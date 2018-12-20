@@ -1,5 +1,9 @@
 package org.moera.node.controller;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import javax.inject.Inject;
 
 import org.moera.node.model.RegisteredName;
@@ -19,9 +23,13 @@ public class RegisteredNameController {
     private NamingClient namingClient;
 
     @PostMapping("/moera-node/registered-name")
-    public void post(@RequestBody RegisteredName registeredName) {
+    public void post(@RequestBody RegisteredName registeredName) throws NoSuchAlgorithmException { // TODO handle it
         log.info("Asked to register the name '{}'", registeredName.getName());
-        namingClient.register(registeredName.getName());
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+        SecureRandom random = SecureRandom.getInstanceStrong();
+        keyPairGenerator.initialize(256, random);
+        KeyPair pair = keyPairGenerator.generateKeyPair();
+        namingClient.register(registeredName.getName(), pair.getPublic());
     }
 
 }

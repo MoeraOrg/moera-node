@@ -10,6 +10,7 @@ function init() {
             contentType: "application/json",
             data: data
         });
+        $("#register-name").val("");
     });
 }
 

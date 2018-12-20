@@ -2,10 +2,12 @@ package org.moera.node.naming;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.PublicKey;
 import javax.annotation.PostConstruct;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
+import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +22,9 @@ public class NamingClient {
         namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
     }
 
-    public void register(String name) {
-        namingService.put(name, false, "CD", "", null, null, null);
+    public void register(String name, PublicKey updatingKey) {
+        String updatingKeyE = Util.base64encode(updatingKey.getEncoded());
+        namingService.put(name, false, updatingKeyE, "", null, null, null);
     }
 
 }
