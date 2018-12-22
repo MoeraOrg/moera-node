@@ -10,7 +10,7 @@ import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
-import org.moera.node.Config;
+import org.moera.node.option.Options;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,11 +19,11 @@ public class NamingClient {
     private NamingService namingService;
 
     @Inject
-    private Config config;
+    private Options options;
 
     @PostConstruct
     protected void init() throws MalformedURLException {
-        JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(config.getNamingServer()));
+        JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(options.getString("naming.location")));
         namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
     }
 

@@ -5,5 +5,4 @@ spring:
   jpa:
     show-sql: true  # Show or not log for each sql query
 
-node:
-  namingServer: http://localhost.localdomain:8081/moera-naming
+node-id: 27b2c873-da0c-400f-ab44-0519a17dfa61

@@ -1,0 +1,3 @@
+- name: naming.location
+  type: string
+  defaultValue: http://localhost.localdomain:8081/moera-naming
