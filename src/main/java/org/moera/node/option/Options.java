@@ -5,18 +5,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.moera.node.data.Option;
+import org.moera.node.data.OptionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -27,12 +34,16 @@ public class Options {
 
     private Map<String, OptionDescriptor> descriptors;
     private Map<String, Object> values = new HashMap<>();
+    private ReadWriteLock valuesLock = new ReentrantReadWriteLock();
 
     @Value("${node-id}")
     private UUID nodeId;
 
     @Inject
     private ApplicationContext applicationContext;
+
+    @Inject
+    private OptionRepository optionRepository;
 
     @PostConstruct
     public void init() throws NodeIdNotSetException, IOException {
@@ -51,30 +62,48 @@ public class Options {
             .forEach(desc -> putValue(desc.getName(), desc.getDefaultValue()));
     }
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void load() {
+        optionRepository.findAllByNodeId(nodeId).forEach(option -> putValue(option.getName(), option.getValue()));
+    }
+
+    private String serializeValue(Object value) {
+        return value.toString();
+    }
+
+    private Object deserializeValue(String type, String value) throws DeserializeOptionValueException {
+        if (value == null) {
+            return null;
+        }
+        if (type.equalsIgnoreCase("string")) {
+            return value;
+        } else if (type.equalsIgnoreCase("int")) {
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new DeserializeOptionValueException("Invalid value of type 'int' for option");
+            }
+        } else if (type.equalsIgnoreCase("long")) {
+            try {
+                return Long.parseLong(value);
+            } catch (NumberFormatException e) {
+                throw new DeserializeOptionValueException("Invalid value of type 'long' for option");
+            }
+        } else {
+            throw new DeserializeOptionValueException(String.format("Unknown type '%s' of option", type));
+        }
+    }
+
     private void putValue(String name, String value) {
         OptionDescriptor desc = descriptors.get(name);
         if (desc == null) {
             log.warn("Unknown option: {}", name);
             return;
         }
-        if (desc.getType().equalsIgnoreCase("string")) {
-            values.put(name, value);
-        } else if (desc.getType().equalsIgnoreCase("int")) {
-            try {
-                Integer v = Integer.parseInt(value);
-                values.put(name, v);
-            } catch (NumberFormatException e) {
-                log.error("Invalid value of type 'int' for option: {}", name);
-            }
-        } else if (desc.getType().equalsIgnoreCase("long")) {
-            try {
-                Long v = Long.parseLong(value);
-                values.put(name, v);
-            } catch (NumberFormatException e) {
-                log.error("Invalid value of type 'long' for option: {}", name);
-            }
-        } else {
-            log.error("Unknown type '{}' of option: {}", desc.getType(), name);
+        try {
+            values.put(name, deserializeValue(desc.getType(), value));
+        } catch (DeserializeOptionValueException e) {
+            log.error("{}: {}", e.getMessage(), name);
         }
     }
 
@@ -82,21 +111,35 @@ public class Options {
         if (!requireType(name, "string")) {
             return null;
         }
-        return (String) values.get(name);
+        valuesLock.readLock().lock();
+        try {
+            return (String) values.get(name);
+        } finally {
+            valuesLock.readLock().unlock();
+        }
     }
 
     public Integer getInt(String name) {
         if (!requireType(name, "int")) {
             return null;
         }
-        return (Integer) values.get(name);
+        valuesLock.readLock().lock();
+        try {
+            return (Integer) values.get(name);
+        } finally {
+            valuesLock.readLock().unlock();
+        }
     }
 
     public Long getLong(String name) {
         if (!requireType(name, "long")) {
             return null;
         }
-        return (Long) values.get(name);
+        try {
+            return (Long) values.get(name);
+        } finally {
+            valuesLock.readLock().unlock();
+        }
     }
 
     private boolean requireType(String name, String type) {
@@ -109,6 +152,73 @@ public class Options {
             throw new InvalidOptionTypeException(desc.getName(), desc.getType(), type);
         }
         return true;
+    }
+
+    @Transactional
+    public void set(String name, Object value) {
+        OptionDescriptor desc = descriptors.get(name);
+        if (desc == null) {
+            log.warn("Unknown option: {}", name);
+            return;
+        }
+
+        Object newValue;
+        if (value == null) {
+            newValue = null;
+        } else if (desc.getType().equalsIgnoreCase("string")) {
+            newValue = value.toString();
+        } else if (desc.getType().equalsIgnoreCase("int")) {
+            if (value instanceof Integer) {
+                newValue = value;
+            } else if (value instanceof Long
+                    && ((Long) value) < Integer.MAX_VALUE
+                    && ((Long) value) > Integer.MIN_VALUE) {
+                newValue = ((Long) value).intValue();
+            } else {
+                log.error("Invalid value of type 'int' for option: {}", name);
+                return;
+            }
+        } else if (desc.getType().equalsIgnoreCase("long")) {
+            if (value instanceof Integer) {
+                newValue = ((Integer) value).longValue();
+            } else if (value instanceof Long) {
+                newValue = value;
+            } else {
+                log.error("Invalid value of type 'long' for option: {}", name);
+                return;
+            }
+        } else {
+            log.error("Unknown type '{}' of option: {}", desc.getType(), name);
+            return;
+        }
+
+        valuesLock.writeLock().lock();
+        try {
+            Option option = optionRepository.findByNodeIdAndName(nodeId, name).orElse(new Option(nodeId, name));
+            option.setValue(serializeValue(newValue));
+            optionRepository.saveAndFlush(option);
+
+            values.put(name, newValue);
+        } finally {
+            valuesLock.writeLock().unlock();
+        }
+    }
+
+    @Transactional
+    public void reset(String name) {
+        OptionDescriptor desc = descriptors.get(name);
+        if (desc == null) {
+            log.warn("Unknown option: {}", name);
+            return;
+        }
+
+        valuesLock.writeLock().lock();
+        try {
+            optionRepository.deleteByNodeIdAndName(nodeId, name);
+            values.put(name, desc.getDefaultValue());
+        } finally {
+            valuesLock.writeLock().unlock();
+        }
     }
 
     public UUID nodeId() {

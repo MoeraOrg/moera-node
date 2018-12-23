@@ -29,6 +29,14 @@ public class Option {
     @Size(max = 4096)
     private String value;
 
+    public Option() {
+    }
+
+    public Option(UUID nodeId, String name) {
+        this.nodeId = nodeId;
+        this.name = name;
+    }
+
     public long getId() {
         return id;
     }
