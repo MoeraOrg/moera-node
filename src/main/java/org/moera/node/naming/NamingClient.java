@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
+import org.moera.commons.util.CryptoUtil;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
 import org.moera.node.option.Options;
@@ -28,7 +29,7 @@ public class NamingClient {
     }
 
     public void register(String name, PublicKey updatingKey) {
-        String updatingKeyE = Util.base64encode(updatingKey.getEncoded());
+        String updatingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(updatingKey));
         namingService.put(name, false, updatingKeyE, "", null, null, null);
     }
 
