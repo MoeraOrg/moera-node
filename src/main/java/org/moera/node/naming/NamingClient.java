@@ -28,9 +28,10 @@ public class NamingClient {
         namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
     }
 
-    public void register(String name, PublicKey updatingKey) {
+    public void register(String name, PublicKey updatingKey, PublicKey signingKey) {
         String updatingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(updatingKey));
-        namingService.put(name, false, updatingKeyE, "", null, null, null);
+        String signingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(signingKey));
+        namingService.put(name, false, updatingKeyE, "", signingKeyE, null, null);
     }
 
 }

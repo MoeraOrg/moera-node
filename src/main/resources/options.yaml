@@ -1,3 +1,16 @@
 - name: naming.location
   type: string
   defaultValue: http://localhost.localdomain:8081/moera-naming
+
+- name: profile.registered-name
+  type: string
+
+- name: profile.registered-name.generation
+  type: int
+
+- name: profile.location
+  type: string
+  defaultValue:
+
+- name: profile.signing-key
+  type: PrivateKey

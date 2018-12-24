@@ -1,6 +1,9 @@
 package org.moera.node.option;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +19,8 @@ import javax.transaction.Transactional;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.moera.commons.util.CryptoUtil;
+import org.moera.commons.util.Util;
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
 import org.slf4j.Logger;
@@ -68,6 +73,9 @@ public class Options {
     }
 
     private String serializeValue(Object value) {
+        if (value instanceof PrivateKey) {
+            return Util.base64encode(CryptoUtil.toRawPrivateKey((PrivateKey) value));
+        }
         return value.toString();
     }
 
@@ -77,21 +85,31 @@ public class Options {
         }
         if (type.equalsIgnoreCase("string")) {
             return value;
-        } else if (type.equalsIgnoreCase("int")) {
+        }
+        if (type.equalsIgnoreCase("int")) {
             try {
                 return Integer.parseInt(value);
             } catch (NumberFormatException e) {
                 throw new DeserializeOptionValueException("Invalid value of type 'int' for option");
             }
-        } else if (type.equalsIgnoreCase("long")) {
+        }
+        if (type.equalsIgnoreCase("long")) {
             try {
                 return Long.parseLong(value);
             } catch (NumberFormatException e) {
                 throw new DeserializeOptionValueException("Invalid value of type 'long' for option");
             }
-        } else {
-            throw new DeserializeOptionValueException(String.format("Unknown type '%s' of option", type));
         }
+        if (type.equalsIgnoreCase("PrivateKey")) {
+            try {
+                return CryptoUtil.toPrivateKey(Util.base64decode(value));
+            } catch (NoSuchAlgorithmException e) {
+                throw new DeserializeOptionValueException("ECDSA algorithm is not available");
+            } catch (InvalidKeySpecException e) {
+                throw new DeserializeOptionValueException("Invalid value of type 'PrivateKey' for option");
+            }
+        }
+        throw new DeserializeOptionValueException(String.format("Unknown type '%s' of option", type));
     }
 
     private void putValue(String name, String value) {
@@ -142,13 +160,24 @@ public class Options {
         }
     }
 
+    public PrivateKey getPrivateKey(String name) {
+        if (!requireType(name, "PrivateKey")) {
+            return null;
+        }
+        try {
+            return (PrivateKey) values.get(name);
+        } finally {
+            valuesLock.readLock().unlock();
+        }
+    }
+
     private boolean requireType(String name, String type) {
         OptionDescriptor desc = descriptors.get(name);
         if (desc == null) {
             log.warn("Unknown option: {}", name);
             return false;
         }
-        if (!desc.getType().equals(type)) {
+        if (!desc.getType().equalsIgnoreCase(type)) {
             throw new InvalidOptionTypeException(desc.getName(), desc.getType(), type);
         }
         return true;
@@ -185,6 +214,13 @@ public class Options {
                 newValue = value;
             } else {
                 log.error("Invalid value of type 'long' for option: {}", name);
+                return;
+            }
+        } else if (desc.getType().equalsIgnoreCase("PrivateKey")) {
+            if (value instanceof PrivateKey) {
+                newValue = value;
+            } else {
+                log.error("Invalid value of type 'PrivateKey' for option: {}", name);
                 return;
             }
         } else {
