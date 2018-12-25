@@ -1,9 +1,7 @@
 package org.moera.node.option;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +17,6 @@ import javax.transaction.Transactional;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.moera.commons.util.CryptoUtil;
-import org.moera.commons.util.Util;
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
 import org.slf4j.Logger;
@@ -37,6 +33,7 @@ public class Options {
 
     private static Logger log = LoggerFactory.getLogger(Options.class);
 
+    private Map<String, OptionTypeBase> types;
     private Map<String, OptionDescriptor> descriptors;
     private Map<String, Object> values = new HashMap<>();
     private ReadWriteLock valuesLock = new ReentrantReadWriteLock();
@@ -56,6 +53,11 @@ public class Options {
             throw new NodeIdNotSetException();
         }
 
+        types = applicationContext.getBeansWithAnnotation(OptionType.class).values().stream()
+            .filter(bean -> bean instanceof OptionTypeBase)
+            .map(bean -> (OptionTypeBase) bean)
+            .collect(Collectors.toMap(OptionTypeBase::getTypeName, Function.identity()));
+
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         List<OptionDescriptor> data = mapper.readValue(
                 applicationContext.getResource("classpath:options.yaml").getInputStream(),
@@ -72,44 +74,35 @@ public class Options {
         optionRepository.findAllByNodeId(nodeId).forEach(option -> putValue(option.getName(), option.getValue()));
     }
 
-    private String serializeValue(Object value) {
-        if (value instanceof PrivateKey) {
-            return Util.base64encode(CryptoUtil.toRawPrivateKey((PrivateKey) value));
+    private OptionTypeBase getType(String type) {
+        OptionTypeBase optionType = types.get(type);
+        if (optionType == null) {
+            throw new UnknownOptionTypeException(type);
         }
-        return value.toString();
+        return optionType;
+    }
+
+    private OptionTypeBase getOptionType(String name) {
+        OptionDescriptor desc = descriptors.get(name);
+        if (desc == null) {
+            log.warn("Unknown option: {}", name);
+            return null;
+        }
+        return getType(desc.getType());
+    }
+
+    private String serializeValue(String type, Object value) {
+        if (value == null) {
+            return null;
+        }
+        return getType(type).serializeValue(value);
     }
 
     private Object deserializeValue(String type, String value) throws DeserializeOptionValueException {
         if (value == null) {
             return null;
         }
-        if (type.equalsIgnoreCase("string")) {
-            return value;
-        }
-        if (type.equalsIgnoreCase("int")) {
-            try {
-                return Integer.parseInt(value);
-            } catch (NumberFormatException e) {
-                throw new DeserializeOptionValueException("Invalid value of type 'int' for option");
-            }
-        }
-        if (type.equalsIgnoreCase("long")) {
-            try {
-                return Long.parseLong(value);
-            } catch (NumberFormatException e) {
-                throw new DeserializeOptionValueException("Invalid value of type 'long' for option");
-            }
-        }
-        if (type.equalsIgnoreCase("PrivateKey")) {
-            try {
-                return CryptoUtil.toPrivateKey(Util.base64decode(value));
-            } catch (NoSuchAlgorithmException e) {
-                throw new DeserializeOptionValueException("ECDSA algorithm is not available");
-            } catch (InvalidKeySpecException e) {
-                throw new DeserializeOptionValueException("Invalid value of type 'PrivateKey' for option");
-            }
-        }
-        throw new DeserializeOptionValueException(String.format("Unknown type '%s' of option", type));
+        return getType(type).deserializeValue(value);
     }
 
     private void putValue(String name, String value) {
@@ -126,112 +119,70 @@ public class Options {
     }
 
     public String getString(String name) {
-        if (!requireType(name, "string")) {
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
             return null;
         }
         valuesLock.readLock().lock();
         try {
-            return (String) values.get(name);
+            return optionType.getString(values.get(name));
         } finally {
             valuesLock.readLock().unlock();
         }
     }
 
     public Integer getInt(String name) {
-        if (!requireType(name, "int")) {
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
             return null;
         }
         valuesLock.readLock().lock();
         try {
-            return (Integer) values.get(name);
+            return optionType.getInt(values.get(name));
         } finally {
             valuesLock.readLock().unlock();
         }
     }
 
     public Long getLong(String name) {
-        if (!requireType(name, "long")) {
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
             return null;
         }
+        valuesLock.readLock().lock();
         try {
-            return (Long) values.get(name);
+            return optionType.getLong(values.get(name));
         } finally {
             valuesLock.readLock().unlock();
         }
     }
 
     public PrivateKey getPrivateKey(String name) {
-        if (!requireType(name, "PrivateKey")) {
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
             return null;
         }
+        valuesLock.readLock().lock();
         try {
-            return (PrivateKey) values.get(name);
+            return optionType.getPrivateKey(values.get(name));
         } finally {
             valuesLock.readLock().unlock();
         }
     }
 
-    private boolean requireType(String name, String type) {
-        OptionDescriptor desc = descriptors.get(name);
-        if (desc == null) {
-            log.warn("Unknown option: {}", name);
-            return false;
-        }
-        if (!desc.getType().equalsIgnoreCase(type)) {
-            throw new InvalidOptionTypeException(desc.getName(), desc.getType(), type);
-        }
-        return true;
-    }
-
     @Transactional
     public void set(String name, Object value) {
-        OptionDescriptor desc = descriptors.get(name);
-        if (desc == null) {
-            log.warn("Unknown option: {}", name);
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
             return;
         }
 
-        Object newValue;
-        if (value == null) {
-            newValue = null;
-        } else if (desc.getType().equalsIgnoreCase("string")) {
-            newValue = value.toString();
-        } else if (desc.getType().equalsIgnoreCase("int")) {
-            if (value instanceof Integer) {
-                newValue = value;
-            } else if (value instanceof Long
-                    && ((Long) value) < Integer.MAX_VALUE
-                    && ((Long) value) > Integer.MIN_VALUE) {
-                newValue = ((Long) value).intValue();
-            } else {
-                log.error("Invalid value of type 'int' for option: {}", name);
-                return;
-            }
-        } else if (desc.getType().equalsIgnoreCase("long")) {
-            if (value instanceof Integer) {
-                newValue = ((Integer) value).longValue();
-            } else if (value instanceof Long) {
-                newValue = value;
-            } else {
-                log.error("Invalid value of type 'long' for option: {}", name);
-                return;
-            }
-        } else if (desc.getType().equalsIgnoreCase("PrivateKey")) {
-            if (value instanceof PrivateKey) {
-                newValue = value;
-            } else {
-                log.error("Invalid value of type 'PrivateKey' for option: {}", name);
-                return;
-            }
-        } else {
-            log.error("Unknown type '{}' of option: {}", desc.getType(), name);
-            return;
-        }
+        Object newValue = optionType.accept(value);
 
         valuesLock.writeLock().lock();
         try {
             Option option = optionRepository.findByNodeIdAndName(nodeId, name).orElse(new Option(nodeId, name));
-            option.setValue(serializeValue(newValue));
+            option.setValue(serializeValue(optionType.getTypeName(), newValue));
             optionRepository.saveAndFlush(option);
 
             values.put(name, newValue);
