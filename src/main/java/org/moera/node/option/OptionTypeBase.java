@@ -1,6 +1,7 @@
 package org.moera.node.option;
 
 import java.security.PrivateKey;
+import java.time.Duration;
 
 public abstract class OptionTypeBase {
 
@@ -34,6 +35,10 @@ public abstract class OptionTypeBase {
 
     public PrivateKey getPrivateKey(Object value) {
         throw new InvalidOptionTypeConversionException(getTypeName(), PrivateKey.class);
+    }
+
+    public Duration getDuration(Object value) {
+        throw new InvalidOptionTypeConversionException(getTypeName(), Duration.class);
     }
 
     public Object accept(Object value) {

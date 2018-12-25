@@ -8,6 +8,10 @@
 - name: profile.registered-name.generation
   type: int
 
+- name: profile.registered-name.layover
+  type: Duration
+  defaultValue: 1h
+
 - name: profile.location
   type: string
   defaultValue:

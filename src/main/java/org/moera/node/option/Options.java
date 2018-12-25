@@ -2,6 +2,7 @@ package org.moera.node.option;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -165,6 +166,19 @@ public class Options {
         valuesLock.readLock().lock();
         try {
             return optionType.getPrivateKey(values.get(name));
+        } finally {
+            valuesLock.readLock().unlock();
+        }
+    }
+
+    public Duration getDuration(String name) {
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
+            return null;
+        }
+        valuesLock.readLock().lock();
+        try {
+            return optionType.getDuration(values.get(name));
         } finally {
             valuesLock.readLock().unlock();
         }

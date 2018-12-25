@@ -3,6 +3,7 @@ package org.moera.node.naming;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.PublicKey;
+import java.time.Instant;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -31,7 +32,8 @@ public class NamingClient {
     public void register(String name, PublicKey updatingKey, PublicKey signingKey) {
         String updatingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(updatingKey));
         String signingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(signingKey));
-        namingService.put(name, false, updatingKeyE, "", signingKeyE, null, null);
+        long validFrom = Instant.now().plus(options.getDuration("profile.registered-name.layover")).getEpochSecond();
+        namingService.put(name, false, updatingKeyE, "", signingKeyE, validFrom, null);
     }
 
 }
