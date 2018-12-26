@@ -2,6 +2,12 @@
   type: string
   defaultValue: http://localhost.localdomain:8081/moera-naming
 
+- name: credentials.login
+  type: string
+
+- name: credentials.password-hash
+  type: string
+
 - name: profile.registered-name
   type: string
 
