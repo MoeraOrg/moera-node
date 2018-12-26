@@ -24,3 +24,7 @@
 
 - name: profile.signing-key
   type: PrivateKey
+
+- name: token.lifetime
+  type: Duration
+  defaultValue: 365d

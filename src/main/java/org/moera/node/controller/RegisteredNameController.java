@@ -13,9 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/moera-node/registered-name")
 public class RegisteredNameController {
 
     private static Logger log = LoggerFactory.getLogger(RegisteredNameController.class);
@@ -26,7 +28,7 @@ public class RegisteredNameController {
     @Inject
     private NamingClient namingClient;
 
-    @PostMapping("/moera-node/registered-name")
+    @PostMapping
     public void post(@RequestBody RegisteredName registeredName) throws NoSuchAlgorithmException { // TODO handle it
         log.info("Asked to register the name '{}'", registeredName.getName());
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
