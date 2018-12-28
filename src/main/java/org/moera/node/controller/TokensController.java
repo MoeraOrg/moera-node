@@ -1,6 +1,5 @@
 package org.moera.node.controller;
 
-import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import javax.inject.Inject;
@@ -32,7 +31,7 @@ public class TokensController {
 
     @PostMapping
     @ResponseBody
-    public TokenCreated post(@Valid @RequestBody Credentials credentials) throws NoSuchAlgorithmException {
+    public TokenCreated post(@Valid @RequestBody Credentials credentials) {
         if (!credentials.getLogin().equals(options.getString("credentials.login"))
             || !Password.validate(options.getString("credentials.password-hash"), credentials.getPassword())) {
             throw new OperationFailure("credentials.login-incorrect");

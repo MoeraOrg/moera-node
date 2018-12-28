@@ -48,7 +48,7 @@ public class ExceptionsControllerAdvice {
 
     @ExceptionHandler
     @ResponseBody
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.CONFLICT)
     public Result failure(OperationFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
         return new Result(e.getErrorCode(), message);

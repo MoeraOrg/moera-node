@@ -1,8 +1,6 @@
 package org.moera.node.option;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
 
 import org.moera.commons.util.CryptoUtil;
 import org.moera.commons.util.Util;
@@ -17,13 +15,7 @@ public class PrivateKeyOptionType extends OptionTypeBase {
 
     @Override
     public Object deserializeValue(String value) {
-        try {
-            return CryptoUtil.toPrivateKey(Util.base64decode(value));
-        } catch (NoSuchAlgorithmException e) {
-            throw new DeserializeOptionValueException("ECDSA algorithm is not available");
-        } catch (InvalidKeySpecException e) {
-            throw new DeserializeOptionValueException("Invalid value of type 'PrivateKey' for option");
-        }
+        return CryptoUtil.toPrivateKey(Util.base64decode(value));
     }
 
     @Override

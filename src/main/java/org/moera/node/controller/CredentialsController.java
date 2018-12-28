@@ -1,6 +1,5 @@
 package org.moera.node.controller;
 
-import java.security.NoSuchAlgorithmException;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
@@ -23,7 +22,7 @@ public class CredentialsController {
 
     @PostMapping
     @ResponseBody
-    public Result post(@Valid @RequestBody Credentials credentials) throws NoSuchAlgorithmException {
+    public Result post(@Valid @RequestBody Credentials credentials) {
         options.set("credentials.login", credentials.getLogin());
         options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
 

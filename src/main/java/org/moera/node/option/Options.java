@@ -99,7 +99,7 @@ public class Options {
         return getType(type).serializeValue(value);
     }
 
-    private Object deserializeValue(String type, String value) throws DeserializeOptionValueException {
+    private Object deserializeValue(String type, String value) {
         if (value == null) {
             return null;
         }
