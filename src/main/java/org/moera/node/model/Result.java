@@ -1,22 +1,22 @@
 package org.moera.node.model;
 
-public class Success {
+public class Result {
 
-    public static final Success OK = new Success(0, "ok");
+    public static final Result OK = new Result("ok", "OK");
 
-    private int errorCode;
+    private String errorCode;
     private String message;
 
-    public Success(int errorCode, String message) {
+    public Result(String errorCode, String message) {
         this.errorCode = errorCode;
         this.message = message;
     }
 
-    public int getErrorCode() {
+    public String getErrorCode() {
         return errorCode;
     }
 
-    public void setErrorCode(int errorCode) {
+    public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
     }
 

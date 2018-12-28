@@ -6,7 +6,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import javax.inject.Inject;
 
-import org.moera.node.model.RegisteredName;
+import org.moera.node.model.NameToRegister;
+import org.moera.node.model.Result;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
@@ -29,17 +30,18 @@ public class RegisteredNameController {
     private NamingClient namingClient;
 
     @PostMapping
-    public void post(@RequestBody RegisteredName registeredName) throws NoSuchAlgorithmException { // TODO handle it
-        log.info("Asked to register the name '{}'", registeredName.getName());
+    public Result post(@RequestBody NameToRegister nameToRegister) throws NoSuchAlgorithmException { // TODO handle it
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
         SecureRandom random = SecureRandom.getInstanceStrong();
         keyPairGenerator.initialize(256, random);
         KeyPair updatingKeyPair = keyPairGenerator.generateKeyPair();
         keyPairGenerator.initialize(256, random);
         KeyPair signingKeyPair = keyPairGenerator.generateKeyPair();
-        namingClient.register(registeredName.getName(), updatingKeyPair.getPublic(), signingKeyPair.getPublic());
-        options.set("profile.registered-name", registeredName.getName());
+        namingClient.register(nameToRegister.getName(), updatingKeyPair.getPublic(), signingKeyPair.getPublic());
+        options.set("profile.registered-name", nameToRegister.getName());
         options.set("profile.signing-key", signingKeyPair.getPrivate());
+
+        return Result.OK;
     }
 
 }

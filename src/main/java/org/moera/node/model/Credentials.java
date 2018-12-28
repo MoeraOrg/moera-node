@@ -1,8 +1,13 @@
 package org.moera.node.model;
 
+import javax.validation.constraints.NotBlank;
+
 public class Credentials {
 
+    @NotBlank
     private String login;
+
+    @NotBlank
     private String password;
 
     public String getLogin() {

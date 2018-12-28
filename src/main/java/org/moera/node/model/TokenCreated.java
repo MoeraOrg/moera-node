@@ -1,10 +1,10 @@
 package org.moera.node.model;
 
-public class Token {
+public class TokenCreated {
 
     private String token;
 
-    public Token(String token) {
+    public TokenCreated(String token) {
         this.token = token;
     }
 

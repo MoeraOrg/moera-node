@@ -4,15 +4,16 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import javax.inject.Inject;
+import javax.validation.Valid;
 
 import org.moera.commons.util.CryptoUtil;
 import org.moera.commons.util.Password;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.model.Credentials;
-import org.moera.node.model.Success;
+import org.moera.node.model.OperationFailure;
+import org.moera.node.model.TokenCreated;
 import org.moera.node.option.Options;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,11 +32,10 @@ public class TokensController {
 
     @PostMapping
     @ResponseBody
-    public Object post(@RequestBody Credentials credentials) throws NoSuchAlgorithmException {
-        if (StringUtils.isEmpty(credentials.getLogin()) || StringUtils.isEmpty(credentials.getPassword())
-            || !credentials.getLogin().equals(options.getString("credentials.login"))
+    public TokenCreated post(@Valid @RequestBody Credentials credentials) throws NoSuchAlgorithmException {
+        if (!credentials.getLogin().equals(options.getString("credentials.login"))
             || !Password.validate(options.getString("credentials.password-hash"), credentials.getPassword())) {
-            return new Success(1, "login incorrect");
+            throw new OperationFailure("credentials.login-incorrect");
         }
 
         Token token = new Token();
@@ -44,7 +44,7 @@ public class TokensController {
         token.setDeadline(Timestamp.from(Instant.now().plus(options.getDuration("token.lifetime"))));
         tokenRepository.save(token);
 
-        return new org.moera.node.model.Token(token.getToken());
+        return new TokenCreated(token.getToken());
     }
 
 }

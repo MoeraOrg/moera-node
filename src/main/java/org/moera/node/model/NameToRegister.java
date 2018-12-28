@@ -1,6 +1,6 @@
 package org.moera.node.model;
 
-public class RegisteredName {
+public class NameToRegister {
 
     private String name;
 
