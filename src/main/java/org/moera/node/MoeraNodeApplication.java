@@ -3,6 +3,7 @@ package org.moera.node;
 import javax.inject.Inject;
 
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
+import org.moera.node.global.AdminInterceptor;
 import org.moera.node.helper.HelperSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -17,6 +19,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MoeraNodeApplication implements WebMvcConfigurer {
 
     private static Logger log = LoggerFactory.getLogger(MoeraNodeApplication.class);
+
+    @Inject
+    private AdminInterceptor adminInterceptor;
 
     @Inject
     private ApplicationContext applicationContext;
@@ -31,6 +36,11 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
             resolver.registerHelpers(helperSource);
         }
         return resolver;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(adminInterceptor);
     }
 
     @Override

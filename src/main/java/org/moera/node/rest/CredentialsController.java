@@ -4,12 +4,14 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 
 import org.moera.commons.util.Password;
+import org.moera.node.global.Admin;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.option.Options;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -29,6 +31,16 @@ public class CredentialsController {
                 && !StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
             throw new OperationFailure("credentials.already-created");
         }
+        options.set("credentials.login", credentials.getLogin());
+        options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+
+        return Result.OK;
+    }
+
+    @PutMapping
+    @Admin
+    @ResponseBody
+    public Result put(@Valid @RequestBody Credentials credentials) {
         options.set("credentials.login", credentials.getLogin());
         options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
 

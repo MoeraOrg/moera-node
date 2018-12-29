@@ -64,4 +64,22 @@ public class ExceptionsControllerAdvice {
         return new Result(errorCode, message);
     }
 
+    @ExceptionHandler
+    @ResponseBody
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Result authorizationRequired(AuthorizationException e) {
+        String errorCode = "authorization.required";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message);
+    }
+
+    @ExceptionHandler
+    @ResponseBody
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result authorizationRequired(InvalidTokenException e) {
+        String errorCode = "authorization.invalid";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message);
+    }
+
 }
