@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
+import org.moera.node.naming.NamingNotAvailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -52,6 +53,15 @@ public class ExceptionsControllerAdvice {
     public Result failure(OperationFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseBody
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result namingFailure(NamingNotAvailableException e) {
+        String errorCode = "naming.not-available";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message);
     }
 
 }

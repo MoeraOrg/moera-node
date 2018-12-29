@@ -33,7 +33,11 @@ public class NamingClient {
         String updatingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(updatingKey));
         String signingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(signingKey));
         long validFrom = Instant.now().plus(options.getDuration("profile.registered-name.layover")).getEpochSecond();
-        namingService.put(name, false, updatingKeyE, "", signingKeyE, validFrom, null);
+        try {
+            namingService.put(name, false, updatingKeyE, "", signingKeyE, validFrom, null);
+        } catch (Exception e) {
+            throw new NamingNotAvailableException(e);
+        }
     }
 
 }
