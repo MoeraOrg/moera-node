@@ -7,6 +7,7 @@ import java.security.SecureRandom;
 import javax.inject.Inject;
 
 import org.moera.commons.util.CryptoException;
+import org.moera.node.global.Admin;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.Result;
 import org.moera.node.naming.NamingClient;
@@ -32,6 +33,7 @@ public class RegisteredNameController {
     private NamingClient namingClient;
 
     @PostMapping
+    @Admin
     @ResponseBody
     public Result post(@RequestBody NameToRegister nameToRegister) {
         KeyPair signingKeyPair = null;
