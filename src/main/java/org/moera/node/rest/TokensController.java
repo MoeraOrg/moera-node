@@ -1,4 +1,4 @@
-package org.moera.node.controller;
+package org.moera.node.rest;
 
 import java.sql.Timestamp;
 import java.time.Instant;

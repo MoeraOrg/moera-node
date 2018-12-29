@@ -1,4 +1,4 @@
-package org.moera.node.controller;
+package org.moera.node.ui;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

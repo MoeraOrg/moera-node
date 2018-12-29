@@ -1,4 +1,4 @@
-package org.moera.node.controller;
+package org.moera.node.global;
 
 import java.util.Locale;
 import javax.inject.Inject;

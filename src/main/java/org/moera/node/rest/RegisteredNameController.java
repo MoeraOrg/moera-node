@@ -1,4 +1,4 @@
-package org.moera.node.controller;
+package org.moera.node.rest;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
