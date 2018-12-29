@@ -8,7 +8,6 @@ import org.moera.node.model.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
-import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -32,12 +31,7 @@ public class ExceptionsControllerAdvice {
         log.error("Exception in controller", e);
 
         String errorCode = "server.misconfiguration";
-        String message = null;
-        try {
-            message = messageSource.getMessage(errorCode, null, Locale.getDefault());
-        } catch (NoSuchMessageException me) {
-            message = messageSource.getMessage("no-message", null, Locale.getDefault());
-        }
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message + ": " + e.getMessage());
     }
 
