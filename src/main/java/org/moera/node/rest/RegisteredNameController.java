@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import org.moera.commons.util.CryptoException;
 import org.moera.node.global.Admin;
 import org.moera.node.model.NameToRegister;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.option.Options;
@@ -37,8 +38,11 @@ public class RegisteredNameController {
     @Admin
     @ResponseBody
     public Result post(@RequestBody NameToRegister nameToRegister) {
-        KeyPair signingKeyPair = null;
-        UUID operationId = null;
+        UUID operationId = options.getUuid("profile.registered-name.operation-id");
+        if (operationId != null) {
+            throw new OperationFailure("nameToRegister.operation-pending");
+        }
+        KeyPair signingKeyPair;
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
             SecureRandom random = SecureRandom.getInstanceStrong();
