@@ -27,13 +27,13 @@ public class IntOptionType extends OptionTypeBase {
     public Object accept(Object value) {
         if (value instanceof Integer) {
             return value;
-        } else if (value instanceof Long
+        }
+        if (value instanceof Long
                 && ((Long) value) < Integer.MAX_VALUE
                 && ((Long) value) > Integer.MIN_VALUE) {
             return ((Long) value).intValue();
-        } else {
-            return super.accept(value);
         }
+        return super.accept(value);
     }
 
 }

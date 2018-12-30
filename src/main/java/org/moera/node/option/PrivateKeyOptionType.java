@@ -32,9 +32,8 @@ public class PrivateKeyOptionType extends OptionTypeBase {
     public Object accept(Object value) {
         if (value instanceof PrivateKey) {
             return value;
-        } else {
-            return super.accept(value);
         }
+        return super.accept(value);
     }
 
 }

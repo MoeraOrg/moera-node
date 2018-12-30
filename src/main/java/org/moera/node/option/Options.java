@@ -184,6 +184,19 @@ public class Options {
         }
     }
 
+    public UUID getUuid(String name) {
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
+            return null;
+        }
+        valuesLock.readLock().lock();
+        try {
+            return optionType.getUuid(values.get(name));
+        } finally {
+            valuesLock.readLock().unlock();
+        }
+    }
+
     @Transactional
     public void set(String name, Object value) {
         OptionTypeBase optionType = getOptionType(name);

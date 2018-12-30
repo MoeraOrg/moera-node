@@ -4,6 +4,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.util.CryptoException;
@@ -37,6 +38,7 @@ public class RegisteredNameController {
     @ResponseBody
     public Result post(@RequestBody NameToRegister nameToRegister) {
         KeyPair signingKeyPair = null;
+        UUID operationId = null;
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
             SecureRandom random = SecureRandom.getInstanceStrong();
@@ -44,10 +46,12 @@ public class RegisteredNameController {
             KeyPair updatingKeyPair = keyPairGenerator.generateKeyPair();
             keyPairGenerator.initialize(256, random);
             signingKeyPair = keyPairGenerator.generateKeyPair();
-            namingClient.register(nameToRegister.getName(), updatingKeyPair.getPublic(), signingKeyPair.getPublic());
+            operationId = namingClient.register(nameToRegister.getName(), updatingKeyPair.getPublic(),
+                    signingKeyPair.getPublic());
         } catch (NoSuchAlgorithmException e) {
             throw new CryptoException(e);
         }
+        options.set("profile.registered-name.operation-id", operationId);
         options.set("profile.registered-name", nameToRegister.getName());
         options.set("profile.signing-key", signingKeyPair.getPrivate());
 

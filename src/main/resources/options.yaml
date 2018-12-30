@@ -18,6 +18,9 @@
   type: Duration
   defaultValue: 1h
 
+- name: profile.registered-name.operation-id
+  type: UUID
+
 - name: profile.signing-key
   type: PrivateKey
 

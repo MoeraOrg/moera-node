@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.PublicKey;
 import java.time.Instant;
+import java.util.UUID;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -29,12 +30,12 @@ public class NamingClient {
         namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
     }
 
-    public void register(String name, PublicKey updatingKey, PublicKey signingKey) {
+    public UUID register(String name, PublicKey updatingKey, PublicKey signingKey) {
         String updatingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(updatingKey));
         String signingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(signingKey));
         long validFrom = Instant.now().plus(options.getDuration("profile.registered-name.layover")).getEpochSecond();
         try {
-            namingService.put(name, false, updatingKeyE, "", signingKeyE, validFrom, null);
+            return namingService.put(name, false, updatingKeyE, "", signingKeyE, validFrom, null);
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }

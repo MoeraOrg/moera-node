@@ -22,11 +22,11 @@ public class LongOptionType extends OptionTypeBase {
     public Object accept(Object value) {
         if (value instanceof Integer) {
             return ((Integer) value).longValue();
-        } else if (value instanceof Long) {
-            return value;
-        } else {
-            return super.accept(value);
         }
+        if (value instanceof Long) {
+            return value;
+        }
+        return super.accept(value);
     }
 
 }
