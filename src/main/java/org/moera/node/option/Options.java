@@ -2,6 +2,7 @@ package org.moera.node.option;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -192,6 +193,19 @@ public class Options {
         valuesLock.readLock().lock();
         try {
             return optionType.getUuid(values.get(name));
+        } finally {
+            valuesLock.readLock().unlock();
+        }
+    }
+
+    public Timestamp getTimestamp(String name) {
+        OptionTypeBase optionType = getOptionType(name);
+        if (optionType == null) {
+            return null;
+        }
+        valuesLock.readLock().lock();
+        try {
+            return optionType.getTimestamp(values.get(name));
         } finally {
             valuesLock.readLock().unlock();
         }

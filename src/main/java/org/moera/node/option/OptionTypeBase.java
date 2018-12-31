@@ -1,6 +1,7 @@
 package org.moera.node.option;
 
 import java.security.PrivateKey;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -44,6 +45,10 @@ public abstract class OptionTypeBase {
 
     public UUID getUuid(Object value) {
         throw new InvalidOptionTypeConversionException(getTypeName(), UUID.class);
+    }
+
+    public Timestamp getTimestamp(Object value) {
+        throw new InvalidOptionTypeConversionException(getTypeName(), Timestamp.class);
     }
 
     public Object accept(Object value) {

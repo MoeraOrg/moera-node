@@ -11,6 +11,12 @@
 - name: naming.operation.error-code
   type: string
 
+- name: naming.operation.added
+  type: Timestamp
+
+- name: naming.operation.completed
+  type: Timestamp
+
 - name: credentials.login
   type: string
 

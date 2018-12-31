@@ -60,18 +60,18 @@ public class NamingClient {
                 return;
             }
             options.set("naming.operation.status", info.getStatus().name().toLowerCase());
+            options.set("naming.operation.added", info.getAdded());
             switch (info.getStatus()) {
                 case ADDED:
                 case STARTED:
-                    // TODO store added timestamp
                     break;
                 case SUCCEEDED:
-                    // TODO store completed timestamp
+                    options.set("naming.operation.completed", info.getCompleted());
                     options.set("profile.registered-name.generation", info.getGeneration());
                     options.reset("naming.operation.id");
                     break;
                 case FAILED:
-                    // TODO store completed timestamp
+                    options.set("naming.operation.completed", info.getCompleted());
                     options.set("naming.operation.error-code", "naming." + info.getErrorCode());
                     options.reset("naming.operation.id");
                     break;
