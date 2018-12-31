@@ -2,6 +2,15 @@
   type: string
   defaultValue: http://localhost.localdomain:8081/moera-naming
 
+- name: naming.operation.id
+  type: UUID
+
+- name: naming.operation.status
+  type: string # TODO maybe enum?
+
+- name: naming.operation.error-code
+  type: string
+
 - name: credentials.login
   type: string
 
@@ -14,15 +23,12 @@
 - name: profile.registered-name.generation
   type: int
 
-- name: profile.registered-name.layover
-  type: Duration
-  defaultValue: 1h
-
-- name: profile.registered-name.operation-id
-  type: UUID
-
 - name: profile.signing-key
   type: PrivateKey
+
+- name: profile.signing-key.valid-from.layover
+  type: Duration
+  defaultValue: 1h
 
 - name: token.lifetime
   type: Duration
