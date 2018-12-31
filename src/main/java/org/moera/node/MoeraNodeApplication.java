@@ -1,8 +1,10 @@
 package org.moera.node;
 
+import java.security.Security;
 import javax.inject.Inject;
 
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.moera.node.global.AdminInterceptor;
 import org.moera.node.helper.HelperSource;
 import org.slf4j.Logger;
@@ -51,6 +53,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     }
 
     public static void main(String[] args) {
+        Security.addProvider(new BouncyCastleProvider());
         SpringApplication.run(MoeraNodeApplication.class, args);
     }
 

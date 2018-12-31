@@ -97,6 +97,16 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.github.novacrypto</groupId>
+            <artifactId>BIP39</artifactId>
+            <version>2018.10.06</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.60</version>
+        </dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -110,6 +120,27 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 	</dependencies>
+
+    <repositories>
+        <repository>
+            <id>novacrypto.bip</id>
+            <name>Nova Crypto BIP</name>
+            <layout>default</layout>
+            <url>https://dl.bintray.com/novacrypto/BIP/</url>
+        </repository>
+        <repository>
+            <id>novacrypto.general</id>
+            <name>Nova Crypto General</name>
+            <layout>default</layout>
+            <url>https://dl.bintray.com/novacrypto/General/</url>
+        </repository>
+        <repository>
+            <id>novacrypto.hashing</id>
+            <name>Nova Crypto Hashing</name>
+            <layout>default</layout>
+            <url>https://dl.bintray.com/novacrypto/Hashing/</url>
+        </repository>
+    </repositories>
 
 	<build>
 		<plugins>
