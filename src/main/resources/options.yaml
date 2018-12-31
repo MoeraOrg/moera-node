@@ -2,6 +2,10 @@
   type: string
   defaultValue: http://localhost.localdomain:8081/moera-naming
 
+- name: naming.unavailable.max-retries
+  type: int
+  defaultValue: 5
+
 - name: naming.operation.id
   type: UUID
 

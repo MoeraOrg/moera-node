@@ -6,6 +6,7 @@ import java.security.PublicKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -16,11 +17,15 @@ import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
 import org.moera.naming.rpc.OperationStatusInfo;
 import org.moera.node.option.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NamingClient {
+
+    private static Logger log = LoggerFactory.getLogger(NamingClient.class);
 
     private NamingService namingService;
 
@@ -41,6 +46,7 @@ public class NamingClient {
         if (options.getUuid("naming.operation.id") == null) {
             return;
         }
+        final AtomicInteger retries = new AtomicInteger(0);
         taskScheduler.schedule(() -> {
             UUID id = options.getUuid("naming.operation.id");
             if (id == null) {
@@ -50,13 +56,18 @@ public class NamingClient {
             try {
                 info = namingService.getStatus(id);
             } catch (Exception e) {
-                // TODO count retries and mark as unknown
+                int n = retries.incrementAndGet();
+                int maxRetries = options.getInt("naming.unavailable.max-retries");
+                if (n > maxRetries) {
+                    unknownOperationStatus();
+                } else {
+                    log.info("Naming service unavailable, retry {} of {}...", n, maxRetries);
+                }
                 return;
             }
+            retries.set(0);
             if (info.getStatus() == null) {
-                options.set("naming.operation.status", "unknown");
-                options.set("naming.operation.error-code", "naming." + info.getErrorCode());
-                options.reset("naming.operation.id");
+                unknownOperationStatus();
                 return;
             }
             options.set("naming.operation.status", info.getStatus().name().toLowerCase());
@@ -83,6 +94,15 @@ public class NamingClient {
             Date last = context.lastCompletionTime();
             return last == null ? new Date() : Date.from(last.toInstant().plusSeconds(60));
         });
+    }
+
+    private void unknownOperationStatus() {
+        log.info("Status of naming operation {} is set to 'unknown'", options.getString("naming.operation.id"));
+
+        options.set("naming.operation.status", "unknown");
+        options.set("naming.operation.error-code", "naming.unknown");
+        options.set("naming.operation.completed", Util.now());
+        options.reset("naming.operation.id");
     }
 
     public void register(String name, PublicKey updatingKey, PublicKey signingKey) {
