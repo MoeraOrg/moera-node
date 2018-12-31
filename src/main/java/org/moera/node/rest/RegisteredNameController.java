@@ -62,17 +62,23 @@ public class RegisteredNameController {
         KeyPair signingKeyPair;
         try {
             SecureRandom random = SecureRandom.getInstanceStrong();
+
             byte[] entropy = new byte[Words.TWENTY_FOUR.byteLength()];
             random.nextBytes(entropy);
             StringBuilder mnemonic = new StringBuilder();
             new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, mnemonic::append);
             byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE).calculateSeed(mnemonic.toString(), "");
 
+            secretInfo.setSecret(Util.base64encode(entropy));
+            secretInfo.setMnemonic(mnemonic.toString().split(" "));
+
+            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
             ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("secp256k1");
+
             BigInteger d = new BigInteger(seed);
             ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
-            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
             PrivateKey privateUpdatingKey = keyFactory.generatePrivate(privateKeySpec);
+
             ECPoint q = ecSpec.getG().multiply(d);
             ECPublicKeySpec pubSpec = new ECPublicKeySpec(q, ecSpec);
             PublicKey publicUpdatingKey = keyFactory.generatePublic(pubSpec);
@@ -80,10 +86,8 @@ public class RegisteredNameController {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
             keyPairGenerator.initialize(ecSpec, random);
             signingKeyPair = keyPairGenerator.generateKeyPair();
-            namingClient.register(nameToRegister.getName(), publicUpdatingKey, signingKeyPair.getPublic());
 
-            secretInfo.setSecret(Util.base64encode(entropy));
-            secretInfo.setMnemonic(mnemonic.toString().split(" "));
+            namingClient.register(nameToRegister.getName(), publicUpdatingKey, signingKeyPair.getPublic());
         } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException
                 | InvalidKeySpecException e) {
             throw new CryptoException(e);
