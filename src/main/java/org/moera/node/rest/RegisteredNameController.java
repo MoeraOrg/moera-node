@@ -1,16 +1,13 @@
 package org.moera.node.rest;
 
 import java.math.BigInteger;
-import java.security.InvalidAlgorithmParameterException;
+import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import javax.inject.Inject;
 
 import io.github.novacrypto.bip39.JavaxPBKDF2WithHmacSHA512;
@@ -88,8 +85,7 @@ public class RegisteredNameController {
             signingKeyPair = keyPairGenerator.generateKeyPair();
 
             namingClient.register(nameToRegister.getName(), publicUpdatingKey, signingKeyPair.getPublic());
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException
-                | InvalidKeySpecException e) {
+        } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         }
         options.set("profile.signing-key", signingKeyPair.getPrivate());
@@ -134,7 +130,7 @@ public class RegisteredNameController {
             PrivateKey privateUpdatingKey = keyFactory.generatePrivate(privateKeySpec);
 
             namingClient.update(name, generation, privateUpdatingKey);
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
+        } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {
             throw new OperationFailure("registeredNameSecret." + of.getErrorCode());
