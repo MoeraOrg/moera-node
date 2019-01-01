@@ -29,11 +29,14 @@ import org.moera.node.global.Admin;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
+import org.moera.node.model.Result;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -76,9 +79,6 @@ public class RegisteredNameController {
             ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("secp256k1");
 
             BigInteger d = new BigInteger(seed);
-            ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
-            PrivateKey privateUpdatingKey = keyFactory.generatePrivate(privateKeySpec);
-
             ECPoint q = ecSpec.getG().multiply(d);
             ECPublicKeySpec pubSpec = new ECPublicKeySpec(q, ecSpec);
             PublicKey publicUpdatingKey = keyFactory.generatePublic(pubSpec);
@@ -95,6 +95,52 @@ public class RegisteredNameController {
         options.set("profile.signing-key", signingKeyPair.getPrivate());
 
         return secretInfo;
+    }
+
+    @PutMapping
+    @Admin
+    @ResponseBody
+    public Result put(@RequestBody RegisteredNameSecret registeredNameSecret) {
+        if (options.getUuid("naming.operation.id") != null) {
+            throw new OperationFailure("registeredNameSecret.operation-pending");
+        }
+        String name = options.getString("profile.registered-name");
+        Integer generation = options.getInt("profile.registered-name.generation");
+        if (StringUtils.isEmpty(name) || generation == null) {
+            throw new OperationFailure("registeredNameSecret.registered-name-absent");
+        }
+        if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
+                && StringUtils.isEmpty(registeredNameSecret.getSecret())) {
+            throw new OperationFailure("registeredNameSecret.empty");
+        }
+
+        String mnemonic;
+        if (!StringUtils.isEmpty(registeredNameSecret.getSecret())) {
+            byte[] entropy = Util.base64decode(registeredNameSecret.getSecret());
+            StringBuilder buf = new StringBuilder();
+            new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, buf::append);
+            mnemonic = buf.toString();
+        } else {
+            mnemonic = String.join(" ", registeredNameSecret.getMnemonic());
+        }
+        byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE).calculateSeed(mnemonic.toString(), "");
+
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
+            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("secp256k1");
+
+            BigInteger d = new BigInteger(seed);
+            ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
+            PrivateKey privateUpdatingKey = keyFactory.generatePrivate(privateKeySpec);
+
+            namingClient.update(name, generation, privateUpdatingKey);
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
+            throw new CryptoException(e);
+        } catch (OperationFailure of) {
+            throw new OperationFailure("registeredNameSecret." + of.getErrorCode());
+        }
+
+        return Result.OK;
     }
 
 }

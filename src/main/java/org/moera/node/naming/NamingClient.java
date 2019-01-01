@@ -1,8 +1,13 @@
 package org.moera.node.naming;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
+import java.security.Signature;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
@@ -12,10 +17,14 @@ import javax.inject.Inject;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
+import org.moera.commons.util.CryptoException;
 import org.moera.commons.util.CryptoUtil;
+import org.moera.commons.util.SignatureDataBuilder;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
 import org.moera.naming.rpc.OperationStatusInfo;
+import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,6 +128,44 @@ public class NamingClient {
         }
         options.set("naming.operation.id", operationId);
         options.set("profile.registered-name", name);
+        monitorOperation();
+    }
+
+    public void update(String name, int generation, PrivateKey privateUpdatingKey) {
+        RegisteredNameInfo info = namingService.getCurrent(name);
+        if (info == null) {
+            throw new OperationFailure("name-not-registered");
+        }
+        if (info.getGeneration() != generation) {
+            throw new OperationFailure("wrong-generation");
+        }
+        // TODO possible to validate the private key by the public key
+
+        UUID operationId;
+        SignatureDataBuilder buf = new SignatureDataBuilder();
+        try {
+            buf.append(info.getName());
+            buf.append(Util.base64decode(info.getUpdatingKey()));
+            buf.append(info.getNodeUri());
+            if (info.getSigningKey() != null) {
+                buf.append(Util.base64decode(info.getSigningKey()));
+                buf.append(info.getValidFrom());
+            }
+
+            Signature sign = Signature.getInstance("SHA3-256withECDSA", "BC");
+            sign.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
+            sign.update(buf.toBytes());
+            String signature = Util.base64encode(sign.sign());
+
+            try {
+                operationId = namingService.put(name, false, null, null, null, null, signature);
+            } catch (Exception e) {
+                throw new NamingNotAvailableException(e);
+            }
+        } catch (GeneralSecurityException | IOException e) {
+            throw new CryptoException(e);
+        }
+        options.set("naming.operation.id", operationId);
         monitorOperation();
     }
 
