@@ -24,6 +24,7 @@ import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
 import org.moera.naming.rpc.OperationStatusInfo;
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.naming.rpc.Rules;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
@@ -152,7 +153,7 @@ public class NamingClient {
                 buf.append(info.getValidFrom());
             }
 
-            Signature sign = Signature.getInstance("SHA3-256withECDSA", "BC");
+            Signature sign = Signature.getInstance(Rules.SIGNATURE_ALGORITHM, "BC");
             sign.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
             sign.update(buf.toBytes());
             String signature = Util.base64encode(sign.sign());
