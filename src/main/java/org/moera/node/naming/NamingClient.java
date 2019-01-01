@@ -19,10 +19,10 @@ import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
 import org.moera.commons.util.CryptoException;
 import org.moera.commons.util.CryptoUtil;
-import org.moera.commons.util.SignatureDataBuilder;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
 import org.moera.naming.rpc.OperationStatusInfo;
+import org.moera.naming.rpc.PutSignatureDataBuilder;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.model.OperationFailure;
@@ -143,15 +143,13 @@ public class NamingClient {
         // TODO possible to validate the private key by the public key
 
         UUID operationId;
-        SignatureDataBuilder buf = new SignatureDataBuilder();
         try {
-            buf.append(info.getName());
-            buf.append(Util.base64decode(info.getUpdatingKey()));
-            buf.append(info.getNodeUri());
-            if (info.getSigningKey() != null) {
-                buf.append(Util.base64decode(info.getSigningKey()));
-                buf.append(info.getValidFrom());
-            }
+            PutSignatureDataBuilder buf = new PutSignatureDataBuilder(
+                    info.getName(),
+                    Util.base64decode(info.getUpdatingKey()),
+                    info.getNodeUri(),
+                    info.getSigningKey() != null ? Util.base64decode(info.getSigningKey()) : null,
+                    info.getValidFrom());
 
             Signature sign = Signature.getInstance(Rules.SIGNATURE_ALGORITHM, "BC");
             sign.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
