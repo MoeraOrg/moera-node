@@ -116,14 +116,14 @@ public class NamingClient {
     }
 
     public void register(String name, PublicKey updatingKey, PublicKey signingKey) {
-        String updatingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(updatingKey));
-        String signingKeyE = Util.base64encode(CryptoUtil.toRawPublicKey(signingKey));
+        byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
+        byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
         long validFrom = Instant.now()
                                 .plus(options.getDuration("profile.signing-key.valid-from.layover"))
                                 .getEpochSecond();
         UUID operationId;
         try {
-            operationId = namingService.put(name, false, updatingKeyE, "", signingKeyE, validFrom, null);
+            operationId = namingService.put(name, false, updatingKeyR, "", signingKeyR, validFrom, null);
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
@@ -152,13 +152,12 @@ public class NamingClient {
                     info.getSigningKey() != null ? Util.base64decode(info.getSigningKey()) : null,
                     info.getValidFrom());
 
-            Signature sign = Signature.getInstance(Rules.SIGNATURE_ALGORITHM, "BC");
-            sign.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
-            sign.update(buf.toBytes());
-            String signature = Util.base64encode(sign.sign());
+            Signature signature = Signature.getInstance(Rules.SIGNATURE_ALGORITHM, "BC");
+            signature.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
+            signature.update(buf.toBytes());
 
             try {
-                operationId = namingService.put(name, false, null, null, null, null, signature);
+                operationId = namingService.put(name, false, null, null, null, null, signature.sign());
             } catch (Exception e) {
                 throw new NamingNotAvailableException(e);
             }
