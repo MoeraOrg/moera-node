@@ -148,6 +148,7 @@ public class NamingClient {
                     info.getName(),
                     Util.base64decode(info.getUpdatingKey()),
                     info.getNodeUri(),
+                    info.getDeadline(),
                     info.getSigningKey() != null ? Util.base64decode(info.getSigningKey()) : null,
                     info.getValidFrom());
 
