@@ -17,7 +17,9 @@
         <script src="/js/jquery-3.3.1.min.js"></script>
         <script src="/js/bootstrap.bundle.min.js"></script>
         <script src="/js/main.js"></script>
-
+        <script>
+            window.pageName = "{{menuIndex}}";
+        </script>
         <title>Moera</title>
     </head>
     <body>
@@ -27,6 +29,7 @@
                 <ul class="navbar-nav ml-3 mr-auto">
                     {{> menuItem index="index" title="HOME" href="/"}}
                     {{> menuItem index="profile" title="PROFILE" href="/profile"}}
+                    {{> menuItem index="credentials" title="CREDENTIALS" href="/credentials"}}
                 </ul>
             </div>
         </nav>

@@ -1,4 +1,4 @@
-function init() {
+function initIndex() {
     $("#register-submit").click(function (event) {
         event.preventDefault();
         let data = JSON.stringify({
@@ -12,6 +12,14 @@ function init() {
         });
         $("#register-name").val("");
     });
+}
+
+function init() {
+    switch (window.pageName) {
+        case "index":
+            initIndex();
+            break;
+    }
 }
 
 $(init);
