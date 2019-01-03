@@ -1,27 +1,12 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <link href="/css/bootstrap.min.css" rel="stylesheet">
+{{> part/top}}
 
-        <script src="/js/jquery-3.3.1.min.js"></script>
-        <script src="/js/bootstrap.bundle.min.js"></script>
-        <script src="/js/main.js"></script>
+<h2>Name Registration</h2>
+<form>
+    <div class="form-group">
+        <label for="register-name">Name</label>
+        <input type="text" class="form-control" id="register-name" placeholder="Enter a name to register">
+    </div>
+    <button type="submit" class="btn btn-primary" id="register-submit">Register</button>
+</form>
 
-        <title>Moera</title>
-    </head>
-    <body>
-        <nav class="navbar navbar-dark bg-dark mb-3">
-            <a class="navbar-brand" href="/">Moera</a>
-        </nav>
-        <div class="container">
-            <h2>Name Registration</h2>
-            <form>
-                <div class="form-group">
-                    <label for="register-name">Name</label>
-                    <input type="text" class="form-control" id="register-name" placeholder="Enter a name to register">
-                </div>
-                <button type="submit" class="btn btn-primary" id="register-submit">Register</button>
-            </form>
-        </div>
-    </body>
-</html>
+{{> part/bottom}}

@@ -1,0 +1,32 @@
+{{> part/top}}
+
+<h2>Profile</h2>
+<dl class="row">
+    <dt class="col-sm-3">Registered name</dt>
+    <dd class="col-sm-9">
+        {{#if profile.registeredName}}
+            {{profile.registeredName}}
+            <sub><small>
+                {{#ifset profile.registeredNameGeneration}}
+                    {{profile.registeredNameGeneration}}
+                {{else}}
+                    ?
+                {{/ifset}}
+            </small></sub>
+        {{/if}}
+    </dd>
+    {{#if profile.fullName}}
+        <dt class="col-sm-3">Full name</dt>
+        <dd class="col-sm-9">
+            {{profile.fullName}}
+        </dd>
+    {{/if}}
+    {{#if profile.gender}}
+        <dt class="col-sm-3">Gender</dt>
+        <dd class="col-sm-9">
+            {{profile.gender}}
+        </dd>
+    {{/if}}
+</dl>
+
+{{> part/bottom}}
