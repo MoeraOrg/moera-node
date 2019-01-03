@@ -33,6 +33,12 @@
 - name: profile.registered-name.generation
   type: int
 
+- name: profile.full-name
+  type: string
+
+- name: profile.gender
+  type: string
+
 - name: profile.signing-key
   type: PrivateKey
 
