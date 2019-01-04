@@ -6,10 +6,12 @@ import javax.validation.Valid;
 import org.moera.commons.util.Password;
 import org.moera.node.global.Admin;
 import org.moera.node.model.Credentials;
+import org.moera.node.model.CredentialsCreated;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.option.Options;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +25,14 @@ public class CredentialsController {
 
     @Inject
     private Options options;
+
+    @GetMapping
+    @ResponseBody
+    public CredentialsCreated get() {
+        return new CredentialsCreated(
+                !StringUtils.isEmpty(options.getString("credentials.login"))
+                && !StringUtils.isEmpty(options.getString("credentials.password-hash")));
+    }
 
     @PostMapping
     @ResponseBody

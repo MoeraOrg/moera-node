@@ -14,10 +14,23 @@ function initIndex() {
     });
 }
 
+function initCredentials() {
+    $.getJSON("/moera-node/credentials", function (data) {
+        if (data.created) {
+            $("#update").css("display", "block");
+        } else {
+            $("#create").css("display", "block");
+        }
+    }); // TODO .fail()
+}
+
 function init() {
     switch (window.pageName) {
         case "index":
             initIndex();
+            break;
+        case "credentials":
+            initCredentials();
             break;
     }
 }
