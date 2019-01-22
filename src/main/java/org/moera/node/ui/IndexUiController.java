@@ -1,7 +1,9 @@
 package org.moera.node.ui;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.global.VirtualPage;
 import org.moera.node.model.Profile;
 import org.moera.node.option.Options;
 import org.springframework.stereotype.Controller;
@@ -22,7 +24,8 @@ public class IndexUiController {
     }
 
     @GetMapping("/profile")
-    public String profile(Model model) {
+    @VirtualPage("/profile")
+    public String profile(Model model, HttpServletResponse response) {
         model.addAttribute("menuIndex", "profile");
         model.addAttribute("profile", new Profile(options));
 
