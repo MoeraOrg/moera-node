@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/moera-node/registered-name")
+@RequestMapping("/moera/api/registered-name")
 public class RegisteredNameController {
 
     private static Logger log = LoggerFactory.getLogger(RegisteredNameController.class);

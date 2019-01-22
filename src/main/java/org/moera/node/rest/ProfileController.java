@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/moera-node/profile")
+@RequestMapping("/moera/api/profile")
 public class ProfileController {
 
     @Inject

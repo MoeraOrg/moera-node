@@ -6,7 +6,7 @@ function initIndex() {
         });
         $.ajax({
             method: "POST",
-            url: "/moera-node/registered-name",
+            url: "/moera/api/registered-name",
             contentType: "application/json",
             data: data
         });
@@ -37,7 +37,7 @@ function createCredentials(login, password) {
         });
         $.ajax({
             method: "POST",
-            url: "/moera-node/credentials",
+            url: "/moera/api/credentials",
             contentType: "application/json",
             data: data
         })
@@ -58,7 +58,7 @@ function updateCredentials(token, login, password) {
         });
         $.ajax({
             method: "PUT",
-            url: "/moera-node/credentials?token=" + encodeURIComponent(token),
+            url: "/moera/api/credentials?token=" + encodeURIComponent(token),
             contentType: "application/json",
             data: data
         })
@@ -78,7 +78,7 @@ function loginAndUpdateCredentials(login, password, newPassword) {
         });
         $.ajax({
             method: "POST",
-            url: "/moera-node/tokens",
+            url: "/moera/api/tokens",
             contentType: "application/json",
             data: data
         })
@@ -91,7 +91,7 @@ function loginAndUpdateCredentials(login, password, newPassword) {
 }
 
 function initCredentials() {
-    $.getJSON("/moera-node/credentials", function (data) {
+    $.getJSON("/moera/api/credentials", function (data) {
         if (data.created) {
             $("#update").css("display", "block");
         } else {

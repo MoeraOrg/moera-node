@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/moera-node/credentials")
+@RequestMapping("/moera/api/credentials")
 public class CredentialsController {
 
     @Inject

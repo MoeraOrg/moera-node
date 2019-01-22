@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/moera-node/tokens")
+@RequestMapping("/moera/api/tokens")
 public class TokensController {
 
     @Inject
