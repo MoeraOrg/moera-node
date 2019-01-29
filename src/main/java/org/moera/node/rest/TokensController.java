@@ -9,6 +9,7 @@ import org.moera.commons.util.CryptoUtil;
 import org.moera.commons.util.Password;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
+import org.moera.node.global.ApiController;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenCreated;
@@ -17,9 +18,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@ApiController
 @RequestMapping("/moera/api/tokens")
 public class TokensController {
 

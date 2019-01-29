@@ -23,6 +23,7 @@ import org.bouncycastle.math.ec.ECPoint;
 import org.moera.commons.util.CryptoException;
 import org.moera.commons.util.Util;
 import org.moera.node.global.Admin;
+import org.moera.node.global.ApiController;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
@@ -37,9 +38,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@ApiController
 @RequestMapping("/moera/api/registered-name")
 public class RegisteredNameController {
 

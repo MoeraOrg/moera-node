@@ -4,6 +4,7 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 
 import org.moera.node.global.Admin;
+import org.moera.node.global.ApiController;
 import org.moera.node.model.Profile;
 import org.moera.node.model.Result;
 import org.moera.node.option.Options;
@@ -12,9 +13,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@ApiController
 @RequestMapping("/moera/api/profile")
 public class ProfileController {
 
