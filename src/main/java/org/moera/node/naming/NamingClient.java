@@ -133,7 +133,7 @@ public class NamingClient {
     }
 
     public void update(String name, int generation, PrivateKey privateUpdatingKey) {
-        RegisteredNameInfo info = namingService.getCurrent(name);
+        RegisteredNameInfo info = namingService.getCurrentForLatest(name);
         if (info == null) {
             throw new OperationFailure("name-not-registered");
         }
