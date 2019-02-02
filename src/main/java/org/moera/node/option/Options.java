@@ -40,7 +40,7 @@ public class Options {
     private Map<String, Object> values = new HashMap<>();
     private ReadWriteLock valuesLock = new ReentrantReadWriteLock();
 
-    @Value("${node-id}")
+    @Value("${node.id}")
     private UUID nodeId;
 
     @Inject

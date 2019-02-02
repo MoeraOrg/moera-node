@@ -37,4 +37,7 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
-node-id:
+node:
+  id:
+
+  mock-network-latency: false

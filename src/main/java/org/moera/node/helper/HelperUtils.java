@@ -1,7 +1,5 @@
 package org.moera.node.helper;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -10,29 +8,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
-import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
-import org.springframework.web.util.HtmlUtils;
+import org.moera.node.util.Util;
 
 public class HelperUtils {
 
-    public static String ue(Object s) {
-        try {
-            return URLEncoder.encode(s.toString(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return "ue:" + e.getMessage();
-        }
-    }
-
-    public static SafeString he(Object s) {
-        if (s == null) {
-            return new SafeString("");
-        }
-        return s instanceof SafeString ? (SafeString) s : new SafeString(HtmlUtils.htmlEscape(s.toString()));
-    }
-
     public static void safeAppend(StringBuilder buf, Object s) {
-        buf.append(he(s));
+        buf.append(Util.he(s));
     }
 
     public static <T> T mandatoryHash(String name, Options options) {

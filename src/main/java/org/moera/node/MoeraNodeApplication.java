@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.moera.node.global.AdminInterceptor;
+import org.moera.node.global.NetworkLatencyInterceptor;
 import org.moera.node.global.VirtualPageInterceptor;
 import org.moera.node.helper.HelperSource;
 import org.slf4j.Logger;
@@ -32,6 +33,9 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     private VirtualPageInterceptor virtualPageInterceptor;
 
     @Inject
+    private NetworkLatencyInterceptor networkLatencyInterceptor;
+
+    @Inject
     private ApplicationContext applicationContext;
 
     @Bean
@@ -50,6 +54,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(adminInterceptor);
         registry.addInterceptor(virtualPageInterceptor);
+        registry.addInterceptor(networkLatencyInterceptor);
     }
 
     @Override
