@@ -25,7 +25,7 @@ public class NetworkLatencyInterceptor extends HandlerInterceptorAdapter {
             return true;
         }
         Class<?> controllerType = ((HandlerMethod) handler).getBeanType();
-        if (AnnotatedElementUtils.hasAnnotation(controllerType, ApiController.class)) {
+        if (!AnnotatedElementUtils.hasAnnotation(controllerType, ApiController.class)) {
             return true;
         }
 
