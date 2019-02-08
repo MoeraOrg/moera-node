@@ -17,7 +17,7 @@ public class NetworkLatencyInterceptor extends HandlerInterceptorAdapter {
     private boolean enabled;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!enabled) {
             return true;
         }

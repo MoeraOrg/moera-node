@@ -11,8 +11,10 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 @Component
 public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
 
+    private static final String X_MOERA = "X-Moera";
+
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
@@ -20,7 +22,7 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
         if (virtualPage == null) {
             return true;
         }
-        response.addHeader("X-Moera", "page=" + Util.ue(virtualPage.value()));
+        response.addHeader(X_MOERA, "page=" + Util.ue(virtualPage.value()));
 
         return true;
     }

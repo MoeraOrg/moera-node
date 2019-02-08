@@ -3,14 +3,14 @@ package org.moera.node.ui;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.Profile;
 import org.moera.node.option.Options;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller
+@UiController
 public class IndexUiController {
 
     @Inject
