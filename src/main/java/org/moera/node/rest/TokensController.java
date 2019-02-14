@@ -13,7 +13,10 @@ import org.moera.node.global.ApiController;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenCreated;
+import org.moera.node.model.TokenInfo;
 import org.moera.node.option.Options;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +46,17 @@ public class TokensController {
         token.setDeadline(Timestamp.from(Instant.now().plus(options.getDuration("token.lifetime"))));
         tokenRepository.save(token);
 
-        return new TokenCreated(token.getToken());
+        return new TokenCreated(token.getToken(), "admin");
+    }
+
+    @GetMapping("/{token}")
+    @ResponseBody
+    public TokenInfo get(@PathVariable String token) {
+        Token tokenData = tokenRepository.findById(token).orElse(null);
+        if (tokenData == null) {
+            return new TokenInfo(token, false);
+        }
+        return new TokenInfo(tokenData);
     }
 
 }
