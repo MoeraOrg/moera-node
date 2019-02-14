@@ -19,7 +19,7 @@ public class TokenInfo {
     public TokenInfo(Token tokenData) {
         token = tokenData.getToken();
         valid = true;
-        permissions = tokenData.isAdmin() ? new String[] {"admin"} : new String[0];
+        permissions = tokenData.isAdmin() ? new String[]{"admin"} : new String[0];
     }
 
     public String getToken() {

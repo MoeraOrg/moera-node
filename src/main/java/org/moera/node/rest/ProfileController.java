@@ -6,6 +6,7 @@ import javax.validation.Valid;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.model.Profile;
+import org.moera.node.model.ProfileInfo;
 import org.moera.node.model.Result;
 import org.moera.node.option.Options;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +24,8 @@ public class ProfileController {
 
     @GetMapping
     @ResponseBody
-    public Profile get() {
-        return new Profile(options);
+    public ProfileInfo get() {
+        return new ProfileInfo(options);
     }
 
     @PutMapping
