@@ -1,6 +1,7 @@
 package org.moera.node.option;
 
 import java.security.PrivateKey;
+import java.security.interfaces.ECPrivateKey;
 
 import org.moera.commons.util.CryptoUtil;
 import org.moera.commons.util.Util;
@@ -10,7 +11,7 @@ public class PrivateKeyOptionType extends OptionTypeBase {
 
     @Override
     public String serializeValue(Object value) {
-        return Util.base64encode(CryptoUtil.toRawPrivateKey((PrivateKey) value));
+        return Util.base64encode(CryptoUtil.toRawPrivateKey((ECPrivateKey) value));
     }
 
     @Override

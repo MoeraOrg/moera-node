@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
@@ -115,7 +115,7 @@ public class NamingClient {
         options.reset("naming.operation.id");
     }
 
-    public void register(String name, PublicKey updatingKey, PublicKey signingKey) {
+    public void register(String name, ECPublicKey updatingKey, ECPublicKey signingKey) {
         byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
         byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
         long validFrom = Instant.now()
@@ -132,7 +132,7 @@ public class NamingClient {
         monitorOperation();
     }
 
-    public void update(String name, int generation, PrivateKey privateUpdatingKey) {
+    public void update(String name, int generation, ECPrivateKey privateUpdatingKey) {
         RegisteredNameInfo info = namingService.getCurrentForLatest(name);
         if (info == null) {
             throw new OperationFailure("name-not-registered");

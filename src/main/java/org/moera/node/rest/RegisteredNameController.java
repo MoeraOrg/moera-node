@@ -5,9 +5,9 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import javax.inject.Inject;
 
 import io.github.novacrypto.bip39.JavaxPBKDF2WithHmacSHA512;
@@ -22,6 +22,7 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.moera.commons.util.CryptoException;
 import org.moera.commons.util.Util;
+import org.moera.naming.rpc.Rules;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.model.NameToRegister;
@@ -73,18 +74,21 @@ public class RegisteredNameController {
             secretInfo.setMnemonic(mnemonic.toString().split(" "));
 
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("secp256k1");
+            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(Rules.EC_CURVE);
 
             BigInteger d = new BigInteger(seed);
             ECPoint q = ecSpec.getG().multiply(d);
             ECPublicKeySpec pubSpec = new ECPublicKeySpec(q, ecSpec);
-            PublicKey publicUpdatingKey = keyFactory.generatePublic(pubSpec);
+            ECPublicKey publicUpdatingKey = (ECPublicKey) keyFactory.generatePublic(pubSpec);
 
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
             keyPairGenerator.initialize(ecSpec, random);
             signingKeyPair = keyPairGenerator.generateKeyPair();
 
-            namingClient.register(nameToRegister.getName(), publicUpdatingKey, signingKeyPair.getPublic());
+            namingClient.register(
+                    nameToRegister.getName(),
+                    publicUpdatingKey,
+                    (ECPublicKey) signingKeyPair.getPublic());
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         }
@@ -127,7 +131,7 @@ public class RegisteredNameController {
 
             BigInteger d = new BigInteger(seed);
             ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
-            PrivateKey privateUpdatingKey = keyFactory.generatePrivate(privateKeySpec);
+            ECPrivateKey privateUpdatingKey = (ECPrivateKey) keyFactory.generatePrivate(privateKeySpec);
 
             namingClient.update(name, generation, privateUpdatingKey);
         } catch (GeneralSecurityException e) {
