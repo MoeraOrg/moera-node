@@ -1,19 +1,3 @@
-function initIndex() {
-    $("#register-submit").click(function (event) {
-        event.preventDefault();
-        let data = JSON.stringify({
-            "name": $("#register-name").val()
-        });
-        $.ajax({
-            method: "POST",
-            url: "/moera/api/registered-name",
-            contentType: "application/json",
-            data: data
-        });
-        $("#register-name").val("");
-    });
-}
-
 function alertHide() {
     $(".alert").fadeOut();
 }
@@ -121,9 +105,6 @@ function initCredentials() {
 
 function init() {
     switch (window.pageName) {
-        case "index":
-            initIndex();
-            break;
         case "credentials":
             initCredentials();
             break;
