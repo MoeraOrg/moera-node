@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
 import org.moera.naming.rpc.Rules;
@@ -18,14 +19,11 @@ public class Profile {
     @Size(max = 31)
     private String gender;
 
-    public Profile() {
-    }
+    @Email
+    @Size(max = 63)
+    private String email;
 
-    public Profile(Options options) {
-        registeredName = options.getString("profile.registered-name");
-        registeredNameGeneration = options.getInt("profile.registered-name.generation");
-        fullName = options.getString("profile.full-name");
-        gender = options.getString("profile.gender");
+    public Profile() {
     }
 
     public String getRegisteredName() {
@@ -60,6 +58,14 @@ public class Profile {
         this.gender = gender;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public void toOptions(Options options) {
         if (getRegisteredName() != null) {
             options.set("profile.registered-name", getRegisteredName());
@@ -72,6 +78,9 @@ public class Profile {
         }
         if (getGender() != null) {
             options.set("profile.gender", getGender());
+        }
+        if (getEmail() != null) {
+            options.set("profile.email", getEmail());
         }
     }
 

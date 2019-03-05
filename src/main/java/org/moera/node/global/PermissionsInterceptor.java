@@ -13,28 +13,40 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 @Component
-public class AdminInterceptor extends HandlerInterceptorAdapter {
+public class PermissionsInterceptor extends HandlerInterceptorAdapter {
 
     @Inject
     private TokenRepository tokenRepository;
 
+    @Inject
+    private RequestContext requestContext;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        processAuthParameters(request);
+
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
         if (((HandlerMethod) handler).getMethodAnnotation(Admin.class) == null) {
             return true;
         }
-        String tokenS = request.getParameter("token");
-        if (StringUtils.isEmpty(tokenS)) {
+        if (!requestContext.isAdmin()) {
             throw new AuthorizationException();
         }
-        Token token = tokenRepository.findById(tokenS).orElse(null);
-        if (token == null || token.getDeadline().before(Util.now()) || !token.isAdmin()) {
-            throw new InvalidTokenException();
-        }
+
         return true;
+    }
+
+    private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException {
+        String tokenS = request.getParameter("token");
+        if (!StringUtils.isEmpty(tokenS)) {
+            Token token = tokenRepository.findById(tokenS).orElse(null);
+            if (token == null || token.getDeadline().before(Util.now())) {
+                throw new InvalidTokenException();
+            }
+            requestContext.setAdmin(token.isAdmin());
+        }
     }
 
 }

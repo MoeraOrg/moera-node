@@ -39,6 +39,9 @@
 - name: profile.gender
   type: string
 
+- name: profile.email
+  type: string
+
 - name: profile.signing-key
   type: PrivateKey
 
