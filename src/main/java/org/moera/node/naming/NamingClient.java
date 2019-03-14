@@ -128,7 +128,7 @@ public class NamingClient {
                                 .plus(options.getDuration("profile.signing-key.valid-from.layover"))
                                 .getEpochSecond();
         log.info("Registering name '{}': updating key = {}, signing key = {}, valid from = {}",
-                name, Util.base64encode(updatingKeyR), Util.base64encode(signingKeyR), Util.formatTimestamp(validFrom));
+                name, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
         UUID operationId;
         try {
             operationId = namingService.put(name, false, updatingKeyR, "", signingKeyR, validFrom, null);
