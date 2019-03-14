@@ -6,7 +6,7 @@ import java.net.URLEncoder;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.springframework.web.util.HtmlUtils;
 
-public class Util {
+public class Util extends org.moera.commons.util.Util {
 
     public static String ue(Object s) {
         try {

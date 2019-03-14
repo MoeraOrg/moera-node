@@ -62,6 +62,8 @@ public class NamingClient {
             if (id == null) {
                 return;
             }
+            log.info("Monitoring naming operation {}", id);
+
             OperationStatusInfo info;
             try {
                 info = namingService.getStatus(id);
@@ -80,6 +82,7 @@ public class NamingClient {
                 unknownOperationStatus();
                 return;
             }
+            log.info("Naming operation {}, status is {}", id, info.getStatus().name());
             options.set("naming.operation.status", info.getStatus().name().toLowerCase());
             options.set("naming.operation.added", info.getAdded());
             switch (info.getStatus()) {
@@ -96,6 +99,9 @@ public class NamingClient {
                     options.set("naming.operation.error-code", "naming." + info.getErrorCode());
                     options.reset("naming.operation.id");
                     break;
+            }
+            if (options.getUuid("naming.operation.id") == null) {
+                log.info("Stopped monitoring naming operation {}", id);
             }
         }, context -> {
             if (options.getUuid("naming.operation.id") == null) {
@@ -121,19 +127,27 @@ public class NamingClient {
         long validFrom = Instant.now()
                                 .plus(options.getDuration("profile.signing-key.valid-from.layover"))
                                 .getEpochSecond();
+        log.info("Registering name '{}': updating key = {}, signing key = {}, valid from = {}",
+                name, Util.base64encode(updatingKeyR), Util.base64encode(signingKeyR), Util.formatTimestamp(validFrom));
         UUID operationId;
         try {
             operationId = namingService.put(name, false, updatingKeyR, "", signingKeyR, validFrom, null);
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
+        log.info("Created naming operation {}", operationId);
         options.set("naming.operation.id", operationId);
         options.set("profile.registered-name", name);
         monitorOperation();
     }
 
     public void update(String name, int generation, ECPrivateKey privateUpdatingKey) {
-        RegisteredNameInfo info = namingService.getCurrentForLatest(name);
+        RegisteredNameInfo info;
+        try {
+            info = namingService.getCurrentForLatest(name);
+        } catch (Exception e) {
+            throw new NamingNotAvailableException(e);
+        }
         if (info == null) {
             throw new OperationFailure("name-not-registered");
         }
@@ -141,6 +155,7 @@ public class NamingClient {
             throw new OperationFailure("wrong-generation");
         }
         // TODO possible to validate the private key by the public key
+        log.info("Updating name '{}', generation {}", name, generation);
 
         UUID operationId;
         try {
@@ -164,6 +179,7 @@ public class NamingClient {
         } catch (GeneralSecurityException | IOException e) {
             throw new CryptoException(e);
         }
+        log.info("Created naming operation {}", operationId);
         options.set("naming.operation.id", operationId);
         monitorOperation();
     }

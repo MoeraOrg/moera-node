@@ -15,6 +15,8 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenCreated;
 import org.moera.node.model.TokenInfo;
 import org.moera.node.option.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +28,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/moera/api/tokens")
 public class TokensController {
 
+    private static Logger log = LoggerFactory.getLogger(TokensController.class);
+
     @Inject
     private Options options;
 
@@ -35,6 +39,8 @@ public class TokensController {
     @PostMapping
     @ResponseBody
     public TokenCreated post(@Valid @RequestBody Credentials credentials) {
+        log.info("PUT /tokens (login = '{}')", credentials.getLogin());
+
         if (!credentials.getLogin().equals(options.getString("credentials.login"))
             || !Password.validate(options.getString("credentials.password-hash"), credentials.getPassword())) {
             throw new OperationFailure("credentials.login-incorrect");
@@ -52,6 +58,8 @@ public class TokensController {
     @GetMapping("/{token}")
     @ResponseBody
     public TokenInfo get(@PathVariable String token) {
+        log.info("GET /tokens/{}", token);
+
         Token tokenData = tokenRepository.findById(token).orElse(null);
         if (tokenData == null) {
             return new TokenInfo(token, false);

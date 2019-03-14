@@ -7,6 +7,7 @@ public class OperationFailure extends RuntimeException implements MessageSourceR
     private String errorCode;
 
     public OperationFailure(String errorCode) {
+        super("Operation failed: " + errorCode);
         this.errorCode = errorCode;
     }
 

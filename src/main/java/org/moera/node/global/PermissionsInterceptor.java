@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.moera.commons.util.Util;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -14,6 +16,8 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 @Component
 public class PermissionsInterceptor extends HandlerInterceptorAdapter {
+
+    private static Logger log = LoggerFactory.getLogger(PermissionsInterceptor.class);
 
     @Inject
     private TokenRepository tokenRepository;
@@ -46,6 +50,7 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
                 throw new InvalidTokenException();
             }
             requestContext.setAdmin(token.isAdmin());
+            log.info("Authorized as {}", token.isAdmin() ? "admin" : "non-admin");
         }
     }
 

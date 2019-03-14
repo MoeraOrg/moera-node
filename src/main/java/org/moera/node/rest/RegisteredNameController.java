@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import javax.inject.Inject;
+import javax.validation.Valid;
 
 import io.github.novacrypto.bip39.JavaxPBKDF2WithHmacSHA512;
 import io.github.novacrypto.bip39.MnemonicGenerator;
@@ -55,7 +56,9 @@ public class RegisteredNameController {
     @PostMapping
     @Admin
     @ResponseBody
-    public RegisteredNameSecret post(@RequestBody NameToRegister nameToRegister) {
+    public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister) {
+        log.info("POST /registered-name (name = '{}')", nameToRegister.getName());
+
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("nameToRegister.operation-pending");
         }
@@ -100,7 +103,9 @@ public class RegisteredNameController {
     @PutMapping
     @Admin
     @ResponseBody
-    public Result put(@RequestBody RegisteredNameSecret registeredNameSecret) {
+    public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret) {
+        log.info("PUT /registered-name");
+
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("registeredNameSecret.operation-pending");
         }
