@@ -4,7 +4,15 @@
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
     <springProperty name="PROFILE" source="spring.profiles.active"/>
     <property name="LOG_FILE" value="log/node-${PROFILE}.log"/>
-    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- deny all events with a level below INFO, that is TRACE and DEBUG -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
     <include resource="org/springframework/boot/logging/logback/file-appender.xml" />
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
@@ -14,11 +22,8 @@
     <logger name="org.hibernate.engine.jdbc.env.internal" level="WARN"/>
 
     <springProfile name="dev0 | dev1">
-        <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
-            <appender-ref ref="FILE"/>
-        </logger>
-        <logger name="org.hibernate.type.descriptor.sql" level="TRACE" additivity="false">
-            <appender-ref ref="FILE"/>
-        </logger>
+        <logger name="org.moera" level="DEBUG"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/>
     </springProfile>
 </configuration>
