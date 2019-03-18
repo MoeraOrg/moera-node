@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.Password;
@@ -42,15 +43,18 @@ public class CredentialsController {
 
     @PostMapping
     @ResponseBody
+    @Transactional
     public Result post(@Valid @RequestBody Credentials credentials) {
         log.info("POST /credentials (login = '{}')", credentials.getLogin());
 
-        if (!StringUtils.isEmpty(options.getString("credentials.login"))
-                && !StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
-            throw new OperationFailure("credentials.already-created");
-        }
-        options.set("credentials.login", credentials.getLogin());
-        options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+        options.runInTransaction(() -> {
+            if (!StringUtils.isEmpty(options.getString("credentials.login"))
+                    && !StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
+                throw new OperationFailure("credentials.already-created");
+            }
+            options.set("credentials.login", credentials.getLogin());
+            options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+        });
 
         return Result.OK;
     }
@@ -58,11 +62,14 @@ public class CredentialsController {
     @PutMapping
     @Admin
     @ResponseBody
+    @Transactional
     public Result put(@Valid @RequestBody Credentials credentials) {
         log.info("PUT /credentials (login = '{}')", credentials.getLogin());
 
-        options.set("credentials.login", credentials.getLogin());
-        options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+        options.runInTransaction(() -> {
+            options.set("credentials.login", credentials.getLogin());
+            options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+        });
 
         return Result.OK;
     }

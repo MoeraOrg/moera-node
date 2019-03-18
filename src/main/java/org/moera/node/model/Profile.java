@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
@@ -66,22 +67,25 @@ public class Profile {
         this.email = email;
     }
 
+    @Transactional
     public void toOptions(Options options) {
-        if (getRegisteredName() != null) {
-            options.set("profile.registered-name", getRegisteredName());
-        }
-        if (getRegisteredNameGeneration() != null) {
-            options.set("profile.registered-name.generation", getRegisteredNameGeneration());
-        }
-        if (getFullName() != null) {
-            options.set("profile.full-name", getFullName());
-        }
-        if (getGender() != null) {
-            options.set("profile.gender", getGender());
-        }
-        if (getEmail() != null) {
-            options.set("profile.email", getEmail());
-        }
+        options.runInTransaction(() -> {
+            if (getRegisteredName() != null) {
+                options.set("profile.registered-name", getRegisteredName());
+            }
+            if (getRegisteredNameGeneration() != null) {
+                options.set("profile.registered-name.generation", getRegisteredNameGeneration());
+            }
+            if (getFullName() != null) {
+                options.set("profile.full-name", getFullName());
+            }
+            if (getGender() != null) {
+                options.set("profile.gender", getGender());
+            }
+            if (getEmail() != null) {
+                options.set("profile.email", getEmail());
+            }
+        });
     }
 
 }

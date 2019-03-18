@@ -39,6 +39,8 @@ public class Options {
     private Map<String, OptionDescriptor> descriptors;
     private Map<String, Object> values = new HashMap<>();
     private ReadWriteLock valuesLock = new ReentrantReadWriteLock();
+    private ThreadLocal<Map<String, Object>> transaction = new ThreadLocal<>();
+    private ThreadLocal<Integer> transactionDepth = new ThreadLocal<>();
 
     @Value("${node.id}")
     private UUID nodeId;
@@ -48,6 +50,102 @@ public class Options {
 
     @Inject
     private OptionRepository optionRepository;
+
+    private void lockRead() {
+        if (!inTransaction()) {
+            valuesLock.readLock().lock();
+        }
+    }
+
+    private void unlockRead() {
+        if (!inTransaction()) {
+            valuesLock.readLock().unlock();
+        }
+    }
+
+    private void lockWrite() {
+        if (!inTransaction()) {
+            valuesLock.writeLock().lock();
+        }
+    }
+
+    private void unlockWrite() {
+        if (!inTransaction()) {
+            valuesLock.writeLock().unlock();
+        }
+    }
+
+    public boolean inTransaction() {
+        return transaction.get() != null;
+    }
+
+    public void beginTransaction() {
+        if (inTransaction()) {
+            transactionDepth.set(transactionDepth.get() + 1);
+            return;
+        }
+        lockWrite();
+        transaction.set(new HashMap<>());
+        transactionDepth.set(1);
+    }
+
+    public void commit() {
+        if (!inTransaction()) {
+            throw new TransactionAbsentException();
+        }
+        if (transactionDepth.get() > 1) {
+            transactionDepth.set(transactionDepth.get() - 1);
+            return;
+        }
+        values.putAll(transaction.get());
+        transaction.remove();
+        transactionDepth.remove();
+        unlockWrite();
+    }
+
+    public void rollback() {
+        if (!inTransaction()) {
+            throw new TransactionAbsentException();
+        }
+        if (transactionDepth.get() > 1) {
+            transactionDepth.set(transactionDepth.get() - 1);
+            return;
+        }
+        transaction.remove();
+        transactionDepth.remove();
+        unlockWrite();
+    }
+
+    public void runInTransaction(Runnable runnable) {
+        beginTransaction();
+        try {
+            runnable.run();
+        } catch (Throwable t) {
+            rollback();
+            throw t;
+        }
+        commit();
+    }
+
+    private Object transactionalGet(String name) {
+        if (inTransaction()) {
+            if (transaction.get().containsKey(name)) {
+                return transaction.get().get(name);
+            } else {
+                return values.get(name);
+            }
+        } else {
+            return values.get(name);
+        }
+    }
+
+    private void transactionalPut(String name, Object value) {
+        if (inTransaction()) {
+            transaction.get().put(name, value);
+        } else {
+            values.put(name, value);
+        }
+    }
 
     @PostConstruct
     public void init() throws NodeIdNotSetException, IOException {
@@ -114,7 +212,7 @@ public class Options {
             return;
         }
         try {
-            values.put(name, deserializeValue(desc.getType(), value));
+            transactionalPut(name, deserializeValue(desc.getType(), value));
         } catch (DeserializeOptionValueException e) {
             log.error("{}: {}", e.getMessage(), name);
         }
@@ -125,11 +223,11 @@ public class Options {
         if (optionType == null) {
             return null;
         }
-        valuesLock.readLock().lock();
+        lockRead();
         try {
-            return optionType.getString(values.get(name));
+            return optionType.getString(transactionalGet(name));
         } finally {
-            valuesLock.readLock().unlock();
+            unlockRead();
         }
     }
 
@@ -138,11 +236,11 @@ public class Options {
         if (optionType == null) {
             return null;
         }
-        valuesLock.readLock().lock();
+        lockRead();
         try {
-            return optionType.getInt(values.get(name));
+            return optionType.getInt(transactionalGet(name));
         } finally {
-            valuesLock.readLock().unlock();
+            unlockRead();
         }
     }
 
@@ -151,11 +249,11 @@ public class Options {
         if (optionType == null) {
             return null;
         }
-        valuesLock.readLock().lock();
+        lockRead();
         try {
-            return optionType.getLong(values.get(name));
+            return optionType.getLong(transactionalGet(name));
         } finally {
-            valuesLock.readLock().unlock();
+            unlockRead();
         }
     }
 
@@ -164,11 +262,11 @@ public class Options {
         if (optionType == null) {
             return null;
         }
-        valuesLock.readLock().lock();
+        lockRead();
         try {
-            return optionType.getPrivateKey(values.get(name));
+            return optionType.getPrivateKey(transactionalGet(name));
         } finally {
-            valuesLock.readLock().unlock();
+            unlockRead();
         }
     }
 
@@ -177,11 +275,11 @@ public class Options {
         if (optionType == null) {
             return null;
         }
-        valuesLock.readLock().lock();
+        lockRead();
         try {
-            return optionType.getDuration(values.get(name));
+            return optionType.getDuration(transactionalGet(name));
         } finally {
-            valuesLock.readLock().unlock();
+            unlockRead();
         }
     }
 
@@ -190,11 +288,11 @@ public class Options {
         if (optionType == null) {
             return null;
         }
-        valuesLock.readLock().lock();
+        lockRead();
         try {
-            return optionType.getUuid(values.get(name));
+            return optionType.getUuid(transactionalGet(name));
         } finally {
-            valuesLock.readLock().unlock();
+            unlockRead();
         }
     }
 
@@ -203,11 +301,11 @@ public class Options {
         if (optionType == null) {
             return null;
         }
-        valuesLock.readLock().lock();
+        lockRead();
         try {
-            return optionType.getTimestamp(values.get(name));
+            return optionType.getTimestamp(transactionalGet(name));
         } finally {
-            valuesLock.readLock().unlock();
+            unlockRead();
         }
     }
 
@@ -220,15 +318,15 @@ public class Options {
 
         Object newValue = optionType.accept(value);
 
-        valuesLock.writeLock().lock();
+        lockWrite();
         try {
             Option option = optionRepository.findByNodeIdAndName(nodeId, name).orElse(new Option(nodeId, name));
             option.setValue(serializeValue(optionType.getTypeName(), newValue));
             optionRepository.saveAndFlush(option);
 
-            values.put(name, newValue);
+            transactionalPut(name, newValue);
         } finally {
-            valuesLock.writeLock().unlock();
+            unlockWrite();
         }
     }
 
@@ -240,12 +338,12 @@ public class Options {
             return;
         }
 
-        valuesLock.writeLock().lock();
+        lockWrite();
         try {
             optionRepository.deleteByNodeIdAndName(nodeId, name);
-            values.put(name, desc.getDefaultValue());
+            transactionalPut(name, desc.getDefaultValue());
         } finally {
-            valuesLock.writeLock().unlock();
+            unlockWrite();
         }
     }
 
