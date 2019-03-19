@@ -174,10 +174,10 @@ public class NamingClient {
             log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
             PutSignatureDataBuilder buf = new PutSignatureDataBuilder(
                     info.getName(),
-                    Util.base64decode(info.getUpdatingKey()),
+                    info.getUpdatingKey(),
                     info.getNodeUri(),
                     info.getDeadline(),
-                    info.getSigningKey() != null ? Util.base64decode(info.getSigningKey()) : null,
+                    info.getSigningKey(),
                     info.getValidFrom(),
                     info.getDigest());
 
