@@ -27,8 +27,10 @@ import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
+import org.moera.node.option.OptionsLoadedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -49,20 +51,27 @@ public class NamingClient {
     protected void init() throws MalformedURLException {
         JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(options.getString("naming.location")));
         namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
+    }
+
+    @EventListener(OptionsLoadedEvent.class)
+    public void optionsLoaded() {
         monitorOperation();
     }
 
     private void monitorOperation() {
-        if (options.getUuid("naming.operation.id") == null) {
+        UUID operationId = options.getUuid("naming.operation.id");
+        if (operationId == null) {
+            log.info("No pending naming operation");
             return;
         }
+        log.info("Started monitoring for naming operation {}", operationId);
         final AtomicInteger retries = new AtomicInteger(0);
         taskScheduler.schedule(() -> {
             UUID id = options.getUuid("naming.operation.id");
             if (id == null) {
                 return;
             }
-            log.info("Monitoring naming operation {}", id);
+            log.debug("Monitoring naming operation {}", id);
 
             OperationStatusInfo info;
             try {
@@ -131,7 +140,9 @@ public class NamingClient {
                 name, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
         UUID operationId;
         try {
-            operationId = namingService.put(name, false, updatingKeyR, "", signingKeyR, validFrom, null);
+            RegisteredNameInfo info = namingService.getCurrentForLatest(name);
+            byte[] previousDigest = info != null ? info.getDigest() : null;
+            operationId = namingService.put(name, false, updatingKeyR, "", signingKeyR, validFrom, previousDigest, null);
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
@@ -159,20 +170,23 @@ public class NamingClient {
 
         UUID operationId;
         try {
+            byte[] previousDigest = info.getDigest();
+            log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
             PutSignatureDataBuilder buf = new PutSignatureDataBuilder(
                     info.getName(),
                     Util.base64decode(info.getUpdatingKey()),
                     info.getNodeUri(),
                     info.getDeadline(),
                     info.getSigningKey() != null ? Util.base64decode(info.getSigningKey()) : null,
-                    info.getValidFrom());
+                    info.getValidFrom(),
+                    info.getDigest());
 
             Signature signature = Signature.getInstance(Rules.SIGNATURE_ALGORITHM, "BC");
             signature.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
             signature.update(buf.toBytes());
 
             try {
-                operationId = namingService.put(name, false, null, null, null, null, signature.sign());
+                operationId = namingService.put(name, false, null, null, null, null, info.getDigest(), signature.sign());
             } catch (Exception e) {
                 throw new NamingNotAvailableException(e);
             }
