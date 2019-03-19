@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.global.Admin;
@@ -41,6 +42,7 @@ public class ProfileController {
     @PutMapping
     @Admin
     @ResponseBody
+    @Transactional
     public Result put(@Valid @RequestBody Profile profile) {
         log.info("PUT /profile");
 
