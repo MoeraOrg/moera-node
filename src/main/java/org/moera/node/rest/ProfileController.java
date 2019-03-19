@@ -9,7 +9,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Profile;
 import org.moera.node.model.ProfileInfo;
-import org.moera.node.model.Result;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,11 +42,11 @@ public class ProfileController {
     @Admin
     @ResponseBody
     @Transactional
-    public Result put(@Valid @RequestBody Profile profile) {
+    public ProfileInfo put(@Valid @RequestBody Profile profile) {
         log.info("PUT /profile");
 
         profile.toOptions(options);
-        return Result.OK;
+        return new ProfileInfo(options, requestContext);
     }
 
 }
