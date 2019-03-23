@@ -43,6 +43,7 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
     }
 
     private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException {
+        requestContext.setBrowserExtension(request.getHeader("X-Accept-Moera") != null);
         String tokenS = request.getParameter("token");
         if (!StringUtils.isEmpty(tokenS)) {
             Token token = tokenRepository.findById(tokenS).orElse(null);

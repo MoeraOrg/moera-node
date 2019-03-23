@@ -8,7 +8,18 @@ import org.springframework.web.context.annotation.RequestScope;
 @Component
 public class RequestContextImpl implements RequestContext {
 
+    private boolean browserExtension;
     private boolean admin;
+
+    @Override
+    public boolean isBrowserExtension() {
+        return browserExtension;
+    }
+
+    @Override
+    public void setBrowserExtension(boolean browserExtension) {
+        this.browserExtension = browserExtension;
+    }
 
     @Override
     public boolean isAdmin() {
