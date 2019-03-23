@@ -18,6 +18,7 @@ public class IndexUiController {
     private Options options;
 
     @GetMapping("/")
+    @VirtualPage("/")
     private String index(Model model) {
         model.addAttribute("menuIndex", "index");
 
