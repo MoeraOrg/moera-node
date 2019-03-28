@@ -17,7 +17,7 @@ public class DataBinderControllerAdvice {
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         DefaultMessageCodesResolver messageCodesResolver = new DefaultMessageCodesResolver();
-        messageCodesResolver.setMessageCodeFormatter(DefaultMessageCodesResolver.Format.POSTFIX_ERROR_CODE);
+        messageCodesResolver.setMessageCodeFormatter(new SmartMessageCodeFormatter());
         binder.setMessageCodesResolver(messageCodesResolver);
     }
 
