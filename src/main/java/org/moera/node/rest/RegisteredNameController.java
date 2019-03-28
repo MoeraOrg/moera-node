@@ -60,7 +60,7 @@ public class RegisteredNameController {
         log.info("POST /registered-name (name = '{}')", nameToRegister.getName());
 
         if (options.getUuid("naming.operation.id") != null) {
-            throw new OperationFailure("nameToRegister.operation-pending");
+            throw new OperationFailure("naming.operation-pending");
         }
         RegisteredNameSecret secretInfo = new RegisteredNameSecret();
         KeyPair signingKeyPair;
@@ -107,12 +107,12 @@ public class RegisteredNameController {
         log.info("PUT /registered-name");
 
         if (options.getUuid("naming.operation.id") != null) {
-            throw new OperationFailure("registeredNameSecret.operation-pending");
+            throw new OperationFailure("naming.operation-pending");
         }
         String name = options.getString("profile.registered-name");
         Integer generation = options.getInt("profile.registered-name.generation");
         if (StringUtils.isEmpty(name) || generation == null) {
-            throw new OperationFailure("registeredNameSecret.registered-name-absent");
+            throw new OperationFailure("registered-name.name-absent");
         }
         if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
                 && StringUtils.isEmpty(registeredNameSecret.getSecret())) {
@@ -142,7 +142,7 @@ public class RegisteredNameController {
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {
-            throw new OperationFailure("registeredNameSecret." + of.getErrorCode());
+            throw new OperationFailure("registered-name." + of.getErrorCode());
         }
 
         return Result.OK;
