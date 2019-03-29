@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/moera/api/profile")
 public class ProfileController {
 
-    private static Logger log = LoggerFactory.getLogger(CredentialsController.class);
+    private static Logger log = LoggerFactory.getLogger(ProfileController.class);
 
     @Inject
     private RequestContext requestContext;

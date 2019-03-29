@@ -34,11 +34,4 @@ public class IndexUiController {
         return "profile";
     }
 
-    @GetMapping("/credentials")
-    private String credentials(Model model) {
-        model.addAttribute("menuIndex", "credentials");
-
-        return "credentials";
-    }
-
 }
