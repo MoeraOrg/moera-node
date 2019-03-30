@@ -17,6 +17,7 @@ import org.moera.node.model.TokenInfo;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,8 +40,12 @@ public class TokensController {
     @PostMapping
     @ResponseBody
     public TokenCreated post(@Valid @RequestBody Credentials credentials) {
-        log.info("PUT /tokens (login = '{}')", credentials.getLogin());
+        log.info("POST /tokens (login = '{}')", credentials.getLogin());
 
+        if (StringUtils.isEmpty(options.getString("credentials.login"))
+                || StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
+            throw new OperationFailure("credentials.not-created");
+        }
         if (!credentials.getLogin().equals(options.getString("credentials.login"))
             || !Password.validate(options.getString("credentials.password-hash"), credentials.getPassword())) {
             throw new OperationFailure("credentials.login-incorrect");
