@@ -28,6 +28,7 @@ import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.RegisteredNameInfo;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.naming.NamingClient;
@@ -35,6 +36,7 @@ import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,6 +54,14 @@ public class RegisteredNameController {
 
     @Inject
     private NamingClient namingClient;
+
+    @GetMapping
+    @ResponseBody
+    public RegisteredNameInfo get() {
+        log.info("GET /registered-name");
+
+        return new RegisteredNameInfo(options);
+    }
 
     @PostMapping
     @Admin
