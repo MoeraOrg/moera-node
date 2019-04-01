@@ -26,6 +26,7 @@ import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameInfo;
@@ -50,6 +51,9 @@ public class RegisteredNameController {
     private static Logger log = LoggerFactory.getLogger(RegisteredNameController.class);
 
     @Inject
+    private RequestContext requestContext;
+
+    @Inject
     private Options options;
 
     @Inject
@@ -60,7 +64,7 @@ public class RegisteredNameController {
     public RegisteredNameInfo get() {
         log.info("GET /registered-name");
 
-        return new RegisteredNameInfo(options);
+        return new RegisteredNameInfo(options, requestContext);
     }
 
     @PostMapping

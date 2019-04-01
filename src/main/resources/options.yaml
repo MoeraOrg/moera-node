@@ -12,7 +12,13 @@
 - name: naming.operation.status
   type: string # TODO maybe enum?
 
+- name: naming.operation.status.updated
+  type: Timestamp
+
 - name: naming.operation.error-code
+  type: string
+
+- name: naming.operation.error-message
   type: string
 
 - name: naming.operation.added

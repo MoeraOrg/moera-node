@@ -21,6 +21,7 @@ import org.moera.commons.util.CryptoException;
 import org.moera.commons.util.CryptoUtil;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
+import org.moera.naming.rpc.OperationStatus;
 import org.moera.naming.rpc.OperationStatusInfo;
 import org.moera.naming.rpc.PutSignatureDataBuilder;
 import org.moera.naming.rpc.RegisteredNameInfo;
@@ -65,6 +66,7 @@ public class NamingClient {
             return;
         }
         log.info("Started monitoring for naming operation {}", operationId);
+        options.set("naming.operation.status", OperationStatus.WAITING.getValue());
         final AtomicInteger retries = new AtomicInteger(0);
         taskScheduler.schedule(() -> {
             UUID id = options.getUuid("naming.operation.id");
@@ -77,6 +79,7 @@ public class NamingClient {
             try {
                 info = namingService.getStatus(id);
             } catch (Exception e) {
+                options.set("naming.operation.status.updated", Util.now());
                 int n = retries.incrementAndGet();
                 int maxRetries = options.getInt("naming.unavailable.max-retries");
                 if (n > maxRetries) {
@@ -92,8 +95,9 @@ public class NamingClient {
                 return;
             }
             log.info("Naming operation {}, status is {}", id, info.getStatus().name());
-            options.set("naming.operation.status", info.getStatus().name().toLowerCase());
+            options.set("naming.operation.status", info.getStatus().getValue());
             options.set("naming.operation.added", info.getAdded());
+            options.set("naming.operation.status.updated", Util.now());
             switch (info.getStatus()) {
                 case ADDED:
                 case STARTED:
@@ -106,6 +110,7 @@ public class NamingClient {
                 case FAILED:
                     options.set("naming.operation.completed", info.getCompleted());
                     options.set("naming.operation.error-code", "naming." + info.getErrorCode());
+                    options.set("naming.operation.error-message", info.getErrorMessage());
                     options.reset("naming.operation.id");
                     break;
             }
@@ -125,7 +130,9 @@ public class NamingClient {
         log.info("Status of naming operation {} is set to 'unknown'", options.getString("naming.operation.id"));
 
         options.set("naming.operation.status", "unknown");
+        options.set("naming.operation.status.updated", Util.now());
         options.set("naming.operation.error-code", "naming.unknown");
+        options.set("naming.operation.error-message", "operation status is unknown");
         options.set("naming.operation.completed", Util.now());
         options.reset("naming.operation.id");
     }

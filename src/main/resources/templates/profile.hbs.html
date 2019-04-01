@@ -4,11 +4,11 @@
 <dl class="row">
     <dt class="col-sm-3">Registered name</dt>
     <dd class="col-sm-9">
-        {{#if profile.registeredName}}
-            {{profile.registeredName}}
+        {{#if registeredName.name}}
+            {{registeredName.name}}
             <sub><small>
-                {{#ifset profile.registeredNameGeneration}}
-                    {{profile.registeredNameGeneration}}
+                {{#ifset registeredName.generation}}
+                    {{registeredName.generation}}
                 {{else}}
                     ?
                 {{/ifset}}
