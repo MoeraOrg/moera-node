@@ -45,6 +45,7 @@ public class RegisteredNameInfo {
                     break;
             }
         }
+        operationStatusUpdated = operationStatusUpdated != null ? operationStatusUpdated / 1000 : null;
         operations = Collections.singletonMap("manage", new String[]{"admin"});
     }
 
