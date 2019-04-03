@@ -25,27 +25,30 @@ public class RegisteredNameInfo {
         generation = options.getInt("profile.registered-name.generation");
         if (requestContext.isAdmin()) {
             operationStatus = options.getString("naming.operation.status");
-            switch (OperationStatus.forValue(operationStatus)) {
-                case WAITING:
-                    break;
-                case ADDED:
-                    operationStatusUpdated = options.getLong("naming.operation.added");
-                    break;
-                case STARTED:
-                    operationStatusUpdated = options.getLong("naming.operation.status.updated");
-                    break;
-                case SUCCEEDED:
-                    operationStatusUpdated = options.getLong("naming.operation.completed");
-                    break;
-                case FAILED:
-                case UNKNOWN:
-                    operationStatusUpdated = options.getLong("naming.operation.completed");
-                    operationErrorCode = options.getString("naming.operation.error-code");
-                    operationErrorMessage = options.getString("naming.operation.error-message");
-                    break;
+            OperationStatus status = OperationStatus.forValue(operationStatus);
+            if (status != null) {
+                switch (status) {
+                    case WAITING:
+                        break;
+                    case ADDED:
+                        operationStatusUpdated = options.getLong("naming.operation.added");
+                        break;
+                    case STARTED:
+                        operationStatusUpdated = options.getLong("naming.operation.status.updated");
+                        break;
+                    case SUCCEEDED:
+                        operationStatusUpdated = options.getLong("naming.operation.completed");
+                        break;
+                    case FAILED:
+                    case UNKNOWN:
+                        operationStatusUpdated = options.getLong("naming.operation.completed");
+                        operationErrorCode = options.getString("naming.operation.error-code");
+                        operationErrorMessage = options.getString("naming.operation.error-message");
+                        break;
+                }
+                operationStatusUpdated = operationStatusUpdated != null ? operationStatusUpdated / 1000 : null;
             }
         }
-        operationStatusUpdated = operationStatusUpdated != null ? operationStatusUpdated / 1000 : null;
         operations = Collections.singletonMap("manage", new String[]{"admin"});
     }
 
