@@ -22,7 +22,7 @@ public class TimestampOptionType extends OptionTypeBase {
 
     @Override
     public Long getLong(Object value) {
-        return ((Timestamp) value).getTime();
+        return value != null ? ((Timestamp) value).getTime() : null;
     }
 
     @Override
