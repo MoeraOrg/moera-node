@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import io.github.novacrypto.bip39.JavaxPBKDF2WithHmacSHA512;
@@ -34,6 +35,7 @@ import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.option.Options;
+import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -70,7 +72,7 @@ public class RegisteredNameController {
     @PostMapping
     @Admin
     @ResponseBody
-    public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister) {
+    public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister, HttpServletRequest request) {
         log.info("POST /registered-name (name = '{}')", nameToRegister.getName());
 
         if (options.getUuid("naming.operation.id") != null) {
@@ -104,6 +106,7 @@ public class RegisteredNameController {
 
             namingClient.register(
                     nameToRegister.getName(),
+                    UriUtil.createBuilderFromRequest(request).replacePath("/moera").replaceQuery(null).toUriString(),
                     publicUpdatingKey,
                     (ECPublicKey) signingKeyPair.getPublic());
         } catch (GeneralSecurityException e) {

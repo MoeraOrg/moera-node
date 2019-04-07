@@ -137,19 +137,20 @@ public class NamingClient {
         options.reset("naming.operation.id");
     }
 
-    public void register(String name, ECPublicKey updatingKey, ECPublicKey signingKey) {
+    public void register(String name, String nodeUri, ECPublicKey updatingKey, ECPublicKey signingKey) {
         byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
         byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
         long validFrom = Instant.now()
                                 .plus(options.getDuration("profile.signing-key.valid-from.layover"))
                                 .getEpochSecond();
-        log.info("Registering name '{}': updating key = {}, signing key = {}, valid from = {}",
-                name, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
+        log.info("Registering name '{}': node uri = {}, updating key = {}, signing key = {}, valid from = {}",
+                name, nodeUri, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
         UUID operationId;
         try {
             RegisteredNameInfo info = namingService.getCurrentForLatest(name);
             byte[] previousDigest = info != null ? info.getDigest() : null;
-            operationId = namingService.put(name, false, updatingKeyR, "", signingKeyR, validFrom, previousDigest, null);
+            operationId = namingService.put(
+                    name, false, updatingKeyR, nodeUri, signingKeyR, validFrom, previousDigest, null);
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
