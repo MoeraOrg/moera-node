@@ -73,6 +73,10 @@ public class RegisteredNameController {
     @Admin
     @ResponseBody
     public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister, HttpServletRequest request) {
+        if (!Rules.isNameValid(nameToRegister.getName())) {
+            throw new OperationFailure("nameToRegister.name.invalid");
+        }
+
         log.info("POST /registered-name (name = '{}')", nameToRegister.getName());
 
         if (options.getUuid("naming.operation.id") != null) {
