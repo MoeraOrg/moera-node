@@ -76,16 +76,20 @@ public class Profile {
             if (getRegisteredNameGeneration() != null) {
                 options.set("profile.registered-name.generation", getRegisteredNameGeneration());
             }
-            if (getFullName() != null) {
-                options.set("profile.full-name", getFullName());
-            }
-            if (getGender() != null) {
-                options.set("profile.gender", getGender());
-            }
-            if (getEmail() != null) {
-                options.set("profile.email", getEmail());
-            }
+            toOption("profile.full-name", getFullName(), options);
+            toOption("profile.gender", getGender(), options);
+            toOption("profile.email", getEmail(), options);
         });
+    }
+
+    private void toOption(String name, String value, Options options) {
+        if (value != null) {
+            if (!value.isEmpty()) {
+                options.set(name, value);
+            } else {
+                options.reset(name);
+            }
+        }
     }
 
 }
