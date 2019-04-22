@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.interfaces.ECPrivateKey;
@@ -104,6 +105,7 @@ public class NamingClient {
                     break;
                 case SUCCEEDED:
                     options.set("naming.operation.completed", info.getCompleted());
+                    commitOperation();
                     options.set("profile.registered-name.generation", info.getGeneration());
                     options.reset("naming.operation.id");
                     break;
@@ -129,12 +131,39 @@ public class NamingClient {
     private void unknownOperationStatus() {
         log.info("Status of naming operation {} is set to 'unknown'", options.getString("naming.operation.id"));
 
-        options.set("naming.operation.status", "unknown");
+        options.set("naming.operation.status", OperationStatus.UNKNOWN.getValue());
         options.set("naming.operation.status.updated", Util.now());
         options.set("naming.operation.error-code", "naming.unknown");
         options.set("naming.operation.error-message", "operation status is unknown");
-        options.set("naming.operation.completed", Util.now());
-        options.reset("naming.operation.id");
+    }
+
+    private void operationSent(UUID operationId) {
+        log.info("Created naming operation {}", operationId);
+
+        options.set("naming.operation.id", operationId);
+        options.set("naming.operation.status", OperationStatus.WAITING.getValue());
+        options.set("naming.operation.status.updated", Util.now());
+        options.reset("naming.operation.error-code");
+        options.reset("naming.operation.error-message");
+        options.reset("naming.operation.completed");
+        options.reset("naming.operation.registered-name");
+        options.reset("naming.operation.registered-name.generation");
+        options.reset("naming.operation.signing-key");
+    }
+
+    private void commitOperation() {
+        String name = options.getString("naming.operation.registered-name");
+        if (name != null) {
+            options.set("profile.registered-name", name);
+        }
+        Integer generation = options.getInt("naming.operation.registered-name.generation");
+        if (generation != null) {
+            options.set("profile.registered-name.generation", generation);
+        }
+        PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");
+        if (signingKey != null) {
+            options.set("profile.signing-key", signingKey);
+        }
     }
 
     public void register(String name, String nodeUri, ECPublicKey updatingKey, ECPublicKey signingKey) {
@@ -154,9 +183,8 @@ public class NamingClient {
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
-        log.info("Created naming operation {}", operationId);
-        options.set("naming.operation.id", operationId);
-        options.set("profile.registered-name", name);
+        operationSent(operationId);
+        options.set("naming.operation.registered-name", name);
         monitorOperation();
     }
 
@@ -201,8 +229,7 @@ public class NamingClient {
         } catch (GeneralSecurityException | IOException e) {
             throw new CryptoException(e);
         }
-        log.info("Created naming operation {}", operationId);
-        options.set("naming.operation.id", operationId);
+        operationSent(operationId);
         monitorOperation();
     }
 

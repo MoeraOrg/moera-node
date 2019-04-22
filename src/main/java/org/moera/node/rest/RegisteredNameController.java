@@ -117,7 +117,7 @@ public class RegisteredNameController {
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         }
-        options.set("profile.signing-key", signingKeyPair.getPrivate());
+        options.set("naming.operation.signing-key", signingKeyPair.getPrivate());
 
         return secretInfo;
     }

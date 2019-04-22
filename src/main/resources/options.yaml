@@ -27,6 +27,15 @@
 - name: naming.operation.completed
   type: Timestamp
 
+- name: naming.operation.registered-name
+  type: string
+
+- name: naming.operation.registered-name.generation
+  type: int
+
+- name: naming.operation.signing-key
+  type: PrivateKey
+
 - name: credentials.login
   type: string
 
