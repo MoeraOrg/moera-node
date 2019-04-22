@@ -84,6 +84,7 @@ public class RegisteredNameController {
             throw new OperationFailure("naming.operation-pending");
         }
         RegisteredNameSecret secretInfo = new RegisteredNameSecret();
+        secretInfo.setName(nameToRegister.getName());
         KeyPair signingKeyPair;
         try {
             SecureRandom random = SecureRandom.getInstanceStrong();
@@ -113,11 +114,11 @@ public class RegisteredNameController {
                     nameToRegister.getName(),
                     UriUtil.createBuilderFromRequest(request).replacePath("/moera").replaceQuery(null).toUriString(),
                     publicUpdatingKey,
+                    (ECPrivateKey) signingKeyPair.getPrivate(),
                     (ECPublicKey) signingKeyPair.getPublic());
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         }
-        options.set("naming.operation.signing-key", signingKeyPair.getPrivate());
 
         return secretInfo;
     }
@@ -131,8 +132,10 @@ public class RegisteredNameController {
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
-        String name = options.getString("profile.registered-name");
-        Integer generation = options.getInt("profile.registered-name.generation");
+        String name = registeredNameSecret.getName() != null
+                ? registeredNameSecret.getName() : options.getString("profile.registered-name");
+        Integer generation = registeredNameSecret.getGeneration() != null
+                ? registeredNameSecret.getGeneration() : options.getInt("profile.registered-name.generation");
         if (StringUtils.isEmpty(name) || generation == null) {
             throw new OperationFailure("registered-name.name-absent");
         }
@@ -160,7 +163,18 @@ public class RegisteredNameController {
             ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
             ECPrivateKey privateUpdatingKey = (ECPrivateKey) keyFactory.generatePrivate(privateKeySpec);
 
-            namingClient.update(name, generation, privateUpdatingKey);
+            ECPrivateKey privateSigningKey = null;
+            ECPublicKey signingKey = null;
+            if (registeredNameSecret.getName() != null) {
+                SecureRandom random = SecureRandom.getInstanceStrong();
+                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
+                keyPairGenerator.initialize(ecSpec, random);
+                KeyPair signingKeyPair = keyPairGenerator.generateKeyPair();
+                privateSigningKey = (ECPrivateKey) signingKeyPair.getPrivate();
+                signingKey = (ECPublicKey) signingKeyPair.getPublic();
+            }
+
+            namingClient.update(name, generation, privateUpdatingKey, privateSigningKey, signingKey);
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {

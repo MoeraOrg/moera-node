@@ -166,7 +166,9 @@ public class NamingClient {
         }
     }
 
-    public void register(String name, String nodeUri, ECPublicKey updatingKey, ECPublicKey signingKey) {
+    public void register(String name, String nodeUri, ECPublicKey updatingKey,
+                         ECPrivateKey privateSigningKey, ECPublicKey signingKey) {
+
         byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
         byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
         long validFrom = Instant.now()
@@ -179,16 +181,26 @@ public class NamingClient {
             RegisteredNameInfo info = namingService.getCurrentForLatest(name);
             byte[] previousDigest = info != null ? info.getDigest() : null;
             operationId = namingService.put(
-                    name, false, updatingKeyR, nodeUri, signingKeyR, validFrom, previousDigest, null);
+                    name,
+                    false,
+                    updatingKeyR,
+                    nodeUri,
+                    signingKeyR,
+                    validFrom,
+                    previousDigest,
+                    null);
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
         operationSent(operationId);
         options.set("naming.operation.registered-name", name);
+        options.set("naming.operation.signing-key", privateSigningKey);
         monitorOperation();
     }
 
-    public void update(String name, int generation, ECPrivateKey privateUpdatingKey) {
+    public void update(String name, int generation, ECPrivateKey privateUpdatingKey,
+                       ECPrivateKey privateSigningKey, ECPublicKey signingKey) {
+
         RegisteredNameInfo info;
         try {
             info = namingService.getCurrentForLatest(name);
@@ -208,21 +220,37 @@ public class NamingClient {
         try {
             byte[] previousDigest = info.getDigest();
             log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
+            byte[] signingKeyR = signingKey != null ? CryptoUtil.toRawPublicKey(signingKey) : info.getSigningKey();
+            long validFrom = signingKey != null
+                    ? Instant.now()
+                        .plus(options.getDuration("profile.signing-key.valid-from.layover"))
+                        .getEpochSecond()
+                    : info.getValidFrom();
             PutSignatureDataBuilder buf = new PutSignatureDataBuilder(
                     info.getName(),
                     info.getUpdatingKey(),
                     info.getNodeUri(),
                     info.getDeadline(),
-                    info.getSigningKey(),
-                    info.getValidFrom(),
+                    signingKeyR,
+                    validFrom,
                     info.getDigest());
+
+            log.debug("Data to be signed: {}", Util.dump(buf.toBytes()));
 
             Signature signature = Signature.getInstance(Rules.SIGNATURE_ALGORITHM, "BC");
             signature.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
             signature.update(buf.toBytes());
 
             try {
-                operationId = namingService.put(name, false, null, null, null, null, info.getDigest(), signature.sign());
+                operationId = namingService.put(
+                        name,
+                        false,
+                        null,
+                        null,
+                        signingKey != null ? signingKeyR : null,
+                        signingKey != null ? validFrom : null,
+                        info.getDigest(),
+                        signature.sign());
             } catch (Exception e) {
                 throw new NamingNotAvailableException(e);
             }
@@ -230,6 +258,11 @@ public class NamingClient {
             throw new CryptoException(e);
         }
         operationSent(operationId);
+        options.set("naming.operation.registered-name", name);
+        options.set("naming.operation.registered-name.generation", generation);
+        if (privateSigningKey != null) {
+            options.set("naming.operation.signing-key", privateSigningKey);
+        }
         monitorOperation();
     }
 
