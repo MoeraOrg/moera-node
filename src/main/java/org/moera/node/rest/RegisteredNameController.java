@@ -39,6 +39,7 @@ import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -165,6 +166,22 @@ public class RegisteredNameController {
         } catch (OperationFailure of) {
             throw new OperationFailure("registered-name." + of.getErrorCode());
         }
+
+        return Result.OK;
+    }
+
+    @DeleteMapping
+    @Admin
+    @ResponseBody
+    public Result delete() {
+        log.info("DELETE /registered-name");
+
+        if (options.getUuid("naming.operation.id") != null) {
+            throw new OperationFailure("naming.operation-pending");
+        }
+        options.reset("profile.registered-name");
+        options.reset("profile.registered-name.generation");
+        options.reset("profile.signing-key");
 
         return Result.OK;
     }
