@@ -210,9 +210,6 @@ public class NamingClient {
         if (info == null) {
             throw new OperationFailure("name-not-registered");
         }
-        if (info.getGeneration() != generation) {
-            throw new OperationFailure("wrong-generation");
-        }
         // TODO possible to validate the private key by the public key
         log.info("Updating name '{}', generation {}", name, generation);
 
