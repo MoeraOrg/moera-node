@@ -15,6 +15,12 @@ public class MoeraUiController {
         return "redirect:/";
     }
 
+    @GetMapping("/timeline")
+    @VirtualPage
+    public String timeline() {
+        return "redirect:/timeline";
+    }
+
     @GetMapping("/profile")
     @VirtualPage
     public String profile() {

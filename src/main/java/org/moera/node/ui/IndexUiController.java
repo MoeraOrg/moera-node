@@ -22,10 +22,16 @@ public class IndexUiController {
     @GetMapping("/")
     @VirtualPage("/")
     private String index(Model model) {
-        model.addAttribute("pageTitle", buildPageTitle("Timeline"));
-        model.addAttribute("menuIndex", "index");
+        return "redirect:/timeline";
+    }
 
-        return "index";
+    @GetMapping("/timeline")
+    @VirtualPage("/timeline")
+    private String timeline(Model model) {
+        model.addAttribute("pageTitle", buildPageTitle("Timeline"));
+        model.addAttribute("menuIndex", "timeline");
+
+        return "timeline";
     }
 
     @GetMapping("/profile")
