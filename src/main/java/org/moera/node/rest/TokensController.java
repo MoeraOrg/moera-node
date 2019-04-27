@@ -52,6 +52,7 @@ public class TokensController {
         }
 
         Token token = new Token();
+        token.setNodeId(options.nodeId());
         token.setToken(CryptoUtil.token());
         token.setAdmin(true);
         token.setDeadline(Timestamp.from(Instant.now().plus(options.getDuration("token.lifetime"))));
@@ -66,7 +67,7 @@ public class TokensController {
         log.info("GET /tokens/{}", token);
 
         Token tokenData = tokenRepository.findById(token).orElse(null);
-        if (tokenData == null) {
+        if (tokenData == null || !tokenData.getNodeId().equals(options.nodeId())) {
             return new TokenInfo(token, false);
         }
         return new TokenInfo(tokenData);

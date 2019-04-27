@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -16,6 +17,9 @@ public class Token {
     @Id
     @Size(max = 45)
     private String token;
+
+    @NotNull
+    private UUID nodeId;
 
     @Size(max = 127)
     private String name;
@@ -37,6 +41,14 @@ public class Token {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public UUID getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(UUID nodeId) {
+        this.nodeId = nodeId;
     }
 
     public String getName() {
