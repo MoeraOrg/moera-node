@@ -3,11 +3,16 @@ package org.moera.node.model;
 import java.util.UUID;
 import javax.validation.constraints.NotBlank;
 
+import org.moera.node.model.constraint.Hostname;
+import org.moera.node.model.constraint.Uuid;
+
 public class DomainInfo {
 
     @NotBlank
+    @Hostname
     private String name;
 
+    @Uuid
     private String nodeId;
 
     public DomainInfo() {

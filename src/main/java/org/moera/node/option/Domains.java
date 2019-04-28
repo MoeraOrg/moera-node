@@ -40,9 +40,10 @@ public class Domains {
     @EventListener(ApplicationReadyEvent.class)
     public void load() {
         if (domainRepository.count() == 0) {
-            createDomain(DEFAULT_DOMAIN);
+            createDomain(DEFAULT_DOMAIN, UUID.randomUUID());
+        } else {
+            domainRepository.findAll().forEach(this::configureDomain);
         }
-        domainRepository.findAll().forEach(this::configureDomain);
         applicationEventPublisher.publishEvent(new DomainsConfiguredEvent(this));
 
     }
@@ -66,11 +67,23 @@ public class Domains {
         return domainOptions.keySet();
     }
 
-    public Domain createDomain(String name) {
-        Domain domain = new Domain(name, UUID.randomUUID());
+    public Domain createDomain(String name, UUID nodeId) {
+        Domain domain = new Domain(name, nodeId);
         domainRepository.saveAndFlush(domain);
-        log.info("Created {} domain with id = {}", domain.getName(), domain.getNodeId());
+        log.info("Created domain {} with id = {}", domain.getName(), domain.getNodeId());
+        configureDomain(domain);
         return domain;
+    }
+
+    public void deleteDomain(String name) {
+        Domain domain = domainRepository.findById(name).orElse(null);
+        if (domain == null) {
+            return;
+        }
+        domainRepository.delete(domain);
+        domainRepository.flush();
+        log.info("Deleted domain {}", domain.getName());
+        domainOptions.remove(name);
     }
 
 }

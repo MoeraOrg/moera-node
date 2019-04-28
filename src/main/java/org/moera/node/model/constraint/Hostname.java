@@ -1,4 +1,4 @@
-package org.moera.node.model;
+package org.moera.node.model.constraint;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -12,7 +12,7 @@ import javax.validation.Payload;
 @Constraint(validatedBy = HostnameValidator.class)
 public @interface Hostname {
 
-    String message() default "{org.moera.node.model.Hostname.message}";
+    String message() default "{org.moera.node.model.constraint.Hostname.message}";
 
     Class<?>[] groups() default {};
 

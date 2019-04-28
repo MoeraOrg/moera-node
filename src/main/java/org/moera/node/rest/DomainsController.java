@@ -11,14 +11,17 @@ import org.moera.node.data.Domain;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RootAdmin;
 import org.moera.node.model.DomainInfo;
-import org.moera.node.model.DomainName;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.Result;
 import org.moera.node.option.Domains;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -61,11 +64,48 @@ public class DomainsController {
     @RootAdmin
     @PostMapping
     @ResponseBody
-    public DomainInfo post(@RequestBody @Valid DomainName domainName) {
+    public DomainInfo post(@RequestBody @Valid DomainInfo domainInfo) {
         log.info("POST /domains");
 
-        Domain domain = domains.createDomain(domainName.getName().toLowerCase());
+        String name = domainInfo.getName().toLowerCase();
+        UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
+                ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
+        if (domains.getDomainNodeId(name) != null) {
+            throw new OperationFailure("domain.already-exists");
+        }
+        Domain domain = domains.createDomain(name, nodeId);
         return new DomainInfo(domain.getName(), domain.getNodeId());
+    }
+
+    @RootAdmin
+    @PutMapping("/{name}")
+    @ResponseBody
+    public DomainInfo put(@PathVariable String name, @RequestBody @Valid DomainInfo domainInfo) {
+        log.info("PUT /domains/{}", name);
+
+        name = name.toLowerCase();
+        String newName = domainInfo.getName().toLowerCase();
+        UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
+                ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
+        if (domains.getDomainNodeId(name) == null) {
+            throw new OperationFailure("domain.not-found");
+        }
+        Domain domain = domains.createDomain(newName, nodeId);
+        return new DomainInfo(domain.getName(), domain.getNodeId());
+    }
+
+    @RootAdmin
+    @DeleteMapping("/{name}")
+    @ResponseBody
+    public Result delete(@PathVariable String name) {
+        log.info("DELETE /domains/{}", name);
+
+        name = name.toLowerCase();
+        if (domains.getDomainNodeId(name) == null) {
+            throw new OperationFailure("domain.not-found");
+        }
+        domains.deleteDomain(name);
+        return Result.OK;
     }
 
 }
