@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.UUID;
 import javax.validation.constraints.NotBlank;
 
 public class DomainInfo {
@@ -15,6 +16,10 @@ public class DomainInfo {
     public DomainInfo(String name, String nodeId) {
         this.name = name;
         this.nodeId = nodeId;
+    }
+
+    public DomainInfo(String name, UUID nodeId) {
+        this(name, nodeId.toString());
     }
 
     public String getName() {

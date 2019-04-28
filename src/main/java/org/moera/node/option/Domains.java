@@ -40,9 +40,7 @@ public class Domains {
     @EventListener(ApplicationReadyEvent.class)
     public void load() {
         if (domainRepository.count() == 0) {
-            Domain domain = new Domain(DEFAULT_DOMAIN, UUID.randomUUID());
-            domainRepository.saveAndFlush(domain);
-            log.info("Created _default_ domain with id = {}", domain.getNodeId());
+            createDomain(DEFAULT_DOMAIN);
         }
         domainRepository.findAll().forEach(this::configureDomain);
         applicationEventPublisher.publishEvent(new DomainsConfiguredEvent(this));
@@ -66,6 +64,13 @@ public class Domains {
 
     public Set<String> getAllDomainNames() {
         return domainOptions.keySet();
+    }
+
+    public Domain createDomain(String name) {
+        Domain domain = new Domain(name, UUID.randomUUID());
+        domainRepository.saveAndFlush(domain);
+        log.info("Created {} domain with id = {}", domain.getName(), domain.getNodeId());
+        return domain;
     }
 
 }
