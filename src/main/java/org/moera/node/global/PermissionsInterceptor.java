@@ -1,5 +1,6 @@
 package org.moera.node.global;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -7,8 +8,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.moera.commons.util.Util;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
+import org.moera.node.option.RootSecretNotSetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -19,11 +22,21 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
 
     private static Logger log = LoggerFactory.getLogger(PermissionsInterceptor.class);
 
+    @Value("${node.root-secret}")
+    private String rootSecret;
+
     @Inject
     private TokenRepository tokenRepository;
 
     @Inject
     private RequestContext requestContext;
+
+    @PostConstruct
+    public void init() throws RootSecretNotSetException {
+        if (StringUtils.isEmpty(rootSecret)) {
+            throw new RootSecretNotSetException();
+        }
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -32,10 +45,10 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
-        if (((HandlerMethod) handler).getMethodAnnotation(Admin.class) == null) {
-            return true;
+        if (((HandlerMethod) handler).getMethodAnnotation(RootAdmin.class) != null && !requestContext.isRootAdmin()) {
+            throw new AuthorizationException();
         }
-        if (!requestContext.isAdmin()) {
+        if (((HandlerMethod) handler).getMethodAnnotation(Admin.class) != null && !requestContext.isAdmin()) {
             throw new AuthorizationException();
         }
 
@@ -44,6 +57,11 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
 
     private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException {
         requestContext.setBrowserExtension(request.getHeader("X-Accept-Moera") != null);
+        String secret = request.getParameter("secret");
+        if (rootSecret.equals(secret)) {
+            requestContext.setRootAdmin(true);
+            log.info("Authorized as root admin");
+        }
         String tokenS = request.getParameter("token");
         if (!StringUtils.isEmpty(tokenS)) {
             Token token = tokenRepository.findById(tokenS).orElse(null);

@@ -41,4 +41,5 @@ node:
   naming:
     location: http://localhost.localdomain:8081/moera-naming
 
+  root-secret:
   mock-network-latency: false

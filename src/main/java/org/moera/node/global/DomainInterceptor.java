@@ -19,7 +19,9 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
     private RequestContext requestContext;
 
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        requestContext.setOptions(domains.getDomainOptions(UriUtil.createBuilderFromRequest(request).build().getHost()));
+        String host = UriUtil.createBuilderFromRequest(request).build().getHost();
+        host = host != null ? host.toLowerCase() : host;
+        requestContext.setOptions(domains.getDomainOptions(host));
         return true;
     }
 

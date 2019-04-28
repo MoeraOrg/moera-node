@@ -10,6 +10,7 @@ import org.springframework.web.context.annotation.RequestScope;
 public class RequestContextImpl implements RequestContext {
 
     private boolean browserExtension;
+    private boolean rootAdmin;
     private boolean admin;
     private Options options;
 
@@ -21,6 +22,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setBrowserExtension(boolean browserExtension) {
         this.browserExtension = browserExtension;
+    }
+
+    @Override
+    public boolean isRootAdmin() {
+        return rootAdmin;
+    }
+
+    @Override
+    public void setRootAdmin(boolean rootAdmin) {
+        this.rootAdmin = rootAdmin;
     }
 
     @Override

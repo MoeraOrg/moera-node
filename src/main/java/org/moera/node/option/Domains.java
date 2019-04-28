@@ -54,6 +54,11 @@ public class Domains {
         domainOptions.put(domain.getName(), options);
     }
 
+    public UUID getDomainNodeId(String name) {
+        Options options = domainOptions.get(name);
+        return options != null ? options.nodeId() : null;
+    }
+
     public Options getDomainOptions(String name) {
         Options options = domainOptions.get(name);
         return options != null ? options : domainOptions.get(DEFAULT_DOMAIN);

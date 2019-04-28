@@ -8,6 +8,10 @@ public interface RequestContext {
 
     void setBrowserExtension(boolean browserExtension);
 
+    boolean isRootAdmin();
+
+    void setRootAdmin(boolean rootAdmin);
+
     boolean isAdmin();
 
     void setAdmin(boolean admin);

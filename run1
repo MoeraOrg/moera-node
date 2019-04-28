@@ -1,3 +1,0 @@
-#!/bin/bash
-
-SPRING_APPLICATION_JSON='{"spring":{"profiles":{"active":"dev1"}}}' mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5007"
