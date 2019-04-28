@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import org.moera.commons.util.Password;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.CredentialsCreated;
 import org.moera.node.model.OperationFailure;
@@ -29,13 +30,14 @@ public class CredentialsController {
     private static Logger log = LoggerFactory.getLogger(CredentialsController.class);
 
     @Inject
-    private Options options;
+    private RequestContext requestContext;
 
     @GetMapping
     @ResponseBody
     public CredentialsCreated get() {
         log.info("GET /credentials");
 
+        Options options = requestContext.getOptions();
         return new CredentialsCreated(
                 !StringUtils.isEmpty(options.getString("credentials.login"))
                 && !StringUtils.isEmpty(options.getString("credentials.password-hash")));
@@ -47,6 +49,7 @@ public class CredentialsController {
     public Result post(@Valid @RequestBody Credentials credentials) {
         log.info("POST /credentials (login = '{}')", credentials.getLogin());
 
+        Options options = requestContext.getOptions();
         options.runInTransaction(() -> {
             if (!StringUtils.isEmpty(options.getString("credentials.login"))
                     && !StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
@@ -66,6 +69,7 @@ public class CredentialsController {
     public Result put(@Valid @RequestBody Credentials credentials) {
         log.info("PUT /credentials (login = '{}')", credentials.getLogin());
 
+        Options options = requestContext.getOptions();
         options.runInTransaction(() -> {
             options.set("credentials.login", credentials.getLogin());
             options.set("credentials.password-hash", Password.hash(credentials.getPassword()));

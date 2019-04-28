@@ -18,6 +18,14 @@ public class Domain {
     @NotNull
     private UUID nodeId;
 
+    public Domain() {
+    }
+
+    public Domain(String name, UUID nodeId) {
+        this.name = name;
+        this.nodeId = nodeId;
+    }
+
     public String getName() {
         return name;
     }

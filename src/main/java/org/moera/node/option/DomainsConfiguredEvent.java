@@ -2,9 +2,9 @@ package org.moera.node.option;
 
 import org.springframework.context.ApplicationEvent;
 
-public class OptionsLoadedEvent extends ApplicationEvent {
+public class DomainsConfiguredEvent extends ApplicationEvent {
 
-    public OptionsLoadedEvent(Object source) {
+    public DomainsConfiguredEvent(Object source) {
         super(source);
     }
 

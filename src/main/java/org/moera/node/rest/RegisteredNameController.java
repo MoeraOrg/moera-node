@@ -57,9 +57,6 @@ public class RegisteredNameController {
     private RequestContext requestContext;
 
     @Inject
-    private Options options;
-
-    @Inject
     private NamingClient namingClient;
 
     @GetMapping
@@ -67,7 +64,7 @@ public class RegisteredNameController {
     public RegisteredNameInfo get() {
         log.info("GET /registered-name");
 
-        return new RegisteredNameInfo(options, requestContext);
+        return new RegisteredNameInfo(requestContext);
     }
 
     @PostMapping
@@ -80,6 +77,7 @@ public class RegisteredNameController {
 
         log.info("POST /registered-name (name = '{}')", nameToRegister.getName());
 
+        Options options = requestContext.getOptions();
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
@@ -115,7 +113,8 @@ public class RegisteredNameController {
                     UriUtil.createBuilderFromRequest(request).replacePath("/moera").replaceQuery(null).toUriString(),
                     publicUpdatingKey,
                     (ECPrivateKey) signingKeyPair.getPrivate(),
-                    (ECPublicKey) signingKeyPair.getPublic());
+                    (ECPublicKey) signingKeyPair.getPublic(),
+                    options);
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         }
@@ -129,6 +128,7 @@ public class RegisteredNameController {
     public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret) {
         log.info("PUT /registered-name");
 
+        Options options = requestContext.getOptions();
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
@@ -174,7 +174,7 @@ public class RegisteredNameController {
                 signingKey = (ECPublicKey) signingKeyPair.getPublic();
             }
 
-            namingClient.update(name, generation, privateUpdatingKey, privateSigningKey, signingKey);
+            namingClient.update(name, generation, privateUpdatingKey, privateSigningKey, signingKey, options);
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {
@@ -190,6 +190,7 @@ public class RegisteredNameController {
     public Result delete() {
         log.info("DELETE /registered-name");
 
+        Options options = requestContext.getOptions();
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }

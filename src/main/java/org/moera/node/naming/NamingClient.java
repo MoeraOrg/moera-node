@@ -28,10 +28,12 @@ import org.moera.naming.rpc.PutSignatureDataBuilder;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.option.Domains;
+import org.moera.node.option.DomainsConfiguredEvent;
 import org.moera.node.option.Options;
-import org.moera.node.option.OptionsLoadedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -41,26 +43,29 @@ public class NamingClient {
 
     private static Logger log = LoggerFactory.getLogger(NamingClient.class);
 
+    @Value("${node.naming.location}")
+    private String namingLocation;
+
     private NamingService namingService;
 
     @Inject
-    private Options options;
+    private Domains domains;
 
     @Inject
     private TaskScheduler taskScheduler;
 
     @PostConstruct
     protected void init() throws MalformedURLException {
-        JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(options.getString("naming.location")));
+        JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(namingLocation));
         namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
     }
 
-    @EventListener(OptionsLoadedEvent.class)
+    @EventListener(DomainsConfiguredEvent.class)
     public void optionsLoaded() {
-        monitorOperation();
+        domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(this::monitorOperation);
     }
 
-    private void monitorOperation() {
+    private void monitorOperation(Options options) {
         UUID operationId = options.getUuid("naming.operation.id");
         if (operationId == null) {
             log.info("No pending naming operation");
@@ -84,7 +89,7 @@ public class NamingClient {
                 int n = retries.incrementAndGet();
                 int maxRetries = options.getInt("naming.unavailable.max-retries");
                 if (n > maxRetries) {
-                    unknownOperationStatus();
+                    unknownOperationStatus(options);
                 } else {
                     log.info("Naming service unavailable, retry {} of {}...", n, maxRetries);
                 }
@@ -92,7 +97,7 @@ public class NamingClient {
             }
             retries.set(0);
             if (info.getStatus() == null) {
-                unknownOperationStatus();
+                unknownOperationStatus(options);
                 return;
             }
             log.info("Naming operation {}, status is {}", id, info.getStatus().name());
@@ -105,7 +110,7 @@ public class NamingClient {
                     break;
                 case SUCCEEDED:
                     options.set("naming.operation.completed", info.getCompleted());
-                    commitOperation();
+                    commitOperation(options);
                     options.set("profile.registered-name.generation", info.getGeneration());
                     options.reset("naming.operation.id");
                     break;
@@ -128,7 +133,7 @@ public class NamingClient {
         });
     }
 
-    private void unknownOperationStatus() {
+    private void unknownOperationStatus(Options options) {
         log.info("Status of naming operation {} is set to 'unknown'", options.getString("naming.operation.id"));
 
         options.set("naming.operation.status", OperationStatus.UNKNOWN.getValue());
@@ -137,7 +142,7 @@ public class NamingClient {
         options.set("naming.operation.error-message", "operation status is unknown");
     }
 
-    private void operationSent(UUID operationId) {
+    private void operationSent(UUID operationId, Options options) {
         log.info("Created naming operation {}", operationId);
 
         options.set("naming.operation.id", operationId);
@@ -151,7 +156,7 @@ public class NamingClient {
         options.reset("naming.operation.signing-key");
     }
 
-    private void commitOperation() {
+    private void commitOperation(Options options) {
         String name = options.getString("naming.operation.registered-name");
         if (name != null) {
             options.set("profile.registered-name", name);
@@ -167,7 +172,7 @@ public class NamingClient {
     }
 
     public void register(String name, String nodeUri, ECPublicKey updatingKey,
-                         ECPrivateKey privateSigningKey, ECPublicKey signingKey) {
+                         ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
 
         byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
         byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
@@ -192,14 +197,14 @@ public class NamingClient {
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
-        operationSent(operationId);
+        operationSent(operationId, options);
         options.set("naming.operation.registered-name", name);
         options.set("naming.operation.signing-key", privateSigningKey);
-        monitorOperation();
+        monitorOperation(options);
     }
 
     public void update(String name, int generation, ECPrivateKey privateUpdatingKey,
-                       ECPrivateKey privateSigningKey, ECPublicKey signingKey) {
+                       ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
 
         RegisteredNameInfo info;
         try {
@@ -254,13 +259,13 @@ public class NamingClient {
         } catch (GeneralSecurityException | IOException e) {
             throw new CryptoException(e);
         }
-        operationSent(operationId);
+        operationSent(operationId, options);
         options.set("naming.operation.registered-name", name);
         options.set("naming.operation.registered-name.generation", generation);
         if (privateSigningKey != null) {
             options.set("naming.operation.signing-key", privateSigningKey);
         }
-        monitorOperation();
+        monitorOperation(options);
     }
 
 }

@@ -9,7 +9,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Profile;
 import org.moera.node.model.ProfileInfo;
-import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,15 +26,12 @@ public class ProfileController {
     @Inject
     private RequestContext requestContext;
 
-    @Inject
-    private Options options;
-
     @GetMapping
     @ResponseBody
     public ProfileInfo get() {
         log.info("GET /profile");
 
-        return new ProfileInfo(options, requestContext);
+        return new ProfileInfo(requestContext);
     }
 
     @PutMapping
@@ -45,8 +41,8 @@ public class ProfileController {
     public ProfileInfo put(@Valid @RequestBody Profile profile) {
         log.info("PUT /profile");
 
-        profile.toOptions(options);
-        return new ProfileInfo(options, requestContext);
+        profile.toOptions(requestContext.getOptions());
+        return new ProfileInfo(requestContext);
     }
 
 }

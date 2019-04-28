@@ -10,6 +10,7 @@ import org.moera.commons.util.Password;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenCreated;
@@ -32,7 +33,7 @@ public class TokensController {
     private static Logger log = LoggerFactory.getLogger(TokensController.class);
 
     @Inject
-    private Options options;
+    private RequestContext requestContext;
 
     @Inject
     private TokenRepository tokenRepository;
@@ -42,6 +43,7 @@ public class TokensController {
     public TokenCreated post(@Valid @RequestBody Credentials credentials) {
         log.info("POST /tokens (login = '{}')", credentials.getLogin());
 
+        Options options = requestContext.getOptions();
         if (StringUtils.isEmpty(options.getString("credentials.login"))
                 || StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
             throw new OperationFailure("credentials.not-created");
@@ -67,7 +69,7 @@ public class TokensController {
         log.info("GET /tokens/{}", token);
 
         Token tokenData = tokenRepository.findById(token).orElse(null);
-        if (tokenData == null || !tokenData.getNodeId().equals(options.nodeId())) {
+        if (tokenData == null || !tokenData.getNodeId().equals(requestContext.getOptions().nodeId())) {
             return new TokenInfo(token, false);
         }
         return new TokenInfo(tokenData);

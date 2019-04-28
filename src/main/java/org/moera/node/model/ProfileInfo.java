@@ -16,7 +16,8 @@ public class ProfileInfo {
     public ProfileInfo() {
     }
 
-    public ProfileInfo(Options options, RequestContext requestContext) {
+    public ProfileInfo(RequestContext requestContext) {
+        Options options = requestContext.getOptions();
         fullName = options.getString("profile.full-name");
         gender = options.getString("profile.gender");
         if (requestContext.isAdmin()) {

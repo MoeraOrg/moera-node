@@ -20,7 +20,8 @@ public class RegisteredNameInfo {
     public RegisteredNameInfo() {
     }
 
-    public RegisteredNameInfo(Options options, RequestContext requestContext) {
+    public RegisteredNameInfo(RequestContext requestContext) {
+        Options options = requestContext.getOptions();
         name = options.getString("profile.registered-name");
         generation = options.getInt("profile.registered-name.generation");
         if (requestContext.isAdmin()) {

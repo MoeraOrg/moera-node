@@ -38,6 +38,7 @@ spring:
       max-request-size: 5MB
 
 node:
-  id:
+  naming:
+    location: http://localhost.localdomain:8081/moera-naming
 
   mock-network-latency: false

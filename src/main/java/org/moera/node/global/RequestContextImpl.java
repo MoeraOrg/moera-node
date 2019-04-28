@@ -1,5 +1,6 @@
 package org.moera.node.global;
 
+import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
@@ -10,6 +11,7 @@ public class RequestContextImpl implements RequestContext {
 
     private boolean browserExtension;
     private boolean admin;
+    private Options options;
 
     @Override
     public boolean isBrowserExtension() {
@@ -29,6 +31,25 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    @Override
+    public Options getOptions() {
+        return options;
+    }
+
+    @Override
+    public void setOptions(Options options) {
+        this.options = options;
+    }
+
+    @Override
+    public RequestContext getPublic() {
+        RequestContext context = new RequestContextImpl();
+        context.setBrowserExtension(false);
+        context.setAdmin(false);
+        context.setOptions(options);
+        return context;
     }
 
 }
