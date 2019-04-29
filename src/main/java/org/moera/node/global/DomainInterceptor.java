@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.option.Domains;
 import org.moera.node.util.UriUtil;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -21,6 +22,7 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String host = UriUtil.createBuilderFromRequest(request).build().getHost();
         host = host != null ? host.toLowerCase() : host;
+        MDC.put("domain", domains.getDomainEffectiveName(host));
         requestContext.setOptions(domains.getDomainOptions(host));
         return true;
     }

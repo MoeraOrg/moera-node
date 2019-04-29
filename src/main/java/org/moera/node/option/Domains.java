@@ -53,6 +53,10 @@ public class Domains {
         domainOptions.put(domain.getName(), options);
     }
 
+    public String getDomainEffectiveName(String name) {
+        return domainOptions.containsKey(name) ? name : DEFAULT_DOMAIN;
+    }
+
     public UUID getDomainNodeId(String name) {
         Options options = domainOptions.get(name);
         return options != null ? options.nodeId() : null;
