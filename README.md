@@ -29,10 +29,15 @@ Installation instructions:
        password: <password>
    node:
      root-secret: <secret>
+     naming:
+       location: http://<naming server>:<naming port>/moera-naming
    ```
 
-   `<secret>` must be a long random string of letters and digits without
-   spaces.
+   * `<secret>` must be a long random string of letters and digits
+     without spaces.
+   * `<naming server>:<naming port>` must be set to the hostname and the
+     port where the [naming server][2] is running.
+
 6. By default, the server runs on port 8081. If you want it to run on a
    different port, add these lines to the file above:
     
@@ -43,3 +48,4 @@ Installation instructions:
 7. Execute `./run` script.
 
 [1]: https://github.com/MoeraOrg/moera-commons
+[2]: https://github.com/MoeraOrg/moera-naming
