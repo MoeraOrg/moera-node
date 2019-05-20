@@ -1,5 +1,5 @@
 server:
-  port: 8080  # Server port
+  port: 8081  # Server port
 
 spring:
   # DataSource settings
