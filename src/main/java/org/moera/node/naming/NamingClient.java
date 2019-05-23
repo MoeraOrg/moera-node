@@ -37,6 +37,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 @Service
 public class NamingClient {
@@ -53,6 +56,9 @@ public class NamingClient {
 
     @Inject
     private TaskScheduler taskScheduler;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     @PostConstruct
     protected void init() throws MalformedURLException {
@@ -95,32 +101,41 @@ public class NamingClient {
                 }
                 return;
             }
-            retries.set(0);
-            if (info.getStatus() == null) {
-                unknownOperationStatus(options);
-                return;
+
+            final TransactionStatus ts = txManager.getTransaction(new DefaultTransactionDefinition());
+            try {
+                retries.set(0);
+                if (info.getStatus() == null) {
+                    unknownOperationStatus(options);
+                    return;
+                }
+                log.info("Naming operation {}, status is {}", id, info.getStatus().name());
+                options.set("naming.operation.status", info.getStatus().getValue());
+                options.set("naming.operation.added", info.getAdded());
+                options.set("naming.operation.status.updated", Util.now());
+                switch (info.getStatus()) {
+                    case ADDED:
+                    case STARTED:
+                        break;
+                    case SUCCEEDED:
+                        options.set("naming.operation.completed", info.getCompleted());
+                        commitOperation(options);
+                        options.set("profile.registered-name.generation", info.getGeneration());
+                        options.reset("naming.operation.id");
+                        break;
+                    case FAILED:
+                        options.set("naming.operation.completed", info.getCompleted());
+                        options.set("naming.operation.error-code", "naming." + info.getErrorCode());
+                        options.set("naming.operation.error-message", info.getErrorMessage());
+                        options.reset("naming.operation.id");
+                        break;
+                }
+                txManager.commit(ts);
+            } catch (Exception e) {
+                txManager.rollback(ts);
+                throw e;
             }
-            log.info("Naming operation {}, status is {}", id, info.getStatus().name());
-            options.set("naming.operation.status", info.getStatus().getValue());
-            options.set("naming.operation.added", info.getAdded());
-            options.set("naming.operation.status.updated", Util.now());
-            switch (info.getStatus()) {
-                case ADDED:
-                case STARTED:
-                    break;
-                case SUCCEEDED:
-                    options.set("naming.operation.completed", info.getCompleted());
-                    commitOperation(options);
-                    options.set("profile.registered-name.generation", info.getGeneration());
-                    options.reset("naming.operation.id");
-                    break;
-                case FAILED:
-                    options.set("naming.operation.completed", info.getCompleted());
-                    options.set("naming.operation.error-code", "naming." + info.getErrorCode());
-                    options.set("naming.operation.error-message", info.getErrorMessage());
-                    options.reset("naming.operation.id");
-                    break;
-            }
+
             if (options.getUuid("naming.operation.id") == null) {
                 log.info("Stopped monitoring naming operation {}", id);
             }
