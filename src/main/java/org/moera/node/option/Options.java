@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.transaction.Transactional;
 
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
@@ -248,7 +247,6 @@ public class Options {
         }
     }
 
-    @Transactional
     public void set(String name, Object value) {
         OptionTypeBase optionType = optionsMetadata.getOptionType(name);
         if (optionType == null) {
@@ -269,7 +267,6 @@ public class Options {
         }
     }
 
-    @Transactional
     public void reset(String name) {
         lockWrite();
         try {

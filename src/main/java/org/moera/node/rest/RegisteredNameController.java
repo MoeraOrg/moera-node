@@ -10,6 +10,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import io.github.novacrypto.bip39.JavaxPBKDF2WithHmacSHA512;
@@ -70,6 +71,7 @@ public class RegisteredNameController {
     @PostMapping
     @Admin
     @ResponseBody
+    @Transactional
     public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister, HttpServletRequest request) {
         if (!Rules.isNameValid(nameToRegister.getName())) {
             throw new OperationFailure("nameToRegister.name.invalid");
@@ -125,6 +127,7 @@ public class RegisteredNameController {
     @PutMapping
     @Admin
     @ResponseBody
+    @Transactional
     public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret) {
         log.info("PUT /registered-name");
 
@@ -187,6 +190,7 @@ public class RegisteredNameController {
     @DeleteMapping
     @Admin
     @ResponseBody
+    @Transactional
     public Result delete() {
         log.info("DELETE /registered-name");
 
@@ -194,9 +198,11 @@ public class RegisteredNameController {
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
-        options.reset("profile.registered-name");
-        options.reset("profile.registered-name.generation");
-        options.reset("profile.signing-key");
+        options.runInTransaction(() -> {
+            options.reset("profile.registered-name");
+            options.reset("profile.registered-name.generation");
+            options.reset("profile.signing-key");
+        });
 
         return Result.OK;
     }

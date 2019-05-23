@@ -184,10 +184,11 @@ public class NamingClient {
         UUID operationId;
         try {
             RegisteredNameInfo info = namingService.getCurrentForLatest(name);
+            int generation = info != null ? info.getGeneration() + 1 : 0;
             byte[] previousDigest = info != null ? info.getDigest() : null;
             operationId = namingService.put(
                     name,
-                    false,
+                    generation,
                     updatingKeyR,
                     nodeUri,
                     signingKeyR,
@@ -246,7 +247,7 @@ public class NamingClient {
             try {
                 operationId = namingService.put(
                         name,
-                        false,
+                        info.getGeneration(),
                         null,
                         null,
                         signingKey != null ? signingKeyR : null,
