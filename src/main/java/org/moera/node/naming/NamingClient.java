@@ -120,7 +120,6 @@ public class NamingClient {
                     case SUCCEEDED:
                         options.set("naming.operation.completed", info.getCompleted());
                         commitOperation(options);
-                        options.set("profile.registered-name.generation", info.getGeneration());
                         options.reset("naming.operation.id");
                         break;
                     case FAILED:
@@ -197,9 +196,10 @@ public class NamingClient {
         log.info("Registering name '{}': node uri = {}, updating key = {}, signing key = {}, valid from = {}",
                 name, nodeUri, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
         UUID operationId;
+        int generation;
         try {
             RegisteredNameInfo info = namingService.getCurrentForLatest(name);
-            int generation = info != null ? info.getGeneration() + 1 : 0;
+            generation = info != null ? info.getGeneration() + 1 : 0;
             byte[] previousDigest = info != null ? info.getDigest() : null;
             operationId = namingService.put(
                     name,
@@ -215,6 +215,7 @@ public class NamingClient {
         }
         operationSent(operationId, options);
         options.set("naming.operation.registered-name", name);
+        options.set("naming.operation.registered-name.generation", generation);
         options.set("naming.operation.signing-key", privateSigningKey);
         monitorOperation(options);
     }
