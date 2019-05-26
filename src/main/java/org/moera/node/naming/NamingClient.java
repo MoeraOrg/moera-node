@@ -5,8 +5,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
-import java.security.SecureRandom;
-import java.security.Signature;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
@@ -18,15 +16,14 @@ import javax.inject.Inject;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
-import org.moera.commons.util.CryptoException;
-import org.moera.commons.util.CryptoUtil;
+import org.moera.commons.crypto.CryptoException;
+import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
 import org.moera.naming.rpc.OperationStatus;
 import org.moera.naming.rpc.OperationStatusInfo;
-import org.moera.naming.rpc.PutSignatureDataBuilder;
+import org.moera.naming.rpc.PutCallFingerprint;
 import org.moera.naming.rpc.RegisteredNameInfo;
-import org.moera.naming.rpc.Rules;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Domains;
 import org.moera.node.option.DomainsConfiguredEvent;
@@ -235,30 +232,32 @@ public class NamingClient {
         // TODO possible to validate the private key by the public key
         log.info("Updating name '{}', generation {}", name, generation);
 
+        byte[] previousDigest = info.getDigest();
+        log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
+        byte[] signingKeyR = signingKey != null ? CryptoUtil.toRawPublicKey(signingKey) : info.getSigningKey();
+        long validFrom = signingKey != null
+                ? Instant.now()
+                    .plus(options.getDuration("profile.signing-key.valid-from.layover"))
+                    .getEpochSecond()
+                : info.getValidFrom();
+        Object putCall = new PutCallFingerprint(
+                info.getName(),
+                info.getGeneration(),
+                info.getUpdatingKey(),
+                info.getNodeUri(),
+                info.getDeadline(),
+                signingKeyR,
+                validFrom,
+                info.getDigest());
+
         UUID operationId;
+
         try {
-            byte[] previousDigest = info.getDigest();
-            log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
-            byte[] signingKeyR = signingKey != null ? CryptoUtil.toRawPublicKey(signingKey) : info.getSigningKey();
-            long validFrom = signingKey != null
-                    ? Instant.now()
-                        .plus(options.getDuration("profile.signing-key.valid-from.layover"))
-                        .getEpochSecond()
-                    : info.getValidFrom();
-            PutSignatureDataBuilder buf = new PutSignatureDataBuilder(
-                    info.getName(),
-                    info.getUpdatingKey(),
-                    info.getNodeUri(),
-                    info.getDeadline(),
-                    signingKeyR,
-                    validFrom,
-                    info.getDigest());
+            if (log.isDebugEnabled()) {
+                log.debug("Data to be signed: {}", Util.dump(CryptoUtil.fingerprint(putCall)));
+            }
 
-            log.debug("Data to be signed: {}", Util.dump(buf.toBytes()));
-
-            Signature signature = Signature.getInstance(Rules.SIGNATURE_ALGORITHM, "BC");
-            signature.initSign(privateUpdatingKey, SecureRandom.getInstanceStrong());
-            signature.update(buf.toBytes());
+            byte[] signature = CryptoUtil.sign(putCall, privateUpdatingKey);
 
             try {
                 operationId = namingService.put(
@@ -269,7 +268,7 @@ public class NamingClient {
                         signingKey != null ? signingKeyR : null,
                         signingKey != null ? validFrom : null,
                         info.getDigest(),
-                        signature.sign());
+                        signature);
             } catch (Exception e) {
                 throw new NamingNotAvailableException(e);
             }

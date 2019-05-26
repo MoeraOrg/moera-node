@@ -23,7 +23,7 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPrivateKeySpec;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
-import org.moera.commons.util.CryptoException;
+import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.global.Admin;

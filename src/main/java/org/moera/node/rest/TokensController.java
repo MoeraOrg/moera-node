@@ -5,8 +5,8 @@ import java.time.Instant;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
-import org.moera.commons.util.CryptoUtil;
-import org.moera.commons.util.Password;
+import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.crypto.Password;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.global.ApiController;
