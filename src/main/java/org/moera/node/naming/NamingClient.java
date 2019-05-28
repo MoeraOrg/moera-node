@@ -245,7 +245,6 @@ public class NamingClient {
                 info.getGeneration(),
                 info.getUpdatingKey(),
                 info.getNodeUri(),
-                info.getDeadline(),
                 signingKeyR,
                 validFrom,
                 info.getDigest());
