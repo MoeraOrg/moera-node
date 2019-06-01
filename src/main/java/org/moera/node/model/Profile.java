@@ -4,15 +4,9 @@ import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
-import org.moera.naming.rpc.Rules;
 import org.moera.node.option.Options;
 
 public class Profile {
-
-    @Size(max = Rules.NAME_MAX_LENGTH)
-    private String registeredName;
-
-    private Integer registeredNameGeneration;
 
     @Size(max = 255)
     private String fullName;
@@ -25,22 +19,6 @@ public class Profile {
     private String email;
 
     public Profile() {
-    }
-
-    public String getRegisteredName() {
-        return registeredName;
-    }
-
-    public void setRegisteredName(String registeredName) {
-        this.registeredName = registeredName;
-    }
-
-    public Integer getRegisteredNameGeneration() {
-        return registeredNameGeneration;
-    }
-
-    public void setRegisteredNameGeneration(Integer registeredNameGeneration) {
-        this.registeredNameGeneration = registeredNameGeneration;
     }
 
     public String getFullName() {
@@ -70,12 +48,6 @@ public class Profile {
     @Transactional
     public void toOptions(Options options) {
         options.runInTransaction(() -> {
-            if (getRegisteredName() != null) {
-                options.set("profile.registered-name", getRegisteredName());
-            }
-            if (getRegisteredNameGeneration() != null) {
-                options.set("profile.registered-name.generation", getRegisteredNameGeneration());
-            }
             toOption("profile.full-name", getFullName(), options);
             toOption("profile.gender", getGender(), options);
             toOption("profile.email", getEmail(), options);
