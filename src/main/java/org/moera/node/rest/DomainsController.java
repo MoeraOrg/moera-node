@@ -75,10 +75,17 @@ public class DomainsController {
         String name = domainInfo.getName().toLowerCase();
         UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
                 ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
-        if (domains.getDomainNodeId(name) != null) {
-            throw new OperationFailure("domain.already-exists");
+
+        domains.lockWrite();
+        Domain domain;
+        try {
+            if (domains.getDomainNodeId(name) != null) {
+                throw new OperationFailure("domain.already-exists");
+            }
+            domain = domains.createDomain(name, nodeId);
+        } finally {
+            domains.unlockWrite();
         }
-        Domain domain = domains.createDomain(name, nodeId);
         return new DomainInfo(domain.getName(), domain.getNodeId());
     }
 
@@ -93,19 +100,26 @@ public class DomainsController {
         String newName = !StringUtils.isEmpty(domainInfo.getName()) ? domainInfo.getName().toLowerCase() : name;
         UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
                 ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
-        if (domains.getDomainNodeId(name) == null) {
-            throw new OperationFailure("domain.not-found");
-        }
-        if (!name.equals(newName)) {
-            if (name.equals(Domains.DEFAULT_DOMAIN)) {
-                throw new OperationFailure("domain.cannot-rename-default");
+
+        domains.lockWrite();
+        Domain domain;
+        try {
+            if (domains.getDomainNodeId(name) == null) {
+                throw new OperationFailure("domain.not-found");
             }
-            if (domains.getDomainNodeId(newName) != null) {
-                throw new OperationFailure("domain.already-exists");
+            if (!name.equals(newName)) {
+                if (name.equals(Domains.DEFAULT_DOMAIN)) {
+                    throw new OperationFailure("domain.cannot-rename-default");
+                }
+                if (domains.getDomainNodeId(newName) != null) {
+                    throw new OperationFailure("domain.already-exists");
+                }
             }
+            domains.deleteDomain(name);
+            domain = domains.createDomain(newName, nodeId);
+        } finally {
+            domains.unlockWrite();
         }
-        domains.deleteDomain(name);
-        Domain domain = domains.createDomain(newName, nodeId);
         return new DomainInfo(domain.getName(), domain.getNodeId());
     }
 
@@ -120,10 +134,16 @@ public class DomainsController {
         if (name.equals(Domains.DEFAULT_DOMAIN)) {
             throw new OperationFailure("domain.cannot-delete-default");
         }
-        if (domains.getDomainNodeId(name) == null) {
-            throw new OperationFailure("domain.not-found");
+
+        domains.lockWrite();
+        try {
+            if (domains.getDomainNodeId(name) == null) {
+                throw new OperationFailure("domain.not-found");
+            }
+            domains.deleteDomain(name);
+        } finally {
+            domains.unlockWrite();
         }
-        domains.deleteDomain(name);
         return Result.OK;
     }
 

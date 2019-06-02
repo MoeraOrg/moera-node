@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.inject.Inject;
 
 import org.moera.node.data.Domain;
@@ -23,6 +25,7 @@ public class Domains {
 
     private static Logger log = LoggerFactory.getLogger(Options.class);
 
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Map<String, Options> domainOptions = new HashMap<>();
 
     @Inject
@@ -48,27 +51,66 @@ public class Domains {
 
     }
 
+    public AutoCloseable lockRead() {
+        lock.readLock().lock();
+        return this::unlockRead;
+    }
+
+    public void unlockRead() {
+        lock.readLock().unlock();
+    }
+
+    public AutoCloseable lockWrite() {
+        lock.writeLock().lock();
+        return this::unlockWrite;
+    }
+
+    public void unlockWrite() {
+        lock.writeLock().unlock();
+    }
+
     private void configureDomain(Domain domain) {
         Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository);
         domainOptions.put(domain.getName(), options);
     }
 
     public String getDomainEffectiveName(String name) {
-        return domainOptions.containsKey(name) ? name : DEFAULT_DOMAIN;
+        lockRead();
+        try {
+            return domainOptions.containsKey(name) ? name : DEFAULT_DOMAIN;
+        } finally {
+            unlockRead();
+        }
     }
 
     public UUID getDomainNodeId(String name) {
-        Options options = domainOptions.get(name);
+        Options options;
+        lockRead();
+        try {
+            options = domainOptions.get(name);
+        } finally {
+            unlockRead();
+        }
         return options != null ? options.nodeId() : null;
     }
 
     public Options getDomainOptions(String name) {
-        Options options = domainOptions.get(name);
-        return options != null ? options : domainOptions.get(DEFAULT_DOMAIN);
+        lockRead();
+        try {
+            Options options = domainOptions.get(name);
+            return options != null ? options : domainOptions.get(DEFAULT_DOMAIN);
+        } finally {
+            unlockRead();
+        }
     }
 
     public Set<String> getAllDomainNames() {
-        return domainOptions.keySet();
+        lockRead();
+        try {
+            return domainOptions.keySet();
+        } finally {
+            unlockRead();
+        }
     }
 
     public Domain createDomain(String name, UUID nodeId) {
