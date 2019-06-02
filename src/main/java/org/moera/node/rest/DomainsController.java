@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.data.Domain;
@@ -64,9 +65,13 @@ public class DomainsController {
     @RootAdmin
     @PostMapping
     @ResponseBody
+    @Transactional
     public DomainInfo post(@RequestBody @Valid DomainInfo domainInfo) {
         log.info("POST /domains");
 
+        if (StringUtils.isEmpty(domainInfo.getName())) {
+            throw new OperationFailure("domainInfo.name.blank");
+        }
         String name = domainInfo.getName().toLowerCase();
         UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
                 ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
@@ -80,16 +85,26 @@ public class DomainsController {
     @RootAdmin
     @PutMapping("/{name}")
     @ResponseBody
+    @Transactional
     public DomainInfo put(@PathVariable String name, @RequestBody @Valid DomainInfo domainInfo) {
         log.info("PUT /domains/{}", name);
 
         name = name.toLowerCase();
-        String newName = domainInfo.getName().toLowerCase();
+        String newName = !StringUtils.isEmpty(domainInfo.getName()) ? domainInfo.getName().toLowerCase() : name;
         UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
                 ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
         if (domains.getDomainNodeId(name) == null) {
             throw new OperationFailure("domain.not-found");
         }
+        if (!name.equals(newName)) {
+            if (name.equals(Domains.DEFAULT_DOMAIN)) {
+                throw new OperationFailure("domain.cannot-rename-default");
+            }
+            if (domains.getDomainNodeId(newName) != null) {
+                throw new OperationFailure("domain.already-exists");
+            }
+        }
+        domains.deleteDomain(name);
         Domain domain = domains.createDomain(newName, nodeId);
         return new DomainInfo(domain.getName(), domain.getNodeId());
     }
@@ -97,10 +112,14 @@ public class DomainsController {
     @RootAdmin
     @DeleteMapping("/{name}")
     @ResponseBody
+    @Transactional
     public Result delete(@PathVariable String name) {
         log.info("DELETE /domains/{}", name);
 
         name = name.toLowerCase();
+        if (name.equals(Domains.DEFAULT_DOMAIN)) {
+            throw new OperationFailure("domain.cannot-delete-default");
+        }
         if (domains.getDomainNodeId(name) == null) {
             throw new OperationFailure("domain.not-found");
         }
