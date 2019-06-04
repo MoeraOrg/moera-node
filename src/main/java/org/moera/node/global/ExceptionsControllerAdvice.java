@@ -3,8 +3,10 @@ package org.moera.node.global;
 import java.util.Locale;
 import javax.inject.Inject;
 
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingNotAvailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +51,24 @@ public class ExceptionsControllerAdvice {
 
     @ExceptionHandler
     @ResponseBody
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result objectNotFound(ObjectNotFoundFailure e) {
+        String message = messageSource.getMessage(e, Locale.getDefault());
+        return new Result(e.getErrorCode(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result validationFailure(ValidationFailure e) {
+        String message = messageSource.getMessage(e, Locale.getDefault());
+        return new Result(e.getErrorCode(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseBody
     @ResponseStatus(HttpStatus.CONFLICT)
-    public Result failure(OperationFailure e) {
+    public Result operationFailure(OperationFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
     }

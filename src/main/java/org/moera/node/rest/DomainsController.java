@@ -12,8 +12,10 @@ import org.moera.node.data.Domain;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RootAdmin;
 import org.moera.node.model.DomainInfo;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.option.Domains;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +59,7 @@ public class DomainsController {
         name = name.toLowerCase();
         UUID nodeId = domains.getDomainNodeId(name);
         if (nodeId == null) {
-            throw new OperationFailure("domain.not-found");
+            throw new ObjectNotFoundFailure("domain.not-found");
         }
         return new DomainInfo(name, nodeId.toString());
     }
@@ -70,7 +72,7 @@ public class DomainsController {
         log.info("POST /domains");
 
         if (StringUtils.isEmpty(domainInfo.getName())) {
-            throw new OperationFailure("domainInfo.name.blank");
+            throw new ValidationFailure("domainInfo.name.blank");
         }
         String name = domainInfo.getName().toLowerCase();
         UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
@@ -105,7 +107,7 @@ public class DomainsController {
         Domain domain;
         try {
             if (domains.getDomainNodeId(name) == null) {
-                throw new OperationFailure("domain.not-found");
+                throw new ObjectNotFoundFailure("domain.not-found");
             }
             if (!name.equals(newName)) {
                 if (name.equals(Domains.DEFAULT_DOMAIN)) {
@@ -138,7 +140,7 @@ public class DomainsController {
         domains.lockWrite();
         try {
             if (domains.getDomainNodeId(name) == null) {
-                throw new OperationFailure("domain.not-found");
+                throw new ObjectNotFoundFailure("domain.not-found");
             }
             domains.deleteDomain(name);
         } finally {

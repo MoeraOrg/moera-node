@@ -34,6 +34,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameInfo;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
@@ -140,11 +141,11 @@ public class RegisteredNameController {
         Integer generation = registeredNameSecret.getGeneration() != null
                 ? registeredNameSecret.getGeneration() : options.getInt("profile.registered-name.generation");
         if (StringUtils.isEmpty(name) || generation == null) {
-            throw new OperationFailure("registered-name.name-absent");
+            throw new ValidationFailure("registered-name.name-absent");
         }
         if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
                 && StringUtils.isEmpty(registeredNameSecret.getSecret())) {
-            throw new OperationFailure("registeredNameSecret.empty");
+            throw new ValidationFailure("registeredNameSecret.empty");
         }
 
         String mnemonic;
