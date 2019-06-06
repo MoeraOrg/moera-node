@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.UUID;
 
 import org.moera.node.data.Posting;
+import org.moera.node.util.Util;
 
 public class PostingInfo {
 
@@ -23,7 +24,7 @@ public class PostingInfo {
         ownerGeneration = posting.getOwnerGeneration();
         bodySrc = posting.getBodySrc();
         bodyHtml = posting.getBodyHtml();
-        created = posting.getCreated().getTime() / 1000;
+        created = Util.toEpochSecond(posting.getCreated());
         signature = posting.getSignature();
     }
 

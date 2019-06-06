@@ -47,7 +47,6 @@ public class RegisteredNameInfo {
                         operationErrorMessage = options.getString("naming.operation.error-message");
                         break;
                 }
-                operationStatusUpdated = operationStatusUpdated != null ? operationStatusUpdated / 1000 : null;
             }
         }
         operations = Collections.singletonMap("manage", new String[]{"admin"});

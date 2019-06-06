@@ -2,18 +2,20 @@ package org.moera.node.option;
 
 import java.sql.Timestamp;
 
+import org.moera.node.util.Util;
+
 @OptionType("Timestamp")
 public class TimestampOptionType extends OptionTypeBase {
 
     @Override
     public String serializeValue(Object value) {
-        return Long.toString(((Timestamp) value).getTime());
+        return Long.toString(Util.toEpochSecond((Timestamp) value));
     }
 
     @Override
     public Object deserializeValue(String value) {
         try {
-            return new Timestamp(Long.parseLong(value));
+            return Util.toTimestamp(Long.parseLong(value));
         } catch (NumberFormatException e) {
             throw new DeserializeOptionValueException(
                     String.format("Invalid value of type '%s' for option", getTypeName()));
@@ -22,7 +24,7 @@ public class TimestampOptionType extends OptionTypeBase {
 
     @Override
     public Long getLong(Object value) {
-        return value != null ? ((Timestamp) value).getTime() : null;
+        return Util.toEpochSecond((Timestamp) value);
     }
 
     @Override
@@ -33,7 +35,7 @@ public class TimestampOptionType extends OptionTypeBase {
     @Override
     public Object accept(Object value) {
         if (value instanceof Long) {
-            return new Timestamp((Long) value);
+            return Util.toTimestamp((Long) value);
         }
         if (value instanceof Timestamp) {
             return value;

@@ -17,6 +17,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.option.Options;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,7 +68,7 @@ public class PostingController {
     }
 
     private long buildMoment(Timestamp timestamp) {
-        return timestamp.getTime() / 1000 * 100 + nonce.getAndIncrement() % 100;
+        return Util.toEpochSecond(timestamp) * 100 + nonce.getAndIncrement() % 100;
     }
 
 }
