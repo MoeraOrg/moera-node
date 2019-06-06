@@ -35,10 +35,10 @@ public class Entry {
 
     @NotNull
     @Size(max = 127)
-    private String name;
+    private String ownerName;
 
     @NotNull
-    private int generation;
+    private int ownerGeneration;
 
     @NotNull
     private String bodySrc = "";
@@ -75,20 +75,20 @@ public class Entry {
         return entryType;
     }
 
-    public String getName() {
-        return name;
+    public String getOwnerName() {
+        return ownerName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
-    public int getGeneration() {
-        return generation;
+    public int getOwnerGeneration() {
+        return ownerGeneration;
     }
 
-    public void setGeneration(int generation) {
-        this.generation = generation;
+    public void setOwnerGeneration(int ownerGeneration) {
+        this.ownerGeneration = ownerGeneration;
     }
 
     public String getBodySrc() {

@@ -23,8 +23,4 @@ public class Util extends org.moera.commons.util.Util {
         return s instanceof SafeString ? (SafeString) s : new SafeString(HtmlUtils.htmlEscape(s.toString()));
     }
 
-    public static int random(int min, int max) {
-        return (int) (Math.random() * (max - min)) + min;
-    }
-
 }
