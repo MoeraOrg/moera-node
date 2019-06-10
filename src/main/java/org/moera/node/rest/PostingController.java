@@ -1,5 +1,9 @@
 package org.moera.node.rest;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -7,9 +11,11 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.fingerprint.PostingFingerprint;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -43,7 +49,7 @@ public class PostingController {
     @Admin
     @ResponseBody
     @Transactional
-    public PostingInfo post(@Valid @RequestBody PostingText postingText) {
+    public PostingInfo post(@Valid @RequestBody PostingText postingText) throws IOException, GeneralSecurityException {
         log.info("POST /postings (bodySrc = {}, bodyHtml = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodyHtml(), 64));
@@ -54,6 +60,10 @@ public class PostingController {
         if (name == null || generation == null) {
             throw new OperationFailure("posting.registered-name-not-set");
         }
+        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
+        if (signingKey == null) {
+            throw new OperationFailure("posting.signing-key-not-set");
+        }
 
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
@@ -62,6 +72,7 @@ public class PostingController {
         posting.setOwnerGeneration(generation);
         postingText.toPosting(posting);
         posting.setMoment(buildMoment(posting.getCreated()));
+        posting.setSignature(CryptoUtil.sign(new PostingFingerprint(posting), (ECPrivateKey) signingKey));
         postingRepository.saveAndFlush(posting);
 
         return new PostingInfo(posting);
