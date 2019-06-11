@@ -5,6 +5,7 @@ import javax.validation.constraints.Size;
 
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 
 public class PostingText {
@@ -18,6 +19,8 @@ public class PostingText {
     @NotBlank
     @Size(max = 65535)
     private String bodyHtml;
+
+    private Long created;
 
     public PostingText() {
     }
@@ -46,6 +49,14 @@ public class PostingText {
         this.bodyHtml = bodyHtml;
     }
 
+    public Long getCreated() {
+        return created;
+    }
+
+    public void setCreated(Long created) {
+        this.created = created;
+    }
+
     public void toPosting(Posting posting) {
         posting.setBodySrc(bodySrc);
         if (!StringUtils.isEmpty(bodySrcFormat)) {
@@ -56,6 +67,9 @@ public class PostingText {
             posting.setBodySrcFormat(format);
         }
         posting.setBodyHtml(bodyHtml);
+        if (created != null) {
+            posting.setCreated(Util.toTimestamp(created));
+        }
     }
 
 }
