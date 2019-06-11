@@ -10,6 +10,7 @@ public class PostingFingerprint extends Fingerprint {
     public String ownerName;
     public int ownerGeneration;
     public Digest<String> bodySrc = new Digest<>();
+    public String bodySrcFormat;
     public String bodyHtml;
     public long created;
 
@@ -18,6 +19,7 @@ public class PostingFingerprint extends Fingerprint {
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
         bodySrc.setValue(posting.getBodySrc());
+        bodySrcFormat = posting.getBodySrcFormat().getValue();
         bodyHtml = posting.getBodyHtml();
         created = Util.toEpochSecond(posting.getCreated());
     }

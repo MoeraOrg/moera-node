@@ -44,6 +44,10 @@ public class Entry {
     private String bodySrc = "";
 
     @NotNull
+    @Enumerated
+    private SourceFormat bodySrcFormat = SourceFormat.PLAIN_TEXT;
+
+    @NotNull
     private String bodyHtml = "";
 
     @NotNull
@@ -97,6 +101,14 @@ public class Entry {
 
     public void setBodySrc(String bodySrc) {
         this.bodySrc = bodySrc;
+    }
+
+    public SourceFormat getBodySrcFormat() {
+        return bodySrcFormat;
+    }
+
+    public void setBodySrcFormat(SourceFormat bodySrcFormat) {
+        this.bodySrcFormat = bodySrcFormat;
     }
 
     public String getBodyHtml() {

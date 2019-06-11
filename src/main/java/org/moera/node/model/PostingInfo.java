@@ -11,6 +11,7 @@ public class PostingInfo {
     private String ownerName;
     private int ownerGeneration;
     private String bodySrc;
+    private String bodySrcFormat;
     private String bodyHtml;
     private long created;
     private byte[] signature;
@@ -23,6 +24,7 @@ public class PostingInfo {
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
         bodySrc = posting.getBodySrc();
+        bodySrcFormat = posting.getBodySrcFormat().getValue();
         bodyHtml = posting.getBodyHtml();
         created = Util.toEpochSecond(posting.getCreated());
         signature = posting.getSignature();
@@ -58,6 +60,14 @@ public class PostingInfo {
 
     public void setBodySrc(String bodySrc) {
         this.bodySrc = bodySrc;
+    }
+
+    public String getBodySrcFormat() {
+        return bodySrcFormat;
+    }
+
+    public void setBodySrcFormat(String bodySrcFormat) {
+        this.bodySrcFormat = bodySrcFormat;
     }
 
     public String getBodyHtml() {

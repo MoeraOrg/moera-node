@@ -4,12 +4,16 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import org.moera.node.data.Posting;
+import org.moera.node.data.SourceFormat;
+import org.springframework.util.StringUtils;
 
 public class PostingText {
 
     @NotBlank
     @Size(max = 65535)
     private String bodySrc;
+
+    private String bodySrcFormat;
 
     @NotBlank
     @Size(max = 65535)
@@ -26,6 +30,14 @@ public class PostingText {
         this.bodySrc = bodySrc;
     }
 
+    public String getBodySrcFormat() {
+        return bodySrcFormat;
+    }
+
+    public void setBodySrcFormat(String bodySrcFormat) {
+        this.bodySrcFormat = bodySrcFormat;
+    }
+
     public String getBodyHtml() {
         return bodyHtml;
     }
@@ -36,6 +48,13 @@ public class PostingText {
 
     public void toPosting(Posting posting) {
         posting.setBodySrc(bodySrc);
+        if (!StringUtils.isEmpty(bodySrcFormat)) {
+            SourceFormat format = SourceFormat.forValue(bodySrcFormat);
+            if (format == null) {
+                throw new ValidationFailure("postingText.bodySrcFormat.unknown");
+            }
+            posting.setBodySrcFormat(format);
+        }
         posting.setBodyHtml(bodyHtml);
     }
 

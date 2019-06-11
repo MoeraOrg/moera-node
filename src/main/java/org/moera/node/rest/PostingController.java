@@ -50,8 +50,9 @@ public class PostingController {
     @ResponseBody
     @Transactional
     public PostingInfo post(@Valid @RequestBody PostingText postingText) throws IOException, GeneralSecurityException {
-        log.info("POST /postings (bodySrc = {}, bodyHtml = {})",
+        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, bodyHtml = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
+                LogUtil.format(postingText.getBodySrcFormat()),
                 LogUtil.format(postingText.getBodyHtml(), 64));
 
         Options options = requestContext.getOptions();
