@@ -29,7 +29,7 @@ public class TimelineUiController {
     @GetMapping("/timeline")
     @VirtualPage("/timeline")
     private String timeline(Model model, @RequestParam(required = false) Long before) throws PageNotFoundException {
-        before = before != null ? before : Long.MAX_VALUE - 1;
+        before = before != null ? before : Long.MAX_VALUE;
         PublicPage publicPage = publicPageRepository.findContaining(before);
         if (publicPage == null) {
             throw new PageNotFoundException();

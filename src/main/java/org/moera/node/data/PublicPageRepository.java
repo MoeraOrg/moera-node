@@ -9,7 +9,7 @@ public interface PublicPageRepository extends JpaRepository<PublicPage, Long> {
 
     PublicPage findByEndMoment(long endMoment);
 
-    @Query("select p from PublicPage p where ?1 >= p.beginMoment and ?1 < p.endMoment")
+    @Query("select p from PublicPage p where ?1 > p.beginMoment and ?1 <= p.endMoment")
     PublicPage findContaining(long moment);
 
 }

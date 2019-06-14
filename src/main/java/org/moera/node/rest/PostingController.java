@@ -106,11 +106,11 @@ public class PostingController {
         }
 
         long begin = firstPage.getBeginMoment();
-        if (moment >= begin) {
+        if (moment > begin) {
             int count = postingRepository.countInRange(begin, Long.MAX_VALUE);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
                 long median = postingRepository.findMomentsInRange(begin, Long.MAX_VALUE,
-                        PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE - 1, 1, Sort.by(Sort.Direction.DESC, "moment")))
+                        PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1, Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 firstPage.setBeginMoment(median);
                 PublicPage secondPage = new PublicPage();
@@ -124,11 +124,11 @@ public class PostingController {
 
         PublicPage lastPage = publicPageRepository.findByBeginMoment(0);
         long end = lastPage.getEndMoment();
-        if (moment < end) {
+        if (moment <= end) {
             int count = postingRepository.countInRange(0, end);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
                 long median = postingRepository.findMomentsInRange(0, end,
-                        PageRequest.of(PUBLIC_PAGE_AVG_SIZE, 1, Sort.by(Sort.Direction.DESC, "moment")))
+                        PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1, Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 lastPage.setEndMoment(median);
                 PublicPage prevPage = new PublicPage();
