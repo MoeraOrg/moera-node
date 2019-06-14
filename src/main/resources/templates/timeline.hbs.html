@@ -2,4 +2,11 @@
 
 <h2>Timeline</h2>
 
+{{#each postings}}
+    <div class="posting">
+        <div class="date">{{cal "dd-MM-yyyy HH:mm" date=created}}</div>
+        <div class="content">{{{bodyHtml}}}</div>
+    </div>
+{{/each}}
+
 {{> part/bottom}}

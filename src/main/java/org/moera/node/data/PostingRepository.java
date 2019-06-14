@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -14,5 +15,8 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query("select p.moment from Posting p where p.moment >= ?1 and p.moment < ?2")
     Page<Long> findMomentsInRange(long beginMoment, long endMoment, Pageable pageable);
+
+    @Query("select p from Posting p where p.moment >= ?1 and p.moment < ?2 order by p.moment desc")
+    List<Posting> findInRange(long beginMoment, long endMoment);
 
 }
