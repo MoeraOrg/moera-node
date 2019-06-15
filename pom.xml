@@ -212,6 +212,8 @@
                 </executions>
                 <configuration>
                     <outputPath>${project.build.directory}/classes/static/css/</outputPath>
+                    <sourceMapOutputPath>${project.build.directory}/classes/static/css/</sourceMapOutputPath>
+                    <outputStyle>compressed</outputStyle>
                 </configuration>
             </plugin>
         </plugins>
