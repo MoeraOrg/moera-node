@@ -1,5 +1,7 @@
 package org.moera.node.global;
 
+import java.util.UUID;
+
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -61,6 +63,11 @@ public class RequestContextImpl implements RequestContext {
         context.setAdmin(false);
         context.setOptions(options);
         return context;
+    }
+
+    @Override
+    public UUID nodeId() {
+        return options != null ? options.nodeId() : null;
     }
 
 }

@@ -66,7 +66,7 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
         if (!StringUtils.isEmpty(tokenS)) {
             Token token = tokenRepository.findById(tokenS).orElse(null);
             if (token == null
-                    || !token.getNodeId().equals(requestContext.getOptions().nodeId())
+                    || !token.getNodeId().equals(requestContext.nodeId())
                     || token.getDeadline().before(Util.now())) {
                 throw new InvalidTokenException();
             }

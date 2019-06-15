@@ -1,5 +1,7 @@
 package org.moera.node.global;
 
+import java.util.UUID;
+
 import org.moera.node.option.Options;
 
 public interface RequestContext {
@@ -21,5 +23,7 @@ public interface RequestContext {
     void setOptions(Options options);
 
     RequestContext getPublic();
+
+    UUID nodeId();
 
 }

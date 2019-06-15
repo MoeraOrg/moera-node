@@ -98,7 +98,7 @@ public class PostingController {
         PublicPage firstPage = publicPageRepository.findByEndMoment(Long.MAX_VALUE);
         if (firstPage == null) {
             firstPage = new PublicPage();
-            firstPage.setNodeId(requestContext.getOptions().nodeId());
+            firstPage.setNodeId(requestContext.nodeId());
             firstPage.setBeginMoment(0);
             firstPage.setEndMoment(Long.MAX_VALUE);
             publicPageRepository.save(firstPage);
@@ -114,7 +114,7 @@ public class PostingController {
                         .getContent().get(0);
                 firstPage.setBeginMoment(median);
                 PublicPage secondPage = new PublicPage();
-                secondPage.setNodeId(requestContext.getOptions().nodeId());
+                secondPage.setNodeId(requestContext.nodeId());
                 secondPage.setBeginMoment(begin);
                 secondPage.setEndMoment(median);
                 publicPageRepository.save(secondPage);
@@ -132,7 +132,7 @@ public class PostingController {
                         .getContent().get(0);
                 lastPage.setEndMoment(median);
                 PublicPage prevPage = new PublicPage();
-                prevPage.setNodeId(requestContext.getOptions().nodeId());
+                prevPage.setNodeId(requestContext.nodeId());
                 prevPage.setBeginMoment(median);
                 prevPage.setEndMoment(end);
                 publicPageRepository.save(prevPage);

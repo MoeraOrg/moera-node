@@ -69,7 +69,7 @@ public class TokensController {
         log.info("GET /tokens/{}", token);
 
         Token tokenData = tokenRepository.findById(token).orElse(null);
-        if (tokenData == null || !tokenData.getNodeId().equals(requestContext.getOptions().nodeId())) {
+        if (tokenData == null || !tokenData.getNodeId().equals(requestContext.nodeId())) {
             return new TokenInfo(token, false);
         }
         return new TokenInfo(tokenData);
