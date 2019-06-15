@@ -2,6 +2,10 @@
 
 <h2>Timeline</h2>
 
+{{#unless postings}}
+    <div class="no-postings">Nothing yet.</div>
+{{/unless}}
+
 {{#each postings}}
     <a name="m{{moment}}"></a>
     <div class="posting">

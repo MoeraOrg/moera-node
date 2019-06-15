@@ -95,7 +95,8 @@ public class PostingController {
     }
 
     private void updatePublicPages(long moment) {
-        PublicPage firstPage = publicPageRepository.findByEndMoment(Long.MAX_VALUE);
+        UUID nodeId = requestContext.nodeId();
+        PublicPage firstPage = publicPageRepository.findByEndMoment(nodeId, Long.MAX_VALUE);
         if (firstPage == null) {
             firstPage = new PublicPage();
             firstPage.setNodeId(requestContext.nodeId());
@@ -107,9 +108,9 @@ public class PostingController {
 
         long begin = firstPage.getBeginMoment();
         if (moment > begin) {
-            int count = postingRepository.countInRange(begin, Long.MAX_VALUE);
+            int count = postingRepository.countInRange(nodeId, begin, Long.MAX_VALUE);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = postingRepository.findMomentsInRange(begin, Long.MAX_VALUE,
+                long median = postingRepository.findMomentsInRange(nodeId, begin, Long.MAX_VALUE,
                         PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1, Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 firstPage.setBeginMoment(median);
@@ -122,12 +123,12 @@ public class PostingController {
             return;
         }
 
-        PublicPage lastPage = publicPageRepository.findByBeginMoment(0);
+        PublicPage lastPage = publicPageRepository.findByBeginMoment(nodeId, 0);
         long end = lastPage.getEndMoment();
         if (moment <= end) {
-            int count = postingRepository.countInRange(0, end);
+            int count = postingRepository.countInRange(nodeId, 0, end);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = postingRepository.findMomentsInRange(0, end,
+                long median = postingRepository.findMomentsInRange(nodeId, 0, end,
                         PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1, Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 lastPage.setEndMoment(median);
