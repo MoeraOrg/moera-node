@@ -3,6 +3,7 @@
 <h2>Timeline</h2>
 
 {{#each postings}}
+    <a name="m{{moment}}"></a>
     <div class="posting">
         <div class="date">{{cal "dd-MM-yyyy HH:mm" date=created}}</div>
         <div class="content">{{{bodyHtml}}}</div>

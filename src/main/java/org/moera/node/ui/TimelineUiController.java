@@ -34,6 +34,13 @@ public class TimelineUiController {
         if (publicPage == null) {
             throw new PageNotFoundException();
         }
+        if (publicPage.getEndMoment() != before) {
+            if (publicPage.getEndMoment() != Long.MAX_VALUE) {
+                return String.format("redirect:/timeline?before=%d#m%d", publicPage.getEndMoment(), before);
+            } else {
+                return String.format("redirect:/timeline#m%d", before);
+            }
+        }
         List<Posting> postings = postingRepository.findInRange(publicPage.getBeginMoment(), publicPage.getEndMoment());
 
         model.addAttribute("pageTitle", titleBuilder.build("Timeline"));
