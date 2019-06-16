@@ -9,7 +9,7 @@
 {{#each postings}}
     <a name="m{{moment}}"></a>
     <div class="posting">
-        <div class="date">{{cal "dd-MM-yyyy HH:mm" date=created}}</div>
+        <a class="date" href="/post/{{id}}">{{cal "dd-MM-yyyy HH:mm" date=created}}</a>
         <div class="content">{{{bodyHtml}}}</div>
     </div>
 {{/each}}

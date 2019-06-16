@@ -2,17 +2,20 @@ package org.moera.node.ui;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
+import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @UiController
@@ -32,7 +35,7 @@ public class TimelineUiController {
 
     @GetMapping("/timeline")
     @VirtualPage("/timeline")
-    private String timeline(Model model, @RequestParam(required = false) Long before) {
+    public String timeline(@RequestParam(required = false) Long before, Model model) {
         before = before != null ? before : Long.MAX_VALUE;
         List<Posting> postings = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContaining(requestContext.nodeId(), before);
@@ -53,6 +56,20 @@ public class TimelineUiController {
         model.addAttribute("postings", postings);
 
         return "timeline";
+    }
+
+    @GetMapping("/post/{id}")
+    public String posting(@PathVariable UUID id, Model model) {
+        Posting posting = postingRepository.findById(id).orElse(null);
+        if (posting == null) {
+            throw new PageNotFoundException();
+        }
+
+        model.addAttribute("pageTitle", titleBuilder.build("Posting")); // FIXME extract title from text
+        model.addAttribute("menuIndex", "timeline");
+        model.addAttribute("posting", posting);
+
+        return "posting";
     }
 
 }

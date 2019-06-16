@@ -1,0 +1,8 @@
+{{> part/top}}
+
+<div class="posting">
+    <div class="date">{{cal "dd-MM-yyyy HH:mm" date=posting.created}}</div>
+    <div class="content">{{{posting.bodyHtml}}}</div>
+</div>
+
+{{> part/bottom}}
