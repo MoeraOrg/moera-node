@@ -86,7 +86,7 @@ public class TimelineUiController {
                 .getContent().get(0);
         List<PublicPage> pages = publicPageRepository.findAllBeforeEndMoment(
                 requestContext.nodeId(), firstPage.getEndMoment(),
-                PageRequest.of(rangeFirst - 1, 5, Sort.Direction.DESC, "endMoment"))
+                PageRequest.of(0, 5, Sort.Direction.DESC, "endMoment"))
                 .getContent();
         int rangeLast = rangeFirst + pages.size() - 1;
 
