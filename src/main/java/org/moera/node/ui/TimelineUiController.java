@@ -141,7 +141,7 @@ public class TimelineUiController {
             throw new PageNotFoundException();
         }
 
-        model.addAttribute("pageTitle", titleBuilder.build("Posting")); // FIXME extract title from text
+        model.addAttribute("pageTitle", titleBuilder.build(posting.getHeading()));
         model.addAttribute("menuIndex", "timeline");
         model.addAttribute("posting", posting);
 

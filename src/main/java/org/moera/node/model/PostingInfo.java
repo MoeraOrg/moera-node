@@ -13,6 +13,7 @@ public class PostingInfo {
     private String bodySrc;
     private String bodySrcFormat;
     private String bodyHtml;
+    private String heading;
     private long created;
     private byte[] signature;
 
@@ -26,6 +27,7 @@ public class PostingInfo {
         bodySrc = posting.getBodySrc();
         bodySrcFormat = posting.getBodySrcFormat().getValue();
         bodyHtml = posting.getBodyHtml();
+        heading = posting.getHeading();
         created = Util.toEpochSecond(posting.getCreated());
         signature = posting.getSignature();
     }
@@ -76,6 +78,14 @@ public class PostingInfo {
 
     public void setBodyHtml(String bodyHtml) {
         this.bodyHtml = bodyHtml;
+    }
+
+    public String getHeading() {
+        return heading;
+    }
+
+    public void setHeading(String heading) {
+        this.heading = heading;
     }
 
     public long getCreated() {

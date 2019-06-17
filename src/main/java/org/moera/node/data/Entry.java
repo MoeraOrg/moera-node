@@ -51,6 +51,9 @@ public class Entry {
     private String bodyHtml = "";
 
     @NotNull
+    private String heading = "";
+
+    @NotNull
     private Timestamp created = Util.now();
 
     @NotNull
@@ -117,6 +120,14 @@ public class Entry {
 
     public void setBodyHtml(String bodyHtml) {
         this.bodyHtml = bodyHtml;
+    }
+
+    public String getHeading() {
+        return heading;
+    }
+
+    public void setHeading(String heading) {
+        this.heading = heading;
     }
 
     public Timestamp getCreated() {
