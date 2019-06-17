@@ -2,7 +2,8 @@ package org.moera.node.data;
 
 public enum SourceFormat {
 
-    PLAIN_TEXT;
+    PLAIN_TEXT,
+    HTML;
 
     public String getValue() {
         return name().toLowerCase().replace('_', '-');

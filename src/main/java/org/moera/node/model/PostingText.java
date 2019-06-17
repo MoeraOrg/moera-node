@@ -5,6 +5,7 @@ import javax.validation.constraints.Size;
 
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 
@@ -16,7 +17,6 @@ public class PostingText {
 
     private String bodySrcFormat;
 
-    @NotBlank
     @Size(max = 65535)
     private String bodyHtml;
 
@@ -66,7 +66,12 @@ public class PostingText {
             }
             posting.setBodySrcFormat(format);
         }
+
+        if (StringUtils.isEmpty(bodyHtml)) {
+            bodyHtml = TextConverter.toHtml(posting.getBodySrcFormat(), bodySrc);
+        }
         posting.setBodyHtml(bodyHtml);
+
         if (created != null) {
             posting.setCreated(Util.toTimestamp(created));
         }
