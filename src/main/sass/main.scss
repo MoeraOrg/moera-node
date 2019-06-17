@@ -1,3 +1,7 @@
+BODY {
+    background-color: #e9ebee;
+}
+
 .no-postings {
 	font-weight: bold;
 	color: #f0f0f0;
@@ -5,7 +9,25 @@
 	margin-top: 5rem;
 }
 
-.posting .date {
-    font-size: 0.8rem;
-    color: #a9a9a9;
+.posting {
+    background-color: #fff;
+    border: #dbdbdb 1px solid;
+    border-radius: 5px;
+    margin-top: 1rem;
+    padding: 0.5rem;
+
+    .date {
+        font-size: 0.8rem;
+        color: #a9a9a9;
+    }
+}
+
+.pagination {
+    margin-top: 1rem;
+
+    .page-link.page-dots {
+        border-top: none;
+        border-bottom: none;
+        background-color: inherit;
+    }
 }
