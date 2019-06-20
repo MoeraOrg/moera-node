@@ -19,4 +19,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Query("select p from Posting p where p.nodeId = ?1 and p.moment > ?2 and p.moment <= ?3 order by p.moment desc")
     List<Posting> findInRange(UUID nodeId, long beginMoment, long endMoment);
 
+    @Query("select p from Posting p where p.nodeId = ?1 and p.moment > ?2 and p.moment <= ?3")
+    Page<Posting> findSlice(UUID nodeId, long beginMoment, long endMoment, Pageable pageable);
+
 }

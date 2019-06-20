@@ -16,6 +16,7 @@ public class PostingInfo {
     private String heading;
     private long created;
     private byte[] signature;
+    private long moment;
 
     public PostingInfo() {
     }
@@ -30,6 +31,7 @@ public class PostingInfo {
         heading = posting.getHeading();
         created = Util.toEpochSecond(posting.getCreated());
         signature = posting.getSignature();
+        moment = posting.getMoment();
     }
 
     public UUID getId() {
@@ -102,6 +104,14 @@ public class PostingInfo {
 
     public void setSignature(byte[] signature) {
         this.signature = signature;
+    }
+
+    public long getMoment() {
+        return moment;
+    }
+
+    public void setMoment(long moment) {
+        this.moment = moment;
     }
 
 }
