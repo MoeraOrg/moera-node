@@ -43,15 +43,15 @@ public class TimelineUiController {
         List<Posting> postings = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContaining(requestContext.nodeId(), before);
         if (publicPage != null) {
-            if (publicPage.getEndMoment() != before) {
-                if (publicPage.getEndMoment() != Long.MAX_VALUE) {
-                    return String.format("redirect:/timeline?before=%d#m%d", publicPage.getEndMoment(), before);
+            if (publicPage.getBeforeMoment() != before) {
+                if (publicPage.getBeforeMoment() != Long.MAX_VALUE) {
+                    return String.format("redirect:/timeline?before=%d#m%d", publicPage.getBeforeMoment(), before);
                 } else {
                     return String.format("redirect:/timeline#m%d", before);
                 }
             }
             postings = postingRepository.findInRange(
-                    requestContext.nodeId(), publicPage.getBeginMoment(), publicPage.getEndMoment());
+                    requestContext.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment());
         }
 
         model.addAttribute("pageTitle", titleBuilder.build("Timeline"));
@@ -67,7 +67,7 @@ public class TimelineUiController {
             return null;
         }
 
-        int current = publicPageRepository.countNumber(requestContext.nodeId(), page.getEndMoment());
+        int current = publicPageRepository.countNumber(requestContext.nodeId(), page.getBeforeMoment());
         int last = publicPageRepository.countTotal(requestContext.nodeId());
         if (last <= 1) {
             return null;
@@ -76,23 +76,23 @@ public class TimelineUiController {
         tillLast = tillLast > 2 ? 2 : tillLast;
         int rangeFirst = current + tillLast - 4;
         rangeFirst = rangeFirst < 1 ? 1 : rangeFirst;
-        PublicPage firstPage = publicPageRepository.findAllBeforeEndMoment(
+        PublicPage firstPage = publicPageRepository.findAllBeforeMoment(
                 requestContext.nodeId(), Long.MAX_VALUE,
                 PageRequest.of(rangeFirst - 1, 1, Sort.Direction.DESC, "endMoment"))
                 .getContent().get(0);
-        PublicPage lastPage = publicPageRepository.findAllBeforeEndMoment(
+        PublicPage lastPage = publicPageRepository.findAllBeforeMoment(
                 requestContext.nodeId(), Long.MAX_VALUE,
                 PageRequest.of(last - 1, 1, Sort.Direction.DESC, "endMoment"))
                 .getContent().get(0);
-        List<PublicPage> pages = publicPageRepository.findAllBeforeEndMoment(
-                requestContext.nodeId(), firstPage.getEndMoment(),
+        List<PublicPage> pages = publicPageRepository.findAllBeforeMoment(
+                requestContext.nodeId(), firstPage.getBeforeMoment(),
                 PageRequest.of(0, 5, Sort.Direction.DESC, "endMoment"))
                 .getContent();
         int rangeLast = rangeFirst + pages.size() - 1;
 
         LinkedList<PaginationItem> items = new LinkedList<>();
         for (int i = 0; i < pages.size(); i++) {
-            items.add(PaginationItem.pageLink(rangeFirst + i, pages.get(i).getEndMoment(), rangeFirst + i == current));
+            items.add(PaginationItem.pageLink(rangeFirst + i, pages.get(i).getBeforeMoment(), rangeFirst + i == current));
         }
         if (rangeFirst > 2) {
             items.addFirst(PaginationItem.pageDots());
@@ -104,7 +104,7 @@ public class TimelineUiController {
             items.addLast(PaginationItem.pageDots());
         }
         if (last > rangeLast) {
-            items.addLast(PaginationItem.pageLink(last, lastPage.getEndMoment(), false));
+            items.addLast(PaginationItem.pageLink(last, lastPage.getBeforeMoment(), false));
         }
 
         long prevMoment = 0;

@@ -22,10 +22,10 @@ public class PublicPage {
     private UUID nodeId;
 
     @NotNull
-    private long beginMoment;
+    private long afterMoment;
 
     @NotNull
-    private long endMoment;
+    private long beforeMoment;
 
     public PublicPage() {
     }
@@ -46,20 +46,20 @@ public class PublicPage {
         this.nodeId = nodeId;
     }
 
-    public long getBeginMoment() {
-        return beginMoment;
+    public long getAfterMoment() {
+        return afterMoment;
     }
 
-    public void setBeginMoment(long beginMoment) {
-        this.beginMoment = beginMoment;
+    public void setAfterMoment(long afterMoment) {
+        this.afterMoment = afterMoment;
     }
 
-    public long getEndMoment() {
-        return endMoment;
+    public long getBeforeMoment() {
+        return beforeMoment;
     }
 
-    public void setEndMoment(long endMoment) {
-        this.endMoment = endMoment;
+    public void setBeforeMoment(long beforeMoment) {
+        this.beforeMoment = beforeMoment;
     }
 
 }

@@ -1,0 +1,4 @@
+ALTER TABLE public_pages RENAME COLUMN begin_moment TO after_moment;
+ALTER TABLE public_pages RENAME COLUMN end_moment TO before_moment;
+ALTER INDEX public_pages_node_id_begin_moment_idx RENAME TO public_pages_node_id_after_moment_idx;
+ALTER INDEX public_pages_node_id_end_moment_idx RENAME TO public_pages_node_id_before_moment_idx;

@@ -96,46 +96,46 @@ public class PostingController {
 
     private void updatePublicPages(long moment) {
         UUID nodeId = requestContext.nodeId();
-        PublicPage firstPage = publicPageRepository.findByEndMoment(nodeId, Long.MAX_VALUE);
+        PublicPage firstPage = publicPageRepository.findByBeforeMoment(nodeId, Long.MAX_VALUE);
         if (firstPage == null) {
             firstPage = new PublicPage();
             firstPage.setNodeId(requestContext.nodeId());
-            firstPage.setBeginMoment(0);
-            firstPage.setEndMoment(Long.MAX_VALUE);
+            firstPage.setAfterMoment(0);
+            firstPage.setBeforeMoment(Long.MAX_VALUE);
             publicPageRepository.save(firstPage);
             return;
         }
 
-        long begin = firstPage.getBeginMoment();
-        if (moment > begin) {
-            int count = postingRepository.countInRange(nodeId, begin, Long.MAX_VALUE);
+        long after = firstPage.getAfterMoment();
+        if (moment > after) {
+            int count = postingRepository.countInRange(nodeId, after, Long.MAX_VALUE);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = postingRepository.findMomentsInRange(nodeId, begin, Long.MAX_VALUE,
+                long median = postingRepository.findMomentsInRange(nodeId, after, Long.MAX_VALUE,
                         PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1, Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
-                firstPage.setBeginMoment(median);
+                firstPage.setAfterMoment(median);
                 PublicPage secondPage = new PublicPage();
                 secondPage.setNodeId(requestContext.nodeId());
-                secondPage.setBeginMoment(begin);
-                secondPage.setEndMoment(median);
+                secondPage.setAfterMoment(after);
+                secondPage.setBeforeMoment(median);
                 publicPageRepository.save(secondPage);
             }
             return;
         }
 
-        PublicPage lastPage = publicPageRepository.findByBeginMoment(nodeId, 0);
-        long end = lastPage.getEndMoment();
+        PublicPage lastPage = publicPageRepository.findByAfterMoment(nodeId, 0);
+        long end = lastPage.getBeforeMoment();
         if (moment <= end) {
             int count = postingRepository.countInRange(nodeId, 0, end);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
                 long median = postingRepository.findMomentsInRange(nodeId, 0, end,
                         PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1, Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
-                lastPage.setEndMoment(median);
+                lastPage.setBeforeMoment(median);
                 PublicPage prevPage = new PublicPage();
                 prevPage.setNodeId(requestContext.nodeId());
-                prevPage.setBeginMoment(median);
-                prevPage.setEndMoment(end);
+                prevPage.setAfterMoment(median);
+                prevPage.setBeforeMoment(end);
                 publicPageRepository.save(prevPage);
             }
         }
