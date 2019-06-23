@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Comparator;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -9,6 +10,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.TimelineSliceInfo;
+import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -40,23 +42,51 @@ public class TimelineController {
             @RequestParam(required = false) Long after,
             @RequestParam(required = false) Integer limit) {
 
-        before = before != null ? before : Long.MAX_VALUE;
-        after = after != null ? after : 0;
-        limit = limit != null && limit <= MAX_POSTINGS_PER_REQUEST ? limit : MAX_POSTINGS_PER_REQUEST;
+        if (before != null && after != null) {
+            throw new ValidationFailure("timeline.before-after-exclusive");
+        }
 
-        Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), after, before,
+        limit = limit != null && limit <= MAX_POSTINGS_PER_REQUEST ? limit : MAX_POSTINGS_PER_REQUEST;
+        if (after == null) {
+            before = before != null ? before : Long.MAX_VALUE;
+            return getPostingsBefore(before, limit);
+        } else {
+            return getPostingsAfter(after, limit);
+        }
+    }
+
+    private TimelineSliceInfo getPostingsBefore(long before, int limit) {
+        Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), 0, before,
                 PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         TimelineSliceInfo sliceInfo = new TimelineSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(after);
+            sliceInfo.setAfter(0);
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
         sliceInfo.setPostings(page.stream().map(PostingInfo::new).collect(Collectors.toList()));
         if (sliceInfo.getPostings().size() > limit) {
-            sliceInfo.getPostings().remove(limit.intValue()); // To call remove(int) instead of remove(Object)
+            sliceInfo.getPostings().remove(limit);
         }
+        return sliceInfo;
+    }
+
+    private TimelineSliceInfo getPostingsAfter(long after, int limit) {
+        Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), after, Long.MAX_VALUE,
+                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
+        TimelineSliceInfo sliceInfo = new TimelineSliceInfo();
+        sliceInfo.setAfter(after);
+        if (page.getNumberOfElements() < limit + 1) {
+            sliceInfo.setBefore(Long.MAX_VALUE);
+        } else {
+            sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
+        }
+        sliceInfo.setPostings(page.stream().map(PostingInfo::new).collect(Collectors.toList()));
+        if (sliceInfo.getPostings().size() > limit) {
+            sliceInfo.getPostings().remove(limit);
+        }
+        sliceInfo.getPostings().sort(Comparator.comparingLong(PostingInfo::getMoment).reversed());
         return sliceInfo;
     }
 
