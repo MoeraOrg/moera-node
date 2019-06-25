@@ -78,15 +78,15 @@ public class TimelineUiController {
         rangeFirst = rangeFirst < 1 ? 1 : rangeFirst;
         PublicPage firstPage = publicPageRepository.findAllBeforeMoment(
                 requestContext.nodeId(), Long.MAX_VALUE,
-                PageRequest.of(rangeFirst - 1, 1, Sort.Direction.DESC, "endMoment"))
+                PageRequest.of(rangeFirst - 1, 1, Sort.Direction.DESC, "beforeMoment"))
                 .getContent().get(0);
         PublicPage lastPage = publicPageRepository.findAllBeforeMoment(
                 requestContext.nodeId(), Long.MAX_VALUE,
-                PageRequest.of(last - 1, 1, Sort.Direction.DESC, "endMoment"))
+                PageRequest.of(last - 1, 1, Sort.Direction.DESC, "beforeMoment"))
                 .getContent().get(0);
         List<PublicPage> pages = publicPageRepository.findAllBeforeMoment(
                 requestContext.nodeId(), firstPage.getBeforeMoment(),
-                PageRequest.of(0, 5, Sort.Direction.DESC, "endMoment"))
+                PageRequest.of(0, 5, Sort.Direction.DESC, "beforeMoment"))
                 .getContent();
         int rangeLast = rangeFirst + pages.size() - 1;
 
