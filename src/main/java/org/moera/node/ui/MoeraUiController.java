@@ -18,8 +18,8 @@ public class MoeraUiController {
 
     @GetMapping("/timeline")
     @VirtualPage
-    public String timeline(@RequestParam(required = false) Long at) {
-        return at == null ? "redirect:/timeline" : String.format("redirect:/timeline?before=%d", at);
+    public String timeline(@RequestParam(required = false) Long before) {
+        return before == null ? "redirect:/timeline" : String.format("redirect:/timeline?before=%d", before);
     }
 
     @GetMapping("/profile")
