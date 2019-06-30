@@ -7,9 +7,8 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.moera.node.util.MoeraHeader;
+import org.moera.node.util.VirtualPageHeader;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -30,12 +29,8 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
         if (virtualPage == null) {
             return true;
         }
+        VirtualPageHeader.put(response, virtualPage.value());
 
-        if (!StringUtils.isEmpty(virtualPage.value())) {
-            response.addHeader(MoeraHeader.X_MOERA, MoeraHeader.build(virtualPage.value()));
-        } else {
-            response.addHeader(MoeraHeader.X_MOERA, "true");
-        }
         if (requestContext.isBrowserExtension()) {
             response.setContentType("text/html; charset=utf-8");
             Writer out = new OutputStreamWriter(response.getOutputStream());

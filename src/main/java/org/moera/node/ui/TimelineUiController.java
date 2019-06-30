@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -13,7 +14,7 @@ import org.moera.node.data.PublicPageRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
-import org.moera.node.global.VirtualPage;
+import org.moera.node.util.VirtualPageHeader;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.ui.Model;
@@ -37,8 +38,16 @@ public class TimelineUiController {
     private PostingRepository postingRepository;
 
     @GetMapping("/timeline")
-    @VirtualPage("/timeline")
-    public String timeline(@RequestParam(required = false) Long before, Model model) {
+    public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
+        if (before != null) {
+            VirtualPageHeader.put(response, String.format("/timeline?before=%d", before));
+        } else {
+            VirtualPageHeader.put(response, "/timeline");
+        }
+        if (requestContext.isBrowserExtension()) {
+            return null;
+        }
+
         before = before != null ? before : Long.MAX_VALUE;
         List<Posting> postings = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContaining(requestContext.nodeId(), before);
@@ -135,7 +144,12 @@ public class TimelineUiController {
     }
 
     @GetMapping("/post/{id}")
-    public String posting(@PathVariable UUID id, Model model) {
+    public String posting(@PathVariable UUID id, HttpServletResponse response, Model model) {
+        VirtualPageHeader.put(response, String.format("/post/%s", id));
+        if (requestContext.isBrowserExtension()) {
+            return null;
+        }
+
         Posting posting = postingRepository.findById(id).orElse(null);
         if (posting == null) {
             throw new PageNotFoundException();
