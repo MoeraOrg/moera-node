@@ -56,12 +56,12 @@ public class TimelineController {
     }
 
     private TimelineSliceInfo getPostingsBefore(long before, int limit) {
-        Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), 0, before,
+        Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), Long.MIN_VALUE, before,
                 PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         TimelineSliceInfo sliceInfo = new TimelineSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(0);
+            sliceInfo.setAfter(Long.MIN_VALUE);
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
