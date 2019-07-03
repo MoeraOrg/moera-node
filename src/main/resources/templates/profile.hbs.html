@@ -1,38 +1,40 @@
 {{> part/top}}
 
 <h2>Profile</h2>
-<dl class="row">
-    <dt class="col-sm-3">Registered name</dt>
-    <dd class="col-sm-9">
-        {{#if registeredName.name}}
-            {{registeredName.name}}
-            <sub><small>
-                {{#ifset registeredName.generation}}
-                    {{registeredName.generation}}
-                {{else}}
-                    ?
-                {{/ifset}}
-            </small></sub>
+<div class="profile-view">
+    <dl class="row">
+        <dt class="col-sm-3">Registered name</dt>
+        <dd class="col-sm-9">
+            {{#if registeredName.name}}
+                {{registeredName.name}}
+                <sub><small>
+                    {{#ifset registeredName.generation}}
+                        {{registeredName.generation}}
+                    {{else}}
+                        ?
+                    {{/ifset}}
+                </small></sub>
+            {{/if}}
+        </dd>
+        {{#if profile.fullName}}
+            <dt class="col-sm-3">Full name</dt>
+            <dd class="col-sm-9">
+                {{profile.fullName}}
+            </dd>
         {{/if}}
-    </dd>
-    {{#if profile.fullName}}
-        <dt class="col-sm-3">Full name</dt>
-        <dd class="col-sm-9">
-            {{profile.fullName}}
-        </dd>
-    {{/if}}
-    {{#if profile.gender}}
-        <dt class="col-sm-3">Gender</dt>
-        <dd class="col-sm-9">
-            {{profile.gender}}
-        </dd>
-    {{/if}}
-    {{#if profile.email}}
-        <dt class="col-sm-3">E-mail</dt>
-        <dd class="col-sm-9">
-            {{profile.email}}
-        </dd>
-    {{/if}}
-</dl>
+        {{#if profile.gender}}
+            <dt class="col-sm-3">Gender</dt>
+            <dd class="col-sm-9">
+                {{profile.gender}}
+            </dd>
+        {{/if}}
+        {{#if profile.email}}
+            <dt class="col-sm-3">E-mail</dt>
+            <dd class="col-sm-9">
+                {{profile.email}}
+            </dd>
+        {{/if}}
+    </dl>
+</div>
 
 {{> part/bottom}}

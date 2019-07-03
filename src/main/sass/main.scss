@@ -4,15 +4,19 @@ BODY {
 
 .no-postings {
 	font-weight: bold;
-	color: #f0f0f0;
+	color: #d0d0d0;
 	font-size: 4rem;
 	margin-top: 5rem;
 }
 
-.posting {
+@mixin pane {
     background-color: #fff;
     border: #dbdbdb 1px solid;
     border-radius: 5px;
+}
+
+.posting {
+    @include pane;
     margin-top: 1rem;
     padding: 0.5rem;
 
@@ -30,4 +34,11 @@ BODY {
         border-bottom: none;
         background-color: inherit;
     }
+}
+
+.profile-view {
+    @include pane;
+    padding-left: 1rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
 }
