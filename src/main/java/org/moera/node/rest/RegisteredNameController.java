@@ -157,7 +157,7 @@ public class RegisteredNameController {
         } else {
             mnemonic = String.join(" ", registeredNameSecret.getMnemonic());
         }
-        byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE).calculateSeed(mnemonic.toString(), "");
+        byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE).calculateSeed(mnemonic, "");
 
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");

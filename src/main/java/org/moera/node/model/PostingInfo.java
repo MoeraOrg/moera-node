@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import java.util.UUID;
 
+import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.util.Util;
 
@@ -10,7 +11,7 @@ public class PostingInfo {
     private UUID id;
     private String ownerName;
     private int ownerGeneration;
-    private String bodySrc;
+    private byte[] bodySrcHash;
     private String bodySrcFormat;
     private String bodyHtml;
     private String heading;
@@ -25,7 +26,7 @@ public class PostingInfo {
         id = posting.getId();
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
-        bodySrc = posting.getBodySrc();
+        bodySrcHash = CryptoUtil.digest(posting.getBodySrc());
         bodySrcFormat = posting.getBodySrcFormat().getValue();
         bodyHtml = posting.getBodyHtml();
         heading = posting.getHeading();
@@ -58,12 +59,12 @@ public class PostingInfo {
         this.ownerGeneration = ownerGeneration;
     }
 
-    public String getBodySrc() {
-        return bodySrc;
+    public byte[] getBodySrcHash() {
+        return bodySrcHash;
     }
 
-    public void setBodySrc(String bodySrc) {
-        this.bodySrc = bodySrc;
+    public void setBodySrcHash(byte[] bodySrcHash) {
+        this.bodySrcHash = bodySrcHash;
     }
 
     public String getBodySrcFormat() {

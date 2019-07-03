@@ -1,9 +1,7 @@
 package org.moera.node.naming;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
@@ -16,7 +14,6 @@ import javax.inject.Inject;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
-import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.NamingService;
@@ -251,28 +248,23 @@ public class NamingClient {
 
         UUID operationId;
 
+        if (log.isDebugEnabled()) {
+            log.debug("Data to be signed: {}", Util.dump(CryptoUtil.fingerprint(putCall)));
+        }
+        byte[] signature = CryptoUtil.sign(putCall, privateUpdatingKey);
+
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("Data to be signed: {}", Util.dump(CryptoUtil.fingerprint(putCall)));
-            }
-
-            byte[] signature = CryptoUtil.sign(putCall, privateUpdatingKey);
-
-            try {
-                operationId = namingService.put(
-                        name,
-                        info.getGeneration(),
-                        null,
-                        null,
-                        signingKey != null ? signingKeyR : null,
-                        signingKey != null ? validFrom : null,
-                        info.getDigest(),
-                        signature);
-            } catch (Exception e) {
-                throw new NamingNotAvailableException(e);
-            }
-        } catch (GeneralSecurityException | IOException e) {
-            throw new CryptoException(e);
+            operationId = namingService.put(
+                    name,
+                    info.getGeneration(),
+                    null,
+                    null,
+                    signingKey != null ? signingKeyR : null,
+                    signingKey != null ? validFrom : null,
+                    info.getDigest(),
+                    signature);
+        } catch (Exception e) {
+            throw new NamingNotAvailableException(e);
         }
         operationSent(operationId, options);
         options.set("naming.operation.registered-name", name);

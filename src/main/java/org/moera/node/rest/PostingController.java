@@ -1,7 +1,5 @@
 package org.moera.node.rest;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
@@ -59,7 +57,7 @@ public class PostingController {
     @Admin
     @ResponseBody
     @Transactional
-    public PostingInfo post(@Valid @RequestBody PostingText postingText) throws IOException, GeneralSecurityException {
+    public PostingInfo post(@Valid @RequestBody PostingText postingText) {
         log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, bodyHtml = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
