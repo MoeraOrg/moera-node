@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.ApiController;
@@ -41,6 +42,9 @@ public class TimelineController {
             @RequestParam(required = false) Long before,
             @RequestParam(required = false) Long after,
             @RequestParam(required = false) Integer limit) {
+
+        log.info("GET /timeline/postings (before = {}, after = {}, limit = {})",
+                LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
 
         if (before != null && after != null) {
             throw new ValidationFailure("timeline.before-after-exclusive");

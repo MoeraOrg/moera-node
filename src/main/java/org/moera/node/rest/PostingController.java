@@ -19,6 +19,7 @@ import org.moera.node.data.fingerprint.PostingFingerprint;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
@@ -28,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -137,6 +140,18 @@ public class PostingController {
                 publicPageRepository.save(prevPage);
             }
         }
+    }
+
+    @GetMapping("/{id}")
+    @ResponseBody
+    public PostingInfo get(@PathVariable UUID id) {
+        log.info("GET /postings/{id}, (id = {})", LogUtil.format(id));
+
+        Posting posting = postingRepository.findById(id).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        return new PostingInfo(posting);
     }
 
 }
