@@ -16,6 +16,10 @@ public class Shortener {
     private static final String SENTENCE_END = ".?!";
     private static final String PHRASE_END = ":,;)";
 
+    public static boolean isShort(String html) {
+        return html.length() <= SHORT_TEXT_MAX;
+    }
+
     public static String shorten(String html) {
         if (html.length() <= SHORT_TEXT_MAX) {
             return html;

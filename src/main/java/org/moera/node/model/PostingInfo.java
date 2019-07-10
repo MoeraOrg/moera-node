@@ -11,6 +11,7 @@ public class PostingInfo {
     private UUID id;
     private String ownerName;
     private int ownerGeneration;
+    private String bodyPreviewHtml;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
     private String bodyHtml;
@@ -26,6 +27,7 @@ public class PostingInfo {
         id = posting.getId();
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
+        bodyPreviewHtml = posting.getBodyPreviewHtml();
         bodySrcHash = CryptoUtil.digest(posting.getBodySrc());
         bodySrcFormat = posting.getBodySrcFormat().getValue();
         bodyHtml = posting.getBodyHtml();
@@ -57,6 +59,14 @@ public class PostingInfo {
 
     public void setOwnerGeneration(int ownerGeneration) {
         this.ownerGeneration = ownerGeneration;
+    }
+
+    public String getBodyPreviewHtml() {
+        return bodyPreviewHtml;
+    }
+
+    public void setBodyPreviewHtml(String bodyPreviewHtml) {
+        this.bodyPreviewHtml = bodyPreviewHtml;
     }
 
     public byte[] getBodySrcHash() {

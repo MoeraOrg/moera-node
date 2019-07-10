@@ -41,6 +41,9 @@ public class Entry {
     private int ownerGeneration;
 
     @NotNull
+    private String bodyPreviewHtml = "";
+
+    @NotNull
     private String bodySrc = "";
 
     @NotNull
@@ -96,6 +99,14 @@ public class Entry {
 
     public void setOwnerGeneration(int ownerGeneration) {
         this.ownerGeneration = ownerGeneration;
+    }
+
+    public String getBodyPreviewHtml() {
+        return bodyPreviewHtml;
+    }
+
+    public void setBodyPreviewHtml(String bodyPreviewHtml) {
+        this.bodyPreviewHtml = bodyPreviewHtml;
     }
 
     public String getBodySrc() {
