@@ -2,6 +2,34 @@ BODY {
     background-color: #e9ebee;
 }
 
+.navbar-moera {
+    margin-bottom: 1rem;
+    padding-top: 0;
+    padding-bottom: 0;
+
+    .navbar-brand {
+        border-right: 1px rgba(255,255,255,.5) solid;
+        padding-right: 1rem;
+    }
+
+    .registered-name {
+        color: #20c997;
+        font-weight: bold;
+
+    }
+
+    A.navbar-text:hover {
+        text-decoration: none;
+    }
+}
+
+SUB.generation {
+    position: relative;
+    left: 0.2em;
+    font-size: 60%;
+    font-weight: 400;
+}
+
 .no-postings {
 	font-weight: bold;
 	color: #d0d0d0;

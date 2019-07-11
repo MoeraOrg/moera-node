@@ -7,7 +7,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.ProfileInfo;
-import org.moera.node.model.RegisteredNameInfo;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -31,7 +30,6 @@ public class IndexUiController {
     public String profile(Model model, HttpServletResponse response) {
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
-        model.addAttribute("registeredName", new RegisteredNameInfo(requestContext.getPublic()));
         model.addAttribute("profile", new ProfileInfo(requestContext.getPublic()));
 
         return "profile";
