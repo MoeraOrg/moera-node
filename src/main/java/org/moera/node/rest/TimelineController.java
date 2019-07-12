@@ -10,6 +10,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.TimelineInfo;
 import org.moera.node.model.TimelineSliceInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
@@ -35,6 +36,14 @@ public class TimelineController {
 
     @Inject
     private PostingRepository postingRepository;
+
+    @GetMapping
+    @ResponseBody
+    public TimelineInfo get() {
+        log.info("GET /timeline");
+
+        return new TimelineInfo();
+    }
 
     @GetMapping("/postings")
     @ResponseBody
