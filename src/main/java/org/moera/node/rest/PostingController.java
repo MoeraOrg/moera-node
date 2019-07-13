@@ -148,7 +148,7 @@ public class PostingController {
         log.info("GET /postings/{id}, (id = {})", LogUtil.format(id));
 
         Posting posting = postingRepository.findById(id).orElse(null);
-        if (posting == null) {
+        if (posting == null || posting.getNodeId() != requestContext.nodeId()) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         return new PostingInfo(posting);
