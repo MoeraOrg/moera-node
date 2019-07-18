@@ -1,10 +1,22 @@
 package org.moera.node.data;
 
-public enum SourceFormat {
+public enum SourceFormat implements Choosable {
 
-    PLAIN_TEXT,
-    HTML;
+    PLAIN_TEXT("Plain text"),
+    HTML("HTML");
 
+    private String title;
+
+    SourceFormat(String title) {
+        this.title = title;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
     public String getValue() {
         return name().toLowerCase().replace('_', '-');
     }

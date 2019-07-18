@@ -21,6 +21,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.option.Options;
@@ -55,6 +56,14 @@ public class PostingController {
     private PublicPageRepository publicPageRepository;
 
     private AtomicInteger nonce = new AtomicInteger(0);
+
+    @GetMapping("/features")
+    @ResponseBody
+    public PostingFeatures getFeatures() {
+        log.info("GET /postings/features");
+
+        return PostingFeatures.INSTANCE;
+    }
 
     @PostMapping
     @Admin
