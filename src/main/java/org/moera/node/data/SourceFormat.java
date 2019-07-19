@@ -3,7 +3,8 @@ package org.moera.node.data;
 public enum SourceFormat implements Choosable {
 
     PLAIN_TEXT("Plain text"),
-    HTML("HTML");
+    HTML("HTML"),
+    MARKDOWN("Markdown");
 
     private String title;
 

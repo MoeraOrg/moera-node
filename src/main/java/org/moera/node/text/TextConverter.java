@@ -10,6 +10,8 @@ public class TextConverter {
                 return PlainTextConverter.toHtml(source);
             case HTML:
                 return source;
+            case MARKDOWN:
+                return MarkdownConverter.toHtml(source);
             default:
                 throw new IllegalArgumentException("Unknown source format: " + format.name());
         }
