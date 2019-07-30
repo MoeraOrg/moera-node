@@ -14,9 +14,7 @@ public class UriUtil {
         String forwardedHost = request.getHeader("X-Forwarded-Host");
         if (!StringUtils.isEmpty(forwardedHost)) {
             builder.host(forwardedHost);
-        }
-        String forwardedPort = request.getHeader("X-Forwarded-Port");
-        if (!StringUtils.isEmpty(forwardedPort)) {
+            String forwardedPort = request.getHeader("X-Forwarded-Port");
             builder.port(forwardedPort);
         }
         return builder;
