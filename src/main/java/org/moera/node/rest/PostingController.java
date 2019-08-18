@@ -92,7 +92,7 @@ public class PostingController {
         posting.setOwnerName(name);
         posting.setOwnerGeneration(generation);
         postingText.toPosting(posting);
-        posting.setMoment(buildMoment(posting.getCreated()));
+        posting.setMoment(buildMoment(posting.getPublishedAt()));
         posting.setSignature(CryptoUtil.sign(new PostingFingerprint(posting), (ECPrivateKey) signingKey));
         postingRepository.saveAndFlush(posting);
         updatePublicPages(posting.getMoment());

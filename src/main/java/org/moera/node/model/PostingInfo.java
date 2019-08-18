@@ -16,7 +16,8 @@ public class PostingInfo {
     private String bodySrcFormat;
     private String bodyHtml;
     private String heading;
-    private long created;
+    private long createdAt;
+    private long publishedAt;
     private byte[] signature;
     private long moment;
 
@@ -32,7 +33,8 @@ public class PostingInfo {
         bodySrcFormat = posting.getBodySrcFormat().getValue();
         bodyHtml = posting.getBodyHtml();
         heading = posting.getHeading();
-        created = Util.toEpochSecond(posting.getCreated());
+        createdAt = Util.toEpochSecond(posting.getCreatedAt());
+        publishedAt = Util.toEpochSecond(posting.getPublishedAt());
         signature = posting.getSignature();
         moment = posting.getMoment();
     }
@@ -101,12 +103,20 @@ public class PostingInfo {
         this.heading = heading;
     }
 
-    public long getCreated() {
-        return created;
+    public long getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreated(long created) {
-        this.created = created;
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public long getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(long publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     public byte[] getSignature() {

@@ -30,7 +30,7 @@ public class Token {
     private boolean admin;
 
     @NotNull
-    private Timestamp created = Util.now();
+    private Timestamp createdAt = Util.now();
 
     @NotNull
     private Timestamp deadline;
@@ -75,12 +75,12 @@ public class Token {
         this.admin = admin;
     }
 
-    public Timestamp getCreated() {
-        return created;
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreated(Timestamp created) {
-        this.created = created;
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Timestamp getDeadline() {

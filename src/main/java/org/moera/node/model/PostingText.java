@@ -22,7 +22,7 @@ public class PostingText {
     @Size(max = 65535)
     private String bodyHtml;
 
-    private Long created;
+    private Long publishAt;
 
     public PostingText() {
     }
@@ -51,12 +51,12 @@ public class PostingText {
         this.bodyHtml = bodyHtml;
     }
 
-    public Long getCreated() {
-        return created;
+    public Long getPublishAt() {
+        return publishAt;
     }
 
-    public void setCreated(Long created) {
-        this.created = created;
+    public void setPublishAt(Long publishAt) {
+        this.publishAt = publishAt;
     }
 
     public void toPosting(Posting posting) {
@@ -77,9 +77,8 @@ public class PostingText {
             posting.setBodyPreviewHtml(Shortener.shorten(bodyHtml));
         }
         posting.setHeading(HeadingExtractor.extract(bodyHtml));
-
-        if (created != null) {
-            posting.setCreated(Util.toTimestamp(created));
+        if (publishAt != null) {
+            posting.setPublishedAt(Util.toTimestamp(publishAt));
         }
     }
 

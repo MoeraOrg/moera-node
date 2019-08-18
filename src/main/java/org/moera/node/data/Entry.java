@@ -57,7 +57,10 @@ public class Entry {
     private String heading = "";
 
     @NotNull
-    private Timestamp created = Util.now();
+    private Timestamp createdAt = Util.now();
+
+    @NotNull
+    private Timestamp publishedAt = Util.now();
 
     @NotNull
     private long moment;
@@ -141,12 +144,20 @@ public class Entry {
         this.heading = heading;
     }
 
-    public Timestamp getCreated() {
-        return created;
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreated(Timestamp created) {
-        this.created = created;
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(Timestamp publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     public long getMoment() {

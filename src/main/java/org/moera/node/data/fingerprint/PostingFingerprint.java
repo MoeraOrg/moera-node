@@ -12,7 +12,7 @@ public class PostingFingerprint extends Fingerprint {
     public Digest<String> bodySrc = new Digest<>();
     public String bodySrcFormat;
     public String bodyHtml;
-    public long created;
+    public long createdAt;
 
     public PostingFingerprint(Posting posting) {
         super(0);
@@ -21,7 +21,7 @@ public class PostingFingerprint extends Fingerprint {
         bodySrc.setValue(posting.getBodySrc());
         bodySrcFormat = posting.getBodySrcFormat().getValue();
         bodyHtml = posting.getBodyHtml();
-        created = Util.toEpochSecond(posting.getCreated());
+        createdAt = Util.toEpochSecond(posting.getCreatedAt());
     }
 
 }
