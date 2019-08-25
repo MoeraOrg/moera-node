@@ -2,6 +2,6 @@
 .*.swp
 *.log
 .idea/
-src/main/resources/application-dev*.yml
 target/
 log/
+application-dev*.yml
