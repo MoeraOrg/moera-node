@@ -1,8 +1,10 @@
 package org.moera.node.global;
 
-import org.moera.node.model.ObjectNotFoundFailure;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
-public class PageNotFoundException extends ObjectNotFoundFailure {
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class PageNotFoundException extends RuntimeException {
 
     public PageNotFoundException() {
         super("Page not found");
