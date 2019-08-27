@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+        <title>{{pageTitle}}</title>
+        <style>
+                #content {
+                    display: flex;
+                    flex-flow: row wrap;
+                    justify-content: center;
+                }
+                .column {
+                    margin: 1.5em;
+                }
+                #status {
+                    font-size: 40pt;
+                    font-weight: bold;
+                    position: relative;
+                    top: -6pt;
+                    margin-left: 0.5em;
+                }
+                #comment {
+                    font-size: 24pt;
+                    font-style: italic;
+                }
+                HEADER {
+                    font-weight: bold;
+                    font-size: larger;
+                }
+                LI {
+                    margin: 5pt 0;
+                }
+            </style>
+    </head>
+    <body>
+        <div id="content">
+            <div class="column">
+                {{image "/pics/logo-128.png"}}
+            </div>
+            <div class="column">
+                <span id="status">{{status}}</span><br>
+                <span id="comment">{{comment}}</span>
+            </div>
+        </div>
+    </body>
+</html>

@@ -17,7 +17,11 @@ public class TitleBuilder {
         if (!StringUtils.isEmpty(title)) {
             buf.append(title);
             buf.append(' ');
-            String name = requestContext.getPublic().getOptions().getString("profile.registered-name");
+            String name = "";
+            try {
+                name = requestContext.getPublic().getOptions().getString("profile.registered-name");
+            } catch (Exception e) {
+            }
             if (!StringUtils.isEmpty(name)) {
                 buf.append("@ ");
                 buf.append(name);
