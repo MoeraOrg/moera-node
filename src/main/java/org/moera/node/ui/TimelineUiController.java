@@ -82,9 +82,9 @@ public class TimelineUiController {
             return null;
         }
         int tillLast = last - current;
-        tillLast = tillLast > 2 ? 2 : tillLast;
+        tillLast = Math.min(tillLast, 2);
         int rangeFirst = current + tillLast - 4;
-        rangeFirst = rangeFirst < 1 ? 1 : rangeFirst;
+        rangeFirst = Math.max(rangeFirst, 1);
         PublicPage firstPage = publicPageRepository.findAllBeforeMoment(
                 requestContext.nodeId(), Long.MAX_VALUE,
                 PageRequest.of(rangeFirst - 1, 1, Sort.Direction.DESC, "beforeMoment"))
