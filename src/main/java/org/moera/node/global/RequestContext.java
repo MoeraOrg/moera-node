@@ -22,6 +22,10 @@ public interface RequestContext {
 
     void setOptions(Options options);
 
+    String getSiteUrl();
+
+    void setSiteUrl(String siteUrl);
+
     RequestContext getPublic();
 
     UUID nodeId();

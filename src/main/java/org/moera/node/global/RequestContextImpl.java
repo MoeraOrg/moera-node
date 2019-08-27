@@ -15,6 +15,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean rootAdmin;
     private boolean admin;
     private Options options;
+    private String siteUrl;
 
     @Override
     public boolean isBrowserExtension() {
@@ -57,11 +58,22 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public String getSiteUrl() {
+        return siteUrl;
+    }
+
+    @Override
+    public void setSiteUrl(String siteUrl) {
+        this.siteUrl = siteUrl;
+    }
+
+    @Override
     public RequestContext getPublic() {
         RequestContext context = new RequestContextImpl();
         context.setBrowserExtension(false);
         context.setAdmin(false);
         context.setOptions(options);
+        context.setSiteUrl(siteUrl);
         return context;
     }
 

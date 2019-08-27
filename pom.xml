@@ -124,6 +124,11 @@
             <artifactId>flexmark-all</artifactId>
             <version>0.50.18</version>
         </dependency>
+        <dependency>
+            <groupId>com.rometools</groupId>
+            <artifactId>rome</artifactId>
+            <version>1.12.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -134,7 +139,7 @@
         <dependency>
             <groupId>org.moera</groupId>
             <artifactId>moera-commons</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
     </dependencies>
 

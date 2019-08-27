@@ -9,12 +9,14 @@ import org.moera.node.global.DomainInterceptor;
 import org.moera.node.global.PermissionsInterceptor;
 import org.moera.node.global.CacheControlInterceptor;
 import org.moera.node.global.NetworkLatencyInterceptor;
+import org.moera.node.global.SyndFeedHttpMessageConverter;
 import org.moera.node.global.VirtualPageInterceptor;
 import org.moera.node.helper.HelperSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -70,6 +72,12 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     @Override
     public void configureViewResolvers(ViewResolverRegistry registry) {
         registry.viewResolver(handlebarsViewResolver());
+    }
+
+    @Bean
+    public HttpMessageConverters customMessageConverters() {
+        return new HttpMessageConverters(
+                new SyndFeedHttpMessageConverter());
     }
 
     public static void main(String[] args) {
