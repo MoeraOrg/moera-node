@@ -10,7 +10,14 @@
     <a name="m{{moment}}"></a>
     <div class="posting">
         <a class="date" href="/post/{{id}}">{{cal "dd-MM-yyyy HH:mm" date=publishedAt}}</a>
-        <div class="content">{{{bodyHtml}}}</div>
+        {{#if bodyPreviewHtml}}
+            <div class="content">
+                <div>{{{bodyPreviewHtml}}}</div>
+                <a href="/post/{{id}}">Continue Reading &rarr;</a>
+            </div>
+        {{else}}
+            <div class="content">{{{bodyHtml}}}</div>
+        {{/if}}
     </div>
 {{/each}}
 
