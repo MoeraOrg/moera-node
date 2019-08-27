@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
+@RestControllerAdvice(annotations = ApiController.class)
 public class ExceptionsControllerAdvice {
 
     private static Logger log = LoggerFactory.getLogger(ExceptionsControllerAdvice.class);
@@ -28,7 +28,6 @@ public class ExceptionsControllerAdvice {
     private MessageSource messageSource;
 
     @ExceptionHandler
-    @ResponseBody
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result exception(Throwable e) {
         log.error("Exception in controller", e);
@@ -39,7 +38,6 @@ public class ExceptionsControllerAdvice {
     }
 
     @ExceptionHandler
-    @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result validation(MethodArgumentNotValidException e) {
         ObjectError objectError = e.getBindingResult().getAllErrors().get(0);
@@ -50,7 +48,6 @@ public class ExceptionsControllerAdvice {
     }
 
     @ExceptionHandler
-    @ResponseBody
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result objectNotFound(ObjectNotFoundFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
@@ -58,7 +55,6 @@ public class ExceptionsControllerAdvice {
     }
 
     @ExceptionHandler
-    @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result validationFailure(ValidationFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
@@ -66,7 +62,6 @@ public class ExceptionsControllerAdvice {
     }
 
     @ExceptionHandler
-    @ResponseBody
     @ResponseStatus(HttpStatus.CONFLICT)
     public Result operationFailure(OperationFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
@@ -83,7 +78,6 @@ public class ExceptionsControllerAdvice {
     }
 
     @ExceptionHandler
-    @ResponseBody
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Result authenticationRequired(AuthenticationException e) {
         String errorCode = "authentication.required";
@@ -92,7 +86,6 @@ public class ExceptionsControllerAdvice {
     }
 
     @ExceptionHandler
-    @ResponseBody
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result authenticationInvalid(InvalidTokenException e) {
         String errorCode = "authentication.invalid";
