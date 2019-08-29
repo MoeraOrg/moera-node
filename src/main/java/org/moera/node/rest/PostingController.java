@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.net.URI;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
@@ -30,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,9 +69,8 @@ public class PostingController {
 
     @PostMapping
     @Admin
-    @ResponseBody
     @Transactional
-    public PostingInfo post(@Valid @RequestBody PostingText postingText) {
+    public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
         log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, bodyHtml = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
@@ -97,7 +98,7 @@ public class PostingController {
         postingRepository.saveAndFlush(posting);
         updatePublicPages(posting.getMoment());
 
-        return new PostingInfo(posting);
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting));
     }
 
     private long buildMoment(Timestamp timestamp) {

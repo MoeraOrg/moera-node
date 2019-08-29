@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.option.Domains;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -66,9 +68,8 @@ public class DomainsController {
 
     @RootAdmin
     @PostMapping
-    @ResponseBody
     @Transactional
-    public DomainInfo post(@RequestBody @Valid DomainInfo domainInfo) {
+    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainInfo domainInfo) {
         log.info("POST /domains");
 
         if (StringUtils.isEmpty(domainInfo.getName())) {
@@ -88,7 +89,8 @@ public class DomainsController {
         } finally {
             domains.unlockWrite();
         }
-        return new DomainInfo(domain.getName(), domain.getNodeId());
+        return ResponseEntity.created(URI.create("/domains/" + domain.getName()))
+                .body(new DomainInfo(domain.getName(), domain.getNodeId()));
     }
 
     @RootAdmin

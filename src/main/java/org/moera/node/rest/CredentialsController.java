@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.net.URI;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -15,6 +16,7 @@ import org.moera.node.model.Result;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,9 +46,8 @@ public class CredentialsController {
     }
 
     @PostMapping
-    @ResponseBody
     @Transactional
-    public Result post(@Valid @RequestBody Credentials credentials) {
+    public ResponseEntity<Result> post(@Valid @RequestBody Credentials credentials) {
         log.info("POST /credentials (login = '{}')", credentials.getLogin());
 
         Options options = requestContext.getOptions();
@@ -59,7 +60,7 @@ public class CredentialsController {
             options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
         });
 
-        return Result.OK;
+        return ResponseEntity.created(URI.create("/credentials")).body(Result.OK);
     }
 
     @PutMapping

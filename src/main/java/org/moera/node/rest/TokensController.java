@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
 import javax.inject.Inject;
@@ -18,6 +19,7 @@ import org.moera.node.model.TokenInfo;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,8 +41,7 @@ public class TokensController {
     private TokenRepository tokenRepository;
 
     @PostMapping
-    @ResponseBody
-    public TokenCreated post(@Valid @RequestBody Credentials credentials) {
+    public ResponseEntity<TokenCreated> post(@Valid @RequestBody Credentials credentials) {
         log.info("POST /tokens (login = '{}')", credentials.getLogin());
 
         Options options = requestContext.getOptions();
@@ -60,7 +61,8 @@ public class TokensController {
         token.setDeadline(Timestamp.from(Instant.now().plus(options.getDuration("token.lifetime"))));
         tokenRepository.save(token);
 
-        return new TokenCreated(token.getToken(), "admin");
+        return ResponseEntity.created(URI.create("/tokens/" + token.getToken()))
+                .body(new TokenCreated(token.getToken(), "admin"));
     }
 
     @GetMapping("/{token}")
