@@ -1,0 +1,6 @@
+ALTER TABLE options RENAME id TO old_id;
+ALTER TABLE options ADD COLUMN id uuid NOT NULL DEFAULT uuid_generate_v4();
+ALTER TABLE options DROP CONSTRAINT options_pkey;
+ALTER TABLE options ADD PRIMARY KEY(id);
+ALTER TABLE options ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE options DROP COLUMN old_id;

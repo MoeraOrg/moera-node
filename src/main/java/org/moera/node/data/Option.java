@@ -1,10 +1,7 @@
 package org.moera.node.data;
 
 import java.util.UUID;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -15,9 +12,7 @@ import javax.validation.constraints.Size;
 public class Option {
 
     @Id
-    @GeneratedValue
-    @Access(AccessType.PROPERTY)
-    private long id;
+    private UUID id;
 
     @NotNull
     private UUID nodeId;
@@ -33,15 +28,16 @@ public class Option {
     }
 
     public Option(UUID nodeId, String name) {
+        this.id = UUID.randomUUID();
         this.nodeId = nodeId;
         this.name = name;
     }
 
-    public long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
