@@ -25,7 +25,7 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting) {
-        id = posting.getId();
+        id = posting.getEntryId();
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
         bodyPreviewHtml = posting.getBodyPreviewHtml();

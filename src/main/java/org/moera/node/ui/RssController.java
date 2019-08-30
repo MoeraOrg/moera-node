@@ -66,8 +66,8 @@ public class RssController {
 
         SyndEntry entry = new SyndEntryImpl();
         entry.setTitle(posting.getHeading());
-        entry.setLink(siteUrl + "/post/" + posting.getId());
-        entry.setUri("urn:entry:" + posting.getId());
+        entry.setLink(siteUrl + "/post/" + posting.getEntryId());
+        entry.setUri("urn:entry:" + posting.getEntryId());
         entry.setPublishedDate(posting.getPublishedAt());
 
         StringBuilder buf = new StringBuilder();
@@ -76,7 +76,7 @@ public class RssController {
         buf.append(hasPreview ? posting.getBodyPreviewHtml() : posting.getBodyHtml());
         buf.append("</div>");
         if (hasPreview) {
-            buf.append(String.format("<a href=\"/post/%s\">Continue Reading &rarr;</a>", posting.getId()));
+            buf.append(String.format("<a href=\"/post/%s\">Continue Reading &rarr;</a>", posting.getEntryId()));
         }
 
         SyndContent content = new SyndContentImpl();

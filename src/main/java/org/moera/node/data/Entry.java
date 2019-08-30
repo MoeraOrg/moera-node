@@ -29,6 +29,9 @@ public class Entry {
     private UUID nodeId;
 
     @NotNull
+    private UUID entryId;
+
+    @NotNull
     @Enumerated
     @Column(insertable = false, updatable = false)
     private EntryType entryType;
@@ -62,6 +65,8 @@ public class Entry {
     @NotNull
     private Timestamp publishedAt = Util.now();
 
+    private Timestamp deletedAt;
+
     @NotNull
     private long moment;
 
@@ -82,6 +87,14 @@ public class Entry {
 
     public void setNodeId(UUID nodeId) {
         this.nodeId = nodeId;
+    }
+
+    public UUID getEntryId() {
+        return entryId;
+    }
+
+    public void setEntryId(UUID entryId) {
+        this.entryId = entryId;
     }
 
     public EntryType getEntryType() {
@@ -158,6 +171,14 @@ public class Entry {
 
     public void setPublishedAt(Timestamp publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public Timestamp getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Timestamp deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public long getMoment() {

@@ -89,6 +89,7 @@ public class PostingController {
 
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
+        posting.setEntryId(UUID.randomUUID());
         posting.setNodeId(options.nodeId());
         posting.setOwnerName(name);
         posting.setOwnerGeneration(generation);
@@ -98,7 +99,7 @@ public class PostingController {
         postingRepository.saveAndFlush(posting);
         updatePublicPages(posting.getMoment());
 
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting));
+        return ResponseEntity.created(URI.create("/postings/" + posting.getEntryId())).body(new PostingInfo(posting));
     }
 
     private long buildMoment(Timestamp timestamp) {
@@ -157,7 +158,7 @@ public class PostingController {
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findByNodeIdAndEntryId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
