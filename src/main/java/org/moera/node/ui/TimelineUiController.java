@@ -150,7 +150,7 @@ public class TimelineUiController {
             return null;
         }
 
-        Posting posting = postingRepository.findById(id).orElse(null);
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new PageNotFoundException();
         }

@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -9,6 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface PostingRepository extends JpaRepository<Posting, UUID> {
+
+    Optional<Posting> findByNodeIdAndId(UUID nodeId, UUID id);
 
     @Query("select count(*) from Posting p where p.nodeId = ?1 and p.moment > ?2 and p.moment <= ?3")
     int countInRange(UUID nodeId, long afterMoment, long beforeMoment);
