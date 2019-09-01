@@ -25,6 +25,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
+import org.moera.node.model.Result;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -163,6 +165,22 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         return new PostingInfo(posting);
+    }
+
+    @DeleteMapping("/{id}")
+    @Admin
+    @ResponseBody
+    @Transactional
+    public Result delete(@PathVariable UUID id) {
+        log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
+
+        Posting posting = postingRepository.findByNodeIdAndEntryId(requestContext.nodeId(), id).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        posting.setDeletedAt(Util.now());
+
+        return Result.OK;
     }
 
 }
