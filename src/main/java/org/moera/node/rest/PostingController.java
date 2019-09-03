@@ -10,13 +10,11 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
-import org.moera.node.data.fingerprint.PostingFingerprint;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -37,6 +35,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -73,10 +72,11 @@ public class PostingController {
     @Admin
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
-        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, bodyHtml = {})",
+        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, bodyHtml = {}, publishAt = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.format(postingText.getBodyHtml(), 64));
+                LogUtil.format(postingText.getBodyHtml(), 64),
+                LogUtil.formatTimestamp(postingText.getPublishAt()));
 
         Options options = requestContext.getOptions();
         String name = options.getString("profile.registered-name");
@@ -97,11 +97,49 @@ public class PostingController {
         posting.setOwnerGeneration(generation);
         postingText.toPosting(posting);
         posting.setMoment(buildMoment(posting.getPublishedAt()));
-        posting.setSignature(CryptoUtil.sign(new PostingFingerprint(posting), (ECPrivateKey) signingKey));
+        posting.sign((ECPrivateKey) signingKey);
         postingRepository.saveAndFlush(posting);
         updatePublicPages(posting.getMoment());
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getEntryId())).body(new PostingInfo(posting));
+    }
+
+    @PutMapping("/{id}")
+    @Admin
+    @Transactional
+    public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
+        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, bodyHtml = {}, publishAt = {})",
+                LogUtil.format(id),
+                LogUtil.format(postingText.getBodySrc(), 64),
+                LogUtil.format(postingText.getBodySrcFormat()),
+                LogUtil.format(postingText.getBodyHtml(), 64),
+                LogUtil.formatTimestamp(postingText.getPublishAt()));
+
+        Posting latest = postingRepository.findByNodeIdAndEntryId(requestContext.nodeId(), id).orElse(null);
+        if (latest == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+
+        Options options = requestContext.getOptions();
+        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
+        if (signingKey == null) {
+            throw new OperationFailure("posting.signing-key-not-set");
+        }
+
+        latest.setDeletedAt(Util.now());
+
+        Posting posting = latest.newRevision();
+        postingText.toPosting(posting);
+        if (posting.getPublishedAt().equals(latest.getPublishedAt())) {
+            posting.setMoment(latest.getMoment());
+        } else {
+            posting.setMoment(buildMoment(posting.getPublishedAt()));
+        }
+        posting.sign((ECPrivateKey) signingKey);
+        postingRepository.saveAndFlush(posting);
+        updatePublicPages(posting.getMoment());
+
+        return new PostingInfo(posting);
     }
 
     private long buildMoment(Timestamp timestamp) {
