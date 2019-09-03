@@ -33,4 +33,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Query("select min(p.createdAt) from Posting p where p.nodeId = ?1 and p.entryId = ?2")
     Timestamp firstCreatedAt(UUID nodeId, UUID entryId);
 
+    @Query("select count(*) from Posting p where p.nodeId = ?1 and p.entryId = ?2")
+    int countRevisions(UUID nodeId, UUID entryId);
+
 }

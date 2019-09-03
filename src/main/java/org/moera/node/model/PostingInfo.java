@@ -10,6 +10,7 @@ public class PostingInfo {
 
     private UUID id;
     private UUID revisionId;
+    private int totalRevisions;
     private String ownerName;
     private int ownerGeneration;
     private String bodyPreviewHtml;
@@ -57,6 +58,14 @@ public class PostingInfo {
 
     public void setRevisionId(UUID revisionId) {
         this.revisionId = revisionId;
+    }
+
+    public int getTotalRevisions() {
+        return totalRevisions;
+    }
+
+    public void setTotalRevisions(int totalRevisions) {
+        this.totalRevisions = totalRevisions;
     }
 
     public String getOwnerName() {

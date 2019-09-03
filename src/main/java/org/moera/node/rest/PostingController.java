@@ -224,9 +224,13 @@ public class PostingController {
 
     private PostingInfo toPostingInfo(Posting posting) {
         PostingInfo postingInfo = new PostingInfo(posting);
-        Timestamp createdAt = postingRepository.firstCreatedAt(requestContext.nodeId(), posting.getEntryId());
-        if (createdAt != null) {
-            postingInfo.setCreatedAt(Util.toEpochSecond(createdAt));
+        int totalRevisions = postingRepository.countRevisions(requestContext.nodeId(), posting.getEntryId());
+        postingInfo.setTotalRevisions(totalRevisions);
+        if (totalRevisions > 1) {
+            Timestamp createdAt = postingRepository.firstCreatedAt(requestContext.nodeId(), posting.getEntryId());
+            if (createdAt != null) {
+                postingInfo.setCreatedAt(Util.toEpochSecond(createdAt));
+            }
         }
 
         return postingInfo;
