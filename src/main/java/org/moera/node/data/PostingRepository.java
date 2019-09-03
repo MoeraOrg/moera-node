@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,5 +29,8 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query("select p from Posting p where p.nodeId = ?1 and p.moment > ?2 and p.moment <= ?3 and p.deletedAt is null")
     Page<Posting> findSlice(UUID nodeId, long afterMoment, long beforeMoment, Pageable pageable);
+
+    @Query("select min(p.createdAt) from Posting p where p.nodeId = ?1 and p.entryId = ?2")
+    Timestamp firstCreatedAt(UUID nodeId, UUID entryId);
 
 }

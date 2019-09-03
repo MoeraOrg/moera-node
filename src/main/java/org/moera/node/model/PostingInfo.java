@@ -9,6 +9,7 @@ import org.moera.node.util.Util;
 public class PostingInfo {
 
     private UUID id;
+    private UUID revisionId;
     private String ownerName;
     private int ownerGeneration;
     private String bodyPreviewHtml;
@@ -17,6 +18,7 @@ public class PostingInfo {
     private String bodyHtml;
     private String heading;
     private long createdAt;
+    private long editedAt;
     private long publishedAt;
     private byte[] signature;
     private long moment;
@@ -26,6 +28,7 @@ public class PostingInfo {
 
     public PostingInfo(Posting posting) {
         id = posting.getEntryId();
+        revisionId = posting.getId();
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
         bodyPreviewHtml = posting.getBodyPreviewHtml();
@@ -34,6 +37,7 @@ public class PostingInfo {
         bodyHtml = posting.getBodyHtml();
         heading = posting.getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
+        editedAt = createdAt;
         publishedAt = Util.toEpochSecond(posting.getPublishedAt());
         signature = posting.getSignature();
         moment = posting.getMoment();
@@ -45,6 +49,14 @@ public class PostingInfo {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getRevisionId() {
+        return revisionId;
+    }
+
+    public void setRevisionId(UUID revisionId) {
+        this.revisionId = revisionId;
     }
 
     public String getOwnerName() {
@@ -109,6 +121,14 @@ public class PostingInfo {
 
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public long getEditedAt() {
+        return editedAt;
+    }
+
+    public void setEditedAt(long editedAt) {
+        this.editedAt = editedAt;
     }
 
     public long getPublishedAt() {

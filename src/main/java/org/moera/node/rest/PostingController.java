@@ -139,7 +139,7 @@ public class PostingController {
         postingRepository.saveAndFlush(posting);
         updatePublicPages(posting.getMoment());
 
-        return new PostingInfo(posting);
+        return toPostingInfo(posting);
     }
 
     private long buildMoment(Timestamp timestamp) {
@@ -202,7 +202,8 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        return new PostingInfo(posting);
+
+        return toPostingInfo(posting);
     }
 
     @DeleteMapping("/{id}")
@@ -219,6 +220,16 @@ public class PostingController {
         posting.setDeletedAt(Util.now());
 
         return Result.OK;
+    }
+
+    private PostingInfo toPostingInfo(Posting posting) {
+        PostingInfo postingInfo = new PostingInfo(posting);
+        Timestamp createdAt = postingRepository.firstCreatedAt(requestContext.nodeId(), posting.getEntryId());
+        if (createdAt != null) {
+            postingInfo.setCreatedAt(Util.toEpochSecond(createdAt));
+        }
+
+        return postingInfo;
     }
 
 }
