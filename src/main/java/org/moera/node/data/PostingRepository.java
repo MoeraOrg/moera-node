@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query("select p from Posting p where p.nodeId = ?1 and p.entryId = ?2 and p.deletedAt is null")
-    Optional<Posting> findByNodeIdAndEntryId(UUID nodeId, UUID entryId);
+    Optional<Posting> findByEntryId(UUID nodeId, UUID entryId);
 
     @Query("select count(*) from Posting p where p.nodeId = ?1 and p.moment > ?2 and p.moment <= ?3"
             + " and p.deletedAt is null")

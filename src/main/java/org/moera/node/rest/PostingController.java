@@ -115,7 +115,7 @@ public class PostingController {
                 LogUtil.format(postingText.getBodyHtml(), 64),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
-        Posting latest = postingRepository.findByNodeIdAndEntryId(requestContext.nodeId(), id).orElse(null);
+        Posting latest = postingRepository.findByEntryId(requestContext.nodeId(), id).orElse(null);
         if (latest == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -198,7 +198,7 @@ public class PostingController {
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findByNodeIdAndEntryId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findByEntryId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -213,7 +213,7 @@ public class PostingController {
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findByNodeIdAndEntryId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findByEntryId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
