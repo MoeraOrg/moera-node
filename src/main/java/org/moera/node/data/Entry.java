@@ -1,7 +1,10 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
@@ -10,6 +13,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -29,49 +34,30 @@ public class Entry {
     private UUID nodeId;
 
     @NotNull
-    private UUID entryId;
-
-    @NotNull
     @Enumerated
     @Column(insertable = false, updatable = false)
     private EntryType entryType;
 
     @NotNull
     @Size(max = 127)
-    private String ownerName;
+    private String ownerName = "";
 
     @NotNull
     private int ownerGeneration;
 
     @NotNull
-    private String bodyPreviewHtml = "";
-
-    @NotNull
-    private String bodySrc = "";
-
-    @NotNull
-    @Enumerated
-    private SourceFormat bodySrcFormat = SourceFormat.PLAIN_TEXT;
-
-    @NotNull
-    private String bodyHtml = "";
-
-    @NotNull
-    private String heading = "";
-
-    @NotNull
     private Timestamp createdAt = Util.now();
-
-    @NotNull
-    private Timestamp publishedAt = Util.now();
 
     private Timestamp deletedAt;
 
     @NotNull
-    private long moment;
+    private int totalRevisions;
 
-    @NotNull
-    private byte[] signature;
+    @OneToOne
+    private EntryRevision currentRevision;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    private Set<EntryRevision> revisions = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -87,14 +73,6 @@ public class Entry {
 
     public void setNodeId(UUID nodeId) {
         this.nodeId = nodeId;
-    }
-
-    public UUID getEntryId() {
-        return entryId;
-    }
-
-    public void setEntryId(UUID entryId) {
-        this.entryId = entryId;
     }
 
     public EntryType getEntryType() {
@@ -117,60 +95,12 @@ public class Entry {
         this.ownerGeneration = ownerGeneration;
     }
 
-    public String getBodyPreviewHtml() {
-        return bodyPreviewHtml;
-    }
-
-    public void setBodyPreviewHtml(String bodyPreviewHtml) {
-        this.bodyPreviewHtml = bodyPreviewHtml;
-    }
-
-    public String getBodySrc() {
-        return bodySrc;
-    }
-
-    public void setBodySrc(String bodySrc) {
-        this.bodySrc = bodySrc;
-    }
-
-    public SourceFormat getBodySrcFormat() {
-        return bodySrcFormat;
-    }
-
-    public void setBodySrcFormat(SourceFormat bodySrcFormat) {
-        this.bodySrcFormat = bodySrcFormat;
-    }
-
-    public String getBodyHtml() {
-        return bodyHtml;
-    }
-
-    public void setBodyHtml(String bodyHtml) {
-        this.bodyHtml = bodyHtml;
-    }
-
-    public String getHeading() {
-        return heading;
-    }
-
-    public void setHeading(String heading) {
-        this.heading = heading;
-    }
-
     public Timestamp getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Timestamp getPublishedAt() {
-        return publishedAt;
-    }
-
-    public void setPublishedAt(Timestamp publishedAt) {
-        this.publishedAt = publishedAt;
     }
 
     public Timestamp getDeletedAt() {
@@ -181,20 +111,28 @@ public class Entry {
         this.deletedAt = deletedAt;
     }
 
-    public long getMoment() {
-        return moment;
+    public int getTotalRevisions() {
+        return totalRevisions;
     }
 
-    public void setMoment(long moment) {
-        this.moment = moment;
+    public void setTotalRevisions(int totalRevisions) {
+        this.totalRevisions = totalRevisions;
     }
 
-    public byte[] getSignature() {
-        return signature;
+    public EntryRevision getCurrentRevision() {
+        return currentRevision;
     }
 
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
+    public void setCurrentRevision(EntryRevision currentRevision) {
+        this.currentRevision = currentRevision;
+    }
+
+    public Set<EntryRevision> getRevisions() {
+        return revisions;
+    }
+
+    public void setRevisions(Set<EntryRevision> revisions) {
+        this.revisions = revisions;
     }
 
 }

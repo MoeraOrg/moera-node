@@ -3,7 +3,7 @@ package org.moera.node.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import org.moera.node.data.Posting;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.Shortener;
@@ -59,26 +59,26 @@ public class PostingText {
         this.publishAt = publishAt;
     }
 
-    public void toPosting(Posting posting) {
-        posting.setBodySrc(bodySrc);
+    public void toEntryRevision(EntryRevision revision) {
+        revision.setBodySrc(bodySrc);
         if (!StringUtils.isEmpty(bodySrcFormat)) {
             SourceFormat format = SourceFormat.forValue(bodySrcFormat);
             if (format == null) {
                 throw new ValidationFailure("postingText.bodySrcFormat.unknown");
             }
-            posting.setBodySrcFormat(format);
+            revision.setBodySrcFormat(format);
         }
 
         if (StringUtils.isEmpty(bodyHtml)) {
-            bodyHtml = TextConverter.toHtml(posting.getBodySrcFormat(), bodySrc);
+            bodyHtml = TextConverter.toHtml(revision.getBodySrcFormat(), bodySrc);
         }
-        posting.setBodyHtml(bodyHtml);
+        revision.setBodyHtml(bodyHtml);
         if (!Shortener.isShort(bodyHtml)) {
-            posting.setBodyPreviewHtml(Shortener.shorten(bodyHtml));
+            revision.setBodyPreviewHtml(Shortener.shorten(bodyHtml));
         }
-        posting.setHeading(HeadingExtractor.extract(bodyHtml));
+        revision.setHeading(HeadingExtractor.extract(bodyHtml));
         if (publishAt != null) {
-            posting.setPublishedAt(Util.toTimestamp(publishAt));
+            revision.setPublishedAt(Util.toTimestamp(publishAt));
         }
     }
 

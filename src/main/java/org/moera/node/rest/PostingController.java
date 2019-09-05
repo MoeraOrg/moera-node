@@ -11,6 +11,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.EntryRevision;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
@@ -56,6 +58,9 @@ public class PostingController {
     private PostingRepository postingRepository;
 
     @Inject
+    private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
     private PublicPageRepository publicPageRepository;
 
     private AtomicInteger nonce = new AtomicInteger(0);
@@ -89,19 +94,16 @@ public class PostingController {
             throw new OperationFailure("posting.signing-key-not-set");
         }
 
-        Posting posting = new Posting();
-        posting.setId(UUID.randomUUID());
-        posting.setEntryId(UUID.randomUUID());
-        posting.setNodeId(options.nodeId());
-        posting.setOwnerName(name);
-        posting.setOwnerGeneration(generation);
-        postingText.toPosting(posting);
-        posting.setMoment(buildMoment(posting.getPublishedAt()));
+        Posting posting = Posting.newPosting(postingRepository, options.nodeId(), name, generation);
+        posting.newRevision(entryRevisionRepository);
+        EntryRevision revision = posting.getCurrentRevision();
+        postingText.toEntryRevision(revision);
+        revision.setMoment(buildMoment(revision.getPublishedAt()));
         posting.sign((ECPrivateKey) signingKey);
-        postingRepository.saveAndFlush(posting);
-        updatePublicPages(posting.getMoment());
+        postingRepository.flush();
+        updatePublicPages(revision.getMoment());
 
-        return ResponseEntity.created(URI.create("/postings/" + posting.getEntryId())).body(new PostingInfo(posting));
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting));
     }
 
     @PutMapping("/{id}")
@@ -115,8 +117,8 @@ public class PostingController {
                 LogUtil.format(postingText.getBodyHtml(), 64),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
-        Posting latest = postingRepository.findByEntryId(requestContext.nodeId(), id).orElse(null);
-        if (latest == null) {
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
@@ -126,20 +128,18 @@ public class PostingController {
             throw new OperationFailure("posting.signing-key-not-set");
         }
 
-        latest.setDeletedAt(Util.now());
-
-        Posting posting = latest.newRevision();
-        postingText.toPosting(posting);
-        if (posting.getPublishedAt().equals(latest.getPublishedAt())) {
-            posting.setMoment(latest.getMoment());
-        } else {
-            posting.setMoment(buildMoment(posting.getPublishedAt()));
+        EntryRevision latest = posting.getCurrentRevision();
+        posting.newRevision(entryRevisionRepository);
+        EntryRevision current = posting.getCurrentRevision();
+        postingText.toEntryRevision(current);
+        if (!current.getPublishedAt().equals(latest.getPublishedAt())) {
+            current.setMoment(buildMoment(current.getPublishedAt()));
         }
         posting.sign((ECPrivateKey) signingKey);
         postingRepository.saveAndFlush(posting);
-        updatePublicPages(posting.getMoment());
+        updatePublicPages(current.getMoment());
 
-        return toPostingInfo(posting);
+        return new PostingInfo(posting);
     }
 
     private long buildMoment(Timestamp timestamp) {
@@ -163,7 +163,8 @@ public class PostingController {
             int count = postingRepository.countInRange(nodeId, after, Long.MAX_VALUE);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
                 long median = postingRepository.findMomentsInRange(nodeId, after, Long.MAX_VALUE,
-                        PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1, Sort.by(Sort.Direction.DESC, "moment")))
+                        PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1,
+                                Sort.by(Sort.Direction.DESC, "currentRevision.moment")))
                         .getContent().get(0);
                 firstPage.setAfterMoment(median);
                 PublicPage secondPage = new PublicPage();
@@ -181,7 +182,8 @@ public class PostingController {
             int count = postingRepository.countInRange(nodeId, Long.MIN_VALUE, end);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
                 long median = postingRepository.findMomentsInRange(nodeId, Long.MIN_VALUE, end,
-                        PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1, Sort.by(Sort.Direction.DESC, "moment")))
+                        PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1,
+                                Sort.by(Sort.Direction.DESC, "currentRevision.moment")))
                         .getContent().get(0);
                 lastPage.setBeforeMoment(median);
                 PublicPage prevPage = new PublicPage();
@@ -198,12 +200,12 @@ public class PostingController {
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findByEntryId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return toPostingInfo(posting);
+        return new PostingInfo(posting);
     }
 
     @DeleteMapping("/{id}")
@@ -213,27 +215,15 @@ public class PostingController {
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findByEntryId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         posting.setDeletedAt(Util.now());
+        posting.getCurrentRevision().setDeletedAt(Util.now());
+        entryRevisionRepository.save(posting.getCurrentRevision());
 
         return Result.OK;
-    }
-
-    private PostingInfo toPostingInfo(Posting posting) {
-        PostingInfo postingInfo = new PostingInfo(posting);
-        int totalRevisions = postingRepository.countRevisions(requestContext.nodeId(), posting.getEntryId());
-        postingInfo.setTotalRevisions(totalRevisions);
-        if (totalRevisions > 1) {
-            Timestamp createdAt = postingRepository.firstCreatedAt(requestContext.nodeId(), posting.getEntryId());
-            if (createdAt != null) {
-                postingInfo.setCreatedAt(Util.toEpochSecond(createdAt));
-            }
-        }
-
-        return postingInfo;
     }
 
 }

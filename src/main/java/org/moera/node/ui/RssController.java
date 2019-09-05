@@ -11,6 +11,7 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
@@ -62,21 +63,22 @@ public class RssController {
     }
 
     private SyndEntry buildEntry(Posting posting) {
+        EntryRevision revision = posting.getCurrentRevision();
         String siteUrl = requestContext.getSiteUrl();
 
         SyndEntry entry = new SyndEntryImpl();
-        entry.setTitle(posting.getHeading());
-        entry.setLink(siteUrl + "/post/" + posting.getEntryId());
-        entry.setUri("urn:entry:" + posting.getEntryId());
-        entry.setPublishedDate(posting.getPublishedAt());
+        entry.setTitle(revision.getHeading());
+        entry.setLink(siteUrl + "/post/" + posting.getId());
+        entry.setUri("urn:entry:" + posting.getId());
+        entry.setPublishedDate(revision.getPublishedAt());
 
         StringBuilder buf = new StringBuilder();
-        boolean hasPreview = !StringUtils.isEmpty(posting.getBodyPreviewHtml());
+        boolean hasPreview = !StringUtils.isEmpty(revision.getBodyPreviewHtml());
         buf.append("<div>");
-        buf.append(hasPreview ? posting.getBodyPreviewHtml() : posting.getBodyHtml());
+        buf.append(hasPreview ? revision.getBodyPreviewHtml() : revision.getBodyHtml());
         buf.append("</div>");
         if (hasPreview) {
-            buf.append(String.format("<a href=\"/post/%s\">Continue Reading &rarr;</a>", posting.getEntryId()));
+            buf.append(String.format("<a href=\"/post/%s\">Continue Reading &rarr;</a>", posting.getId()));
         }
 
         SyndContent content = new SyndContentImpl();

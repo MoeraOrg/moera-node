@@ -28,20 +28,21 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting) {
-        id = posting.getEntryId();
-        revisionId = posting.getId();
+        id = posting.getId();
+        revisionId = posting.getCurrentRevision().getId();
+        totalRevisions = posting.getTotalRevisions();
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
-        bodyPreviewHtml = posting.getBodyPreviewHtml();
-        bodySrcHash = CryptoUtil.digest(posting.getBodySrc());
-        bodySrcFormat = posting.getBodySrcFormat().getValue();
-        bodyHtml = posting.getBodyHtml();
-        heading = posting.getHeading();
+        bodyPreviewHtml = posting.getCurrentRevision().getBodyPreviewHtml();
+        bodySrcHash = CryptoUtil.digest(posting.getCurrentRevision().getBodySrc());
+        bodySrcFormat = posting.getCurrentRevision().getBodySrcFormat().getValue();
+        bodyHtml = posting.getCurrentRevision().getBodyHtml();
+        heading = posting.getCurrentRevision().getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
-        editedAt = createdAt;
-        publishedAt = Util.toEpochSecond(posting.getPublishedAt());
-        signature = posting.getSignature();
-        moment = posting.getMoment();
+        editedAt = Util.toEpochSecond(posting.getCurrentRevision().getCreatedAt());
+        publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
+        signature = posting.getCurrentRevision().getSignature();
+        moment = posting.getCurrentRevision().getMoment();
     }
 
     public UUID getId() {

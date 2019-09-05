@@ -70,13 +70,13 @@ public class TimelineController {
 
     private TimelineSliceInfo getPostingsBefore(long before, int limit) {
         Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), Long.MIN_VALUE, before,
-                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "currentRevision.moment"));
         TimelineSliceInfo sliceInfo = new TimelineSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setAfter(Long.MIN_VALUE);
         } else {
-            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+            sliceInfo.setAfter(page.getContent().get(limit).getCurrentRevision().getMoment());
         }
         sliceInfo.setPostings(page.stream().map(PostingInfo::new).collect(Collectors.toList()));
         if (sliceInfo.getPostings().size() > limit) {
@@ -87,13 +87,13 @@ public class TimelineController {
 
     private TimelineSliceInfo getPostingsAfter(long after, int limit) {
         Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), after, Long.MAX_VALUE,
-                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
+                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "currentRevision.moment"));
         TimelineSliceInfo sliceInfo = new TimelineSliceInfo();
         sliceInfo.setAfter(after);
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setBefore(Long.MAX_VALUE);
         } else {
-            sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
+            sliceInfo.setBefore(page.getContent().get(limit - 1).getCurrentRevision().getMoment());
         }
         sliceInfo.setPostings(page.stream().map(PostingInfo::new).collect(Collectors.toList()));
         if (sliceInfo.getPostings().size() > limit) {

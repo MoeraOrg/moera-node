@@ -150,12 +150,12 @@ public class TimelineUiController {
             return null;
         }
 
-        Posting posting = postingRepository.findByEntryId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new PageNotFoundException();
         }
 
-        model.addAttribute("pageTitle", titleBuilder.build(posting.getHeading()));
+        model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
         model.addAttribute("posting", posting);
 
