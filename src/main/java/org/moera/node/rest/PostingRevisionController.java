@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.ApiController;
@@ -32,6 +33,9 @@ public class PostingRevisionController {
     @Inject
     private PostingRepository postingRepository;
 
+    @Inject
+    private EntryRevisionRepository entryRevisionRepository;
+
     @GetMapping
     @ResponseBody
     public List<PostingRevisionInfo> getAll(@PathVariable UUID postingId) {
@@ -46,6 +50,22 @@ public class PostingRevisionController {
                 .map(PostingRevisionInfo::new)
                 .sorted(Comparator.comparing(PostingRevisionInfo::getCreatedAt).reversed())
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}")
+    @ResponseBody
+    public PostingRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID id) {
+        log.info("GET /postings/{postingId}/revisions/{id} (postingId = {}, id = {})",
+                LogUtil.format(postingId),
+                LogUtil.format(id));
+
+        PostingRevisionInfo info = entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), postingId, id)
+                .map(PostingRevisionInfo::new).orElse(null);
+        if (info == null) {
+            throw new ObjectNotFoundFailure("posting-revision.not-found");
+        }
+
+        return info;
     }
 
 }
