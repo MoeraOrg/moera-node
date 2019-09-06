@@ -25,12 +25,16 @@ public class Posting extends Entry {
     }
 
     public void newRevision(EntryRevisionRepository entryRevisionRepository) {
+        newRevision(entryRevisionRepository, getTotalRevisions() == 0 ? null : getCurrentRevision());
+    }
+
+    public void newRevision(EntryRevisionRepository entryRevisionRepository, EntryRevision template) {
         EntryRevision revision;
-        if (getTotalRevisions() == 0) {
+        if (template == null) {
             revision = EntryRevision.newRevision(entryRevisionRepository, this);
             setTotalRevisions(1);
         } else {
-            revision = getCurrentRevision().newRevision(entryRevisionRepository);
+            revision = template.newRevision(entryRevisionRepository);
             getCurrentRevision().setDeletedAt(Util.now());
             setTotalRevisions(getTotalRevisions() + 1);
         }
