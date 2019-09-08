@@ -45,10 +45,12 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
-        if (((HandlerMethod) handler).getMethodAnnotation(RootAdmin.class) != null && !requestContext.isRootAdmin()) {
+        if (((HandlerMethod) handler).hasMethodAnnotation(RootAdmin.class) && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
         }
-        if (((HandlerMethod) handler).getMethodAnnotation(Admin.class) != null && !requestContext.isAdmin()) {
+        if ((((HandlerMethod) handler).hasMethodAnnotation(Admin.class)
+                || ((HandlerMethod) handler).getBeanType().isAnnotationPresent(Admin.class))
+                && !requestContext.isAdmin()) {
             throw new AuthenticationException();
         }
 

@@ -4,16 +4,18 @@ import java.util.UUID;
 
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
-@RequestMapping("/moera/api/postings/{postingId}/revisions")
-public class PostingRevisionController extends PostingRevisionControllerBase{
+@RequestMapping("/moera/api/deleted-postings/{postingId}/revisions")
+@Admin
+public class DeletedPostingRevisionController extends PostingRevisionControllerBase {
 
-    private static Logger log = LoggerFactory.getLogger(PostingRevisionController.class);
+    private static Logger log = LoggerFactory.getLogger(DeletedPostingRevisionController.class);
 
     @Override
     protected Logger getLog() {
@@ -22,17 +24,17 @@ public class PostingRevisionController extends PostingRevisionControllerBase{
 
     @Override
     protected String getDirectory() {
-        return "/postings";
+        return "/deleted-postings";
     }
 
     @Override
     protected Posting findPosting(UUID postingId) {
-        return postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        return postingRepository.findDeletedById(requestContext.nodeId(), postingId).orElse(null);
     }
 
     @Override
     protected EntryRevision findRevision(UUID postingId, UUID id) {
-        return entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), postingId, id).orElse(null);
+        return entryRevisionRepository.findByDeletedEntryIdAndId(requestContext.nodeId(), postingId, id).orElse(null);
     }
 
 }
