@@ -27,8 +27,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/moera/api/timeline")
 public class TimelineController {
 
-    private static final int MAX_POSTINGS_PER_REQUEST = 200;
-
     private static Logger log = LoggerFactory.getLogger(TimelineController.class);
 
     @Inject
@@ -59,7 +57,11 @@ public class TimelineController {
             throw new ValidationFailure("timeline.before-after-exclusive");
         }
 
-        limit = limit != null && limit <= MAX_POSTINGS_PER_REQUEST ? limit : MAX_POSTINGS_PER_REQUEST;
+        limit = limit != null && limit <= PostingOperations.MAX_POSTINGS_PER_REQUEST
+                ? limit : PostingOperations.MAX_POSTINGS_PER_REQUEST;
+        if (limit < 0) {
+            throw new ValidationFailure("limit.invalid");
+        }
         if (after == null) {
             before = before != null ? before : Long.MAX_VALUE;
             return getPostingsBefore(before, limit);

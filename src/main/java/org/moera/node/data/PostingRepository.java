@@ -32,4 +32,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             + " and p.currentRevision.moment > ?2 and p.currentRevision.moment <= ?3 and p.deletedAt is null")
     Page<Posting> findSlice(UUID nodeId, long afterMoment, long beforeMoment, Pageable pageable);
 
+    @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is not null")
+    List<Posting> findDeleted(UUID nodeId, Pageable pageable);
+
 }

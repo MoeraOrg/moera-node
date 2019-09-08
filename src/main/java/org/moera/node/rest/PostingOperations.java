@@ -17,6 +17,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class PostingOperations {
 
+    public static final int MAX_POSTINGS_PER_REQUEST = 200;
+
     private static final int PUBLIC_PAGE_MAX_SIZE = 30;
     private static final int PUBLIC_PAGE_AVG_SIZE = 20;
 
