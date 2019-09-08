@@ -16,4 +16,8 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
             + " and r.entry.deletedAt is not null and r.id = ?3")
     Optional<EntryRevision> findByDeletedEntryIdAndId(UUID nodeId, UUID entryId, UUID id);
 
+    @Query("select count(*) from EntryRevision r where r.entry.nodeId = ?1 and r.entry.deletedAt is null"
+            + " and r.moment = ?2")
+    int countMoments(UUID nodeId, long moment);
+
 }

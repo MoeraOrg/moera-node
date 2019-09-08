@@ -52,7 +52,7 @@ public class PostingOperations {
             updater.accept(current);
         }
         if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())) {
-            current.setMoment(buildMoment(current.getPublishedAt()));
+            current.setMoment(findFreeMoment(current.getPublishedAt()));
         }
         posting.sign(signingKey);
         postingRepository.saveAndFlush(posting);
@@ -106,8 +106,22 @@ public class PostingOperations {
         return revision;
     }
 
-    private long buildMoment(Timestamp timestamp) {
-        return Util.toEpochSecond(timestamp) * 100 + nonce.getAndIncrement() % 100;
+    private long findFreeMoment(Timestamp timestamp) {
+        int prevM = -1;
+        while (true) {
+            int m = nonce.getAndIncrement() % 100;
+            if (m <= prevM) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                }
+            }
+            long moment = Util.toEpochSecond(timestamp) * 100 + m;
+            int n = entryRevisionRepository.countMoments(requestContext.nodeId(), moment);
+            if (n == 0) {
+                return moment;
+            }
+        }
     }
 
     private void updatePublicPages(long moment) {
