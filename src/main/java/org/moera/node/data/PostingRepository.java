@@ -35,4 +35,8 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is not null")
     List<Posting> findDeleted(UUID nodeId, Pageable pageable);
 
+    @Query("select p from Posting p left join p.currentRevision where p.nodeId = ?1 and p.id = ?2"
+            + " and p.deletedAt is not null")
+    Optional<Posting> findDeletedById(UUID nodeId, UUID id);
+
 }

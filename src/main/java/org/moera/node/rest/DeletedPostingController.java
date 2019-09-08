@@ -1,14 +1,17 @@
 package org.moera.node.rest;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -56,6 +60,20 @@ public class DeletedPostingController {
                 .stream()
                 .map(PostingInfo::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}")
+    @Admin
+    @ResponseBody
+    public PostingInfo get(@PathVariable UUID id) {
+        log.info("GET /deleted-postings/{id}, (id = {})", LogUtil.format(id));
+
+        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+
+        return new PostingInfo(posting);
     }
 
 }
