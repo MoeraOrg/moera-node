@@ -20,6 +20,7 @@ public class PostingInfo {
     private String heading;
     private long createdAt;
     private long editedAt;
+    private Long deletedAt;
     private long publishedAt;
     private byte[] signature;
     private long moment;
@@ -40,6 +41,7 @@ public class PostingInfo {
         heading = posting.getCurrentRevision().getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
         editedAt = Util.toEpochSecond(posting.getCurrentRevision().getCreatedAt());
+        deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
         signature = posting.getCurrentRevision().getSignature();
         moment = posting.getCurrentRevision().getMoment();
@@ -139,6 +141,14 @@ public class PostingInfo {
 
     public void setEditedAt(long editedAt) {
         this.editedAt = editedAt;
+    }
+
+    public Long getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Long deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public long getPublishedAt() {
