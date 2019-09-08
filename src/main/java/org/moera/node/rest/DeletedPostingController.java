@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -35,6 +37,9 @@ public class DeletedPostingController {
 
     @Inject
     private PostingRepository postingRepository;
+
+    @Inject
+    private PostingOperations postingOperations;
 
     @GetMapping
     @Admin
@@ -72,6 +77,24 @@ public class DeletedPostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
+
+        return new PostingInfo(posting);
+    }
+
+    @PostMapping("/{id}/restore")
+    @Admin
+    @ResponseBody
+    @Transactional
+    public PostingInfo restore(@PathVariable UUID id) {
+        log.info("POST /deleted-postings/{id}/restore (id = {})", LogUtil.format(id));
+
+        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+
+        posting.setDeletedAt(null);
+        postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null);
 
         return new PostingInfo(posting);
     }

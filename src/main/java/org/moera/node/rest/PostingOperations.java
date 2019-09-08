@@ -76,7 +76,9 @@ public class PostingOperations {
             posting.setTotalRevisions(1);
         } else {
             revision = newRevision(posting, template);
-            posting.getCurrentRevision().setDeletedAt(Util.now());
+            if (posting.getCurrentRevision().getDeletedAt() == null) {
+                posting.getCurrentRevision().setDeletedAt(Util.now());
+            }
             posting.setTotalRevisions(posting.getTotalRevisions() + 1);
         }
         posting.getRevisions().add(revision);
