@@ -1,7 +1,5 @@
 package org.moera.node.rest;
 
-import java.security.PrivateKey;
-import java.security.interfaces.ECPrivateKey;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +16,8 @@ import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -89,33 +85,20 @@ public class PostingRevisionController {
                 LogUtil.format(postingId),
                 LogUtil.format(id));
 
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (posting.getCurrentRevision().getId().equals(id)) {
+            throw new ValidationFailure("posting-revision.already-current");
+        }
         EntryRevision revision = entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), postingId, id)
                 .orElse(null);
         if (revision == null) {
             throw new ObjectNotFoundFailure("posting-revision.not-found");
         }
 
-        Options options = requestContext.getOptions();
-        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
-        if (signingKey == null) {
-            throw new OperationFailure("posting.signing-key-not-set");
-        }
-
-        Posting posting = (Posting) revision.getEntry();
-        EntryRevision latest = posting.getCurrentRevision();
-
-        if (latest.getId().equals(revision.getId())) {
-            throw new ValidationFailure("posting-revision.already-current");
-        }
-
-        posting.newRevision(entryRevisionRepository, revision);
-        EntryRevision current = posting.getCurrentRevision();
-        if (!current.getPublishedAt().equals(latest.getPublishedAt())) {
-            current.setMoment(postingOperations.buildMoment(current.getPublishedAt()));
-        }
-        posting.sign((ECPrivateKey) signingKey);
-        postingRepository.saveAndFlush(posting);
-        postingOperations.updatePublicPages(current.getMoment());
+        postingOperations.createOrUpdatePosting(posting, revision, null);
 
         return new PostingRevisionInfo(revision);
     }

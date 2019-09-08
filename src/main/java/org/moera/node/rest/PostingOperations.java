@@ -1,14 +1,22 @@
 package org.moera.node.rest;
 
+import java.security.PrivateKey;
+import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 
+import org.moera.node.data.EntryRevision;
+import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.OperationFailure;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -29,15 +37,78 @@ public class PostingOperations {
     private PostingRepository postingRepository;
 
     @Inject
+    private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
     private PublicPageRepository publicPageRepository;
 
     private AtomicInteger nonce = new AtomicInteger(0);
 
-    public long buildMoment(Timestamp timestamp) {
+    public void createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
+        ECPrivateKey signingKey = getSigningKey();
+        EntryRevision latest = posting.getCurrentRevision();
+        EntryRevision current = newPostingRevision(posting, revision);
+        if (updater != null) {
+            updater.accept(current);
+        }
+        if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())) {
+            current.setMoment(buildMoment(current.getPublishedAt()));
+        }
+        posting.sign(signingKey);
+        postingRepository.saveAndFlush(posting);
+        updatePublicPages(current.getMoment());
+    }
+
+    private ECPrivateKey getSigningKey() {
+        Options options = requestContext.getOptions();
+        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
+        if (signingKey == null) {
+            throw new OperationFailure("posting.signing-key-not-set");
+        }
+        return (ECPrivateKey) signingKey;
+    }
+
+    private EntryRevision newPostingRevision(Posting posting, EntryRevision template) {
+        EntryRevision revision;
+
+        if (template == null) {
+            revision = newRevision(posting, null);
+            posting.setTotalRevisions(1);
+        } else {
+            revision = newRevision(posting, template);
+            posting.getCurrentRevision().setDeletedAt(Util.now());
+            posting.setTotalRevisions(posting.getTotalRevisions() + 1);
+        }
+        posting.getRevisions().add(revision);
+        posting.setCurrentRevision(revision);
+
+        return revision;
+    }
+
+    private EntryRevision newRevision(Posting posting, EntryRevision template) {
+        EntryRevision revision = new EntryRevision();
+        revision.setId(UUID.randomUUID());
+        revision.setEntry(posting);
+        entryRevisionRepository.save(revision);
+
+        if (template != null) {
+            revision.setBodyPreviewHtml(template.getBodyPreviewHtml());
+            revision.setBodySrc(template.getBodySrc());
+            revision.setBodySrcFormat(template.getBodySrcFormat());
+            revision.setBodyHtml(template.getBodyHtml());
+            revision.setHeading(template.getHeading());
+            revision.setPublishedAt(template.getPublishedAt());
+            revision.setMoment(template.getMoment());
+        }
+
+        return revision;
+    }
+
+    private long buildMoment(Timestamp timestamp) {
         return Util.toEpochSecond(timestamp) * 100 + nonce.getAndIncrement() % 100;
     }
 
-    public void updatePublicPages(long moment) {
+    private void updatePublicPages(long moment) {
         UUID nodeId = requestContext.nodeId();
         PublicPage firstPage = publicPageRepository.findByBeforeMoment(nodeId, Long.MAX_VALUE);
         if (firstPage == null) {

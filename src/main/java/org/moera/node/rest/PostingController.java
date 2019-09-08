@@ -1,15 +1,12 @@
 package org.moera.node.rest;
 
 import java.net.URI;
-import java.security.PrivateKey;
-import java.security.interfaces.ECPrivateKey;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -78,19 +75,15 @@ public class PostingController {
         if (name == null || generation == null) {
             throw new OperationFailure("posting.registered-name-not-set");
         }
-        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
-        if (signingKey == null) {
-            throw new OperationFailure("posting.signing-key-not-set");
-        }
 
-        Posting posting = Posting.newPosting(postingRepository, options.nodeId(), name, generation);
-        posting.newRevision(entryRevisionRepository);
-        EntryRevision revision = posting.getCurrentRevision();
-        postingText.toEntryRevision(revision);
-        revision.setMoment(postingOperations.buildMoment(revision.getPublishedAt()));
-        posting.sign((ECPrivateKey) signingKey);
-        postingRepository.flush();
-        postingOperations.updatePublicPages(revision.getMoment());
+        Posting posting = new Posting();
+        posting.setId(UUID.randomUUID());
+        posting.setNodeId(options.nodeId());
+        posting.setOwnerName(name);
+        posting.setOwnerGeneration(generation);
+        postingRepository.save(posting);
+
+        postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting));
     }
@@ -110,23 +103,7 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-
-        Options options = requestContext.getOptions();
-        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
-        if (signingKey == null) {
-            throw new OperationFailure("posting.signing-key-not-set");
-        }
-
-        EntryRevision latest = posting.getCurrentRevision();
-        posting.newRevision(entryRevisionRepository);
-        EntryRevision current = posting.getCurrentRevision();
-        postingText.toEntryRevision(current);
-        if (!current.getPublishedAt().equals(latest.getPublishedAt())) {
-            current.setMoment(postingOperations.buildMoment(current.getPublishedAt()));
-        }
-        posting.sign((ECPrivateKey) signingKey);
-        postingRepository.saveAndFlush(posting);
-        postingOperations.updatePublicPages(current.getMoment());
+        postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), postingText::toEntryRevision);
 
         return new PostingInfo(posting);
     }

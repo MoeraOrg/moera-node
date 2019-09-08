@@ -148,23 +148,4 @@ public class EntryRevision {
         this.signature = signature;
     }
 
-    public static EntryRevision newRevision(EntryRevisionRepository entryRevisionRepository, Entry entry) {
-        EntryRevision revision = new EntryRevision();
-        revision.setId(UUID.randomUUID());
-        revision.setEntry(entry);
-        return entryRevisionRepository.save(revision);
-    }
-
-    public EntryRevision newRevision(EntryRevisionRepository entryRevisionRepository) {
-        EntryRevision revision = newRevision(entryRevisionRepository, getEntry());
-        revision.setBodyPreviewHtml(getBodyPreviewHtml());
-        revision.setBodySrc(getBodySrc());
-        revision.setBodySrcFormat(getBodySrcFormat());
-        revision.setBodyHtml(getBodyHtml());
-        revision.setHeading(getHeading());
-        revision.setPublishedAt(getPublishedAt());
-        revision.setMoment(getMoment());
-        return revision;
-    }
-
 }
