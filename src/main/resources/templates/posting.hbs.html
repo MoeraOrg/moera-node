@@ -4,7 +4,12 @@
    href="/timeline?before={{posting.moment}}#m{{posting.moment}}">&larr; Timeline</a>
 
 <div class="posting">
-    <div class="date">{{cal "dd-MM-yyyy HH:mm" date=posting.publishedAt}}</div>
+    <div class="date">
+        {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt}}
+        {{#ifne posting.createdAt posting.editedAt}}
+            (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt}})
+        {{/ifne}}
+    </div>
     <div class="content">{{{posting.bodyHtml}}}</div>
 </div>
 

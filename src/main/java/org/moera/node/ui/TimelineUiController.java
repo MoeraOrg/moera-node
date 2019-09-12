@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,6 +15,7 @@ import org.moera.node.data.PublicPageRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -49,7 +51,7 @@ public class TimelineUiController {
         }
 
         before = before != null ? before : Long.MAX_VALUE;
-        List<Posting> postings = Collections.emptyList();
+        List<PostingInfo> postings = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContaining(requestContext.nodeId(), before);
         if (publicPage != null) {
             if (publicPage.getBeforeMoment() != before) {
@@ -60,7 +62,10 @@ public class TimelineUiController {
                 }
             }
             postings = postingRepository.findInRange(
-                    requestContext.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment());
+                    requestContext.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment())
+                    .stream()
+                    .map(PostingInfo::new)
+                    .collect(Collectors.toList());
         }
 
         model.addAttribute("pageTitle", titleBuilder.build("Timeline"));
@@ -157,7 +162,7 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
-        model.addAttribute("posting", posting);
+        model.addAttribute("posting", new PostingInfo(posting));
 
         return "posting";
     }

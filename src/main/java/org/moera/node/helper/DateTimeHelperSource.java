@@ -12,7 +12,10 @@ import org.moera.node.util.Util;
 public class DateTimeHelperSource {
 
     public CharSequence cal(String pattern, Options options) {
-        LocalDateTime timestamp = HelperUtils.timestampArg("date", options.hash("date"));
+        Long epochSeconds = HelperUtils.integerArg("es", options.hash("es"));
+        LocalDateTime timestamp = epochSeconds != null
+                ? Util.toTimestamp(epochSeconds).toLocalDateTime()
+                : HelperUtils.timestampArg("date", options.hash("date"));
         Calendar calendar = Calendar.getInstance();
         Util.copyToCalendar(timestamp, calendar);
         return new SimpleDateFormat(pattern, Locale.ENGLISH).format(calendar);

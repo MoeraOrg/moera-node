@@ -9,7 +9,10 @@
 {{#each postings}}
     <a name="m{{moment}}"></a>
     <div class="posting">
-        <a class="date" href="/post/{{id}}">{{cal "dd-MM-yyyy HH:mm" date=publishedAt}}</a>
+        <a class="date" href="/post/{{id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt}}</a>
+        {{#ifne createdAt editedAt}}
+            <span class="date">(updated {{cal "dd-MM-yyyy HH:mm" es=editedAt}})</span>
+        {{/ifne}}
         {{#if bodyPreviewHtml}}
             <div class="content">
                 <div>{{{bodyPreviewHtml}}}</div>
