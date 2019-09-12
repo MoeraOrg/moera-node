@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -24,11 +26,17 @@ public class PostingInfo {
     private long publishedAt;
     private byte[] signature;
     private long moment;
+    private Map<String, String[]> operations;
 
     public PostingInfo() {
+        operations = new HashMap<>();
+        operations.put("edit", new String[]{"owner"});
+        operations.put("delete", new String[]{"owner"});
     }
 
     public PostingInfo(Posting posting) {
+        this();
+
         id = posting.getId();
         revisionId = posting.getCurrentRevision().getId();
         totalRevisions = posting.getTotalRevisions();
@@ -173,6 +181,14 @@ public class PostingInfo {
 
     public void setMoment(long moment) {
         this.moment = moment;
+    }
+
+    public Map<String, String[]> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, String[]> operations) {
+        this.operations = operations;
     }
 
 }
