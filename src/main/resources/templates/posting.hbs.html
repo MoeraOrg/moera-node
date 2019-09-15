@@ -6,9 +6,9 @@
 <div class="posting">
     <div class="date">
         {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt}}
-        {{#ifne posting.createdAt posting.editedAt}}
+        {{#ifgt posting.totalRevisions 1}}
             (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt}})
-        {{/ifne}}
+        {{/ifgt}}
     </div>
     <div class="content">{{{posting.bodyHtml}}}</div>
 </div>
