@@ -29,14 +29,9 @@ public class PostingInfo {
     private Map<String, String[]> operations;
 
     public PostingInfo() {
-        operations = new HashMap<>();
-        operations.put("edit", new String[]{"owner"});
-        operations.put("delete", new String[]{"owner"});
     }
 
     public PostingInfo(Posting posting) {
-        this();
-
         id = posting.getId();
         revisionId = posting.getCurrentRevision().getId();
         totalRevisions = posting.getTotalRevisions();
@@ -53,6 +48,9 @@ public class PostingInfo {
         publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
         signature = posting.getCurrentRevision().getSignature();
         moment = posting.getCurrentRevision().getMoment();
+        operations = new HashMap<>();
+        operations.put("edit", new String[]{"owner"});
+        operations.put("delete", new String[]{"owner"});
     }
 
     public UUID getId() {
