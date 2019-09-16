@@ -16,6 +16,7 @@ public class PostingInfo {
     private String ownerName;
     private int ownerGeneration;
     private String bodyPreviewHtml;
+    private String bodySrc;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
     private String bodyHtml;
@@ -32,12 +33,19 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting) {
+        this(posting, false);
+    }
+
+    public PostingInfo(Posting posting, boolean includeSource) {
         id = posting.getId();
         revisionId = posting.getCurrentRevision().getId();
         totalRevisions = posting.getTotalRevisions();
         ownerName = posting.getOwnerName();
         ownerGeneration = posting.getOwnerGeneration();
         bodyPreviewHtml = posting.getCurrentRevision().getBodyPreviewHtml();
+        if (includeSource) {
+            bodySrc = posting.getCurrentRevision().getBodySrc();
+        }
         bodySrcHash = CryptoUtil.digest(posting.getCurrentRevision().getBodySrc());
         bodySrcFormat = posting.getCurrentRevision().getBodySrcFormat().getValue();
         bodyHtml = posting.getCurrentRevision().getBodyHtml();
@@ -99,6 +107,14 @@ public class PostingInfo {
 
     public void setBodyPreviewHtml(String bodyPreviewHtml) {
         this.bodyPreviewHtml = bodyPreviewHtml;
+    }
+
+    public String getBodySrc() {
+        return bodySrc;
+    }
+
+    public void setBodySrc(String bodySrc) {
+        this.bodySrc = bodySrc;
     }
 
     public byte[] getBodySrcHash() {

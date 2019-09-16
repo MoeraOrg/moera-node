@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.net.URI;
+import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
@@ -110,15 +112,17 @@ public class PostingController {
 
     @GetMapping("/{id}")
     @ResponseBody
-    public PostingInfo get(@PathVariable UUID id) {
-        log.info("GET /postings/{id}, (id = {})", LogUtil.format(id));
+    public PostingInfo get(@PathVariable UUID id, @RequestParam(required = false) String include) {
+        log.info("GET /postings/{id}, (id = {}, include = {})", LogUtil.format(id), LogUtil.format(include));
+
+        Set<String> includeSet = Util.setParam(include);
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return new PostingInfo(posting);
+        return new PostingInfo(posting, includeSet.contains("source"));
     }
 
     @DeleteMapping("/{id}")
