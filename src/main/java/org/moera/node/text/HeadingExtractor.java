@@ -36,6 +36,7 @@ public class HeadingExtractor {
                     result.append(clear(text));
                     if (result.length() >= HEADING_LENGTH) {
                         result.setLength(HEADING_LENGTH);
+                        result.append('\u2026');
                         return FilterResult.STOP;
                     }
                 }
