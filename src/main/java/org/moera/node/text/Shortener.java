@@ -30,7 +30,7 @@ public class Shortener {
         document.body().filter(measurer);
 
         Document result = Document.createShell("");
-        Cutter cutter = new Cutter(measurer.getCut(), result.body());
+        Cutter cutter = new Cutter(measurer.getCut(), measurer.needsEllipsis(), result.body());
         document.body().filter(cutter);
         return result.body().html();
     }
@@ -57,6 +57,10 @@ public class Shortener {
                 return wordCut;
             }
             return SHORT_TEXT_AVG;
+        }
+
+        boolean needsEllipsis() {
+            return paragraphCut <= 0 && sentenceCut <= 0;
         }
 
         private int closest(int incumbent, int challenger) {
@@ -126,11 +130,13 @@ public class Shortener {
     private static class Cutter implements NodeFilter {
 
         private int cut;
+        private boolean ellipsis;
         private Element target;
         private int offset;
 
-        Cutter(int cut, Element target) {
+        Cutter(int cut, boolean ellipsis, Element target) {
             this.cut = cut;
+            this.ellipsis = ellipsis;
             this.target = target;
         }
 
@@ -144,6 +150,9 @@ public class Shortener {
                     target.appendChild(new TextNode(text.substring(0, cut - offset)));
                 }
                 offset += text.length();
+                if (offset >= cut && ellipsis) {
+                    target.appendChild(new TextNode("\u2026"));
+                }
             }
             if (node instanceof Element && !((Element) node).normalName().equals("body")) {
                 Element sub = new Element(((Element) node).tag(), "", node.attributes());
