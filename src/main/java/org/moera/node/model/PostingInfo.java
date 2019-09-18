@@ -58,7 +58,7 @@ public class PostingInfo {
         moment = posting.getCurrentRevision().getMoment();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
-        operations.put("delete", new String[]{"owner"});
+        operations.put("delete", new String[]{"owner", "admin"});
     }
 
     public UUID getId() {
