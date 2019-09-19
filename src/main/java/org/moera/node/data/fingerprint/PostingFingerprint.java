@@ -22,7 +22,7 @@ public class PostingFingerprint extends Fingerprint {
         bodySrc.setValue(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat().getValue();
         bodyHtml = revision.getBodyHtml();
-        createdAt = Util.toEpochSecond(posting.getCreatedAt());
+        createdAt = Util.toEpochSecond(revision.getCreatedAt());
     }
 
 }
