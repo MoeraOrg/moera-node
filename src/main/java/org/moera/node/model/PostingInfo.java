@@ -59,6 +59,7 @@ public class PostingInfo {
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
+        operations.put("revisions", new String[0]);
     }
 
     public UUID getId() {
