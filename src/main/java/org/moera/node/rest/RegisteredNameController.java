@@ -88,7 +88,7 @@ public class RegisteredNameController {
         secretInfo.setName(nameToRegister.getName());
         KeyPair signingKeyPair;
         try {
-            SecureRandom random = SecureRandom.getInstanceStrong();
+            SecureRandom random = new SecureRandom();
 
             byte[] entropy = new byte[Words.TWENTY_FOUR.byteLength()];
             random.nextBytes(entropy);
@@ -170,7 +170,7 @@ public class RegisteredNameController {
             ECPrivateKey privateSigningKey = null;
             ECPublicKey signingKey = null;
             if (registeredNameSecret.getName() != null) {
-                SecureRandom random = SecureRandom.getInstanceStrong();
+                SecureRandom random = new SecureRandom();
                 KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
                 keyPairGenerator.initialize(ecSpec, random);
                 KeyPair signingKeyPair = keyPairGenerator.generateKeyPair();
