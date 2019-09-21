@@ -3,6 +3,7 @@ package org.moera.node.util;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class UriUtil {
@@ -16,6 +17,16 @@ public class UriUtil {
             builder.host(forwardedHost);
             String forwardedPort = request.getHeader("X-Forwarded-Port");
             builder.port(forwardedPort);
+            String forwardedScheme = request.getHeader("X-Forwarded-Proto");
+            if (!StringUtils.isEmpty(forwardedScheme)) {
+                builder.scheme(forwardedScheme);
+            }
+        }
+        UriComponents components = builder.build();
+        if (components.getScheme() != null
+                && (components.getScheme().equalsIgnoreCase("https") && components.getPort() == 443
+                    || components.getScheme().equalsIgnoreCase("http") && components.getPort() == 80)) {
+            builder.port(null);
         }
         return builder;
     }
