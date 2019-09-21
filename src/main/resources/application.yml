@@ -39,7 +39,7 @@ spring:
 
 node:
   naming:
-    location: http://naming.moera.org/moera-naming
+    location: https://naming.moera.org/moera-naming
 
   root-secret:
   mock-network-latency: false
