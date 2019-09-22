@@ -50,7 +50,7 @@ public class EntryRevision {
     private long moment;
 
     @NotNull
-    private byte[] signature;
+    private byte[] signature = new byte[0];
 
     public UUID getId() {
         return id;

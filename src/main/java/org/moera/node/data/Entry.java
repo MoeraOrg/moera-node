@@ -79,6 +79,10 @@ public class Entry {
         return entryType;
     }
 
+    protected void setEntryType(EntryType entryType) {
+        this.entryType = entryType;
+    }
+
     public String getOwnerName() {
         return ownerName;
     }

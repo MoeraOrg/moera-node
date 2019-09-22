@@ -11,6 +11,10 @@ import org.moera.node.data.fingerprint.PostingFingerprint;
 @DiscriminatorValue("0")
 public class Posting extends Entry {
 
+    public Posting() {
+        setEntryType(EntryType.POSTING);
+    }
+
     public void sign(ECPrivateKey signingKey) {
         getCurrentRevision().setSignature(
                 CryptoUtil.sign(new PostingFingerprint(this, getCurrentRevision()), signingKey));
