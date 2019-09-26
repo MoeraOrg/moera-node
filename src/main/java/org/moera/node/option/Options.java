@@ -197,6 +197,19 @@ public class Options {
         return forName(name, (value, optionType) -> optionType.getTimestamp(value));
     }
 
+    // Returns only committed values
+    public void forEach(OptionConsumer consumer) {
+        lockRead();
+        try {
+            for (Map.Entry<String, Object> entry : values.entrySet()) {
+                OptionTypeBase optionType = optionsMetadata.getOptionType(entry.getKey());
+                consumer.consume(entry.getKey(), entry.getValue(), optionType);
+            }
+        } finally {
+            unlockRead();
+        }
+    }
+
     public void set(String name, Object value) {
         OptionTypeBase optionType = optionsMetadata.getOptionType(name);
         if (optionType == null) {

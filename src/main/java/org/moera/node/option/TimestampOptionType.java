@@ -23,6 +23,11 @@ public class TimestampOptionType extends OptionTypeBase {
     }
 
     @Override
+    public String getString(Object value) {
+        return serializeValue(value);
+    }
+
+    @Override
     public Long getLong(Object value) {
         return Util.toEpochSecond((Timestamp) value);
     }
