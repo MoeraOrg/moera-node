@@ -62,11 +62,11 @@ public class Options {
         }
     }
 
-    public boolean inTransaction() {
+    private boolean inTransaction() {
         return transaction.get() != null;
     }
 
-    public void beginTransaction() {
+    private void beginTransaction() {
         if (inTransaction()) {
             transactionDepth.set(transactionDepth.get() + 1);
             return;
@@ -76,7 +76,7 @@ public class Options {
         transactionDepth.set(1);
     }
 
-    public void commit() {
+    private void commit() {
         if (!inTransaction()) {
             throw new TransactionAbsentException();
         }
@@ -90,7 +90,7 @@ public class Options {
         unlockWrite();
     }
 
-    public void rollback() {
+    private void rollback() {
         if (!inTransaction()) {
             throw new TransactionAbsentException();
         }
@@ -156,95 +156,45 @@ public class Options {
         }
     }
 
-    public String getString(String name) {
+    private <T> T forName(String name, OptionMapper<T> mapper) {
         OptionTypeBase optionType = optionsMetadata.getOptionType(name);
         if (optionType == null) {
             return null;
         }
         lockRead();
         try {
-            return optionType.getString(transactionalGet(name));
+            return mapper.map(transactionalGet(name), optionType);
         } finally {
             unlockRead();
         }
+    }
+
+    public String getString(String name) {
+        return forName(name, (value, optionType) -> optionType.getString(value));
     }
 
     public Integer getInt(String name) {
-        OptionTypeBase optionType = optionsMetadata.getOptionType(name);
-        if (optionType == null) {
-            return null;
-        }
-        lockRead();
-        try {
-            return optionType.getInt(transactionalGet(name));
-        } finally {
-            unlockRead();
-        }
+        return forName(name, (value, optionType) -> optionType.getInt(value));
     }
 
     public Long getLong(String name) {
-        OptionTypeBase optionType = optionsMetadata.getOptionType(name);
-        if (optionType == null) {
-            return null;
-        }
-        lockRead();
-        try {
-            return optionType.getLong(transactionalGet(name));
-        } finally {
-            unlockRead();
-        }
+        return forName(name, (value, optionType) -> optionType.getLong(value));
     }
 
     public PrivateKey getPrivateKey(String name) {
-        OptionTypeBase optionType = optionsMetadata.getOptionType(name);
-        if (optionType == null) {
-            return null;
-        }
-        lockRead();
-        try {
-            return optionType.getPrivateKey(transactionalGet(name));
-        } finally {
-            unlockRead();
-        }
+        return forName(name, (value, optionType) -> optionType.getPrivateKey(value));
     }
 
     public Duration getDuration(String name) {
-        OptionTypeBase optionType = optionsMetadata.getOptionType(name);
-        if (optionType == null) {
-            return null;
-        }
-        lockRead();
-        try {
-            return optionType.getDuration(transactionalGet(name));
-        } finally {
-            unlockRead();
-        }
+        return forName(name, (value, optionType) -> optionType.getDuration(value));
     }
 
     public UUID getUuid(String name) {
-        OptionTypeBase optionType = optionsMetadata.getOptionType(name);
-        if (optionType == null) {
-            return null;
-        }
-        lockRead();
-        try {
-            return optionType.getUuid(transactionalGet(name));
-        } finally {
-            unlockRead();
-        }
+        return forName(name, (value, optionType) -> optionType.getUuid(value));
     }
 
     public Timestamp getTimestamp(String name) {
-        OptionTypeBase optionType = optionsMetadata.getOptionType(name);
-        if (optionType == null) {
-            return null;
-        }
-        lockRead();
-        try {
-            return optionType.getTimestamp(transactionalGet(name));
-        } finally {
-            unlockRead();
-        }
+        return forName(name, (value, optionType) -> optionType.getTimestamp(value));
     }
 
     public void set(String name, Object value) {
