@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.moera.commons.util.Util;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
-import org.moera.node.option.RootSecretNotSetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

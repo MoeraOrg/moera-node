@@ -1,4 +1,4 @@
-package org.moera.node.option;
+package org.moera.node.domain;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +11,8 @@ import javax.inject.Inject;
 import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
 import org.moera.node.data.OptionRepository;
+import org.moera.node.option.Options;
+import org.moera.node.option.OptionsMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;

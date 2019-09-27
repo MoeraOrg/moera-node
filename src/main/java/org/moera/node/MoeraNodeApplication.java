@@ -5,7 +5,7 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.moera.node.global.DomainInterceptor;
+import org.moera.node.domain.DomainInterceptor;
 import org.moera.node.global.PermissionsInterceptor;
 import org.moera.node.global.CacheControlInterceptor;
 import org.moera.node.global.NetworkLatencyInterceptor;

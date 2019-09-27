@@ -1,4 +1,4 @@
-package org.moera.node.option;
+package org.moera.node.domain;
 
 import org.springframework.context.ApplicationEvent;
 

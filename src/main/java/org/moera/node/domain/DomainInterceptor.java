@@ -1,10 +1,10 @@
-package org.moera.node.global;
+package org.moera.node.domain;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.moera.node.option.Domains;
+import org.moera.node.global.RequestContext;
 import org.moera.node.util.UriUtil;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
