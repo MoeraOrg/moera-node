@@ -47,10 +47,10 @@ public class Profile {
 
     @Transactional
     public void toOptions(Options options) {
-        options.runInTransaction(() -> {
-            toOption("profile.full-name", getFullName(), options);
-            toOption("profile.gender", getGender(), options);
-            toOption("profile.email", getEmail(), options);
+        options.runInTransaction(opt -> {
+            toOption("profile.full-name", getFullName(), opt);
+            toOption("profile.gender", getGender(), opt);
+            toOption("profile.email", getEmail(), opt);
         });
     }
 

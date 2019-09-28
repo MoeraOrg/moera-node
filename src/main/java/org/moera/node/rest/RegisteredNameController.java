@@ -195,11 +195,10 @@ public class RegisteredNameController {
     public Result delete() {
         log.info("DELETE /registered-name");
 
-        Options options = requestContext.getOptions();
-        if (options.getUuid("naming.operation.id") != null) {
+        if (requestContext.getOptions().getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
-        options.runInTransaction(() -> {
+        requestContext.getOptions().runInTransaction(options -> {
             options.reset("profile.registered-name");
             options.reset("profile.registered-name.generation");
             options.reset("profile.signing-key");

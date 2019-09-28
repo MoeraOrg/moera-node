@@ -50,8 +50,7 @@ public class CredentialsController {
     public ResponseEntity<Result> post(@Valid @RequestBody Credentials credentials) {
         log.info("POST /credentials (login = '{}')", credentials.getLogin());
 
-        Options options = requestContext.getOptions();
-        options.runInTransaction(() -> {
+        requestContext.getOptions().runInTransaction(options -> {
             if (!StringUtils.isEmpty(options.getString("credentials.login"))
                     && !StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
                 throw new OperationFailure("credentials.already-created");
@@ -70,8 +69,7 @@ public class CredentialsController {
     public Result put(@Valid @RequestBody Credentials credentials) {
         log.info("PUT /credentials (login = '{}')", credentials.getLogin());
 
-        Options options = requestContext.getOptions();
-        options.runInTransaction(() -> {
+        requestContext.getOptions().runInTransaction(options -> {
             options.set("credentials.login", credentials.getLogin());
             options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
         });

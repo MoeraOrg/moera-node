@@ -103,10 +103,10 @@ public class Options {
         unlockWrite();
     }
 
-    public void runInTransaction(Runnable runnable) {
+    public void runInTransaction(OptionsOperation operation) {
         beginTransaction();
         try {
-            runnable.run();
+            operation.run(this);
         } catch (Throwable t) {
             rollback();
             throw t;
@@ -207,7 +207,10 @@ public class Options {
         try {
             for (Map.Entry<String, Object> entry : values.entrySet()) {
                 OptionTypeBase optionType = optionsMetadata.getOptionType(entry.getKey());
-                consumer.consume(entry.getKey(), entry.getValue(), optionType);
+                try {
+                    consumer.consume(entry.getKey(), entry.getValue(), optionType);
+                } catch (Exception e) {
+                }
             }
         } finally {
             unlockRead();

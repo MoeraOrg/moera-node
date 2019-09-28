@@ -5,16 +5,20 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.validation.Valid;
 
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.Result;
 import org.moera.node.model.SettingInfo;
 import org.moera.node.model.SettingMetaInfo;
 import org.moera.node.option.OptionsMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -61,6 +65,25 @@ public class SettingsController {
                 .map(SettingMetaInfo::new)
                 .sorted(Comparator.comparing(SettingMetaInfo::getName))
                 .collect(Collectors.toList());
+    }
+
+    @PutMapping
+    @Admin
+    @ResponseBody
+    public Result put(@RequestBody @Valid List<SettingInfo> settings) {
+        log.info("PUT /settings");
+
+        requestContext.getOptions().runInTransaction(options -> {
+            settings.forEach(setting -> {
+                if (setting.getValue() != null) {
+                    options.set(setting.getName(), setting.getValue());
+                } else {
+                    options.reset(setting.getName());
+                }
+            });
+        });
+
+        return Result.OK;
     }
 
 }

@@ -11,6 +11,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingNotAvailableException;
+import org.moera.node.option.OptionValueException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -89,6 +90,13 @@ public class ExceptionsControllerAdvice {
     public Result operationFailure(OperationFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result optionValueException(OptionValueException e) {
+        String message = messageSource.getMessage(e, Locale.getDefault());
+        return new Result(e.getErrorCode(), message + ": " + e.getMessage());
     }
 
     @ExceptionHandler
