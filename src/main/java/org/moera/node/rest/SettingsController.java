@@ -44,8 +44,7 @@ public class SettingsController {
             if (!nameFilter.apply(name)) {
                 return;
             }
-            String s = optionType != null ? optionType.getString(value) : value.toString();
-            list.add(new SettingInfo(name, s));
+            list.add(new SettingInfo(name, optionType.getString(value)));
         });
         list.sort(Comparator.comparing(SettingInfo::getName));
 
@@ -58,7 +57,8 @@ public class SettingsController {
     public List<SettingInfo> getForNode(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node");
 
-        return getOptions(name -> !name.startsWith("client.") && (prefix == null || name.startsWith(prefix)));
+        return getOptions(name -> !name.startsWith(OptionsMetadata.CLIENT_PREFIX)
+                && (prefix == null || name.startsWith(prefix)));
     }
 
     @GetMapping("/client")
@@ -67,7 +67,8 @@ public class SettingsController {
     public List<SettingInfo> getForClient(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/client");
 
-        return getOptions(name -> name.startsWith("client.") && (prefix == null || name.startsWith(prefix)));
+        return getOptions(name -> name.startsWith(OptionsMetadata.CLIENT_PREFIX)
+                && (prefix == null || name.startsWith(prefix)));
     }
 
     @GetMapping("/node/metadata")

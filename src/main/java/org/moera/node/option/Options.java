@@ -210,6 +210,9 @@ public class Options {
                     continue;
                 }
                 OptionTypeBase optionType = optionsMetadata.getOptionType(entry.getKey());
+                if (optionType == null) {
+                    continue;
+                }
                 try {
                     consumer.consume(entry.getKey(), entry.getValue(), optionType);
                 } catch (Exception e) {

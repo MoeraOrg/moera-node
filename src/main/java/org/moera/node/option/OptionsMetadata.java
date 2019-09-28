@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class OptionsMetadata {
 
+    public static final String CLIENT_PREFIX = "client.";
+
     private static Logger log = LoggerFactory.getLogger(OptionsMetadata.class);
 
     private Map<String, OptionTypeBase> types;
@@ -50,7 +52,17 @@ public class OptionsMetadata {
         return optionType;
     }
 
+    private static OptionDescriptor clientDescriptor(String name) {
+        OptionDescriptor descriptor = new OptionDescriptor();
+        descriptor.setName(name);
+        descriptor.setType("string");
+        return descriptor;
+    }
+
     public OptionDescriptor getDescriptor(String name) {
+        if (name.startsWith(CLIENT_PREFIX)) {
+            return clientDescriptor(name);
+        }
         OptionDescriptor desc = descriptors.get(name);
         if (desc == null) {
             log.warn("Unknown option: {}", name);
