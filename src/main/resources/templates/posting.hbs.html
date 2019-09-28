@@ -5,9 +5,9 @@
 
 <div class="posting">
     <div class="date">
-        {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt}}
+        {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt fromNow="posting.time.relative"}}
         {{#ifgt posting.totalRevisions 1}}
-            (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt}})
+            (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
         {{/ifgt}}
     </div>
     <div class="content">{{{posting.bodyHtml}}}</div>

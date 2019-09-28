@@ -3,6 +3,7 @@ package org.moera.node.util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +37,45 @@ public class Util extends org.moera.commons.util.Util {
 
     public static Set<String> setParam(String value) {
         return value != null ? new HashSet<>(Arrays.asList(value.split(","))) : Collections.emptySet();
+    }
+
+    public static String fromNow(LocalDateTime dateTime) {
+        long diff = dateTime.until(LocalDateTime.now(), ChronoUnit.SECONDS);
+        if (diff < 60) {
+            return "few seconds ago";
+        }
+        diff /= 60;
+        if (diff == 1) {
+            return "a minute ago";
+        }
+        if (diff < 60) {
+            return String.format("%d minutes ago", diff);
+        }
+        diff /= 60;
+        if (diff == 1) {
+            return "an hour ago";
+        }
+        if (diff < 24) {
+            return String.format("%d hours ago", diff);
+        }
+        diff /= 24;
+        if (diff == 1) {
+            return "yesterday";
+        }
+        if (diff < 30) {
+            return String.format("%d days ago", diff);
+        }
+        if (diff < 60) {
+            return "a month ago";
+        }
+        if (diff < 330) {
+            return String.format("%d months ago", diff / 30);
+        }
+        diff /= 365;
+        if (diff <= 1) {
+            return "a year ago";
+        }
+        return String.format("%d years ago", diff);
     }
 
 }

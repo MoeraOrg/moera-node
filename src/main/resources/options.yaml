@@ -63,3 +63,7 @@
 - name: token.lifetime
   type: Duration
   defaultValue: 365d
+
+- name: posting.time.relative
+  type: bool
+  defaultValue: false
