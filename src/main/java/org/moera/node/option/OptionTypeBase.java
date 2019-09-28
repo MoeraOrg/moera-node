@@ -27,6 +27,10 @@ public abstract class OptionTypeBase {
         return value.toString();
     }
 
+    public Boolean getBool(Object value) {
+        throw new InvalidOptionTypeConversionException(getTypeName(), Boolean.class);
+    }
+
     public Integer getInt(Object value) {
         throw new InvalidOptionTypeConversionException(getTypeName(), Integer.class);
     }

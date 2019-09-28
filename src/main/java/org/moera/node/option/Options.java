@@ -173,6 +173,10 @@ public class Options {
         return forName(name, (value, optionType) -> optionType.getString(value));
     }
 
+    public Boolean getBool(String name) {
+        return forName(name, (value, optionType) -> optionType.getBool(value));
+    }
+
     public Integer getInt(String name) {
         return forName(name, (value, optionType) -> optionType.getInt(value));
     }
