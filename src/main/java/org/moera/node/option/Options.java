@@ -201,11 +201,14 @@ public class Options {
         return forName(name, (value, optionType) -> optionType.getTimestamp(value));
     }
 
-    // Returns only committed values
+    // Returns only committed values of non-internal options
     public void forEach(OptionConsumer consumer) {
         lockRead();
         try {
             for (Map.Entry<String, Object> entry : values.entrySet()) {
+                if (optionsMetadata.isInternal(entry.getKey())) {
+                    continue;
+                }
                 OptionTypeBase optionType = optionsMetadata.getOptionType(entry.getKey());
                 try {
                     consumer.consume(entry.getKey(), entry.getValue(), optionType);

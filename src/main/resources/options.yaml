@@ -4,57 +4,75 @@
 
 - name: naming.operation.id
   type: UUID
+  internal: true
 
 - name: naming.operation.status
   type: string # TODO maybe enum?
+  internal: true
 
 - name: naming.operation.status.updated
   type: Timestamp
+  internal: true
 
 - name: naming.operation.error-code
   type: string
+  internal: true
 
 - name: naming.operation.error-message
   type: string
+  internal: true
 
 - name: naming.operation.added
   type: Timestamp
+  internal: true
 
 - name: naming.operation.completed
   type: Timestamp
+  internal: true
 
 - name: naming.operation.registered-name
   type: string
+  internal: true
 
 - name: naming.operation.registered-name.generation
   type: int
+  internal: true
 
 - name: naming.operation.signing-key
   type: PrivateKey
+  internal: true
 
 - name: credentials.login
   type: string
+  internal: true
 
 - name: credentials.password-hash
   type: string
+  internal: true
 
 - name: profile.registered-name
   type: string
+  internal: true
 
 - name: profile.registered-name.generation
   type: int
+  internal: true
 
 - name: profile.full-name
   type: string
+  internal: true
 
 - name: profile.gender
   type: string
+  internal: true
 
 - name: profile.email
   type: string
+  internal: true
 
 - name: profile.signing-key
   type: PrivateKey
+  internal: true
 
 - name: profile.signing-key.valid-from.layover
   type: Duration

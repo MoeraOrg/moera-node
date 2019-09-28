@@ -10,9 +10,11 @@ import javax.validation.Valid;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SettingInfo;
 import org.moera.node.model.SettingMetaInfo;
+import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,7 @@ public class SettingsController {
         log.info("GET /settings/metadata");
 
         return optionsMetadata.getDescriptors().values().stream()
+                .filter(d -> !d.isInternal())
                 .filter(d -> prefix != null && d.getName().startsWith(prefix))
                 .map(SettingMetaInfo::new)
                 .sorted(Comparator.comparing(SettingMetaInfo::getName))
@@ -75,6 +78,13 @@ public class SettingsController {
 
         requestContext.getOptions().runInTransaction(options -> {
             settings.forEach(setting -> {
+                OptionDescriptor descriptor = optionsMetadata.getDescriptor(setting.getName());
+                if (descriptor == null) {
+                    throw new OperationFailure("setting.unknown");
+                }
+                if (descriptor.isInternal()) {
+                    throw new OperationFailure("setting.internal");
+                }
                 if (setting.getValue() != null) {
                     options.set(setting.getName(), setting.getValue());
                 } else {

@@ -63,6 +63,10 @@ public class OptionsMetadata {
         return getType(getDescriptor(name).getType());
     }
 
+    public boolean isInternal(String name) {
+        return getDescriptor(name).isInternal();
+    }
+
     public Map<String, OptionDescriptor> getDescriptors() {
         return descriptors;
     }
