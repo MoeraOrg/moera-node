@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -37,15 +38,10 @@ public class SettingsController {
     @Inject
     private OptionsMetadata optionsMetadata;
 
-    @GetMapping
-    @Admin
-    @ResponseBody
-    public List<SettingInfo> get(@RequestParam(required = false) String prefix) {
-        log.info("GET /settings");
-
+    private List<SettingInfo> getOptions(Function<String, Boolean> nameFilter) {
         List<SettingInfo> list = new ArrayList<>();
         requestContext.getOptions().forEach((name, value, optionType) -> {
-            if (prefix != null && !name.startsWith(prefix)) {
+            if (!nameFilter.apply(name)) {
                 return;
             }
             String s = optionType != null ? optionType.getString(value) : value.toString();
@@ -56,11 +52,29 @@ public class SettingsController {
         return list;
     }
 
-    @GetMapping("/metadata")
+    @GetMapping("/node")
+    @Admin
+    @ResponseBody
+    public List<SettingInfo> getForNode(@RequestParam(required = false) String prefix) {
+        log.info("GET /settings/node");
+
+        return getOptions(name -> !name.startsWith("client.") && (prefix == null || name.startsWith(prefix)));
+    }
+
+    @GetMapping("/client")
+    @Admin
+    @ResponseBody
+    public List<SettingInfo> getForClient(@RequestParam(required = false) String prefix) {
+        log.info("GET /settings/client");
+
+        return getOptions(name -> name.startsWith("client.") && (prefix == null || name.startsWith(prefix)));
+    }
+
+    @GetMapping("/node/metadata")
     @Admin
     @ResponseBody
     public List<SettingMetaInfo> getMetadata(@RequestParam(required = false) String prefix) {
-        log.info("GET /settings/metadata");
+        log.info("GET /settings/node/metadata");
 
         return optionsMetadata.getDescriptors().values().stream()
                 .filter(d -> !d.isInternal())

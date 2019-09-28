@@ -21,7 +21,7 @@ public class CustomErrorAttributes extends DefaultErrorAttributes {
     @Override
     public Map<String, Object> getErrorAttributes(WebRequest webRequest, boolean includeStackTrace) {
         Map<String, Object> ea = super.getErrorAttributes(webRequest, includeStackTrace);
-        if (Objects.equals(ea.get("status"), 404)) {
+        if (Objects.equals(ea.get("status"), 404) || Objects.equals(ea.get("status"), 405)) {
             Map<String, Object> errorAttributes = new HashMap<>();
             String errorCode = "not-found";
             String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
