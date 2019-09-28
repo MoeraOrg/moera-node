@@ -3,13 +3,15 @@ package org.moera.node.rest;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.SettingInfo;
+import org.moera.node.model.SettingMetaInfo;
+import org.moera.node.option.OptionsMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,9 @@ public class SettingsController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private OptionsMetadata optionsMetadata;
 
     @GetMapping
     @Admin
@@ -43,6 +48,19 @@ public class SettingsController {
         list.sort(Comparator.comparing(SettingInfo::getName));
 
         return list;
+    }
+
+    @GetMapping("/metadata")
+    @Admin
+    @ResponseBody
+    public List<SettingMetaInfo> getMetadata(@RequestParam(required = false) String prefix) {
+        log.info("GET /settings/metadata");
+
+        return optionsMetadata.getDescriptors().values().stream()
+                .filter(d -> prefix != null && d.getName().startsWith(prefix))
+                .map(SettingMetaInfo::new)
+                .sorted(Comparator.comparing(SettingMetaInfo::getName))
+                .collect(Collectors.toList());
     }
 
 }
