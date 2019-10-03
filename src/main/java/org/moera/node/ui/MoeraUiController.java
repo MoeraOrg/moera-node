@@ -42,4 +42,10 @@ public class MoeraUiController {
         return "redirect:/profile";
     }
 
+    @GetMapping("/settings")
+    @VirtualPage
+    public String settings() {
+        return "redirect:/settings";
+    }
+
 }
