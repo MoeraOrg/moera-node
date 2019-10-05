@@ -6,6 +6,7 @@ public class OptionDescriptor {
     private String type;
     private String defaultValue;
     private boolean internal;
+    private String title;
 
     public String getName() {
         return name;
@@ -37,6 +38,14 @@ public class OptionDescriptor {
 
     public void setInternal(boolean internal) {
         this.internal = internal;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
 }

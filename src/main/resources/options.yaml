@@ -1,6 +1,7 @@
 - name: naming.unavailable.max-retries
   type: int
   defaultValue: 5
+  title: Naming server connection retries
 
 - name: naming.operation.id
   type: UUID
@@ -77,11 +78,14 @@
 - name: profile.signing-key.valid-from.layover
   type: Duration
   defaultValue: 1h
+  title: Signing key activation layover
 
 - name: token.lifetime
   type: Duration
   defaultValue: 365d
+  title: Authentication token lifetime
 
 - name: posting.time.relative
   type: bool
   defaultValue: false
+  title: Show relative time in postings

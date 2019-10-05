@@ -7,6 +7,7 @@ public class SettingMetaInfo {
     private String name;
     private String type;
     private String defaultValue;
+    private String title;
 
     public SettingMetaInfo() {
     }
@@ -15,6 +16,7 @@ public class SettingMetaInfo {
         name = descriptor.getName();
         type = descriptor.getType();
         defaultValue = descriptor.getDefaultValue();
+        title = descriptor.getTitle();
     }
 
     public String getName() {
@@ -39,6 +41,14 @@ public class SettingMetaInfo {
 
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
 }
