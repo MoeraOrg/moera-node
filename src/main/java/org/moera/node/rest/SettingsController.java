@@ -79,7 +79,7 @@ public class SettingsController {
 
         return optionsMetadata.getDescriptors().values().stream()
                 .filter(d -> !d.isInternal())
-                .filter(d -> prefix != null && d.getName().startsWith(prefix))
+                .filter(d -> prefix == null || d.getName().startsWith(prefix))
                 .map(SettingMetaInfo::new)
                 .sorted(Comparator.comparing(SettingMetaInfo::getName))
                 .collect(Collectors.toList());
