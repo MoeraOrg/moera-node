@@ -7,6 +7,7 @@ public class OptionDescriptor {
     private String defaultValue;
     private boolean internal;
     private String title;
+    private OptionTypeModifiers modifiers = new OptionTypeModifiers();
 
     public String getName() {
         return name;
@@ -46,6 +47,14 @@ public class OptionDescriptor {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public OptionTypeModifiers getModifiers() {
+        return modifiers;
+    }
+
+    public void setModifiers(OptionTypeModifiers modifiers) {
+        this.modifiers = modifiers;
     }
 
 }
