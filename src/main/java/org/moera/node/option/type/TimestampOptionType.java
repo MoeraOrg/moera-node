@@ -1,12 +1,23 @@
 package org.moera.node.option.type;
 
 import java.sql.Timestamp;
+import java.util.function.Consumer;
 
 import org.moera.node.option.exception.DeserializeOptionValueException;
+import org.moera.node.option.exception.UnsuitableOptionValueException;
 import org.moera.node.util.Util;
 
 @OptionType("Timestamp")
 public class TimestampOptionType extends OptionTypeBase {
+
+    private Timestamp parse(String value, Consumer<String> invalidValue) {
+        try {
+            return Util.toTimestamp(Long.parseLong(value));
+        } catch (NumberFormatException e) {
+            invalidValue.accept(value);
+        }
+        return null; // unreachable
+    }
 
     @Override
     public String serializeValue(Object value) {
@@ -15,12 +26,9 @@ public class TimestampOptionType extends OptionTypeBase {
 
     @Override
     public Object deserializeValue(String value) {
-        try {
-            return Util.toTimestamp(Long.parseLong(value));
-        } catch (NumberFormatException e) {
-            throw new DeserializeOptionValueException(
-                    String.format("Invalid value of type '%s' for option", getTypeName()));
-        }
+        return parse(value, v -> {
+            throw new DeserializeOptionValueException(getTypeName(), v);
+        });
     }
 
     @Override
@@ -45,6 +53,11 @@ public class TimestampOptionType extends OptionTypeBase {
         }
         if (value instanceof Timestamp) {
             return value;
+        }
+        if (value instanceof String) {
+            return parse((String) value, v -> {
+                throw new UnsuitableOptionValueException(v);
+            });
         }
         return super.accept(value);
     }

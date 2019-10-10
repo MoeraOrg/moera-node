@@ -1,20 +1,29 @@
 package org.moera.node.option.type;
 
+import java.util.function.Consumer;
+
 import org.moera.node.option.exception.DeserializeOptionValueException;
+import org.moera.node.option.exception.UnsuitableOptionValueException;
 
 @OptionType("bool")
 public class BoolOptionType extends OptionTypeBase {
 
-    @Override
-    public Object deserializeValue(String value) {
+    private boolean parse(String value, Consumer<String> invalidValue) {
         if ("true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value) || "1".equals(value)) {
             return true;
         }
         if ("false".equalsIgnoreCase(value) || "no".equalsIgnoreCase(value) || "0".equals(value)) {
             return false;
         }
-        throw new DeserializeOptionValueException(
-                String.format("Invalid value of type '%s' for option", getTypeName()));
+        invalidValue.accept(value);
+        return false; // unreachable
+    }
+
+    @Override
+    public Object deserializeValue(String value) {
+        return parse(value, v -> {
+            throw new DeserializeOptionValueException(getTypeName(), v);
+        });
     }
 
     @Override
@@ -44,7 +53,9 @@ public class BoolOptionType extends OptionTypeBase {
             return ((Long) value) != 0;
         }
         if (value instanceof String) {
-            return deserializeValue((String) value);
+            return parse((String) value, v -> {
+                throw new UnsuitableOptionValueException(v);
+            });
         }
         return super.accept(value);
     }

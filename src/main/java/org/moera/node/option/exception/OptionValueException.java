@@ -2,7 +2,7 @@ package org.moera.node.option.exception;
 
 import org.springframework.context.MessageSourceResolvable;
 
-public class OptionValueException extends RuntimeException implements MessageSourceResolvable {
+public abstract class OptionValueException extends RuntimeException implements MessageSourceResolvable {
 
     private String errorCode;
 

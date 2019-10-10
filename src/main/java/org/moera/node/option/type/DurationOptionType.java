@@ -4,6 +4,7 @@ import java.time.Duration;
 
 import org.moera.commons.util.DurationFormatException;
 import org.moera.commons.util.Util;
+import org.moera.node.option.exception.UnsuitableOptionValueException;
 
 @OptionType("Duration")
 public class DurationOptionType extends OptionTypeBase {
@@ -25,6 +26,7 @@ public class DurationOptionType extends OptionTypeBase {
                 Util.toDuration((String) value);
                 return value;
             } catch (DurationFormatException e) {
+                throw new UnsuitableOptionValueException((String) value);
             }
         }
         return super.accept(value);

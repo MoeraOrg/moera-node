@@ -6,7 +6,7 @@ import java.time.Duration;
 import java.util.UUID;
 
 import org.moera.node.option.exception.InvalidOptionTypeConversionException;
-import org.moera.node.option.exception.UnsuitableOptionValueException;
+import org.moera.node.option.exception.UnsuitableOptionTypeException;
 
 public abstract class OptionTypeBase {
 
@@ -62,7 +62,7 @@ public abstract class OptionTypeBase {
         if (value == null) {
             return null;
         }
-        throw new UnsuitableOptionValueException(getTypeName(), value.getClass());
+        throw new UnsuitableOptionTypeException(getTypeName(), value.getClass());
     }
 
 }

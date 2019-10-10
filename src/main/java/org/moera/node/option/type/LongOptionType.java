@@ -10,8 +10,7 @@ public class LongOptionType extends OptionTypeBase {
         try {
             return Long.parseLong(value);
         } catch (NumberFormatException e) {
-            throw new DeserializeOptionValueException(
-                    String.format("Invalid value of type '%s' for option", getTypeName()));
+            throw new DeserializeOptionValueException(getTypeName(), value);
         }
     }
 
