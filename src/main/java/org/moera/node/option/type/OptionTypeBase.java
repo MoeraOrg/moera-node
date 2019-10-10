@@ -1,13 +1,16 @@
-package org.moera.node.option;
+package org.moera.node.option.type;
 
 import java.security.PrivateKey;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.UUID;
 
+import org.moera.node.option.exception.InvalidOptionTypeConversionException;
+import org.moera.node.option.exception.UnsuitableOptionValueException;
+
 public abstract class OptionTypeBase {
 
-    protected String getTypeName() {
+    public String getTypeName() {
         OptionType optionType = getClass().getAnnotation(OptionType.class);
         if (optionType == null) {
             return "unknown";

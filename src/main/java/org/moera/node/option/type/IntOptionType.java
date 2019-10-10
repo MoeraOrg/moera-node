@@ -1,4 +1,6 @@
-package org.moera.node.option;
+package org.moera.node.option.type;
+
+import org.moera.node.option.exception.DeserializeOptionValueException;
 
 @OptionType("int")
 public class IntOptionType extends OptionTypeBase {

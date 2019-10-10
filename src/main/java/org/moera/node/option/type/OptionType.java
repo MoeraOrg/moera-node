@@ -1,4 +1,4 @@
-package org.moera.node.option;
+package org.moera.node.option.type;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

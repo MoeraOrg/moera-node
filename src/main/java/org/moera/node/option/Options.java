@@ -11,6 +11,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
+import org.moera.node.option.exception.DeserializeOptionValueException;
+import org.moera.node.option.exception.TransactionAbsentException;
+import org.moera.node.option.type.OptionTypeBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

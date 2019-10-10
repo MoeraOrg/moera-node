@@ -1,7 +1,8 @@
-package org.moera.node.option;
+package org.moera.node.option.type;
 
 import java.sql.Timestamp;
 
+import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.util.Util;
 
 @OptionType("Timestamp")

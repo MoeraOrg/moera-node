@@ -1,6 +1,8 @@
-package org.moera.node.option;
+package org.moera.node.option.type;
 
 import java.util.UUID;
+
+import org.moera.node.option.exception.DeserializeOptionValueException;
 
 @OptionType("UUID")
 public class UuidOptionType extends OptionTypeBase {

@@ -1,4 +1,6 @@
-package org.moera.node.option;
+package org.moera.node.option.type;
+
+import org.moera.node.option.exception.DeserializeOptionValueException;
 
 @OptionType("long")
 public class LongOptionType extends OptionTypeBase {

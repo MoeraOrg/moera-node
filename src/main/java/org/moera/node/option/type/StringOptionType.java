@@ -1,4 +1,4 @@
-package org.moera.node.option;
+package org.moera.node.option.type;
 
 @OptionType("string")
 public class StringOptionType extends OptionTypeBase {

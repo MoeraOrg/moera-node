@@ -1,4 +1,4 @@
-package org.moera.node.option;
+package org.moera.node.option.exception;
 
 public class UnsuitableOptionValueException extends OptionValueException {
 
