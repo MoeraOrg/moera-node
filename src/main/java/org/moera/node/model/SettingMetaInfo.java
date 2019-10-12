@@ -8,6 +8,7 @@ public class SettingMetaInfo {
     private String type;
     private String defaultValue;
     private String title;
+    private SettingTypeModifiers modifiers;
 
     public SettingMetaInfo() {
     }
@@ -17,6 +18,9 @@ public class SettingMetaInfo {
         type = descriptor.getType();
         defaultValue = descriptor.getDefaultValue();
         title = descriptor.getTitle();
+        if ("int".equalsIgnoreCase(type) || "Duration".equalsIgnoreCase(type)) {
+            modifiers = new SettingTypeModifiers(descriptor.getModifiers());
+        }
     }
 
     public String getName() {
@@ -49,6 +53,14 @@ public class SettingMetaInfo {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public SettingTypeModifiers getModifiers() {
+        return modifiers;
+    }
+
+    public void setModifiers(SettingTypeModifiers modifiers) {
+        this.modifiers = modifiers;
     }
 
 }
