@@ -181,7 +181,8 @@ public class Options {
     }
 
     public Integer getInt(String name) {
-        return forName(name, (value, optionType) -> optionType.getInt(value));
+        return forName(name,
+                (value, optionType) -> optionType.getInt(value, optionsMetadata.getOptionTypeModifiers(name)));
     }
 
     public Long getLong(String name) {
@@ -232,7 +233,7 @@ public class Options {
             return;
         }
 
-        Object newValue = optionType.accept(value);
+        Object newValue = optionType.accept(value, optionsMetadata.getOptionTypeModifiers(name));
 
         lockWrite();
         try {

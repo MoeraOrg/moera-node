@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.UUID;
 
+import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.InvalidOptionTypeConversionException;
 import org.moera.node.option.exception.UnsuitableOptionTypeException;
 
@@ -16,6 +17,10 @@ public abstract class OptionTypeBase {
             return "unknown";
         }
         return optionType.value();
+    }
+
+    public Object parseTypeModifiers(OptionTypeModifiers modifiers) {
+        return modifiers;
     }
 
     public String serializeValue(Object value) {
@@ -34,7 +39,7 @@ public abstract class OptionTypeBase {
         throw new InvalidOptionTypeConversionException(getTypeName(), Boolean.class);
     }
 
-    public Integer getInt(Object value) {
+    public Integer getInt(Object value, Object typeModifiers) {
         throw new InvalidOptionTypeConversionException(getTypeName(), Integer.class);
     }
 
@@ -58,7 +63,11 @@ public abstract class OptionTypeBase {
         throw new InvalidOptionTypeConversionException(getTypeName(), Timestamp.class);
     }
 
-    public Object accept(Object value) {
+    public Object accept(Object value, Object typeModifiers) {
+        return accept(value);
+    }
+
+    protected Object accept(Object value) {
         if (value == null) {
             return null;
         }

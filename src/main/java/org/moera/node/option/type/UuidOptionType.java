@@ -31,7 +31,7 @@ public class UuidOptionType extends OptionTypeBase {
     }
 
     @Override
-    public Object accept(Object value) {
+    protected Object accept(Object value) {
         if (value instanceof UUID) {
             return value;
         }

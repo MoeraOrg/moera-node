@@ -8,7 +8,7 @@ public class StringOptionType extends OptionTypeBase {
         return (String) value;
     }
 
-    public Object accept(Object value) {
+    protected Object accept(Object value) {
         return value.toString();
     }
 

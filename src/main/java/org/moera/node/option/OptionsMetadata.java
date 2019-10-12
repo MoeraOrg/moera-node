@@ -28,6 +28,7 @@ public class OptionsMetadata {
 
     private Map<String, OptionTypeBase> types;
     private Map<String, OptionDescriptor> descriptors;
+    private Map<String, Object> typeModifiers;
 
     @Inject
     private ApplicationContext applicationContext;
@@ -45,6 +46,12 @@ public class OptionsMetadata {
                 new TypeReference<List<OptionDescriptor>>() {
                 });
         descriptors = data.stream().collect(Collectors.toMap(OptionDescriptor::getName, Function.identity()));
+        typeModifiers = data.stream()
+                .filter(desc -> desc.getModifiers() != null)
+                .filter(desc -> types.get(desc.getType()) != null)
+                .collect(Collectors.toMap(
+                        OptionDescriptor::getName,
+                        desc -> types.get(desc.getType()).parseTypeModifiers(desc.getModifiers())));
     }
 
     public OptionTypeBase getType(String type) {
@@ -84,6 +91,10 @@ public class OptionsMetadata {
 
     public Map<String, OptionDescriptor> getDescriptors() {
         return descriptors;
+    }
+
+    public Object getOptionTypeModifiers(String name) {
+        return typeModifiers.get(name);
     }
 
 }

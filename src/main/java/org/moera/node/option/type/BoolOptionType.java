@@ -32,7 +32,7 @@ public class BoolOptionType extends OptionTypeBase {
     }
 
     @Override
-    public Integer getInt(Object value) {
+    public Integer getInt(Object value, Object typeModifiers) {
         return ((Boolean) value) ? 1 : 0;
     }
 
@@ -42,7 +42,7 @@ public class BoolOptionType extends OptionTypeBase {
     }
 
     @Override
-    public Object accept(Object value) {
+    protected Object accept(Object value) {
         if (value instanceof Boolean) {
             return value;
         }
