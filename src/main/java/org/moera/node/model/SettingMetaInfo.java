@@ -1,7 +1,9 @@
 package org.moera.node.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.option.OptionDescriptor;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SettingMetaInfo {
 
     private String name;
@@ -18,9 +20,7 @@ public class SettingMetaInfo {
         type = descriptor.getType();
         defaultValue = descriptor.getDefaultValue();
         title = descriptor.getTitle();
-        if ("int".equalsIgnoreCase(type) || "Duration".equalsIgnoreCase(type)) {
-            modifiers = new SettingTypeModifiers(descriptor.getModifiers());
-        }
+        modifiers = new SettingTypeModifiers(descriptor.getModifiers());
     }
 
     public String getName() {

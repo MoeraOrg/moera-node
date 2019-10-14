@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.util.Util;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingInfo {
 
     private UUID id;

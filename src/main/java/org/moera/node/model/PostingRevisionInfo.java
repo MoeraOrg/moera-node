@@ -2,10 +2,12 @@ package org.moera.node.model;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.util.Util;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingRevisionInfo {
 
     private UUID id;

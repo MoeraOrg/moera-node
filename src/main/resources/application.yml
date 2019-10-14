@@ -16,9 +16,6 @@ spring:
     table: schema_history
     baseline-on-migrate: true
 
-  jackson:
-    default-property-inclusion: non-null
-
   jpa:
     open-in-view: true
     show-sql: false  # Show or not log for each sql query
