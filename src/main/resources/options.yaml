@@ -41,6 +41,9 @@
 - name: naming.operation.registered-name.generation
   type: int
   internal: true
+  modifiers:
+    min: 0
+    max: 65535
 
 - name: naming.operation.signing-key
   type: PrivateKey
