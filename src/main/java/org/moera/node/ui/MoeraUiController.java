@@ -48,4 +48,10 @@ public class MoeraUiController {
         return "redirect:/settings";
     }
 
+    @GetMapping("/settings/{tab}")
+    @VirtualPage
+    public String settingsTab(@PathVariable String tab) {
+        return "redirect:/settings/" + tab;
+    }
+
 }
