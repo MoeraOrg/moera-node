@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/registered-name")
@@ -62,7 +61,6 @@ public class RegisteredNameController {
     private NamingClient namingClient;
 
     @GetMapping
-    @ResponseBody
     public RegisteredNameInfo get() {
         log.info("GET /registered-name");
 
@@ -71,7 +69,6 @@ public class RegisteredNameController {
 
     @PostMapping
     @Admin
-    @ResponseBody
     @Transactional
     public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister, HttpServletRequest request) {
         if (!Rules.isNameValid(nameToRegister.getName())) {
@@ -127,7 +124,6 @@ public class RegisteredNameController {
 
     @PutMapping
     @Admin
-    @ResponseBody
     @Transactional
     public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret) {
         log.info("PUT /registered-name");
@@ -190,7 +186,6 @@ public class RegisteredNameController {
 
     @DeleteMapping
     @Admin
-    @ResponseBody
     @Transactional
     public Result delete() {
         log.info("DELETE /registered-name");

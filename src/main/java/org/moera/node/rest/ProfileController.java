@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/profile")
@@ -27,7 +26,6 @@ public class ProfileController {
     private RequestContext requestContext;
 
     @GetMapping
-    @ResponseBody
     public ProfileInfo get() {
         log.info("GET /profile");
 
@@ -36,7 +34,6 @@ public class ProfileController {
 
     @PutMapping
     @Admin
-    @ResponseBody
     @Transactional
     public ProfileInfo put(@Valid @RequestBody Profile profile) {
         log.info("PUT /profile");

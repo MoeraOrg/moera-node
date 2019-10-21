@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 public abstract class PostingRevisionControllerBase {
 
@@ -46,7 +45,6 @@ public abstract class PostingRevisionControllerBase {
     protected abstract EntryRevision findRevision(UUID postingId, UUID id);
 
     @GetMapping
-    @ResponseBody
     public List<PostingRevisionInfo> getAll(@PathVariable UUID postingId) {
         getLog().info("GET {}/{postingId}/revisions (postingId = {})", getDirectory(), LogUtil.format(postingId));
 
@@ -62,7 +60,6 @@ public abstract class PostingRevisionControllerBase {
     }
 
     @GetMapping("/{id}")
-    @ResponseBody
     public PostingRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID id) {
         getLog().info("GET {}/{postingId}/revisions/{id} (postingId = {}, id = {})",
                 getDirectory(),
@@ -79,7 +76,6 @@ public abstract class PostingRevisionControllerBase {
 
     @PostMapping("/{id}/restore")
     @Admin
-    @ResponseBody
     @Transactional
     public PostingRevisionInfo restore(@PathVariable UUID postingId, @PathVariable UUID id) {
         getLog().info("POST {}/{postingId}/revisions/{id}/restore (postingId = {}, id = {})",

@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/postings")
@@ -54,7 +53,6 @@ public class PostingController {
     private PostingOperations postingOperations;
 
     @GetMapping("/features")
-    @ResponseBody
     public PostingFeatures getFeatures() {
         log.info("GET /postings/features");
 
@@ -111,7 +109,6 @@ public class PostingController {
     }
 
     @GetMapping("/{id}")
-    @ResponseBody
     public PostingInfo get(@PathVariable UUID id, @RequestParam(required = false) String include) {
         log.info("GET /postings/{id}, (id = {}, include = {})", LogUtil.format(id), LogUtil.format(include));
 
@@ -127,7 +124,6 @@ public class PostingController {
 
     @DeleteMapping("/{id}")
     @Admin
-    @ResponseBody
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));

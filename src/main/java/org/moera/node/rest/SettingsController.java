@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/settings")
@@ -53,7 +52,6 @@ public class SettingsController {
 
     @GetMapping("/node")
     @Admin
-    @ResponseBody
     public List<SettingInfo> getForNode(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node");
 
@@ -63,7 +61,6 @@ public class SettingsController {
 
     @GetMapping("/client")
     @Admin
-    @ResponseBody
     public List<SettingInfo> getForClient(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/client");
 
@@ -73,7 +70,6 @@ public class SettingsController {
 
     @GetMapping("/node/metadata")
     @Admin
-    @ResponseBody
     public List<SettingMetaInfo> getMetadata(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node/metadata");
 
@@ -87,7 +83,6 @@ public class SettingsController {
 
     @PutMapping
     @Admin
-    @ResponseBody
     public Result put(@RequestBody @Valid List<SettingInfo> settings) {
         log.info("PUT /settings");
 

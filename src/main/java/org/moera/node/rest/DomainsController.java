@@ -10,6 +10,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.data.Domain;
+import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RootAdmin;
 import org.moera.node.model.DomainInfo;
@@ -17,7 +18,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.domain.Domains;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/domains")
@@ -42,7 +41,6 @@ public class DomainsController {
 
     @RootAdmin
     @GetMapping
-    @ResponseBody
     public List<DomainInfo> get() {
         log.info("GET /domains");
 
@@ -54,7 +52,6 @@ public class DomainsController {
 
     @RootAdmin
     @GetMapping("/{name}")
-    @ResponseBody
     public DomainInfo get(@PathVariable String name) {
         log.info("GET /domains/{}", name);
 
@@ -95,7 +92,6 @@ public class DomainsController {
 
     @RootAdmin
     @PutMapping("/{name}")
-    @ResponseBody
     @Transactional
     public DomainInfo put(@PathVariable String name, @RequestBody @Valid DomainInfo domainInfo) {
         log.info("PUT /domains/{}", name);
@@ -129,7 +125,6 @@ public class DomainsController {
 
     @RootAdmin
     @DeleteMapping("/{name}")
-    @ResponseBody
     @Transactional
     public Result delete(@PathVariable String name) {
         log.info("DELETE /domains/{}", name);
