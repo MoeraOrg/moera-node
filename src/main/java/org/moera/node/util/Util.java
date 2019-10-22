@@ -78,4 +78,22 @@ public class Util extends org.moera.commons.util.Util {
         return String.format("%d years ago", diff);
     }
 
+    public static Boolean toBoolean(String value) {
+        if (value == null) {
+            return null;
+        }
+        if ("true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value) || "1".equals(value)) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(value) || "no".equalsIgnoreCase(value) || "0".equals(value)) {
+            return false;
+        }
+        throw new IllegalArgumentException(String.format("\"%s\" is not a valid value for boolean", value));
+    }
+
+    public static boolean toBoolean(String value, boolean defaultValue) {
+        Boolean boolValue = toBoolean(value);
+        return boolValue != null ? boolValue : defaultValue;
+    }
+
 }

@@ -104,3 +104,10 @@
   type: bool
   defaultValue: false
   title: Show relative time in postings
+
+- name: webui.head.top.html
+  type: string
+  defaultValue: ""
+  title: "WebUI: HTML to insert at the beginning of <HEAD>"
+  modifiers:
+    multiline: true

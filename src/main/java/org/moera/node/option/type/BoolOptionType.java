@@ -4,16 +4,15 @@ import java.util.function.Consumer;
 
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
+import org.moera.node.util.Util;
 
 @OptionType("bool")
 public class BoolOptionType extends OptionTypeBase {
 
     private boolean parse(String value, Consumer<String> invalidValue) {
-        if ("true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value) || "1".equals(value)) {
-            return true;
-        }
-        if ("false".equalsIgnoreCase(value) || "no".equalsIgnoreCase(value) || "0".equals(value)) {
-            return false;
+        Boolean boolValue = Util.toBoolean(value);
+        if (boolValue != null) {
+            return boolValue;
         }
         invalidValue.accept(value);
         return false; // unreachable

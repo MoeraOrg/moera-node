@@ -8,6 +8,7 @@ public class SettingTypeModifiers {
 
     private String min;
     private String max;
+    private String multiline;
 
     public SettingTypeModifiers() {
     }
@@ -15,6 +16,7 @@ public class SettingTypeModifiers {
     public SettingTypeModifiers(OptionTypeModifiers modifiers) {
         min = modifiers.getMin();
         max = modifiers.getMax();
+        multiline = modifiers.getMultiline();
     }
 
     public String getMin() {
@@ -31,6 +33,14 @@ public class SettingTypeModifiers {
 
     public void setMax(String max) {
         this.max = max;
+    }
+
+    public String getMultiline() {
+        return multiline;
+    }
+
+    public void setMultiline(String multiline) {
+        this.multiline = multiline;
     }
 
 }
