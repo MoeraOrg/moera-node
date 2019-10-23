@@ -35,7 +35,9 @@ import org.moera.node.model.RegisteredNameInfo;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.naming.DelegatedName;
 import org.moera.node.naming.NamingClient;
+import org.moera.node.naming.RegisteredName;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -132,11 +134,11 @@ public class RegisteredNameController {
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
-        String name = registeredNameSecret.getName() != null
+        String registeredName = registeredNameSecret.getName() != null
                 ? registeredNameSecret.getName() : options.getString("profile.registered-name");
-        Integer generation = registeredNameSecret.getGeneration() != null
-                ? registeredNameSecret.getGeneration() : options.getInt("profile.registered-name.generation");
-        if (StringUtils.isEmpty(name) || generation == null) {
+        DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(registeredName);
+
+        if (StringUtils.isEmpty(delegatedName.getName()) || delegatedName.getGeneration() == null) {
             throw new ValidationFailure("registered-name.name-absent");
         }
         if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
@@ -174,7 +176,8 @@ public class RegisteredNameController {
                 signingKey = (ECPublicKey) signingKeyPair.getPublic();
             }
 
-            namingClient.update(name, generation, privateUpdatingKey, privateSigningKey, signingKey, options);
+            namingClient.update(delegatedName.getName(), delegatedName.getGeneration(), privateUpdatingKey,
+                    privateSigningKey, signingKey, options);
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {
@@ -195,7 +198,6 @@ public class RegisteredNameController {
         }
         requestContext.getOptions().runInTransaction(options -> {
             options.reset("profile.registered-name");
-            options.reset("profile.registered-name.generation");
             options.reset("profile.signing-key");
         });
 

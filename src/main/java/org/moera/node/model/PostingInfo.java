@@ -16,7 +16,6 @@ public class PostingInfo {
     private UUID revisionId;
     private int totalRevisions;
     private String ownerName;
-    private int ownerGeneration;
     private String bodyPreviewHtml;
     private String bodySrc;
     private byte[] bodySrcHash;
@@ -43,7 +42,6 @@ public class PostingInfo {
         revisionId = posting.getCurrentRevision().getId();
         totalRevisions = posting.getTotalRevisions();
         ownerName = posting.getOwnerName();
-        ownerGeneration = posting.getOwnerGeneration();
         bodyPreviewHtml = posting.getCurrentRevision().getBodyPreviewHtml();
         if (includeSource) {
             bodySrc = posting.getCurrentRevision().getBodySrc();
@@ -94,14 +92,6 @@ public class PostingInfo {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
-    }
-
-    public int getOwnerGeneration() {
-        return ownerGeneration;
-    }
-
-    public void setOwnerGeneration(int ownerGeneration) {
-        this.ownerGeneration = ownerGeneration;
     }
 
     public String getBodyPreviewHtml() {

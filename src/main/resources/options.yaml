@@ -61,13 +61,6 @@
   type: string
   internal: true
 
-- name: profile.registered-name.generation
-  type: int
-  internal: true
-  modifiers:
-    min: 0
-    max: 65535
-
 - name: profile.full-name
   type: string
   internal: true

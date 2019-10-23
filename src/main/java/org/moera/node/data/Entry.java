@@ -43,9 +43,6 @@ public class Entry {
     private String ownerName = "";
 
     @NotNull
-    private int ownerGeneration;
-
-    @NotNull
     private Timestamp createdAt = Util.now();
 
     private Timestamp deletedAt;
@@ -89,14 +86,6 @@ public class Entry {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
-    }
-
-    public int getOwnerGeneration() {
-        return ownerGeneration;
-    }
-
-    public void setOwnerGeneration(int ownerGeneration) {
-        this.ownerGeneration = ownerGeneration;
     }
 
     public Timestamp getCreatedAt() {

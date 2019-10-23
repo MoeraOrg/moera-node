@@ -3,7 +3,6 @@ package org.moera.node.model;
 public class RegisteredNameSecret {
 
     private String name;
-    private Integer generation;
     private String[] mnemonic;
     private String secret;
 
@@ -13,14 +12,6 @@ public class RegisteredNameSecret {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Integer getGeneration() {
-        return generation;
-    }
-
-    public void setGeneration(Integer generation) {
-        this.generation = generation;
     }
 
     public String[] getMnemonic() {

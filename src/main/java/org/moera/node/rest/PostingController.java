@@ -71,8 +71,7 @@ public class PostingController {
 
         Options options = requestContext.getOptions();
         String name = options.getString("profile.registered-name");
-        Integer generation = options.getInt("profile.registered-name.generation");
-        if (name == null || generation == null) {
+        if (name == null) {
             throw new OperationFailure("posting.registered-name-not-set");
         }
 
@@ -80,7 +79,6 @@ public class PostingController {
         posting.setId(UUID.randomUUID());
         posting.setNodeId(options.nodeId());
         posting.setOwnerName(name);
-        posting.setOwnerGeneration(generation);
         postingRepository.save(posting);
 
         postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);

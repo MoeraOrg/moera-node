@@ -21,9 +21,9 @@ import org.moera.naming.rpc.OperationStatus;
 import org.moera.naming.rpc.OperationStatusInfo;
 import org.moera.naming.rpc.PutCallFingerprint;
 import org.moera.naming.rpc.RegisteredNameInfo;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,13 +166,8 @@ public class NamingClient {
 
     private void commitOperation(Options options) {
         String name = options.getString("naming.operation.registered-name");
-        if (name != null) {
-            options.set("profile.registered-name", name);
-        }
         Integer generation = options.getInt("naming.operation.registered-name.generation");
-        if (generation != null) {
-            options.set("profile.registered-name.generation", generation);
-        }
+        options.set("profile.registered-name", new DelegatedName(name, generation).format());
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");
         if (signingKey != null) {
             options.set("profile.signing-key", signingKey);

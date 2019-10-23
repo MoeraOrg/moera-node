@@ -153,7 +153,12 @@ public class Options {
 
     private void putValue(String name, String value) {
         try {
-            transactionalPut(name, deserializeValue(optionsMetadata.getDescriptor(name).getType(), value));
+            OptionDescriptor desc = optionsMetadata.getDescriptor(name);
+            if (desc == null) {
+                log.warn("No metadata for option {}", name);
+                return;
+            }
+            transactionalPut(name, deserializeValue(desc.getType(), value));
         } catch (DeserializeOptionValueException e) {
             log.error("{}: {}", e.getMessage(), name);
         }

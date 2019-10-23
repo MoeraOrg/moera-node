@@ -12,7 +12,6 @@ import org.moera.node.option.Options;
 public class RegisteredNameInfo {
 
     private String name;
-    private Integer generation;
     private String operationStatus;
     private Long operationStatusUpdated;
     private String operationErrorCode;
@@ -25,7 +24,6 @@ public class RegisteredNameInfo {
     public RegisteredNameInfo(RequestContext requestContext) {
         Options options = requestContext.getOptions();
         name = options.getString("profile.registered-name");
-        generation = options.getInt("profile.registered-name.generation");
         if (requestContext.isAdmin()) {
             operationStatus = options.getString("naming.operation.status");
             OperationStatus status = OperationStatus.forValue(operationStatus);
@@ -60,14 +58,6 @@ public class RegisteredNameInfo {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Integer getGeneration() {
-        return generation;
-    }
-
-    public void setGeneration(Integer generation) {
-        this.generation = generation;
     }
 
     public String getOperationStatus() {

@@ -24,8 +24,6 @@ public class Token {
     @Size(max = 127)
     private String name;
 
-    private Integer generation;
-
     @NotNull
     private boolean admin;
 
@@ -57,14 +55,6 @@ public class Token {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Integer getGeneration() {
-        return generation;
-    }
-
-    public void setGeneration(Integer generation) {
-        this.generation = generation;
     }
 
     public boolean isAdmin() {
