@@ -15,6 +15,7 @@ public class PostingRevisionInfo {
     private byte[] bodySrcHash;
     private String bodySrcFormat;
     private String bodyHtml;
+    private String bodyHtmlFormat;
     private String heading;
     private long createdAt;
     private long publishedAt;
@@ -31,6 +32,7 @@ public class PostingRevisionInfo {
         bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat().getValue();
         bodyHtml = revision.getBodyHtml();
+        bodyHtmlFormat = revision.getBodyHtmlFormat();
         heading = revision.getHeading();
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
         publishedAt = Util.toEpochSecond(revision.getPublishedAt());
@@ -77,6 +79,14 @@ public class PostingRevisionInfo {
 
     public void setBodyHtml(String bodyHtml) {
         this.bodyHtml = bodyHtml;
+    }
+
+    public String getBodyHtmlFormat() {
+        return bodyHtmlFormat;
+    }
+
+    public void setBodyHtmlFormat(String bodyHtmlFormat) {
+        this.bodyHtmlFormat = bodyHtmlFormat;
     }
 
     public String getHeading() {

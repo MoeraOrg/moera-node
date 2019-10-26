@@ -25,7 +25,7 @@ public class Domains {
 
     public static final String DEFAULT_DOMAIN = "_default_";
 
-    private static Logger log = LoggerFactory.getLogger(Options.class);
+    private static Logger log = LoggerFactory.getLogger(Domains.class);
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
     private Map<String, Options> domainOptions = new HashMap<>();

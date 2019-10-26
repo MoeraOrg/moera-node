@@ -8,6 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.moera.commons.util.Util;
 
@@ -31,6 +32,10 @@ public class EntryRevision {
     @NotNull
     @Enumerated
     private SourceFormat bodySrcFormat = SourceFormat.PLAIN_TEXT;
+
+    @NotNull
+    @Size(max = 75)
+    private String bodyHtmlFormat = "html";
 
     @NotNull
     private String bodyHtml = "";
@@ -98,6 +103,14 @@ public class EntryRevision {
 
     public void setBodyHtml(String bodyHtml) {
         this.bodyHtml = bodyHtml;
+    }
+
+    public String getBodyHtmlFormat() {
+        return bodyHtmlFormat;
+    }
+
+    public void setBodyHtmlFormat(String bodyHtmlFormat) {
+        this.bodyHtmlFormat = bodyHtmlFormat;
     }
 
     public String getHeading() {

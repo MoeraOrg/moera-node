@@ -40,6 +40,10 @@ public class Entry {
 
     @NotNull
     @Size(max = 127)
+    private String receiverName = "";
+
+    @NotNull
+    @Size(max = 127)
     private String ownerName = "";
 
     @NotNull
@@ -78,6 +82,14 @@ public class Entry {
 
     protected void setEntryType(EntryType entryType) {
         this.entryType = entryType;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
     }
 
     public String getOwnerName() {

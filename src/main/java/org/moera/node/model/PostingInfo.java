@@ -15,12 +15,14 @@ public class PostingInfo {
     private UUID id;
     private UUID revisionId;
     private int totalRevisions;
+    private String receiverName;
     private String ownerName;
     private String bodyPreviewHtml;
     private String bodySrc;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
     private String bodyHtml;
+    private String bodyHtmlFormat;
     private String heading;
     private long createdAt;
     private long editedAt;
@@ -41,6 +43,7 @@ public class PostingInfo {
         id = posting.getId();
         revisionId = posting.getCurrentRevision().getId();
         totalRevisions = posting.getTotalRevisions();
+        receiverName = posting.getReceiverName();
         ownerName = posting.getOwnerName();
         bodyPreviewHtml = posting.getCurrentRevision().getBodyPreviewHtml();
         if (includeSource) {
@@ -49,6 +52,7 @@ public class PostingInfo {
         bodySrcHash = CryptoUtil.digest(posting.getCurrentRevision().getBodySrc());
         bodySrcFormat = posting.getCurrentRevision().getBodySrcFormat().getValue();
         bodyHtml = posting.getCurrentRevision().getBodyHtml();
+        bodyHtmlFormat = posting.getCurrentRevision().getBodyHtmlFormat();
         heading = posting.getCurrentRevision().getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
         editedAt = Util.toEpochSecond(posting.getCurrentRevision().getCreatedAt());
@@ -84,6 +88,14 @@ public class PostingInfo {
 
     public void setTotalRevisions(int totalRevisions) {
         this.totalRevisions = totalRevisions;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
     }
 
     public String getOwnerName() {
@@ -132,6 +144,14 @@ public class PostingInfo {
 
     public void setBodyHtml(String bodyHtml) {
         this.bodyHtml = bodyHtml;
+    }
+
+    public String getBodyHtmlFormat() {
+        return bodyHtmlFormat;
+    }
+
+    public void setBodyHtmlFormat(String bodyHtmlFormat) {
+        this.bodyHtmlFormat = bodyHtmlFormat;
     }
 
     public String getHeading() {

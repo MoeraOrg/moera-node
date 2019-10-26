@@ -78,6 +78,7 @@ public class PostingController {
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
         posting.setNodeId(options.nodeId());
+        posting.setReceiverName(name);
         posting.setOwnerName(name);
         postingRepository.save(posting);
 
