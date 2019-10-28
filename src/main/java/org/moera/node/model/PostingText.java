@@ -20,7 +20,9 @@ public class PostingText {
     private String bodySrcFormat;
 
     @Size(max = 65535)
-    private String bodyHtml;
+    private String body;
+
+    private String bodyFormat;
 
     private Long publishAt;
 
@@ -43,12 +45,20 @@ public class PostingText {
         this.bodySrcFormat = bodySrcFormat;
     }
 
-    public String getBodyHtml() {
-        return bodyHtml;
+    public String getBody() {
+        return body;
     }
 
-    public void setBodyHtml(String bodyHtml) {
-        this.bodyHtml = bodyHtml;
+    public void setBody(String body) {
+        this.body = body;
+    }
+
+    public String getBodyFormat() {
+        return bodyFormat;
+    }
+
+    public void setBodyFormat(String bodyFormat) {
+        this.bodyFormat = bodyFormat;
     }
 
     public Long getPublishAt() {
@@ -69,14 +79,22 @@ public class PostingText {
             revision.setBodySrcFormat(format);
         }
 
-        if (StringUtils.isEmpty(bodyHtml)) {
-            bodyHtml = TextConverter.toHtml(revision.getBodySrcFormat(), bodySrc);
+        if (StringUtils.isEmpty(body)) {
+            body = TextConverter.toHtml(revision.getBodySrcFormat(), bodySrc);
+            bodyFormat = "html";
+        } else {
+            if (StringUtils.isEmpty(bodyFormat)) {
+                bodyFormat = "html";
+            }
         }
-        revision.setBodyHtml(bodyHtml);
-        if (!Shortener.isShort(bodyHtml)) {
-            revision.setBodyPreviewHtml(Shortener.shorten(bodyHtml));
+        revision.setBody(body);
+        revision.setBodyFormat(bodyFormat);
+        if (bodyFormat.equals("html")) {
+            if (!Shortener.isShort(body)) {
+                revision.setBodyPreviewHtml(Shortener.shorten(body));
+            }
+            revision.setHeading(HeadingExtractor.extract(body));
         }
-        revision.setHeading(HeadingExtractor.extract(bodyHtml));
         if (publishAt != null) {
             revision.setPublishedAt(Util.toTimestamp(publishAt));
         }

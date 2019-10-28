@@ -21,8 +21,8 @@ public class PostingInfo {
     private String bodySrc;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
-    private String bodyHtml;
-    private String bodyHtmlFormat;
+    private String body;
+    private String bodyFormat;
     private String heading;
     private long createdAt;
     private long editedAt;
@@ -51,8 +51,8 @@ public class PostingInfo {
         }
         bodySrcHash = CryptoUtil.digest(posting.getCurrentRevision().getBodySrc());
         bodySrcFormat = posting.getCurrentRevision().getBodySrcFormat().getValue();
-        bodyHtml = posting.getCurrentRevision().getBodyHtml();
-        bodyHtmlFormat = posting.getCurrentRevision().getBodyHtmlFormat();
+        body = posting.getCurrentRevision().getBody();
+        bodyFormat = posting.getCurrentRevision().getBodyFormat();
         heading = posting.getCurrentRevision().getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
         editedAt = Util.toEpochSecond(posting.getCurrentRevision().getCreatedAt());
@@ -138,20 +138,20 @@ public class PostingInfo {
         this.bodySrcFormat = bodySrcFormat;
     }
 
-    public String getBodyHtml() {
-        return bodyHtml;
+    public String getBody() {
+        return body;
     }
 
-    public void setBodyHtml(String bodyHtml) {
-        this.bodyHtml = bodyHtml;
+    public void setBody(String body) {
+        this.body = body;
     }
 
-    public String getBodyHtmlFormat() {
-        return bodyHtmlFormat;
+    public String getBodyFormat() {
+        return bodyFormat;
     }
 
-    public void setBodyHtmlFormat(String bodyHtmlFormat) {
-        this.bodyHtmlFormat = bodyHtmlFormat;
+    public void setBodyFormat(String bodyFormat) {
+        this.bodyFormat = bodyFormat;
     }
 
     public String getHeading() {

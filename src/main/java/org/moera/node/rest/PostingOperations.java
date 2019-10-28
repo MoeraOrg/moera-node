@@ -97,7 +97,7 @@ public class PostingOperations {
             revision.setBodyPreviewHtml(template.getBodyPreviewHtml());
             revision.setBodySrc(template.getBodySrc());
             revision.setBodySrcFormat(template.getBodySrcFormat());
-            revision.setBodyHtml(template.getBodyHtml());
+            revision.setBody(template.getBody());
             revision.setHeading(template.getHeading());
             revision.setPublishedAt(template.getPublishedAt());
             revision.setMoment(template.getMoment());

@@ -35,10 +35,10 @@ public class EntryRevision {
 
     @NotNull
     @Size(max = 75)
-    private String bodyHtmlFormat = "html";
+    private String bodyFormat = "html";
 
     @NotNull
-    private String bodyHtml = "";
+    private String body = "";
 
     @NotNull
     private String heading = "";
@@ -97,20 +97,20 @@ public class EntryRevision {
         this.bodySrcFormat = bodySrcFormat;
     }
 
-    public String getBodyHtml() {
-        return bodyHtml;
+    public String getBody() {
+        return body;
     }
 
-    public void setBodyHtml(String bodyHtml) {
-        this.bodyHtml = bodyHtml;
+    public void setBody(String body) {
+        this.body = body;
     }
 
-    public String getBodyHtmlFormat() {
-        return bodyHtmlFormat;
+    public String getBodyFormat() {
+        return bodyFormat;
     }
 
-    public void setBodyHtmlFormat(String bodyHtmlFormat) {
-        this.bodyHtmlFormat = bodyHtmlFormat;
+    public void setBodyFormat(String bodyFormat) {
+        this.bodyFormat = bodyFormat;
     }
 
     public String getHeading() {

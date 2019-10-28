@@ -63,10 +63,11 @@ public class PostingController {
     @Admin
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
-        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, bodyHtml = {}, publishAt = {})",
+        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, body = {}, bodyFormat = {}, publishAt = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.format(postingText.getBodyHtml(), 64),
+                LogUtil.format(postingText.getBody(), 64),
+                LogUtil.format(postingText.getBodyFormat()),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
         Options options = requestContext.getOptions();
@@ -91,11 +92,13 @@ public class PostingController {
     @Admin
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
-        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, bodyHtml = {}, publishAt = {})",
+        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, body = {}, bodyFormat = {},"
+                        + " publishAt = {})",
                 LogUtil.format(id),
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.format(postingText.getBodyHtml(), 64),
+                LogUtil.format(postingText.getBody(), 64),
+                LogUtil.format(postingText.getBodyFormat()),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);

@@ -12,8 +12,8 @@ public class PostingFingerprint extends Fingerprint {
     public String ownerName;
     public Digest<String> bodySrc = new Digest<>();
     public String bodySrcFormat;
-    public String bodyHtml;
-    public String bodyHtmlFormat;
+    public String body;
+    public String bodyFormat;
     public long createdAt;
     public byte attachments; // TODO for future use
 
@@ -23,8 +23,8 @@ public class PostingFingerprint extends Fingerprint {
         ownerName = posting.getOwnerName();
         bodySrc.setValue(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat().getValue();
-        bodyHtml = revision.getBodyHtml();
-        bodyHtmlFormat = revision.getBodyHtmlFormat();
+        body = revision.getBody();
+        bodyFormat = revision.getBodyFormat();
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
     }
 
