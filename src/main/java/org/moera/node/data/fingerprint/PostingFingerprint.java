@@ -15,6 +15,7 @@ public class PostingFingerprint extends Fingerprint {
     public String body;
     public String bodyFormat;
     public long createdAt;
+    public byte permissions; // TODO for future use
     public byte attachments; // TODO for future use
 
     public PostingFingerprint(Posting posting, EntryRevision revision) {
