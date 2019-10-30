@@ -2,13 +2,14 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.option.OptionTypeModifiers;
+import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SettingTypeModifiers {
 
     private String min;
     private String max;
-    private String multiline;
+    private Boolean multiline;
 
     public SettingTypeModifiers() {
     }
@@ -16,7 +17,7 @@ public class SettingTypeModifiers {
     public SettingTypeModifiers(OptionTypeModifiers modifiers) {
         min = modifiers.getMin();
         max = modifiers.getMax();
-        multiline = modifiers.getMultiline();
+        multiline = Util.toBoolean(modifiers.getMultiline());
     }
 
     public String getMin() {
@@ -35,11 +36,11 @@ public class SettingTypeModifiers {
         this.max = max;
     }
 
-    public String getMultiline() {
+    public Boolean getMultiline() {
         return multiline;
     }
 
-    public void setMultiline(String multiline) {
+    public void setMultiline(Boolean multiline) {
         this.multiline = multiline;
     }
 
