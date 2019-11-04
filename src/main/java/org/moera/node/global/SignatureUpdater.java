@@ -9,7 +9,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
-import org.moera.node.data.fingerprint.PostingFingerprint;
+import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.option.Options;

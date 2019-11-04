@@ -1,4 +1,4 @@
-package org.moera.node.data.fingerprint;
+package org.moera.node.fingerprint;
 
 import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
@@ -6,8 +6,10 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.util.Util;
 
+@FingerprintVersion(objectType = FingerprintObjectType.POSTING, version = 0)
 public class PostingFingerprint extends Fingerprint {
 
+    public String objectType = FingerprintObjectType.POSTING.name();
     public String receiverName;
     public String ownerName;
     public Digest<String> bodySrc = new Digest<>();
