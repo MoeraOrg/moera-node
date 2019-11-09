@@ -5,7 +5,7 @@ public class Event {
     private long queueStartedAt;
     private int ordinal;
     private long sentAt;
-    private String type = EventType.TEST.name();
+    private EventType type = EventType.TEST;
 
     public Event() {
     }
@@ -34,11 +34,11 @@ public class Event {
         this.sentAt = sentAt;
     }
 
-    public String getType() {
+    public EventType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(EventType type) {
         this.type = type;
     }
 
