@@ -153,7 +153,6 @@ public class EventManager {
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor
                 .create(SimpMessageType.MESSAGE);
         headerAccessor.setSessionId(subscriber.getSessionId());
-        headerAccessor.setLeaveMutable(true); // TODO remove?
         MessageHeaders headers = headerAccessor.getMessageHeaders();
 
         int first = events.get(0).getOrdinal();
