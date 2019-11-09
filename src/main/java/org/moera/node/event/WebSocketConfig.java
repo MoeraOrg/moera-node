@@ -18,7 +18,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/moera/events")
+        registry.addEndpoint("/moera/api/events")
             .setAllowedOrigins("*");
     }
 
