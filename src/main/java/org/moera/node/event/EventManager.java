@@ -13,7 +13,6 @@ import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.event.model.Event;
-import org.moera.node.event.model.EventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -42,7 +41,7 @@ public class EventManager {
     public SimpMessagingTemplate messagingTemplate;
 
     private Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
-    private List<Event> events = new ArrayList<>();
+    private List<EventPacket> queue = new ArrayList<>();
     private final long startedAt = Instant.now().getEpochSecond();
     private int lastOrdinal = 0;
     private ReadWriteLock eventsLock = new ReentrantReadWriteLock();
@@ -77,8 +76,6 @@ public class EventManager {
             subscriber.setLastEventSeen(seen.lastEvent);
         }
         subscribers.put(accessor.getSessionId(), subscriber);
-
-        send(new Event());
     }
 
     @EventListener(SessionUnsubscribeEvent.class)
@@ -118,7 +115,7 @@ public class EventManager {
 
     private void purge() {
         long boundary = Instant.now().minus(10, ChronoUnit.MINUTES).getEpochSecond();
-        events.removeIf(event -> event.getSentAt() < boundary);
+        queue.removeIf(packet -> packet.getSentAt() < boundary);
     }
 
     public void send(Event event) {
@@ -127,23 +124,18 @@ public class EventManager {
         eventsLock.writeLock().lock();
         try {
             purge();
-            event.setQueueStartedAt(startedAt);
-            event.setOrdinal(++lastOrdinal);
-            event.setSentAt(Instant.now().getEpochSecond());
-            events.add(event);
+            EventPacket packet = new EventPacket();
+            packet.setQueueStartedAt(startedAt);
+            packet.setOrdinal(++lastOrdinal);
+            packet.setSentAt(Instant.now().getEpochSecond());
+            packet.setEvent(event);
+            queue.add(packet);
         } finally {
             eventsLock.writeLock().unlock();
         }
         synchronized (deliverySignal) {
             deliverySignal.notifyAll();
         }
-    }
-
-    @Scheduled(fixedDelayString = "PT10S") // FIXME debug
-    public void something() {
-        Event event = new Event();
-        event.setType(EventType.TEST2);
-        send(event);
     }
 
     @Scheduled(fixedDelayString = "PT1M")
@@ -158,10 +150,10 @@ public class EventManager {
 
         eventsLock.readLock().lock();
         try {
-            if (events.isEmpty()) {
+            if (queue.isEmpty()) {
                 return;
             }
-            int last = events.get(0).getOrdinal() + events.size() - 1;
+            int last = queue.get(0).getOrdinal() + queue.size() - 1;
             subscribers.values().stream()
                     .filter(sub -> sub.getLastEventSeen() < last)
                     .forEach(this::deliver);
@@ -178,13 +170,13 @@ public class EventManager {
         headerAccessor.setSessionId(subscriber.getSessionId());
         MessageHeaders headers = headerAccessor.getMessageHeaders();
 
-        int first = events.get(0).getOrdinal();
+        int first = queue.get(0).getOrdinal();
         int beginIndex = Math.max(0, subscriber.getLastEventSeen() - first + 1);
         try {
-            for (int i = beginIndex; i < events.size(); i++) {
-                log.debug("Sending event {}: {}", first + i, events.get(i).getType());
+            for (int i = beginIndex; i < queue.size(); i++) {
+                log.debug("Sending event {}: {}", first + i, queue.get(i).getEvent().getType());
                 messagingTemplate.convertAndSendToUser(subscriber.getSessionId(), EVENT_DESTINATION,
-                        events.get(i), headers);
+                        queue.get(i), headers);
                 subscriber.setLastEventSeen(first + i);
             }
         } catch (MessagingException e) {

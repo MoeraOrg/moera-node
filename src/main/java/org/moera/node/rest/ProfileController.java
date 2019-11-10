@@ -4,6 +4,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.ProfileUpdatedEvent;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -25,6 +27,9 @@ public class ProfileController {
     @Inject
     private RequestContext requestContext;
 
+    @Inject
+    private EventManager eventManager;
+
     @GetMapping
     public ProfileInfo get() {
         log.info("GET /profile");
@@ -39,6 +44,7 @@ public class ProfileController {
         log.info("PUT /profile");
 
         profile.toOptions(requestContext.getOptions());
+        eventManager.send(new ProfileUpdatedEvent());
         return new ProfileInfo(requestContext);
     }
 
