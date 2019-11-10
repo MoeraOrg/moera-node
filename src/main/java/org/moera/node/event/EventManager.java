@@ -11,7 +11,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.node.event.model.Event;
+import org.moera.node.event.model.EventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -41,7 +43,7 @@ public class EventManager {
 
     private Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
     private List<Event> events = new ArrayList<>();
-    private final Instant startedAt = Instant.now();
+    private final long startedAt = Instant.now().getEpochSecond();
     private int lastOrdinal = 0;
     private ReadWriteLock eventsLock = new ReentrantReadWriteLock();
     private final Object deliverySignal = new Object();
@@ -58,10 +60,24 @@ public class EventManager {
         if (!(USER_PREFIX + EVENT_DESTINATION).equals(accessor.getDestination())) {
             return;
         }
+
+        SeenHeader.Details seen = SeenHeader.parse(accessor);
+        log.info("Session subscribed, id = {} seen = {}/{}",
+                accessor.getSessionId(),
+                LogUtil.format(seen.queueStartedAt),
+                LogUtil.format(seen.lastEvent));
+
         EventSubscriber subscriber = new EventSubscriber();
         subscriber.setSessionId(accessor.getSessionId());
+        if (seen.queueStartedAt == null) {
+            subscriber.setLastEventSeen(lastOrdinal);
+        } else if (seen.queueStartedAt != startedAt) {
+            subscriber.setLastEventSeen(0);
+        } else {
+            subscriber.setLastEventSeen(seen.lastEvent);
+        }
         subscribers.put(accessor.getSessionId(), subscriber);
-        log.info("Session subscribed, id = {}", accessor.getSessionId());
+
         send(new Event());
     }
 
@@ -111,7 +127,7 @@ public class EventManager {
         eventsLock.writeLock().lock();
         try {
             purge();
-            event.setQueueStartedAt(startedAt.getEpochSecond());
+            event.setQueueStartedAt(startedAt);
             event.setOrdinal(++lastOrdinal);
             event.setSentAt(Instant.now().getEpochSecond());
             events.add(event);
@@ -121,6 +137,13 @@ public class EventManager {
         synchronized (deliverySignal) {
             deliverySignal.notifyAll();
         }
+    }
+
+    @Scheduled(fixedDelayString = "PT10S") // FIXME debug
+    public void something() {
+        Event event = new Event();
+        event.setType(EventType.TEST2);
+        send(event);
     }
 
     @Scheduled(fixedDelayString = "PT1M")
