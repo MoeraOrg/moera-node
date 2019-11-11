@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/revisions")
-public class PostingRevisionController extends PostingRevisionControllerBase{
+public class PostingRevisionController extends PostingRevisionControllerBase {
 
     private static Logger log = LoggerFactory.getLogger(PostingRevisionController.class);
 
