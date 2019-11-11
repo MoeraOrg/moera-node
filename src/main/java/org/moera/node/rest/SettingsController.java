@@ -3,11 +3,15 @@ package org.moera.node.rest;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.ClientSettingsChangedEvent;
+import org.moera.node.event.model.NodeSettingsChangedEvent;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -36,6 +40,9 @@ public class SettingsController {
 
     @Inject
     private OptionsMetadata optionsMetadata;
+
+    @Inject
+    private EventManager eventManager;
 
     private List<SettingInfo> getOptions(Function<String, Boolean> nameFilter) {
         List<SettingInfo> list = new ArrayList<>();
@@ -86,6 +93,8 @@ public class SettingsController {
     public Result put(@RequestBody @Valid List<SettingInfo> settings) {
         log.info("PUT /settings");
 
+        AtomicBoolean nodeChanged = new AtomicBoolean(false);
+        AtomicBoolean clientChanged = new AtomicBoolean(false);
         requestContext.getOptions().runInTransaction(options -> {
             settings.forEach(setting -> {
                 OptionDescriptor descriptor = optionsMetadata.getDescriptor(setting.getName());
@@ -100,8 +109,20 @@ public class SettingsController {
                 } else {
                     options.reset(setting.getName());
                 }
+                if (setting.getName().startsWith(OptionsMetadata.CLIENT_PREFIX)) {
+                    clientChanged.set(true);
+                } else {
+                    nodeChanged.set(true);
+                }
             });
         });
+
+        if (nodeChanged.get()) {
+            eventManager.send(new NodeSettingsChangedEvent());
+        }
+        if (clientChanged.get()) {
+            eventManager.send(new ClientSettingsChangedEvent());
+        }
 
         return Result.OK;
     }
