@@ -13,6 +13,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.event.model.Event;
+import org.moera.node.global.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -38,7 +39,10 @@ public class EventManager {
     private static final String EVENT_DESTINATION = "/queue";
 
     @Inject
-    public SimpMessagingTemplate messagingTemplate;
+    private RequestContext requestContext;
+
+    @Inject
+    private SimpMessagingTemplate messagingTemplate;
 
     private Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
     private List<EventPacket> queue = new ArrayList<>();
@@ -128,6 +132,7 @@ public class EventManager {
             packet.setQueueStartedAt(startedAt);
             packet.setOrdinal(++lastOrdinal);
             packet.setSentAt(Instant.now().getEpochSecond());
+            packet.setCid(requestContext.getClientId());
             packet.setEvent(event);
             queue.add(packet);
         } finally {

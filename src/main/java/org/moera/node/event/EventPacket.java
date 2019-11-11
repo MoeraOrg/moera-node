@@ -7,6 +7,7 @@ public class EventPacket {
     private long queueStartedAt;
     private int ordinal;
     private long sentAt;
+    private String cid;
     private Event event;
 
     public long getQueueStartedAt() {
@@ -31,6 +32,14 @@ public class EventPacket {
 
     public void setSentAt(long sentAt) {
         this.sentAt = sentAt;
+    }
+
+    public String getCid() {
+        return cid;
+    }
+
+    public void setCid(String cid) {
+        this.cid = cid;
     }
 
     public Event getEvent() {

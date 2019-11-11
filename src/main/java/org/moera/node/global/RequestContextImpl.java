@@ -16,6 +16,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean admin;
     private Options options;
     private String siteUrl;
+    private String clientId;
 
     @Override
     public boolean isBrowserExtension() {
@@ -65,6 +66,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setSiteUrl(String siteUrl) {
         this.siteUrl = siteUrl;
+    }
+
+    @Override
+    public String getClientId() {
+        return clientId;
+    }
+
+    @Override
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     @Override
