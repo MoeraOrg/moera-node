@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.model.Event;
+import org.moera.node.event.model.SubscribedEvent;
 import org.moera.node.global.AuthenticationManager;
 import org.moera.node.global.InvalidTokenException;
 import org.moera.node.global.RequestContext;
@@ -108,6 +109,7 @@ public class EventManager {
             subscriber.setLastEventSeen(seen.lastEvent);
         }
         subscriber.setSubscribed(true);
+        send(new SubscribedEvent(subscriber.getSessionId()));
     }
 
     @EventListener(SessionUnsubscribeEvent.class)
