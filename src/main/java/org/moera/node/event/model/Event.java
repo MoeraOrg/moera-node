@@ -1,5 +1,7 @@
 package org.moera.node.event.model;
 
+import org.moera.node.event.EventSubscriber;
+
 public abstract class Event {
 
     private EventType type;
@@ -14,6 +16,10 @@ public abstract class Event {
 
     public void setType(EventType type) {
         this.type = type;
+    }
+
+    public boolean isPermitted(EventSubscriber subscriber) {
+        return true;
     }
 
 }

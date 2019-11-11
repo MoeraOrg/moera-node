@@ -12,10 +12,14 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.domain.Domains;
 import org.moera.node.event.model.Event;
+import org.moera.node.global.AuthenticationManager;
+import org.moera.node.global.InvalidTokenException;
 import org.moera.node.global.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
@@ -25,7 +29,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
@@ -37,12 +41,19 @@ public class EventManager {
 
     private static final String USER_PREFIX = "/user";
     private static final String EVENT_DESTINATION = "/queue";
+    private static final String TOKEN_HEADER = "token";
 
     @Inject
     private RequestContext requestContext;
 
     @Inject
+    private Domains domains;
+
+    @Inject
     private SimpMessagingTemplate messagingTemplate;
+
+    @Inject
+    private AuthenticationManager authenticationManager;
 
     private Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
     private List<EventPacket> queue = new ArrayList<>();
@@ -51,10 +62,25 @@ public class EventManager {
     private ReadWriteLock eventsLock = new ReentrantReadWriteLock();
     private final Object deliverySignal = new Object();
 
-    @EventListener(SessionConnectedEvent.class)
-    public void sessionConnected(SessionConnectedEvent event) {
+    @EventListener(SessionConnectEvent.class)
+    public void sessionConnect(SessionConnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
-        log.info("Session connected, id = {}", accessor.getSessionId());
+        boolean admin = false;
+        try {
+            admin = authenticationManager.isAdminToken(
+                    accessor.getFirstNativeHeader(TOKEN_HEADER),
+                    domains.getDomainNodeId(accessor.getHost()));
+        } catch (InvalidTokenException e) { // Ignore, the client will detect the problem from REST API requests
+        }
+        log.info("Session connect, id = {} host = {} {}",
+                accessor.getSessionId(),
+                accessor.getHost(),
+                admin ? "admin" : "non-admin");
+
+        EventSubscriber subscriber = new EventSubscriber();
+        subscriber.setSessionId(accessor.getSessionId());
+        subscriber.setAdmin(admin);
+        subscribers.put(accessor.getSessionId(), subscriber);
     }
 
     @EventListener(SessionSubscribeEvent.class)
@@ -70,8 +96,10 @@ public class EventManager {
                 LogUtil.format(seen.queueStartedAt),
                 LogUtil.format(seen.lastEvent));
 
-        EventSubscriber subscriber = new EventSubscriber();
-        subscriber.setSessionId(accessor.getSessionId());
+        EventSubscriber subscriber = subscribers.get(accessor.getSessionId());
+        if (subscriber == null) {
+            return;
+        }
         if (seen.queueStartedAt == null) {
             subscriber.setLastEventSeen(lastOrdinal);
         } else if (seen.queueStartedAt != startedAt) {
@@ -79,7 +107,7 @@ public class EventManager {
         } else {
             subscriber.setLastEventSeen(seen.lastEvent);
         }
-        subscribers.put(accessor.getSessionId(), subscriber);
+        subscriber.setSubscribed(true);
     }
 
     @EventListener(SessionUnsubscribeEvent.class)
@@ -93,7 +121,7 @@ public class EventManager {
     }
 
     @EventListener(SessionDisconnectEvent.class)
-    public void unsubscribed(SessionDisconnectEvent event) {
+    public void disconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         subscribers.remove(accessor.getSessionId());
         log.info("Session disconnected, id = {}", accessor.getSessionId());
@@ -132,7 +160,10 @@ public class EventManager {
             packet.setQueueStartedAt(startedAt);
             packet.setOrdinal(++lastOrdinal);
             packet.setSentAt(Instant.now().getEpochSecond());
-            packet.setCid(requestContext.getClientId());
+            try {
+                packet.setCid(requestContext.getClientId());
+            } catch (BeanCreationException e) { // No request
+            }
             packet.setEvent(event);
             queue.add(packet);
         } finally {
@@ -160,6 +191,7 @@ public class EventManager {
             }
             int last = queue.get(0).getOrdinal() + queue.size() - 1;
             subscribers.values().stream()
+                    .filter(EventSubscriber::isSubscribed)
                     .filter(sub -> sub.getLastEventSeen() < last)
                     .forEach(this::deliver);
         } finally {
@@ -179,9 +211,12 @@ public class EventManager {
         int beginIndex = Math.max(0, subscriber.getLastEventSeen() - first + 1);
         try {
             for (int i = beginIndex; i < queue.size(); i++) {
-                log.debug("Sending event {}: {}", first + i, queue.get(i).getEvent().getType());
-                messagingTemplate.convertAndSendToUser(subscriber.getSessionId(), EVENT_DESTINATION,
-                        queue.get(i), headers);
+                EventPacket packet = queue.get(i);
+                if (!packet.getEvent().isPermitted(subscriber)) {
+                    continue;
+                }
+                log.debug("Sending event {}: {}", first + i, packet.getEvent().getType());
+                messagingTemplate.convertAndSendToUser(subscriber.getSessionId(), EVENT_DESTINATION, packet, headers);
                 subscriber.setLastEventSeen(first + i);
             }
         } catch (MessagingException e) {

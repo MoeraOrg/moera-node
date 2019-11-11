@@ -5,9 +5,6 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.moera.commons.util.Util;
-import org.moera.node.data.Token;
-import org.moera.node.data.TokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +22,7 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
     private String rootSecret;
 
     @Inject
-    private TokenRepository tokenRepository;
+    private AuthenticationManager authenticationManager;
 
     @Inject
     private RequestContext requestContext;
@@ -63,17 +60,9 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
             requestContext.setRootAdmin(true);
             log.info("Authorized as root admin");
         }
-        String tokenS = request.getParameter("token");
-        if (!StringUtils.isEmpty(tokenS)) {
-            Token token = tokenRepository.findById(tokenS).orElse(null);
-            if (token == null
-                    || !token.getNodeId().equals(requestContext.nodeId())
-                    || token.getDeadline().before(Util.now())) {
-                throw new InvalidTokenException();
-            }
-            requestContext.setAdmin(token.isAdmin());
-            log.info("Authorized as {}", token.isAdmin() ? "admin" : "non-admin");
-        }
+        requestContext.setAdmin(
+                authenticationManager.isAdminToken(request.getParameter("token"), requestContext.nodeId()));
+        log.info("Authorized as {}", requestContext.isAdmin() ? "admin" : "non-admin");
     }
 
 }
