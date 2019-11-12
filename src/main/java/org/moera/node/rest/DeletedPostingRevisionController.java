@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.event.model.Event;
+import org.moera.node.event.model.PostingRestoredEvent;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.slf4j.Logger;
@@ -35,6 +37,11 @@ public class DeletedPostingRevisionController extends PostingRevisionControllerB
     @Override
     protected EntryRevision findRevision(UUID postingId, UUID id) {
         return entryRevisionRepository.findByDeletedEntryIdAndId(requestContext.nodeId(), postingId, id).orElse(null);
+    }
+
+    @Override
+    protected Event getRestorationEvent(Posting posting) {
+        return new PostingRestoredEvent(posting);
     }
 
 }

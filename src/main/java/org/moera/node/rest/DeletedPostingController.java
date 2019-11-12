@@ -9,6 +9,8 @@ import javax.transaction.Transactional;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.PostingRestoredEvent;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -39,6 +41,9 @@ public class DeletedPostingController {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private EventManager eventManager;
 
     @GetMapping
     @Admin
@@ -91,6 +96,7 @@ public class DeletedPostingController {
 
         posting.setDeletedAt(null);
         postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null);
+        eventManager.send(new PostingRestoredEvent(posting));
 
         return new PostingInfo(posting);
     }

@@ -11,6 +11,10 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.PostingAddedEvent;
+import org.moera.node.event.model.PostingDeletedEvent;
+import org.moera.node.event.model.PostingUpdatedEvent;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -52,6 +56,9 @@ public class PostingController {
     @Inject
     private PostingOperations postingOperations;
 
+    @Inject
+    private EventManager eventManager;
+
     @GetMapping("/features")
     public PostingFeatures getFeatures() {
         log.info("GET /postings/features");
@@ -84,6 +91,7 @@ public class PostingController {
         postingRepository.save(posting);
 
         postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
+        eventManager.send(new PostingAddedEvent(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting));
     }
@@ -106,6 +114,7 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), postingText::toEntryRevision);
+        eventManager.send(new PostingUpdatedEvent(posting));
 
         return new PostingInfo(posting);
     }
@@ -137,6 +146,8 @@ public class PostingController {
         posting.setDeletedAt(Util.now());
         posting.getCurrentRevision().setDeletedAt(Util.now());
         entryRevisionRepository.save(posting.getCurrentRevision());
+
+        eventManager.send(new PostingDeletedEvent(posting));
 
         return Result.OK;
     }
