@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -66,6 +67,11 @@ public class EventManager {
     @EventListener(SessionConnectEvent.class)
     public void sessionConnect(SessionConnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        if (accessor.getHost() == null) {
+            log.debug("Ignoring session {} without a host", accessor.getSessionId());
+            return;
+        }
+        UUID nodeId = domains.getDomainNodeId(accessor.getHost());
         boolean admin = false;
         try {
             admin = authenticationManager.isAdminToken(
@@ -79,6 +85,7 @@ public class EventManager {
                 admin ? "admin" : "non-admin");
 
         EventSubscriber subscriber = new EventSubscriber();
+        subscriber.setNodeId(nodeId);
         subscriber.setSessionId(accessor.getSessionId());
         subscriber.setAdmin(admin);
         subscribers.put(accessor.getSessionId(), subscriber);
@@ -109,7 +116,7 @@ public class EventManager {
             subscriber.setLastEventSeen(seen.lastEvent);
         }
         subscriber.setSubscribed(true);
-        send(new SubscribedEvent(subscriber.getSessionId()));
+        send(subscriber.getNodeId(), new SubscribedEvent(subscriber.getSessionId()));
     }
 
     @EventListener(SessionUnsubscribeEvent.class)
@@ -153,12 +160,17 @@ public class EventManager {
     }
 
     public void send(Event event) {
-        log.info("Event arrived: {}", event.getType());
+        send(requestContext.nodeId(), event);
+    }
+
+    public void send(UUID nodeId, Event event) {
+        log.info("Event arrived: host = {} {}", domains.getDomainName(nodeId), event.getType());
 
         eventsLock.writeLock().lock();
         try {
             purge();
             EventPacket packet = new EventPacket();
+            packet.setNodeId(nodeId);
             packet.setQueueStartedAt(startedAt);
             packet.setOrdinal(++lastOrdinal);
             packet.setSentAt(Instant.now().getEpochSecond());
@@ -214,7 +226,7 @@ public class EventManager {
         try {
             for (int i = beginIndex; i < queue.size(); i++) {
                 EventPacket packet = queue.get(i);
-                if (!packet.getEvent().isPermitted(subscriber)) {
+                if (!packet.getNodeId().equals(subscriber.getNodeId()) || !packet.getEvent().isPermitted(subscriber)) {
                     subscriber.setLastEventSeen(first + i);
                     continue;
                 }

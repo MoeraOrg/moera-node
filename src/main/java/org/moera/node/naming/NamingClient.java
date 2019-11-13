@@ -152,7 +152,7 @@ public class NamingClient {
         String prevStatus = options.getString("naming.operation.status");
         options.set("naming.operation.status", status.getValue());
         if (!Objects.equals(prevStatus, status.getValue())) {
-            eventManager.send(new RegisteredNameOperationStatusEvent());
+            eventManager.send(options.nodeId(), new RegisteredNameOperationStatusEvent());
         }
     }
 
@@ -186,7 +186,7 @@ public class NamingClient {
         String newRegisteredName = new DelegatedName(name, generation).format();
         options.set("profile.registered-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
-            eventManager.send(new RegisteredNameChangedEvent(newRegisteredName));
+            eventManager.send(options.nodeId(), new RegisteredNameChangedEvent(newRegisteredName));
         }
 
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");

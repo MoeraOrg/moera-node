@@ -1,11 +1,22 @@
 package org.moera.node.event;
 
+import java.util.UUID;
+
 public class EventSubscriber {
 
+    private UUID nodeId;
     private String sessionId;
     private int lastEventSeen;
     private boolean admin;
     private boolean subscribed;
+
+    public UUID getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(UUID nodeId) {
+        this.nodeId = nodeId;
+    }
 
     public String getSessionId() {
         return sessionId;
