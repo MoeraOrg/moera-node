@@ -26,6 +26,8 @@ import org.bouncycastle.math.ec.ECPoint;
 import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.RegisteredNameChangedEvent;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -61,6 +63,9 @@ public class RegisteredNameController {
 
     @Inject
     private NamingClient namingClient;
+
+    @Inject
+    private EventManager eventManager;
 
     @GetMapping
     public RegisteredNameInfo get() {
@@ -200,6 +205,7 @@ public class RegisteredNameController {
             options.reset("profile.registered-name");
             options.reset("profile.signing-key");
         });
+        eventManager.send(new RegisteredNameChangedEvent(""));
 
         return Result.OK;
     }

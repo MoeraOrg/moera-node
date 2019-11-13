@@ -7,6 +7,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.PostConstruct;
@@ -23,6 +24,9 @@ import org.moera.naming.rpc.PutCallFingerprint;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.RegisteredNameChangedEvent;
+import org.moera.node.event.model.RegisteredNameOperationStatusEvent;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
@@ -54,6 +58,9 @@ public class NamingClient {
     @Inject
     private PlatformTransactionManager txManager;
 
+    @Inject
+    private EventManager eventManager;
+
     @PostConstruct
     protected void init() throws MalformedURLException {
         JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(namingLocation));
@@ -72,7 +79,7 @@ public class NamingClient {
             return;
         }
         log.info("Started monitoring for naming operation {}", operationId);
-        options.set("naming.operation.status", OperationStatus.WAITING.getValue());
+        updateOperationStatus(options, OperationStatus.WAITING);
         final AtomicInteger retries = new AtomicInteger(0);
         taskScheduler.schedule(() -> {
             UUID id = options.getUuid("naming.operation.id");
@@ -104,7 +111,7 @@ public class NamingClient {
                     return;
                 }
                 log.info("Naming operation {}, status is {}", id, info.getStatus().name());
-                options.set("naming.operation.status", info.getStatus().getValue());
+                updateOperationStatus(options, info.getStatus());
                 options.set("naming.operation.added", info.getAdded());
                 options.set("naming.operation.status.updated", Util.now());
                 switch (info.getStatus()) {
@@ -141,10 +148,18 @@ public class NamingClient {
         });
     }
 
+    private void updateOperationStatus(Options options, OperationStatus status) {
+        String prevStatus = options.getString("naming.operation.status");
+        options.set("naming.operation.status", status.getValue());
+        if (!Objects.equals(prevStatus, status.getValue())) {
+            eventManager.send(new RegisteredNameOperationStatusEvent());
+        }
+    }
+
     private void unknownOperationStatus(Options options) {
         log.info("Status of naming operation {} is set to 'unknown'", options.getString("naming.operation.id"));
 
-        options.set("naming.operation.status", OperationStatus.UNKNOWN.getValue());
+        updateOperationStatus(options, OperationStatus.UNKNOWN);
         options.set("naming.operation.status.updated", Util.now());
         options.set("naming.operation.error-code", "naming.unknown");
         options.set("naming.operation.error-message", "operation status is unknown");
@@ -154,7 +169,7 @@ public class NamingClient {
         log.info("Created naming operation {}", operationId);
 
         options.set("naming.operation.id", operationId);
-        options.set("naming.operation.status", OperationStatus.WAITING.getValue());
+        updateOperationStatus(options, OperationStatus.WAITING);
         options.set("naming.operation.status.updated", Util.now());
         options.reset("naming.operation.error-code");
         options.reset("naming.operation.error-message");
@@ -167,7 +182,13 @@ public class NamingClient {
     private void commitOperation(Options options) {
         String name = options.getString("naming.operation.registered-name");
         Integer generation = options.getInt("naming.operation.registered-name.generation");
-        options.set("profile.registered-name", new DelegatedName(name, generation).format());
+        String prevRegisteredName = options.getString("profile.registered-name");
+        String newRegisteredName = new DelegatedName(name, generation).format();
+        options.set("profile.registered-name", newRegisteredName);
+        if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
+            eventManager.send(new RegisteredNameChangedEvent(newRegisteredName));
+        }
+
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");
         if (signingKey != null) {
             options.set("profile.signing-key", signingKey);
