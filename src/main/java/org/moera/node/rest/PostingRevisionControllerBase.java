@@ -103,7 +103,7 @@ public abstract class PostingRevisionControllerBase {
         }
 
         posting.setDeletedAt(null);
-        postingOperations.createOrUpdatePosting(posting, revision, null);
+        posting = postingOperations.createOrUpdatePosting(posting, revision, null);
         eventManager.send(getRestorationEvent(posting));
 
         return new PostingRevisionInfo(revision);

@@ -44,7 +44,7 @@ public class PostingOperations {
 
     private AtomicInteger nonce = new AtomicInteger(0);
 
-    public void createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
+    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
         ECPrivateKey signingKey = getSigningKey();
         EntryRevision latest = posting.getCurrentRevision();
         EntryRevision current = newPostingRevision(posting, revision);
@@ -52,11 +52,17 @@ public class PostingOperations {
             updater.accept(current);
         }
         if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())) {
+            current.setMoment(0);
+        }
+        posting = postingRepository.saveAndFlush(posting);
+        current = posting.getCurrentRevision();
+        if (current.getMoment() == 0) {
             current.setMoment(findFreeMoment(current.getPublishedAt()));
         }
         posting.sign(signingKey);
-        postingRepository.saveAndFlush(posting);
         updatePublicPages(current.getMoment());
+
+        return posting;
     }
 
     private ECPrivateKey getSigningKey() {

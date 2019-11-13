@@ -90,7 +90,7 @@ public class PostingController {
         posting.setOwnerName(name);
         postingRepository.save(posting);
 
-        postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
+        posting = postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
         eventManager.send(new PostingAddedEvent(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting));
@@ -113,7 +113,8 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), postingText::toEntryRevision);
+        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
+                postingText::toEntryRevision);
         eventManager.send(new PostingUpdatedEvent(posting));
 
         return new PostingInfo(posting);

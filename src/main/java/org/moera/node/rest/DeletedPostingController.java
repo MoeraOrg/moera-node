@@ -95,7 +95,7 @@ public class DeletedPostingController {
         }
 
         posting.setDeletedAt(null);
-        postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null);
+        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null);
         eventManager.send(new PostingRestoredEvent(posting));
 
         return new PostingInfo(posting);
