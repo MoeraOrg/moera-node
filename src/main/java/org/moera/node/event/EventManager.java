@@ -215,6 +215,7 @@ public class EventManager {
             for (int i = beginIndex; i < queue.size(); i++) {
                 EventPacket packet = queue.get(i);
                 if (!packet.getEvent().isPermitted(subscriber)) {
+                    subscriber.setLastEventSeen(first + i);
                     continue;
                 }
                 log.debug("Sending event {}: {}", first + i, packet.getEvent().getType());
