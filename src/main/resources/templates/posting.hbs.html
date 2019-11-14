@@ -4,6 +4,12 @@
    href="/timeline?before={{posting.moment}}#m{{posting.moment}}">&larr; Timeline</a>
 
 <div class="posting">
+    <div class="owner">
+        {{regname posting.ownerName}}
+        {{#ifne posting.receiverName registeredName.name}}
+            &#x25b8; {{regname posting.receiverName}}
+        {{/ifne}}
+    </div>
     <div class="date">
         {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt fromNow="posting.time.relative"}}
         {{#ifgt posting.totalRevisions 1}}

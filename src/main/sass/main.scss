@@ -62,9 +62,19 @@ SUB.generation {
     margin-top: 1rem;
     padding: 0.5rem;
 
+    .owner {
+        font-weight: bold;
+    }
+
     .date {
         font-size: 0.8rem;
         color: #a9a9a9;
+        position: relative;
+        top: -0.2rem;
+
+        A {
+            color: inherit;
+        }
     }
 }
 

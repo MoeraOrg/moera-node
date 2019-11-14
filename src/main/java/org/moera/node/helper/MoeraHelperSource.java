@@ -1,7 +1,6 @@
 package org.moera.node.helper;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
-import org.moera.node.model.RegisteredNameInfo;
 import org.moera.node.naming.DelegatedName;
 import org.moera.node.naming.RegisteredName;
 import org.springframework.util.StringUtils;
@@ -9,9 +8,9 @@ import org.springframework.util.StringUtils;
 @HelperSource
 public class MoeraHelperSource {
 
-    public CharSequence regname(RegisteredNameInfo registeredName) {
+    public CharSequence regname(String registeredName) {
         StringBuilder buf = new StringBuilder();
-        DelegatedName name = (DelegatedName) RegisteredName.parse(registeredName.getName());
+        DelegatedName name = (DelegatedName) RegisteredName.parse(registeredName);
         if (!StringUtils.isEmpty(name.getName())) {
             buf.append("<span class=\"registered-name\">");
             HelperUtils.safeAppend(buf, name.getName());
