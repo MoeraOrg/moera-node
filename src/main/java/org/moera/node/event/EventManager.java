@@ -72,6 +72,10 @@ public class EventManager {
             return;
         }
         UUID nodeId = domains.getDomainNodeId(accessor.getHost());
+        if (nodeId == null) {
+            log.info("Ignoring session {} with unknown host {}", accessor.getSessionId(), accessor.getHost());
+            return;
+        }
         boolean admin = false;
         try {
             admin = authenticationManager.isAdminToken(
