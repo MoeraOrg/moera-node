@@ -1,16 +1,21 @@
 package org.moera.node.naming;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.util.Util;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,7 +28,7 @@ public class NamingCache {
 
     }
 
-    private static final int MAX_SIZE = 1024;
+    private static final Duration TTL = Duration.of(6, ChronoUnit.HOURS);
 
     private ReadWriteLock cacheLock = new ReentrantReadWriteLock();
     private Map<String, Record> cache = new HashMap<>();
@@ -110,6 +115,29 @@ public class NamingCache {
 
     private String getRedirector(String name) {
         return "/moera/gotoname?name=" + Util.ue(name);
+    }
+
+    @Scheduled(fixedDelayString = "PT1H")
+    public void purge() {
+        Instant deadline = Instant.now().minus(TTL);
+        List<String> remove;
+        cacheLock.readLock().lock();
+        try {
+            remove = cache.entrySet().stream()
+                    .filter(e -> e.getValue().accessed.isBefore(deadline))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+        if (remove.size() > 0) {
+            cacheLock.writeLock().lock();
+            try {
+                remove.forEach(cache::remove);
+            } finally {
+                cacheLock.writeLock().unlock();
+            }
+        }
     }
 
 }
