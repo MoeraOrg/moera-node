@@ -18,8 +18,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
@@ -83,6 +85,11 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     public HttpMessageConverters customMessageConverters() {
         return new HttpMessageConverters(
                 new SyndFeedHttpMessageConverter());
+    }
+
+    @Bean
+    public TaskExecutor namingTaskExecutor() {
+        return new TaskExecutorBuilder().maxPoolSize(16).build();
     }
 
     public static void main(String[] args) {

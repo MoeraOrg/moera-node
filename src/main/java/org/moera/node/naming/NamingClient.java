@@ -195,6 +195,14 @@ public class NamingClient {
         }
     }
 
+    public RegisteredNameInfo getCurrent(String name, int generation) {
+        return namingService.getCurrent(name, generation);
+    }
+
+    public RegisteredNameInfo getCurrentForLatest(String name) {
+        return namingService.getCurrentForLatest(name);
+    }
+
     public void register(String name, String nodeUri, ECPublicKey updatingKey,
                          ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
 

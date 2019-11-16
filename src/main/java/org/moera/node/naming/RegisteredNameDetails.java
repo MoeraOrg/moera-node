@@ -2,7 +2,7 @@ package org.moera.node.naming;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
 
-public class RegisteredNameDetails {
+public class RegisteredNameDetails implements Cloneable {
 
     private boolean latest;
     private String nodeUri;
@@ -31,6 +31,11 @@ public class RegisteredNameDetails {
 
     public void setNodeUri(String nodeUri) {
         this.nodeUri = nodeUri;
+    }
+
+    @Override
+    public RegisteredNameDetails clone() {
+        return new RegisteredNameDetails(latest, nodeUri);
     }
 
 }
