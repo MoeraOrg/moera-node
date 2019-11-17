@@ -100,17 +100,20 @@ public class NamingCache {
     private void queryName(String name) {
         DelegatedName delegatedName = DelegatedName.parse(name);
         RegisteredNameInfo info = namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration());
-            Record record = readRecord(name);
-            if (record == null) {
-                record = new Record();
-                cacheLock.writeLock().lock();
-                try {
-                    cache.put(name, record);
-                } finally {
-                    cacheLock.writeLock().unlock();
-                }
+        Record record = readRecord(name);
+        if (record == null) {
+            record = new Record();
+            cacheLock.writeLock().lock();
+            try {
+                cache.put(name, record);
+            } finally {
+                cacheLock.writeLock().unlock();
             }
-            record.details = info == null ? new RegisteredNameDetails(false, null) : new RegisteredNameDetails(info);
+        }
+        record.details = info == null ? new RegisteredNameDetails(false, null) : new RegisteredNameDetails(info);
+        synchronized (queryDone) {
+            queryDone.notifyAll();
+        }
     }
 
     private String getRedirector(String name) {
