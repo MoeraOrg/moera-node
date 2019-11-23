@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.util.Locale;
 import java.util.UUID;
+import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.naming.rpc.RegisteredNameInfo;
@@ -26,16 +27,16 @@ public class RemotePostingVerifyTask implements Runnable {
     private String nodeName;
     private String id;
 
+    @Inject
     private NamingClient namingClient;
+
+    @Inject
     private MessageSource messageSource;
 
-    public RemotePostingVerifyTask(UUID nodeId, String nodeName, String id, NamingClient namingClient,
-                                   MessageSource messageSource) {
+    public RemotePostingVerifyTask(UUID nodeId, String nodeName, String id) {
         this.nodeId = nodeId;
         this.nodeName = nodeName;
         this.id = id;
-        this.namingClient = namingClient;
-        this.messageSource = messageSource;
     }
 
     @Override

@@ -7,11 +7,10 @@ import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Result;
-import org.moera.node.naming.NamingClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.MessageSource;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,10 +30,7 @@ public class RemotePostingController {
     private RequestContext requestContext;
 
     @Inject
-    private NamingClient namingClient;
-
-    @Inject
-    private MessageSource messageSource;
+    private AutowireCapableBeanFactory autowireCapableBeanFactory;
 
     @PostMapping("/{id}/verify")
     @Admin
@@ -42,8 +38,9 @@ public class RemotePostingController {
         log.info("POST /nodes/{name}/postings/{id}/verify, (name = {}, id = {})",
                 LogUtil.format(nodeName), LogUtil.format(id));
 
-        taskExecutor.execute(
-                new RemotePostingVerifyTask(requestContext.nodeId(), nodeName, id, namingClient, messageSource));
+        RemotePostingVerifyTask task = new RemotePostingVerifyTask(requestContext.nodeId(), nodeName, id);
+        autowireCapableBeanFactory.autowireBean(task);
+        taskExecutor.execute(task);
         return Result.OK;
     }
 
