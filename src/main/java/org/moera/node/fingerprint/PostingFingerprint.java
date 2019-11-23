@@ -4,6 +4,7 @@ import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.util.Util;
 
 @FingerprintVersion(objectType = FingerprintObjectType.POSTING, version = 0)
@@ -29,6 +30,17 @@ public class PostingFingerprint extends Fingerprint {
         body = revision.getBody();
         bodyFormat = revision.getBodyFormat();
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
+    }
+
+    public PostingFingerprint(PostingInfo postingInfo) {
+        super(0);
+        receiverName = postingInfo.getReceiverName();
+        ownerName = postingInfo.getOwnerName();
+        bodySrc.setDigest(postingInfo.getBodySrcHash());
+        bodySrcFormat = postingInfo.getBodySrcFormat();
+        body = postingInfo.getBody();
+        bodyFormat = postingInfo.getBodyFormat();
+        createdAt = postingInfo.getEditedAt();
     }
 
 }

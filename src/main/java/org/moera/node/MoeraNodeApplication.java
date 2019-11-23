@@ -92,6 +92,11 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         return new TaskExecutorBuilder().maxPoolSize(16).build();
     }
 
+    @Bean
+    public TaskExecutor remoteTaskExecutor() {
+        return new TaskExecutorBuilder().maxPoolSize(16).build();
+    }
+
     public static void main(String[] args) {
         Security.addProvider(new BouncyCastleProvider());
         SpringApplication.run(MoeraNodeApplication.class, args);
