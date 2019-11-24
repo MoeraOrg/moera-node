@@ -21,6 +21,7 @@ import org.moera.node.global.InvalidTokenException;
 import org.moera.node.global.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.MessageHeaders;
@@ -83,10 +84,8 @@ public class EventManager {
                     domains.getDomainNodeId(accessor.getHost()));
         } catch (InvalidTokenException e) { // Ignore, the client will detect the problem from REST API requests
         }
-        log.info("Session connect, id = {} host = {} {}",
-                accessor.getSessionId(),
-                accessor.getHost(),
-                admin ? "admin" : "non-admin");
+        MDC.put("domain", domains.getDomainEffectiveName(accessor.getHost()));
+        log.info("Session connect, id = {} {}", accessor.getSessionId(), admin ? "admin" : "non-admin");
 
         EventSubscriber subscriber = new EventSubscriber();
         subscriber.setNodeId(nodeId);
@@ -103,6 +102,7 @@ public class EventManager {
         }
 
         SeenHeader.Details seen = SeenHeader.parse(accessor);
+        initLoggingDomain(accessor.getSessionId());
         log.info("Session subscribed, id = {} seen = {}/{}",
                 accessor.getSessionId(),
                 LogUtil.format(seen.queueStartedAt),
@@ -129,6 +129,7 @@ public class EventManager {
         if (!(USER_PREFIX + EVENT_DESTINATION).equals(accessor.getDestination())) {
             return;
         }
+        initLoggingDomain(accessor.getSessionId());
         subscribers.remove(accessor.getSessionId());
         log.info("Session unsubscribed, id = {}", accessor.getSessionId());
     }
@@ -136,8 +137,16 @@ public class EventManager {
     @EventListener(SessionDisconnectEvent.class)
     public void disconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
+        initLoggingDomain(accessor.getSessionId());
         subscribers.remove(accessor.getSessionId());
         log.info("Session disconnected, id = {}", accessor.getSessionId());
+    }
+
+    private void initLoggingDomain(String sessionId) {
+        EventSubscriber subscriber = subscribers.get(sessionId);
+        if (subscriber != null) {
+            MDC.put("domain", domains.getDomainName(subscriber.getNodeId()));
+        }
     }
 
     @PostConstruct
@@ -168,7 +177,8 @@ public class EventManager {
     }
 
     public void send(UUID nodeId, Event event) {
-        log.info("Event arrived: host = {} {}", domains.getDomainName(nodeId), event.getType());
+        MDC.put("domain", domains.getDomainName(nodeId));
+        log.info("Event arrived: {}", event.getType());
 
         eventsLock.writeLock().lock();
         try {
@@ -218,6 +228,7 @@ public class EventManager {
     }
 
     private void deliver(EventSubscriber subscriber) {
+        initLoggingDomain(subscriber.getSessionId());
         log.debug("Delivering events to {}", subscriber.getSessionId());
 
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor
