@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.naming.DelegatedName;
@@ -14,6 +15,7 @@ import org.moera.node.naming.RegisteredName;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -33,10 +35,17 @@ public class RemotePostingVerifyTask implements Runnable {
     @Inject
     private MessageSource messageSource;
 
+    @Inject
+    private Domains domains;
+
     public RemotePostingVerifyTask(UUID nodeId, String nodeName, String id) {
         this.nodeId = nodeId;
         this.nodeName = nodeName;
         this.id = id;
+    }
+
+    private void initLoggingDomain() {
+        MDC.put("domain", domains.getDomainName(nodeId));
     }
 
     @Override
@@ -91,10 +100,13 @@ public class RemotePostingVerifyTask implements Runnable {
     }
 
     private void succeeded(boolean correct) {
+        initLoggingDomain();
         log.info("Verified posting {} at node {}: {}", id, nodeName, correct ? "correct" : "incorrect");
     }
 
     private void failed(String errorCode, String message) {
+        initLoggingDomain();
+
         String errorMessage = messageSource.getMessage(errorCode, null, Locale.getDefault());
         if (message != null) {
             errorMessage += ": " + message;
