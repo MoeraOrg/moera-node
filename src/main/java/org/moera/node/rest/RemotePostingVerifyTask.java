@@ -12,6 +12,7 @@ import org.moera.node.event.model.RemotePostingVerifiedEvent;
 import org.moera.node.event.model.RemotePostingVerifyFailedEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.naming.DelegatedName;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.RegisteredName;
@@ -29,9 +30,13 @@ public class RemotePostingVerifyTask implements Runnable {
     private static Logger log = LoggerFactory.getLogger(RemotePostingVerifyTask.class);
 
     private UUID nodeId;
+
     private String nodeName;
     private String id;
     private String revisionId;
+
+    private String nodeUri;
+    private byte[] signingKey;
 
     @Inject
     private NamingClient namingClient;
@@ -45,10 +50,11 @@ public class RemotePostingVerifyTask implements Runnable {
     @Inject
     private EventManager eventManager;
 
-    public RemotePostingVerifyTask(UUID nodeId, String nodeName, String id) {
+    public RemotePostingVerifyTask(UUID nodeId, String nodeName, String id, String revisionId) {
         this.nodeId = nodeId;
         this.nodeName = nodeName;
         this.id = id;
+        this.revisionId = revisionId;
     }
 
     private void initLoggingDomain() {
@@ -57,42 +63,61 @@ public class RemotePostingVerifyTask implements Runnable {
 
     @Override
     public void run() {
-        String nodeUri = getNodeUri();
+        fetchNodeUri();
         if (nodeUri == null) {
             failed("remote-node.not-found", null);
             return;
         }
-        WebClient.create(nodeUri + "/api/postings/" + id)
+        WebClient.create(String.format("%s/api/postings/%s", nodeUri, id))
                 .get()
                 .retrieve()
                 .bodyToMono(PostingInfo.class)
                 .subscribe(this::verify, this::error);
     }
 
-    private String getNodeUri() {
+    private void fetchNodeUri() {
         DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(nodeName);
         RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
                 ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration())
                 : namingClient.getCurrentForLatest(delegatedName.getName());
-        return UriUtil.normalize(nameInfo != null ? nameInfo.getNodeUri() : null);
+        nodeUri = UriUtil.normalize(nameInfo != null ? nameInfo.getNodeUri() : null);
     }
 
-    private byte[] getSigningKey(String ownerName) {
+    private void fetchSigningKey(String ownerName) {
         DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(ownerName);
         RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
                 ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration())
                 : namingClient.getCurrentForLatest(delegatedName.getName());  // FIXME previous keys?
-        return nameInfo != null ? nameInfo.getSigningKey() : null;
+        signingKey = nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
     private void verify(PostingInfo postingInfo) {
-        revisionId = postingInfo.getRevisionId().toString();
-        byte[] signingKey = getSigningKey(postingInfo.getOwnerName());
-        if (signingKey == null) {
-            succeeded(false);
-        } else {
-            succeeded(CryptoUtil.verify(new PostingFingerprint(postingInfo), postingInfo.getSignature(), signingKey));
+        try {
+            fetchSigningKey(postingInfo.getOwnerName());
+            if (signingKey == null) {
+                succeeded(false);
+                return;
+            }
+            if (revisionId == null) {
+                revisionId = postingInfo.getRevisionId().toString();
+                succeeded(CryptoUtil.verify(new PostingFingerprint(postingInfo), postingInfo.getSignature(), signingKey));
+            } else {
+                WebClient.create(String.format("%s/api/postings/%s/revisions/%s", nodeUri, id, revisionId))
+                        .get()
+                        .retrieve()
+                        .bodyToMono(PostingRevisionInfo.class)
+                        .subscribe(r -> verify(postingInfo, r), this::error);
+            }
+        } catch (Exception e) {
+            failed("remote-node.invalid-answer", null);
         }
+    }
+
+    private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
+        succeeded(CryptoUtil.verify(
+                new PostingFingerprint(postingInfo, postingRevisionInfo),
+                postingRevisionInfo.getSignature(),
+                signingKey));
     }
 
     private void error(Throwable e) {

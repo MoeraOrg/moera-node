@@ -34,13 +34,28 @@ public class RemotePostingController {
 
     @PostMapping("/{id}/verify")
     @Admin
-    public Result verify(@PathVariable String nodeName, @PathVariable String id) {
+    public Result executeVerifyTask(@PathVariable String nodeName, @PathVariable String id) {
         log.info("POST /nodes/{name}/postings/{id}/verify, (name = {}, id = {})",
                 LogUtil.format(nodeName), LogUtil.format(id));
 
-        RemotePostingVerifyTask task = new RemotePostingVerifyTask(requestContext.nodeId(), nodeName, id);
+        return executeVerifyTask(nodeName, id, null);
+    }
+
+    @PostMapping("/{id}/revisions/{revisionId}/verify")
+    @Admin
+    public Result verifyRevision(@PathVariable String nodeName, @PathVariable String id,
+                                 @PathVariable String revisionId) {
+        log.info("POST /nodes/{name}/postings/{id}/revisions/{revisionId}/verify, (name = {}, id = {}, revisionId = {})",
+                LogUtil.format(nodeName), LogUtil.format(id), LogUtil.format(revisionId));
+
+        return executeVerifyTask(nodeName, id, revisionId);
+    }
+
+    private Result executeVerifyTask(String nodeName, String id, String revisionId) {
+        RemotePostingVerifyTask task = new RemotePostingVerifyTask(requestContext.nodeId(), nodeName, id, revisionId);
         autowireCapableBeanFactory.autowireBean(task);
         taskExecutor.execute(task);
+
         return Result.OK;
     }
 
