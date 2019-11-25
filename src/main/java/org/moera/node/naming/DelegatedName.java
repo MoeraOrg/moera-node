@@ -49,7 +49,7 @@ public class DelegatedName implements RegisteredName {
     }
 
     @Override
-    public String format() {
+    public String toString() {
         if (name != null) {
             if (generation != null) {
                 return String.format("%s_%d", name, generation);

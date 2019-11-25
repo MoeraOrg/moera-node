@@ -80,7 +80,10 @@ public class RemotePostingVerifyTask implements Runnable {
         RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
                 ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration())
                 : namingClient.getCurrentForLatest(delegatedName.getName());
-        nodeUri = UriUtil.normalize(nameInfo != null ? nameInfo.getNodeUri() : null);
+        if (nameInfo != null) {
+            nodeName = new DelegatedName(nameInfo.getName(), nameInfo.getGeneration()).toString();
+            nodeUri = UriUtil.normalize(nameInfo.getNodeUri());
+        }
     }
 
     private void fetchSigningKey(String ownerName) {

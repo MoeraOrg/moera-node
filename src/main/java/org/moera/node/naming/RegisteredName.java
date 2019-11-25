@@ -6,6 +6,4 @@ public interface RegisteredName {
         return DelegatedName.parse(name);
     }
 
-    String format();
-
 }
