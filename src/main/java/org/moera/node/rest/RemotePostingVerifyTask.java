@@ -7,6 +7,9 @@ import javax.inject.Inject;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.RemotePostingVerifiedEvent;
+import org.moera.node.event.model.RemotePostingVerifyFailedEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.naming.DelegatedName;
@@ -28,6 +31,7 @@ public class RemotePostingVerifyTask implements Runnable {
     private UUID nodeId;
     private String nodeName;
     private String id;
+    private String revisionId;
 
     @Inject
     private NamingClient namingClient;
@@ -37,6 +41,9 @@ public class RemotePostingVerifyTask implements Runnable {
 
     @Inject
     private Domains domains;
+
+    @Inject
+    private EventManager eventManager;
 
     public RemotePostingVerifyTask(UUID nodeId, String nodeName, String id) {
         this.nodeId = nodeId;
@@ -79,6 +86,7 @@ public class RemotePostingVerifyTask implements Runnable {
     }
 
     private void verify(PostingInfo postingInfo) {
+        revisionId = postingInfo.getRevisionId().toString();
         byte[] signingKey = getSigningKey(postingInfo.getOwnerName());
         if (signingKey == null) {
             succeeded(false);
@@ -101,7 +109,8 @@ public class RemotePostingVerifyTask implements Runnable {
 
     private void succeeded(boolean correct) {
         initLoggingDomain();
-        log.info("Verified posting {} at node {}: {}", id, nodeName, correct ? "correct" : "incorrect");
+        log.info("Verified posting {}/{} at node {}: {}", id, revisionId, nodeName, correct ? "correct" : "incorrect");
+        eventManager.send(nodeId, new RemotePostingVerifiedEvent(nodeName, id, revisionId, correct));
     }
 
     private void failed(String errorCode, String message) {
@@ -111,7 +120,10 @@ public class RemotePostingVerifyTask implements Runnable {
         if (message != null) {
             errorMessage += ": " + message;
         }
-        log.info("Verification of posting {} at node {} failed: {} ({})", id, nodeName, errorMessage, errorCode);
+        log.info("Verification of posting {}/{} at node {} failed: {} ({})",
+                id, revisionId, nodeName, errorMessage, errorCode);
+        eventManager.send(nodeId,
+                new RemotePostingVerifyFailedEvent(nodeName, id, revisionId, errorCode, errorMessage));
     }
 
 }
