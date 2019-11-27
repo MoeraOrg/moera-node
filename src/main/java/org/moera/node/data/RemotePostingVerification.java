@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
@@ -38,6 +39,9 @@ public class RemotePostingVerification {
 
     @Size(max = 255)
     private String errorMessage;
+
+    @NotNull
+    private Timestamp deadline;
 
     public RemotePostingVerification() {
     }
@@ -112,6 +116,14 @@ public class RemotePostingVerification {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    public Timestamp getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Timestamp deadline) {
+        this.deadline = deadline;
     }
 
 }

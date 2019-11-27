@@ -104,3 +104,11 @@
   title: "Web UI: HTML to insert at the beginning of <HEAD>"
   modifiers:
     multiline: true
+
+- name: remote-posting-verification.lifetime
+  type: Duration
+  defaultValue: 1h
+  title: Posting verification information lifetime
+  modifiers:
+    min: 30m
+    max: 2000d

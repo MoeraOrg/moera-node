@@ -1,5 +1,7 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -10,11 +12,13 @@ import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -62,6 +66,8 @@ public class RemotePostingController {
     private AsyncOperationCreated executeVerifyTask(String nodeName, String id, String revisionId) {
         RemotePostingVerification data = new RemotePostingVerification(
                 requestContext.nodeId(), nodeName, id, revisionId);
+        data.setDeadline(Timestamp.from(Instant.now().plus(
+                requestContext.getOptions().getDuration("remote-posting-verification.lifetime"))));
         remotePostingVerificationRepository.saveAndFlush(data);
 
         RemotePostingVerifyTask task = new RemotePostingVerifyTask(data);
@@ -69,6 +75,12 @@ public class RemotePostingController {
         taskExecutor.execute(task);
 
         return new AsyncOperationCreated(data.getId());
+    }
+
+    @Scheduled(fixedDelayString = "PT30M")
+    @Transactional
+    public void purgeVerifications() {
+        remotePostingVerificationRepository.deleteOutdated(Util.now());
     }
 
 }
