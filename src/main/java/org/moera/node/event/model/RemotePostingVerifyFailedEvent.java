@@ -1,5 +1,7 @@
 package org.moera.node.event.model;
 
+import org.moera.node.data.RemotePostingVerification;
+
 public class RemotePostingVerifyFailedEvent extends RemotePostingEvent {
 
     private String errorCode;
@@ -9,11 +11,10 @@ public class RemotePostingVerifyFailedEvent extends RemotePostingEvent {
         super(EventType.REMOTE_POSTING_VERIFY_FAILED);
     }
 
-    public RemotePostingVerifyFailedEvent(String nodeName, String id, String revisionId,
-                                          String errorCode, String errorMessage) {
-        super(EventType.REMOTE_POSTING_VERIFY_FAILED, nodeName, id, revisionId);
-        this.errorCode = errorCode;
-        this.errorMessage = errorMessage;
+    public RemotePostingVerifyFailedEvent(RemotePostingVerification data) {
+        super(EventType.REMOTE_POSTING_VERIFY_FAILED, data);
+        errorCode = data.getErrorCode();
+        errorMessage = data.getErrorMessage();
     }
 
     public String getErrorCode() {

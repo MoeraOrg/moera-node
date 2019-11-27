@@ -1,5 +1,8 @@
 package org.moera.node.event.model;
 
+import org.moera.node.data.RemotePostingVerification;
+import org.moera.node.data.VerificationStatus;
+
 public class RemotePostingVerifiedEvent extends RemotePostingEvent {
 
     private boolean correct;
@@ -8,9 +11,9 @@ public class RemotePostingVerifiedEvent extends RemotePostingEvent {
         super(EventType.REMOTE_POSTING_VERIFIED);
     }
 
-    public RemotePostingVerifiedEvent(String nodeName, String id, String revisionId, boolean correct) {
-        super(EventType.REMOTE_POSTING_VERIFIED, nodeName, id, revisionId);
-        this.correct = correct;
+    public RemotePostingVerifiedEvent(RemotePostingVerification data) {
+        super(EventType.REMOTE_POSTING_VERIFIED, data);
+        correct = data.getStatus() == VerificationStatus.CORRECT;
     }
 
     public boolean isCorrect() {

@@ -1,5 +1,6 @@
 package org.moera.node.event.model;
 
+import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.event.EventSubscriber;
 
 public abstract class RemotePostingEvent extends Event {
@@ -12,11 +13,11 @@ public abstract class RemotePostingEvent extends Event {
         super(type);
     }
 
-    protected RemotePostingEvent(EventType type, String nodeName, String id, String revisionId) {
+    protected RemotePostingEvent(EventType type, RemotePostingVerification data) {
         super(type);
-        this.nodeName = nodeName;
-        this.id = id;
-        this.revisionId = revisionId;
+        nodeName = data.getNodeName();
+        id = data.getPostingId();
+        revisionId = data.getRevisionId();
     }
 
     public String getNodeName() {
