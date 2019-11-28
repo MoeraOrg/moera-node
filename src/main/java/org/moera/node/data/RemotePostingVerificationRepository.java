@@ -14,6 +14,6 @@ public interface RemotePostingVerificationRepository extends JpaRepository<Remot
 
     @Query("delete from RemotePostingVerification v where v.deadline < ?1")
     @Modifying
-    void deleteOutdated(Timestamp deadline);
+    void deleteExpired(Timestamp deadline);
 
 }

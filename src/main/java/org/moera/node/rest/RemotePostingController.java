@@ -79,8 +79,8 @@ public class RemotePostingController {
 
     @Scheduled(fixedDelayString = "PT30M")
     @Transactional
-    public void purgeVerifications() {
-        remotePostingVerificationRepository.deleteOutdated(Util.now());
+    public void purgeExpiredVerifications() {
+        remotePostingVerificationRepository.deleteExpired(Util.now());
     }
 
 }

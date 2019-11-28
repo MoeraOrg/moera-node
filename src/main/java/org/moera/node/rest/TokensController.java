@@ -4,6 +4,7 @@ import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -17,9 +18,11 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenCreated;
 import org.moera.node.model.TokenInfo;
 import org.moera.node.option.Options;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,6 +76,12 @@ public class TokensController {
             return new TokenInfo(token, false);
         }
         return new TokenInfo(tokenData);
+    }
+
+    @Scheduled(fixedDelayString = "PT1H")
+    @Transactional
+    public void purgeExpired() {
+        tokenRepository.deleteExpired(Util.now());
     }
 
 }
