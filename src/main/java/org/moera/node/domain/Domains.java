@@ -108,6 +108,10 @@ public class Domains {
         }
     }
 
+    public Options getDomainOptions(UUID nodeId) {
+        return getDomainOptions(getDomainName(nodeId));
+    }
+
     public Set<String> getAllDomainNames() {
         lockRead();
         try {

@@ -1,3 +1,8 @@
+- name: naming.location
+  type: string
+  defaultValue: https://naming.moera.org/moera-naming
+  title: Naming server location
+
 - name: naming.unavailable.max-retries
   type: int
   defaultValue: 5

@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.node.global.RequestContext;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
@@ -40,6 +42,9 @@ public class NamingCache {
 
     @Inject
     private NamingClient namingClient;
+
+    @Inject
+    private RequestContext requestContext;
 
     public RegisteredNameDetails getFast(String name) {
         RegisteredNameDetails details = getOrRun(name);
@@ -82,7 +87,8 @@ public class NamingCache {
                 record = cache.get(name);
                 if (record == null) {
                     cache.put(name, new Record());
-                    taskExecutor.execute(() -> queryName(name));
+                    Options options = requestContext.getOptions();
+                    taskExecutor.execute(() -> queryName(name, options));
                     return null;
                 }
             } finally {
@@ -97,9 +103,10 @@ public class NamingCache {
         }
     }
 
-    private void queryName(String name) {
+    private void queryName(String name, Options options) {
         DelegatedName delegatedName = DelegatedName.parse(name);
-        RegisteredNameInfo info = namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration());
+        RegisteredNameInfo info = namingClient.getCurrent(
+                delegatedName.getName(), delegatedName.getGeneration(), options);
         Record record = readRecord(name);
         if (record == null) {
             record = new Record();

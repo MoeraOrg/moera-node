@@ -35,8 +35,5 @@ spring:
       max-request-size: 5MB
 
 node:
-  naming:
-    location: https://naming.moera.org/moera-naming
-
   root-secret:
   mock-network-latency: false

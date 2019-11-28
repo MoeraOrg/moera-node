@@ -7,10 +7,11 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
@@ -31,7 +32,6 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -44,10 +44,7 @@ public class NamingClient {
 
     private static Logger log = LoggerFactory.getLogger(NamingClient.class);
 
-    @Value("${node.naming.location}")
-    private String namingLocation;
-
-    private NamingService namingService;
+    private Map<String, NamingService> namingServices = new HashMap<>();
 
     @Inject
     private Domains domains;
@@ -61,21 +58,32 @@ public class NamingClient {
     @Inject
     private EventManager eventManager;
 
-    @PostConstruct
-    protected void init() throws MalformedURLException {
-        JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(namingLocation));
-        namingService = ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
-    }
-
     @EventListener(DomainsConfiguredEvent.class)
     public void optionsLoaded() {
         domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(this::monitorOperation);
+    }
+
+    private NamingService getNamingService(Options options) {
+        return namingServices.computeIfAbsent(options.getString("naming.location"), location -> {
+            try {
+                JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(location));
+                return ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
+            } catch (MalformedURLException e) {
+                log.error(e.getMessage());
+                return null;
+            }
+        });
     }
 
     private void monitorOperation(Options options) {
         UUID operationId = options.getUuid("naming.operation.id");
         if (operationId == null) {
             log.info("No pending naming operation");
+            return;
+        }
+        NamingService namingService = getNamingService(options);
+        if (namingService == null) {
+            log.error("No naming service available");
             return;
         }
         log.info("Started monitoring for naming operation {}", operationId);
@@ -195,16 +203,32 @@ public class NamingClient {
         }
     }
 
-    public RegisteredNameInfo getCurrent(String name, int generation) {
+    public RegisteredNameInfo getCurrent(String name, int generation, Options options) {
+        NamingService namingService = getNamingService(options);
+        if (namingService == null) {
+            log.error("No naming service available");
+            return null;
+        }
         return namingService.getCurrent(name, generation);
     }
 
-    public RegisteredNameInfo getCurrentForLatest(String name) {
+    public RegisteredNameInfo getCurrentForLatest(String name, Options options) {
+        NamingService namingService = getNamingService(options);
+        if (namingService == null) {
+            log.error("No naming service available");
+            return null;
+        }
         return namingService.getCurrentForLatest(name);
     }
 
     public void register(String name, String nodeUri, ECPublicKey updatingKey,
                          ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
+
+        NamingService namingService = getNamingService(options);
+        if (namingService == null) {
+            log.error("No naming service available");
+            return;
+        }
 
         byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
         byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
@@ -240,6 +264,12 @@ public class NamingClient {
 
     public void update(String name, int generation, ECPrivateKey privateUpdatingKey,
                        ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
+
+        NamingService namingService = getNamingService(options);
+        if (namingService == null) {
+            log.error("No naming service available");
+            return;
+        }
 
         RegisteredNameInfo info;
         try {

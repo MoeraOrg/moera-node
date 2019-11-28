@@ -18,6 +18,7 @@ import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.naming.DelegatedName;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.RegisteredName;
+import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,10 +75,11 @@ public class RemotePostingVerifyTask implements Runnable {
     }
 
     private void fetchNodeUri() {
+        Options options = domains.getDomainOptions(data.getNodeId());
         DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(data.getNodeName());
         RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
-                ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration())
-                : namingClient.getCurrentForLatest(delegatedName.getName());
+                ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration(), options)
+                : namingClient.getCurrentForLatest(delegatedName.getName(), options);
         if (nameInfo != null) {
             data.setNodeName(new DelegatedName(nameInfo.getName(), nameInfo.getGeneration()).toString());
             nodeUri = UriUtil.normalize(nameInfo.getNodeUri());
@@ -85,10 +87,11 @@ public class RemotePostingVerifyTask implements Runnable {
     }
 
     private void fetchSigningKey(String ownerName) {
+        Options options = domains.getDomainOptions(data.getNodeId());
         DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(ownerName);
         RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
-                ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration())
-                : namingClient.getCurrentForLatest(delegatedName.getName());  // FIXME previous keys?
+                ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration(), options)
+                : namingClient.getCurrentForLatest(delegatedName.getName(), options);  // FIXME previous keys?
         signingKey = nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
