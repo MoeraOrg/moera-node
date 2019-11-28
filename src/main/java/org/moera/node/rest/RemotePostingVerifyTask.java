@@ -11,7 +11,7 @@ import org.moera.node.data.VerificationStatus;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.RemotePostingVerifiedEvent;
-import org.moera.node.event.model.RemotePostingVerifyFailedEvent;
+import org.moera.node.event.model.RemotePostingVerificationFailedEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
@@ -171,7 +171,7 @@ public class RemotePostingVerifyTask implements Runnable {
         data.setErrorCode(errorCode);
         data.setErrorMessage(errorMessage);
         remotePostingVerificationRepository.saveAndFlush(data);
-        eventManager.send(data.getNodeId(), new RemotePostingVerifyFailedEvent(data));
+        eventManager.send(data.getNodeId(), new RemotePostingVerificationFailedEvent(data));
     }
 
 }

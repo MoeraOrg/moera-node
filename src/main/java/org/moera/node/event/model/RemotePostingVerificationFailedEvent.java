@@ -2,17 +2,17 @@ package org.moera.node.event.model;
 
 import org.moera.node.data.RemotePostingVerification;
 
-public class RemotePostingVerifyFailedEvent extends RemotePostingEvent {
+public class RemotePostingVerificationFailedEvent extends RemotePostingVerificationEvent {
 
     private String errorCode;
     private String errorMessage;
 
-    public RemotePostingVerifyFailedEvent() {
-        super(EventType.REMOTE_POSTING_VERIFY_FAILED);
+    public RemotePostingVerificationFailedEvent() {
+        super(EventType.REMOTE_POSTING_VERIFICATION_FAILED);
     }
 
-    public RemotePostingVerifyFailedEvent(RemotePostingVerification data) {
-        super(EventType.REMOTE_POSTING_VERIFY_FAILED, data);
+    public RemotePostingVerificationFailedEvent(RemotePostingVerification data) {
+        super(EventType.REMOTE_POSTING_VERIFICATION_FAILED, data);
         errorCode = data.getErrorCode();
         errorMessage = data.getErrorMessage();
     }

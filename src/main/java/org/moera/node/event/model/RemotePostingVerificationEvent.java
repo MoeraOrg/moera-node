@@ -5,18 +5,18 @@ import java.util.UUID;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.event.EventSubscriber;
 
-public abstract class RemotePostingEvent extends Event {
+public abstract class RemotePostingVerificationEvent extends Event {
 
     private UUID id;
     private String nodeName;
     private String postingId;
     private String revisionId;
 
-    protected RemotePostingEvent(EventType type) {
+    protected RemotePostingVerificationEvent(EventType type) {
         super(type);
     }
 
-    protected RemotePostingEvent(EventType type, RemotePostingVerification data) {
+    protected RemotePostingVerificationEvent(EventType type, RemotePostingVerification data) {
         super(type);
         id = data.getId();
         nodeName = data.getNodeName();

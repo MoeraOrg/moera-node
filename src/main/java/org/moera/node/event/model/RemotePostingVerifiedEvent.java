@@ -3,7 +3,7 @@ package org.moera.node.event.model;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.VerificationStatus;
 
-public class RemotePostingVerifiedEvent extends RemotePostingEvent {
+public class RemotePostingVerifiedEvent extends RemotePostingVerificationEvent {
 
     private boolean correct;
 
