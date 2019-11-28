@@ -86,39 +86,51 @@ public class RemotePostingVerifyTask implements Runnable {
         }
     }
 
-    private void fetchSigningKey(String ownerName) {
+    private void fetchSigningKey(String ownerName, long at) {
         Options options = domains.getDomainOptions(data.getNodeId());
         DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(ownerName);
         RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
-                ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration(), options)
-                : namingClient.getCurrentForLatest(delegatedName.getName(), options);  // FIXME previous keys?
+                    ? namingClient.getPast(delegatedName.getName(), delegatedName.getGeneration(), at, options)
+                    : namingClient.getPastForLatest(delegatedName.getName(), at, options);
         signingKey = nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
     private void verify(PostingInfo postingInfo) {
         try {
-            fetchSigningKey(postingInfo.getOwnerName());
-            if (signingKey == null) {
-                succeeded(false);
-                return;
-            }
             if (data.getRevisionId() == null) {
-                data.setRevisionId(postingInfo.getRevisionId().toString());
-                succeeded(CryptoUtil.verify(new PostingFingerprint(postingInfo), postingInfo.getSignature(), signingKey));
+                verifySignature(postingInfo);
             } else {
                 WebClient.create(String.format("%s/api/postings/%s/revisions/%s",
                                                 nodeUri, data.getPostingId(), data.getRevisionId()))
                         .get()
                         .retrieve()
                         .bodyToMono(PostingRevisionInfo.class)
-                        .subscribe(r -> verify(postingInfo, r), this::error);
+                        .subscribe(r -> verifySignature(postingInfo, r), this::error);
             }
         } catch (Exception e) {
             failed("remote-node.invalid-answer", null);
         }
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
+    private void verifySignature(PostingInfo postingInfo) {
+        fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
+        if (signingKey == null) {
+            succeeded(false);
+            return;
+        }
+        data.setRevisionId(postingInfo.getRevisionId().toString());
+        succeeded(CryptoUtil.verify(
+                new PostingFingerprint(postingInfo),
+                postingInfo.getSignature(),
+                signingKey));
+    }
+
+    private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
+        fetchSigningKey(postingInfo.getOwnerName(), postingRevisionInfo.getCreatedAt());
+        if (signingKey == null) {
+            succeeded(false);
+            return;
+        }
         succeeded(CryptoUtil.verify(
                 new PostingFingerprint(postingInfo, postingRevisionInfo),
                 postingRevisionInfo.getSignature(),

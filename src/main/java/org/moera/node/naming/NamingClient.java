@@ -221,6 +221,24 @@ public class NamingClient {
         return namingService.getCurrentForLatest(name);
     }
 
+    public RegisteredNameInfo getPast(String name, int generation, long at, Options options) {
+        NamingService namingService = getNamingService(options);
+        if (namingService == null) {
+            log.error("No naming service available");
+            return null;
+        }
+        return namingService.getPast(name, generation, at);
+    }
+
+    public RegisteredNameInfo getPastForLatest(String name, long at, Options options) {
+        NamingService namingService = getNamingService(options);
+        if (namingService == null) {
+            log.error("No naming service available");
+            return null;
+        }
+        return namingService.getPastForLatest(name, at);
+    }
+
     public void register(String name, String nodeUri, ECPublicKey updatingKey,
                          ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
 
