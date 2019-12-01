@@ -23,6 +23,9 @@ public class RemotePostingVerification {
     @Size(max = 63)
     private String nodeName;
 
+    @Size(max = 63)
+    private String receiverName;
+
     @NotNull
     @Size(max = 40)
     private String postingId;
@@ -76,6 +79,14 @@ public class RemotePostingVerification {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
     }
 
     public String getPostingId() {

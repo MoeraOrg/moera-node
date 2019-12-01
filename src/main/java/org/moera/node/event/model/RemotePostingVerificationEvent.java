@@ -9,6 +9,7 @@ public abstract class RemotePostingVerificationEvent extends Event {
 
     private UUID id;
     private String nodeName;
+    private String receiverName;
     private String postingId;
     private String revisionId;
 
@@ -20,6 +21,7 @@ public abstract class RemotePostingVerificationEvent extends Event {
         super(type);
         id = data.getId();
         nodeName = data.getNodeName();
+        receiverName = data.getReceiverName();
         postingId = data.getPostingId();
         revisionId = data.getRevisionId();
     }
@@ -38,6 +40,14 @@ public abstract class RemotePostingVerificationEvent extends Event {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
     }
 
     public String getPostingId() {

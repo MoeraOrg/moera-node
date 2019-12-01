@@ -97,6 +97,9 @@ public class RemotePostingVerifyTask implements Runnable {
 
     private void verify(PostingInfo postingInfo) {
         try {
+            data.setReceiverName(postingInfo.getReceiverName());
+            remotePostingVerificationRepository.saveAndFlush(data);
+
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo);
             } else {
