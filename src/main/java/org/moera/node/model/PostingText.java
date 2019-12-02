@@ -91,7 +91,7 @@ public class PostingText {
         revision.setBodyFormat(bodyFormat);
         if (bodyFormat.equals("html")) {
             if (!Shortener.isShort(body)) {
-                revision.setBodyPreviewHtml(Shortener.shorten(body));
+                revision.setBodyPreview(Shortener.shorten(body));
             }
             revision.setHeading(HeadingExtractor.extract(body));
         }

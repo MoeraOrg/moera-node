@@ -73,9 +73,9 @@ public class RssController {
         entry.setPublishedDate(revision.getPublishedAt());
 
         StringBuilder buf = new StringBuilder();
-        boolean hasPreview = !StringUtils.isEmpty(revision.getBodyPreviewHtml());
+        boolean hasPreview = !StringUtils.isEmpty(revision.getBodyPreview());
         buf.append("<div>");
-        buf.append(hasPreview ? revision.getBodyPreviewHtml() : revision.getBody());
+        buf.append(hasPreview ? revision.getBodyPreview() : revision.getBody());
         buf.append("</div>");
         if (hasPreview) {
             buf.append(String.format("<a href=\"/post/%s\">Continue Reading &rarr;</a>", posting.getId()));

@@ -24,7 +24,7 @@ public class EntryRevision {
     private Entry entry;
 
     @NotNull
-    private String bodyPreviewHtml = "";
+    private String bodyPreview = "";
 
     @NotNull
     private String bodySrc = "";
@@ -73,12 +73,12 @@ public class EntryRevision {
         this.entry = entry;
     }
 
-    public String getBodyPreviewHtml() {
-        return bodyPreviewHtml;
+    public String getBodyPreview() {
+        return bodyPreview;
     }
 
-    public void setBodyPreviewHtml(String bodyPreviewHtml) {
-        this.bodyPreviewHtml = bodyPreviewHtml;
+    public void setBodyPreview(String bodyPreview) {
+        this.bodyPreview = bodyPreview;
     }
 
     public String getBodySrc() {

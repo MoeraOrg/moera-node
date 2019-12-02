@@ -17,7 +17,7 @@ public class PostingInfo {
     private int totalRevisions;
     private String receiverName;
     private String ownerName;
-    private String bodyPreviewHtml;
+    private String bodyPreview;
     private String bodySrc;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
@@ -45,7 +45,7 @@ public class PostingInfo {
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
         ownerName = posting.getOwnerName();
-        bodyPreviewHtml = posting.getCurrentRevision().getBodyPreviewHtml();
+        bodyPreview = posting.getCurrentRevision().getBodyPreview();
         if (includeSource) {
             bodySrc = posting.getCurrentRevision().getBodySrc();
         }
@@ -106,12 +106,12 @@ public class PostingInfo {
         this.ownerName = ownerName;
     }
 
-    public String getBodyPreviewHtml() {
-        return bodyPreviewHtml;
+    public String getBodyPreview() {
+        return bodyPreview;
     }
 
-    public void setBodyPreviewHtml(String bodyPreviewHtml) {
-        this.bodyPreviewHtml = bodyPreviewHtml;
+    public void setBodyPreview(String bodyPreview) {
+        this.bodyPreview = bodyPreview;
     }
 
     public String getBodySrc() {

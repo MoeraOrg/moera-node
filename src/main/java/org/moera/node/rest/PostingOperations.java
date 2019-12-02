@@ -100,7 +100,7 @@ public class PostingOperations {
         entryRevisionRepository.save(revision);
 
         if (template != null) {
-            revision.setBodyPreviewHtml(template.getBodyPreviewHtml());
+            revision.setBodyPreview(template.getBodyPreview());
             revision.setBodySrc(template.getBodySrc());
             revision.setBodySrcFormat(template.getBodySrcFormat());
             revision.setBody(template.getBody());

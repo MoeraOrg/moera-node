@@ -11,7 +11,7 @@ import org.moera.node.util.Util;
 public class PostingRevisionInfo {
 
     private UUID id;
-    private String bodyPreviewHtml;
+    private String bodyPreview;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
     private String body;
@@ -28,7 +28,7 @@ public class PostingRevisionInfo {
 
     public PostingRevisionInfo(EntryRevision revision) {
         id = revision.getId();
-        bodyPreviewHtml = revision.getBodyPreviewHtml();
+        bodyPreview = revision.getBodyPreview();
         bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat().getValue();
         body = revision.getBody();
@@ -49,12 +49,12 @@ public class PostingRevisionInfo {
         this.id = id;
     }
 
-    public String getBodyPreviewHtml() {
-        return bodyPreviewHtml;
+    public String getBodyPreview() {
+        return bodyPreview;
     }
 
-    public void setBodyPreviewHtml(String bodyPreviewHtml) {
-        this.bodyPreviewHtml = bodyPreviewHtml;
+    public void setBodyPreview(String bodyPreview) {
+        this.bodyPreview = bodyPreview;
     }
 
     public byte[] getBodySrcHash() {
