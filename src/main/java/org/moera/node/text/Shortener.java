@@ -6,6 +6,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
+import org.moera.node.model.Body;
 
 public class Shortener {
 
@@ -16,11 +17,21 @@ public class Shortener {
     private static final String SENTENCE_END = ".?!";
     private static final String PHRASE_END = ":,;)";
 
-    public static boolean isShort(String html) {
+    public static boolean isShort(Body body) {
+        return isShort(body.getText());
+    }
+
+    private static boolean isShort(String html) {
         return html.length() <= SHORT_TEXT_MAX;
     }
 
-    public static String shorten(String html) {
+    public static Body shorten(Body body) {
+        Body shortened = new Body();
+        shortened.setText(shorten(body.getText()));
+        return shortened;
+    }
+
+    private static String shorten(String html) {
         if (html.length() <= SHORT_TEXT_MAX) {
             return html;
         }

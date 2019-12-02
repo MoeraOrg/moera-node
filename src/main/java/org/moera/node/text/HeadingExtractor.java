@@ -5,12 +5,17 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
+import org.moera.node.model.Body;
 
 public class HeadingExtractor {
 
     private static final int HEADING_LENGTH = 40;
 
-    public static String extract(String html) {
+    public static String extract(Body body) {
+        return extract(body.getText());
+    }
+
+    private static String extract(String html) {
         Document document = Jsoup.parseBodyFragment(html);
         Extractor extractor = new Extractor();
         document.filter(extractor);

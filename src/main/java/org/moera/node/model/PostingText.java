@@ -80,7 +80,7 @@ public class PostingText {
         }
 
         if (StringUtils.isEmpty(body)) {
-            body = TextConverter.toHtml(revision.getBodySrcFormat(), bodySrc);
+            body = TextConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc)).getEncoded();
             bodyFormat = "html";
         } else {
             if (StringUtils.isEmpty(bodyFormat)) {
@@ -90,10 +90,13 @@ public class PostingText {
         revision.setBody(body);
         revision.setBodyFormat(bodyFormat);
         if (bodyFormat.equals("html")) {
-            if (!Shortener.isShort(body)) {
-                revision.setBodyPreview(Shortener.shorten(body));
+            Body decodedBody = new Body(body);
+            if (!Shortener.isShort(decodedBody)) {
+                revision.setBodyPreview(Shortener.shorten(decodedBody).getEncoded());
+            } else {
+                revision.setBodyPreview(new Body().getEncoded());
             }
-            revision.setHeading(HeadingExtractor.extract(body));
+            revision.setHeading(HeadingExtractor.extract(decodedBody));
         }
         if (publishAt != null) {
             revision.setPublishedAt(Util.toTimestamp(publishAt));

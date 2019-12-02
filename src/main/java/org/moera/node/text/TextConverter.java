@@ -1,10 +1,11 @@
 package org.moera.node.text;
 
 import org.moera.node.data.SourceFormat;
+import org.moera.node.model.Body;
 
 public class TextConverter {
 
-    public static String toHtml(SourceFormat format, String source) {
+    private static String toHtml(SourceFormat format, String source) {
         switch (format) {
             case PLAIN_TEXT:
                 return PlainTextConverter.toHtml(source);
@@ -15,6 +16,12 @@ public class TextConverter {
             default:
                 throw new IllegalArgumentException("Unknown source format: " + format.name());
         }
+    }
+
+    public static Body toHtml(SourceFormat format, Body source) {
+        Body converted = new Body();
+        converted.setText(toHtml(format, source.getText()));
+        return converted;
     }
 
 }
