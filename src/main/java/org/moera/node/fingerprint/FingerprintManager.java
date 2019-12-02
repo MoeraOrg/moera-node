@@ -15,6 +15,7 @@ public class FingerprintManager {
     private Map<FingerprintId, Class<? extends Fingerprint>> fingerints;
 
     @PostConstruct
+    @SuppressWarnings("unchecked")
     public void init() {
         Reflections reflections = new Reflections("org.moera.node.fingerprint");
         fingerints = reflections.getTypesAnnotatedWith(FingerprintVersion.class).stream()
