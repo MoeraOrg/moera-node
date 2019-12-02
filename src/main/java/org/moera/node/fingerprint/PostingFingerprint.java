@@ -39,7 +39,7 @@ public class PostingFingerprint extends Fingerprint {
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingInfo.getBodySrcHash());
         bodySrcFormat = postingInfo.getBodySrcFormat();
-        body = postingInfo.getBody();
+        body = postingInfo.getBody().getEncoded();
         bodyFormat = postingInfo.getBodyFormat();
         createdAt = postingInfo.getEditedAt();
     }
@@ -50,7 +50,7 @@ public class PostingFingerprint extends Fingerprint {
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingRevisionInfo.getBodySrcHash());
         bodySrcFormat = postingRevisionInfo.getBodySrcFormat();
-        body = postingRevisionInfo.getBody();
+        body = postingRevisionInfo.getBody().getEncoded();
         bodyFormat = postingRevisionInfo.getBodyFormat();
         createdAt = postingRevisionInfo.getCreatedAt();
     }

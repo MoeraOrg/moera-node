@@ -11,10 +11,10 @@ import org.moera.node.util.Util;
 public class PostingRevisionInfo {
 
     private UUID id;
-    private String bodyPreview;
+    private Body bodyPreview;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
-    private String body;
+    private Body body;
     private String bodyFormat;
     private String heading;
     private long createdAt;
@@ -28,10 +28,10 @@ public class PostingRevisionInfo {
 
     public PostingRevisionInfo(EntryRevision revision) {
         id = revision.getId();
-        bodyPreview = revision.getBodyPreview();
+        bodyPreview = new Body(revision.getBodyPreview());
         bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat().getValue();
-        body = revision.getBody();
+        body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
@@ -49,11 +49,11 @@ public class PostingRevisionInfo {
         this.id = id;
     }
 
-    public String getBodyPreview() {
+    public Body getBodyPreview() {
         return bodyPreview;
     }
 
-    public void setBodyPreview(String bodyPreview) {
+    public void setBodyPreview(Body bodyPreview) {
         this.bodyPreview = bodyPreview;
     }
 
@@ -73,11 +73,11 @@ public class PostingRevisionInfo {
         this.bodySrcFormat = bodySrcFormat;
     }
 
-    public String getBody() {
+    public Body getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public void setBody(Body body) {
         this.body = body;
     }
 

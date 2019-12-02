@@ -17,11 +17,11 @@ public class PostingInfo {
     private int totalRevisions;
     private String receiverName;
     private String ownerName;
-    private String bodyPreview;
-    private String bodySrc;
+    private Body bodyPreview;
+    private Body bodySrc;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
-    private String body;
+    private Body body;
     private String bodyFormat;
     private String heading;
     private long createdAt;
@@ -45,13 +45,13 @@ public class PostingInfo {
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
         ownerName = posting.getOwnerName();
-        bodyPreview = posting.getCurrentRevision().getBodyPreview();
+        bodyPreview = new Body(posting.getCurrentRevision().getBodyPreview());
         if (includeSource) {
-            bodySrc = posting.getCurrentRevision().getBodySrc();
+            bodySrc = new Body(posting.getCurrentRevision().getBodySrc());
         }
         bodySrcHash = CryptoUtil.digest(posting.getCurrentRevision().getBodySrc());
         bodySrcFormat = posting.getCurrentRevision().getBodySrcFormat().getValue();
-        body = posting.getCurrentRevision().getBody();
+        body = new Body(posting.getCurrentRevision().getBody());
         bodyFormat = posting.getCurrentRevision().getBodyFormat();
         heading = posting.getCurrentRevision().getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
@@ -106,19 +106,19 @@ public class PostingInfo {
         this.ownerName = ownerName;
     }
 
-    public String getBodyPreview() {
+    public Body getBodyPreview() {
         return bodyPreview;
     }
 
-    public void setBodyPreview(String bodyPreview) {
+    public void setBodyPreview(Body bodyPreview) {
         this.bodyPreview = bodyPreview;
     }
 
-    public String getBodySrc() {
+    public Body getBodySrc() {
         return bodySrc;
     }
 
-    public void setBodySrc(String bodySrc) {
+    public void setBodySrc(Body bodySrc) {
         this.bodySrc = bodySrc;
     }
 
@@ -138,11 +138,11 @@ public class PostingInfo {
         this.bodySrcFormat = bodySrcFormat;
     }
 
-    public String getBody() {
+    public Body getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public void setBody(Body body) {
         this.body = body;
     }
 

@@ -15,6 +15,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.model.Body;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,9 @@ public class Updater {
             case UPDATE_SIGNATURE:
                 updateSignature(upgrade.getEntryRevision());
                 break;
+            case JSON_BODY:
+                convertBodyToJson(upgrade.getEntryRevision());
+                break;
             default:
                 break;
         }
@@ -81,6 +85,17 @@ public class Updater {
         PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
         revision.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
         log.info("Signature upgraded for entry {}, revision {}", posting.getId(), revision.getId());
+    }
+
+    private void convertBodyToJson(EntryRevision revision) {
+        Body body = new Body();
+        body.setText(revision.getBody());
+        revision.setBody(body.getEncoded());
+        body.setText(revision.getBodyPreview());
+        revision.setBodyPreview(body.getEncoded());
+        body.setText(revision.getBodySrc());
+        revision.setBodySrc(body.getEncoded());
+        log.info("Body of entry {}, revision {} converted to JSON", revision.getEntry().getId(), revision.getId());
     }
 
 }

@@ -21,13 +21,13 @@
                 (updated {{cal "dd-MM-yyyy HH:mm" es=editedAt fromNow="posting.time.relative"}})
             {{/ifgt}}
         </div>
-        {{#if bodyPreview}}
+        {{#if bodyPreview.text}}
             <div class="content">
-                <div>{{{bodyPreview}}}</div>
+                <div>{{{bodyPreview.text}}}</div>
                 <a href="/post/{{id}}">Continue Reading &rarr;</a>
             </div>
         {{else}}
-            <div class="content">{{{body}}}</div>
+            <div class="content">{{{body.text}}}</div>
         {{/if}}
     </div>
 {{/each}}
