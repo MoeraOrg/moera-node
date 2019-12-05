@@ -32,23 +32,23 @@ public class ImagesHelperSource {
         Object dataId = options.hash("dataId");
         Object dataValue = options.hash("dataValue");
         CharSequence style = options.hash("style");
-        boolean button = HelperUtils.boolArg(options.hash("button", false));
+        boolean button = HelperUtil.boolArg(options.hash("button", false));
 
         StringBuilder buf = new StringBuilder();
         buf.append(!button ? "<img" : "<input type=\"image\"");
-        HelperUtils.appendAttr(buf, "src", src);
+        HelperUtil.appendAttr(buf, "src", src);
         Dimension imageSize = getImageSize(src.toString());
         if (imageSize != null) {
-            HelperUtils.appendAttr(buf, "width", imageSize.width);
-            HelperUtils.appendAttr(buf, "height", imageSize.height);
+            HelperUtil.appendAttr(buf, "width", imageSize.width);
+            HelperUtil.appendAttr(buf, "height", imageSize.height);
         }
-        HelperUtils.appendAttr(buf, "alt", alt);
-        HelperUtils.appendAttr(buf, "title", title);
-        HelperUtils.appendAttr(buf, "class", klass);
-        HelperUtils.appendAttr(buf, "id", id);
-        HelperUtils.appendAttr(buf, "data-id", dataId);
-        HelperUtils.appendAttr(buf, "data-value", dataValue);
-        HelperUtils.appendAttr(buf, "style", style);
+        HelperUtil.appendAttr(buf, "alt", alt);
+        HelperUtil.appendAttr(buf, "title", title);
+        HelperUtil.appendAttr(buf, "class", klass);
+        HelperUtil.appendAttr(buf, "id", id);
+        HelperUtil.appendAttr(buf, "data-id", dataId);
+        HelperUtil.appendAttr(buf, "data-value", dataValue);
+        HelperUtil.appendAttr(buf, "style", style);
         buf.append('>');
         return new SafeString(buf);
     }
@@ -70,19 +70,19 @@ public class ImagesHelperSource {
                        CharSequence klass, Object dataId, Object dataValue, CharSequence id) {
         StringBuilder buf = new StringBuilder();
         buf.append("<img");
-        HelperUtils.appendAttr(buf, "src", src);
+        HelperUtil.appendAttr(buf, "src", src);
         Dimension imageSize = getImageSize(src.toString());
         if (imageSize != null) {
-            HelperUtils.appendAttr(buf, "width", imageSize.width);
-            HelperUtils.appendAttr(buf, "height", imageSize.height);
+            HelperUtil.appendAttr(buf, "width", imageSize.width);
+            HelperUtil.appendAttr(buf, "height", imageSize.height);
         }
-        HelperUtils.appendAttr(buf, "alt", alt);
-        HelperUtils.appendAttr(buf, "title", title);
-        HelperUtils.appendAttr(buf, "class", klass);
-        HelperUtils.appendAttr(buf, "data-id", dataId);
-        HelperUtils.appendAttr(buf, "data-value", dataValue);
-        HelperUtils.appendAttr(buf, "style", style);
-        HelperUtils.appendAttr(buf, "id", id);
+        HelperUtil.appendAttr(buf, "alt", alt);
+        HelperUtil.appendAttr(buf, "title", title);
+        HelperUtil.appendAttr(buf, "class", klass);
+        HelperUtil.appendAttr(buf, "data-id", dataId);
+        HelperUtil.appendAttr(buf, "data-value", dataValue);
+        HelperUtil.appendAttr(buf, "style", style);
+        HelperUtil.appendAttr(buf, "id", id);
         buf.append('>');
         return new SafeString(buf);
     }

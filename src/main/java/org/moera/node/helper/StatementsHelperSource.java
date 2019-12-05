@@ -21,39 +21,39 @@ public class StatementsHelperSource {
 
     public CharSequence assignIeq(String variableName, Object value1, Object value2, Options options)
             throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) == HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) == HelperUtil.intArg(1, value2);
         options.data(variableName, condition);
         return "";
     }
 
     public CharSequence assignIne(String variableName, Object value1, Object value2, Options options)
             throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) != HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) != HelperUtil.intArg(1, value2);
         options.data(variableName, condition);
         return "";
     }
 
     public CharSequence assignDivisive(String variableName, Object value1, Object value2, Options options)
             throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) % HelperUtils.intArg(1, value2) == 0;
+        boolean condition = HelperUtil.intArg(0, value1) % HelperUtil.intArg(1, value2) == 0;
         options.data(variableName, condition);
         return "";
     }
 
     public CharSequence not(Object value) {
-        return HelperUtils.boolResult(!HelperUtils.boolArg(value));
+        return HelperUtil.boolResult(!HelperUtil.boolArg(value));
     }
 
     public CharSequence and(Object left, Object right) {
-        return HelperUtils.boolResult(HelperUtils.boolArg(left) && HelperUtils.boolArg(right));
+        return HelperUtil.boolResult(HelperUtil.boolArg(left) && HelperUtil.boolArg(right));
     }
 
     public CharSequence or(Object left, Object right) {
-        return HelperUtils.boolResult(HelperUtils.boolArg(left) || HelperUtils.boolArg(right));
+        return HelperUtil.boolResult(HelperUtil.boolArg(left) || HelperUtil.boolArg(right));
     }
 
     public CharSequence neg(Object value) {
-        return Long.toString(-HelperUtils.intArg(1, value));
+        return Long.toString(-HelperUtil.intArg(1, value));
     }
 
     public CharSequence ifset(Object value, Options options) throws IOException {
@@ -75,38 +75,38 @@ public class StatementsHelperSource {
     }
 
     public CharSequence ifieq(Object value1, Object value2, Options options) throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) == HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) == HelperUtil.intArg(1, value2);
         return condition ? options.apply(options.fn) : options.apply(options.inverse);
     }
 
     public CharSequence ifine(Object value1, Object value2, Options options) throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) != HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) != HelperUtil.intArg(1, value2);
         return condition ? options.apply(options.fn) : options.apply(options.inverse);
     }
 
     public CharSequence ifgt(Object value1, Object value2, Options options) throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) > HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) > HelperUtil.intArg(1, value2);
         return condition ? options.apply(options.fn) : options.apply(options.inverse);
     }
 
     public CharSequence iflt(Object value1, Object value2, Options options) throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) < HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) < HelperUtil.intArg(1, value2);
         return condition ? options.apply(options.fn) : options.apply(options.inverse);
     }
 
     public CharSequence ifge(Object value1, Object value2, Options options) throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) >= HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) >= HelperUtil.intArg(1, value2);
         return condition ? options.apply(options.fn) : options.apply(options.inverse);
     }
 
     public CharSequence ifle(Object value1, Object value2, Options options) throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) <= HelperUtils.intArg(1, value2);
+        boolean condition = HelperUtil.intArg(0, value1) <= HelperUtil.intArg(1, value2);
         return condition ? options.apply(options.fn) : options.apply(options.inverse);
     }
 
     public CharSequence ifbtw(Object value1, Object value2, Object value3, Options options) throws IOException {
-        boolean condition = HelperUtils.intArg(0, value1) >= HelperUtils.intArg(1, value2)
-                && HelperUtils.intArg(0, value1) < HelperUtils.intArg(2, value3);
+        boolean condition = HelperUtil.intArg(0, value1) >= HelperUtil.intArg(1, value2)
+                && HelperUtil.intArg(0, value1) < HelperUtil.intArg(2, value3);
         return condition ? options.apply(options.fn) : options.apply(options.inverse);
     }
 

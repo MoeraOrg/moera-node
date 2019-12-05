@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 import com.github.jknack.handlebars.Options;
 import org.moera.node.util.Util;
 
-public class HelperUtils {
+public class HelperUtil {
 
     public static void safeAppend(StringBuilder buf, Object s) {
         buf.append(Util.he(s));
@@ -123,7 +123,7 @@ public class HelperUtils {
         if (value instanceof Timestamp) {
             return ((Timestamp) value).toLocalDateTime();
         }
-        return Instant.ofEpochMilli(HelperUtils.intArg(paramName, value))
+        return Instant.ofEpochMilli(HelperUtil.intArg(paramName, value))
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
     }

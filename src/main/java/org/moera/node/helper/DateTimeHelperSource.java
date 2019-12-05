@@ -19,10 +19,10 @@ public class DateTimeHelperSource {
     private RequestContext requestContext;
 
     public CharSequence cal(String pattern, Options options) {
-        Long epochSeconds = HelperUtils.integerArg("es", options.hash("es"));
+        Long epochSeconds = HelperUtil.integerArg("es", options.hash("es"));
         LocalDateTime timestamp = epochSeconds != null
                 ? Util.toTimestamp(epochSeconds).toLocalDateTime()
-                : HelperUtils.timestampArg("date", options.hash("date"));
+                : HelperUtil.timestampArg("date", options.hash("date"));
         Calendar calendar = Calendar.getInstance();
         Util.copyToCalendar(timestamp, calendar);
         String exactDate = new SimpleDateFormat(pattern, Locale.ENGLISH).format(calendar);
