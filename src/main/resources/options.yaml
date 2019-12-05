@@ -98,6 +98,11 @@
     min: 1h
     max: 2000d
 
+- name: posting.subject.present
+  type: bool
+  defaultValue: false
+  title: "Postings have titles"
+
 - name: posting.time.relative
   type: bool
   defaultValue: false

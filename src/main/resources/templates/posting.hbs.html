@@ -9,13 +9,16 @@
         {{#ifne posting.receiverName registeredName.name}}
             &#x25b8; {{regname posting.receiverName}}
         {{/ifne}}
+        <span class="date">
+            {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt fromNow="posting.time.relative"}}
+            {{#ifgt posting.totalRevisions 1}}
+                (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
+            {{/ifgt}}
+        </span>
     </div>
-    <div class="date">
-        {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt fromNow="posting.time.relative"}}
-        {{#ifgt posting.totalRevisions 1}}
-            (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
-        {{/ifgt}}
-    </div>
+    {{#if posting.body.subject}}
+        <div class="subject">{{posting.body.subject}}</div>
+    {{/if}}
     <div class="content">{{{posting.body.text}}}</div>
 </div>
 

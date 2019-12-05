@@ -55,6 +55,14 @@ public class Body {
         decode();
     }
 
+    public String getSubject() {
+        return decoded.getSubject();
+    }
+
+    public void setSubject(String subject) {
+        decoded.setSubject(subject);
+    }
+
     public String getText() {
         return decoded.getText();
     }

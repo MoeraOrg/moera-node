@@ -14,13 +14,20 @@
             {{#ifne receiverName registeredName.name}}
                 &#x25b8; {{regname receiverName}}
             {{/ifne}}
+            <span class="date">
+                <a href="/post/{{id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt fromNow="posting.time.relative"}}</a>
+                {{#ifgt totalRevisions 1}}
+                    (updated {{cal "dd-MM-yyyy HH:mm" es=editedAt fromNow="posting.time.relative"}})
+                {{/ifgt}}
+            </span>
         </div>
-        <div class="date">
-            <a href="/post/{{id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt fromNow="posting.time.relative"}}</a>
-            {{#ifgt totalRevisions 1}}
-                (updated {{cal "dd-MM-yyyy HH:mm" es=editedAt fromNow="posting.time.relative"}})
-            {{/ifgt}}
-        </div>
+        {{#if bodyPreview.subject}}
+            <div class="subject">{{bodyPreview.subject}}</div>
+        {{else}}
+            {{#if body.subject}}
+                <div class="subject">{{body.subject}}</div>
+            {{/if}}
+        {{/if}}
         {{#if bodyPreview.text}}
             <div class="content">
                 <div>{{{bodyPreview.text}}}</div>

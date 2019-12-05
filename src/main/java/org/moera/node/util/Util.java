@@ -96,4 +96,18 @@ public class Util extends org.moera.commons.util.Util {
         return boolValue != null ? boolValue : defaultValue;
     }
 
+    public static void ellipsize(StringBuilder buf, int size) {
+        if (buf != null && buf.length() > size) {
+            buf.setLength(size);
+            buf.append('\u2026');
+        }
+    }
+
+    public static String ellipsize(String s, int size) {
+        if (s != null && s.length() > size) {
+            return s.substring(0, size) + '\u2026';
+        }
+        return s;
+    }
+
 }

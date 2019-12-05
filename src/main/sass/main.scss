@@ -62,8 +62,17 @@ SUB.generation {
     margin-top: 1rem;
     padding: 0.5rem;
 
+    .subject {
+        font-weight: 500;
+        font-size: 1.75rem;
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+        color: #385898;
+    }
+
     .owner {
         font-weight: bold;
+        margin-bottom: 0.2em;
 
         A {
             color: #385898;
@@ -73,8 +82,7 @@ SUB.generation {
     .date {
         font-size: 0.8rem;
         color: #a9a9a9;
-        position: relative;
-        top: -0.2rem;
+        margin-left: 0.5em;
 
         A {
             color: inherit;

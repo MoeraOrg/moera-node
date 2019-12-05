@@ -20,6 +20,7 @@ public class TextConverter {
 
     public static Body toHtml(SourceFormat format, Body source) {
         Body converted = new Body();
+        converted.setSubject(source.getSubject());
         converted.setText(toHtml(format, source.getText()));
         return converted;
     }

@@ -6,12 +6,17 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
 import org.moera.node.model.Body;
+import org.moera.node.util.Util;
+import org.springframework.util.StringUtils;
 
 public class HeadingExtractor {
 
-    private static final int HEADING_LENGTH = 40;
+    private static final int HEADING_LENGTH = 65;
 
     public static String extract(Body body) {
+        if (!StringUtils.isEmpty(body.getSubject())) {
+            return Util.ellipsize(body.getSubject(), HEADING_LENGTH);
+        }
         return extract(body.getText());
     }
 
@@ -40,8 +45,7 @@ public class HeadingExtractor {
                     }
                     result.append(clear(text));
                     if (result.length() >= HEADING_LENGTH) {
-                        result.setLength(HEADING_LENGTH);
-                        result.append('\u2026');
+                        Util.ellipsize(result, HEADING_LENGTH);
                         return FilterResult.STOP;
                     }
                 }

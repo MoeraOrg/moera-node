@@ -7,8 +7,11 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
 import org.moera.node.model.Body;
+import org.moera.node.util.Util;
 
 public class Shortener {
+
+    private static final int SHORT_TITLE_MAX = 70;
 
     private static final int SHORT_TEXT_MIN = 400;
     private static final int SHORT_TEXT_AVG = 700;
@@ -18,16 +21,18 @@ public class Shortener {
     private static final String PHRASE_END = ":,;)";
 
     public static boolean isShort(Body body) {
-        return isShort(body.getText());
-    }
-
-    private static boolean isShort(String html) {
-        return html.length() <= SHORT_TEXT_MAX;
+        return (body.getSubject() == null || body.getSubject().length() <= SHORT_TITLE_MAX)
+                && body.getText().length() <= SHORT_TEXT_MAX;
     }
 
     public static Body shorten(Body body) {
         Body shortened = new Body();
-        shortened.setText(shorten(body.getText()));
+        if (body.getSubject() != null && body.getSubject().length() > SHORT_TITLE_MAX) {
+            shortened.setSubject(Util.ellipsize(body.getSubject(), SHORT_TITLE_MAX));
+        }
+        if (body.getText().length() > SHORT_TEXT_MAX) {
+            shortened.setText(shorten(body.getText()));
+        }
         return shortened;
     }
 

@@ -63,7 +63,7 @@ public class PostingController {
     public PostingFeatures getFeatures() {
         log.info("GET /postings/features");
 
-        return PostingFeatures.INSTANCE;
+        return new PostingFeatures(requestContext.getOptions());
     }
 
     @PostMapping
