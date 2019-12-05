@@ -2,7 +2,6 @@ package org.moera.node.model;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
@@ -12,8 +11,8 @@ import org.moera.node.util.Util;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingInfo {
 
-    private UUID id;
-    private UUID revisionId;
+    private String id;
+    private String revisionId;
     private int totalRevisions;
     private String receiverName;
     private String ownerName;
@@ -40,8 +39,8 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting, boolean includeSource) {
-        id = posting.getId();
-        revisionId = posting.getCurrentRevision().getId();
+        id = posting.getId().toString();
+        revisionId = posting.getCurrentRevision().getId().toString();
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
         ownerName = posting.getOwnerName();
@@ -66,19 +65,19 @@ public class PostingInfo {
         operations.put("revisions", new String[0]);
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public UUID getRevisionId() {
+    public String getRevisionId() {
         return revisionId;
     }
 
-    public void setRevisionId(UUID revisionId) {
+    public void setRevisionId(String revisionId) {
         this.revisionId = revisionId;
     }
 

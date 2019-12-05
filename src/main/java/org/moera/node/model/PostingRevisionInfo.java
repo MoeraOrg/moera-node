@@ -1,7 +1,5 @@
 package org.moera.node.model;
 
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
@@ -10,7 +8,7 @@ import org.moera.node.util.Util;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingRevisionInfo {
 
-    private UUID id;
+    private String id;
     private Body bodyPreview;
     private byte[] bodySrcHash;
     private String bodySrcFormat;
@@ -27,7 +25,7 @@ public class PostingRevisionInfo {
     }
 
     public PostingRevisionInfo(EntryRevision revision) {
-        id = revision.getId();
+        id = revision.getId().toString();
         bodyPreview = new Body(revision.getBodyPreview());
         bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat().getValue();
@@ -41,11 +39,11 @@ public class PostingRevisionInfo {
         moment = revision.getMoment();
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 

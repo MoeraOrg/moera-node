@@ -4,20 +4,20 @@ import java.util.UUID;
 
 public class AsyncOperationCreated {
 
-    private UUID id;
+    private String id;
 
     public AsyncOperationCreated() {
     }
 
     public AsyncOperationCreated(UUID id) {
-        this.id = id;
+        this.id = id.toString();
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 

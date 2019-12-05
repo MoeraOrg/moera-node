@@ -1,12 +1,10 @@
 package org.moera.node.event.model;
 
-import java.util.UUID;
-
 import org.moera.node.data.Posting;
 
 public class PostingEvent extends Event {
 
-    private UUID id;
+    private String id;
     private long moment;
 
     public PostingEvent(EventType type) {
@@ -15,15 +13,15 @@ public class PostingEvent extends Event {
 
     public PostingEvent(EventType type, Posting posting) {
         super(type);
-        this.id = posting.getId();
+        this.id = posting.getId().toString();
         this.moment = posting.getCurrentRevision().getMoment();
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 
