@@ -37,6 +37,17 @@ BODY {
     }
 }
 
+@media (max-width: 767px) {
+    #navbarNav {
+        position: absolute;
+        padding-right: 1rem;
+        top: 2.5em;
+        right: 1em;
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.75);
+        border: solid 1px #808080;
+    }
+}
+
 SUB.generation {
     position: relative;
     left: 0.2em;
