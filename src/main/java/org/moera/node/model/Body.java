@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.util.StdConverter;
 @JsonDeserialize(converter = Body.FromStringConverter.class)
 public class Body {
 
+    public static final String EMPTY = "{}";
+
     private String encoded;
     private BodyDecoded decoded = new BodyDecoded();
 

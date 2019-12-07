@@ -94,7 +94,7 @@ public class PostingText {
             if (!Shortener.isShort(decodedBody)) {
                 revision.setBodyPreview(Shortener.shorten(decodedBody).getEncoded());
             } else {
-                revision.setBodyPreview(new Body().getEncoded());
+                revision.setBodyPreview(Body.EMPTY);
             }
             revision.setHeading(HeadingExtractor.extract(decodedBody));
         }
