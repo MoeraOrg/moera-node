@@ -22,10 +22,10 @@
             </span>
         </div>
         {{#if bodyPreview.subject}}
-            <div class="subject">{{bodyPreview.subject}}</div>
+            <div class="subject"><a href="/post/{{id}}">{{bodyPreview.subject}}</a></div>
         {{else}}
             {{#if body.subject}}
-                <div class="subject">{{body.subject}}</div>
+                <div class="subject"><a href="/post/{{id}}">{{body.subject}}</a></div>
             {{/if}}
         {{/if}}
         {{#if bodyPreview.text}}
