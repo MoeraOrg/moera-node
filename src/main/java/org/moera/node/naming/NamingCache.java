@@ -104,9 +104,9 @@ public class NamingCache {
     }
 
     private void queryName(String name, Options options) {
-        DelegatedName delegatedName = DelegatedName.parse(name);
+        RegisteredName registeredName = RegisteredName.parse(name);
         RegisteredNameInfo info = namingClient.getCurrent(
-                delegatedName.getName(), delegatedName.getGeneration(), options);
+                registeredName.getName(), registeredName.getGeneration(), options);
         Record record = readRecord(name);
         if (record == null) {
             record = new Record();

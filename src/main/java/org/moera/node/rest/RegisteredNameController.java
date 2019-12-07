@@ -37,9 +37,9 @@ import org.moera.node.model.RegisteredNameInfo;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.naming.DelegatedName;
-import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.RegisteredName;
+import org.moera.node.naming.NamingClient;
+import org.moera.node.naming.NodeName;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -139,11 +139,11 @@ public class RegisteredNameController {
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
-        String registeredName = registeredNameSecret.getName() != null
+        String nodeName = registeredNameSecret.getName() != null
                 ? registeredNameSecret.getName() : options.getString("profile.registered-name");
-        DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(registeredName);
+        RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
 
-        if (StringUtils.isEmpty(delegatedName.getName()) || delegatedName.getGeneration() == null) {
+        if (StringUtils.isEmpty(registeredName.getName()) || registeredName.getGeneration() == null) {
             throw new ValidationFailure("registered-name.name-absent");
         }
         if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
@@ -181,7 +181,7 @@ public class RegisteredNameController {
                 signingKey = (ECPublicKey) signingKeyPair.getPublic();
             }
 
-            namingClient.update(delegatedName.getName(), delegatedName.getGeneration(), privateUpdatingKey,
+            namingClient.update(registeredName.getName(), registeredName.getGeneration(), privateUpdatingKey,
                     privateSigningKey, signingKey, options);
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);

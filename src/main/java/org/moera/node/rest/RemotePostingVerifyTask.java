@@ -19,9 +19,9 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.naming.DelegatedName;
-import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.RegisteredName;
+import org.moera.node.naming.NamingClient;
+import org.moera.node.naming.NodeName;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -83,22 +83,22 @@ public class RemotePostingVerifyTask implements Runnable {
 
     private void fetchNodeUri() {
         Options options = domains.getDomainOptions(data.getNodeId());
-        DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(data.getNodeName());
-        RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
-                ? namingClient.getCurrent(delegatedName.getName(), delegatedName.getGeneration(), options)
-                : namingClient.getCurrentForLatest(delegatedName.getName(), options);
+        RegisteredName registeredName = (RegisteredName) NodeName.parse(data.getNodeName());
+        RegisteredNameInfo nameInfo = registeredName.getGeneration() != null
+                ? namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), options)
+                : namingClient.getCurrentForLatest(registeredName.getName(), options);
         if (nameInfo != null) {
-            data.setNodeName(new DelegatedName(nameInfo.getName(), nameInfo.getGeneration()).toString());
+            data.setNodeName(new RegisteredName(nameInfo.getName(), nameInfo.getGeneration()).toString());
             nodeUri = UriUtil.normalize(nameInfo.getNodeUri());
         }
     }
 
     private void fetchSigningKey(String ownerName, long at) {
         Options options = domains.getDomainOptions(data.getNodeId());
-        DelegatedName delegatedName = (DelegatedName) RegisteredName.parse(ownerName);
-        RegisteredNameInfo nameInfo = delegatedName.getGeneration() != null
-                    ? namingClient.getPast(delegatedName.getName(), delegatedName.getGeneration(), at, options)
-                    : namingClient.getPastForLatest(delegatedName.getName(), at, options);
+        RegisteredName registeredName = (RegisteredName) NodeName.parse(ownerName);
+        RegisteredNameInfo nameInfo = registeredName.getGeneration() != null
+                    ? namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, options)
+                    : namingClient.getPastForLatest(registeredName.getName(), at, options);
         signingKey = nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
