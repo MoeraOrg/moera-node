@@ -56,10 +56,29 @@ public class RssController {
         feed.setLanguage("en-us");
         feed.setPublishedDate(!postings.isEmpty() ? postings.get(0).getCreatedAt() : Util.now());
         feed.setGenerator("moera-node");
+        feed.setWebMaster(buildWebmaster());
 
         feed.setEntries(postings.stream().map(this::buildEntry).collect(Collectors.toList()));
 
         return feed;
+    }
+
+    private String buildWebmaster() {
+        String name = requestContext.getOptions().getString("webmaster.name");
+        String email = requestContext.getOptions().getString("webmaster.email");
+        if (StringUtils.isEmpty(name)) {
+            if (StringUtils.isEmpty(email)) {
+                return null;
+            } else {
+                return email;
+            }
+        } else {
+            if (StringUtils.isEmpty(email)) {
+                return name;
+            } else {
+                return String.format("%s (%s)", email, name);
+            }
+        }
     }
 
     private SyndEntry buildEntry(Posting posting) {

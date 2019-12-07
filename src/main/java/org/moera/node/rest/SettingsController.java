@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.event.EventManager;
@@ -89,6 +90,7 @@ public class SettingsController {
     }
 
     @PutMapping
+    @Transactional
     @Admin
     public Result put(@RequestBody @Valid List<SettingInfo> settings) {
         log.info("PUT /settings");

@@ -90,6 +90,16 @@
     min: 10m
     max: 7d
 
+- name: webmaster.name
+  type: string
+  defaultValue:
+  title: Webmaster name
+
+- name: webmaster.email
+  type: string
+  defaultValue:
+  title: Webmaster e-mail
+
 - name: token.lifetime
   type: Duration
   defaultValue: 365d
