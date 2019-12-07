@@ -57,6 +57,9 @@ public class EntryRevision {
     @NotNull
     private byte[] signature = new byte[0];
 
+    @NotNull
+    private short signatureVersion;
+
     public UUID getId() {
         return id;
     }
@@ -159,6 +162,14 @@ public class EntryRevision {
 
     public void setSignature(byte[] signature) {
         this.signature = signature;
+    }
+
+    public short getSignatureVersion() {
+        return signatureVersion;
+    }
+
+    public void setSignatureVersion(short signatureVersion) {
+        this.signatureVersion = signatureVersion;
     }
 
 }

@@ -1,18 +1,22 @@
 package org.moera.node.rest;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.crypto.Fingerprint;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
-import org.moera.node.event.model.RemotePostingVerifiedEvent;
 import org.moera.node.event.model.RemotePostingVerificationFailedEvent;
-import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.event.model.RemotePostingVerifiedEvent;
+import org.moera.node.fingerprint.FingerprintManager;
+import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.naming.DelegatedName;
@@ -51,6 +55,9 @@ public class RemotePostingVerifyTask implements Runnable {
 
     @Inject
     private RemotePostingVerificationRepository remotePostingVerificationRepository;
+
+    @Inject
+    private FingerprintManager fingerprintManager;
 
     public RemotePostingVerifyTask(RemotePostingVerification data) {
         this.data = data;
@@ -115,17 +122,39 @@ public class RemotePostingVerifyTask implements Runnable {
         }
     }
 
+    private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {
+        Class<? extends Fingerprint> fingerprintClass = fingerprintManager.get(FingerprintObjectType.POSTING, version);
+        if (fingerprintClass == null) {
+            return null;
+        }
+        try {
+            return fingerprintClass.getConstructor(parameterTypes);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
+
     private void verifySignature(PostingInfo postingInfo) {
         fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
         if (signingKey == null) {
             succeeded(false);
             return;
         }
-        data.setRevisionId(postingInfo.getRevisionId().toString());
-        succeeded(CryptoUtil.verify(
-                new PostingFingerprint(postingInfo),
-                postingInfo.getSignature(),
-                signingKey));
+        data.setRevisionId(postingInfo.getRevisionId());
+        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
+                postingInfo.getSignatureVersion(), PostingInfo.class);
+        if (constructor == null) {
+            succeeded(false);
+            return;
+        }
+        try {
+            succeeded(CryptoUtil.verify(
+                    constructor.newInstance(postingInfo),
+                    postingInfo.getSignature(),
+                    signingKey));
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            succeeded(false);
+        }
     }
 
     private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
@@ -134,10 +163,20 @@ public class RemotePostingVerifyTask implements Runnable {
             succeeded(false);
             return;
         }
-        succeeded(CryptoUtil.verify(
-                new PostingFingerprint(postingInfo, postingRevisionInfo),
-                postingRevisionInfo.getSignature(),
-                signingKey));
+        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
+                postingInfo.getSignatureVersion(), PostingInfo.class, PostingRevisionInfo.class);
+        if (constructor == null) {
+            succeeded(false);
+            return;
+        }
+        try {
+            succeeded(CryptoUtil.verify(
+                    constructor.newInstance(postingInfo, postingRevisionInfo),
+                    postingRevisionInfo.getSignature(),
+                    signingKey));
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            succeeded(false);
+        }
     }
 
     private void error(Throwable e) {

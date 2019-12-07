@@ -19,6 +19,7 @@ public class PostingRevisionInfo {
     private long publishedAt;
     private Long deletedAt;
     private byte[] signature;
+    private short signatureVersion;
     private long moment;
 
     public PostingRevisionInfo() {
@@ -36,6 +37,7 @@ public class PostingRevisionInfo {
         publishedAt = Util.toEpochSecond(revision.getPublishedAt());
         deletedAt = Util.toEpochSecond(revision.getDeletedAt());
         signature = revision.getSignature();
+        signatureVersion = revision.getSignatureVersion();
         moment = revision.getMoment();
     }
 
@@ -125,6 +127,14 @@ public class PostingRevisionInfo {
 
     public void setSignature(byte[] signature) {
         this.signature = signature;
+    }
+
+    public short getSignatureVersion() {
+        return signatureVersion;
+    }
+
+    public void setSignatureVersion(short signatureVersion) {
+        this.signatureVersion = signatureVersion;
     }
 
     public long getMoment() {

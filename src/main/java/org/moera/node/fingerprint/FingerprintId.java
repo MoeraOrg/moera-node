@@ -5,12 +5,12 @@ import java.util.Objects;
 public class FingerprintId {
 
     private FingerprintObjectType objectType;
-    private byte version;
+    private short version;
 
     public FingerprintId() {
     }
 
-    public FingerprintId(FingerprintObjectType objectType, byte version) {
+    public FingerprintId(FingerprintObjectType objectType, short version) {
         this.objectType = objectType;
         this.version = version;
     }
@@ -27,11 +27,11 @@ public class FingerprintId {
         this.objectType = objectType;
     }
 
-    public byte getVersion() {
+    public short getVersion() {
         return version;
     }
 
-    public void setVersion(byte version) {
+    public void setVersion(short version) {
         this.version = version;
     }
 

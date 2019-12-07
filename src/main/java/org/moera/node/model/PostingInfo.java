@@ -28,6 +28,7 @@ public class PostingInfo {
     private Long deletedAt;
     private long publishedAt;
     private byte[] signature;
+    private short signatureVersion;
     private long moment;
     private Map<String, String[]> operations;
 
@@ -58,6 +59,7 @@ public class PostingInfo {
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
         signature = posting.getCurrentRevision().getSignature();
+        signatureVersion = posting.getCurrentRevision().getSignatureVersion();
         moment = posting.getCurrentRevision().getMoment();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
@@ -199,6 +201,14 @@ public class PostingInfo {
 
     public void setSignature(byte[] signature) {
         this.signature = signature;
+    }
+
+    public short getSignatureVersion() {
+        return signatureVersion;
+    }
+
+    public void setSignatureVersion(short signatureVersion) {
+        this.signatureVersion = signatureVersion;
     }
 
     public long getMoment() {

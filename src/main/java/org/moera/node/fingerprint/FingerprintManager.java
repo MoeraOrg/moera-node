@@ -27,7 +27,7 @@ public class FingerprintManager {
                 ));
     }
 
-    public Class<? extends Fingerprint> get(FingerprintObjectType objectType, byte version) {
+    public Class<? extends Fingerprint> get(FingerprintObjectType objectType, short version) {
         return fingerints.get(new FingerprintId(objectType, version));
     }
 

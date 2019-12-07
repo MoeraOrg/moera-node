@@ -84,6 +84,7 @@ public class Updater {
         Posting posting = (Posting) revision.getEntry();
         PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
         revision.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
+        revision.setSignatureVersion(PostingFingerprint.VERSION);
         log.info("Signature upgraded for entry {}, revision {}", posting.getId(), revision.getId());
     }
 

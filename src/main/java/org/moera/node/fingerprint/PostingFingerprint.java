@@ -11,6 +11,8 @@ import org.moera.node.util.Util;
 @FingerprintVersion(objectType = FingerprintObjectType.POSTING, version = 0)
 public class PostingFingerprint extends Fingerprint {
 
+    public static final short VERSION = 0;
+
     public String objectType = FingerprintObjectType.POSTING.name();
     public String receiverName;
     public String ownerName;
