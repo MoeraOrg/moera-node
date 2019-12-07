@@ -1,5 +1,7 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -9,6 +11,8 @@ import javax.transaction.Transactional;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.domain.Domains;
+import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingRestoredEvent;
 import org.moera.node.global.Admin;
@@ -19,8 +23,10 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +50,9 @@ public class DeletedPostingController {
 
     @Inject
     private EventManager eventManager;
+
+    @Inject
+    private Domains domains;
 
     @GetMapping
     @Admin
@@ -99,6 +108,16 @@ public class DeletedPostingController {
         eventManager.send(new PostingRestoredEvent(posting));
 
         return new PostingInfo(posting);
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @EventListener(DomainsConfiguredEvent.class)
+    @Transactional
+    public void purgeExpired() {
+        domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(options -> {
+            Timestamp ts = Timestamp.from(Instant.now().minus(options.getDuration("posting.deleted.lifetime")));
+            postingRepository.deleteExpired(options.nodeId(), ts);
+        });
     }
 
 }

@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -7,6 +8,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface PostingRepository extends JpaRepository<Posting, UUID> {
@@ -38,5 +40,9 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Query("select p from Posting p left join p.currentRevision where p.nodeId = ?1 and p.id = ?2"
             + " and p.deletedAt is not null")
     Optional<Posting> findDeletedById(UUID nodeId, UUID id);
+
+    @Query("delete from Posting p where p.nodeId = ?1 and p.deletedAt < ?2")
+    @Modifying
+    void deleteExpired(UUID nodeId, Timestamp deletedBefore);
 
 }
