@@ -6,4 +6,8 @@ public interface NodeName {
         return RegisteredName.parse(name);
     }
 
+    static String shorten(String name) {
+        return RegisteredName.shorten(name);
+    }
+
 }

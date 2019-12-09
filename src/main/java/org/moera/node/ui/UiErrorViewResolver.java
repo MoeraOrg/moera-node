@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class UiErrorViewResolver implements ErrorViewResolver {
 
     @Inject
+    @Lazy
     private TitleBuilder titleBuilder;
 
     @Override

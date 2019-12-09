@@ -32,6 +32,10 @@ public class RegisteredName implements NodeName {
         return result;
     }
 
+    public static String shorten(String registeredName) {
+        return parse(registeredName).getName();
+    }
+
     public String getName() {
         return name;
     }
