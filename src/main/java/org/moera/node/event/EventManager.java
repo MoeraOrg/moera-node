@@ -73,15 +73,10 @@ public class EventManager {
             return;
         }
         UUID nodeId = domains.getDomainNodeId(accessor.getHost());
-        if (nodeId == null) {
-            log.info("Ignoring session {} with unknown host {}", accessor.getSessionId(), accessor.getHost());
-            return;
-        }
+        nodeId = nodeId != null ? nodeId : domains.getDomainNodeId(Domains.DEFAULT_DOMAIN);
         boolean admin = false;
         try {
-            admin = authenticationManager.isAdminToken(
-                    accessor.getFirstNativeHeader(TOKEN_HEADER),
-                    domains.getDomainNodeId(accessor.getHost()));
+            admin = authenticationManager.isAdminToken(accessor.getFirstNativeHeader(TOKEN_HEADER), nodeId);
         } catch (InvalidTokenException e) { // Ignore, the client will detect the problem from REST API requests
         }
         MDC.put("domain", domains.getDomainEffectiveName(accessor.getHost()));
