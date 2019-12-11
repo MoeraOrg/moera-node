@@ -16,6 +16,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class NamingCache {
     private TaskExecutor taskExecutor;
 
     @Inject
+    @Lazy
     private NamingClient namingClient;
 
     @Inject
