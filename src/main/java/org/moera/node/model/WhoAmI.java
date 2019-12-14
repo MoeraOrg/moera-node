@@ -6,21 +6,21 @@ import org.moera.node.option.Options;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WhoAmI {
 
-    private String registeredName;
+    private String nodeName;
 
     public WhoAmI() {
     }
 
     public WhoAmI(Options options) {
-        registeredName = options.getString("profile.registered-name");
+        nodeName = options.getString("profile.node-name");
     }
 
-    public String getRegisteredName() {
-        return registeredName;
+    public String getNodeName() {
+        return nodeName;
     }
 
-    public void setRegisteredName(String registeredName) {
-        this.registeredName = registeredName;
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
 }

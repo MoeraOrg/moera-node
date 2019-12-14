@@ -5,9 +5,9 @@
 
 <div class="posting">
     <div class="owner">
-        {{regname posting.ownerName}}
-        {{#ifne posting.receiverName registeredName.name}}
-            &#x25b8; {{regname posting.receiverName}}
+        {{nodename posting.ownerName}}
+        {{#ifne posting.receiverName nodeName.name}}
+            &#x25b8; {{nodename posting.receiverName}}
         {{/ifne}}
         <span class="date">
             {{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt fromNow="posting.time.relative"}}

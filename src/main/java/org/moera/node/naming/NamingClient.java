@@ -26,7 +26,7 @@ import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
-import org.moera.node.event.model.RegisteredNameChangedEvent;
+import org.moera.node.event.model.NodeNameChangedEvent;
 import org.moera.node.event.model.RegisteredNameOperationStatusEvent;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
@@ -190,11 +190,11 @@ public class NamingClient {
     private void commitOperation(Options options) {
         String name = options.getString("naming.operation.registered-name");
         Integer generation = options.getInt("naming.operation.registered-name.generation");
-        String prevRegisteredName = options.getString("profile.registered-name");
+        String prevRegisteredName = options.getString("profile.node-name");
         String newRegisteredName = new RegisteredName(name, generation).toString();
-        options.set("profile.registered-name", newRegisteredName);
+        options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
-            eventManager.send(options.nodeId(), new RegisteredNameChangedEvent(newRegisteredName));
+            eventManager.send(options.nodeId(), new NodeNameChangedEvent(newRegisteredName));
         }
 
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");

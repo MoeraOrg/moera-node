@@ -1,14 +1,14 @@
 package org.moera.node.event.model;
 
-public class RegisteredNameChangedEvent extends Event {
+public class NodeNameChangedEvent extends Event {
 
     private String name;
 
-    public RegisteredNameChangedEvent() {
-        super(EventType.REGISTERED_NAME_CHANGED);
+    public NodeNameChangedEvent() {
+        super(EventType.NODE_NAME_CHANGED);
     }
 
-    public RegisteredNameChangedEvent(String name) {
+    public NodeNameChangedEvent(String name) {
         this();
         this.name = name;
     }

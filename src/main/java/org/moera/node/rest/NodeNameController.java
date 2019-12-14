@@ -27,13 +27,13 @@ import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.event.EventManager;
-import org.moera.node.event.model.RegisteredNameChangedEvent;
+import org.moera.node.event.model.NodeNameChangedEvent;
 import org.moera.node.global.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.RegisteredNameInfo;
+import org.moera.node.model.NodeNameInfo;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -53,10 +53,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
-@RequestMapping("/moera/api/registered-name")
-public class RegisteredNameController {
+@RequestMapping("/moera/api/node-name")
+public class NodeNameController {
 
-    private static Logger log = LoggerFactory.getLogger(RegisteredNameController.class);
+    private static Logger log = LoggerFactory.getLogger(NodeNameController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -68,10 +68,10 @@ public class RegisteredNameController {
     private EventManager eventManager;
 
     @GetMapping
-    public RegisteredNameInfo get() {
-        log.info("GET /registered-name");
+    public NodeNameInfo get() {
+        log.info("GET /node-name");
 
-        return new RegisteredNameInfo(requestContext);
+        return new NodeNameInfo(requestContext);
     }
 
     @PostMapping
@@ -82,7 +82,7 @@ public class RegisteredNameController {
             throw new OperationFailure("nameToRegister.name.invalid");
         }
 
-        log.info("POST /registered-name (name = '{}')", nameToRegister.getName());
+        log.info("POST /node-name (name = '{}')", nameToRegister.getName());
 
         Options options = requestContext.getOptions();
         if (options.getUuid("naming.operation.id") != null) {
@@ -133,18 +133,18 @@ public class RegisteredNameController {
     @Admin
     @Transactional
     public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret) {
-        log.info("PUT /registered-name");
+        log.info("PUT /node-name");
 
         Options options = requestContext.getOptions();
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
         String nodeName = registeredNameSecret.getName() != null
-                ? registeredNameSecret.getName() : options.getString("profile.registered-name");
+                ? registeredNameSecret.getName() : options.getString("profile.node-name");
         RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
 
         if (StringUtils.isEmpty(registeredName.getName()) || registeredName.getGeneration() == null) {
-            throw new ValidationFailure("registered-name.name-absent");
+            throw new ValidationFailure("node-name.name-absent");
         }
         if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
                 && StringUtils.isEmpty(registeredNameSecret.getSecret())) {
@@ -186,7 +186,7 @@ public class RegisteredNameController {
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {
-            throw new OperationFailure("registered-name." + of.getErrorCode());
+            throw new OperationFailure("node-name." + of.getErrorCode());
         }
 
         return Result.OK;
@@ -196,16 +196,16 @@ public class RegisteredNameController {
     @Admin
     @Transactional
     public Result delete() {
-        log.info("DELETE /registered-name");
+        log.info("DELETE /node-name");
 
         if (requestContext.getOptions().getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
         requestContext.getOptions().runInTransaction(options -> {
-            options.reset("profile.registered-name");
+            options.reset("profile.node-name");
             options.reset("profile.signing-key");
         });
-        eventManager.send(new RegisteredNameChangedEvent(""));
+        eventManager.send(new NodeNameChangedEvent(""));
 
         return Result.OK;
     }

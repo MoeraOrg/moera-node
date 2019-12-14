@@ -78,9 +78,9 @@ public class PostingController {
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
         Options options = requestContext.getOptions();
-        String name = options.getString("profile.registered-name");
+        String name = options.getString("profile.node-name");
         if (name == null) {
-            throw new OperationFailure("posting.registered-name-not-set");
+            throw new OperationFailure("posting.node-name-not-set");
         }
 
         Posting posting = new Posting();

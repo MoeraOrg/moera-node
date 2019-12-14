@@ -26,7 +26,7 @@ public class RegisteredName implements NodeName {
             try {
                 result.setGeneration(Integer.parseInt(parts[1]));
             } catch (NumberFormatException e) {
-                throw new RegisteredNameParsingException("Invalid value for generation: " + parts[1]);
+                throw new NodeNameParsingException("Invalid value for generation: " + parts[1]);
             }
         }
         return result;

@@ -9,7 +9,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RegisteredNameInfo {
+public class NodeNameInfo {
 
     private String name;
     private String operationStatus;
@@ -18,12 +18,12 @@ public class RegisteredNameInfo {
     private String operationErrorMessage;
     private Map<String, String[]> operations;
 
-    public RegisteredNameInfo() {
+    public NodeNameInfo() {
     }
 
-    public RegisteredNameInfo(RequestContext requestContext) {
+    public NodeNameInfo(RequestContext requestContext) {
         Options options = requestContext.getOptions();
-        name = options.getString("profile.registered-name");
+        name = options.getString("profile.node-name");
         if (requestContext.isAdmin()) {
             operationStatus = options.getString("naming.operation.status");
             OperationStatus status = OperationStatus.forValue(operationStatus);

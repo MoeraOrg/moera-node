@@ -4,7 +4,7 @@ import javax.inject.Inject;
 
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
-import org.moera.node.model.RegisteredNameInfo;
+import org.moera.node.model.NodeNameInfo;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -17,7 +17,7 @@ public class GlobalsControllerAdvice {
 
     @ModelAttribute
     public void session(Model model) {
-        model.addAttribute("registeredName", new RegisteredNameInfo(requestContext.getPublic()));
+        model.addAttribute("nodeName", new NodeNameInfo(requestContext.getPublic()));
         model.addAttribute("siteUrl", requestContext.getSiteUrl());
     }
 

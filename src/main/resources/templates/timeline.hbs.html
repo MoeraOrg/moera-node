@@ -10,9 +10,9 @@
     <a name="m{{moment}}"></a>
     <div class="posting">
         <div class="owner">
-            {{regname ownerName}}
-            {{#ifne receiverName registeredName.name}}
-                &#x25b8; {{regname receiverName}}
+            {{nodename ownerName}}
+            {{#ifne receiverName nodeName.name}}
+                &#x25b8; {{nodename receiverName}}
             {{/ifne}}
             <span class="date">
                 <a href="/post/{{id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt fromNow="posting.time.relative"}}</a>

@@ -62,7 +62,7 @@
   type: string
   internal: true
 
-- name: profile.registered-name
+- name: profile.node-name
   type: string
   internal: true
 
