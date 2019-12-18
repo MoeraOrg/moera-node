@@ -1,8 +1,8 @@
 package org.moera.node.fingerprint;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 import org.moera.commons.crypto.Fingerprint;
 
@@ -16,10 +16,10 @@ public class CarteFingerprint extends Fingerprint {
     public byte permissions; // TODO for future use
     public byte[] salt;
 
-    public CarteFingerprint(String ownerName) {
+    public CarteFingerprint(String ownerName, Duration ttl) {
         super(0);
         this.ownerName = ownerName;
-        deadline = Instant.now().plus(15, ChronoUnit.MINUTES).getEpochSecond();
+        deadline = Instant.now().plus(ttl).getEpochSecond();
         salt = new byte[8];
         new SecureRandom().nextBytes(salt);
     }
