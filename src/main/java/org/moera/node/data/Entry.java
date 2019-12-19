@@ -60,6 +60,9 @@ public class Entry {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    private Set<ReactionTotal> reactionTotals = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -138,6 +141,14 @@ public class Entry {
 
     public void setRevisions(Set<EntryRevision> revisions) {
         this.revisions = revisions;
+    }
+
+    public Set<ReactionTotal> getReactionTotals() {
+        return reactionTotals;
+    }
+
+    public void setReactionTotals(Set<ReactionTotal> reactionTotals) {
+        this.reactionTotals = reactionTotals;
     }
 
 }

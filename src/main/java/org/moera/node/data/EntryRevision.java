@@ -1,11 +1,15 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -54,11 +58,16 @@ public class EntryRevision {
     @NotNull
     private long moment;
 
-    @NotNull
-    private byte[] signature = new byte[0];
+    private byte[] signature;
 
     @NotNull
     private short signatureVersion;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
+    private Set<Reaction> reactions = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
+    private Set<ReactionTotal> reactionTotals = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -170,6 +179,22 @@ public class EntryRevision {
 
     public void setSignatureVersion(short signatureVersion) {
         this.signatureVersion = signatureVersion;
+    }
+
+    public Set<Reaction> getReactions() {
+        return reactions;
+    }
+
+    public void setReactions(Set<Reaction> reactions) {
+        this.reactions = reactions;
+    }
+
+    public Set<ReactionTotal> getReactionTotals() {
+        return reactionTotals;
+    }
+
+    public void setReactionTotals(Set<ReactionTotal> reactionTotals) {
+        this.reactionTotals = reactionTotals;
     }
 
 }

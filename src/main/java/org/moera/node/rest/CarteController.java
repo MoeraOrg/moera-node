@@ -61,7 +61,7 @@ public class CarteController {
                 CarteInfo carteInfo = new CarteInfo();
                 carteInfo.setCarte(Carte.generate(ownerName, InetAddress.getByName(request.getLocalAddr()),
                         beginning, signingKey));
-                carteInfo.setBeginning(beginning.minusSeconds(60).getEpochSecond());
+                carteInfo.setBeginning(beginning.minusSeconds(120).getEpochSecond());
                 beginning = Carte.getDeadline(beginning);
                 carteInfo.setDeadline(beginning.getEpochSecond());
                 cartes.add(carteInfo);
