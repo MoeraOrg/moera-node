@@ -14,7 +14,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.Event;
-import org.moera.node.global.Admin;
+import org.moera.node.auth.Admin;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;

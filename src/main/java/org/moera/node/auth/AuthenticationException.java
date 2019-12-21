@@ -1,4 +1,4 @@
-package org.moera.node.global;
+package org.moera.node.auth;
 
 public class AuthenticationException extends Exception {
 

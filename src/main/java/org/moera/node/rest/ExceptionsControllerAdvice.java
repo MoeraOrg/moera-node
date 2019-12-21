@@ -4,8 +4,8 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import org.moera.node.global.ApiController;
-import org.moera.node.global.AuthenticationException;
-import org.moera.node.global.InvalidTokenException;
+import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;

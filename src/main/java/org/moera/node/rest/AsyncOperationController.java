@@ -6,7 +6,7 @@ import javax.inject.Inject;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
-import org.moera.node.global.Admin;
+import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;

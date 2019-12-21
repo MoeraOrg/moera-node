@@ -15,7 +15,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingRestoredEvent;
-import org.moera.node.global.Admin;
+import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;

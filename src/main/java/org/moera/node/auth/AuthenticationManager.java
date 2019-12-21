@@ -1,4 +1,4 @@
-package org.moera.node.global;
+package org.moera.node.auth;
 
 import java.util.UUID;
 import javax.inject.Inject;

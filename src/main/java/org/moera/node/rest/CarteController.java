@@ -11,7 +11,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.global.Admin;
+import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CarteInfo;
