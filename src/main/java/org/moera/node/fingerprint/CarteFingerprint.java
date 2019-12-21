@@ -6,6 +6,7 @@ import java.time.Instant;
 
 import org.moera.commons.crypto.Fingerprint;
 
+@FingerprintVersion(objectType = FingerprintObjectType.CARTE, version = 0)
 public class CarteFingerprint extends Fingerprint {
 
     public static final short VERSION = 0;
@@ -17,6 +18,10 @@ public class CarteFingerprint extends Fingerprint {
     public long deadline;
     public byte permissions; // TODO for future use
     public byte[] salt;
+
+    public CarteFingerprint() {
+        super(0);
+    }
 
     public CarteFingerprint(String ownerName, InetAddress address, Instant beginning, Instant deadline) {
         super(0);

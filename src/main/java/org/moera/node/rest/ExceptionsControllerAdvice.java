@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.util.Locale;
 import javax.inject.Inject;
 
+import org.moera.node.auth.InvalidCarteException;
 import org.moera.node.global.ApiController;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.InvalidTokenException;
@@ -122,6 +123,13 @@ public class ExceptionsControllerAdvice {
         String errorCode = "authentication.invalid";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Result carteInvalid(InvalidCarteException e) {
+        String message = messageSource.getMessage(e.getErrorCode(), null, Locale.getDefault());
+        return new Result(e.getErrorCode(), message);
     }
 
 }

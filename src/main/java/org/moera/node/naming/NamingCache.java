@@ -26,12 +26,14 @@ public class NamingCache {
 
     private static class Record {
 
-        public Instant accessed = Instant.now();
+        public Instant deadline;
         public RegisteredNameDetails details;
+        private Throwable error;
 
     }
 
-    private static final Duration TTL = Duration.of(6, ChronoUnit.HOURS);
+    private static final Duration NORMAL_TTL = Duration.of(6, ChronoUnit.HOURS);
+    private static final Duration ERROR_TTL = Duration.of(1, ChronoUnit.MINUTES);
 
     private ReadWriteLock cacheLock = new ReentrantReadWriteLock();
     private Map<String, Record> cache = new HashMap<>();
@@ -50,7 +52,7 @@ public class NamingCache {
 
     public RegisteredNameDetails getFast(String name) {
         RegisteredNameDetails details = getOrRun(name);
-        return details != null ? details.clone() : new RegisteredNameDetails(false, getRedirector(name));
+        return details != null ? details.clone() : new RegisteredNameDetails(false, getRedirector(name), null);
     }
 
     public RegisteredNameDetails get(String name) {
@@ -61,8 +63,13 @@ public class NamingCache {
         synchronized (queryDone) {
             while (true) {
                 Record record = readRecord(name);
-                if (record != null && record.details != null) {
-                    return record.details.clone();
+                if (record != null) {
+                    if (record.error != null) {
+                        throw new NamingNotAvailableException(record.error);
+                    }
+                    if (record.details != null) {
+                        return record.details.clone();
+                    }
                 }
                 try {
                     queryDone.wait();
@@ -97,9 +104,10 @@ public class NamingCache {
                 cacheLock.writeLock().unlock();
             }
         }
-        record.accessed = Instant.now();
-        if (record.details != null) {
-            return record.details;
+        if (record.error != null) {
+            throw new NamingNotAvailableException(record.error);
+        } else if (record.details != null) {
+            return record.details.clone();
         } else {
             return null;
         }
@@ -107,8 +115,13 @@ public class NamingCache {
 
     private void queryName(String name, Options options) {
         RegisteredName registeredName = RegisteredName.parse(name);
-        RegisteredNameInfo info = namingClient.getCurrent(
-                registeredName.getName(), registeredName.getGeneration(), options);
+        RegisteredNameInfo info = null;
+        Throwable error = null;
+        try {
+            info = namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), options);
+        } catch (Exception e) {
+            error = e;
+        }
         Record record = readRecord(name);
         if (record == null) {
             record = new Record();
@@ -119,7 +132,9 @@ public class NamingCache {
                 cacheLock.writeLock().unlock();
             }
         }
-        record.details = info == null ? new RegisteredNameDetails(false, null) : new RegisteredNameDetails(info);
+        record.details = info == null ? new RegisteredNameDetails() : new RegisteredNameDetails(info);
+        record.error = error;
+        record.deadline = Instant.now().plus(error == null ? NORMAL_TTL : ERROR_TTL);
         synchronized (queryDone) {
             queryDone.notifyAll();
         }
@@ -129,14 +144,13 @@ public class NamingCache {
         return "/moera/gotoname?name=" + Util.ue(name);
     }
 
-    @Scheduled(fixedDelayString = "PT1H")
+    @Scheduled(fixedDelayString = "PT1M")
     public void purge() {
-        Instant deadline = Instant.now().minus(TTL);
         List<String> remove;
         cacheLock.readLock().lock();
         try {
             remove = cache.entrySet().stream()
-                    .filter(e -> e.getValue().accessed.isBefore(deadline))
+                    .filter(e -> e.getValue().deadline.isBefore(Instant.now()))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
         } finally {

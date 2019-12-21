@@ -1,5 +1,7 @@
 package org.moera.node.auth;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -64,6 +66,15 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
         requestContext.setAdmin(
                 authenticationManager.isAdminToken(request.getParameter("token"), requestContext.nodeId()));
         log.info("Authorized as {}", requestContext.isAdmin() ? "admin" : "non-admin");
+        try {
+            requestContext.setClientName(authenticationManager.getClientName(request.getParameter("carte"),
+                    InetAddress.getByName(request.getRemoteAddr())));
+        } catch (UnknownHostException e) {
+            throw new InvalidCarteException("carte.client-address-unknown");
+        }
+        if (!StringUtils.isEmpty(requestContext.getClientName())) {
+            log.info("Authorized with node name {}", requestContext.getClientName());
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
@@ -25,6 +26,7 @@ import org.moera.node.model.ReactionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,8 +54,10 @@ public class ReactionController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<ReactionInfo> post(@PathVariable UUID postingId,
-                                             @Valid @RequestBody ReactionDescription reactionDescription) {
+    public ResponseEntity<ReactionInfo> post(
+            @PathVariable UUID postingId, @Valid @RequestBody ReactionDescription reactionDescription)
+            throws AuthenticationException {
+
         log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {}",
                 LogUtil.format(postingId),
                 reactionDescription.isNegative() ? "yes" : "no",
@@ -63,7 +67,10 @@ public class ReactionController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
-        String ownerName = "balu-dev_0"; // TODO
+        String ownerName = requestContext.getClientName(); // TODO will not work with signed requests
+        if (StringUtils.isEmpty(ownerName)) {
+            throw new AuthenticationException();
+        }
         int counterChange = 1;
         Reaction reaction = reactionRepository.findByPostingAndOwner(postingId, ownerName);
         if (reaction != null) {

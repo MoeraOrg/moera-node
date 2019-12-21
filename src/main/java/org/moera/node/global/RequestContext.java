@@ -30,6 +30,10 @@ public interface RequestContext {
 
     void setClientId(String clientId);
 
+    String getClientName();
+
+    void setClientName(String clientName);
+
     RequestContext getPublic();
 
     UUID nodeId();
