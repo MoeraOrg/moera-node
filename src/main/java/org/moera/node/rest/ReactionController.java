@@ -23,6 +23,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -74,7 +75,7 @@ public class ReactionController {
         Reaction reaction = reactionRepository.findByPostingAndOwner(postingId, ownerName);
         if (reaction != null) {
             changeTotals(posting, reaction, -1);
-            reactionRepository.delete(reaction);
+            reaction.setDeletedAt(Util.now());
         }
 
         reaction = new Reaction();

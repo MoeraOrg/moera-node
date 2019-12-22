@@ -35,6 +35,8 @@ public class Reaction {
 
     private Timestamp deadline;
 
+    private Timestamp deletedAt;
+
     private byte[] signature;
 
     private short signatureVersion;
@@ -93,6 +95,14 @@ public class Reaction {
 
     public void setDeadline(Timestamp deadline) {
         this.deadline = deadline;
+    }
+
+    public Timestamp getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Timestamp deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     public byte[] getSignature() {
