@@ -111,4 +111,9 @@ public class Reaction {
         this.signatureVersion = signatureVersion;
     }
 
+    public void toReactionTotal(ReactionTotal total) {
+        total.setNegative(negative);
+        total.setEmoji(emoji);
+    }
+
 }

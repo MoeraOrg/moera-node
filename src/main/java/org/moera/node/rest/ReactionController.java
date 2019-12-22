@@ -71,11 +71,10 @@ public class ReactionController {
         if (StringUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
-        int counterChange = 1;
         Reaction reaction = reactionRepository.findByPostingAndOwner(postingId, ownerName);
         if (reaction != null) {
+            changeTotals(posting, reaction, -1);
             reactionRepository.delete(reaction);
-            counterChange = 0;
         }
 
         reaction = new Reaction();
@@ -86,17 +85,24 @@ public class ReactionController {
         reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL))); // TODO signature
         reactionRepository.save(reaction);
 
+        changeTotals(posting, reaction, 1);
+
+        return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
+                .body(new ReactionInfo(reaction));
+    }
+
+    private void changeTotals(Posting posting, Reaction reaction, int delta) {
         ReactionTotal total = reactionTotalRepository.findByEntryRevision(
-                posting.getCurrentRevision().getId(), reaction.isNegative(), reaction.getEmoji());
+                reaction.getEntryRevision().getId(), reaction.isNegative(), reaction.getEmoji());
         if (total == null) {
             total = new ReactionTotal();
             total.setId(UUID.randomUUID());
-            total.setEntryRevision(posting.getCurrentRevision());
-            reactionDescription.toReactionTotal(total);
-            total.setTotal(1);
+            total.setEntryRevision(reaction.getEntryRevision());
+            reaction.toReactionTotal(total);
+            total.setTotal(delta);
             reactionTotalRepository.save(total);
         } else {
-            total.setTotal(total.getTotal() + counterChange);
+            total.setTotal(total.getTotal() + delta);
         }
 
         total = reactionTotalRepository.findByEntry(posting.getId(), reaction.isNegative(), reaction.getEmoji());
@@ -104,15 +110,12 @@ public class ReactionController {
             total = new ReactionTotal();
             total.setId(UUID.randomUUID());
             total.setEntry(posting);
-            reactionDescription.toReactionTotal(total);
-            total.setTotal(1);
+            reaction.toReactionTotal(total);
+            total.setTotal(delta);
             reactionTotalRepository.save(total);
         } else {
-            total.setTotal(total.getTotal() + counterChange);
+            total.setTotal(total.getTotal() + delta);
         }
-
-        return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
-                .body(new ReactionInfo(reaction));
     }
 
 }

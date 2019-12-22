@@ -1,7 +1,6 @@
 package org.moera.node.model;
 
 import org.moera.node.data.Reaction;
-import org.moera.node.data.ReactionTotal;
 
 public class ReactionDescription {
 
@@ -27,11 +26,6 @@ public class ReactionDescription {
     public void toReaction(Reaction reaction) {
         reaction.setNegative(negative);
         reaction.setEmoji(emoji);
-    }
-
-    public void toReactionTotal(ReactionTotal total) {
-        total.setNegative(negative);
-        total.setEmoji(emoji);
     }
 
 }
