@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.util.Locale;
 import javax.inject.Inject;
 
+import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
 import org.moera.node.global.ApiController;
 import org.moera.node.auth.AuthenticationException;
@@ -121,6 +122,14 @@ public class ExceptionsControllerAdvice {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result authenticationInvalid(InvalidTokenException e) {
         String errorCode = "authentication.invalid";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Result incorrectSignature(IncorrectSignatureException e) {
+        String errorCode = "authentication.incorrect-signature";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message);
     }

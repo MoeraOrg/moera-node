@@ -123,15 +123,7 @@ public class RemotePostingVerifyTask implements Runnable {
     }
 
     private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {
-        Class<? extends Fingerprint> fingerprintClass = fingerprintManager.get(FingerprintObjectType.POSTING, version);
-        if (fingerprintClass == null) {
-            return null;
-        }
-        try {
-            return fingerprintClass.getConstructor(parameterTypes);
-        } catch (NoSuchMethodException e) {
-            return null;
-        }
+        return fingerprintManager.getConstructor(FingerprintObjectType.POSTING, version, parameterTypes);
     }
 
     private void verifySignature(PostingInfo postingInfo) {

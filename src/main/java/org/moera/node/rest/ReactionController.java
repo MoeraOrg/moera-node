@@ -1,5 +1,7 @@
 package org.moera.node.rest;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -11,8 +13,11 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Entry;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -20,11 +25,14 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
+import org.moera.node.fingerprint.FingerprintManager;
+import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
+import org.moera.node.naming.NamingCache;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +66,12 @@ public class ReactionController {
     @Inject
     private PostingRepository postingRepository;
 
+    @Inject
+    private NamingCache namingCache;
+
+    @Inject
+    private FingerprintManager fingerprintManager;
+
     @PostMapping
     @Transactional
     public ResponseEntity<ReactionInfo> post(
@@ -73,11 +87,38 @@ public class ReactionController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
-        String ownerName = requestContext.getClientName(); // TODO will not work with signed requests
-        if (StringUtils.isEmpty(ownerName)) {
-            throw new AuthenticationException();
+
+        if (reactionDescription.getSignature() == null) {
+            String ownerName = requestContext.getClientName();
+            if (StringUtils.isEmpty(ownerName)) {
+                throw new AuthenticationException();
+            }
+            if (!StringUtils.isEmpty(reactionDescription.getOwnerName())
+                    && !reactionDescription.getOwnerName().equals(ownerName)) {
+                throw new AuthenticationException();
+            }
+            reactionDescription.setOwnerName(ownerName);
+        } else {
+            Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
+                    FingerprintObjectType.REACTION, reactionDescription.getSignatureVersion(),
+                    ReactionDescription.class, byte[].class);
+            if (constructor == null) {
+                throw new IncorrectSignatureException();
+            }
+            byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
+            try {
+                if (!CryptoUtil.verify(
+                        constructor.newInstance(reactionDescription, posting.getCurrentRevision().getDigest()),
+                        reactionDescription.getSignature(),
+                        signingKey)) {
+                    throw new IncorrectSignatureException();
+                }
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                throw new IncorrectSignatureException();
+            }
         }
-        Reaction reaction = reactionRepository.findByEntryAndOwner(postingId, ownerName);
+
+        Reaction reaction = reactionRepository.findByEntryAndOwner(postingId, reactionDescription.getOwnerName());
         if (reaction != null) {
             changeTotals(posting, reaction, -1);
             reaction.setDeletedAt(Util.now());
@@ -85,10 +126,11 @@ public class ReactionController {
 
         reaction = new Reaction();
         reaction.setId(UUID.randomUUID());
-        reaction.setOwnerName(ownerName);
         reaction.setEntryRevision(posting.getCurrentRevision());
         reactionDescription.toReaction(reaction);
-        reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL))); // TODO signature
+        if (reactionDescription.getSignature() == null) {
+            reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
+        }
         reactionRepository.save(reaction);
 
         changeTotals(posting, reaction, 1);

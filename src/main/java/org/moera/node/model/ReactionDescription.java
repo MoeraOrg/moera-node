@@ -4,8 +4,19 @@ import org.moera.node.data.Reaction;
 
 public class ReactionDescription {
 
+    private String ownerName;
     private boolean negative;
     private int emoji;
+    private byte[] signature;
+    private short signatureVersion;
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
+    }
 
     public boolean isNegative() {
         return negative;
@@ -23,9 +34,28 @@ public class ReactionDescription {
         this.emoji = emoji;
     }
 
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
+    public short getSignatureVersion() {
+        return signatureVersion;
+    }
+
+    public void setSignatureVersion(short signatureVersion) {
+        this.signatureVersion = signatureVersion;
+    }
+
     public void toReaction(Reaction reaction) {
+        reaction.setOwnerName(ownerName);
         reaction.setNegative(negative);
         reaction.setEmoji(emoji);
+        reaction.setSignature(signature);
+        reaction.setSignatureVersion(signatureVersion);
     }
 
 }

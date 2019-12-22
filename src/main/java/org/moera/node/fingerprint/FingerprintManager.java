@@ -1,5 +1,6 @@
 package org.moera.node.fingerprint;
 
+import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,6 +30,20 @@ public class FingerprintManager {
 
     public Class<? extends Fingerprint> get(FingerprintObjectType objectType, short version) {
         return fingerints.get(new FingerprintId(objectType, version));
+    }
+
+    public Constructor<? extends Fingerprint> getConstructor(
+            FingerprintObjectType objectType, short version, Class<?>... parameterTypes) {
+
+        Class<? extends Fingerprint> fingerprintClass = get(objectType, version);
+        if (fingerprintClass == null) {
+            return null;
+        }
+        try {
+            return fingerprintClass.getConstructor(parameterTypes);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
     }
 
 }
