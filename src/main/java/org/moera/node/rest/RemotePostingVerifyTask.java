@@ -1,7 +1,6 @@
 package org.moera.node.rest;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 import javax.inject.Inject;
 
@@ -19,9 +18,9 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
+import org.moera.node.naming.RegisteredName;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -135,18 +134,7 @@ public class RemotePostingVerifyTask implements Runnable {
         data.setRevisionId(postingInfo.getRevisionId());
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 postingInfo.getSignatureVersion(), PostingInfo.class);
-        if (constructor == null) {
-            succeeded(false);
-            return;
-        }
-        try {
-            succeeded(CryptoUtil.verify(
-                    constructor.newInstance(postingInfo),
-                    postingInfo.getSignature(),
-                    signingKey));
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            succeeded(false);
-        }
+        succeeded(CryptoUtil.verify(postingInfo.getSignature(), signingKey, constructor, postingInfo));
     }
 
     private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
@@ -157,18 +145,8 @@ public class RemotePostingVerifyTask implements Runnable {
         }
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 postingInfo.getSignatureVersion(), PostingInfo.class, PostingRevisionInfo.class);
-        if (constructor == null) {
-            succeeded(false);
-            return;
-        }
-        try {
-            succeeded(CryptoUtil.verify(
-                    constructor.newInstance(postingInfo, postingRevisionInfo),
-                    postingRevisionInfo.getSignature(),
-                    signingKey));
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            succeeded(false);
-        }
+        succeeded(CryptoUtil.verify(
+                postingRevisionInfo.getSignature(), signingKey, constructor, postingInfo, postingRevisionInfo));
     }
 
     private void error(Throwable e) {

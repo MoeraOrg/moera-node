@@ -1,7 +1,6 @@
 package org.moera.node.rest;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -99,21 +98,16 @@ public class ReactionController {
             }
             reactionDescription.setOwnerName(ownerName);
         } else {
+            byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
             Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
                     FingerprintObjectType.REACTION, reactionDescription.getSignatureVersion(),
                     ReactionDescription.class, byte[].class);
-            if (constructor == null) {
-                throw new IncorrectSignatureException();
-            }
-            byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
-            try {
-                if (!CryptoUtil.verify(
-                        constructor.newInstance(reactionDescription, posting.getCurrentRevision().getDigest()),
-                        reactionDescription.getSignature(),
-                        signingKey)) {
-                    throw new IncorrectSignatureException();
-                }
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            if (!CryptoUtil.verify(
+                    reactionDescription.getSignature(),
+                    signingKey,
+                    constructor,
+                    reactionDescription,
+                    posting.getCurrentRevision().getDigest())) {
                 throw new IncorrectSignatureException();
             }
         }
