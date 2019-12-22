@@ -8,12 +8,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
+import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
+import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
@@ -59,7 +61,8 @@ public class PostingOperations {
         if (current.getMoment() == 0) {
             current.setMoment(findFreeMoment(current.getPublishedAt()));
         }
-        posting.sign(signingKey);
+        current.setSignature(CryptoUtil.sign(new PostingFingerprint(posting, current), signingKey));
+        current.setSignatureVersion(PostingFingerprint.VERSION);
         updatePublicPages(current.getMoment());
 
         return posting;

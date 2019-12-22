@@ -15,10 +15,4 @@ public class Posting extends Entry {
         setEntryType(EntryType.POSTING);
     }
 
-    public void sign(ECPrivateKey signingKey) {
-        getCurrentRevision().setSignature(
-                CryptoUtil.sign(new PostingFingerprint(this, getCurrentRevision()), signingKey));
-        getCurrentRevision().setSignatureVersion(PostingFingerprint.VERSION);
-    }
-
 }
