@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -12,6 +13,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.data.Entry;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
@@ -26,7 +28,10 @@ import org.moera.node.model.ReactionInfo;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -72,7 +77,7 @@ public class ReactionController {
         if (StringUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
-        Reaction reaction = reactionRepository.findByPostingAndOwner(postingId, ownerName);
+        Reaction reaction = reactionRepository.findByEntryAndOwner(postingId, ownerName);
         if (reaction != null) {
             changeTotals(posting, reaction, -1);
             reaction.setDeletedAt(Util.now());
@@ -92,7 +97,27 @@ public class ReactionController {
                 .body(new ReactionInfo(reaction));
     }
 
-    private void changeTotals(Posting posting, Reaction reaction, int delta) {
+    @Scheduled(fixedDelayString = "PT15M")
+    @Transactional
+    public void purgeExpired() {
+        reactionRepository.findExpired(Util.now()).forEach(reaction -> {
+            Entry entry = reaction.getEntryRevision().getEntry();
+            if (reaction.getDeletedAt() == null) {
+                List<Reaction> deleted = reactionRepository.findDeletedByEntryAndOwner(
+                        entry.getId(),
+                        reaction.getOwnerName(),
+                        PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
+                if (deleted.size() > 0) {
+                    deleted.get(0).setDeletedAt(null);
+                    changeTotals(entry, deleted.get(0), 1);
+                }
+            }
+            changeTotals(entry, reaction, -1);
+            reactionRepository.delete(reaction);
+        });
+    }
+
+    private void changeTotals(Entry entry, Reaction reaction, int delta) {
         ReactionTotal total = reactionTotalRepository.findByEntryRevision(
                 reaction.getEntryRevision().getId(), reaction.isNegative(), reaction.getEmoji());
         if (total == null) {
@@ -106,11 +131,11 @@ public class ReactionController {
             total.setTotal(total.getTotal() + delta);
         }
 
-        total = reactionTotalRepository.findByEntry(posting.getId(), reaction.isNegative(), reaction.getEmoji());
+        total = reactionTotalRepository.findByEntry(entry.getId(), reaction.isNegative(), reaction.getEmoji());
         if (total == null) {
             total = new ReactionTotal();
             total.setId(UUID.randomUUID());
-            total.setEntry(posting);
+            total.setEntry(entry);
             reaction.toReactionTotal(total);
             total.setTotal(delta);
             reactionTotalRepository.save(total);
