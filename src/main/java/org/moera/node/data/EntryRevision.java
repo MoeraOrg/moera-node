@@ -63,6 +63,8 @@ public class EntryRevision {
     @NotNull
     private short signatureVersion;
 
+    private byte[] digest;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
     private Set<Reaction> reactions = new HashSet<>();
 
@@ -179,6 +181,14 @@ public class EntryRevision {
 
     public void setSignatureVersion(short signatureVersion) {
         this.signatureVersion = signatureVersion;
+    }
+
+    public byte[] getDigest() {
+        return digest;
+    }
+
+    public void setDigest(byte[] digest) {
+        this.digest = digest;
     }
 
     public Set<Reaction> getReactions() {

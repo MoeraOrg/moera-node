@@ -58,6 +58,9 @@ public class Updater {
             case JSON_BODY:
                 convertBodyToJson(upgrade.getEntryRevision());
                 break;
+            case UPDATE_DIGEST:
+                updateDigest(upgrade.getEntryRevision());
+                break;
             default:
                 break;
         }
@@ -97,6 +100,13 @@ public class Updater {
         body.setText(revision.getBodySrc());
         revision.setBodySrc(body.getEncoded());
         log.info("Body of entry {}, revision {} converted to JSON", revision.getEntry().getId(), revision.getId());
+    }
+
+    private void updateDigest(EntryRevision revision) {
+        Posting posting = (Posting) revision.getEntry();
+        PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
+        revision.setDigest(CryptoUtil.digest(fingerprint));
+        log.info("Digest upgraded for entry {}, revision {}", posting.getId(), revision.getId());
     }
 
 }

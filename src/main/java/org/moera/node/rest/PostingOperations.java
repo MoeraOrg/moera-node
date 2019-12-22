@@ -61,7 +61,9 @@ public class PostingOperations {
         if (current.getMoment() == 0) {
             current.setMoment(findFreeMoment(current.getPublishedAt()));
         }
-        current.setSignature(CryptoUtil.sign(new PostingFingerprint(posting, current), signingKey));
+        PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
+        current.setDigest(CryptoUtil.digest(fingerprint));
+        current.setSignature(CryptoUtil.sign(fingerprint, signingKey));
         current.setSignatureVersion(PostingFingerprint.VERSION);
         updatePublicPages(current.getMoment());
 
