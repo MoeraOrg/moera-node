@@ -21,6 +21,7 @@ public class PostingRevisionInfo {
     private byte[] signature;
     private short signatureVersion;
     private long moment;
+    private ReactionTotalsInfo reactions;
 
     public PostingRevisionInfo() {
     }
@@ -39,6 +40,7 @@ public class PostingRevisionInfo {
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         moment = revision.getMoment();
+        reactions = new ReactionTotalsInfo(revision.getReactionTotals());
     }
 
     public String getId() {
@@ -143,6 +145,14 @@ public class PostingRevisionInfo {
 
     public void setMoment(long moment) {
         this.moment = moment;
+    }
+
+    public ReactionTotalsInfo getReactions() {
+        return reactions;
+    }
+
+    public void setReactions(ReactionTotalsInfo reactions) {
+        this.reactions = reactions;
     }
 
 }

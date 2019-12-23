@@ -31,6 +31,7 @@ public class PostingInfo {
     private short signatureVersion;
     private long moment;
     private Map<String, String[]> operations;
+    private ReactionTotalsInfo reactions;
 
     public PostingInfo() {
     }
@@ -65,6 +66,7 @@ public class PostingInfo {
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
         operations.put("revisions", new String[0]);
+        reactions = new ReactionTotalsInfo(posting.getReactionTotals());
     }
 
     public String getId() {
@@ -225,6 +227,14 @@ public class PostingInfo {
 
     public void setOperations(Map<String, String[]> operations) {
         this.operations = operations;
+    }
+
+    public ReactionTotalsInfo getReactions() {
+        return reactions;
+    }
+
+    public void setReactions(ReactionTotalsInfo reactions) {
+        this.reactions = reactions;
     }
 
 }
