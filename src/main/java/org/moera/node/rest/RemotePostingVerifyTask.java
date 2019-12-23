@@ -83,11 +83,9 @@ public class RemotePostingVerifyTask implements Runnable {
     private void fetchNodeUri() {
         Options options = domains.getDomainOptions(data.getNodeId());
         RegisteredName registeredName = (RegisteredName) NodeName.parse(data.getNodeName());
-        RegisteredNameInfo nameInfo = registeredName.getGeneration() != null
-                ? namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), options)
-                : namingClient.getCurrentForLatest(registeredName.getName(), options);
+        RegisteredNameInfo nameInfo =
+                namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), options);
         if (nameInfo != null) {
-            data.setNodeName(new RegisteredName(nameInfo.getName(), nameInfo.getGeneration()).toString());
             nodeUri = UriUtil.normalize(nameInfo.getNodeUri());
         }
     }
@@ -95,9 +93,8 @@ public class RemotePostingVerifyTask implements Runnable {
     private void fetchSigningKey(String ownerName, long at) {
         Options options = domains.getDomainOptions(data.getNodeId());
         RegisteredName registeredName = (RegisteredName) NodeName.parse(ownerName);
-        RegisteredNameInfo nameInfo = registeredName.getGeneration() != null
-                    ? namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, options)
-                    : namingClient.getPastForLatest(registeredName.getName(), at, options);
+        RegisteredNameInfo nameInfo =
+                namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, options);
         signingKey = nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
