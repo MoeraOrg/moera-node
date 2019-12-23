@@ -28,6 +28,7 @@ public class NamingCache {
 
     private static class Record {
 
+        public Instant accessed = Instant.now();
         public Instant deadline;
         public RegisteredNameDetails details;
         private Throwable error;
@@ -107,16 +108,14 @@ public class NamingCache {
                 record = cache.get(name);
                 if (record == null) {
                     cache.put(name, new Record());
-                    Options options = nodeId.get() == null
-                            ? requestContext.getOptions()
-                            : domains.getDomainOptions(nodeId.get());
-                    taskExecutor.execute(() -> queryName(name, options));
+                    run(name);
                     return null;
                 }
             } finally {
                 cacheLock.writeLock().unlock();
             }
         }
+        record.accessed = Instant.now();
         if (record.error != null) {
             throw new NamingNotAvailableException(record.error);
         } else if (record.details != null) {
@@ -124,6 +123,11 @@ public class NamingCache {
         } else {
             return null;
         }
+    }
+
+    private void run(String name) {
+        Options options = nodeId.get() == null ? requestContext.getOptions() : domains.getDomainOptions(nodeId.get());
+        taskExecutor.execute(() -> queryName(name, options));
     }
 
     private void queryName(String name, Options options) {
@@ -172,7 +176,13 @@ public class NamingCache {
         if (remove.size() > 0) {
             cacheLock.writeLock().lock();
             try {
-                remove.forEach(cache::remove);
+                remove.forEach(name -> {
+                    if (cache.get(name).accessed.plus(NORMAL_TTL).isAfter(Instant.now())) {
+                        run(name);
+                    } else {
+                        cache.remove(name);
+                    }
+                });
             } finally {
                 cacheLock.writeLock().unlock();
             }
