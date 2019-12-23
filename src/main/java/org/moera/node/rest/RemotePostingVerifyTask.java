@@ -18,9 +18,11 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
+import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -42,6 +44,9 @@ public class RemotePostingVerifyTask implements Runnable {
 
     @Inject
     private NamingClient namingClient;
+
+    @Inject
+    private NamingCache namingCache;
 
     @Inject
     private MessageSource messageSource;
@@ -81,12 +86,10 @@ public class RemotePostingVerifyTask implements Runnable {
     }
 
     private void fetchNodeUri() {
-        Options options = domains.getDomainOptions(data.getNodeId());
-        RegisteredName registeredName = (RegisteredName) NodeName.parse(data.getNodeName());
-        RegisteredNameInfo nameInfo =
-                namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), options);
-        if (nameInfo != null) {
-            nodeUri = UriUtil.normalize(nameInfo.getNodeUri());
+        namingCache.setNodeId(data.getNodeId());
+        RegisteredNameDetails details = namingCache.get(data.getNodeName());
+        if (details != null) {
+            nodeUri = UriUtil.normalize(details.getNodeUri());
         }
     }
 

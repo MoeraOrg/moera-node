@@ -6,12 +6,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
@@ -39,6 +41,8 @@ public class NamingCache {
     private Map<String, Record> cache = new HashMap<>();
     private final Object queryDone = new Object();
 
+    private ThreadLocal<UUID> nodeId = new ThreadLocal<>();
+
     @Inject
     @Qualifier("namingTaskExecutor")
     private TaskExecutor taskExecutor;
@@ -49,6 +53,13 @@ public class NamingCache {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private Domains domains;
+
+    public void setNodeId(UUID nodeId) {
+        this.nodeId.set(nodeId);
+    }
 
     public RegisteredNameDetails getFast(String name) {
         RegisteredNameDetails details = getOrRun(name);
@@ -96,7 +107,9 @@ public class NamingCache {
                 record = cache.get(name);
                 if (record == null) {
                     cache.put(name, new Record());
-                    Options options = requestContext.getOptions();
+                    Options options = nodeId.get() == null
+                            ? requestContext.getOptions()
+                            : domains.getDomainOptions(nodeId.get());
                     taskExecutor.execute(() -> queryName(name, options));
                     return null;
                 }
@@ -150,7 +163,7 @@ public class NamingCache {
         cacheLock.readLock().lock();
         try {
             remove = cache.entrySet().stream()
-                    .filter(e -> e.getValue().deadline.isBefore(Instant.now()))
+                    .filter(e -> e.getValue().deadline != null && e.getValue().deadline.isBefore(Instant.now()))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
         } finally {
