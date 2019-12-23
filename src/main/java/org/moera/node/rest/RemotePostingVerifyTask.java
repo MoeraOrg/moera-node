@@ -10,7 +10,6 @@ import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.RemotePostingVerificationFailedEvent;
 import org.moera.node.event.model.RemotePostingVerifiedEvent;
@@ -18,22 +17,18 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
-import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.option.Options;
-import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-public class RemotePostingVerifyTask implements Runnable {
+public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
 
     private static Logger log = LoggerFactory.getLogger(RemotePostingVerifyTask.class);
 
@@ -46,13 +41,7 @@ public class RemotePostingVerifyTask implements Runnable {
     private NamingClient namingClient;
 
     @Inject
-    private NamingCache namingCache;
-
-    @Inject
     private MessageSource messageSource;
-
-    @Inject
-    private Domains domains;
 
     @Inject
     private EventManager eventManager;
@@ -64,16 +53,13 @@ public class RemotePostingVerifyTask implements Runnable {
     private FingerprintManager fingerprintManager;
 
     public RemotePostingVerifyTask(RemotePostingVerification data) {
+        super(data.getNodeId());
         this.data = data;
-    }
-
-    private void initLoggingDomain() {
-        MDC.put("domain", domains.getDomainName(data.getNodeId()));
     }
 
     @Override
     public void run() {
-        fetchNodeUri();
+        nodeUri = fetchNodeUri(data.getNodeName());
         if (nodeUri == null) {
             failed("remote-node.not-found", null);
             return;
@@ -83,14 +69,6 @@ public class RemotePostingVerifyTask implements Runnable {
                 .retrieve()
                 .bodyToMono(PostingInfo.class)
                 .subscribe(this::verify, this::error);
-    }
-
-    private void fetchNodeUri() {
-        namingCache.setNodeId(data.getNodeId());
-        RegisteredNameDetails details = namingCache.get(data.getNodeName());
-        if (details != null) {
-            nodeUri = UriUtil.normalize(details.getNodeUri());
-        }
     }
 
     private void fetchSigningKey(String ownerName, long at) {

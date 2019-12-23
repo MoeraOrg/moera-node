@@ -10,6 +10,15 @@ public class ReactionDescription {
     private byte[] signature;
     private short signatureVersion;
 
+    public ReactionDescription() {
+    }
+
+    public ReactionDescription(String ownerName, ReactionAttributes attributes) {
+        this.ownerName = ownerName;
+        negative = attributes.isNegative();
+        emoji = attributes.getEmoji();
+    }
+
     public String getOwnerName() {
         return ownerName;
     }

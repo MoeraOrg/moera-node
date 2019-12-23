@@ -77,7 +77,7 @@ public class ReactionController {
             @PathVariable UUID postingId, @Valid @RequestBody ReactionDescription reactionDescription)
             throws AuthenticationException {
 
-        log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {}",
+        log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {})",
                 LogUtil.format(postingId),
                 reactionDescription.isNegative() ? "yes" : "no",
                 LogUtil.format(reactionDescription.getEmoji()));

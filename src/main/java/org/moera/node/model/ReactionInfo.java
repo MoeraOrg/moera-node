@@ -3,9 +3,11 @@ package org.moera.node.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Reaction;
 import org.moera.node.util.Util;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReactionInfo {
 
     private String id;
@@ -15,7 +17,7 @@ public class ReactionInfo {
     private boolean negative;
     private int emoji;
     private long createdAt;
-    private long deadline;
+    private Long deadline;
     private byte[] signature;
     private short signatureVersion;
     private Map<String, String[]> operations;
@@ -94,11 +96,11 @@ public class ReactionInfo {
         this.createdAt = createdAt;
     }
 
-    public long getDeadline() {
+    public Long getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(long deadline) {
+    public void setDeadline(Long deadline) {
         this.deadline = deadline;
     }
 
