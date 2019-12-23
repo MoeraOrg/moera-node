@@ -1,9 +1,14 @@
 package org.moera.node.helper;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
+import org.moera.node.model.ReactionTotalInfo;
+import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NodeName;
@@ -51,6 +56,42 @@ public class MoeraHelperSource {
             buf.append(String.format("</%s>", tag));
         }
         return new SafeString(buf);
+    }
+
+    public CharSequence reactions(ReactionTotalsInfo totalsInfo) {
+        StringBuilder buf = new StringBuilder();
+        buf.append("<div class=\"reactions\">");
+        if (totalsInfo.getPositive().size() > 0) {
+            buf.append("<span class=\"positive\">");
+            buf.append("<span class=\"arrow\">&#x2b06;</span>");
+            buf.append(sum(totalsInfo.getPositive()));
+            appendEmojis(buf, totalsInfo.getPositive());
+            buf.append("</span>");
+        }
+        if (totalsInfo.getNegative().size() > 0) {
+            buf.append("<span class=\"negative\">");
+            buf.append("<span class=\"arrow\">&#x2b07;</span>");
+            buf.append(sum(totalsInfo.getNegative()));
+            appendEmojis(buf, totalsInfo.getPositive());
+            buf.append("</span>");
+        }
+        buf.append("</div>");
+        return new SafeString(buf);
+    }
+
+    private long sum(List<ReactionTotalInfo> totals) {
+        return totals.stream()
+                .collect(Collectors.summarizingInt(ReactionTotalInfo::getTotal))
+                .getSum();
+    }
+
+    private void appendEmojis(StringBuilder buf, List<ReactionTotalInfo> totals) {
+        totals.sort(Comparator.comparingInt(ReactionTotalInfo::getTotal).reversed());
+        buf.append("<span class=\"emojis\">");
+        for (int i = 0; i < 3 && i < totals.size(); i++) {
+            buf.append(String.format("&#%d;", totals.get(i).getEmoji()));
+        }
+        buf.append("</span>");
     }
 
 }
