@@ -1,6 +1,7 @@
 package org.moera.node.ui;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -65,6 +66,7 @@ public class TimelineUiController {
                     requestContext.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
                     .map(PostingInfo::new)
+                    .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
                     .collect(Collectors.toList());
         }
 

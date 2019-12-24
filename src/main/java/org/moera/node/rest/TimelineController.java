@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -77,10 +78,7 @@ public class TimelineController {
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getCurrentRevision().getMoment());
         }
-        sliceInfo.setPostings(page.stream().map(PostingInfo::new).collect(Collectors.toList()));
-        if (sliceInfo.getPostings().size() > limit) {
-            sliceInfo.getPostings().remove(limit);
-        }
+        sliceInfo.setPostings(getPostingsForSlice(sliceInfo, limit));
         return sliceInfo;
     }
 
@@ -94,12 +92,21 @@ public class TimelineController {
         } else {
             sliceInfo.setBefore(page.getContent().get(limit - 1).getCurrentRevision().getMoment());
         }
-        sliceInfo.setPostings(page.stream().map(PostingInfo::new).collect(Collectors.toList()));
-        if (sliceInfo.getPostings().size() > limit) {
-            sliceInfo.getPostings().remove(limit);
-        }
-        sliceInfo.getPostings().sort(Comparator.comparingLong(PostingInfo::getMoment).reversed());
+        sliceInfo.setPostings(getPostingsForSlice(sliceInfo, limit));
         return sliceInfo;
+    }
+
+    private List<PostingInfo> getPostingsForSlice(TimelineSliceInfo sliceInfo, int limit) {
+        List<PostingInfo> postings = postingRepository.findInRange(
+                requestContext.nodeId(), sliceInfo.getAfter(), sliceInfo.getBefore())
+                .stream()
+                .map(PostingInfo::new)
+                .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
+                .collect(Collectors.toList());
+        if (postings.size() > limit) {
+            postings.remove(limit);
+        }
+        return postings;
     }
 
 }

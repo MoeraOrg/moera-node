@@ -1,6 +1,7 @@
 package org.moera.node.ui;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -43,7 +44,9 @@ public class RssController {
         List<Posting> postings = Collections.emptyList();
         if (publicPage != null) {
             postings = postingRepository.findInRange(
-                    rcp.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment());
+                    rcp.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment()).stream()
+                    .sorted(Collections.reverseOrder(Comparator.comparingLong(p -> p.getCurrentRevision().getMoment())))
+                    .collect(Collectors.toList());
         }
 
         SyndFeed feed = new SyndFeedImpl();

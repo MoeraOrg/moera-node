@@ -63,16 +63,14 @@ public class MoeraHelperSource {
         buf.append("<div class=\"reactions\">");
         if (totalsInfo.getPositive().size() > 0) {
             buf.append("<span class=\"positive\">");
-            buf.append("<span class=\"arrow\">&#x2b06;</span>");
-            buf.append(sum(totalsInfo.getPositive()));
             appendEmojis(buf, totalsInfo.getPositive());
+            buf.append(sum(totalsInfo.getPositive()));
             buf.append("</span>");
         }
         if (totalsInfo.getNegative().size() > 0) {
             buf.append("<span class=\"negative\">");
-            buf.append("<span class=\"arrow\">&#x2b07;</span>");
+            appendEmojis(buf, totalsInfo.getNegative());
             buf.append(sum(totalsInfo.getNegative()));
-            appendEmojis(buf, totalsInfo.getPositive());
             buf.append("</span>");
         }
         buf.append("</div>");

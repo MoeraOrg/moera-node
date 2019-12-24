@@ -73,7 +73,7 @@ public class RemoteReactionPostTask extends RemoteTask implements Runnable {
 
     private void error(Throwable e) {
         initLoggingDomain();
-        log.error("Error fetching posting {} at node {}: {}", postingId, nodeName, e.getMessage());
+        log.error("Error adding reaction to posting {} at node {}: {}", postingId, nodeName, e.getMessage());
     }
 
 }
