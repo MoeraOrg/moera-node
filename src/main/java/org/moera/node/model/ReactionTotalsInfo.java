@@ -16,6 +16,9 @@ public class ReactionTotalsInfo {
 
     public ReactionTotalsInfo(Collection<ReactionTotal> totals) {
         for (ReactionTotal total : totals) {
+            if (total.getTotal() == 0) {
+                continue;
+            }
             if (!total.isNegative()) {
                 positive.add(new ReactionTotalInfo(total));
             } else {
