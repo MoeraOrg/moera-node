@@ -113,22 +113,26 @@ public class ReactionController {
         }
 
         Reaction reaction = reactionRepository.findByEntryAndOwner(postingId, reactionDescription.getOwnerName());
-        if (reaction != null) {
-            changeTotals(posting, reaction, -1);
-            reaction.setDeletedAt(Util.now());
+        if (reaction == null || reaction.getDeadline() == null
+                || reaction.isNegative() != reactionDescription.isNegative()
+                || reaction.getEmoji() != reactionDescription.getEmoji()) {
+
+            if (reaction != null) {
+                changeTotals(posting, reaction, -1);
+                reaction.setDeletedAt(Util.now());
+            }
+
+            reaction = new Reaction();
+            reaction.setId(UUID.randomUUID());
+            reaction.setEntryRevision(posting.getCurrentRevision());
+            reactionDescription.toReaction(reaction);
+            if (reactionDescription.getSignature() == null) {
+                reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
+            }
+            reactionRepository.save(reaction);
+
+            changeTotals(posting, reaction, 1);
         }
-
-        reaction = new Reaction();
-        reaction.setId(UUID.randomUUID());
-        reaction.setEntryRevision(posting.getCurrentRevision());
-        reactionDescription.toReaction(reaction);
-        if (reactionDescription.getSignature() == null) {
-            reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
-        }
-        reactionRepository.save(reaction);
-
-        changeTotals(posting, reaction, 1);
-
         return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
                 .body(new ReactionInfo(reaction));
     }
