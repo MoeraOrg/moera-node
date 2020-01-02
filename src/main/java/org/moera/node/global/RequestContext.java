@@ -38,4 +38,6 @@ public interface RequestContext {
 
     UUID nodeId();
 
+    String nodeName();
+
 }

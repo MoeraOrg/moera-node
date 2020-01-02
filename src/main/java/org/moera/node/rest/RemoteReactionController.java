@@ -48,7 +48,7 @@ public class RemoteReactionController {
                 LogUtil.format(attributes.getEmoji()));
 
         Options options = requestContext.getOptions();
-        String ownerName = options.getString("profile.node-name");
+        String ownerName = options.nodeName();
         if (ownerName == null) {
             throw new OperationFailure("reaction.node-name-not-set");
         }

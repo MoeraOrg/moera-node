@@ -12,7 +12,7 @@ public class WhoAmI {
     }
 
     public WhoAmI(Options options) {
-        nodeName = options.getString("profile.node-name");
+        nodeName = options.nodeName();
     }
 
     public String getNodeName() {

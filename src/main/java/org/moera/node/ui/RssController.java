@@ -51,7 +51,7 @@ public class RssController {
 
         SyndFeed feed = new SyndFeedImpl();
         feed.setFeedType("rss_2.0");
-        String name = rcp.getOptions().getString("profile.node-name");
+        String name = rcp.nodeName();
         String title = !StringUtils.isEmpty(name) ? name + " - Moera" : "Moera";
         feed.setTitle(title);
         feed.setLink(rcp.getSiteUrl() + "/");

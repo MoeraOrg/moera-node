@@ -74,8 +74,7 @@ public class Updater {
             log.error("No domain exists for node {}", nodeId);
             return;
         }
-        String ownerName = options.getString("profile.node-name");
-        if (StringUtils.isEmpty(ownerName)) {
+        if (StringUtils.isEmpty(options.nodeName())) {
             log.info("No name registered for node {}", nodeId);
             return;
         }

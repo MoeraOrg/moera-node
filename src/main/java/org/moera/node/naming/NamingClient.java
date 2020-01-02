@@ -190,7 +190,7 @@ public class NamingClient {
     private void commitOperation(Options options) {
         String name = options.getString("naming.operation.registered-name");
         Integer generation = options.getInt("naming.operation.registered-name.generation");
-        String prevRegisteredName = options.getString("profile.node-name");
+        String prevRegisteredName = options.nodeName();
         String newRegisteredName = new RegisteredName(name, generation).toString();
         options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {

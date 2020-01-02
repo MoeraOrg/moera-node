@@ -139,8 +139,7 @@ public class NodeNameController {
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
-        String nodeName = registeredNameSecret.getName() != null
-                ? registeredNameSecret.getName() : options.getString("profile.node-name");
+        String nodeName = registeredNameSecret.getName() != null ? registeredNameSecret.getName() : options.nodeName();
         RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
 
         if (StringUtils.isEmpty(registeredName.getName()) || registeredName.getGeneration() == null) {

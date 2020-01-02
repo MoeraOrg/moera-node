@@ -45,7 +45,7 @@ public class CarteController {
         limit = limit != null ? limit : DEFAULT_SET_SIZE;
         limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
 
-        String ownerName = requestContext.getOptions().getString("profile.node-name");
+        String ownerName = requestContext.nodeName();
         if (StringUtils.isEmpty(ownerName)) {
             throw new OperationFailure("carte.node-name-not-set");
         }

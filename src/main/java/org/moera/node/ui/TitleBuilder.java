@@ -24,7 +24,7 @@ public class TitleBuilder {
             buf.append(' ');
             String name = "";
             try {
-                name = requestContext.getPublic().getOptions().getString("profile.node-name");
+                name = requestContext.getPublic().nodeName();
             } catch (Exception e) {
             }
             if (!StringUtils.isEmpty(name)) {

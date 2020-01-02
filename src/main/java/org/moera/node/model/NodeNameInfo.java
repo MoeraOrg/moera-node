@@ -23,7 +23,7 @@ public class NodeNameInfo {
 
     public NodeNameInfo(RequestContext requestContext) {
         Options options = requestContext.getOptions();
-        name = options.getString("profile.node-name");
+        name = options.nodeName();
         if (requestContext.isAdmin()) {
             operationStatus = options.getString("naming.operation.status");
             OperationStatus status = OperationStatus.forValue(operationStatus);

@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -15,7 +16,6 @@ import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingAddedEvent;
 import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
-import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -24,7 +24,6 @@ import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
-import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,15 +76,14 @@ public class PostingController {
                 LogUtil.format(postingText.getBodyFormat()),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
-        Options options = requestContext.getOptions();
-        String name = options.getString("profile.node-name");
+        String name = requestContext.nodeName();
         if (name == null) {
             throw new OperationFailure("posting.node-name-not-set");
         }
 
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
-        posting.setNodeId(options.nodeId());
+        posting.setNodeId(requestContext.nodeId());
         posting.setReceiverName(name);
         posting.setOwnerName(name);
         postingRepository.save(posting);

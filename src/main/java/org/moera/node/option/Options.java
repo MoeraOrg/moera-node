@@ -266,4 +266,8 @@ public class Options {
         return nodeId;
     }
 
+    public String nodeName() {
+        return getString("profile.node-name");
+    }
+
 }

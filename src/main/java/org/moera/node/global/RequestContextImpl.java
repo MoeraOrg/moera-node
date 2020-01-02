@@ -104,4 +104,9 @@ public class RequestContextImpl implements RequestContext {
         return options != null ? options.nodeId() : null;
     }
 
+    @Override
+    public String nodeName() {
+        return options != null ? options.nodeName() : null;
+    }
+
 }
