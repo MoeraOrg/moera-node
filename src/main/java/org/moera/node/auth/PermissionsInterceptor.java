@@ -72,7 +72,7 @@ public class PermissionsInterceptor extends HandlerInterceptorAdapter {
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");
         }
-        if (!StringUtils.isEmpty(requestContext.getClientName())) {
+        if (!requestContext.isAdmin() && !StringUtils.isEmpty(requestContext.getClientName())) {
             log.info("Authorized with node name {}", requestContext.getClientName());
         }
     }

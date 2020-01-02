@@ -81,7 +81,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public String getClientName() {
-        return clientName;
+        return isAdmin() ? nodeName() : clientName;
     }
 
     @Override
