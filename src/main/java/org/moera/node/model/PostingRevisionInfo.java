@@ -21,6 +21,7 @@ public class PostingRevisionInfo {
     private byte[] signature;
     private short signatureVersion;
     private long moment;
+    private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
 
     public PostingRevisionInfo() {
@@ -145,6 +146,14 @@ public class PostingRevisionInfo {
 
     public void setMoment(long moment) {
         this.moment = moment;
+    }
+
+    public ClientReactionInfo getClientReaction() {
+        return clientReaction;
+    }
+
+    public void setClientReaction(ClientReactionInfo clientReaction) {
+        this.clientReaction = clientReaction;
     }
 
     public ReactionTotalsInfo getReactions() {

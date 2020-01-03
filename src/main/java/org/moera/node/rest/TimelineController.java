@@ -2,14 +2,18 @@ package org.moera.node.rest;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.ReactionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.TimelineInfo;
 import org.moera.node.model.TimelineSliceInfo;
@@ -19,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,6 +39,9 @@ public class TimelineController {
 
     @Inject
     private PostingRepository postingRepository;
+
+    @Inject
+    private ReactionRepository reactionRepository;
 
     @GetMapping
     public TimelineInfo get() {
@@ -103,6 +111,17 @@ public class TimelineController {
                 .map(PostingInfo::new)
                 .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
                 .collect(Collectors.toList());
+        String clientName = requestContext.getClientName();
+        if (!StringUtils.isEmpty(clientName)) {
+            Map<String, PostingInfo> postingMap = postings.stream().collect(
+                    Collectors.toMap(PostingInfo::getId, Function.identity()));
+            reactionRepository.findByEntriesInRangeAndOwner(
+                    requestContext.nodeId(), sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
+                    .stream()
+                    .map(ClientReactionInfo::new)
+                    .filter(r -> postingMap.containsKey(r.getPostingId()))
+                    .forEach(r -> postingMap.get(r.getPostingId()).setClientReaction(r));
+        }
         if (postings.size() > limit) {
             postings.remove(limit);
         }

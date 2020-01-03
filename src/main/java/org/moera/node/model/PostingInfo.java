@@ -31,6 +31,7 @@ public class PostingInfo {
     private short signatureVersion;
     private long moment;
     private Map<String, String[]> operations;
+    private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
 
     public PostingInfo() {
@@ -227,6 +228,14 @@ public class PostingInfo {
 
     public void setOperations(Map<String, String[]> operations) {
         this.operations = operations;
+    }
+
+    public ClientReactionInfo getClientReaction() {
+        return clientReaction;
+    }
+
+    public void setClientReaction(ClientReactionInfo clientReaction) {
+        this.clientReaction = clientReaction;
     }
 
     public ReactionTotalsInfo getReactions() {

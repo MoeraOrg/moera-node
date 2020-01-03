@@ -12,12 +12,15 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.Reaction;
+import org.moera.node.data.ReactionRepository;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingAddedEvent;
 import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeatures;
@@ -28,6 +31,7 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,6 +55,9 @@ public class PostingController {
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
+    private ReactionRepository reactionRepository;
 
     @Inject
     private PostingOperations postingOperations;
@@ -115,7 +122,7 @@ public class PostingController {
                 postingText::toEntryRevision);
         eventManager.send(new PostingUpdatedEvent(posting));
 
-        return new PostingInfo(posting);
+        return withClientReaction(new PostingInfo(posting));
     }
 
     @GetMapping("/{id}")
@@ -129,7 +136,7 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return new PostingInfo(posting, includeSet.contains("source"));
+        return withClientReaction(new PostingInfo(posting, includeSet.contains("source")));
     }
 
     @DeleteMapping("/{id}")
@@ -149,6 +156,16 @@ public class PostingController {
         eventManager.send(new PostingDeletedEvent(posting));
 
         return Result.OK;
+    }
+
+    private PostingInfo withClientReaction(PostingInfo postingInfo) {
+        String clientName = requestContext.getClientName();
+        if (StringUtils.isEmpty(clientName)) {
+            return postingInfo;
+        }
+        Reaction reaction = reactionRepository.findByEntryAndOwner(UUID.fromString(postingInfo.getId()), clientName);
+        postingInfo.setClientReaction(new ClientReactionInfo(reaction));
+        return postingInfo;
     }
 
 }
