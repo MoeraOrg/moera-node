@@ -70,10 +70,10 @@ public class AuthenticationManager {
         if (!clientAddress.equals(fp.address)) {
             throw new InvalidCarteException("carte.invalid");
         }
-        if (Instant.now().isBefore(Instant.ofEpochSecond(fp.beginning))) {
+        if (Instant.now().isBefore(Instant.ofEpochSecond(fp.beginning).minusSeconds(60))) {
             throw new InvalidCarteException("carte.not-begun");
         }
-        if (Instant.now().isAfter(Instant.ofEpochSecond(fp.deadline))) {
+        if (Instant.now().isAfter(Instant.ofEpochSecond(fp.deadline).plusSeconds(60))) {
             throw new InvalidCarteException("carte.expired");
         }
         byte[] signingKey = namingCache.get(fp.ownerName).getSigningKey();
