@@ -7,7 +7,7 @@ import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.moera.node.domain.DomainInterceptor;
 import org.moera.node.global.ClientIdInterceptor;
-import org.moera.node.auth.PermissionsInterceptor;
+import org.moera.node.auth.AuthenticationInterceptor;
 import org.moera.node.global.CacheControlInterceptor;
 import org.moera.node.global.NetworkLatencyInterceptor;
 import org.moera.node.global.SyndFeedHttpMessageConverter;
@@ -37,7 +37,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     private DomainInterceptor domainInterceptor;
 
     @Inject
-    private PermissionsInterceptor permissionsInterceptor;
+    private AuthenticationInterceptor authenticationInterceptor;
 
     @Inject
     private VirtualPageInterceptor virtualPageInterceptor;
@@ -69,7 +69,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(domainInterceptor).order(-1);
-        registry.addInterceptor(permissionsInterceptor);
+        registry.addInterceptor(authenticationInterceptor);
         registry.addInterceptor(virtualPageInterceptor);
         registry.addInterceptor(networkLatencyInterceptor);
         registry.addInterceptor(cacheControlInterceptor);

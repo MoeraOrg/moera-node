@@ -17,9 +17,9 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 @Component
-public class PermissionsInterceptor extends HandlerInterceptorAdapter {
+public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
 
-    private static Logger log = LoggerFactory.getLogger(PermissionsInterceptor.class);
+    private static Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
 
     @Value("${node.root-secret}")
     private String rootSecret;
