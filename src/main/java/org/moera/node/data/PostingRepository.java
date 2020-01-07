@@ -14,7 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
-    @Query("select p from Posting p join fetch p.currentRevision join fetch p.reactionTotals"
+    @Query("select p from Posting p join fetch p.currentRevision left join fetch p.reactionTotals"
             + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
     Optional<Posting> findByNodeIdAndId(UUID nodeId, UUID id);
 
