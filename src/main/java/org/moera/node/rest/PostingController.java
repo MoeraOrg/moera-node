@@ -164,7 +164,7 @@ public class PostingController {
             return postingInfo;
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
-        postingInfo.setClientReaction(new ClientReactionInfo(reaction));
+        postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
         return postingInfo;
     }
 
