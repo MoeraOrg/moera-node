@@ -185,8 +185,8 @@ public class ReactionController {
                     deleted.get(0).setDeletedAt(null);
                     changeTotals(entry, deleted.get(0), 1);
                 }
+                changeTotals(entry, reaction, -1);
             }
-            changeTotals(entry, reaction, -1);
             reactionRepository.delete(reaction);
         });
     }
