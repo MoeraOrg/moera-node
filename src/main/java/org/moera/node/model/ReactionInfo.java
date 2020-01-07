@@ -1,10 +1,12 @@
 package org.moera.node.model;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Reaction;
+import org.moera.node.data.ReactionTotal;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,11 +23,12 @@ public class ReactionInfo {
     private byte[] signature;
     private short signatureVersion;
     private Map<String, String[]> operations;
+    private ReactionTotalsInfo totals;
 
     public ReactionInfo() {
     }
 
-    public ReactionInfo(Reaction reaction) {
+    public ReactionInfo(Reaction reaction, Collection<ReactionTotal> totals) {
         id = reaction.getId().toString();
         ownerName = reaction.getOwnerName();
         postingId = reaction.getEntryRevision().getEntry().getId().toString();
@@ -38,6 +41,7 @@ public class ReactionInfo {
         signatureVersion = reaction.getSignatureVersion();
         operations = new HashMap<>();
         operations.put("delete", new String[]{"owner", "admin"});
+        this.totals = new ReactionTotalsInfo(totals);
     }
 
     public String getId() {
@@ -126,6 +130,14 @@ public class ReactionInfo {
 
     public void setOperations(Map<String, String[]> operations) {
         this.operations = operations;
+    }
+
+    public ReactionTotalsInfo getTotals() {
+        return totals;
+    }
+
+    public void setTotals(ReactionTotalsInfo totals) {
+        this.totals = totals;
     }
 
 }

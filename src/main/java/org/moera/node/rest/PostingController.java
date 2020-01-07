@@ -163,7 +163,7 @@ public class PostingController {
         if (StringUtils.isEmpty(clientName)) {
             return postingInfo;
         }
-        Reaction reaction = reactionRepository.findByEntryAndOwner(UUID.fromString(postingInfo.getId()), clientName);
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
         postingInfo.setClientReaction(new ClientReactionInfo(reaction));
         return postingInfo;
     }
