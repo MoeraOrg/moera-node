@@ -119,7 +119,8 @@ public class ReactionController {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, reactionDescription.getOwnerName());
         if (reaction == null || reaction.getDeadline() == null
                 || reaction.isNegative() != reactionDescription.isNegative()
-                || reaction.getEmoji() != reactionDescription.getEmoji()) {
+                || reaction.getEmoji() != reactionDescription.getEmoji()
+                || reaction.getSignature() == null && reactionDescription.getSignature() != null) {
 
             if (reaction != null) {
                 changeTotals(posting, reaction, -1);
