@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -26,6 +27,8 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
+import org.moera.node.event.EventManager;
+import org.moera.node.event.model.PostingReactionsChangedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
@@ -44,6 +47,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -74,6 +78,9 @@ public class ReactionController {
 
     @Inject
     private FingerprintManager fingerprintManager;
+
+    @Inject
+    private EventManager eventManager;
 
     @PostMapping
     @Transactional
@@ -140,9 +147,33 @@ public class ReactionController {
         }
         reactionRepository.flush();
 
+        eventManager.send(new PostingReactionsChangedEvent(posting));
+
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
         return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
                 .body(new ReactionInfo(reaction, totals));
+    }
+
+    @GetMapping("/{ownerName}")
+    public ReactionInfo get(@PathVariable UUID postingId, @PathVariable String ownerName)
+            throws AuthenticationException {
+
+        log.info("GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
+                LogUtil.format(postingId), LogUtil.format(ownerName));
+
+        if (!requestContext.isAdmin() && !Objects.equals(requestContext.getClientName(), ownerName)) {
+            throw new AuthenticationException();
+        }
+
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("reaction.posting-not-found");
+        }
+
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
+        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
+
+        return reaction != null ? new ReactionInfo(reaction, totals) : new ReactionInfo(postingId, totals);
     }
 
     @DeleteMapping("/{ownerName}")
@@ -168,6 +199,8 @@ public class ReactionController {
         }
         reactionRepository.flush();
 
+        eventManager.send(new PostingReactionsChangedEvent(posting));
+
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
         return new ReactionTotalsInfo(totals);
     }
@@ -175,6 +208,7 @@ public class ReactionController {
     @Scheduled(fixedDelayString = "PT15M")
     @Transactional
     public void purgeExpired() {
+        Set<Entry> changed = new HashSet<>();
         reactionRepository.findExpired(Util.now()).forEach(reaction -> {
             Entry entry = reaction.getEntryRevision().getEntry();
             if (reaction.getDeletedAt() == null) {
@@ -187,9 +221,11 @@ public class ReactionController {
                     changeTotals(entry, deleted.get(0), 1);
                 }
                 changeTotals(entry, reaction, -1);
+                changed.add(entry);
             }
             reactionRepository.delete(reaction);
         });
+        changed.stream().map(e -> (Posting) e).map(PostingReactionsChangedEvent::new).forEach(eventManager::send);
     }
 
     private void changeTotals(Entry entry, Reaction reaction, int delta) {

@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Reaction;
@@ -16,12 +17,12 @@ public class ReactionInfo {
     private String ownerName;
     private String postingId;
     private String postingRevisionId;
-    private boolean negative;
-    private int emoji;
-    private long createdAt;
+    private Boolean negative;
+    private Integer emoji;
+    private Long createdAt;
     private Long deadline;
     private byte[] signature;
-    private short signatureVersion;
+    private Short signatureVersion;
     private Map<String, String[]> operations;
     private ReactionTotalsInfo totals;
 
@@ -41,6 +42,11 @@ public class ReactionInfo {
         signatureVersion = reaction.getSignatureVersion();
         operations = new HashMap<>();
         operations.put("delete", new String[]{"owner", "admin"});
+        this.totals = new ReactionTotalsInfo(totals);
+    }
+
+    public ReactionInfo(UUID postingId, Collection<ReactionTotal> totals) {
+        this.postingId = postingId.toString();
         this.totals = new ReactionTotalsInfo(totals);
     }
 
@@ -76,27 +82,27 @@ public class ReactionInfo {
         this.postingRevisionId = postingRevisionId;
     }
 
-    public boolean isNegative() {
+    public Boolean isNegative() {
         return negative;
     }
 
-    public void setNegative(boolean negative) {
+    public void setNegative(Boolean negative) {
         this.negative = negative;
     }
 
-    public int getEmoji() {
+    public Integer getEmoji() {
         return emoji;
     }
 
-    public void setEmoji(int emoji) {
+    public void setEmoji(Integer emoji) {
         this.emoji = emoji;
     }
 
-    public long getCreatedAt() {
+    public Long getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(long createdAt) {
+    public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -116,11 +122,11 @@ public class ReactionInfo {
         this.signature = signature;
     }
 
-    public short getSignatureVersion() {
+    public Short getSignatureVersion() {
         return signatureVersion;
     }
 
-    public void setSignatureVersion(short signatureVersion) {
+    public void setSignatureVersion(Short signatureVersion) {
         this.signatureVersion = signatureVersion;
     }
 
