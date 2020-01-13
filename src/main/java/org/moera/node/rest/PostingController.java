@@ -20,6 +20,7 @@ import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -27,6 +28,7 @@ import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,9 +95,14 @@ public class PostingController {
         posting.setNodeId(requestContext.nodeId());
         posting.setReceiverName(name);
         posting.setOwnerName(name);
+        postingText.toEntry(posting);
         postingRepository.save(posting);
 
-        posting = postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
+        try {
+            posting = postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
+        } catch (BodyMappingException e) {
+            throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
+        }
         eventManager.send(new PostingAddedEvent(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
@@ -119,8 +126,13 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
-                postingText::toEntryRevision);
+        postingText.toEntry(posting);
+        try {
+            posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
+                    postingText::toEntryRevision);
+        } catch (BodyMappingException e) {
+            throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
+        }
         eventManager.send(new PostingUpdatedEvent(posting));
 
         return withClientReaction(new PostingInfo(posting, requestContext.getOptions()));

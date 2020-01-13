@@ -2,6 +2,7 @@ package org.moera.node.text;
 
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.Body;
+import org.moera.node.model.BodyMappingException;
 
 public class TextConverter {
 
@@ -21,7 +22,11 @@ public class TextConverter {
     public static Body toHtml(SourceFormat format, Body source) {
         Body converted = new Body();
         converted.setSubject(source.getSubject());
-        converted.setText(toHtml(format, source.getText()));
+        try {
+            converted.setText(toHtml(format, source.getText()));
+        } catch (Exception e) {
+            throw new BodyMappingException();
+        }
         return converted;
     }
 

@@ -3,6 +3,7 @@ package org.moera.node.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
@@ -25,6 +26,12 @@ public class PostingText {
     private String bodyFormat;
 
     private Long publishAt;
+
+    @Size(max = 255)
+    private String acceptedReactionsPositive;
+
+    @Size(max = 255)
+    private String acceptedReactionsNegative;
 
     public PostingText() {
     }
@@ -67,6 +74,27 @@ public class PostingText {
 
     public void setPublishAt(Long publishAt) {
         this.publishAt = publishAt;
+    }
+
+    public String getAcceptedReactionsPositive() {
+        return acceptedReactionsPositive;
+    }
+
+    public void setAcceptedReactionsPositive(String acceptedReactionsPositive) {
+        this.acceptedReactionsPositive = acceptedReactionsPositive;
+    }
+
+    public String getAcceptedReactionsNegative() {
+        return acceptedReactionsNegative;
+    }
+
+    public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
+        this.acceptedReactionsNegative = acceptedReactionsNegative;
+    }
+
+    public void toEntry(Entry entry) {
+        entry.setAcceptedReactionsPositive(acceptedReactionsPositive);
+        entry.setAcceptedReactionsNegative(acceptedReactionsNegative);
     }
 
     public void toEntryRevision(EntryRevision revision) {
