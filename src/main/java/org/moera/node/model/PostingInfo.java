@@ -70,12 +70,8 @@ public class PostingInfo {
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
         operations.put("revisions", new String[0]);
-        acceptedReactionsPositive = posting.getAcceptedReactionsPositive() != null
-                ? posting.getAcceptedReactionsPositive()
-                : options.getString("posting.reactions.positive.accepted");
-        acceptedReactionsNegative = posting.getAcceptedReactionsNegative() != null
-                ? posting.getAcceptedReactionsNegative()
-                : options.getString("posting.reactions.negative.accepted");
+        acceptedReactionsPositive = posting.getAcceptedReactionsPositiveOrDefault(options);
+        acceptedReactionsNegative = posting.getAcceptedReactionsNegativeOrDefault(options);
         reactions = new ReactionTotalsInfo(posting.getReactionTotals());
     }
 

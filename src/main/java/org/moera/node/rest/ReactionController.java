@@ -37,7 +37,9 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.util.EmojiList;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,6 +123,13 @@ public class ReactionController {
                     posting.getCurrentRevision().getDigest())) {
                 throw new IncorrectSignatureException();
             }
+        }
+
+        EmojiList accepted = new EmojiList(!reactionDescription.isNegative()
+                ? posting.getAcceptedReactionsPositiveOrDefault(requestContext.getOptions())
+                : posting.getAcceptedReactionsNegativeOrDefault(requestContext.getOptions()));
+        if (!accepted.isAccepted(reactionDescription.getEmoji())) {
+            throw new ValidationFailure("reaction.not-accepted");
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, reactionDescription.getOwnerName());

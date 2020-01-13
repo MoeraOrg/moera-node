@@ -33,7 +33,7 @@ public class EmojiList {
             s = s.substring(1);
         }
         if (s.startsWith("0x")) {
-            return Integer.parseInt(s.substring(2, 16));
+            return Integer.parseInt(s.substring(2), 16);
         } else {
             return Integer.parseInt(s);
         }
