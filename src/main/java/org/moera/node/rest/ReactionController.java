@@ -234,7 +234,9 @@ public class ReactionController {
             }
             reactionRepository.delete(reaction);
         });
-        changed.stream().map(e -> (Posting) e).map(PostingReactionsChangedEvent::new).forEach(eventManager::send);
+        changed.stream()
+                .map(e -> (Posting) e)
+                .forEach(p -> eventManager.send(p.getNodeId(), new PostingReactionsChangedEvent(p)));
     }
 
     private void changeTotals(Entry entry, Reaction reaction, int delta) {
