@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Posting;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -31,17 +32,19 @@ public class PostingInfo {
     private short signatureVersion;
     private long moment;
     private Map<String, String[]> operations;
+    private String acceptedReactionsPositive;
+    private String acceptedReactionsNegative;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
 
     public PostingInfo() {
     }
 
-    public PostingInfo(Posting posting) {
-        this(posting, false);
+    public PostingInfo(Posting posting, Options options) {
+        this(posting, false, options);
     }
 
-    public PostingInfo(Posting posting, boolean includeSource) {
+    public PostingInfo(Posting posting, boolean includeSource, Options options) {
         id = posting.getId().toString();
         revisionId = posting.getCurrentRevision().getId().toString();
         totalRevisions = posting.getTotalRevisions();
@@ -67,6 +70,12 @@ public class PostingInfo {
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
         operations.put("revisions", new String[0]);
+        acceptedReactionsPositive = posting.getAcceptedReactionsPositive() != null
+                ? posting.getAcceptedReactionsPositive()
+                : options.getString("posting.reactions.positive.accepted");
+        acceptedReactionsNegative = posting.getAcceptedReactionsNegative() != null
+                ? posting.getAcceptedReactionsNegative()
+                : options.getString("posting.reactions.negative.accepted");
         reactions = new ReactionTotalsInfo(posting.getReactionTotals());
     }
 
@@ -228,6 +237,22 @@ public class PostingInfo {
 
     public void setOperations(Map<String, String[]> operations) {
         this.operations = operations;
+    }
+
+    public String getAcceptedReactionsPositive() {
+        return acceptedReactionsPositive;
+    }
+
+    public void setAcceptedReactionsPositive(String acceptedReactionsPositive) {
+        this.acceptedReactionsPositive = acceptedReactionsPositive;
+    }
+
+    public String getAcceptedReactionsNegative() {
+        return acceptedReactionsNegative;
+    }
+
+    public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
+        this.acceptedReactionsNegative = acceptedReactionsNegative;
     }
 
     public ClientReactionInfo getClientReaction() {

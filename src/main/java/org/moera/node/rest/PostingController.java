@@ -98,7 +98,8 @@ public class PostingController {
         posting = postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
         eventManager.send(new PostingAddedEvent(posting));
 
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting));
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
+                .body(new PostingInfo(posting, requestContext.getOptions()));
     }
 
     @PutMapping("/{id}")
@@ -122,7 +123,7 @@ public class PostingController {
                 postingText::toEntryRevision);
         eventManager.send(new PostingUpdatedEvent(posting));
 
-        return withClientReaction(new PostingInfo(posting));
+        return withClientReaction(new PostingInfo(posting, requestContext.getOptions()));
     }
 
     @GetMapping("/{id}")
@@ -136,7 +137,7 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return withClientReaction(new PostingInfo(posting, includeSet.contains("source")));
+        return withClientReaction(new PostingInfo(posting, includeSet.contains("source"), requestContext.getOptions()));
     }
 
     @DeleteMapping("/{id}")

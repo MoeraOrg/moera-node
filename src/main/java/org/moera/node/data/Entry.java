@@ -57,6 +57,12 @@ public class Entry {
     @OneToOne
     private EntryRevision currentRevision;
 
+    @Size(max = 255)
+    private String acceptedReactionsPositive;
+
+    @Size(max = 255)
+    private String acceptedReactionsNegative;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -133,6 +139,22 @@ public class Entry {
 
     public void setCurrentRevision(EntryRevision currentRevision) {
         this.currentRevision = currentRevision;
+    }
+
+    public String getAcceptedReactionsPositive() {
+        return acceptedReactionsPositive;
+    }
+
+    public void setAcceptedReactionsPositive(String acceptedReactionsPositive) {
+        this.acceptedReactionsPositive = acceptedReactionsPositive;
+    }
+
+    public String getAcceptedReactionsNegative() {
+        return acceptedReactionsNegative;
+    }
+
+    public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
+        this.acceptedReactionsNegative = acceptedReactionsNegative;
     }
 
     public Set<EntryRevision> getRevisions() {

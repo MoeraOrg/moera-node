@@ -126,6 +126,16 @@
     min: 7d
     max: 2000d
 
+- name: posting.reactions.positive.accepted
+  type: string
+  defaultValue: +0x1f4a1,+0x1f44d,+0x1f4af,+0x1f60d,+0x1f600,+0x1f926,+0x1f62e,+0x1f622,+0x1f620,+0x1f92e,*
+  title: Accepted positive reactions to posts
+
+- name: posting.reactions.negative.accepted
+  type: string
+  defaultValue: +0x1f4a4,+0x1f44e,+0x1f4a9,+0x2694,+0x23f3,+0x1f3a9,+0x1f921,+0x1f61c,+0x1f494,+0x1f47f
+  title: Accepted negative reactions to posts
+
 - name: webui.head.top.html
   type: string
   defaultValue: ""
