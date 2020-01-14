@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -27,11 +28,8 @@ public class PostingText {
 
     private Long publishAt;
 
-    @Size(max = 255)
-    private String acceptedReactionsPositive;
-
-    @Size(max = 255)
-    private String acceptedReactionsNegative;
+    @Valid
+    private AcceptedReactions acceptedReactions;
 
     public PostingText() {
     }
@@ -76,25 +74,22 @@ public class PostingText {
         this.publishAt = publishAt;
     }
 
-    public String getAcceptedReactionsPositive() {
-        return acceptedReactionsPositive;
+    public AcceptedReactions getAcceptedReactions() {
+        return acceptedReactions;
     }
 
-    public void setAcceptedReactionsPositive(String acceptedReactionsPositive) {
-        this.acceptedReactionsPositive = acceptedReactionsPositive;
-    }
-
-    public String getAcceptedReactionsNegative() {
-        return acceptedReactionsNegative;
-    }
-
-    public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
-        this.acceptedReactionsNegative = acceptedReactionsNegative;
+    public void setAcceptedReactions(AcceptedReactions acceptedReactions) {
+        this.acceptedReactions = acceptedReactions;
     }
 
     public void toEntry(Entry entry) {
-        entry.setAcceptedReactionsPositive(acceptedReactionsPositive);
-        entry.setAcceptedReactionsNegative(acceptedReactionsNegative);
+        if (acceptedReactions != null) {
+            entry.setAcceptedReactionsPositive(acceptedReactions.getPositive());
+            entry.setAcceptedReactionsNegative(acceptedReactions.getNegative());
+        } else {
+            entry.setAcceptedReactionsPositive(null);
+            entry.setAcceptedReactionsNegative(null);
+        }
     }
 
     public void toEntryRevision(EntryRevision revision) {

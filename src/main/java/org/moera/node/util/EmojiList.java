@@ -9,6 +9,9 @@ import org.springframework.util.StringUtils;
 
 public class EmojiList {
 
+    public static final String PATTERN = "^\\s*(?:\\+?(?:\\d+|0x\\p{XDigit}+|\\*)"
+            + "(?:\\s*,\\s*\\+?(?:\\d+|0x\\p{XDigit}+|\\*))*)?\\s*$";
+
     private Set<Integer> accepted = Collections.emptySet();
     private boolean other;
 
