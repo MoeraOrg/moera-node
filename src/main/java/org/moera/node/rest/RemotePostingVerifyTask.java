@@ -20,7 +20,6 @@ import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
-import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -72,10 +71,10 @@ public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
     }
 
     private void fetchSigningKey(String ownerName, long at) {
-        Options options = domains.getDomainOptions(data.getNodeId());
+        String namingLocation = domains.getDomainOptions(data.getNodeId()).getString("naming.location");
         RegisteredName registeredName = (RegisteredName) NodeName.parse(ownerName);
         RegisteredNameInfo nameInfo =
-                namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, options);
+                namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, namingLocation);
         signingKey = nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 

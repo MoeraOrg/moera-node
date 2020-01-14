@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -26,6 +27,35 @@ import org.springframework.stereotype.Service;
 @Service
 public class NamingCache {
 
+    private static class Key {
+
+        public String namingLocation;
+        public String name;
+
+        Key(String namingLocation, String name) {
+            this.namingLocation = namingLocation;
+            this.name = name;
+        }
+
+        @Override
+        public boolean equals(Object peer) {
+            if (this == peer) {
+                return true;
+            }
+            if (peer == null || getClass() != peer.getClass()) {
+                return false;
+            }
+            Key key = (Key) peer;
+            return namingLocation.equals(key.namingLocation) && name.equals(key.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(namingLocation, name);
+        }
+
+    }
+
     private static class Record {
 
         public Instant accessed = Instant.now();
@@ -39,7 +69,7 @@ public class NamingCache {
     private static final Duration ERROR_TTL = Duration.of(1, ChronoUnit.MINUTES);
 
     private ReadWriteLock cacheLock = new ReentrantReadWriteLock();
-    private Map<String, Record> cache = new HashMap<>();
+    private Map<Key, Record> cache = new HashMap<>();
     private final Object queryDone = new Object();
 
     private ThreadLocal<UUID> nodeId = new ThreadLocal<>();
@@ -62,19 +92,25 @@ public class NamingCache {
         this.nodeId.set(nodeId);
     }
 
+    private Key getKey(String name) {
+        Options options = nodeId.get() == null ? requestContext.getOptions() : domains.getDomainOptions(nodeId.get());
+        return new Key(options.getString("naming.location"), name);
+    }
+
     public RegisteredNameDetails getFast(String name) {
-        RegisteredNameDetails details = getOrRun(name);
+        RegisteredNameDetails details = getOrRun(getKey(name));
         return details != null ? details.clone() : new RegisteredNameDetails(false, getRedirector(name), null);
     }
 
     public RegisteredNameDetails get(String name) {
-        RegisteredNameDetails details = getOrRun(name);
+        Key key = getKey(name);
+        RegisteredNameDetails details = getOrRun(key);
         if (details != null) {
             return details.clone();
         }
         synchronized (queryDone) {
             while (true) {
-                Record record = readRecord(name);
+                Record record = readRecord(key);
                 if (record != null) {
                     if (record.error != null) {
                         throw new NamingNotAvailableException(record.error);
@@ -91,24 +127,24 @@ public class NamingCache {
         }
     }
 
-    private Record readRecord(String name) {
+    private Record readRecord(Key key) {
         cacheLock.readLock().lock();
         try {
-            return cache.get(name);
+            return cache.get(key);
         } finally {
             cacheLock.readLock().unlock();
         }
     }
 
-    private RegisteredNameDetails getOrRun(String name) {
-        Record record = readRecord(name);
+    private RegisteredNameDetails getOrRun(Key key) {
+        Record record = readRecord(key);
         if (record == null) {
             cacheLock.writeLock().lock();
             try {
-                record = cache.get(name);
+                record = cache.get(key);
                 if (record == null) {
-                    cache.put(name, new Record());
-                    run(name);
+                    cache.put(key, new Record());
+                    run(key);
                     return null;
                 }
             } finally {
@@ -125,26 +161,25 @@ public class NamingCache {
         }
     }
 
-    private void run(String name) {
-        Options options = nodeId.get() == null ? requestContext.getOptions() : domains.getDomainOptions(nodeId.get());
-        taskExecutor.execute(() -> queryName(name, options));
+    private void run(Key key) {
+        taskExecutor.execute(() -> queryName(key));
     }
 
-    private void queryName(String name, Options options) {
-        RegisteredName registeredName = RegisteredName.parse(name);
+    private void queryName(Key key) {
+        RegisteredName registeredName = RegisteredName.parse(key.name);
         RegisteredNameInfo info = null;
         Throwable error = null;
         try {
-            info = namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), options);
+            info = namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), key.namingLocation);
         } catch (Exception e) {
             error = e;
         }
-        Record record = readRecord(name);
+        Record record = readRecord(key);
         if (record == null) {
             record = new Record();
             cacheLock.writeLock().lock();
             try {
-                cache.put(name, record);
+                cache.put(key, record);
             } finally {
                 cacheLock.writeLock().unlock();
             }
@@ -163,7 +198,7 @@ public class NamingCache {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void purge() {
-        List<String> remove;
+        List<Key> remove;
         cacheLock.readLock().lock();
         try {
             remove = cache.entrySet().stream()
@@ -176,11 +211,11 @@ public class NamingCache {
         if (remove.size() > 0) {
             cacheLock.writeLock().lock();
             try {
-                remove.forEach(name -> {
-                    if (cache.get(name).accessed.plus(NORMAL_TTL).isAfter(Instant.now())) {
-                        run(name);
+                remove.forEach(key -> {
+                    if (cache.get(key).accessed.plus(NORMAL_TTL).isAfter(Instant.now())) {
+                        run(key);
                     } else {
-                        cache.remove(name);
+                        cache.remove(key);
                     }
                 });
             } finally {

@@ -64,7 +64,11 @@ public class NamingClient {
     }
 
     private NamingService getNamingService(Options options) {
-        return namingServices.computeIfAbsent(options.getString("naming.location"), location -> {
+        return getNamingService(options.getString("naming.location"));
+    }
+
+    private NamingService getNamingService(String namingLocation) {
+        return namingServices.computeIfAbsent(namingLocation, location -> {
             try {
                 JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(location));
                 return ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
@@ -203,8 +207,8 @@ public class NamingClient {
         }
     }
 
-    public RegisteredNameInfo getCurrent(String name, int generation, Options options) {
-        NamingService namingService = getNamingService(options);
+    public RegisteredNameInfo getCurrent(String name, int generation, String namingLocation) {
+        NamingService namingService = getNamingService(namingLocation);
         if (namingService == null) {
             log.error("No naming service available");
             return null;
@@ -212,8 +216,8 @@ public class NamingClient {
         return namingService.getCurrent(name, generation);
     }
 
-    public RegisteredNameInfo getCurrentForLatest(String name, Options options) {
-        NamingService namingService = getNamingService(options);
+    public RegisteredNameInfo getCurrentForLatest(String name, String namingLocation) {
+        NamingService namingService = getNamingService(namingLocation);
         if (namingService == null) {
             log.error("No naming service available");
             return null;
@@ -221,8 +225,8 @@ public class NamingClient {
         return namingService.getCurrentForLatest(name);
     }
 
-    public RegisteredNameInfo getPast(String name, int generation, long at, Options options) {
-        NamingService namingService = getNamingService(options);
+    public RegisteredNameInfo getPast(String name, int generation, long at, String namingLocation) {
+        NamingService namingService = getNamingService(namingLocation);
         if (namingService == null) {
             log.error("No naming service available");
             return null;
@@ -230,8 +234,8 @@ public class NamingClient {
         return namingService.getPast(name, generation, at);
     }
 
-    public RegisteredNameInfo getPastForLatest(String name, long at, Options options) {
-        NamingService namingService = getNamingService(options);
+    public RegisteredNameInfo getPastForLatest(String name, long at, String namingLocation) {
+        NamingService namingService = getNamingService(namingLocation);
         if (namingService == null) {
             log.error("No naming service available");
             return null;
