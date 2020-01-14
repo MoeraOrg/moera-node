@@ -32,8 +32,7 @@ public class PostingInfo {
     private short signatureVersion;
     private long moment;
     private Map<String, String[]> operations;
-    private String acceptedReactionsPositive;
-    private String acceptedReactionsNegative;
+    private AcceptedReactions acceptedReactions = new AcceptedReactions();
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
 
@@ -70,8 +69,8 @@ public class PostingInfo {
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
         operations.put("revisions", new String[0]);
-        acceptedReactionsPositive = posting.getAcceptedReactionsPositiveOrDefault(options);
-        acceptedReactionsNegative = posting.getAcceptedReactionsNegativeOrDefault(options);
+        acceptedReactions.setPositive(posting.getAcceptedReactionsPositiveOrDefault(options));
+        acceptedReactions.setNegative(posting.getAcceptedReactionsNegativeOrDefault(options));
         reactions = new ReactionTotalsInfo(posting.getReactionTotals());
     }
 
@@ -235,20 +234,12 @@ public class PostingInfo {
         this.operations = operations;
     }
 
-    public String getAcceptedReactionsPositive() {
-        return acceptedReactionsPositive;
+    public AcceptedReactions getAcceptedReactions() {
+        return acceptedReactions;
     }
 
-    public void setAcceptedReactionsPositive(String acceptedReactionsPositive) {
-        this.acceptedReactionsPositive = acceptedReactionsPositive;
-    }
-
-    public String getAcceptedReactionsNegative() {
-        return acceptedReactionsNegative;
-    }
-
-    public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
-        this.acceptedReactionsNegative = acceptedReactionsNegative;
+    public void setAcceptedReactions(AcceptedReactions acceptedReactions) {
+        this.acceptedReactions = acceptedReactions;
     }
 
     public ClientReactionInfo getClientReaction() {
