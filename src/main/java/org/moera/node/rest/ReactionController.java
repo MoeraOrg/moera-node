@@ -126,8 +126,8 @@ public class ReactionController {
         }
 
         EmojiList accepted = new EmojiList(!reactionDescription.isNegative()
-                ? posting.getAcceptedReactionsPositiveOrDefault(requestContext.getOptions())
-                : posting.getAcceptedReactionsNegativeOrDefault(requestContext.getOptions()));
+                ? posting.getAcceptedReactionsPositive()
+                : posting.getAcceptedReactionsNegative());
         if (!accepted.isAccepted(reactionDescription.getEmoji())) {
             throw new ValidationFailure("reaction.not-accepted");
         }

@@ -6,7 +6,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Posting;
-import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -39,11 +38,11 @@ public class PostingInfo {
     public PostingInfo() {
     }
 
-    public PostingInfo(Posting posting, Options options) {
-        this(posting, false, options);
+    public PostingInfo(Posting posting) {
+        this(posting, false);
     }
 
-    public PostingInfo(Posting posting, boolean includeSource, Options options) {
+    public PostingInfo(Posting posting, boolean includeSource) {
         id = posting.getId().toString();
         revisionId = posting.getCurrentRevision().getId().toString();
         totalRevisions = posting.getTotalRevisions();
@@ -69,8 +68,8 @@ public class PostingInfo {
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
         operations.put("revisions", new String[0]);
-        acceptedReactions.setPositive(posting.getAcceptedReactionsPositiveOrDefault(options));
-        acceptedReactions.setNegative(posting.getAcceptedReactionsNegativeOrDefault(options));
+        acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
+        acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
         reactions = new ReactionTotalsInfo(posting.getReactionTotals());
     }
 

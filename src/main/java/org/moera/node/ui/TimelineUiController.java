@@ -65,7 +65,7 @@ public class TimelineUiController {
             postings = postingRepository.findInRange(
                     requestContext.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
-                    .map(p -> new PostingInfo(p, requestContext.getOptions()))
+                    .map(PostingInfo::new)
                     .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
                     .collect(Collectors.toList());
         }
@@ -164,7 +164,7 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
-        model.addAttribute("posting", new PostingInfo(posting, requestContext.getOptions()));
+        model.addAttribute("posting", new PostingInfo(posting));
 
         return "posting";
     }

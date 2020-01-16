@@ -75,7 +75,7 @@ public class DeletedPostingController {
         return postingRepository.findDeleted(requestContext.nodeId(),
                 PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
                 .stream()
-                .map(p -> new PostingInfo(p, requestContext.getOptions()))
+                .map(PostingInfo::new)
                 .collect(Collectors.toList());
     }
 
@@ -89,7 +89,7 @@ public class DeletedPostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return new PostingInfo(posting, requestContext.getOptions());
+        return new PostingInfo(posting);
     }
 
     @PostMapping("/{id}/restore")
@@ -107,7 +107,7 @@ public class DeletedPostingController {
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null);
         eventManager.send(new PostingRestoredEvent(posting));
 
-        return new PostingInfo(posting, requestContext.getOptions());
+        return new PostingInfo(posting);
     }
 
     @Scheduled(fixedDelayString = "P1D")
