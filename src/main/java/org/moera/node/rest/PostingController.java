@@ -90,6 +90,10 @@ public class PostingController {
             throw new OperationFailure("posting.node-name-not-set");
         }
 
+        if (postingText.getAcceptedReactions() == null) {
+            throw new ValidationFailure("postingText.acceptedReactions.empty");
+        }
+
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
         posting.setNodeId(requestContext.nodeId());

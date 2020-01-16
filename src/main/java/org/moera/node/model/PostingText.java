@@ -86,9 +86,6 @@ public class PostingText {
         if (acceptedReactions != null) {
             entry.setAcceptedReactionsPositive(acceptedReactions.getPositive());
             entry.setAcceptedReactionsNegative(acceptedReactions.getNegative());
-        } else {
-            entry.setAcceptedReactionsPositive(null);
-            entry.setAcceptedReactionsNegative(null);
         }
     }
 
