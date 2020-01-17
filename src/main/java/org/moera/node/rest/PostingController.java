@@ -20,6 +20,7 @@ import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -91,7 +92,13 @@ public class PostingController {
         }
 
         if (postingText.getAcceptedReactions() == null) {
-            throw new ValidationFailure("postingText.acceptedReactions.empty");
+            postingText.setAcceptedReactions(new AcceptedReactions());
+        }
+        if (postingText.getAcceptedReactions().getPositive() == null) {
+            postingText.getAcceptedReactions().setPositive("");
+        }
+        if (postingText.getAcceptedReactions().getNegative() == null) {
+            postingText.getAcceptedReactions().setNegative("");
         }
 
         Posting posting = new Posting();

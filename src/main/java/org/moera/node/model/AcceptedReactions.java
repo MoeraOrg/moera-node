@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
@@ -10,15 +9,13 @@ import org.moera.node.util.EmojiList;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AcceptedReactions {
 
-    @NotNull
     @Size(max = 255)
     @Pattern(regexp = EmojiList.PATTERN)
-    private String positive = "";
+    private String positive;
 
-    @NotNull
     @Size(max = 255)
     @Pattern(regexp = EmojiList.PATTERN)
-    private String negative = "";
+    private String negative;
 
     public String getPositive() {
         return positive;
