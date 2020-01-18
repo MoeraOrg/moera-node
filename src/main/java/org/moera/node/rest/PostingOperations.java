@@ -2,10 +2,9 @@ package org.moera.node.rest;
 
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
-import java.sql.Timestamp;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -19,6 +18,7 @@ import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
+import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -44,7 +44,14 @@ public class PostingOperations {
     @Inject
     private PublicPageRepository publicPageRepository;
 
-    private AtomicInteger nonce = new AtomicInteger(0);
+    private MomentFinder momentFinder;
+
+    @PostConstruct
+    public void init() {
+        momentFinder = new MomentFinder(
+            moment -> entryRevisionRepository.countMoments(requestContext.nodeId(), moment) == 0
+        );
+    }
 
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
         ECPrivateKey signingKey = getSigningKey();
@@ -59,7 +66,7 @@ public class PostingOperations {
         posting = postingRepository.saveAndFlush(posting);
         current = posting.getCurrentRevision();
         if (current.getMoment() == 0) {
-            current.setMoment(findFreeMoment(current.getPublishedAt()));
+            current.setMoment(momentFinder.find(current.getPublishedAt()));
         }
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));
@@ -115,24 +122,6 @@ public class PostingOperations {
         }
 
         return revision;
-    }
-
-    private long findFreeMoment(Timestamp timestamp) {
-        int prevM = -1;
-        while (true) {
-            int m = nonce.getAndIncrement() % 100;
-            if (m <= prevM) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                }
-            }
-            long moment = Util.toEpochSecond(timestamp) * 100 + m;
-            int n = entryRevisionRepository.countMoments(requestContext.nodeId(), moment);
-            if (n == 0) {
-                return moment;
-            }
-        }
     }
 
     private void updatePublicPages(long moment) {
