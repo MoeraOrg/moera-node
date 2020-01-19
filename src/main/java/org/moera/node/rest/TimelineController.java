@@ -86,7 +86,7 @@ public class TimelineController {
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getCurrentRevision().getMoment());
         }
-        sliceInfo.setPostings(getPostingsForSlice(sliceInfo, limit));
+        fillSlice(sliceInfo, limit);
         return sliceInfo;
     }
 
@@ -100,11 +100,11 @@ public class TimelineController {
         } else {
             sliceInfo.setBefore(page.getContent().get(limit - 1).getCurrentRevision().getMoment());
         }
-        sliceInfo.setPostings(getPostingsForSlice(sliceInfo, limit));
+        fillSlice(sliceInfo, limit);
         return sliceInfo;
     }
 
-    private List<PostingInfo> getPostingsForSlice(TimelineSliceInfo sliceInfo, int limit) {
+    private void fillSlice(TimelineSliceInfo sliceInfo, int limit) {
         List<PostingInfo> postings = postingRepository.findInRange(
                 requestContext.nodeId(), sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
@@ -125,7 +125,7 @@ public class TimelineController {
         if (postings.size() > limit) {
             postings.remove(limit);
         }
-        return postings;
+        sliceInfo.setPostings(postings);
     }
 
 }
