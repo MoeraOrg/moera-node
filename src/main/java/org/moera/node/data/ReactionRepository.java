@@ -25,4 +25,7 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
             + " and p.deletedAt is null and r.ownerName = ?4 and r.deletedAt is null")
     List<Reaction> findByEntriesInRangeAndOwner(UUID nodeId, long afterMoment, long beforeMoment, String ownerName);
 
+    @Query("select count(*) from Reaction r where r.entryRevision.entry.id = ?1 and r.moment = ?2")
+    int countMoments(UUID entryId, long moment);
+
 }

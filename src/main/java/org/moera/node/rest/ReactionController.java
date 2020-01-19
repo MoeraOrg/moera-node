@@ -40,6 +40,7 @@ import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.EmojiList;
+import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +84,8 @@ public class ReactionController {
 
     @Inject
     private EventManager eventManager;
+
+    private MomentFinder momentFinder = new MomentFinder();
 
     @PostMapping
     @Transactional
@@ -150,6 +153,9 @@ public class ReactionController {
             if (reactionDescription.getSignature() == null) {
                 reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
             }
+            reaction.setMoment(momentFinder.find(
+                    moment -> reactionRepository.countMoments(postingId, moment) == 0,
+                    Util.now()));
             reaction = reactionRepository.save(reaction);
 
             changeTotals(posting, reaction, 1);

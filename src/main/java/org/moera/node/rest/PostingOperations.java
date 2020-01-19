@@ -4,7 +4,6 @@ import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.util.UUID;
 import java.util.function.Consumer;
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -44,14 +43,7 @@ public class PostingOperations {
     @Inject
     private PublicPageRepository publicPageRepository;
 
-    private MomentFinder momentFinder;
-
-    @PostConstruct
-    public void init() {
-        momentFinder = new MomentFinder(
-            moment -> entryRevisionRepository.countMoments(requestContext.nodeId(), moment) == 0
-        );
-    }
+    private MomentFinder momentFinder = new MomentFinder();
 
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
         ECPrivateKey signingKey = getSigningKey();
@@ -66,7 +58,9 @@ public class PostingOperations {
         posting = postingRepository.saveAndFlush(posting);
         current = posting.getCurrentRevision();
         if (current.getMoment() == 0) {
-            current.setMoment(momentFinder.find(current.getPublishedAt()));
+            current.setMoment(momentFinder.find(
+                    moment -> entryRevisionRepository.countMoments(requestContext.nodeId(), moment) == 0,
+                    current.getPublishedAt()));
         }
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));

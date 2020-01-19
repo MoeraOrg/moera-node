@@ -31,6 +31,9 @@ public class Reaction {
     private int emoji;
 
     @NotNull
+    private long moment;
+
+    @NotNull
     private Timestamp createdAt = Util.now();
 
     private Timestamp deadline;
@@ -79,6 +82,14 @@ public class Reaction {
 
     public void setEmoji(int emoji) {
         this.emoji = emoji;
+    }
+
+    public long getMoment() {
+        return moment;
+    }
+
+    public void setMoment(long moment) {
+        this.moment = moment;
     }
 
     public Timestamp getCreatedAt() {

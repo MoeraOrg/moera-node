@@ -17,8 +17,7 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     Optional<EntryRevision> findByDeletedEntryIdAndId(UUID nodeId, UUID entryId, UUID id);
 
     @Query("select count(*) from EntryRevision r where r.entry.nodeId = ?1"
-            + " and r.entry.entryType = org.moera.node.data.EntryType.POSTING and r.entry.deletedAt is null"
-            + " and r.moment = ?2")
+            + " and r.entry.entryType = org.moera.node.data.EntryType.POSTING and r.moment = ?2")
     int countMoments(UUID nodeId, long moment);
 
 }
