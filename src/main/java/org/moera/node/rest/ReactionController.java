@@ -35,6 +35,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ValidationFailure;
@@ -89,7 +90,7 @@ public class ReactionController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<ReactionInfo> post(
+    public ResponseEntity<ReactionCreated> post(
             @PathVariable UUID postingId, @Valid @RequestBody ReactionDescription reactionDescription)
             throws AuthenticationException {
 
@@ -166,7 +167,7 @@ public class ReactionController {
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
         return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
-                .body(new ReactionInfo(reaction, totals));
+                .body(new ReactionCreated(reaction, totals));
     }
 
     @GetMapping("/{ownerName}")
@@ -186,9 +187,8 @@ public class ReactionController {
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
-        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
 
-        return reaction != null ? new ReactionInfo(reaction, totals) : new ReactionInfo(postingId, totals);
+        return reaction != null ? new ReactionInfo(reaction) : new ReactionInfo(postingId);
     }
 
     @DeleteMapping("/{ownerName}")

@@ -10,7 +10,7 @@ import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionDescription;
-import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.ReactionCreated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -62,13 +62,13 @@ public class RemoteReactionPostTask extends RemoteTask implements Runnable {
                 .post()
                 .syncBody(description)
                 .retrieve()
-                .bodyToMono(ReactionInfo.class)
+                .bodyToMono(ReactionCreated.class)
                 .subscribe(this::success, this::error);
     }
 
-    private void success(ReactionInfo info) {
+    private void success(ReactionCreated info) {
         initLoggingDomain();
-        log.info("Succeeded to post reaction {} to posting {} at node {}", info.getId(), info.getPostingId(), nodeName);
+        log.info("Succeeded to post reaction to posting {} at node {}", info.getReaction().getPostingId(), nodeName);
     }
 
     private void error(Throwable e) {

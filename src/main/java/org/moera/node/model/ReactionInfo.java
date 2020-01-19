@@ -1,61 +1,48 @@
 package org.moera.node.model;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Reaction;
-import org.moera.node.data.ReactionTotal;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReactionInfo {
 
-    private String id;
     private String ownerName;
     private String postingId;
     private String postingRevisionId;
     private Boolean negative;
     private Integer emoji;
+    private long moment;
     private Long createdAt;
     private Long deadline;
     private byte[] signature;
     private Short signatureVersion;
     private Map<String, String[]> operations;
-    private ReactionTotalsInfo totals;
 
     public ReactionInfo() {
     }
 
-    public ReactionInfo(Reaction reaction, Collection<ReactionTotal> totals) {
-        id = reaction.getId().toString();
+    public ReactionInfo(Reaction reaction) {
         ownerName = reaction.getOwnerName();
         postingId = reaction.getEntryRevision().getEntry().getId().toString();
         postingRevisionId = reaction.getEntryRevision().getId().toString();
         negative = reaction.isNegative();
         emoji = reaction.getEmoji();
+        moment = reaction.getMoment();
         createdAt = Util.toEpochSecond(reaction.getCreatedAt());
         deadline = Util.toEpochSecond(reaction.getDeadline());
         signature = reaction.getSignature();
         signatureVersion = reaction.getSignatureVersion();
         operations = new HashMap<>();
         operations.put("delete", new String[]{"owner", "admin"});
-        this.totals = new ReactionTotalsInfo(totals);
     }
 
-    public ReactionInfo(UUID postingId, Collection<ReactionTotal> totals) {
+    public ReactionInfo(UUID postingId) {
         this.postingId = postingId.toString();
-        this.totals = new ReactionTotalsInfo(totals);
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getOwnerName() {
@@ -98,6 +85,14 @@ public class ReactionInfo {
         this.emoji = emoji;
     }
 
+    public long getMoment() {
+        return moment;
+    }
+
+    public void setMoment(long moment) {
+        this.moment = moment;
+    }
+
     public Long getCreatedAt() {
         return createdAt;
     }
@@ -136,14 +131,6 @@ public class ReactionInfo {
 
     public void setOperations(Map<String, String[]> operations) {
         this.operations = operations;
-    }
-
-    public ReactionTotalsInfo getTotals() {
-        return totals;
-    }
-
-    public void setTotals(ReactionTotalsInfo totals) {
-        this.totals = totals;
     }
 
 }
