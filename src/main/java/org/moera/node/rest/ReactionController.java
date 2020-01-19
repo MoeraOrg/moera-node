@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -34,10 +35,11 @@ import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionCreated;
+import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.EmojiList;
@@ -45,6 +47,7 @@ import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -56,6 +59,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/reactions")
@@ -64,6 +68,7 @@ public class ReactionController {
     private static Logger log = LoggerFactory.getLogger(ReactionController.class);
 
     private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
+    private static final int MAX_REACTIONS_PER_REQUEST = 200;
 
     @Inject
     private RequestContext requestContext;
@@ -168,6 +173,38 @@ public class ReactionController {
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
         return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
                 .body(new ReactionCreated(reaction, totals));
+    }
+
+    @GetMapping
+    public ReactionsSliceInfo getAll(
+            @PathVariable UUID postingId,
+            @RequestParam(required = false) Long before,
+            @RequestParam(required = false) Integer limit) {
+
+        log.info("GET /postings/{postingId}/reactions (postingId = {}, before = {}, limit = {})",
+                LogUtil.format(postingId), LogUtil.format(before), LogUtil.format(limit));
+
+        limit = limit != null && limit <= MAX_REACTIONS_PER_REQUEST ? limit : MAX_REACTIONS_PER_REQUEST;
+        if (limit < 0) {
+            throw new ValidationFailure("limit.invalid");
+        }
+        before = before != null ? before : Long.MAX_VALUE;
+        return getReactionsBefore(postingId, before, limit);
+    }
+
+    private ReactionsSliceInfo getReactionsBefore(UUID postingId, long before, int limit) {
+        Page<Reaction> page = reactionRepository.findSlice(postingId, Long.MIN_VALUE, before,
+                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+        ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
+        sliceInfo.setBefore(before);
+        if (page.getNumberOfElements() < limit + 1) {
+            sliceInfo.setAfter(Long.MIN_VALUE);
+        } else {
+            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+        }
+        sliceInfo.setTotal((int) page.getTotalElements());
+        sliceInfo.setReactions(page.stream().map(ReactionInfo::new).collect(Collectors.toList()));
+        return sliceInfo;
     }
 
     @GetMapping("/{ownerName}")

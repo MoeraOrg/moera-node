@@ -6,6 +6,7 @@ public class ReactionsSliceInfo {
 
     private long before;
     private long after;
+    private int total;
     private List<ReactionInfo> reactions;
 
     public ReactionsSliceInfo() {
@@ -25,6 +26,14 @@ public class ReactionsSliceInfo {
 
     public void setAfter(long after) {
         this.after = after;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public void setTotal(int total) {
+        this.total = total;
     }
 
     public List<ReactionInfo> getReactions() {
