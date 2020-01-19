@@ -9,7 +9,7 @@ import org.moera.node.data.ReactionTotal;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReactionCreated {
 
-    ReactionInfo reaction;
+    private ReactionInfo reaction;
     private ReactionTotalsInfo totals;
 
     public ReactionCreated() {
