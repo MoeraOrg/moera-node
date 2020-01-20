@@ -178,22 +178,23 @@ public class ReactionController {
     @GetMapping
     public ReactionsSliceInfo getAll(
             @PathVariable UUID postingId,
+            @RequestParam(defaultValue = "false") boolean negative,
             @RequestParam(required = false) Long before,
             @RequestParam(required = false) Integer limit) {
 
-        log.info("GET /postings/{postingId}/reactions (postingId = {}, before = {}, limit = {})",
-                LogUtil.format(postingId), LogUtil.format(before), LogUtil.format(limit));
+        log.info("GET /postings/{postingId}/reactions (postingId = {}, negative = {} before = {}, limit = {})",
+                LogUtil.format(postingId), negative ? "true" : "false", LogUtil.format(before), LogUtil.format(limit));
 
         limit = limit != null && limit <= MAX_REACTIONS_PER_REQUEST ? limit : MAX_REACTIONS_PER_REQUEST;
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
         before = before != null ? before : Long.MAX_VALUE;
-        return getReactionsBefore(postingId, before, limit);
+        return getReactionsBefore(postingId, negative, before, limit);
     }
 
-    private ReactionsSliceInfo getReactionsBefore(UUID postingId, long before, int limit) {
-        Page<Reaction> page = reactionRepository.findSlice(postingId, Long.MIN_VALUE, before,
+    private ReactionsSliceInfo getReactionsBefore(UUID postingId, boolean negative, long before, int limit) {
+        Page<Reaction> page = reactionRepository.findSlice(postingId, negative, Long.MIN_VALUE, before,
                 PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
         sliceInfo.setBefore(before);

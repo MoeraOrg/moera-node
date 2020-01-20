@@ -29,8 +29,8 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
     @Query("select count(*) from Reaction r where r.entryRevision.entry.id = ?1 and r.moment = ?2")
     int countMoments(UUID entryId, long moment);
 
-    @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.moment > ?2 and r.moment <= ?3"
-            + " and r.deletedAt is null")
-    Page<Reaction> findSlice(UUID postingId, long afterMoment, long beforeMoment, Pageable pageable);
+    @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.negative = ?2"
+            + " and r.moment > ?3 and r.moment <= ?4 and r.deletedAt is null")
+    Page<Reaction> findSlice(UUID postingId, boolean negative, long afterMoment, long beforeMoment, Pageable pageable);
 
 }
