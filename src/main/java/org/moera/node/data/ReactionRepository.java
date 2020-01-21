@@ -33,4 +33,9 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
             + " and r.moment > ?3 and r.moment <= ?4 and r.deletedAt is null")
     Page<Reaction> findSlice(UUID postingId, boolean negative, long afterMoment, long beforeMoment, Pageable pageable);
 
+    @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.negative = ?2 and r.emoji = ?3"
+            + " and r.moment > ?4 and r.moment <= ?5 and r.deletedAt is null")
+    Page<Reaction> findSliceWithEmoji(UUID postingId, boolean negative, int emoji, long afterMoment, long beforeMoment,
+                                      Pageable pageable);
+
 }

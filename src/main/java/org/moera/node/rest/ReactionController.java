@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -179,23 +180,29 @@ public class ReactionController {
     public ReactionsSliceInfo getAll(
             @PathVariable UUID postingId,
             @RequestParam(defaultValue = "false") boolean negative,
+            @RequestParam(required = false) Integer emoji,
             @RequestParam(required = false) Long before,
             @RequestParam(required = false) Integer limit) {
 
-        log.info("GET /postings/{postingId}/reactions (postingId = {}, negative = {} before = {}, limit = {})",
-                LogUtil.format(postingId), negative ? "true" : "false", LogUtil.format(before), LogUtil.format(limit));
+        log.info("GET /postings/{postingId}/reactions"
+                        + " (postingId = {}, negative = {} emoji = {} before = {}, limit = {})",
+                LogUtil.format(postingId), negative ? "true" : "false", LogUtil.format(emoji), LogUtil.format(before),
+                LogUtil.format(limit));
 
         limit = limit != null && limit <= MAX_REACTIONS_PER_REQUEST ? limit : MAX_REACTIONS_PER_REQUEST;
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
         before = before != null ? before : Long.MAX_VALUE;
-        return getReactionsBefore(postingId, negative, before, limit);
+        return getReactionsBefore(postingId, negative, emoji, before, limit);
     }
 
-    private ReactionsSliceInfo getReactionsBefore(UUID postingId, boolean negative, long before, int limit) {
-        Page<Reaction> page = reactionRepository.findSlice(postingId, negative, Long.MIN_VALUE, before,
-                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+    private ReactionsSliceInfo getReactionsBefore(UUID postingId, boolean negative, Integer emoji, long before,
+                                                  int limit) {
+        Pageable pageable = PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment");
+        Page<Reaction> page = emoji == null
+                ? reactionRepository.findSlice(postingId, negative, Long.MIN_VALUE, before, pageable)
+                : reactionRepository.findSliceWithEmoji(postingId, negative, emoji, Long.MIN_VALUE, before, pageable);
         ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
