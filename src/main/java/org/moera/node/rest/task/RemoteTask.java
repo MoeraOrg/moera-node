@@ -1,4 +1,4 @@
-package org.moera.node.rest;
+package org.moera.node.rest.task;
 
 import java.util.UUID;
 

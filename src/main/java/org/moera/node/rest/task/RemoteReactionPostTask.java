@@ -1,4 +1,4 @@
-package org.moera.node.rest;
+package org.moera.node.rest.task;
 
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;

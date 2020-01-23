@@ -11,6 +11,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.option.Options;
+import org.moera.node.rest.task.RemoteReactionPostTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;

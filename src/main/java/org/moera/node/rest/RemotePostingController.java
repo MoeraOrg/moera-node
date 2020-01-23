@@ -12,6 +12,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
+import org.moera.node.rest.task.RemotePostingVerifyTask;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
