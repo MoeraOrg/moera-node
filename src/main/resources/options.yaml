@@ -140,3 +140,11 @@
   modifiers:
     min: 30m
     max: 2000d
+
+- name: remote-reaction-verification.lifetime
+  type: Duration
+  defaultValue: 1h
+  title: Reaction verification information lifetime
+  modifiers:
+    min: 30m
+    max: 2000d

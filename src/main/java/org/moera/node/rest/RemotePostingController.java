@@ -46,7 +46,7 @@ public class RemotePostingController {
     @PostMapping("/{id}/verify")
     @Admin
     @Transactional
-    public AsyncOperationCreated executeVerifyTask(@PathVariable String nodeName, @PathVariable String id) {
+    public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String id) {
         log.info("POST /nodes/{name}/postings/{id}/verify, (name = {}, id = {})",
                 LogUtil.format(nodeName), LogUtil.format(id));
 

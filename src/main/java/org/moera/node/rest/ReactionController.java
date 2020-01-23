@@ -216,15 +216,9 @@ public class ReactionController {
     }
 
     @GetMapping("/{ownerName}")
-    public ReactionInfo get(@PathVariable UUID postingId, @PathVariable String ownerName)
-            throws AuthenticationException {
-
+    public ReactionInfo get(@PathVariable UUID postingId, @PathVariable String ownerName) {
         log.info("GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
-
-        if (!requestContext.isAdmin() && !Objects.equals(requestContext.getClientName(), ownerName)) {
-            throw new AuthenticationException();
-        }
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {

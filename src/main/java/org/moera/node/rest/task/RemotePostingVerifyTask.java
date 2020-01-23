@@ -1,12 +1,10 @@
 package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
-import java.util.Locale;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
-import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
@@ -17,30 +15,17 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.naming.NamingClient;
-import org.moera.node.naming.NodeName;
-import org.moera.node.naming.RegisteredName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
+public class RemotePostingVerifyTask extends RemoteVerificationTask implements Runnable {
 
     private static Logger log = LoggerFactory.getLogger(RemotePostingVerifyTask.class);
 
     private RemotePostingVerification data;
 
     private String nodeUri;
-    private byte[] signingKey;
-
-    @Inject
-    private NamingClient namingClient;
-
-    @Inject
-    private MessageSource messageSource;
 
     @Inject
     private EventManager eventManager;
@@ -70,14 +55,6 @@ public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
                 .subscribe(this::verify, this::error);
     }
 
-    private void fetchSigningKey(String ownerName, long at) {
-        String namingLocation = domains.getDomainOptions(data.getNodeId()).getString("naming.location");
-        RegisteredName registeredName = (RegisteredName) NodeName.parse(ownerName);
-        RegisteredNameInfo nameInfo =
-                namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, namingLocation);
-        signingKey = nameInfo != null ? nameInfo.getSigningKey() : null;
-    }
-
     private void verify(PostingInfo postingInfo) {
         try {
             data.setReceiverName(postingInfo.getReceiverName());
@@ -103,7 +80,7 @@ public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
     }
 
     private void verifySignature(PostingInfo postingInfo) {
-        fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
+        byte[] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
         if (signingKey == null) {
             succeeded(false);
             return;
@@ -115,7 +92,7 @@ public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
     }
 
     private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
-        fetchSigningKey(postingInfo.getOwnerName(), postingRevisionInfo.getCreatedAt());
+        byte [] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingRevisionInfo.getCreatedAt());
         if (signingKey == null) {
             succeeded(false);
             return;
@@ -126,20 +103,8 @@ public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
                 postingRevisionInfo.getSignature(), signingKey, constructor, postingInfo, postingRevisionInfo));
     }
 
-    private void error(Throwable e) {
-        if (e instanceof WebClientResponseException) {
-            if (((WebClientResponseException) e).getStatusCode() == HttpStatus.NOT_FOUND) {
-                failed("remote-node.object-not-found", null);
-            } else {
-                failed("remote-node.internal-error", null);
-            }
-        } else {
-            failed("remote-node.invalid-answer", e.getMessage());
-        }
-    }
-
-    private void succeeded(boolean correct) {
-        initLoggingDomain();
+    @Override
+    protected void reportSuccess(boolean correct) {
         log.info("Verified posting {}/{} at node {}: {}",
                 data.getPostingId(), data.getRevisionId(), data.getNodeName(), correct ? "correct" : "incorrect");
         data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
@@ -147,13 +112,8 @@ public class RemotePostingVerifyTask extends RemoteTask implements Runnable {
         eventManager.send(data.getNodeId(), new RemotePostingVerifiedEvent(data));
     }
 
-    private void failed(String errorCode, String message) {
-        initLoggingDomain();
-
-        String errorMessage = messageSource.getMessage(errorCode, null, Locale.getDefault());
-        if (message != null) {
-            errorMessage += ": " + message;
-        }
+    @Override
+    protected void reportFailure(String errorCode, String errorMessage) {
         log.info("Verification of posting {}/{} at node {} failed: {} ({})",
                 data.getPostingId(), data.getRevisionId(), data.getNodeName(), errorMessage, errorCode);
         data.setStatus(VerificationStatus.ERROR);

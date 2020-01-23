@@ -2,8 +2,11 @@ package org.moera.node.fingerprint;
 
 import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionInfo;
 
 @FingerprintVersion(objectType = FingerprintObjectType.REACTION, version = 0)
 public class ReactionFingerprint extends Fingerprint {
@@ -30,6 +33,15 @@ public class ReactionFingerprint extends Fingerprint {
         this.postingFingerprint.setValue(postingFingerprint);
         negative = attributes.isNegative();
         emoji = attributes.getEmoji();
+    }
+
+    public ReactionFingerprint(ReactionInfo reactionInfo, PostingInfo postingInfo,
+                               PostingRevisionInfo postingRevisionInfo) {
+        super(0);
+        ownerName = reactionInfo.getOwnerName();
+        postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        negative = reactionInfo.isNegative();
+        emoji = reactionInfo.getEmoji();
     }
 
 }
