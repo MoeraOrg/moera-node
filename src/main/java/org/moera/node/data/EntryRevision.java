@@ -39,7 +39,7 @@ public class EntryRevision {
 
     @NotNull
     @Size(max = 75)
-    private String bodyFormat = "html";
+    private String bodyFormat = BodyFormat.MESSAGE.getValue();
 
     @NotNull
     private String body = "";

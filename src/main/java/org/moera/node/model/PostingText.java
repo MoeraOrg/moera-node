@@ -4,6 +4,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
@@ -20,11 +21,6 @@ public class PostingText {
     private String bodySrc;
 
     private String bodySrcFormat;
-
-    @Size(max = 65535)
-    private String body;
-
-    private String bodyFormat;
 
     private Long publishAt;
 
@@ -48,22 +44,6 @@ public class PostingText {
 
     public void setBodySrcFormat(String bodySrcFormat) {
         this.bodySrcFormat = bodySrcFormat;
-    }
-
-    public String getBody() {
-        return body;
-    }
-
-    public void setBody(String body) {
-        this.body = body;
-    }
-
-    public String getBodyFormat() {
-        return bodyFormat;
-    }
-
-    public void setBodyFormat(String bodyFormat) {
-        this.bodyFormat = bodyFormat;
     }
 
     public Long getPublishAt() {
@@ -94,7 +74,6 @@ public class PostingText {
     }
 
     public void toEntryRevision(EntryRevision revision) {
-        revision.setBodySrc(bodySrc);
         if (!StringUtils.isEmpty(bodySrcFormat)) {
             SourceFormat format = SourceFormat.forValue(bodySrcFormat);
             if (format == null) {
@@ -103,24 +82,21 @@ public class PostingText {
             revision.setBodySrcFormat(format);
         }
 
-        if (StringUtils.isEmpty(body)) {
-            body = TextConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc)).getEncoded();
-            bodyFormat = "html";
-        } else {
-            if (StringUtils.isEmpty(bodyFormat)) {
-                bodyFormat = "html";
-            }
-        }
-        revision.setBody(body);
-        revision.setBodyFormat(bodyFormat);
-        if (bodyFormat.equals("html")) {
-            Body decodedBody = new Body(body);
-            if (!Shortener.isShort(decodedBody)) {
-                revision.setBodyPreview(Shortener.shorten(decodedBody).getEncoded());
+        if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
+            revision.setBodySrc(bodySrc);
+            Body body = TextConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
+            revision.setBody(body.getEncoded());
+            revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
+            if (!Shortener.isShort(body)) {
+                revision.setBodyPreview(Shortener.shorten(body).getEncoded());
             } else {
                 revision.setBodyPreview(Body.EMPTY);
             }
-            revision.setHeading(HeadingExtractor.extract(decodedBody));
+            revision.setHeading(HeadingExtractor.extract(body));
+        } else {
+            revision.setBodySrc(Body.EMPTY);
+            revision.setBody(bodySrc);
+            revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
         }
         if (publishAt != null) {
             revision.setPublishedAt(Util.toTimestamp(publishAt));

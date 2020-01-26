@@ -79,11 +79,9 @@ public class PostingController {
     @Admin
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
-        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, body = {}, bodyFormat = {}, publishAt = {})",
+        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.format(postingText.getBody(), 64),
-                LogUtil.format(postingText.getBodyFormat()),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
         String name = requestContext.nodeName();
@@ -124,13 +122,10 @@ public class PostingController {
     @Admin
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
-        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, body = {}, bodyFormat = {},"
-                        + " publishAt = {})",
+        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
                 LogUtil.format(id),
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.format(postingText.getBody(), 64),
-                LogUtil.format(postingText.getBodyFormat()),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);

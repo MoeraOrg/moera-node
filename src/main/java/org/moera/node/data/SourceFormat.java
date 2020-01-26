@@ -4,7 +4,8 @@ public enum SourceFormat implements Choosable {
 
     PLAIN_TEXT("No formatting"),
     HTML("HTML"),
-    MARKDOWN("Markdown");
+    MARKDOWN("Markdown"),
+    APPLICATION("Application-specific");
 
     private String title;
 
