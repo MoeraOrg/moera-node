@@ -108,7 +108,7 @@ public class TimelineController {
         List<PostingInfo> postings = postingRepository.findInRange(
                 requestContext.nodeId(), sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
-                .map(PostingInfo::new)
+                .map(p -> new PostingInfo(p, requestContext.isAdmin()))
                 .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
                 .collect(Collectors.toList());
         String clientName = requestContext.getClientName();

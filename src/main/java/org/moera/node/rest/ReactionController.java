@@ -173,7 +173,7 @@ public class ReactionController {
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
         return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
-                .body(new ReactionCreated(reaction, totals));
+                .body(new ReactionCreated(reaction, totals, requestContext.isAdmin() || posting.isReactionsVisible()));
     }
 
     @GetMapping
@@ -189,6 +189,14 @@ public class ReactionController {
                 LogUtil.format(postingId), negative ? "true" : "false", LogUtil.format(emoji), LogUtil.format(before),
                 LogUtil.format(limit));
 
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("reaction.posting-not-found");
+        }
+        if (!posting.isReactionsVisible() && !requestContext.isAdmin()
+                && !Objects.equals(requestContext.getClientName(), posting.getOwnerName())) {
+            return ReactionsSliceInfo.EMPTY;
+        }
         limit = limit != null && limit <= MAX_REACTIONS_PER_REQUEST ? limit : MAX_REACTIONS_PER_REQUEST;
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
@@ -224,6 +232,10 @@ public class ReactionController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
+        if (!posting.isReactionsVisible() && !requestContext.isAdmin()
+                && !Objects.equals(requestContext.getClientName(), posting.getOwnerName())) {
+            return new ReactionInfo(postingId);
+        }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
 
@@ -256,7 +268,7 @@ public class ReactionController {
         eventManager.send(new PostingReactionsChangedEvent(posting));
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
-        return new ReactionTotalsInfo(totals);
+        return new ReactionTotalsInfo(totals, requestContext.isAdmin());
     }
 
     @Scheduled(fixedDelayString = "PT15M")

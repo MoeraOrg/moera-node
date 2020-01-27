@@ -63,6 +63,12 @@ public class Entry {
     @Size(max = 255)
     private String acceptedReactionsNegative;
 
+    @NotNull
+    private boolean reactionsVisible = true;
+
+    @NotNull
+    private boolean reactionTotalsVisible = true;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -155,6 +161,22 @@ public class Entry {
 
     public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
         this.acceptedReactionsNegative = acceptedReactionsNegative;
+    }
+
+    public boolean isReactionsVisible() {
+        return reactionsVisible;
+    }
+
+    public void setReactionsVisible(boolean reactionsVisible) {
+        this.reactionsVisible = reactionsVisible;
+    }
+
+    public boolean isReactionTotalsVisible() {
+        return reactionTotalsVisible;
+    }
+
+    public void setReactionTotalsVisible(boolean reactionTotalsVisible) {
+        this.reactionTotalsVisible = reactionTotalsVisible;
     }
 
     public Set<EntryRevision> getRevisions() {

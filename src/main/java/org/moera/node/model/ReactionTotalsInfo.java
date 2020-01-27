@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.moera.node.data.ReactionTotal;
 
@@ -14,15 +15,23 @@ public class ReactionTotalsInfo {
     public ReactionTotalsInfo() {
     }
 
-    public ReactionTotalsInfo(Collection<ReactionTotal> totals) {
+    public ReactionTotalsInfo(Collection<ReactionTotal> totals, boolean countsVisible) {
+        int sum = 0;
+        if (!countsVisible) {
+            sum = (int) totals.stream()
+                    .collect(Collectors.summarizingInt(ReactionTotal::getTotal))
+                    .getSum();
+        }
         for (ReactionTotal total : totals) {
             if (total.getTotal() == 0) {
                 continue;
             }
+            ReactionTotalInfo info = countsVisible
+                    ? ReactionTotalInfo.countsInfo(total) : ReactionTotalInfo.shareInfo(total, sum);
             if (!total.isNegative()) {
-                positive.add(new ReactionTotalInfo(total));
+                positive.add(info);
             } else {
-                negative.add(new ReactionTotalInfo(total));
+                negative.add(info);
             }
         }
     }

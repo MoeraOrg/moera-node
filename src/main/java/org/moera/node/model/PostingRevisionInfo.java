@@ -27,7 +27,7 @@ public class PostingRevisionInfo {
     public PostingRevisionInfo() {
     }
 
-    public PostingRevisionInfo(EntryRevision revision) {
+    public PostingRevisionInfo(EntryRevision revision, boolean countsVisible) {
         id = revision.getId().toString();
         bodyPreview = new Body(revision.getBodyPreview());
         bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
@@ -41,7 +41,7 @@ public class PostingRevisionInfo {
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         moment = revision.getMoment();
-        reactions = new ReactionTotalsInfo(revision.getReactionTotals());
+        reactions = new ReactionTotalsInfo(revision.getReactionTotals(), countsVisible);
     }
 
     public String getId() {

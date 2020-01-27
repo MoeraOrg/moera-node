@@ -15,9 +15,9 @@ public class ReactionCreated {
     public ReactionCreated() {
     }
 
-    public ReactionCreated(Reaction reaction, Collection<ReactionTotal> totals) {
+    public ReactionCreated(Reaction reaction, Collection<ReactionTotal> totals, boolean countsVisible) {
         this.reaction = new ReactionInfo(reaction);
-        this.totals = new ReactionTotalsInfo(totals);
+        this.totals = new ReactionTotalsInfo(totals, countsVisible);
     }
 
     public ReactionInfo getReaction() {

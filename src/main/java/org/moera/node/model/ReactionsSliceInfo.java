@@ -1,8 +1,11 @@
 package org.moera.node.model;
 
+import java.util.Collections;
 import java.util.List;
 
 public class ReactionsSliceInfo {
+
+    public static final ReactionsSliceInfo EMPTY = ReactionsSliceInfo.empty();
 
     private long before;
     private long after;
@@ -10,6 +13,15 @@ public class ReactionsSliceInfo {
     private List<ReactionInfo> reactions;
 
     public ReactionsSliceInfo() {
+    }
+
+    private static ReactionsSliceInfo empty() {
+        ReactionsSliceInfo info = new ReactionsSliceInfo();
+        info.before = Long.MAX_VALUE;
+        info.after = Long.MIN_VALUE;
+        info.total = 0;
+        info.reactions = Collections.emptyList();
+        return info;
     }
 
     public long getBefore() {

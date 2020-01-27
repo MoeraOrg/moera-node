@@ -61,7 +61,7 @@ public abstract class PostingRevisionControllerBase {
         }
 
         return posting.getRevisions().stream()
-                .map(PostingRevisionInfo::new)
+                .map(r -> new PostingRevisionInfo(r, requestContext.isAdmin() || posting.isReactionTotalsVisible()))
                 .sorted(Comparator.comparing(PostingRevisionInfo::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
@@ -73,12 +73,16 @@ public abstract class PostingRevisionControllerBase {
                 LogUtil.format(postingId),
                 LogUtil.format(id));
 
+        Posting posting = findPosting(postingId);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
         EntryRevision revision = findRevision(postingId, id);
         if (revision == null) {
             throw new ObjectNotFoundFailure("posting-revision.not-found");
         }
 
-        return new PostingRevisionInfo(revision);
+        return new PostingRevisionInfo(revision, requestContext.isAdmin() || posting.isReactionTotalsVisible());
     }
 
     @PostMapping("/{id}/restore")
@@ -106,7 +110,7 @@ public abstract class PostingRevisionControllerBase {
         posting = postingOperations.createOrUpdatePosting(posting, revision, null);
         eventManager.send(getRestorationEvent(posting));
 
-        return new PostingRevisionInfo(revision);
+        return new PostingRevisionInfo(revision, requestContext.isAdmin() || posting.isReactionTotalsVisible());
     }
 
 }

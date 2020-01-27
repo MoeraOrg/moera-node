@@ -7,6 +7,7 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
+import org.moera.node.data.Entry;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.naming.RegisteredName;
@@ -58,19 +59,23 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
-    public CharSequence reactions(ReactionTotalsInfo totalsInfo) {
+    public CharSequence reactions(Entry entry, ReactionTotalsInfo totalsInfo) {
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");
         if (totalsInfo.getPositive().size() > 0) {
             buf.append("<span class=\"positive\">");
             appendEmojis(buf, totalsInfo.getPositive());
-            buf.append(sum(totalsInfo.getPositive()));
+            if (entry.isReactionTotalsVisible()) {
+                buf.append(sum(totalsInfo.getPositive()));
+            }
             buf.append("</span>");
         }
         if (totalsInfo.getNegative().size() > 0) {
             buf.append("<span class=\"negative\">");
             appendEmojis(buf, totalsInfo.getNegative());
-            buf.append(sum(totalsInfo.getNegative()));
+            if (entry.isReactionTotalsVisible()) {
+                buf.append(sum(totalsInfo.getNegative()));
+            }
             buf.append("</span>");
         }
         buf.append("</div>");

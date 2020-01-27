@@ -27,6 +27,10 @@ public class PostingText {
     @Valid
     private AcceptedReactions acceptedReactions;
 
+    private Boolean reactionsVisible;
+
+    private Boolean reactionTotalsVisible;
+
     public PostingText() {
     }
 
@@ -62,6 +66,22 @@ public class PostingText {
         this.acceptedReactions = acceptedReactions;
     }
 
+    public Boolean getReactionsVisible() {
+        return reactionsVisible;
+    }
+
+    public void setReactionsVisible(Boolean reactionsVisible) {
+        this.reactionsVisible = reactionsVisible;
+    }
+
+    public Boolean getReactionTotalsVisible() {
+        return reactionTotalsVisible;
+    }
+
+    public void setReactionTotalsVisible(Boolean reactionTotalsVisible) {
+        this.reactionTotalsVisible = reactionTotalsVisible;
+    }
+
     public void toEntry(Entry entry) {
         if (acceptedReactions != null) {
             if (acceptedReactions.getPositive() != null) {
@@ -70,6 +90,12 @@ public class PostingText {
             if (acceptedReactions.getNegative() != null) {
                 entry.setAcceptedReactionsNegative(acceptedReactions.getNegative());
             }
+        }
+        if (reactionsVisible != null) {
+            entry.setReactionsVisible(reactionsVisible);
+        }
+        if (reactionTotalsVisible != null) {
+            entry.setReactionTotalsVisible(reactionTotalsVisible);
         }
     }
 

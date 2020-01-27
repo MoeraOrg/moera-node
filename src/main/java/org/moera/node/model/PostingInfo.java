@@ -34,15 +34,17 @@ public class PostingInfo {
     private AcceptedReactions acceptedReactions = new AcceptedReactions();
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
+    private Boolean reactionsVisible;
+    private Boolean reactionTotalsVisible;
 
     public PostingInfo() {
     }
 
-    public PostingInfo(Posting posting) {
-        this(posting, false);
+    public PostingInfo(Posting posting, boolean isAdmin) {
+        this(posting, false, isAdmin);
     }
 
-    public PostingInfo(Posting posting, boolean includeSource) {
+    public PostingInfo(Posting posting, boolean includeSource, boolean isAdmin) {
         id = posting.getId().toString();
         revisionId = posting.getCurrentRevision().getId().toString();
         totalRevisions = posting.getTotalRevisions();
@@ -68,9 +70,15 @@ public class PostingInfo {
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
         operations.put("revisions", new String[0]);
+        operations.put("reactions",
+                posting.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
-        reactions = new ReactionTotalsInfo(posting.getReactionTotals());
+        reactions = new ReactionTotalsInfo(posting.getReactionTotals(), isAdmin || posting.isReactionTotalsVisible());
+        if (includeSource) {
+            reactionsVisible = posting.isReactionsVisible();
+            reactionTotalsVisible = posting.isReactionTotalsVisible();
+        }
     }
 
     public String getId() {
@@ -255,6 +263,22 @@ public class PostingInfo {
 
     public void setReactions(ReactionTotalsInfo reactions) {
         this.reactions = reactions;
+    }
+
+    public Boolean getReactionsVisible() {
+        return reactionsVisible;
+    }
+
+    public void setReactionsVisible(Boolean reactionsVisible) {
+        this.reactionsVisible = reactionsVisible;
+    }
+
+    public Boolean getReactionTotalsVisible() {
+        return reactionTotalsVisible;
+    }
+
+    public void setReactionTotalsVisible(Boolean reactionTotalsVisible) {
+        this.reactionTotalsVisible = reactionTotalsVisible;
     }
 
 }
