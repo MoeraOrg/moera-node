@@ -1,8 +1,11 @@
 package org.moera.node.global;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.moera.node.event.model.Event;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -19,6 +22,7 @@ public class RequestContextImpl implements RequestContext {
     private String siteUrl;
     private String clientId;
     private String clientName;
+    private List<Event> afterCommitEvents = new ArrayList<>();
 
     @Override
     public boolean isBrowserExtension() {
@@ -113,6 +117,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public String nodeName() {
         return options != null ? options.nodeName() : null;
+    }
+
+    @Override
+    public void send(Event event) {
+        afterCommitEvents.add(event);
+    }
+
+    @Override
+    public List<Event> getAfterCommitEvents() {
+        return afterCommitEvents;
     }
 
 }

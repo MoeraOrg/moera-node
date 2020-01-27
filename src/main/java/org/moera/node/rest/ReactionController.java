@@ -168,7 +168,7 @@ public class ReactionController {
         }
         reactionRepository.flush();
 
-        eventManager.send(new PostingReactionsChangedEvent(posting));
+        requestContext.send(new PostingReactionsChangedEvent(posting));
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
         boolean countsVisible = posting.isReactionTotalsVisible() || requestContext.isAdmin()
@@ -266,7 +266,7 @@ public class ReactionController {
         }
         reactionRepository.flush();
 
-        eventManager.send(new PostingReactionsChangedEvent(posting));
+        requestContext.send(new PostingReactionsChangedEvent(posting));
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
         return new ReactionTotalsInfo(totals,

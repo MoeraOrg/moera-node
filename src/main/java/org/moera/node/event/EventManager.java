@@ -13,16 +13,14 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.AuthenticationManager;
+import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.model.Event;
 import org.moera.node.event.model.SubscribedEvent;
-import org.moera.node.auth.AuthenticationManager;
-import org.moera.node.auth.InvalidTokenException;
-import org.moera.node.global.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
@@ -45,9 +43,6 @@ public class EventManager {
     private static final String USER_PREFIX = "/user";
     private static final String EVENT_DESTINATION = "/queue";
     private static final String TOKEN_HEADER = "token";
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private Domains domains;
@@ -167,11 +162,11 @@ public class EventManager {
         queue.removeIf(packet -> packet.getSentAt() < boundary);
     }
 
-    public void send(Event event) {
-        send(requestContext.nodeId(), event);
+    public void send(UUID nodeId, Event event) {
+        send(nodeId, null, event);
     }
 
-    public void send(UUID nodeId, Event event) {
+    public void send(UUID nodeId, String clientId, Event event) {
         MDC.put("domain", domains.getDomainName(nodeId));
         log.info("Event arrived: {}", event.getType());
 
@@ -183,10 +178,7 @@ public class EventManager {
             packet.setQueueStartedAt(startedAt);
             packet.setOrdinal(++lastOrdinal);
             packet.setSentAt(Instant.now().getEpochSecond());
-            try {
-                packet.setCid(requestContext.getClientId());
-            } catch (BeanCreationException e) { // No request
-            }
+            packet.setCid(clientId);
             packet.setEvent(event);
             queue.add(packet);
         } finally {

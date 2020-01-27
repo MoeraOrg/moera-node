@@ -26,20 +26,19 @@ import org.bouncycastle.math.ec.ECPoint;
 import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
-import org.moera.node.event.EventManager;
-import org.moera.node.event.model.NodeNameChangedEvent;
 import org.moera.node.auth.Admin;
+import org.moera.node.event.model.NodeNameChangedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.NameToRegister;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.model.NodeNameInfo;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
+import org.moera.node.naming.RegisteredName;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -63,9 +62,6 @@ public class NodeNameController {
 
     @Inject
     private NamingClient namingClient;
-
-    @Inject
-    private EventManager eventManager;
 
     @GetMapping
     public NodeNameInfo get() {
@@ -204,7 +200,7 @@ public class NodeNameController {
             options.reset("profile.node-name");
             options.reset("profile.signing-key");
         });
-        eventManager.send(new NodeNameChangedEvent(""));
+        requestContext.send(new NodeNameChangedEvent(""));
 
         return Result.OK;
     }

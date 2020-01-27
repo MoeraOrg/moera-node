@@ -14,7 +14,6 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
-import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingAddedEvent;
 import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
@@ -65,9 +64,6 @@ public class PostingController {
     @Inject
     private PostingOperations postingOperations;
 
-    @Inject
-    private EventManager eventManager;
-
     @GetMapping("/features")
     public PostingFeatures getFeatures() {
         log.info("GET /postings/features");
@@ -112,7 +108,7 @@ public class PostingController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
-        eventManager.send(new PostingAddedEvent(posting));
+        requestContext.send(new PostingAddedEvent(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting, true));
     }
@@ -138,7 +134,7 @@ public class PostingController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
-        eventManager.send(new PostingUpdatedEvent(posting));
+        requestContext.send(new PostingUpdatedEvent(posting));
 
         return withClientReaction(new PostingInfo(posting, true));
     }
@@ -172,7 +168,7 @@ public class PostingController {
         posting.getCurrentRevision().setDeletedAt(Util.now());
         entryRevisionRepository.save(posting.getCurrentRevision());
 
-        eventManager.send(new PostingDeletedEvent(posting));
+        requestContext.send(new PostingDeletedEvent(posting));
 
         return Result.OK;
     }

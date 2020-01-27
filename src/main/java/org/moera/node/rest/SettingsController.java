@@ -10,10 +10,9 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.node.event.EventManager;
+import org.moera.node.auth.Admin;
 import org.moera.node.event.model.ClientSettingsChangedEvent;
 import org.moera.node.event.model.NodeSettingsChangedEvent;
-import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.OperationFailure;
@@ -41,9 +40,6 @@ public class SettingsController {
 
     @Inject
     private OptionsMetadata optionsMetadata;
-
-    @Inject
-    private EventManager eventManager;
 
     private List<SettingInfo> getOptions(Function<String, Boolean> nameFilter) {
         List<SettingInfo> list = new ArrayList<>();
@@ -120,10 +116,10 @@ public class SettingsController {
         });
 
         if (nodeChanged.get()) {
-            eventManager.send(new NodeSettingsChangedEvent());
+            requestContext.send(new NodeSettingsChangedEvent());
         }
         if (clientChanged.get()) {
-            eventManager.send(new ClientSettingsChangedEvent());
+            requestContext.send(new ClientSettingsChangedEvent());
         }
 
         return Result.OK;

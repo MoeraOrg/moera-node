@@ -1,7 +1,9 @@
 package org.moera.node.global;
 
+import java.util.List;
 import java.util.UUID;
 
+import org.moera.node.event.model.Event;
 import org.moera.node.option.Options;
 
 public interface RequestContext {
@@ -41,5 +43,9 @@ public interface RequestContext {
     UUID nodeId();
 
     String nodeName();
+
+    void send(Event event);
+
+    List<Event> getAfterCommitEvents();
 
 }

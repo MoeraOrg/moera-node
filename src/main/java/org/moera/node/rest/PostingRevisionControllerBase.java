@@ -13,7 +13,6 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.event.EventManager;
 import org.moera.node.event.model.Event;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -37,9 +36,6 @@ public abstract class PostingRevisionControllerBase {
 
     @Inject
     private PostingOperations postingOperations;
-
-    @Inject
-    private EventManager eventManager;
 
     protected abstract Logger getLog();
 
@@ -111,7 +107,7 @@ public abstract class PostingRevisionControllerBase {
 
         posting.setDeletedAt(null);
         posting = postingOperations.createOrUpdatePosting(posting, revision, null);
-        eventManager.send(getRestorationEvent(posting));
+        requestContext.send(getRestorationEvent(posting));
 
         return new PostingRevisionInfo(revision, true);
     }
