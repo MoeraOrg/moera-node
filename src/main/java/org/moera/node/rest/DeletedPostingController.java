@@ -9,13 +9,13 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingRestoredEvent;
-import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -75,7 +75,7 @@ public class DeletedPostingController {
         return postingRepository.findDeleted(requestContext.nodeId(),
                 PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
                 .stream()
-                .map(p -> new PostingInfo(p, requestContext.isAdmin()))
+                .map(p -> new PostingInfo(p, true))
                 .collect(Collectors.toList());
     }
 
@@ -89,7 +89,7 @@ public class DeletedPostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return new PostingInfo(posting, requestContext.isAdmin());
+        return new PostingInfo(posting, true);
     }
 
     @PostMapping("/{id}/restore")
@@ -107,7 +107,7 @@ public class DeletedPostingController {
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null);
         eventManager.send(new PostingRestoredEvent(posting));
 
-        return new PostingInfo(posting, requestContext.isAdmin());
+        return new PostingInfo(posting, true);
     }
 
     @Scheduled(fixedDelayString = "P1D")

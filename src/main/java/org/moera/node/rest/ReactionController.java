@@ -171,8 +171,10 @@ public class ReactionController {
         eventManager.send(new PostingReactionsChangedEvent(posting));
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
+        boolean countsVisible = posting.isReactionTotalsVisible() || requestContext.isAdmin()
+                || requestContext.isClient(posting.getOwnerName());
         return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
-                .body(new ReactionCreated(reaction, totals, requestContext.isAdmin() || posting.isReactionsVisible()));
+                .body(new ReactionCreated(reaction, totals, countsVisible));
     }
 
     @GetMapping
@@ -267,7 +269,8 @@ public class ReactionController {
         eventManager.send(new PostingReactionsChangedEvent(posting));
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
-        return new ReactionTotalsInfo(totals, requestContext.isAdmin());
+        return new ReactionTotalsInfo(totals,
+                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()));
     }
 
     @Scheduled(fixedDelayString = "PT15M")

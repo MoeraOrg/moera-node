@@ -45,7 +45,8 @@ public class ReactionTotalsController {
         }
 
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
-        return new ReactionTotalsInfo(totals, requestContext.isAdmin() || posting.isReactionTotalsVisible());
+        return new ReactionTotalsInfo(totals, posting.isReactionTotalsVisible() || requestContext.isAdmin()
+                || requestContext.isClient(posting.getOwnerName()));
     }
 
 }

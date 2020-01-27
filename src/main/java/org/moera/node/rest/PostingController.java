@@ -114,8 +114,7 @@ public class PostingController {
         }
         eventManager.send(new PostingAddedEvent(posting));
 
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
-                .body(new PostingInfo(posting, requestContext.isAdmin()));
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting, true));
     }
 
     @PutMapping("/{id}")
@@ -141,7 +140,7 @@ public class PostingController {
         }
         eventManager.send(new PostingUpdatedEvent(posting));
 
-        return withClientReaction(new PostingInfo(posting, requestContext.isAdmin()));
+        return withClientReaction(new PostingInfo(posting, true));
     }
 
     @GetMapping("/{id}")
@@ -155,7 +154,8 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return withClientReaction(new PostingInfo(posting, includeSet.contains("source"), requestContext.isAdmin()));
+        return withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
+                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())));
     }
 
     @DeleteMapping("/{id}")

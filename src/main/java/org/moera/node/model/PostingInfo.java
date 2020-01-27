@@ -40,11 +40,11 @@ public class PostingInfo {
     public PostingInfo() {
     }
 
-    public PostingInfo(Posting posting, boolean isAdmin) {
-        this(posting, false, isAdmin);
+    public PostingInfo(Posting posting, boolean isAdminOrOwner) {
+        this(posting, false, isAdminOrOwner);
     }
 
-    public PostingInfo(Posting posting, boolean includeSource, boolean isAdmin) {
+    public PostingInfo(Posting posting, boolean includeSource, boolean isAdminOrOwner) {
         id = posting.getId().toString();
         revisionId = posting.getCurrentRevision().getId().toString();
         totalRevisions = posting.getTotalRevisions();
@@ -74,7 +74,8 @@ public class PostingInfo {
                 posting.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
-        reactions = new ReactionTotalsInfo(posting.getReactionTotals(), isAdmin || posting.isReactionTotalsVisible());
+        reactions = new ReactionTotalsInfo(posting.getReactionTotals(),
+                isAdminOrOwner || posting.isReactionTotalsVisible());
         if (includeSource) {
             reactionsVisible = posting.isReactionsVisible();
             reactionTotalsVisible = posting.isReactionTotalsVisible();

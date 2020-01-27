@@ -8,13 +8,13 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.Event;
-import org.moera.node.auth.Admin;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
@@ -60,8 +60,10 @@ public abstract class PostingRevisionControllerBase {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
+        boolean countsVisible = posting.isReactionTotalsVisible() || requestContext.isAdmin()
+                || requestContext.isClient(posting.getOwnerName());
         return posting.getRevisions().stream()
-                .map(r -> new PostingRevisionInfo(r, requestContext.isAdmin() || posting.isReactionTotalsVisible()))
+                .map(r -> new PostingRevisionInfo(r, countsVisible))
                 .sorted(Comparator.comparing(PostingRevisionInfo::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
@@ -82,7 +84,8 @@ public abstract class PostingRevisionControllerBase {
             throw new ObjectNotFoundFailure("posting-revision.not-found");
         }
 
-        return new PostingRevisionInfo(revision, requestContext.isAdmin() || posting.isReactionTotalsVisible());
+        return new PostingRevisionInfo(revision, posting.isReactionTotalsVisible() || requestContext.isAdmin()
+                || requestContext.isClient(posting.getOwnerName()));
     }
 
     @PostMapping("/{id}/restore")
@@ -110,7 +113,7 @@ public abstract class PostingRevisionControllerBase {
         posting = postingOperations.createOrUpdatePosting(posting, revision, null);
         eventManager.send(getRestorationEvent(posting));
 
-        return new PostingRevisionInfo(revision, requestContext.isAdmin() || posting.isReactionTotalsVisible());
+        return new PostingRevisionInfo(revision, true);
     }
 
 }
