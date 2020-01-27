@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -194,7 +193,7 @@ public class ReactionController {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
         if (!posting.isReactionsVisible() && !requestContext.isAdmin()
-                && !Objects.equals(requestContext.getClientName(), posting.getOwnerName())) {
+                && !requestContext.isClient(posting.getOwnerName())) {
             return ReactionsSliceInfo.EMPTY;
         }
         limit = limit != null && limit <= MAX_REACTIONS_PER_REQUEST ? limit : MAX_REACTIONS_PER_REQUEST;
@@ -233,7 +232,7 @@ public class ReactionController {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
         if (!posting.isReactionsVisible() && !requestContext.isAdmin()
-                && !Objects.equals(requestContext.getClientName(), posting.getOwnerName())) {
+                && !requestContext.isClient(posting.getOwnerName())) {
             return new ReactionInfo(postingId);
         }
 
@@ -249,7 +248,7 @@ public class ReactionController {
         log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
-        if (!requestContext.isAdmin() && !Objects.equals(requestContext.getClientName(), ownerName)) {
+        if (!requestContext.isAdmin() && !requestContext.isClient(ownerName)) {
             throw new AuthenticationException();
         }
 

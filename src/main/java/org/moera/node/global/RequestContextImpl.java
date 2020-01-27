@@ -1,5 +1,6 @@
 package org.moera.node.global;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.moera.node.option.Options;
@@ -87,6 +88,11 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setClientName(String clientName) {
         this.clientName = clientName;
+    }
+
+    @Override
+    public boolean isClient(String name) {
+        return Objects.equals(this.clientName, name);
     }
 
     @Override

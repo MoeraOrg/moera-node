@@ -34,6 +34,8 @@ public interface RequestContext {
 
     void setClientName(String clientName);
 
+    boolean isClient(String name);
+
     RequestContext getPublic();
 
     UUID nodeId();
