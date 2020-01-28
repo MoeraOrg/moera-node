@@ -130,7 +130,7 @@ public class PostingController {
         postingText.toEntry(posting);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
-                    postingText::toEntryRevision);
+                    postingText::sameAsRevision, postingText::toEntryRevision);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }

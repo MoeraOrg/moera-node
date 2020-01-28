@@ -129,4 +129,11 @@ public class PostingText {
         }
     }
 
+    public boolean sameAsRevision(EntryRevision revision) {
+        return (StringUtils.isEmpty(bodySrcFormat) || bodySrcFormat.equals(revision.getBodySrcFormat().getValue()))
+                && (revision.getBodySrcFormat() != SourceFormat.APPLICATION
+                    ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody()))
+                && (publishAt == null || Util.toTimestamp(publishAt).equals(revision.getPublishedAt()));
+    }
+
 }

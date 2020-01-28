@@ -4,6 +4,7 @@ import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -46,8 +47,17 @@ public class PostingOperations {
     private MomentFinder momentFinder = new MomentFinder();
 
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
+        return createOrUpdatePosting(posting, revision, null, updater);
+    }
+
+    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision,
+                                         Function<EntryRevision, Boolean> preserveRevision,
+                                         Consumer<EntryRevision> updater) {
         ECPrivateKey signingKey = getSigningKey();
         EntryRevision latest = posting.getCurrentRevision();
+        if (latest != null && preserveRevision != null && preserveRevision.apply(latest)) {
+            return postingRepository.saveAndFlush(posting);
+        }
         EntryRevision current = newPostingRevision(posting, revision);
         if (updater != null) {
             updater.accept(current);
