@@ -21,6 +21,7 @@ public class MarkdownConverter {
 
     static final MutableDataHolder OPTIONS = new MutableDataSet()
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
+            .set(HtmlRenderer.SOFT_BREAK, "<br/>")
             .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
             .set(Parser.EXTENSIONS, Arrays.asList(
                     AutolinkExtension.create(),
