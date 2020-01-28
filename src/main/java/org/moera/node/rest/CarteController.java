@@ -59,7 +59,7 @@ public class CarteController {
         for (int i = 0; i <  limit; i++) {
             try {
                 CarteInfo carteInfo = new CarteInfo();
-                carteInfo.setCarte(Carte.generate(ownerName, InetAddress.getByName(request.getLocalAddr()),
+                carteInfo.setCarte(Carte.generate(ownerName, InetAddress.getByName(request.getRemoteAddr()),
                         beginning, signingKey));
                 carteInfo.setBeginning(beginning.getEpochSecond());
                 beginning = Carte.getDeadline(beginning);
@@ -71,6 +71,7 @@ public class CarteController {
         }
 
         CarteSet carteSet = new CarteSet();
+        carteSet.setCartesIp(request.getRemoteAddr());
         carteSet.setCartes(cartes);
         return carteSet;
     }

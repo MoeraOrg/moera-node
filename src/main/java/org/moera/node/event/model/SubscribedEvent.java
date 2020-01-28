@@ -5,14 +5,16 @@ import org.moera.node.event.EventSubscriber;
 public class SubscribedEvent extends Event {
 
     private String sessionId;
+    private String clientIp;
 
     public SubscribedEvent() {
         super(EventType.SUBSCRIBED);
     }
 
-    public SubscribedEvent(String sessionId) {
+    public SubscribedEvent(String sessionId, String clientIp) {
         this();
         this.sessionId = sessionId;
+        this.clientIp = clientIp;
     }
 
     public String getSessionId() {
@@ -21,6 +23,14 @@ public class SubscribedEvent extends Event {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
     }
 
     @Override

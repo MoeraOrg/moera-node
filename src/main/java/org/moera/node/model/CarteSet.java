@@ -4,7 +4,16 @@ import java.util.List;
 
 public class CarteSet {
 
+    private String cartesIp;
     private List<CarteInfo> cartes;
+
+    public String getCartesIp() {
+        return cartesIp;
+    }
+
+    public void setCartesIp(String cartesIp) {
+        this.cartesIp = cartesIp;
+    }
 
     public List<CarteInfo> getCartes() {
         return cartes;

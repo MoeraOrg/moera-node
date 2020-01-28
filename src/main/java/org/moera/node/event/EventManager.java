@@ -110,7 +110,11 @@ public class EventManager {
             subscriber.setLastEventSeen(seen.lastEvent);
         }
         subscriber.setSubscribed(true);
-        send(subscriber.getNodeId(), new SubscribedEvent(subscriber.getSessionId()));
+
+        Map<String, Object> attributes = accessor.getSessionAttributes();
+        String clientIp = (String) attributes.get("ip");
+
+        send(subscriber.getNodeId(), new SubscribedEvent(subscriber.getSessionId(), clientIp));
     }
 
     @EventListener(SessionUnsubscribeEvent.class)

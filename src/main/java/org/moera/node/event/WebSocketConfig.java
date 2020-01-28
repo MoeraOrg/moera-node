@@ -16,10 +16,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Inject
     private TaskScheduler taskScheduler;
 
+    @Inject
+    private WsHandshakeInterceptor wsHandshakeInterceptor;
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/moera/api/events")
-            .setAllowedOrigins("*");
+            .setAllowedOrigins("*")
+            .addInterceptors(wsHandshakeInterceptor);
     }
 
     @Override
