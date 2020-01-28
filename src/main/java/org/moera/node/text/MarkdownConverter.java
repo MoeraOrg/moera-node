@@ -5,6 +5,7 @@ import java.util.Arrays;
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.definition.DefinitionExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiExtension;
+import com.vladsch.flexmark.ext.emoji.EmojiImageType;
 import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
 import com.vladsch.flexmark.ext.media.tags.MediaTagsExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
@@ -19,6 +20,7 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 public class MarkdownConverter {
 
     static final MutableDataHolder OPTIONS = new MutableDataSet()
+            .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
             .set(Parser.EXTENSIONS, Arrays.asList(
                     AutolinkExtension.create(),
                     DefinitionExtension.create(),
