@@ -84,7 +84,9 @@ public class PostingController {
         if (name == null) {
             throw new OperationFailure("posting.node-name-not-set");
         }
-
+        if (StringUtils.isEmpty(postingText.getBodySrc())) {
+            throw new ValidationFailure("postingText.bodySrc.blank");
+        }
         if (postingText.getAcceptedReactions() == null) {
             postingText.setAcceptedReactions(new AcceptedReactions());
         }

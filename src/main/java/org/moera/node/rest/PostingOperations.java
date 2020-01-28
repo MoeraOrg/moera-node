@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
+import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -31,6 +32,8 @@ public class PostingOperations {
 
     private static final int PUBLIC_PAGE_MAX_SIZE = 30;
     private static final int PUBLIC_PAGE_AVG_SIZE = 20;
+
+    private static final Timestamp PINNED_TIME = Util.toTimestamp(90000000000000L); // 9E+13
 
     @Inject
     private RequestContext requestContext;
@@ -62,7 +65,8 @@ public class PostingOperations {
         if (updater != null) {
             updater.accept(current);
         }
-        if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())) {
+        if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())
+                || current.isPinned() != latest.isPinned()) {
             current.setMoment(0);
         }
         posting = postingRepository.saveAndFlush(posting);
@@ -70,7 +74,7 @@ public class PostingOperations {
         if (current.getMoment() == 0) {
             current.setMoment(momentFinder.find(
                     moment -> entryRevisionRepository.countMoments(requestContext.nodeId(), moment) == 0,
-                    current.getPublishedAt()));
+                    !current.isPinned() ? current.getPublishedAt() : PINNED_TIME));
         }
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));

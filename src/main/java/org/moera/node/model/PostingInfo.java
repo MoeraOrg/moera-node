@@ -27,6 +27,7 @@ public class PostingInfo {
     private long editedAt;
     private Long deletedAt;
     private long publishedAt;
+    private boolean pinned;
     private byte[] signature;
     private short signatureVersion;
     private long moment;
@@ -63,6 +64,7 @@ public class PostingInfo {
         editedAt = Util.toEpochSecond(posting.getCurrentRevision().getCreatedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
+        pinned = posting.getCurrentRevision().isPinned();
         signature = posting.getCurrentRevision().getSignature();
         signatureVersion = posting.getCurrentRevision().getSignatureVersion();
         moment = posting.getCurrentRevision().getMoment();
@@ -208,6 +210,14 @@ public class PostingInfo {
 
     public void setPublishedAt(long publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 
     public byte[] getSignature() {
