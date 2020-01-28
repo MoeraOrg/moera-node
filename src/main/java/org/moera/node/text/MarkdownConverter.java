@@ -20,6 +20,7 @@ import com.vladsch.flexmark.util.data.MutableDataSet;
 public class MarkdownConverter {
 
     static final MutableDataHolder OPTIONS = new MutableDataSet()
+            .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
             .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
             .set(Parser.EXTENSIONS, Arrays.asList(
                     AutolinkExtension.create(),
