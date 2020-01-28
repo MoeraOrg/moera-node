@@ -119,11 +119,12 @@ public class PostingController {
     @Admin
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
-        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
+        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {}, pinned = {})",
                 LogUtil.format(id),
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.formatTimestamp(postingText.getPublishAt()));
+                LogUtil.formatTimestamp(postingText.getPublishAt()),
+                postingText.getPinned() != null ? Boolean.toString(postingText.getPinned()) : "null");
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {

@@ -126,6 +126,7 @@ public class PostingOperations {
             revision.setBody(template.getBody());
             revision.setHeading(template.getHeading());
             revision.setPublishedAt(template.getPublishedAt());
+            revision.setPinned(template.isPinned());
             revision.setMoment(template.getMoment());
         }
 
