@@ -1,5 +1,6 @@
 package org.moera.node.helper;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,12 +8,12 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
-import org.moera.node.data.Entry;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
-import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NodeName;
+import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.springframework.util.StringUtils;
 
@@ -59,13 +60,16 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
-    public CharSequence reactions(Entry entry, ReactionTotalsInfo totalsInfo) {
+    public CharSequence reactions(PostingInfo postingInfo) {
+        ReactionTotalsInfo totalsInfo = postingInfo.getReactions();
+        boolean totalsVisible = Arrays.asList(postingInfo.getOperations().get("reactions")).contains("public");
+
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");
         if (totalsInfo.getPositive().size() > 0) {
             buf.append("<span class=\"positive\">");
             appendEmojis(buf, totalsInfo.getPositive());
-            if (entry.isReactionTotalsVisible()) {
+            if (totalsVisible) {
                 buf.append(sum(totalsInfo.getPositive()));
             }
             buf.append("</span>");
@@ -73,7 +77,7 @@ public class MoeraHelperSource {
         if (totalsInfo.getNegative().size() > 0) {
             buf.append("<span class=\"negative\">");
             appendEmojis(buf, totalsInfo.getNegative());
-            if (entry.isReactionTotalsVisible()) {
+            if (totalsVisible) {
                 buf.append(sum(totalsInfo.getNegative()));
             }
             buf.append("</span>");
