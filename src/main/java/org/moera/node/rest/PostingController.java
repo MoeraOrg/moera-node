@@ -1,6 +1,9 @@
 package org.moera.node.rest;
 
 import java.net.URI;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -166,6 +169,8 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         posting.setDeletedAt(Util.now());
+        Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
+        posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         posting.getCurrentRevision().setDeletedAt(Util.now());
         entryRevisionRepository.save(posting.getCurrentRevision());
 

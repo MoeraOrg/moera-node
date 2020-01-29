@@ -45,6 +45,11 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query("delete from Posting p where p.nodeId = ?1 and p.deletedAt < ?2")
     @Modifying
-    void deleteExpired(UUID nodeId, Timestamp deletedBefore);
+    @Deprecated
+    void deleteExpiredDeprecated(UUID nodeId, Timestamp deletedBefore);
+
+    @Query("delete from Posting p where p.deadline < ?1")
+    @Modifying
+    void deleteExpired(Timestamp deadlineBefore);
 
 }

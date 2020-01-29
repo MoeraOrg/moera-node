@@ -51,6 +51,8 @@ public class Entry {
 
     private Timestamp deletedAt;
 
+    private Timestamp deadline;
+
     @NotNull
     private int totalRevisions;
 
@@ -129,6 +131,14 @@ public class Entry {
 
     public void setDeletedAt(Timestamp deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public Timestamp getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Timestamp deadline) {
+        this.deadline = deadline;
     }
 
     public int getTotalRevisions() {

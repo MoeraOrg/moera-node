@@ -108,6 +108,7 @@ public abstract class PostingRevisionControllerBase {
         }
 
         posting.setDeletedAt(null);
+        posting.setDeadline(null);
         posting = postingOperations.createOrUpdatePosting(posting, revision, null);
         requestContext.send(getRestorationEvent(posting));
 

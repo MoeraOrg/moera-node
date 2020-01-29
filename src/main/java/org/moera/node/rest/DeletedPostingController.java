@@ -21,6 +21,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -102,6 +103,7 @@ public class DeletedPostingController {
         }
 
         posting.setDeletedAt(null);
+        posting.setDeadline(null);
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null);
         requestContext.send(new PostingRestoredEvent(posting));
 
@@ -110,12 +112,20 @@ public class DeletedPostingController {
 
     @Scheduled(fixedDelayString = "P1D")
     @EventListener(DomainsConfiguredEvent.class)
+    @Deprecated
     @Transactional
-    public void purgeExpired() {
+    public void purgeExpiredDeprecated() {
         domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(options -> {
             Timestamp ts = Timestamp.from(Instant.now().minus(options.getDuration("posting.deleted.lifetime")));
-            postingRepository.deleteExpired(options.nodeId(), ts);
+            postingRepository.deleteExpiredDeprecated(options.nodeId(), ts);
         });
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @EventListener(DomainsConfiguredEvent.class)
+    @Transactional
+    public void purgeExpired() {
+        postingRepository.deleteExpired(Util.now());
     }
 
 }
