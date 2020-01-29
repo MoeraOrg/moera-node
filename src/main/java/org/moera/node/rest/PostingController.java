@@ -18,12 +18,12 @@ import org.moera.node.event.model.PostingAddedEvent;
 import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
@@ -73,6 +73,7 @@ public class PostingController {
 
     @PostMapping
     @Admin
+    @Entitled
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
         log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
@@ -80,10 +81,6 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrcFormat()),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
-        String name = requestContext.nodeName();
-        if (name == null) {
-            throw new OperationFailure("posting.node-name-not-set");
-        }
         if (StringUtils.isEmpty(postingText.getBodySrc())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
         }
@@ -100,8 +97,8 @@ public class PostingController {
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
         posting.setNodeId(requestContext.nodeId());
-        posting.setReceiverName(name);
-        posting.setOwnerName(name);
+        posting.setReceiverName(requestContext.nodeName());
+        posting.setOwnerName(requestContext.nodeName());
         postingText.toEntry(posting);
         postingRepository.save(posting);
 
@@ -117,6 +114,7 @@ public class PostingController {
 
     @PutMapping("/{id}")
     @Admin
+    @Entitled
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
         log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {}, pinned = {})",

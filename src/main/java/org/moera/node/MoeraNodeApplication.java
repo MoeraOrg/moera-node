@@ -10,6 +10,7 @@ import org.moera.node.event.AfterCommitEventsInterceptor;
 import org.moera.node.global.ClientIdInterceptor;
 import org.moera.node.auth.AuthenticationInterceptor;
 import org.moera.node.global.CacheControlInterceptor;
+import org.moera.node.global.EntitledInterceptor;
 import org.moera.node.global.NetworkLatencyInterceptor;
 import org.moera.node.global.SyndFeedHttpMessageConverter;
 import org.moera.node.global.VirtualPageInterceptor;
@@ -56,6 +57,9 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     private AfterCommitEventsInterceptor afterCommitEventsInterceptor;
 
     @Inject
+    private EntitledInterceptor entitledInterceptor;
+
+    @Inject
     private ApplicationContext applicationContext;
 
     @Bean
@@ -79,6 +83,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         registry.addInterceptor(cacheControlInterceptor);
         registry.addInterceptor(clientIdInterceptor);
         registry.addInterceptor(afterCommitEventsInterceptor);
+        registry.addInterceptor(entitledInterceptor);
     }
 
     @Override

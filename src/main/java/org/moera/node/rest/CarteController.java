@@ -6,13 +6,13 @@ import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CarteInfo;
 import org.moera.node.model.CarteSet;
@@ -20,7 +20,6 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.util.Carte;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,6 +38,7 @@ public class CarteController {
 
     @GetMapping
     @Admin
+    @Entitled
     public CarteSet get(@RequestParam(required = false) Integer limit, HttpServletRequest request) {
         log.info("GET /cartes (limit = {})", LogUtil.format(limit));
 
@@ -46,13 +46,7 @@ public class CarteController {
         limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
 
         String ownerName = requestContext.nodeName();
-        if (StringUtils.isEmpty(ownerName)) {
-            throw new OperationFailure("carte.node-name-not-set");
-        }
         PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
-        if (signingKey == null) {
-            throw new OperationFailure("carte.signing-key-not-set");
-        }
 
         List<CarteInfo> cartes = new ArrayList<>();
         Instant beginning = Instant.now();

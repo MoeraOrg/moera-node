@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
 import java.util.UUID;
@@ -17,8 +16,6 @@ import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.OperationFailure;
-import org.moera.node.option.Options;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
@@ -86,12 +83,7 @@ public class PostingOperations {
     }
 
     private ECPrivateKey getSigningKey() {
-        Options options = requestContext.getOptions();
-        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
-        if (signingKey == null) {
-            throw new OperationFailure("posting.signing-key-not-set");
-        }
-        return (ECPrivateKey) signingKey;
+        return (ECPrivateKey) requestContext.getOptions().getPrivateKey("profile.signing-key");
     }
 
     private EntryRevision newPostingRevision(Posting posting, EntryRevision template) {

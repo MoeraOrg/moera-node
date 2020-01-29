@@ -12,12 +12,11 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
-import org.moera.node.option.Options;
 import org.moera.node.rest.task.RemoteReactionPostTask;
 import org.moera.node.rest.task.RemoteReactionVerifyTask;
 import org.moera.node.util.Util;
@@ -52,6 +51,7 @@ public class RemoteReactionController {
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
 
     @PostMapping
+    @Entitled
     public Result post(@PathVariable String nodeName, @PathVariable String postingId,
                        @Valid @RequestBody ReactionAttributes attributes) {
         log.info("POST /nodes/{nodeName}/postings/{postingId}/reactions"
@@ -61,15 +61,8 @@ public class RemoteReactionController {
                 attributes.isNegative() ? "yes" : "no",
                 LogUtil.format(attributes.getEmoji()));
 
-        Options options = requestContext.getOptions();
-        String ownerName = options.nodeName();
-        if (ownerName == null) {
-            throw new OperationFailure("reaction.node-name-not-set");
-        }
-        PrivateKey signingKey = options.getPrivateKey("profile.signing-key");
-        if (signingKey == null) {
-            throw new OperationFailure("reaction.signing-key-not-set");
-        }
+        String ownerName = requestContext.nodeName();
+        PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
 
         RemoteReactionPostTask task = new RemoteReactionPostTask(
                 requestContext.nodeId(), nodeName, postingId, ownerName, signingKey, attributes);

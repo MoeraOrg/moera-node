@@ -16,6 +16,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.model.PostingRestoredEvent;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
@@ -90,6 +91,7 @@ public class DeletedPostingController {
 
     @PostMapping("/{id}/restore")
     @Admin
+    @Entitled
     @Transactional
     public PostingInfo restore(@PathVariable UUID id) {
         log.info("POST /deleted-postings/{id}/restore (id = {})", LogUtil.format(id));
