@@ -1,10 +1,10 @@
-package org.moera.node.global;
+package org.moera.node.event;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.moera.node.event.EventManager;
+import org.moera.node.global.RequestContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
