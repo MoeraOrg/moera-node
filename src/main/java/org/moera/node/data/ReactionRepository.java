@@ -45,4 +45,10 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
             + " and r.deletedAt is null")
     void deleteAllByEntryId(UUID postingId, Timestamp now);
 
+    @Query("delete from Reaction r where"
+            + " (select e.nodeId from EntryRevision er left join er.entry e where er.id = r.entryRevision.id) = ?1"
+            + " and r.deletedAt < ?2")
+    @Modifying
+    void deleteDeleted(UUID nodeId, Timestamp deletedBefore);
+
 }

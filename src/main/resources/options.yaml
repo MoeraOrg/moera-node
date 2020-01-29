@@ -126,6 +126,14 @@
     min: 7d
     max: 2000d
 
+- name: reaction.deleted.lifetime
+  type: Duration
+  defaultValue: 10d
+  title: Purge deleted reactions after
+  modifiers:
+    min: 7d
+    max: 2000d
+
 - name: webui.head.top.html
   type: string
   defaultValue: ""

@@ -28,6 +28,8 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
+import org.moera.node.domain.Domains;
+import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingReactionsChangedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
@@ -48,6 +50,7 @@ import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -92,6 +95,9 @@ public class ReactionController {
 
     @Inject
     private EventManager eventManager;
+
+    @Inject
+    private Domains domains;
 
     private MomentFinder momentFinder = new MomentFinder();
 
@@ -318,6 +324,16 @@ public class ReactionController {
         changed.stream()
                 .map(e -> (Posting) e)
                 .forEach(p -> eventManager.send(p.getNodeId(), new PostingReactionsChangedEvent(p)));
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @EventListener(DomainsConfiguredEvent.class)
+    @Transactional
+    public void purgeDeleted() {
+        domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(options -> {
+            Timestamp ts = Timestamp.from(Instant.now().minus(options.getDuration("reaction.deleted.lifetime")));
+            reactionRepository.deleteDeleted(options.nodeId(), ts);
+        });
     }
 
     private void changeTotals(Entry entry, Reaction reaction, int delta) {
