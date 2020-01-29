@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ReactionTotalRepository extends JpaRepository<ReactionTotal, UUID> {
@@ -16,5 +17,10 @@ public interface ReactionTotalRepository extends JpaRepository<ReactionTotal, UU
 
     @Query("select rt from ReactionTotal rt where rt.entry.id = ?1 and rt.total != 0")
     Set<ReactionTotal> findAllByEntryId(UUID entryId);
+
+    @Modifying
+    @Query("delete from ReactionTotal rt where rt.entry.id = ?1"
+            + " or rt.entryRevision.id = (select id from EntryRevision er where er.entry.id = ?1)")
+    void deleteAllByEntryId(UUID postingId);
 
 }

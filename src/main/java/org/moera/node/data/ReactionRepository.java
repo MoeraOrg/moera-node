@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
@@ -37,5 +38,11 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
             + " and r.moment > ?4 and r.moment <= ?5 and r.deletedAt is null")
     Page<Reaction> findSliceWithEmoji(UUID postingId, boolean negative, int emoji, long afterMoment, long beforeMoment,
                                       Pageable pageable);
+
+    @Modifying
+    @Query("update Reaction r set r.deletedAt = ?2"
+            + " where r.entryRevision.id = (select id from EntryRevision er where er.entry.id = ?1)"
+            + " and r.deletedAt is null")
+    void deleteAllByEntryId(UUID postingId, Timestamp now);
 
 }

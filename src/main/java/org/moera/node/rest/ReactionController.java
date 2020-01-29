@@ -18,6 +18,7 @@ import javax.validation.Valid;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Entry;
@@ -39,6 +40,7 @@ import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
+import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.EmojiList;
@@ -243,7 +245,27 @@ public class ReactionController {
         return reaction != null ? new ReactionInfo(reaction) : new ReactionInfo(postingId);
     }
 
+    @DeleteMapping
+    @Admin
+    @Transactional
+    public Result deleteAll(@PathVariable UUID postingId) {
+        log.info("DELETE /postings/{postingId}/reactions (postingId = {})", LogUtil.format(postingId));
+
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("reaction.posting-not-found");
+        }
+
+        reactionRepository.deleteAllByEntryId(postingId, Util.now());
+        reactionTotalRepository.deleteAllByEntryId(postingId);
+
+        requestContext.send(new PostingReactionsChangedEvent(posting));
+
+        return Result.OK;
+    }
+
     @DeleteMapping("/{ownerName}")
+    @Transactional
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName)
             throws AuthenticationException {
 
