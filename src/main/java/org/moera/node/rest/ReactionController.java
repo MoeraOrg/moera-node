@@ -29,7 +29,6 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.domain.Domains;
-import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingReactionsChangedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
@@ -50,7 +49,6 @@ import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -158,6 +156,8 @@ public class ReactionController {
             if (reaction != null) {
                 changeTotals(posting, reaction, -1);
                 reaction.setDeletedAt(Util.now());
+                Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
+                reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
             }
 
             reaction = new Reaction();
@@ -291,6 +291,8 @@ public class ReactionController {
         if (reaction != null) {
             changeTotals(posting, reaction, -1);
             reaction.setDeletedAt(Util.now());
+            Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
+            reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
         }
         reactionRepository.flush();
 
@@ -313,8 +315,12 @@ public class ReactionController {
                         reaction.getOwnerName(),
                         PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
                 if (deleted.size() > 0) {
-                    deleted.get(0).setDeletedAt(null);
-                    changeTotals(entry, deleted.get(0), 1);
+                    Reaction next = deleted.get(0);
+                    next.setDeletedAt(null);
+                    if (next.getSignature() != null) {
+                        next.setDeadline(null);
+                    }
+                    changeTotals(entry, next, 1);
                 }
                 changeTotals(entry, reaction, -1);
                 changed.add(entry);
@@ -324,16 +330,6 @@ public class ReactionController {
         changed.stream()
                 .map(e -> (Posting) e)
                 .forEach(p -> eventManager.send(p.getNodeId(), new PostingReactionsChangedEvent(p)));
-    }
-
-    @Scheduled(fixedDelayString = "P1D")
-    @EventListener(DomainsConfiguredEvent.class)
-    @Transactional
-    public void purgeDeleted() {
-        domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(options -> {
-            Timestamp ts = Timestamp.from(Instant.now().minus(options.getDuration("reaction.deleted.lifetime")));
-            reactionRepository.deleteDeleted(options.nodeId(), ts);
-        });
     }
 
     private void changeTotals(Entry entry, Reaction reaction, int delta) {
