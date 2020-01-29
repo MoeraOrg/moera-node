@@ -30,8 +30,10 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             + " and p.currentRevision.moment > ?2 and p.currentRevision.moment <= ?3 and p.deletedAt is null")
     Set<Posting> findInRange(UUID nodeId, long afterMoment, long beforeMoment);
 
-    @Query("select p from Posting p where p.nodeId = ?1"
-            + " and p.currentRevision.moment > ?2 and p.currentRevision.moment <= ?3 and p.deletedAt is null")
+    @Query(value = "select p from Posting p left join fetch p.currentRevision where p.nodeId = ?1"
+            + " and p.currentRevision.moment > ?2 and p.currentRevision.moment <= ?3 and p.deletedAt is null",
+           countQuery = "select count(p) from Posting p where p.nodeId = ?1 and p.currentRevision.moment > ?2"
+                   + " and p.currentRevision.moment <= ?3 and p.deletedAt is null")
     Page<Posting> findSlice(UUID nodeId, long afterMoment, long beforeMoment, Pageable pageable);
 
     @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is not null")
