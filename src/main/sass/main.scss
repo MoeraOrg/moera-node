@@ -108,16 +108,16 @@ SUB.generation {
 
     .reactions {
         font-size: 0.9rem;
-        color: #666;
+        font-weight: 600;
 
         .emojis {
             font-family: sans-serif;
-            font-size: 1.2rem;
+            font-size: 1rem;
             margin-right: 0.5rem;
 
             IMG.emoji {
-               height: 1.2em;
-               width: 1.2em;
+               height: 1em;
+               width: 1em;
             }
         }
         .positive {
