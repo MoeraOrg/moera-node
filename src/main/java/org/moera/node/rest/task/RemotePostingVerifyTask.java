@@ -56,16 +56,6 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
                 .subscribe(this::verify, this::error);
     }
 
-    private void updateData(Consumer<RemotePostingVerification> updater) {
-        updater.accept(data);
-        RemotePostingVerification status = remotePostingVerificationRepository.findById(data.getId()).orElse(null);
-        if (status == null) {
-            return;
-        }
-        updater.accept(status);
-        remotePostingVerificationRepository.saveAndFlush(status);
-    }
-
     private void verify(PostingInfo postingInfo) {
         try {
             updateData(data -> {
@@ -113,6 +103,16 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
                 postingInfo.getSignatureVersion(), PostingInfo.class, PostingRevisionInfo.class);
         succeeded(CryptoUtil.verify(
                 postingRevisionInfo.getSignature(), signingKey, constructor, postingInfo, postingRevisionInfo));
+    }
+
+    private void updateData(Consumer<RemotePostingVerification> updater) {
+        updater.accept(data);
+        RemotePostingVerification status = remotePostingVerificationRepository.findById(data.getId()).orElse(null);
+        if (status == null) {
+            return;
+        }
+        updater.accept(status);
+        remotePostingVerificationRepository.saveAndFlush(status);
     }
 
     @Override

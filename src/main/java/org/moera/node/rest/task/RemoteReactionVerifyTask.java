@@ -2,6 +2,7 @@ package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -103,13 +104,24 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask implements 
                 reactionInfo.getSignature(), signingKey, constructor, reactionInfo, postingInfo, revisionInfo));
     }
 
+    private void updateData(Consumer<RemoteReactionVerification> updater) {
+        updater.accept(data);
+        RemoteReactionVerification status = remoteReactionVerificationRepository.findById(data.getId()).orElse(null);
+        if (status == null) {
+            return;
+        }
+        updater.accept(status);
+        remoteReactionVerificationRepository.saveAndFlush(status);
+    }
+
     @Override
     protected void reportSuccess(boolean correct) {
         log.info("Verified reaction of {} to posting {} at node {}: {}",
                 data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(),
                 correct ? "correct" : "incorrect");
-        data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
-        remoteReactionVerificationRepository.saveAndFlush(data);
+        updateData(data -> {
+            data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
+        });
         eventManager.send(data.getNodeId(), new RemoteReactionVerifiedEvent(data));
     }
 
@@ -117,10 +129,11 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask implements 
     protected void reportFailure(String errorCode, String errorMessage) {
         log.info("Verification of reaction of {} to posting {} at node {} failed: {} ({})",
                 data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode);
-        data.setStatus(VerificationStatus.ERROR);
-        data.setErrorCode(errorCode);
-        data.setErrorMessage(errorMessage);
-        remoteReactionVerificationRepository.saveAndFlush(data);
+        updateData(data -> {
+            data.setStatus(VerificationStatus.ERROR);
+            data.setErrorCode(errorCode);
+            data.setErrorMessage(errorMessage);
+        });
         eventManager.send(data.getNodeId(), new RemoteReactionVerificationFailedEvent(data));
     }
 
