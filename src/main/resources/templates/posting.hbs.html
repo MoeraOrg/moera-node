@@ -4,6 +4,14 @@
    href="/timeline?before={{posting.moment}}#m{{posting.moment}}">&larr; Timeline</a>
 
 <div class="posting">
+    {{#if posting.pinned}}
+        <div class="pin-line">
+            <span class="badge badge-secondary">
+                <i class="fas fa-thumbtack"></i>&nbsp;
+                Pinned post
+            </span>
+        </div>
+    {{/if}}
     <div class="owner">
         {{nodename posting.ownerName}}
         {{#ifne posting.receiverName nodeName.name}}

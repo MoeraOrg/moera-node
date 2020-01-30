@@ -9,6 +9,14 @@
 {{#each postings}}
     <a name="m{{moment}}"></a>
     <div class="posting">
+        {{#if pinned}}
+            <div class="pin-line">
+                <span class="badge badge-secondary">
+                    <i class="fas fa-thumbtack"></i>&nbsp;
+                    Pinned post
+                </span>
+            </div>
+        {{/if}}
         <div class="owner">
             {{nodename ownerName}}
             {{#ifne receiverName nodeName.name}}
