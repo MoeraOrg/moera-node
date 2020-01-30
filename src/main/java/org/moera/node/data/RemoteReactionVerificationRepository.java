@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface RemoteReactionVerificationRepository extends JpaRepository<RemoteReactionVerification, UUID> {
 
-    Optional<RemotePostingVerification> findByNodeIdAndId(UUID nodeId, UUID id);
+    Optional<RemoteReactionVerification> findByNodeIdAndId(UUID nodeId, UUID id);
 
     @Query("delete from RemoteReactionVerification v where v.deadline < ?1")
     @Modifying

@@ -4,13 +4,16 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
-import org.moera.node.auth.Admin;
+import org.moera.node.data.RemoteReactionVerification;
+import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.RemotePostingVerificationInfo;
+import org.moera.node.model.RemoteReactionVerificationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +32,9 @@ public class AsyncOperationController {
     @Inject
     private RemotePostingVerificationRepository remotePostingVerificationRepository;
 
+    @Inject
+    private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
+
     @GetMapping("/remote-posting-verification/{id}")
     @Admin
     public RemotePostingVerificationInfo getRemotePostingVerification(@PathVariable UUID id) {
@@ -41,6 +47,20 @@ public class AsyncOperationController {
         }
 
         return new RemotePostingVerificationInfo(data);
+    }
+
+    @GetMapping("/remote-reaction-verification/{id}")
+    @Admin
+    public RemoteReactionVerificationInfo getRemoteReactionVerification(@PathVariable UUID id) {
+        log.info("GET /async-operations/remote-reaction-verification/{id}, (id = {})", LogUtil.format(id));
+
+        RemoteReactionVerification data =
+                remoteReactionVerificationRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        if (data == null) {
+            throw new ObjectNotFoundFailure("async-operation.not-found");
+        }
+
+        return new RemoteReactionVerificationInfo(data);
     }
 
 }
