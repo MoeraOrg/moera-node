@@ -1,6 +1,7 @@
 package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -55,10 +56,21 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
                 .subscribe(this::verify, this::error);
     }
 
+    private void updateData(Consumer<RemotePostingVerification> updater) {
+        updater.accept(data);
+        RemotePostingVerification status = remotePostingVerificationRepository.findById(data.getId()).orElse(null);
+        if (status == null) {
+            return;
+        }
+        updater.accept(status);
+        remotePostingVerificationRepository.saveAndFlush(status);
+    }
+
     private void verify(PostingInfo postingInfo) {
         try {
-            data.setReceiverName(postingInfo.getReceiverName());
-            remotePostingVerificationRepository.saveAndFlush(data);
+            updateData(data -> {
+                data.setReceiverName(postingInfo.getReceiverName());
+            });
 
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo);
@@ -107,8 +119,9 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
     protected void reportSuccess(boolean correct) {
         log.info("Verified posting {}/{} at node {}: {}",
                 data.getPostingId(), data.getRevisionId(), data.getNodeName(), correct ? "correct" : "incorrect");
-        data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
-        remotePostingVerificationRepository.saveAndFlush(data);
+        updateData(data -> {
+            data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
+        });
         eventManager.send(data.getNodeId(), new RemotePostingVerifiedEvent(data));
     }
 
@@ -116,10 +129,11 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
     protected void reportFailure(String errorCode, String errorMessage) {
         log.info("Verification of posting {}/{} at node {} failed: {} ({})",
                 data.getPostingId(), data.getRevisionId(), data.getNodeName(), errorMessage, errorCode);
-        data.setStatus(VerificationStatus.ERROR);
-        data.setErrorCode(errorCode);
-        data.setErrorMessage(errorMessage);
-        remotePostingVerificationRepository.saveAndFlush(data);
+        updateData(data -> {
+            data.setStatus(VerificationStatus.ERROR);
+            data.setErrorCode(errorCode);
+            data.setErrorMessage(errorMessage);
+        });
         eventManager.send(data.getNodeId(), new RemotePostingVerificationFailedEvent(data));
     }
 
