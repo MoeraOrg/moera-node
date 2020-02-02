@@ -51,6 +51,7 @@ public class RemoteReactionController {
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
 
     @PostMapping
+    @Admin
     @Entitled
     public Result post(@PathVariable String nodeName, @PathVariable String postingId,
                        @Valid @RequestBody ReactionAttributes attributes) {
@@ -77,8 +78,8 @@ public class RemoteReactionController {
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String postingId,
                                         @PathVariable String ownerName) {
-        log.info("POST /nodes/{name}/postings/{postingId}/reactions/{ownerName}/verify"
-                        + " (name = {}, postingId = {}, ownerName = {})",
+        log.info("POST /nodes/{nodeName}/postings/{postingId}/reactions/{ownerName}/verify"
+                        + " (nodeName = {}, postingId = {}, ownerName = {})",
                 LogUtil.format(nodeName), LogUtil.format(postingId), LogUtil.format(ownerName));
 
         RemoteReactionVerification data = new RemoteReactionVerification(
