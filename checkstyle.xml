@@ -16,6 +16,9 @@
     <module name="FileTabCharacter">
         <property name="eachLine" value="true"/>
     </module>
+    <module name="LineLength">
+        <property name="max" value="122"/>
+    </module>
 
     <module name="TreeWalker">
         <property name="tabWidth" value="4"/>
@@ -86,9 +89,6 @@
         <module name="TypeName"/>
 
         <!-- Size -->
-        <module name="LineLength">
-            <property name="max" value="122"/>
-        </module>
         <module name="OuterTypeNumber"/>
 
         <!-- Whitespace -->
@@ -99,9 +99,12 @@
             <property name="allowMultipleEmptyLines" value="false"/>
             <property name="allowMultipleEmptyLinesInsideClassMembers" value="false"/>
         </module>
+        <module name="AvoidNoArgumentSuperConstructorCall"/>
         <module name="GenericWhitespace"/>
         <module name="MethodParamPad"/>
+        <module name="NoArrayTrailingComma"/>
         <module name="NoLineWrap"/>
+        <module name="NoEnumTrailingComma"/>
         <module name="OperatorWrap"/>
         <module name="ParenPad"/>
         <module name="SeparatorWrap">
@@ -113,6 +116,11 @@
             <property name="option" value="nl"/>
         </module>
         <module name="TypecastParenPad"/>
+        <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
+        <module name="UnnecessarySemicolonInEnumeration"/>
+        <module name="UnnecessarySemicolonInTryWithResources">
+            <property name="allowWhenNoBraceAfterSemicolon" value="true"/>
+        </module>
         <module name="WhitespaceAfter"/>
     </module>
 </module>
