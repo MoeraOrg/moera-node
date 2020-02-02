@@ -28,7 +28,6 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
-import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.event.model.PostingReactionsChangedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
@@ -93,9 +92,6 @@ public class ReactionController {
 
     @Inject
     private EventManager eventManager;
-
-    @Inject
-    private Domains domains;
 
     private MomentFinder momentFinder = new MomentFinder();
 
