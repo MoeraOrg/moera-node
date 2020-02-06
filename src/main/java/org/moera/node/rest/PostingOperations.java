@@ -16,6 +16,8 @@ import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.AcceptedReactions;
+import org.moera.node.model.PostingText;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +48,30 @@ public class PostingOperations {
 
     private MomentFinder momentFinder = new MomentFinder();
 
+    public Posting newPosting(PostingText postingText, Consumer<Posting> initializer) {
+        if (postingText.getAcceptedReactions() == null) {
+            postingText.setAcceptedReactions(new AcceptedReactions());
+        }
+        if (postingText.getAcceptedReactions().getPositive() == null) {
+            postingText.getAcceptedReactions().setPositive("");
+        }
+        if (postingText.getAcceptedReactions().getNegative() == null) {
+            postingText.getAcceptedReactions().setNegative("");
+        }
+
+        Posting posting = new Posting();
+        posting.setId(UUID.randomUUID());
+        posting.setNodeId(requestContext.nodeId());
+        posting.setReceiverName(requestContext.nodeName());
+        posting.setOwnerName(requestContext.nodeName());
+        if (initializer != null) {
+            initializer.accept(posting);
+        }
+        postingText.toEntry(posting);
+
+        return postingRepository.save(posting);
+    }
+
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
         return createOrUpdatePosting(posting, revision, null, updater);
     }
@@ -64,11 +90,11 @@ public class PostingOperations {
         }
         if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())
                 || current.isPinned() != latest.isPinned()) {
-            current.setMoment(0);
+            current.setMoment(null);
         }
         posting = postingRepository.saveAndFlush(posting);
         current = posting.getCurrentRevision();
-        if (current.getMoment() == 0) {
+        if (current.getMoment() == null && !posting.isDraft()) {
             current.setMoment(momentFinder.find(
                     moment -> entryRevisionRepository.countMoments(requestContext.nodeId(), moment) == 0,
                     !current.isPinned() ? current.getPublishedAt() : PINNED_TIME));
@@ -77,7 +103,9 @@ public class PostingOperations {
         current.setDigest(CryptoUtil.digest(fingerprint));
         current.setSignature(CryptoUtil.sign(fingerprint, signingKey));
         current.setSignatureVersion(PostingFingerprint.VERSION);
-        updatePublicPages(current.getMoment());
+        if (!posting.isDraft()) {
+            updatePublicPages(current.getMoment());
+        }
 
         return posting;
     }

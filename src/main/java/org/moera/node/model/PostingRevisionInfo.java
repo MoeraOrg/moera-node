@@ -21,7 +21,7 @@ public class PostingRevisionInfo {
     private boolean pinned;
     private byte[] signature;
     private short signatureVersion;
-    private long moment;
+    private Long moment;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
 
@@ -150,11 +150,11 @@ public class PostingRevisionInfo {
         this.signatureVersion = signatureVersion;
     }
 
-    public long getMoment() {
+    public Long getMoment() {
         return moment;
     }
 
-    public void setMoment(long moment) {
+    public void setMoment(Long moment) {
         this.moment = moment;
     }
 

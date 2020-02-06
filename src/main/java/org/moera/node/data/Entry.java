@@ -54,6 +54,9 @@ public class Entry {
     private Timestamp deadline;
 
     @NotNull
+    private boolean draft;
+
+    @NotNull
     private int totalRevisions;
 
     @OneToOne
@@ -139,6 +142,14 @@ public class Entry {
 
     public void setDeadline(Timestamp deadline) {
         this.deadline = deadline;
+    }
+
+    public boolean isDraft() {
+        return draft;
+    }
+
+    public void setDraft(boolean draft) {
+        this.draft = draft;
     }
 
     public int getTotalRevisions() {

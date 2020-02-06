@@ -58,8 +58,7 @@ public class EntryRevision {
     @NotNull
     private boolean pinned;
 
-    @NotNull
-    private long moment;
+    private Long moment;
 
     private byte[] signature;
 
@@ -170,11 +169,11 @@ public class EntryRevision {
         this.pinned = pinned;
     }
 
-    public long getMoment() {
+    public Long getMoment() {
         return moment;
     }
 
-    public void setMoment(long moment) {
+    public void setMoment(Long moment) {
         this.moment = moment;
     }
 

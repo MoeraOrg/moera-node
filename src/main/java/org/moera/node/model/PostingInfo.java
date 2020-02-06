@@ -28,9 +28,10 @@ public class PostingInfo {
     private Long deletedAt;
     private long publishedAt;
     private boolean pinned;
+    private boolean draft;
     private byte[] signature;
     private short signatureVersion;
-    private long moment;
+    private Long moment;
     private Map<String, String[]> operations;
     private AcceptedReactions acceptedReactions = new AcceptedReactions();
     private ClientReactionInfo clientReaction;
@@ -65,6 +66,9 @@ public class PostingInfo {
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
         pinned = posting.getCurrentRevision().isPinned();
+        if (posting.isDraft()) {
+            draft = true;
+        }
         signature = posting.getCurrentRevision().getSignature();
         signatureVersion = posting.getCurrentRevision().getSignatureVersion();
         moment = posting.getCurrentRevision().getMoment();
@@ -220,6 +224,14 @@ public class PostingInfo {
         this.pinned = pinned;
     }
 
+    public boolean isDraft() {
+        return draft;
+    }
+
+    public void setDraft(boolean draft) {
+        this.draft = draft;
+    }
+
     public byte[] getSignature() {
         return signature;
     }
@@ -236,11 +248,11 @@ public class PostingInfo {
         this.signatureVersion = signatureVersion;
     }
 
-    public long getMoment() {
+    public Long getMoment() {
         return moment;
     }
 
-    public void setMoment(long moment) {
+    public void setMoment(Long moment) {
         this.moment = moment;
     }
 
