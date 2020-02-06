@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.util.Util;
 
@@ -48,32 +49,36 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting, boolean includeSource, boolean isAdminOrOwner) {
+        this(posting, posting.getCurrentRevision(), includeSource, isAdminOrOwner);
+    }
+
+    public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
         id = posting.getId().toString();
-        revisionId = posting.getCurrentRevision().getId().toString();
+        revisionId = revision.getId().toString();
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
         ownerName = posting.getOwnerName();
-        bodyPreview = new Body(posting.getCurrentRevision().getBodyPreview());
+        bodyPreview = new Body(revision.getBodyPreview());
         if (includeSource) {
-            bodySrc = new Body(posting.getCurrentRevision().getBodySrc());
+            bodySrc = new Body(revision.getBodySrc());
         }
-        bodySrcHash = CryptoUtil.digest(posting.getCurrentRevision().getBodySrc());
-        bodySrcFormat = posting.getCurrentRevision().getBodySrcFormat().getValue();
-        body = new Body(posting.getCurrentRevision().getBody());
-        bodyFormat = posting.getCurrentRevision().getBodyFormat();
-        heading = posting.getCurrentRevision().getHeading();
+        bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
+        bodySrcFormat = revision.getBodySrcFormat().getValue();
+        body = new Body(revision.getBody());
+        bodyFormat = revision.getBodyFormat();
+        heading = revision.getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
-        editedAt = Util.toEpochSecond(posting.getCurrentRevision().getCreatedAt());
+        editedAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
-        publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
+        publishedAt = Util.toEpochSecond(revision.getPublishedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
-        pinned = posting.getCurrentRevision().isPinned();
+        pinned = revision.isPinned();
         if (posting.isDraft()) {
             draft = true;
         }
-        signature = posting.getCurrentRevision().getSignature();
-        signatureVersion = posting.getCurrentRevision().getSignatureVersion();
-        moment = posting.getCurrentRevision().getMoment();
+        signature = revision.getSignature();
+        signatureVersion = revision.getSignatureVersion();
+        moment = revision.getMoment();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});

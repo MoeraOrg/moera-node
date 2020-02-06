@@ -90,7 +90,7 @@ public class PostingOperations {
         }
         posting = postingRepository.saveAndFlush(posting);
         current = posting.getCurrentRevision();
-        if (current.getMoment() == null && !posting.isDraft()) {
+        if (current.getMoment() == null) {
             current.setMoment(momentFinder.find(
                     moment -> entryRevisionRepository.countMoments(requestContext.nodeId(), moment) == 0,
                     !current.isPinned() ? current.getPublishedAt() : PINNED_TIME));
@@ -99,11 +99,21 @@ public class PostingOperations {
         current.setDigest(CryptoUtil.digest(fingerprint));
         current.setSignature(CryptoUtil.sign(fingerprint, signingKey));
         current.setSignatureVersion(PostingFingerprint.VERSION);
-        if (!posting.isDraft()) {
-            updatePublicPages(current.getMoment());
-        }
+        updatePublicPages(current.getMoment());
 
         return posting;
+    }
+
+    public Posting createOrUpdatePostingDraft(Posting posting, Consumer<EntryRevision> updater) {
+        EntryRevision draft = posting.getDraftRevision();
+        if (draft == null) {
+            draft = newRevision(posting, null);
+            posting.setDraftRevision(draft);
+        }
+        if (updater != null) {
+            updater.accept(draft);
+        }
+        return postingRepository.saveAndFlush(posting);
     }
 
     private ECPrivateKey getSigningKey() {
@@ -133,7 +143,7 @@ public class PostingOperations {
         EntryRevision revision = new EntryRevision();
         revision.setId(UUID.randomUUID());
         revision.setEntry(posting);
-        entryRevisionRepository.save(revision);
+        revision = entryRevisionRepository.save(revision);
 
         if (template != null) {
             revision.setBodyPreview(template.getBodyPreview());

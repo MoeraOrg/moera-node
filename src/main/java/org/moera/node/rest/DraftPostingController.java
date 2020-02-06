@@ -79,10 +79,10 @@ public class DraftPostingController {
             throw new ValidationFailure("limit.invalid");
         }
 
-        return postingRepository.findDraft(requestContext.nodeId(),
+        return postingRepository.findDrafts(requestContext.nodeId(),
                 PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .stream()
-                .map(p -> new PostingInfo(p, true, true))
+                .map(p -> new PostingInfo(p, p.getDraftRevision(), true, true))
                 .collect(Collectors.toList());
     }
 
@@ -102,14 +102,15 @@ public class DraftPostingController {
             p.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
         });
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, null, null, postingText::toEntryRevision);
+            posting = postingOperations.createOrUpdatePostingDraft(posting, postingText::toEntryRevision);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
         requestContext.send(new DraftPostingAddedEvent(posting));
 
         return ResponseEntity.created(
-                URI.create("/draft-postings/" + posting.getId())).body(new PostingInfo(posting, true, true));
+                URI.create("/draft-postings/" + posting.getId()))
+                    .body(new PostingInfo(posting, posting.getDraftRevision(), true, true));
     }
 
     @PutMapping("/{id}")
@@ -132,14 +133,13 @@ public class DraftPostingController {
         Duration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
         posting.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
-                    postingText::sameAsRevision, postingText::toEntryRevision);
+            posting = postingOperations.createOrUpdatePostingDraft(posting, postingText::toEntryRevision);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
         requestContext.send(new DraftPostingUpdatedEvent(posting));
 
-        return new PostingInfo(posting, true, true);
+        return new PostingInfo(posting, posting.getDraftRevision(), true, true);
     }
 
     @GetMapping("/{id}")
@@ -152,7 +152,7 @@ public class DraftPostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return new PostingInfo(posting, true,
+        return new PostingInfo(posting, posting.getDraftRevision(), true,
                 requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()));
     }
 
