@@ -4,7 +4,9 @@ import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -29,6 +31,8 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,6 +41,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/draft-postings")
@@ -55,6 +60,31 @@ public class DraftPostingController {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @GetMapping
+    @Admin
+    public List<PostingInfo> getAll(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer limit) {
+
+        log.info("GET /draft-postings (page = {}, limit = {})", LogUtil.format(page), LogUtil.format(limit));
+
+        page = page != null ? page : 0;
+        if (page < 0) {
+            throw new ValidationFailure("page.invalid");
+        }
+        limit = limit != null && limit <= PostingOperations.MAX_POSTINGS_PER_REQUEST
+                ? limit : PostingOperations.MAX_POSTINGS_PER_REQUEST;
+        if (limit < 0) {
+            throw new ValidationFailure("limit.invalid");
+        }
+
+        return postingRepository.findDraft(requestContext.nodeId(),
+                PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .stream()
+                .map(p -> new PostingInfo(p, true, true))
+                .collect(Collectors.toList());
+    }
 
     @PostMapping
     @Admin
@@ -75,7 +105,7 @@ public class DraftPostingController {
         requestContext.send(new DraftPostingAddedEvent(posting));
 
         return ResponseEntity.created(
-                URI.create("/draft-postings/" + posting.getId())).body(new PostingInfo(posting, true));
+                URI.create("/draft-postings/" + posting.getId())).body(new PostingInfo(posting, true, true));
     }
 
     @PutMapping("/{id}")
@@ -103,7 +133,7 @@ public class DraftPostingController {
         }
         requestContext.send(new DraftPostingUpdatedEvent(posting));
 
-        return new PostingInfo(posting, true);
+        return new PostingInfo(posting, true, true);
     }
 
     @GetMapping("/{id}")

@@ -43,6 +43,9 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is not null and draft = false")
     Optional<Posting> findDeletedById(UUID nodeId, UUID id);
 
+    @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is null and draft = true")
+    List<Posting> findDraft(UUID nodeId, Pageable pageable);
+
     @Query("select p from Posting p join fetch p.currentRevision where p.nodeId = ?1 and p.id = ?2"
             + " and p.deletedAt is null and draft = true")
     Optional<Posting> findDraftById(UUID nodeId, UUID id);
