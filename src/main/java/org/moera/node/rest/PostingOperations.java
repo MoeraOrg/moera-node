@@ -72,10 +72,6 @@ public class PostingOperations {
         return postingRepository.save(posting);
     }
 
-    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, Consumer<EntryRevision> updater) {
-        return createOrUpdatePosting(posting, revision, null, updater);
-    }
-
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision,
                                          Function<EntryRevision, Boolean> preserveRevision,
                                          Consumer<EntryRevision> updater) {

@@ -102,7 +102,7 @@ public class DraftPostingController {
             p.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
         });
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
+            posting = postingOperations.createOrUpdatePosting(posting, null, null, postingText::toEntryRevision);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
