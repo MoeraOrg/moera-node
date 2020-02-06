@@ -62,6 +62,9 @@ public class Entry {
     @OneToOne
     private EntryRevision currentRevision;
 
+    @OneToOne
+    private EntryRevision draftRevision;
+
     @Size(max = 255)
     private String acceptedReactionsPositive;
 
@@ -166,6 +169,14 @@ public class Entry {
 
     public void setCurrentRevision(EntryRevision currentRevision) {
         this.currentRevision = currentRevision;
+    }
+
+    public EntryRevision getDraftRevision() {
+        return draftRevision;
+    }
+
+    public void setDraftRevision(EntryRevision draftRevision) {
+        this.draftRevision = draftRevision;
     }
 
     public String getAcceptedReactionsPositive() {
