@@ -112,17 +112,6 @@ public class DeletedPostingController {
 
     @Scheduled(fixedDelayString = "P1D")
     @EventListener(DomainsConfiguredEvent.class)
-    @Deprecated
-    @Transactional
-    public void purgeExpiredDeprecated() {
-        domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(options -> {
-            Timestamp ts = Timestamp.from(Instant.now().minus(options.getDuration("posting.deleted.lifetime")));
-            postingRepository.deleteExpiredDeprecated(options.nodeId(), ts);
-        });
-    }
-
-    @Scheduled(fixedDelayString = "P1D")
-    @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void purgeExpired() {
         postingRepository.deleteExpired(Util.now());
