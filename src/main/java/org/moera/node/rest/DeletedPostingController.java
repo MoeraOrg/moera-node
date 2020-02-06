@@ -10,7 +10,6 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.model.PostingRestoredEvent;
 import org.moera.node.global.ApiController;
@@ -46,9 +45,6 @@ public class DeletedPostingController {
 
     @Inject
     private PostingOperations postingOperations;
-
-    @Inject
-    private Domains domains;
 
     @GetMapping
     @Admin
