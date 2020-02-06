@@ -96,7 +96,11 @@ public class DraftPostingController {
                 LogUtil.format(postingText.getBodySrcFormat()),
                 LogUtil.formatTimestamp(postingText.getPublishAt()));
 
-        Posting posting = postingOperations.newPosting(postingText, p -> p.setDraft(true));
+        Posting posting = postingOperations.newPosting(postingText, p -> {
+            p.setDraft(true);
+            Duration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
+            p.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
+        });
         try {
             posting = postingOperations.createOrUpdatePosting(posting, null, postingText::toEntryRevision);
         } catch (BodyMappingException e) {
@@ -125,6 +129,8 @@ public class DraftPostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         postingText.toEntry(posting);
+        Duration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
+        posting.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
         try {
             posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
                     postingText::sameAsRevision, postingText::toEntryRevision);

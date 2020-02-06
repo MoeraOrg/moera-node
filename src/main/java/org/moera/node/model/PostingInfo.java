@@ -27,6 +27,7 @@ public class PostingInfo {
     private long editedAt;
     private Long deletedAt;
     private long publishedAt;
+    private Long deadline;
     private boolean pinned;
     private boolean draft;
     private byte[] signature;
@@ -65,6 +66,7 @@ public class PostingInfo {
         editedAt = Util.toEpochSecond(posting.getCurrentRevision().getCreatedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         publishedAt = Util.toEpochSecond(posting.getCurrentRevision().getPublishedAt());
+        deadline = Util.toEpochSecond(posting.getDeadline());
         pinned = posting.getCurrentRevision().isPinned();
         if (posting.isDraft()) {
             draft = true;
@@ -214,6 +216,14 @@ public class PostingInfo {
 
     public void setPublishedAt(long publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public Long getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Long deadline) {
+        this.deadline = deadline;
     }
 
     public boolean isPinned() {
