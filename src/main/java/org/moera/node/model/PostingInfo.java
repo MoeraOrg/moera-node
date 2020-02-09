@@ -31,6 +31,7 @@ public class PostingInfo {
     private Long deadline;
     private boolean pinned;
     private boolean draft;
+    private Boolean draftPending;
     private byte[] signature;
     private short signatureVersion;
     private Long moment;
@@ -75,6 +76,9 @@ public class PostingInfo {
         pinned = revision.isPinned();
         if (posting.isDraft()) {
             draft = true;
+        }
+        if (includeSource) {
+            draftPending = posting.getDraftRevision() != null;
         }
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
@@ -245,6 +249,14 @@ public class PostingInfo {
 
     public void setDraft(boolean draft) {
         this.draft = draft;
+    }
+
+    public Boolean getDraftPending() {
+        return draftPending;
+    }
+
+    public void setDraftPending(Boolean draftPending) {
+        this.draftPending = draftPending;
     }
 
     public byte[] getSignature() {

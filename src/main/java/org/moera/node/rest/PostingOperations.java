@@ -104,10 +104,11 @@ public class PostingOperations {
         return posting;
     }
 
-    public Posting createOrUpdatePostingDraft(Posting posting, Consumer<EntryRevision> updater) {
+    public Posting createOrUpdatePostingDraft(Posting posting, EntryRevision template,
+                                              Consumer<EntryRevision> updater) {
         EntryRevision draft = posting.getDraftRevision();
         if (draft == null) {
-            draft = newRevision(posting, null);
+            draft = newRevision(posting, template);
             posting.setDraftRevision(draft);
         }
         if (updater != null) {

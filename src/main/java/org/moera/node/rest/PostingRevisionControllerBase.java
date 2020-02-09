@@ -57,9 +57,11 @@ public abstract class PostingRevisionControllerBase {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
+        UUID draftId = posting.getDraftRevision() != null ? posting.getDraftRevision().getId() : null;
         boolean countsVisible = posting.isReactionTotalsVisible() || requestContext.isAdmin()
                 || requestContext.isClient(posting.getOwnerName());
         return posting.getRevisions().stream()
+                .filter(r -> !r.getId().equals(draftId))
                 .map(r -> new PostingRevisionInfo(r, countsVisible))
                 .sorted(Comparator.comparing(PostingRevisionInfo::getCreatedAt).reversed())
                 .collect(Collectors.toList());

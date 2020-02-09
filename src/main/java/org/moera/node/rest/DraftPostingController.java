@@ -102,7 +102,7 @@ public class DraftPostingController {
             p.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
         });
         try {
-            posting = postingOperations.createOrUpdatePostingDraft(posting, postingText::toEntryRevision);
+            posting = postingOperations.createOrUpdatePostingDraft(posting, null, postingText::toEntryRevision);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -133,7 +133,8 @@ public class DraftPostingController {
         Duration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
         posting.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
         try {
-            posting = postingOperations.createOrUpdatePostingDraft(posting, postingText::toEntryRevision);
+            posting = postingOperations.createOrUpdatePostingDraft(posting, posting.getDraftRevision(),
+                    postingText::toEntryRevision);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
