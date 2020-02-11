@@ -51,7 +51,7 @@ public class PostingDraftRevisionController {
     @GetMapping
     @Admin
     public PostingInfo get(@PathVariable UUID postingId) {
-        log.info("GET /moera/api/postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
+        log.info("GET /postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
@@ -67,7 +67,7 @@ public class PostingDraftRevisionController {
     @Admin
     @Transactional
     public PostingInfo put(@PathVariable UUID postingId, @RequestBody @Valid PostingText postingText) {
-        log.info("PUT /moera/api/postings/{postingId}/revisions/draft"
+        log.info("PUT /postings/{postingId}/revisions/draft"
                         + " (postingId = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
                 LogUtil.format(postingId),
                 LogUtil.format(postingText.getBodySrc(), 64),
@@ -94,7 +94,7 @@ public class PostingDraftRevisionController {
     @Admin
     @Transactional
     public Result delete(@PathVariable UUID postingId) {
-        log.info("DELETE /moera/api/postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
+        log.info("DELETE /postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
