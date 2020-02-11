@@ -170,8 +170,8 @@ public class DraftPostingController {
         posting.setDeletedAt(Util.now());
         Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
         posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
-        posting.getCurrentRevision().setDeletedAt(Util.now());
-        entryRevisionRepository.save(posting.getCurrentRevision());
+        posting.getDraftRevision().setDeletedAt(Util.now());
+        entryRevisionRepository.save(posting.getDraftRevision());
 
         requestContext.send(new DraftPostingDeletedEvent(posting));
 
