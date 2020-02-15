@@ -1,6 +1,7 @@
 package org.moera.node.event.model;
 
 import org.moera.node.data.Posting;
+import org.moera.node.event.EventSubscriber;
 
 public class DraftPostingEvent extends Event {
 
@@ -21,6 +22,11 @@ public class DraftPostingEvent extends Event {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Override
+    public boolean isPermitted(EventSubscriber subscriber) {
+        return subscriber.isAdmin();
     }
 
 }
