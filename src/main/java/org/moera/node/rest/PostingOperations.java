@@ -114,6 +114,7 @@ public class PostingOperations {
         if (updater != null) {
             updater.accept(draft);
         }
+        draft.setCreatedAt(Util.now());
         return postingRepository.saveAndFlush(posting);
     }
 
