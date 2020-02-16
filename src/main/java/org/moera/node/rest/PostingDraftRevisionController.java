@@ -21,6 +21,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.text.TextConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -47,6 +48,9 @@ public class PostingDraftRevisionController {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private TextConverter textConverter;
 
     @GetMapping
     @Admin
@@ -81,7 +85,8 @@ public class PostingDraftRevisionController {
         try {
             EntryRevision revision = posting.getDraftRevision() != null
                     ? posting.getDraftRevision() : posting.getCurrentRevision();
-            posting = postingOperations.createOrUpdatePostingDraft(posting, revision, postingText::toEntryRevision);
+            posting = postingOperations.createOrUpdatePostingDraft(posting, revision,
+                    postingText.toEntryRevisionExporter(textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }

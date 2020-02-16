@@ -99,7 +99,7 @@ public class NamingCache {
 
     public RegisteredNameDetails getFast(String name) {
         RegisteredNameDetails details = getOrRun(getKey(name));
-        return details != null ? details.clone() : new RegisteredNameDetails(false, getRedirector(name), null);
+        return details != null ? details.clone() : new RegisteredNameDetails(name, false, getRedirector(name), null);
     }
 
     public RegisteredNameDetails get(String name) {
@@ -170,7 +170,10 @@ public class NamingCache {
         RegisteredNameInfo info = null;
         Throwable error = null;
         try {
-            info = namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), key.namingLocation);
+            info = registeredName.getGeneration() != null
+                    ? namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(),
+                                            key.namingLocation)
+                    : namingClient.getCurrentForLatest(registeredName.getName(), key.namingLocation);
         } catch (Exception e) {
             error = e;
         }
@@ -180,6 +183,14 @@ public class NamingCache {
             cacheLock.writeLock().lock();
             try {
                 cache.put(key, record);
+                if (info != null) {
+                    if (registeredName.getGeneration() == null) {
+                        String fullName = RegisteredName.toString(info.getName(), info.getGeneration());
+                        cache.put(new Key(key.namingLocation, fullName), record);
+                    } else if (info.isLatest()) {
+                        cache.put(new Key(key.namingLocation, info.getName()), record);
+                    }
+                }
             } finally {
                 cacheLock.writeLock().unlock();
             }
@@ -192,7 +203,7 @@ public class NamingCache {
         }
     }
 
-    private String getRedirector(String name) {
+    public static String getRedirector(String name) {
         return "/moera/gotoname?name=" + Util.ue(name);
     }
 

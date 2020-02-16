@@ -195,7 +195,7 @@ public class NamingClient {
         String name = options.getString("naming.operation.registered-name");
         Integer generation = options.getInt("naming.operation.registered-name.generation");
         String prevRegisteredName = options.nodeName();
-        String newRegisteredName = new RegisteredName(name, generation).toString();
+        String newRegisteredName = RegisteredName.toString(name, generation);
         options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
             eventManager.send(options.nodeId(), new NodeNameChangedEvent(newRegisteredName));

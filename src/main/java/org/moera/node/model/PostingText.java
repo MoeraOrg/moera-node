@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.function.Consumer;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
@@ -107,7 +108,11 @@ public class PostingText {
         }
     }
 
-    public void toEntryRevision(EntryRevision revision) {
+    public Consumer<EntryRevision> toEntryRevisionExporter(TextConverter textConverter) {
+        return revision -> toEntryRevision(revision, textConverter);
+    }
+
+    public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {
         if (!StringUtils.isEmpty(bodySrcFormat)) {
             SourceFormat format = SourceFormat.forValue(bodySrcFormat);
             if (format == null) {
@@ -119,7 +124,7 @@ public class PostingText {
         if (!StringUtils.isEmpty(bodySrc)) {
             if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
                 revision.setBodySrc(bodySrc);
-                Body body = TextConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
+                Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
                 revision.setBody(body.getEncoded());
                 revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
                 if (!Shortener.isShort(body)) {

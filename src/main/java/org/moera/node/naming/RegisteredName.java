@@ -54,6 +54,10 @@ public class RegisteredName implements NodeName {
 
     @Override
     public String toString() {
+        return toString(name, generation);
+    }
+
+    public static String toString(String name, Integer generation) {
         if (name != null) {
             if (generation != null) {
                 return String.format("%s_%d", name, generation);

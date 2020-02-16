@@ -31,6 +31,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,9 @@ public class PostingController {
     @Inject
     private PostingOperations postingOperations;
 
+    @Inject
+    private TextConverter textConverter;
+
     @GetMapping("/features")
     public PostingFeatures getFeatures() {
         log.info("GET /postings/features");
@@ -89,7 +93,8 @@ public class PostingController {
 
         Posting posting = postingOperations.newPosting(postingText, null);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, null, null, postingText::toEntryRevision);
+            posting = postingOperations.createOrUpdatePosting(posting, null, null,
+                    postingText.toEntryRevisionExporter(textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -117,7 +122,7 @@ public class PostingController {
         postingText.toEntry(posting);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
-                    postingText::sameAsRevision, postingText::toEntryRevision);
+                    postingText::sameAsRevision, postingText.toEntryRevisionExporter(textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
