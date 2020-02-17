@@ -9,6 +9,7 @@ import com.vladsch.flexmark.ext.definition.DefinitionExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiImageType;
 import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
+import com.vladsch.flexmark.ext.gitlab.GitLabExtension;
 import com.vladsch.flexmark.ext.media.tags.MediaTagsExtension;
 import com.vladsch.flexmark.ext.superscript.SuperscriptExtension;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
@@ -29,11 +30,16 @@ public class MarkdownConverter {
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
             .set(HtmlRenderer.SOFT_BREAK, "<br/>")
             .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
+            .set(GitLabExtension.INS_PARSER, false)
+            .set(GitLabExtension.DEL_PARSER, false)
+            .set(GitLabExtension.RENDER_BLOCK_MATH, false)
+            .set(GitLabExtension.RENDER_BLOCK_MERMAID, false)
             .set(Parser.EXTENSIONS, Arrays.asList(
                     AutolinkExtension.create(),
                     DefinitionExtension.create(),
                     EmojiExtension.create(),
                     FootnoteExtension.create(),
+                    GitLabExtension.create(),
                     MediaTagsExtension.create(),
                     MentionsExtension.create(),
                     SuperscriptExtension.create(),
