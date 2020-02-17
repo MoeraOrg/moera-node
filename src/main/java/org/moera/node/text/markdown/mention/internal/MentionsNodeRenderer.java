@@ -38,19 +38,15 @@ public class MentionsNodeRenderer implements NodeRenderer {
             html.text(node.getChars());
         } else {
             String name = node.getText().toString();
-            String nodeUri;
-            try {
-                boolean full = RegisteredName.parse(name).getGeneration() != null;
-                RegisteredNameDetails details = full
-                        ? options.namingCache.getFast(name)
-                        : options.namingCache.get(name);
-                nodeUri = details.getNodeUri() != null ? details.getNodeUri() : NamingCache.getRedirector(name);
-                name = details.getNodeName() != null ? details.getNodeName() : name;
-            } catch (NamingNotAvailableException e) {
-                nodeUri = NamingCache.getRedirector(name);
+            if (RegisteredName.parse(name).getGeneration() == null) {
+                try {
+                    RegisteredNameDetails details = options.namingCache.get(name);
+                    name = details.getNodeName() != null ? details.getNodeName() : name;
+                } catch (NamingNotAvailableException e) {
+                }
             }
             html.srcPos(node.getChars())
-                    .attr("href", nodeUri)
+                    .attr("href", NamingCache.getRedirector(name))
                     .attr("data-nodename", name)
                     .withAttr()
                     .tag("a");
