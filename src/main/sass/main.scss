@@ -1,9 +1,11 @@
+@import 'colors';
+
 HTML {
     font-size: 90%;
 }
 
 BODY {
-    background-color: #e9ebee;
+    background-color: var(--body-background);
 }
 
 .emoji {
@@ -27,12 +29,12 @@ BODY {
     padding-bottom: 0;
 
     .navbar-brand {
-        border-right: 1px rgba(255,255,255,.5) solid;
+        border-right: solid var(--status-icon) 1px;
         padding-right: 1rem;
     }
 
     .node-name {
-        color: #20c997;
+        color: var(--cyan-light);
         font-weight: bold;
 
     }
@@ -48,8 +50,8 @@ BODY {
         padding-right: 1rem;
         top: 2.5em;
         right: 1em;
-        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.75);
-        border: solid 1px #808080;
+        box-shadow: 0 0.125rem 0.25rem var(--shadow);
+        border: solid 1px var(--gray);
     }
 }
 
@@ -62,94 +64,9 @@ SUB.generation {
 
 .no-postings {
 	font-weight: bold;
-	color: #d0d0d0;
+	color: color(--gray-light);
 	font-size: 4rem;
 	margin-top: 5rem;
-}
-
-@mixin pane {
-    background-color: #fff;
-    border: #dbdbdb 1px solid;
-    border-radius: 5px;
-}
-
-.posting {
-    @include pane;
-    margin-top: 1rem;
-    padding: 0.5rem;
-
-    .pin-line {
-        font-size: 0.8rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .subject, .subject A {
-        font-weight: 500;
-        font-size: 1.75rem;
-        line-height: 1.2;
-        margin-bottom: 0.5rem;
-        color: #385898;
-    }
-
-    BLOCKQUOTE {
-        padding: 0.2rem 0.2rem 0.2rem 3rem;
-        position: relative;
-        background-color: #fafafa;
-        border-radius: 0.5rem;
-
-        &::before {
-            content: "\201C";
-            font-family: serif;
-            font-size: 4rem;
-            color: var(--cyan);
-            position: absolute;
-            left: 0.5rem;
-            top: -1rem;
-        }
-    }
-
-    .owner {
-        font-weight: bold;
-        margin-bottom: 0.2em;
-
-        A {
-            color: #385898;
-        }
-    }
-
-    .date {
-        font-size: 0.8rem;
-        font-weight: normal;
-        color: #a9a9a9;
-        margin-left: 0.5em;
-
-        A {
-            color: inherit;
-        }
-    }
-
-    .reactions {
-        font-size: 0.9rem;
-        font-weight: 600;
-
-        .emojis {
-            font-family: sans-serif;
-            font-size: 1rem;
-            margin-right: 0.5rem;
-
-            IMG.emoji {
-               height: 1em;
-               width: 1em;
-            }
-        }
-        .positive {
-            margin-right: 1.3rem;
-            color: forestgreen;
-        }
-        .negative {
-            color: firebrick;
-        }
-    }
 }
 
 .pagination {
@@ -162,9 +79,17 @@ SUB.generation {
     }
 }
 
+@mixin pane {
+    background-color: white;
+    border: var(--gray-light) 1px solid;
+    border-radius: 5px;
+}
+
 .profile-view {
     @include pane;
     padding-left: 1rem;
     padding-top: 1rem;
     margin-top: 1rem;
 }
+
+@import 'posting';

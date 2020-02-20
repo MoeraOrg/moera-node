@@ -1,0 +1,78 @@
+.posting {
+    @include pane;
+    margin-top: 1rem;
+    padding: 0.5rem;
+
+    .pin-line {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .subject, .subject A {
+        font-weight: 500;
+        font-size: 1.75rem;
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+        color: var(--node-name);
+    }
+
+    BLOCKQUOTE {
+        padding: 0.2rem 0.2rem 0.2rem 3rem;
+        position: relative;
+        background-color: var(--blockquote);
+        border-radius: 0.5rem;
+
+        &::before {
+            content: "\201C";
+            font-family: serif;
+            font-size: 4rem;
+            color: var(--cyan);
+            position: absolute;
+            left: 0.5rem;
+            top: -1rem;
+        }
+    }
+
+    .owner {
+        font-weight: bold;
+        margin-bottom: 0.2em;
+
+        A {
+            color: var(--node-name);
+        }
+    }
+
+    .date {
+        font-size: 0.8rem;
+        font-weight: normal;
+        color: var(--gray-medium);
+        margin-left: 0.5em;
+
+        A {
+            color: inherit;
+        }
+    }
+
+    .reactions {
+        font-size: 0.9rem;
+        font-weight: 600;
+
+        .emojis {
+            font-family: sans-serif;
+            font-size: 1rem;
+            margin-right: 0.5rem;
+
+            IMG.emoji {
+               height: 1em;
+               width: 1em;
+            }
+        }
+        .positive {
+            margin-right: 1.3rem;
+            color: var(--correct);
+        }
+        .negative {
+            color: var(--incorrect);
+        }
+    }
+}
