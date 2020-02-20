@@ -77,7 +77,7 @@ public class PostingInfo {
         if (posting.isDraft()) {
             draft = true;
         }
-        if (includeSource) {
+        if (includeSource && isAdminOrOwner) {
             draftPending = posting.getDraftRevision() != null;
         }
         signature = revision.getSignature();
