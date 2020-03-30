@@ -54,16 +54,16 @@ public class PostingInfo {
         this(posting, posting.getCurrentRevision(), false, isAdminOrOwner);
     }
 
+    public PostingInfo(Posting posting, boolean includeSource, boolean isAdminOrOwner) {
+        this(posting, posting.getCurrentRevision(), includeSource, isAdminOrOwner);
+    }
+
     public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
         this(posting, revision, null, includeSource, isAdminOrOwner);
     }
 
     public PostingInfo(Posting posting, List<Story> stories, boolean isAdminOrOwner) {
         this(posting, posting.getCurrentRevision(), stories, false, isAdminOrOwner);
-    }
-
-    public PostingInfo(Posting posting, List<Story> stories, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), stories, includeSource, isAdminOrOwner);
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, List<Story> stories, boolean includeSource,

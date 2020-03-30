@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -28,6 +29,7 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
+import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
@@ -106,7 +108,8 @@ public class PostingController {
         }
         requestContext.send(new PostingAddedEvent(posting));
 
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId())).body(new PostingInfo(posting, true));
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
+                .body(withStories(new PostingInfo(posting, true)));
     }
 
     @PutMapping("/{id}")
@@ -134,7 +137,7 @@ public class PostingController {
         }
         requestContext.send(new PostingUpdatedEvent(posting));
 
-        return withClientReaction(new PostingInfo(posting, true));
+        return withStories(withClientReaction(new PostingInfo(posting, true)));
     }
 
     @GetMapping("/{id}")
@@ -147,10 +150,9 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
 
-        return withClientReaction(new PostingInfo(posting, stories, includeSet.contains("source"),
-                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())));
+        return withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
+                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()))));
     }
 
     @DeleteMapping("/{id}")
@@ -182,6 +184,15 @@ public class PostingController {
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
         postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        return postingInfo;
+    }
+
+    private PostingInfo withStories(PostingInfo postingInfo) {
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(),
+                UUID.fromString(postingInfo.getId()));
+        if (stories != null && !stories.isEmpty()) {
+            postingInfo.setFeedReferences(stories.stream().map(FeedReference::new).collect(Collectors.toList()));
+        }
         return postingInfo;
     }
 

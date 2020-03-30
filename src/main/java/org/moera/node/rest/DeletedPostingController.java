@@ -10,6 +10,8 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.model.PostingRestoredEvent;
 import org.moera.node.global.ApiController;
@@ -39,6 +41,9 @@ public class DeletedPostingController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -101,7 +106,8 @@ public class DeletedPostingController {
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null, null);
         requestContext.send(new PostingRestoredEvent(posting));
 
-        return new PostingInfo(posting, true);
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
+        return new PostingInfo(posting, stories, true);
     }
 
     @Scheduled(fixedDelayString = "P1D")

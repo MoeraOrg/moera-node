@@ -103,7 +103,7 @@ public class PostingOperations {
                     moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
                     !current.isPinned() ? current.getPublishedAt() : PINNED_TIME));
         }
-        story = storyRepository.save(story);
+        story = storyRepository.saveAndFlush(story);
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));
         current.setSignature(CryptoUtil.sign(fingerprint, signingKey));
