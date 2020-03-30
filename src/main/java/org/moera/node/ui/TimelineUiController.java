@@ -71,7 +71,7 @@ public class TimelineUiController {
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
                     .map(s -> new PostingInfo(s, false))
-                    .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
+                    .sorted(Comparator.comparing(p -> ((PostingInfo) p).getMoment(Feed.TIMELINE)).reversed())
                     .collect(Collectors.toList());
         }
 

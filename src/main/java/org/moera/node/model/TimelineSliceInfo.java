@@ -6,7 +6,7 @@ public class TimelineSliceInfo {
 
     private long before;
     private long after;
-    private List<PostingInfo> postings;
+    private List<StoryInfo> stories;
 
     public TimelineSliceInfo() {
     }
@@ -27,12 +27,12 @@ public class TimelineSliceInfo {
         this.after = after;
     }
 
-    public List<PostingInfo> getPostings() {
-        return postings;
+    public List<StoryInfo> getStories() {
+        return stories;
     }
 
-    public void setPostings(List<PostingInfo> postings) {
-        this.postings = postings;
+    public void setStories(List<StoryInfo> stories) {
+        this.stories = stories;
     }
 
 }

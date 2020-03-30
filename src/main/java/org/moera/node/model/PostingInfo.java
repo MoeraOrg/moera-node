@@ -1,6 +1,8 @@
 package org.moera.node.model;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -35,7 +37,7 @@ public class PostingInfo {
     private Boolean draftPending;
     private byte[] signature;
     private short signatureVersion;
-    private Long moment;
+    private List<FeedReference> feedReferences;
     private Map<String, String[]> operations;
     private AcceptedReactions acceptedReactions = new AcceptedReactions();
     private ClientReactionInfo clientReaction;
@@ -55,18 +57,18 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, revision, 0, includeSource, isAdminOrOwner);
+        this(posting, revision, null, includeSource, isAdminOrOwner);
     }
 
     public PostingInfo(Story story, boolean isAdminOrOwner) {
-        this((Posting) story.getEntry(), story.getMoment(), false, isAdminOrOwner);
+        this((Posting) story.getEntry(), story, false, isAdminOrOwner);
     }
 
-    public PostingInfo(Posting posting, long moment, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), moment, includeSource, isAdminOrOwner);
+    public PostingInfo(Posting posting, Story story, boolean includeSource, boolean isAdminOrOwner) {
+        this(posting, posting.getCurrentRevision(), story, includeSource, isAdminOrOwner);
     }
 
-    public PostingInfo(Posting posting, EntryRevision revision, long moment, boolean includeSource,
+    public PostingInfo(Posting posting, EntryRevision revision, Story story, boolean includeSource,
                        boolean isAdminOrOwner) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
@@ -96,7 +98,9 @@ public class PostingInfo {
         }
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        this.moment = moment;
+        if (story != null) {
+            feedReferences = Collections.singletonList(new FeedReference(story));
+        }
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});
@@ -289,12 +293,24 @@ public class PostingInfo {
         this.signatureVersion = signatureVersion;
     }
 
-    public Long getMoment() {
-        return moment;
+    public List<FeedReference> getFeedReferences() {
+        return feedReferences;
     }
 
-    public void setMoment(Long moment) {
-        this.moment = moment;
+    public void setFeedReferences(List<FeedReference> feedReferences) {
+        this.feedReferences = feedReferences;
+    }
+
+    public Long getMoment(String feedName) {
+        if (getFeedReferences() == null) {
+            return null;
+        }
+        for (FeedReference fr : getFeedReferences()) {
+            if (fr.getFeedName().equals(feedName)) {
+                return fr.getMoment();
+            }
+        }
+        return null;
     }
 
     public Map<String, String[]> getOperations() {

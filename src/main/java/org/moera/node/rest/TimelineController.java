@@ -9,7 +9,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Feed;
-import org.moera.node.data.PostingRepository;
+import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -17,6 +17,8 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.StoryInfo;
+import org.moera.node.model.StoryPostingAddedInfo;
 import org.moera.node.model.TimelineInfo;
 import org.moera.node.model.TimelineSliceInfo;
 import org.moera.node.model.ValidationFailure;
@@ -41,9 +43,6 @@ public class TimelineController {
 
     @Inject
     private StoryRepository storyRepository;
-
-    @Inject
-    private PostingRepository postingRepository;
 
     @Inject
     private ReactionRepository reactionRepository;
@@ -110,17 +109,17 @@ public class TimelineController {
     }
 
     private void fillSlice(TimelineSliceInfo sliceInfo, int limit) {
-        List<PostingInfo> postings = storyRepository.findInRange(
+        List<StoryInfo> stories = storyRepository.findInRange(
                 requestContext.nodeId(), Feed.TIMELINE, sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
-                .map(s -> new PostingInfo(s,
-                        requestContext.isAdmin() || requestContext.isClient(s.getEntry().getOwnerName())))
-                .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
+                .map(this::buildStoryInfo)
+                .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .collect(Collectors.toList());
         String clientName = requestContext.getClientName();
         if (!StringUtils.isEmpty(clientName)) {
-            Map<String, PostingInfo> postingMap = postings.stream().collect(
-                    Collectors.toMap(PostingInfo::getId, Function.identity()));
+            Map<String, PostingInfo> postingMap = stories.stream()
+                    .map(s -> ((StoryPostingAddedInfo) s).getPosting())
+                    .collect(Collectors.toMap(PostingInfo::getId, Function.identity()));
             reactionRepository.findByStoriesInRangeAndOwner(
                     requestContext.nodeId(), Feed.TIMELINE, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
                     .stream()
@@ -128,10 +127,16 @@ public class TimelineController {
                     .filter(r -> postingMap.containsKey(r.getPostingId()))
                     .forEach(r -> postingMap.get(r.getPostingId()).setClientReaction(r));
         }
-        if (postings.size() > limit) {
-            postings.remove(limit);
+        if (stories.size() > limit) {
+            stories.remove(limit);
         }
-        sliceInfo.setPostings(postings);
+        sliceInfo.setStories(stories);
+    }
+
+    private StoryPostingAddedInfo buildStoryInfo(Story story) {
+        Posting posting = (Posting) story.getEntry();
+        return new StoryPostingAddedInfo(story,
+                new PostingInfo(posting, requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())));
     }
 
 }
