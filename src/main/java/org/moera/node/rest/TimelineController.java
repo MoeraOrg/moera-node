@@ -8,9 +8,11 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.data.Posting;
+import org.moera.node.data.Feed;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionRepository;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ClientReactionInfo;
@@ -36,6 +38,9 @@ public class TimelineController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -77,46 +82,47 @@ public class TimelineController {
     }
 
     private TimelineSliceInfo getPostingsBefore(long before, int limit) {
-        Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), Long.MIN_VALUE, before,
-                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "currentRevision.moment"));
+        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), Feed.TIMELINE, Long.MIN_VALUE, before,
+                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         TimelineSliceInfo sliceInfo = new TimelineSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setAfter(Long.MIN_VALUE);
         } else {
-            sliceInfo.setAfter(page.getContent().get(limit).getCurrentRevision().getMoment());
+            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
         fillSlice(sliceInfo, limit);
         return sliceInfo;
     }
 
     private TimelineSliceInfo getPostingsAfter(long after, int limit) {
-        Page<Posting> page = postingRepository.findSlice(requestContext.nodeId(), after, Long.MAX_VALUE,
-                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "currentRevision.moment"));
+        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), Feed.TIMELINE, after, Long.MAX_VALUE,
+                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
         TimelineSliceInfo sliceInfo = new TimelineSliceInfo();
         sliceInfo.setAfter(after);
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setBefore(Long.MAX_VALUE);
         } else {
-            sliceInfo.setBefore(page.getContent().get(limit - 1).getCurrentRevision().getMoment());
+            sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
         }
         fillSlice(sliceInfo, limit);
         return sliceInfo;
     }
 
     private void fillSlice(TimelineSliceInfo sliceInfo, int limit) {
-        List<PostingInfo> postings = postingRepository.findInRange(
-                requestContext.nodeId(), sliceInfo.getAfter(), sliceInfo.getBefore())
+        List<PostingInfo> postings = storyRepository.findInRange(
+                requestContext.nodeId(), Feed.TIMELINE, sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
-                .map(p -> new PostingInfo(p, requestContext.isAdmin() || requestContext.isClient(p.getOwnerName())))
+                .map(s -> new PostingInfo(s,
+                        requestContext.isAdmin() || requestContext.isClient(s.getEntry().getOwnerName())))
                 .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
                 .collect(Collectors.toList());
         String clientName = requestContext.getClientName();
         if (!StringUtils.isEmpty(clientName)) {
             Map<String, PostingInfo> postingMap = postings.stream().collect(
                     Collectors.toMap(PostingInfo::getId, Function.identity()));
-            reactionRepository.findByEntriesInRangeAndOwner(
-                    requestContext.nodeId(), sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
+            reactionRepository.findByStoriesInRangeAndOwner(
+                    requestContext.nodeId(), Feed.TIMELINE, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
                     .stream()
                     .map(ClientReactionInfo::new)
                     .filter(r -> postingMap.containsKey(r.getPostingId()))

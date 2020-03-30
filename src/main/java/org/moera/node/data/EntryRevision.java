@@ -58,8 +58,6 @@ public class EntryRevision {
     @NotNull
     private boolean pinned;
 
-    private Long moment;
-
     private byte[] signature;
 
     @NotNull
@@ -167,14 +165,6 @@ public class EntryRevision {
 
     public void setPinned(boolean pinned) {
         this.pinned = pinned;
-    }
-
-    public Long getMoment() {
-        return moment;
-    }
-
-    public void setMoment(Long moment) {
-        this.moment = moment;
     }
 
     public byte[] getSignature() {

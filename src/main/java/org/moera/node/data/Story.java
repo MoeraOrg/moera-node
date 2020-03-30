@@ -45,6 +45,17 @@ public class Story {
     @ManyToOne
     private Entry entry;
 
+    public Story() {
+    }
+
+    public Story(UUID id, UUID nodeId, String feedName, StoryType storyType, Entry entry) {
+        this.id = id;
+        this.nodeId = nodeId;
+        this.feedName = feedName;
+        this.storyType = storyType;
+        this.entry = entry;
+    }
+
     public UUID getId() {
         return id;
     }

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.data.Story;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -54,6 +55,19 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
+        this(posting, revision, 0, includeSource, isAdminOrOwner);
+    }
+
+    public PostingInfo(Story story, boolean isAdminOrOwner) {
+        this((Posting) story.getEntry(), story.getMoment(), false, isAdminOrOwner);
+    }
+
+    public PostingInfo(Posting posting, long moment, boolean includeSource, boolean isAdminOrOwner) {
+        this(posting, posting.getCurrentRevision(), moment, includeSource, isAdminOrOwner);
+    }
+
+    public PostingInfo(Posting posting, EntryRevision revision, long moment, boolean includeSource,
+                       boolean isAdminOrOwner) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
         totalRevisions = posting.getTotalRevisions();
@@ -82,7 +96,7 @@ public class PostingInfo {
         }
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        moment = revision.getMoment();
+        this.moment = moment;
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
         operations.put("delete", new String[]{"owner", "admin"});

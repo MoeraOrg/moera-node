@@ -12,11 +12,13 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
-import org.moera.node.data.Posting;
-import org.moera.node.data.PostingRepository;
+import org.moera.node.data.Feed;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
@@ -34,18 +36,18 @@ public class RssController {
     private PublicPageRepository publicPageRepository;
 
     @Inject
-    private PostingRepository postingRepository;
+    private StoryRepository storyRepository;
 
     @GetMapping("/rss")
     @ResponseBody
     public SyndFeed rss() {
         RequestContext rcp = requestContext.getPublic();
         PublicPage publicPage = publicPageRepository.findContaining(rcp.nodeId(), Long.MAX_VALUE);
-        List<Posting> postings = Collections.emptyList();
+        List<Story> stories = Collections.emptyList();
         if (publicPage != null) {
-            postings = postingRepository.findInRange(
-                    rcp.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment()).stream()
-                    .sorted(Collections.reverseOrder(Comparator.comparingLong(p -> p.getCurrentRevision().getMoment())))
+            stories = storyRepository.findInRange(
+                    rcp.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment()).stream()
+                    .sorted(Collections.reverseOrder(Comparator.comparingLong(Story::getMoment)))
                     .collect(Collectors.toList());
         }
 
@@ -57,11 +59,11 @@ public class RssController {
         feed.setLink(rcp.getSiteUrl() + "/");
         feed.setDescription(title);
         feed.setLanguage("en-us");
-        feed.setPublishedDate(!postings.isEmpty() ? postings.get(0).getCreatedAt() : Util.now());
+        feed.setPublishedDate(!stories.isEmpty() ? stories.get(0).getCreatedAt() : Util.now());
         feed.setGenerator("moera-node");
         feed.setWebMaster(buildWebmaster());
 
-        feed.setEntries(postings.stream().map(this::buildEntry).collect(Collectors.toList()));
+        feed.setEntries(stories.stream().map(Story::getEntry).map(this::buildEntry).collect(Collectors.toList()));
 
         return feed;
     }
@@ -84,7 +86,7 @@ public class RssController {
         }
     }
 
-    private SyndEntry buildEntry(Posting posting) {
+    private SyndEntry buildEntry(Entry posting) {
         EntryRevision revision = posting.getCurrentRevision();
         String siteUrl = requestContext.getSiteUrl();
 

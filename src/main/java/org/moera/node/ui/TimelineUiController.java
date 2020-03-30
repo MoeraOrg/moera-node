@@ -9,10 +9,12 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
@@ -36,6 +38,9 @@ public class TimelineUiController {
 
     @Inject
     private PublicPageRepository publicPageRepository;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -62,10 +67,10 @@ public class TimelineUiController {
                     return String.format("redirect:/timeline#m%d", before);
                 }
             }
-            postings = postingRepository.findInRange(
-                    requestContext.nodeId(), publicPage.getAfterMoment(), publicPage.getBeforeMoment())
+            postings = storyRepository.findInRange(
+                    requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
-                    .map(p -> new PostingInfo(p, false))
+                    .map(s -> new PostingInfo(s, false))
                     .sorted(Comparator.comparingLong(PostingInfo::getMoment).reversed())
                     .collect(Collectors.toList());
         }

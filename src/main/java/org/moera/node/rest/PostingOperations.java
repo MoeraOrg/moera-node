@@ -10,10 +10,14 @@ import javax.inject.Inject;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
+import org.moera.node.data.StoryType;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
@@ -36,6 +40,9 @@ public class PostingOperations {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -84,22 +91,24 @@ public class PostingOperations {
         if (updater != null) {
             updater.accept(current);
         }
+        posting = postingRepository.saveAndFlush(posting);
+        Story story = newOrExistingStory(posting);
         if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())
                 || current.isPinned() != latest.isPinned()) {
-            current.setMoment(null);
+            story.setMoment(null);
         }
-        posting = postingRepository.saveAndFlush(posting);
         current = posting.getCurrentRevision();
-        if (current.getMoment() == null) {
-            current.setMoment(momentFinder.find(
-                    moment -> entryRevisionRepository.countMoments(requestContext.nodeId(), moment) == 0,
+        if (story.getMoment() == null) {
+            story.setMoment(momentFinder.find(
+                    moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
                     !current.isPinned() ? current.getPublishedAt() : PINNED_TIME));
         }
+        story = storyRepository.save(story);
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));
         current.setSignature(CryptoUtil.sign(fingerprint, signingKey));
         current.setSignatureVersion(PostingFingerprint.VERSION);
-        updatePublicPages(current.getMoment());
+        updatePublicPages(story.getMoment());
 
         return posting;
     }
@@ -155,10 +164,18 @@ public class PostingOperations {
             revision.setHeading(template.getHeading());
             revision.setPublishedAt(template.getPublishedAt());
             revision.setPinned(template.isPinned());
-            revision.setMoment(template.getMoment());
         }
 
         return revision;
+    }
+
+    private Story newOrExistingStory(Posting posting) {
+        UUID nodeId = requestContext.nodeId();
+        Story story = storyRepository.findByEntryId(nodeId, Feed.TIMELINE, StoryType.POSTING_ADDED, posting.getId());
+        if (story == null) {
+            story = new Story(UUID.randomUUID(), nodeId, Feed.TIMELINE, StoryType.POSTING_ADDED, posting);
+        }
+        return story;
     }
 
     private void updatePublicPages(long moment) {
@@ -175,11 +192,11 @@ public class PostingOperations {
 
         long after = firstPage.getAfterMoment();
         if (moment > after) {
-            int count = postingRepository.countInRange(nodeId, after, Long.MAX_VALUE);
+            int count = storyRepository.countInRange(nodeId, Feed.TIMELINE, after, Long.MAX_VALUE);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = postingRepository.findMomentsInRange(nodeId, after, Long.MAX_VALUE,
+                long median = storyRepository.findMomentsInRange(nodeId, Feed.TIMELINE, after, Long.MAX_VALUE,
                         PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1,
-                                Sort.by(Sort.Direction.DESC, "currentRevision.moment")))
+                                Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 firstPage.setAfterMoment(median);
                 PublicPage secondPage = new PublicPage();
@@ -194,11 +211,11 @@ public class PostingOperations {
         PublicPage lastPage = publicPageRepository.findByAfterMoment(nodeId, Long.MIN_VALUE);
         long end = lastPage.getBeforeMoment();
         if (moment <= end) {
-            int count = postingRepository.countInRange(nodeId, Long.MIN_VALUE, end);
+            int count = storyRepository.countInRange(nodeId, Feed.TIMELINE, Long.MIN_VALUE, end);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = postingRepository.findMomentsInRange(nodeId, Long.MIN_VALUE, end,
+                long median = storyRepository.findMomentsInRange(nodeId, Feed.TIMELINE, Long.MIN_VALUE, end,
                         PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1,
-                                Sort.by(Sort.Direction.DESC, "currentRevision.moment")))
+                                Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 lastPage.setBeforeMoment(median);
                 PublicPage prevPage = new PublicPage();

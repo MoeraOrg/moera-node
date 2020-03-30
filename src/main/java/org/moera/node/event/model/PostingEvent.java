@@ -14,7 +14,7 @@ public class PostingEvent extends Event {
     public PostingEvent(EventType type, Posting posting) {
         super(type);
         this.id = posting.getId().toString();
-        this.moment = posting.getCurrentRevision().getMoment();
+        this.moment = 0; //FIXME posting.getCurrentRevision().getMoment();
     }
 
     public String getId() {
