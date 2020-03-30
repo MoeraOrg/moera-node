@@ -4,6 +4,7 @@ import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -17,6 +18,8 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.event.model.PostingAddedEvent;
 import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
@@ -54,6 +57,9 @@ public class PostingController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -141,8 +147,9 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
 
-        return withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
+        return withClientReaction(new PostingInfo(posting, stories, includeSet.contains("source"),
                 requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())));
     }
 
@@ -161,6 +168,7 @@ public class PostingController {
         posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         posting.getCurrentRevision().setDeletedAt(Util.now());
         entryRevisionRepository.save(posting.getCurrentRevision());
+        storyRepository.deleteByEntryId(requestContext.nodeId(), id);
 
         requestContext.send(new PostingDeletedEvent(posting));
 

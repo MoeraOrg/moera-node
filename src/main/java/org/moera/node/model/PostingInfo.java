@@ -1,11 +1,11 @@
 package org.moera.node.model;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
@@ -51,27 +51,19 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting, boolean isAdminOrOwner) {
-        this(posting, false, isAdminOrOwner);
-    }
-
-    public PostingInfo(Posting posting, List<Story> stories, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), stories, false, isAdminOrOwner);
-    }
-
-    public PostingInfo(Posting posting, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), includeSource, isAdminOrOwner);
+        this(posting, posting.getCurrentRevision(), false, isAdminOrOwner);
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
         this(posting, revision, null, includeSource, isAdminOrOwner);
     }
 
-    public PostingInfo(Story story, boolean isAdminOrOwner) {
-        this((Posting) story.getEntry(), story, false, isAdminOrOwner);
+    public PostingInfo(Posting posting, List<Story> stories, boolean isAdminOrOwner) {
+        this(posting, posting.getCurrentRevision(), stories, false, isAdminOrOwner);
     }
 
-    public PostingInfo(Posting posting, Story story, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), Collections.singletonList(story), includeSource, isAdminOrOwner);
+    public PostingInfo(Posting posting, List<Story> stories, boolean includeSource, boolean isAdminOrOwner) {
+        this(posting, posting.getCurrentRevision(), stories, includeSource, isAdminOrOwner);
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, List<Story> stories, boolean includeSource,
@@ -319,6 +311,7 @@ public class PostingInfo {
         return null;
     }
 
+    @JsonIgnore
     public Long getTimelineMoment() {
         return getMoment(Feed.TIMELINE);
     }

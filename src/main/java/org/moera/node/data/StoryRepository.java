@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface StoryRepository extends JpaRepository<Story, UUID> {
@@ -16,6 +17,10 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
 
     @Query("select s from Story s where s.nodeId = ?1 and s.entry.id = ?2 order by s.moment desc")
     List<Story> findByEntryId(UUID nodeId, UUID entryId);
+
+    @Modifying
+    @Query("delete from Story s where s.nodeId = ?1 and s.entry.id = ?2")
+    void deleteByEntryId(UUID nodeId, UUID entryId);
 
     @Query("select s from Story s"
             + " left join fetch s.entry e left join fetch e.currentRevision left join fetch e.reactionTotals"
