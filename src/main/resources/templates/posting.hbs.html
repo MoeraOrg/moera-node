@@ -1,7 +1,9 @@
 {{> part/top}}
 
-<a class="btn btn-outline-secondary btn-sm"
-   href="/timeline?before={{posting.moment}}#m{{posting.moment}}">&larr; Timeline</a>
+{{#if posting.timelineMoment}}
+    <a class="btn btn-outline-secondary btn-sm"
+       href="/timeline?before={{posting.timelineMoment}}#m{{posting.timelineMoment}}">&larr; Timeline</a>
+{{/if}}
 
 <div class="posting">
     {{#if posting.pinned}}

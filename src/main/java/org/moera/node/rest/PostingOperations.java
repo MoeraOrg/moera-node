@@ -171,7 +171,8 @@ public class PostingOperations {
 
     private Story newOrExistingStory(Posting posting) {
         UUID nodeId = requestContext.nodeId();
-        Story story = storyRepository.findByEntryId(nodeId, Feed.TIMELINE, StoryType.POSTING_ADDED, posting.getId());
+        Story story = storyRepository.findByFeedAndTypeAndEntryId(
+                nodeId, Feed.TIMELINE, StoryType.POSTING_ADDED, posting.getId());
         if (story == null) {
             story = new Story(UUID.randomUUID(), nodeId, Feed.TIMELINE, StoryType.POSTING_ADDED, posting);
         }

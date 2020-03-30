@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -11,7 +12,10 @@ import org.springframework.data.jpa.repository.Query;
 public interface StoryRepository extends JpaRepository<Story, UUID> {
 
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4")
-    Story findByEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
+    Story findByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
+
+    @Query("select s from Story s where s.nodeId = ?1 and s.entry.id = ?2 order by s.moment desc")
+    List<Story> findByEntryId(UUID nodeId, UUID entryId);
 
     @Query("select s from Story s"
             + " left join fetch s.entry e left join fetch e.currentRevision left join fetch e.reactionTotals"

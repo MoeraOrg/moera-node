@@ -4,10 +4,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
@@ -52,6 +54,10 @@ public class PostingInfo {
         this(posting, false, isAdminOrOwner);
     }
 
+    public PostingInfo(Posting posting, List<Story> stories, boolean isAdminOrOwner) {
+        this(posting, posting.getCurrentRevision(), stories, false, isAdminOrOwner);
+    }
+
     public PostingInfo(Posting posting, boolean includeSource, boolean isAdminOrOwner) {
         this(posting, posting.getCurrentRevision(), includeSource, isAdminOrOwner);
     }
@@ -65,10 +71,10 @@ public class PostingInfo {
     }
 
     public PostingInfo(Posting posting, Story story, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), story, includeSource, isAdminOrOwner);
+        this(posting, posting.getCurrentRevision(), Collections.singletonList(story), includeSource, isAdminOrOwner);
     }
 
-    public PostingInfo(Posting posting, EntryRevision revision, Story story, boolean includeSource,
+    public PostingInfo(Posting posting, EntryRevision revision, List<Story> stories, boolean includeSource,
                        boolean isAdminOrOwner) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
@@ -98,8 +104,8 @@ public class PostingInfo {
         }
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        if (story != null) {
-            feedReferences = Collections.singletonList(new FeedReference(story));
+        if (stories != null && !stories.isEmpty()) {
+            feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
@@ -311,6 +317,10 @@ public class PostingInfo {
             }
         }
         return null;
+    }
+
+    public Long getTimelineMoment() {
+        return getMoment(Feed.TIMELINE);
     }
 
     public Map<String, String[]> getOperations() {

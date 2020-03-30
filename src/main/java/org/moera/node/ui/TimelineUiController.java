@@ -14,6 +14,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
+import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
@@ -168,10 +169,11 @@ public class TimelineUiController {
         if (posting == null) {
             throw new PageNotFoundException();
         }
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
-        model.addAttribute("posting", new PostingInfo(posting, false));
+        model.addAttribute("posting", new PostingInfo(posting, stories, false));
 
         return "posting";
     }
