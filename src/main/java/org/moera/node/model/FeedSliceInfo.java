@@ -2,13 +2,13 @@ package org.moera.node.model;
 
 import java.util.List;
 
-public class TimelineSliceInfo {
+public class FeedSliceInfo {
 
     private long before;
     private long after;
     private List<StoryInfo> stories;
 
-    public TimelineSliceInfo() {
+    public FeedSliceInfo() {
     }
 
     public long getBefore() {
