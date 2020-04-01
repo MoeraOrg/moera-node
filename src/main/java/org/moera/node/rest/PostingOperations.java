@@ -18,6 +18,8 @@ import org.moera.node.data.PublicPageRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.event.model.StoryAddedEvent;
+import org.moera.node.event.model.StoryDeletedEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
@@ -92,18 +94,30 @@ public class PostingOperations {
             updater.accept(current);
         }
         posting = postingRepository.saveAndFlush(posting);
-        Story story = newOrExistingStory(posting);
+
+        Story story = existingStory(posting);
         if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())
                 || current.isPinned() != latest.isPinned()) {
-            story.setMoment(null);
+            if (story != null) {
+                storyRepository.delete(story);
+                requestContext.send(new StoryDeletedEvent(story));
+            }
+            story = newStory(posting);
+        } else {
+            if (story == null) {
+                story = newStory(posting);
+            }
         }
+
         current = posting.getCurrentRevision();
         if (story.getMoment() == null) {
             story.setMoment(momentFinder.find(
                     moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
                     !current.isPinned() ? current.getPublishedAt() : PINNED_TIME));
+            requestContext.send(new StoryAddedEvent(story));
         }
         story = storyRepository.saveAndFlush(story);
+
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));
         current.setSignature(CryptoUtil.sign(fingerprint, signingKey));
@@ -169,14 +183,13 @@ public class PostingOperations {
         return revision;
     }
 
-    private Story newOrExistingStory(Posting posting) {
-        UUID nodeId = requestContext.nodeId();
-        Story story = storyRepository.findByFeedAndTypeAndEntryId(
-                nodeId, Feed.TIMELINE, StoryType.POSTING_ADDED, posting.getId());
-        if (story == null) {
-            story = new Story(UUID.randomUUID(), nodeId, Feed.TIMELINE, StoryType.POSTING_ADDED, posting);
-        }
-        return story;
+    private Story newStory(Posting posting) {
+        return new Story(UUID.randomUUID(), requestContext.nodeId(), Feed.TIMELINE, StoryType.POSTING_ADDED, posting);
+    }
+
+    private Story existingStory(Posting posting) {
+        return storyRepository.findByFeedAndTypeAndEntryId(
+                requestContext.nodeId(), Feed.TIMELINE, StoryType.POSTING_ADDED, posting.getId());
     }
 
     private void updatePublicPages(long moment) {

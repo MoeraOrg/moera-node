@@ -24,6 +24,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.event.model.PostingAddedEvent;
 import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
+import org.moera.node.event.model.StoryDeletedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
@@ -170,9 +171,11 @@ public class PostingController {
         posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         posting.getCurrentRevision().setDeletedAt(Util.now());
         entryRevisionRepository.save(posting.getCurrentRevision());
-        storyRepository.deleteByEntryId(requestContext.nodeId(), id);
-
         requestContext.send(new PostingDeletedEvent(posting));
+
+        storyRepository.findByEntryId(requestContext.nodeId(), id)
+                .forEach(story -> requestContext.send(new StoryDeletedEvent(story)));
+        storyRepository.deleteByEntryId(requestContext.nodeId(), id);
 
         return Result.OK;
     }

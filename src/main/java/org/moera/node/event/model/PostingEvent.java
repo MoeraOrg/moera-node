@@ -5,7 +5,6 @@ import org.moera.node.data.Posting;
 public class PostingEvent extends Event {
 
     private String id;
-    private long moment;
 
     public PostingEvent(EventType type) {
         super(type);
@@ -14,7 +13,6 @@ public class PostingEvent extends Event {
     public PostingEvent(EventType type, Posting posting) {
         super(type);
         this.id = posting.getId().toString();
-        this.moment = 0; //FIXME posting.getCurrentRevision().getMoment();
     }
 
     public String getId() {
@@ -23,14 +21,6 @@ public class PostingEvent extends Event {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public long getMoment() {
-        return moment;
-    }
-
-    public void setMoment(long moment) {
-        this.moment = moment;
     }
 
 }
