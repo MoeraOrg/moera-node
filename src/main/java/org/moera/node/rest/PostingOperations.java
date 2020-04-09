@@ -19,7 +19,7 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.event.model.StoryAddedEvent;
-import org.moera.node.event.model.StoryDeletedEvent;
+import org.moera.node.event.model.StoryUpdatedEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
@@ -55,7 +55,7 @@ public class PostingOperations {
     @Inject
     private PublicPageRepository publicPageRepository;
 
-    private MomentFinder momentFinder = new MomentFinder();
+    private final MomentFinder momentFinder = new MomentFinder();
 
     public Posting newPosting(PostingText postingText, Consumer<Posting> initializer) {
         if (postingText.getAcceptedReactions() == null) {
@@ -84,7 +84,6 @@ public class PostingOperations {
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision,
                                          Function<EntryRevision, Boolean> preserveRevision,
                                          Consumer<EntryRevision> updater) {
-        ECPrivateKey signingKey = getSigningKey();
         EntryRevision latest = posting.getCurrentRevision();
         if (latest != null && preserveRevision != null && preserveRevision.apply(latest)) {
             return postingRepository.saveAndFlush(posting);
@@ -96,35 +95,35 @@ public class PostingOperations {
         posting = postingRepository.saveAndFlush(posting);
 
         Story story = existingStory(posting);
-        if (latest == null || !current.getPublishedAt().equals(latest.getPublishedAt())
-                || current.isPinned() != latest.isPinned()) {
-            if (story != null) {
-                storyRepository.delete(story);
-                requestContext.send(new StoryDeletedEvent(story));
-            }
+        if (story == null) {
             story = newStory(posting);
+            updateMoment(story, current.isPinned());
+            story = storyRepository.saveAndFlush(story);
+            requestContext.send(new StoryAddedEvent(story));
         } else {
-            if (story == null) {
-                story = newStory(posting);
+            if (latest == null
+                    || !current.getPublishedAt().equals(latest.getPublishedAt())
+                    || current.isPinned() != latest.isPinned()) {
+                updateMoment(story, current.isPinned());
+                requestContext.send(new StoryUpdatedEvent(story));
             }
         }
 
         current = posting.getCurrentRevision();
-        if (story.getMoment() == null) {
-            story.setMoment(momentFinder.find(
-                    moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
-                    !current.isPinned() ? current.getPublishedAt() : PINNED_TIME));
-            requestContext.send(new StoryAddedEvent(story));
-        }
-        story = storyRepository.saveAndFlush(story);
 
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));
-        current.setSignature(CryptoUtil.sign(fingerprint, signingKey));
+        current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
         current.setSignatureVersion(PostingFingerprint.VERSION);
         updatePublicPages(story.getMoment());
 
         return posting;
+    }
+
+    private void updateMoment(Story story, boolean pinned) {
+        story.setMoment(momentFinder.find(
+                moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
+                !pinned ? story.getCreatedAt() : PINNED_TIME));
     }
 
     public Posting createOrUpdatePostingDraft(Posting posting, EntryRevision template,
