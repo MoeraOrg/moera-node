@@ -53,6 +53,7 @@ public class Story {
         this.nodeId = nodeId;
         this.feedName = feedName;
         this.storyType = storyType;
+        createdAt = entry.getCurrentRevision().getPublishedAt();
         this.entry = entry;
     }
 
