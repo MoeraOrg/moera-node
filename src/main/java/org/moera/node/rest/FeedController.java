@@ -152,8 +152,11 @@ public class FeedController {
 
     private StoryPostingAddedInfo buildStoryInfo(Story story) {
         Posting posting = (Posting) story.getEntry();
-        return new StoryPostingAddedInfo(story,
-                new PostingInfo(posting, requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())));
+        return new StoryPostingAddedInfo(
+                story,
+                new PostingInfo(posting, requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())),
+                requestContext.isAdmin()
+        );
     }
 
 }

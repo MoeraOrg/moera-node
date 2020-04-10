@@ -13,21 +13,23 @@ public class StoryInfo {
     private long createdAt;
     private long publishedAt;
     private Long moment;
-    private boolean viewed;
-    private boolean read;
+    private Boolean viewed;
+    private Boolean read;
 
     public StoryInfo() {
     }
 
-    public StoryInfo(Story story) {
+    public StoryInfo(Story story, boolean isAdmin) {
         id = story.getId().toString();
         feedName = story.getFeedName();
         storyType = story.getStoryType().getValue();
         createdAt = Util.toEpochSecond(story.getCreatedAt());
         publishedAt = Util.toEpochSecond(story.getPublishedAt());
         moment = story.getMoment();
-        viewed = story.isViewed();
-        read = story.isRead();
+        if (isAdmin) {
+            viewed = story.isViewed();
+            read = story.isRead();
+        }
     }
 
     public String getId() {
@@ -78,19 +80,19 @@ public class StoryInfo {
         this.moment = moment;
     }
 
-    public boolean isViewed() {
+    public Boolean isViewed() {
         return viewed;
     }
 
-    public void setViewed(boolean viewed) {
+    public void setViewed(Boolean viewed) {
         this.viewed = viewed;
     }
 
-    public boolean isRead() {
+    public Boolean isRead() {
         return read;
     }
 
-    public void setRead(boolean read) {
+    public void setRead(Boolean read) {
         this.read = read;
     }
 

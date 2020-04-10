@@ -73,7 +73,7 @@ public class TimelineUiController {
             stories = storyRepository.findInRange(
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
-                    .map(s -> new StoryPostingAddedInfo(s, new PostingInfo((Posting) s.getEntry(), false)))
+                    .map(s -> new StoryPostingAddedInfo(s, new PostingInfo((Posting) s.getEntry(), false), false))
                     .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                     .collect(Collectors.toList());
         }
