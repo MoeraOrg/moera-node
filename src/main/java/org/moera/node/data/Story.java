@@ -34,6 +34,9 @@ public class Story {
     private Timestamp createdAt = Util.now();
 
     @NotNull
+    private Timestamp publishedAt = Util.now();
+
+    @NotNull
     private Long moment;
 
     @NotNull
@@ -53,7 +56,7 @@ public class Story {
         this.nodeId = nodeId;
         this.feedName = feedName;
         this.storyType = storyType;
-        createdAt = entry.getCurrentRevision().getPublishedAt();
+        publishedAt = entry.getCurrentRevision().getPublishedAt();
         this.entry = entry;
     }
 
@@ -95,6 +98,14 @@ public class Story {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(Timestamp publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     public Long getMoment() {

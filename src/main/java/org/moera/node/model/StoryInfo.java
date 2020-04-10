@@ -11,6 +11,7 @@ public class StoryInfo {
     private String feedName;
     private String storyType;
     private long createdAt;
+    private long publishedAt;
     private Long moment;
     private boolean viewed;
     private boolean read;
@@ -23,6 +24,7 @@ public class StoryInfo {
         feedName = story.getFeedName();
         storyType = story.getStoryType().getValue();
         createdAt = Util.toEpochSecond(story.getCreatedAt());
+        publishedAt = Util.toEpochSecond(story.getPublishedAt());
         moment = story.getMoment();
         viewed = story.isViewed();
         read = story.isRead();
@@ -58,6 +60,14 @@ public class StoryInfo {
 
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public long getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(long publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     public Long getMoment() {

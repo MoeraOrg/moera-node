@@ -104,6 +104,7 @@ public class PostingOperations {
             if (latest == null
                     || !current.getPublishedAt().equals(latest.getPublishedAt())
                     || current.isPinned() != latest.isPinned()) {
+                story.setPublishedAt(current.getPublishedAt());
                 updateMoment(story, current.isPinned());
                 requestContext.send(new StoryUpdatedEvent(story));
             }
@@ -123,7 +124,7 @@ public class PostingOperations {
     private void updateMoment(Story story, boolean pinned) {
         story.setMoment(momentFinder.find(
                 moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
-                !pinned ? story.getCreatedAt() : PINNED_TIME));
+                !pinned ? story.getPublishedAt() : PINNED_TIME));
     }
 
     public Posting createOrUpdatePostingDraft(Posting posting, EntryRevision template,
