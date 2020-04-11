@@ -107,7 +107,7 @@ public class DraftPostingController {
         });
         try {
             posting = postingOperations.createOrUpdatePostingDraft(posting, null,
-                    postingText.toEntryRevisionExporter(textConverter));
+                    revision -> postingText.toEntryRevision(revision, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -139,7 +139,7 @@ public class DraftPostingController {
         posting.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
         try {
             posting = postingOperations.createOrUpdatePostingDraft(posting, posting.getDraftRevision(),
-                    postingText.toEntryRevisionExporter(textConverter));
+                    revision -> postingText.toEntryRevision(revision, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }

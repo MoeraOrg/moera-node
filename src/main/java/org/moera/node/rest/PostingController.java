@@ -103,7 +103,8 @@ public class PostingController {
         Posting posting = postingOperations.newPosting(postingText, null);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, null, null,
-                    postingText.toEntryRevisionExporter(textConverter));
+                    revision -> postingText.toEntryRevision(revision, textConverter),
+                    postingText::toStory);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -132,7 +133,9 @@ public class PostingController {
         postingText.toEntry(posting);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
-                    postingText::sameAsRevision, postingText.toEntryRevisionExporter(textConverter));
+                    postingText::sameAsRevision,
+                    revision -> postingText.toEntryRevision(revision, textConverter),
+                    postingText::toStory);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }

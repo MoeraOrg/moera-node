@@ -63,7 +63,7 @@ public class RssController {
         feed.setGenerator("moera-node");
         feed.setWebMaster(buildWebmaster());
 
-        feed.setEntries(stories.stream().map(Story::getEntry).map(this::buildEntry).collect(Collectors.toList()));
+        feed.setEntries(stories.stream().map(this::buildEntry).collect(Collectors.toList()));
 
         return feed;
     }
@@ -86,7 +86,8 @@ public class RssController {
         }
     }
 
-    private SyndEntry buildEntry(Entry posting) {
+    private SyndEntry buildEntry(Story story) {
+        Entry posting = story.getEntry();
         EntryRevision revision = posting.getCurrentRevision();
         String siteUrl = requestContext.getSiteUrl();
 
@@ -94,7 +95,7 @@ public class RssController {
         entry.setTitle(revision.getHeading());
         entry.setLink(siteUrl + "/post/" + posting.getId());
         entry.setUri("urn:entry:" + posting.getId());
-        entry.setPublishedDate(revision.getPublishedAt());
+        entry.setPublishedDate(story.getPublishedAt());
 
         StringBuilder buf = new StringBuilder();
         boolean hasPreview = !StringUtils.isEmpty(revision.getBodyPreview());

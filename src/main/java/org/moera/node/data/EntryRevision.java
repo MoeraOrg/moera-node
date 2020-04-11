@@ -50,9 +50,6 @@ public class EntryRevision {
     @NotNull
     private Timestamp createdAt = Util.now();
 
-    @NotNull
-    private Timestamp publishedAt = Util.now();
-
     private Timestamp deletedAt;
 
     @NotNull
@@ -141,14 +138,6 @@ public class EntryRevision {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Timestamp getPublishedAt() {
-        return publishedAt;
-    }
-
-    public void setPublishedAt(Timestamp publishedAt) {
-        this.publishedAt = publishedAt;
     }
 
     public Timestamp getDeletedAt() {

@@ -32,7 +32,6 @@ public class PostingInfo {
     private long createdAt;
     private long editedAt;
     private Long deletedAt;
-    private long publishedAt;
     private Long deadline;
     private boolean pinned;
     private boolean draft;
@@ -85,7 +84,6 @@ public class PostingInfo {
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
         editedAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
-        publishedAt = Util.toEpochSecond(revision.getPublishedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
         pinned = revision.isPinned();
         if (posting.isDraft()) {
@@ -235,14 +233,6 @@ public class PostingInfo {
         this.deletedAt = deletedAt;
     }
 
-    public long getPublishedAt() {
-        return publishedAt;
-    }
-
-    public void setPublishedAt(long publishedAt) {
-        this.publishedAt = publishedAt;
-    }
-
     public Long getDeadline() {
         return deadline;
     }
@@ -299,21 +289,23 @@ public class PostingInfo {
         this.feedReferences = feedReferences;
     }
 
-    public Long getMoment(String feedName) {
+    public FeedReference getFeedReference(String feedName) {
         if (getFeedReferences() == null) {
             return null;
         }
-        for (FeedReference fr : getFeedReferences()) {
-            if (fr.getFeedName().equals(feedName)) {
-                return fr.getMoment();
-            }
-        }
-        return null;
+        return getFeedReferences().stream().filter(fr -> fr.getFeedName().equals(feedName)).findFirst().orElse(null);
+    }
+
+    @JsonIgnore
+    public Long getTimelinePublishedAt() {
+        FeedReference fr = getFeedReference(Feed.TIMELINE);
+        return fr != null ? fr.getPublishedAt() : null;
     }
 
     @JsonIgnore
     public Long getTimelineMoment() {
-        return getMoment(Feed.TIMELINE);
+        FeedReference fr = getFeedReference(Feed.TIMELINE);
+        return fr != null ? fr.getMoment() : null;
     }
 
     public Map<String, String[]> getOperations() {

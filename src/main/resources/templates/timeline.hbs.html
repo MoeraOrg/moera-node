@@ -23,7 +23,7 @@
                 &#x25b8; {{nodename posting.receiverName}}
             {{/ifne}}
             <span class="date">
-                <a href="/post/{{posting.id}}">{{cal "dd-MM-yyyy HH:mm" es=posting.publishedAt
+                <a href="/post/{{posting.id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt
                                                      fromNow="posting.time.relative"}}</a>
                 {{#ifgt posting.totalRevisions 1}}
                     (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})

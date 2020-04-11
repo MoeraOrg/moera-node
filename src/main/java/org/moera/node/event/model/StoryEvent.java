@@ -2,6 +2,7 @@ package org.moera.node.event.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Story;
+import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StoryEvent extends Event {
@@ -9,6 +10,7 @@ public class StoryEvent extends Event {
     private String id;
     private String storyType;
     private String feedName;
+    private long publishedAt;
     private long moment;
     private String postingId;
 
@@ -21,6 +23,7 @@ public class StoryEvent extends Event {
         id = story.getId().toString();
         storyType = story.getStoryType().getValue();
         feedName = story.getFeedName();
+        publishedAt = Util.toEpochSecond(story.getPublishedAt());
         moment = story.getMoment();
         postingId = story.getEntry() != null ? story.getEntry().getId().toString() : null;
     }
@@ -47,6 +50,14 @@ public class StoryEvent extends Event {
 
     public void setFeedName(String feedName) {
         this.feedName = feedName;
+    }
+
+    public long getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(long publishedAt) {
+        this.publishedAt = publishedAt;
     }
 
     public long getMoment() {

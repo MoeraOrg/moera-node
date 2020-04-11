@@ -103,7 +103,7 @@ public class DeletedPostingController {
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
-        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null, null);
+        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null, null, null);
         requestContext.send(new PostingRestoredEvent(posting));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);

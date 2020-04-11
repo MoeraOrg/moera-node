@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.function.Consumer;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
@@ -8,6 +7,7 @@ import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.data.Story;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.Shortener;
 import org.moera.node.text.TextConverter;
@@ -108,10 +108,6 @@ public class PostingText {
         }
     }
 
-    public Consumer<EntryRevision> toEntryRevisionExporter(TextConverter textConverter) {
-        return revision -> toEntryRevision(revision, textConverter);
-    }
-
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {
         if (!StringUtils.isEmpty(bodySrcFormat)) {
             SourceFormat format = SourceFormat.forValue(bodySrcFormat);
@@ -139,11 +135,14 @@ public class PostingText {
                 revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
             }
         }
-        if (publishAt != null) {
-            revision.setPublishedAt(Util.toTimestamp(publishAt));
-        }
         if (pinned != null) {
             revision.setPinned(pinned);
+        }
+    }
+
+    public void toStory(Story story) {
+        if (publishAt != null) {
+            story.setPublishedAt(Util.toTimestamp(publishAt));
         }
     }
 
@@ -152,7 +151,6 @@ public class PostingText {
                 && (StringUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
-                && (publishAt == null || Util.toTimestamp(publishAt).equals(revision.getPublishedAt()))
                 && (pinned == null || pinned == revision.isPinned());
     }
 

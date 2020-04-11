@@ -82,21 +82,22 @@ public class PostingOperations {
     }
 
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision,
-                                         Function<EntryRevision, Boolean> preserveRevision,
-                                         Consumer<EntryRevision> updater) {
+                                         Function<EntryRevision, Boolean> isPreserveRevision,
+                                         Consumer<EntryRevision> revisionUpdater,
+                                         Consumer<Story> storyUpdater) {
         EntryRevision latest = posting.getCurrentRevision();
-        if (latest != null && preserveRevision != null && preserveRevision.apply(latest)) {
+        if (latest != null && isPreserveRevision != null && isPreserveRevision.apply(latest)) {
             return postingRepository.saveAndFlush(posting);
         }
         EntryRevision current = newPostingRevision(posting, revision);
-        if (updater != null) {
-            updater.accept(current);
+        if (revisionUpdater != null) {
+            revisionUpdater.accept(current);
         }
         posting = postingRepository.saveAndFlush(posting);
 
         Story story = existingStory(posting);
         if (story == null) {
-            story = newStory(posting);
+            story = newStory(posting, storyUpdater);
             updateMoment(story, current.isPinned());
             story = storyRepository.saveAndFlush(story);
             requestContext.send(new StoryAddedEvent(story));
@@ -173,15 +174,19 @@ public class PostingOperations {
             revision.setBodySrcFormat(template.getBodySrcFormat());
             revision.setBody(template.getBody());
             revision.setHeading(template.getHeading());
-            revision.setPublishedAt(template.getPublishedAt());
             revision.setPinned(template.isPinned());
         }
 
         return revision;
     }
 
-    private Story newStory(Posting posting) {
-        return new Story(UUID.randomUUID(), requestContext.nodeId(), Feed.TIMELINE, StoryType.POSTING_ADDED, posting);
+    private Story newStory(Posting posting, Consumer<Story> initializer) {
+        Story story = new Story(
+                UUID.randomUUID(), requestContext.nodeId(), Feed.TIMELINE, StoryType.POSTING_ADDED, posting);
+        if (initializer != null) {
+            initializer.accept(story);
+        }
+        return story;
     }
 
     private Story existingStory(Posting posting) {

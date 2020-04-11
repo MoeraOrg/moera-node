@@ -86,7 +86,7 @@ public class PostingDraftRevisionController {
             EntryRevision revision = posting.getDraftRevision() != null
                     ? posting.getDraftRevision() : posting.getCurrentRevision();
             posting = postingOperations.createOrUpdatePostingDraft(posting, revision,
-                    postingText.toEntryRevisionExporter(textConverter));
+                    r -> postingText.toEntryRevision(r, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
