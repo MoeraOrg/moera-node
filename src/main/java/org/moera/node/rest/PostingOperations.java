@@ -101,10 +101,7 @@ public class PostingOperations {
             story = storyRepository.saveAndFlush(story);
             requestContext.send(new StoryAddedEvent(story));
         } else {
-            if (latest == null
-                    || !current.getPublishedAt().equals(latest.getPublishedAt())
-                    || current.isPinned() != latest.isPinned()) {
-                story.setPublishedAt(current.getPublishedAt());
+            if (latest == null || current.isPinned() != latest.isPinned()) {
                 updateMoment(story, current.isPinned());
                 requestContext.send(new StoryUpdatedEvent(story));
             }
