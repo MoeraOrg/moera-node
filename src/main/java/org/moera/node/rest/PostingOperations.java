@@ -19,7 +19,6 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.event.model.StoryAddedEvent;
-import org.moera.node.event.model.StoryUpdatedEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
@@ -98,14 +97,9 @@ public class PostingOperations {
         Story story = existingStory(posting);
         if (story == null) {
             story = newStory(posting, storyUpdater);
-            updateMoment(story, current.isPinned());
+            updateMoment(story);
             story = storyRepository.saveAndFlush(story);
             requestContext.send(new StoryAddedEvent(story));
-        } else {
-            if (latest == null || current.isPinned() != latest.isPinned()) {
-                updateMoment(story, current.isPinned());
-                requestContext.send(new StoryUpdatedEvent(story));
-            }
         }
 
         current = posting.getCurrentRevision();
@@ -119,10 +113,10 @@ public class PostingOperations {
         return posting;
     }
 
-    private void updateMoment(Story story, boolean pinned) {
+    private void updateMoment(Story story) {
         story.setMoment(momentFinder.find(
                 moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
-                !pinned ? story.getPublishedAt() : PINNED_TIME));
+                !story.isPinned() ? story.getPublishedAt() : PINNED_TIME));
     }
 
     public Posting createOrUpdatePostingDraft(Posting posting, EntryRevision template,
@@ -174,7 +168,6 @@ public class PostingOperations {
             revision.setBodySrcFormat(template.getBodySrcFormat());
             revision.setBody(template.getBody());
             revision.setHeading(template.getHeading());
-            revision.setPinned(template.isPinned());
         }
 
         return revision;

@@ -17,7 +17,6 @@ public class PostingRevisionInfo {
     private String heading;
     private long createdAt;
     private Long deletedAt;
-    private boolean pinned;
     private byte[] signature;
     private short signatureVersion;
     private ClientReactionInfo clientReaction;
@@ -36,7 +35,6 @@ public class PostingRevisionInfo {
         heading = revision.getHeading();
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(revision.getDeletedAt());
-        pinned = revision.isPinned();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         reactions = new ReactionTotalsInfo(revision.getReactionTotals(), countsVisible);
@@ -112,14 +110,6 @@ public class PostingRevisionInfo {
 
     public void setDeletedAt(Long deletedAt) {
         this.deletedAt = deletedAt;
-    }
-
-    public boolean isPinned() {
-        return pinned;
-    }
-
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
     }
 
     public byte[] getSignature() {

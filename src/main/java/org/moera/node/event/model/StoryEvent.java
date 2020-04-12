@@ -11,6 +11,7 @@ public class StoryEvent extends Event {
     private String storyType;
     private String feedName;
     private long publishedAt;
+    private boolean pinned;
     private long moment;
     private String postingId;
 
@@ -24,6 +25,7 @@ public class StoryEvent extends Event {
         storyType = story.getStoryType().getValue();
         feedName = story.getFeedName();
         publishedAt = Util.toEpochSecond(story.getPublishedAt());
+        pinned = story.isPinned();
         moment = story.getMoment();
         postingId = story.getEntry() != null ? story.getEntry().getId().toString() : null;
     }
@@ -58,6 +60,14 @@ public class StoryEvent extends Event {
 
     public void setPublishedAt(long publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 
     public long getMoment() {

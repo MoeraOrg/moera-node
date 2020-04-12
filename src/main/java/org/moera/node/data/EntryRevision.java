@@ -52,9 +52,6 @@ public class EntryRevision {
 
     private Timestamp deletedAt;
 
-    @NotNull
-    private boolean pinned;
-
     private byte[] signature;
 
     @NotNull
@@ -146,14 +143,6 @@ public class EntryRevision {
 
     public void setDeletedAt(Timestamp deletedAt) {
         this.deletedAt = deletedAt;
-    }
-
-    public boolean isPinned() {
-        return pinned;
-    }
-
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
     }
 
     public byte[] getSignature() {

@@ -135,14 +135,14 @@ public class PostingText {
                 revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
             }
         }
-        if (pinned != null) {
-            revision.setPinned(pinned);
-        }
     }
 
     public void toStory(Story story) {
         if (publishAt != null) {
             story.setPublishedAt(Util.toTimestamp(publishAt));
+        }
+        if (pinned != null) {
+            story.setPinned(pinned);
         }
     }
 
@@ -150,8 +150,7 @@ public class PostingText {
         return (StringUtils.isEmpty(bodySrcFormat) || bodySrcFormat.equals(revision.getBodySrcFormat().getValue()))
                 && (StringUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
-                        ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
-                && (pinned == null || pinned == revision.isPinned());
+                        ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())));
     }
 
 }

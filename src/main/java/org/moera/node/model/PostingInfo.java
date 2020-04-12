@@ -33,7 +33,6 @@ public class PostingInfo {
     private long editedAt;
     private Long deletedAt;
     private Long deadline;
-    private boolean pinned;
     private boolean draft;
     private Boolean draftPending;
     private byte[] signature;
@@ -85,7 +84,6 @@ public class PostingInfo {
         editedAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
-        pinned = revision.isPinned();
         if (posting.isDraft()) {
             draft = true;
         }
@@ -241,14 +239,6 @@ public class PostingInfo {
         this.deadline = deadline;
     }
 
-    public boolean isPinned() {
-        return pinned;
-    }
-
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
-    }
-
     public boolean isDraft() {
         return draft;
     }
@@ -296,6 +286,8 @@ public class PostingInfo {
         return getFeedReferences().stream().filter(fr -> fr.getFeedName().equals(feedName)).findFirst().orElse(null);
     }
 
+    // Methods for Web UI
+
     @JsonIgnore
     public Long getTimelinePublishedAt() {
         FeedReference fr = getFeedReference(Feed.TIMELINE);
@@ -303,10 +295,18 @@ public class PostingInfo {
     }
 
     @JsonIgnore
+    public Boolean isTimelinePinned() {
+        FeedReference fr = getFeedReference(Feed.TIMELINE);
+        return fr != null ? fr.isPinned() : null;
+    }
+
+    @JsonIgnore
     public Long getTimelineMoment() {
         FeedReference fr = getFeedReference(Feed.TIMELINE);
         return fr != null ? fr.getMoment() : null;
     }
+
+    // end
 
     public Map<String, String[]> getOperations() {
         return operations;

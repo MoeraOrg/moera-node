@@ -37,6 +37,9 @@ public class Story {
     private Timestamp publishedAt = Util.now();
 
     @NotNull
+    private boolean pinned;
+
+    @NotNull
     private Long moment;
 
     @NotNull
@@ -105,6 +108,14 @@ public class Story {
 
     public void setPublishedAt(Timestamp publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 
     public Long getMoment() {

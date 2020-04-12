@@ -12,6 +12,7 @@ public class StoryInfo {
     private String storyType;
     private long createdAt;
     private long publishedAt;
+    private boolean pinned;
     private Long moment;
     private Boolean viewed;
     private Boolean read;
@@ -25,6 +26,7 @@ public class StoryInfo {
         storyType = story.getStoryType().getValue();
         createdAt = Util.toEpochSecond(story.getCreatedAt());
         publishedAt = Util.toEpochSecond(story.getPublishedAt());
+        pinned = story.isPinned();
         moment = story.getMoment();
         if (isAdmin) {
             viewed = story.isViewed();
@@ -70,6 +72,14 @@ public class StoryInfo {
 
     public void setPublishedAt(long publishedAt) {
         this.publishedAt = publishedAt;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 
     public Long getMoment() {
