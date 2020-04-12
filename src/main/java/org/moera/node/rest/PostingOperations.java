@@ -1,7 +1,6 @@
 package org.moera.node.rest;
 
 import java.security.interfaces.ECPrivateKey;
-import java.sql.Timestamp;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -23,7 +22,6 @@ import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.PostingText;
-import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -36,8 +34,6 @@ public class PostingOperations {
 
     private static final int PUBLIC_PAGE_MAX_SIZE = 30;
     private static final int PUBLIC_PAGE_AVG_SIZE = 20;
-
-    private static final Timestamp PINNED_TIME = Util.toTimestamp(90000000000000L); // 9E+13
 
     @Inject
     private RequestContext requestContext;
@@ -54,7 +50,8 @@ public class PostingOperations {
     @Inject
     private PublicPageRepository publicPageRepository;
 
-    private final MomentFinder momentFinder = new MomentFinder();
+    @Inject
+    private StoryOperations storyOperations;
 
     public Posting newPosting(PostingText postingText, Consumer<Posting> initializer) {
         if (postingText.getAcceptedReactions() == null) {
@@ -97,7 +94,7 @@ public class PostingOperations {
         Story story = existingStory(posting);
         if (story == null) {
             story = newStory(posting, storyUpdater);
-            updateMoment(story);
+            storyOperations.updateMoment(story);
             story = storyRepository.saveAndFlush(story);
             requestContext.send(new StoryAddedEvent(story));
         }
@@ -111,12 +108,6 @@ public class PostingOperations {
         updatePublicPages(story.getMoment());
 
         return posting;
-    }
-
-    private void updateMoment(Story story) {
-        story.setMoment(momentFinder.find(
-                moment -> storyRepository.countMoments(requestContext.nodeId(), Feed.TIMELINE, moment) == 0,
-                !story.isPinned() ? story.getPublishedAt() : PINNED_TIME));
     }
 
     public Posting createOrUpdatePostingDraft(Posting posting, EntryRevision template,

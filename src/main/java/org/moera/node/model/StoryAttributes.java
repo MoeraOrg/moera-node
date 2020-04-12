@@ -1,5 +1,8 @@
 package org.moera.node.model;
 
+import org.moera.node.data.Story;
+import org.moera.node.util.Util;
+
 public class StoryAttributes {
 
     private Long publishedAt;
@@ -37,6 +40,21 @@ public class StoryAttributes {
 
     public void setRead(Boolean read) {
         this.read = read;
+    }
+
+    public void toStory(Story story) {
+        if (publishedAt != null) {
+            story.setPublishedAt(Util.toTimestamp(publishedAt));
+        }
+        if (pinned != null) {
+            story.setPinned(pinned);
+        }
+        if (viewed != null) {
+            story.setViewed(viewed);
+        }
+        if (read != null) {
+            story.setRead(read);
+        }
     }
 
 }
