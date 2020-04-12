@@ -9,7 +9,7 @@ public class StoryPostingAddedInfo extends StoryInfo {
     public StoryPostingAddedInfo() {
     }
 
-    public StoryPostingAddedInfo(Story story, PostingInfo posting, boolean isAdmin) {
+    protected StoryPostingAddedInfo(Story story, PostingInfo posting, boolean isAdmin) {
         super(story, isAdmin);
         this.posting = posting;
     }

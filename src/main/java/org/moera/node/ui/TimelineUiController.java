@@ -21,7 +21,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
-import org.moera.node.model.StoryPostingAddedInfo;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -73,7 +72,7 @@ public class TimelineUiController {
             stories = storyRepository.findInRange(
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
-                    .map(s -> new StoryPostingAddedInfo(s, new PostingInfo((Posting) s.getEntry(), false), false))
+                    .map(s -> StoryInfo.build(s, false, t -> new PostingInfo((Posting) t.getEntry(), false)))
                     .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                     .collect(Collectors.toList());
         }

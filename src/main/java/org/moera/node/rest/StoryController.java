@@ -13,6 +13,7 @@ import org.moera.node.event.model.StoryUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.StoryInfo;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class StoryController {
             throw new ObjectNotFoundFailure("story.not-found");
         }
 
-        return new StoryInfo(story, requestContext.isAdmin());
+        return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }
 
     @PutMapping("/{id}")
@@ -71,7 +72,7 @@ public class StoryController {
         }
         requestContext.send(new StoryUpdatedEvent(story));
 
-        return new StoryInfo(story, requestContext.isAdmin());
+        return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }
 
 }

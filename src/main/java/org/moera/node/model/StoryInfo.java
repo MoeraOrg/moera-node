@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import java.util.function.Function;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
@@ -20,7 +22,7 @@ public class StoryInfo {
     public StoryInfo() {
     }
 
-    public StoryInfo(Story story, boolean isAdmin) {
+    protected StoryInfo(Story story, boolean isAdmin) {
         id = story.getId().toString();
         feedName = story.getFeedName();
         storyType = story.getStoryType().getValue();
@@ -31,6 +33,16 @@ public class StoryInfo {
         if (isAdmin) {
             viewed = story.isViewed();
             read = story.isRead();
+        }
+    }
+
+    public static StoryInfo build(Story story, boolean isAdmin, Function<Story, PostingInfo> buildPostingInfo) {
+        switch (story.getStoryType()) {
+            case POSTING_ADDED:
+                return new StoryPostingAddedInfo(story, buildPostingInfo.apply(story), isAdmin);
+
+            default:
+                return new StoryInfo(story, isAdmin);
         }
     }
 

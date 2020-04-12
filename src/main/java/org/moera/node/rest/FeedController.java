@@ -17,12 +17,12 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ClientReactionInfo;
+import org.moera.node.model.FeedInfo;
+import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.StoryPostingAddedInfo;
-import org.moera.node.model.FeedInfo;
-import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,12 +150,15 @@ public class FeedController {
         sliceInfo.setStories(stories);
     }
 
-    private StoryPostingAddedInfo buildStoryInfo(Story story) {
-        Posting posting = (Posting) story.getEntry();
-        return new StoryPostingAddedInfo(
+    private StoryInfo buildStoryInfo(Story story) {
+        return StoryInfo.build(
                 story,
-                new PostingInfo(posting, requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())),
-                requestContext.isAdmin()
+                requestContext.isAdmin(),
+                t -> {
+                    Posting posting = (Posting) t.getEntry();
+                    return new PostingInfo(posting,
+                            requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()));
+                }
         );
     }
 

@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,7 +20,7 @@ public class PostingInfo {
 
     private String id;
     private String revisionId;
-    private int totalRevisions;
+    private Integer totalRevisions;
     private String receiverName;
     private String ownerName;
     private Body bodyPreview;
@@ -29,23 +30,27 @@ public class PostingInfo {
     private Body body;
     private String bodyFormat;
     private String heading;
-    private long createdAt;
-    private long editedAt;
+    private Long createdAt;
+    private Long editedAt;
     private Long deletedAt;
     private Long deadline;
-    private boolean draft;
+    private Boolean draft;
     private Boolean draftPending;
     private byte[] signature;
-    private short signatureVersion;
+    private Short signatureVersion;
     private List<FeedReference> feedReferences;
     private Map<String, String[]> operations;
-    private AcceptedReactions acceptedReactions = new AcceptedReactions();
+    private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
     private Boolean reactionsVisible;
     private Boolean reactionTotalsVisible;
 
     public PostingInfo() {
+    }
+
+    public PostingInfo(UUID id) {
+        this.id = id.toString();
     }
 
     public PostingInfo(Posting posting, boolean isAdminOrOwner) {
@@ -101,6 +106,7 @@ public class PostingInfo {
         operations.put("revisions", new String[0]);
         operations.put("reactions",
                 posting.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
+        acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
         reactions = new ReactionTotalsInfo(posting.getReactionTotals(),
@@ -127,11 +133,11 @@ public class PostingInfo {
         this.revisionId = revisionId;
     }
 
-    public int getTotalRevisions() {
+    public Integer getTotalRevisions() {
         return totalRevisions;
     }
 
-    public void setTotalRevisions(int totalRevisions) {
+    public void setTotalRevisions(Integer totalRevisions) {
         this.totalRevisions = totalRevisions;
     }
 
@@ -207,19 +213,19 @@ public class PostingInfo {
         this.heading = heading;
     }
 
-    public long getCreatedAt() {
+    public Long getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(long createdAt) {
+    public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
     }
 
-    public long getEditedAt() {
+    public Long getEditedAt() {
         return editedAt;
     }
 
-    public void setEditedAt(long editedAt) {
+    public void setEditedAt(Long editedAt) {
         this.editedAt = editedAt;
     }
 
@@ -239,11 +245,11 @@ public class PostingInfo {
         this.deadline = deadline;
     }
 
-    public boolean isDraft() {
+    public Boolean getDraft() {
         return draft;
     }
 
-    public void setDraft(boolean draft) {
+    public void setDraft(Boolean draft) {
         this.draft = draft;
     }
 
@@ -263,11 +269,11 @@ public class PostingInfo {
         this.signature = signature;
     }
 
-    public short getSignatureVersion() {
+    public Short getSignatureVersion() {
         return signatureVersion;
     }
 
-    public void setSignatureVersion(short signatureVersion) {
+    public void setSignatureVersion(Short signatureVersion) {
         this.signatureVersion = signatureVersion;
     }
 
