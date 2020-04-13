@@ -5,17 +5,26 @@ import org.moera.node.util.Util;
 
 public class StoryAttributes {
 
-    private Long publishedAt;
+    private String feedName;
+    private Long publishAt;
     private Boolean pinned;
     private Boolean viewed;
     private Boolean read;
 
-    public Long getPublishedAt() {
-        return publishedAt;
+    public String getFeedName() {
+        return feedName;
     }
 
-    public void setPublishedAt(Long publishedAt) {
-        this.publishedAt = publishedAt;
+    public void setFeedName(String feedName) {
+        this.feedName = feedName;
+    }
+
+    public Long getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(Long publishAt) {
+        this.publishAt = publishAt;
     }
 
     public Boolean getPinned() {
@@ -43,8 +52,11 @@ public class StoryAttributes {
     }
 
     public void toStory(Story story) {
-        if (publishedAt != null) {
-            story.setPublishedAt(Util.toTimestamp(publishedAt));
+        if (feedName != null) {
+            story.setFeedName(feedName);
+        }
+        if (publishAt != null) {
+            story.setPublishedAt(Util.toTimestamp(publishAt));
         }
         if (pinned != null) {
             story.setPinned(pinned);

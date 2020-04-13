@@ -95,10 +95,9 @@ public class DraftPostingController {
     @Entitled
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
-        log.info("POST /draft-postings (bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
+        log.info("POST /draft-postings (bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.formatTimestamp(postingText.getPublishAt()));
+                LogUtil.format(postingText.getBodySrcFormat()));
 
         Posting posting = postingOperations.newPosting(postingText, p -> {
             p.setDraft(true);
@@ -123,12 +122,10 @@ public class DraftPostingController {
     @Entitled
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
-        log.info("PUT /draft-postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {}, pinned = {})",
+        log.info("PUT /draft-postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(id),
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.formatTimestamp(postingText.getPublishAt()),
-                postingText.getPinned() != null ? Boolean.toString(postingText.getPinned()) : "null");
+                LogUtil.format(postingText.getBodySrcFormat()));
 
         Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {

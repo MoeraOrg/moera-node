@@ -91,10 +91,9 @@ public class PostingController {
     @Entitled
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
-        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
+        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.formatTimestamp(postingText.getPublishAt()));
+                LogUtil.format(postingText.getBodySrcFormat()));
 
         if (StringUtils.isEmpty(postingText.getBodySrc())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
@@ -102,9 +101,8 @@ public class PostingController {
 
         Posting posting = postingOperations.newPosting(postingText, null);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, null, null,
-                    revision -> postingText.toEntryRevision(revision, textConverter),
-                    postingText::toStory);
+            posting = postingOperations.createOrUpdatePosting(posting, null, postingText.getPublications(), null,
+                    revision -> postingText.toEntryRevision(revision, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -119,23 +117,22 @@ public class PostingController {
     @Entitled
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
-        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {}, pinned = {})",
+        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(id),
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.formatTimestamp(postingText.getPublishAt()),
-                postingText.getPinned() != null ? Boolean.toString(postingText.getPinned()) : "null");
+                LogUtil.format(postingText.getBodySrcFormat()));
 
+        if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
+            throw new ValidationFailure("postingText.publications.cannot-modify");
+        }
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         postingText.toEntry(posting);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(),
-                    postingText::sameAsRevision,
-                    revision -> postingText.toEntryRevision(revision, textConverter),
-                    postingText::toStory);
+            posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null,
+                    postingText::sameAsRevision, revision -> postingText.toEntryRevision(revision, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }

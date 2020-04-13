@@ -71,12 +71,10 @@ public class PostingDraftRevisionController {
     @Admin
     @Transactional
     public PostingInfo put(@PathVariable UUID postingId, @RequestBody @Valid PostingText postingText) {
-        log.info("PUT /postings/{postingId}/revisions/draft"
-                        + " (postingId = {}, bodySrc = {}, bodySrcFormat = {}, publishAt = {})",
+        log.info("PUT /postings/{postingId}/revisions/draft (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingId),
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()),
-                LogUtil.formatTimestamp(postingText.getPublishAt()));
+                LogUtil.format(postingText.getBodySrcFormat()));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {

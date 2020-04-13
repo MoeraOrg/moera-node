@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.security.interfaces.ECPrivateKey;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -16,12 +17,11 @@ import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.StoryType;
-import org.moera.node.event.model.StoryAddedEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.PostingText;
+import org.moera.node.model.StoryAttributes;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -77,10 +77,9 @@ public class PostingOperations {
         return postingRepository.save(posting);
     }
 
-    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision,
+    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<StoryAttributes> publications,
                                          Function<EntryRevision, Boolean> isPreserveRevision,
-                                         Consumer<EntryRevision> revisionUpdater,
-                                         Consumer<Story> storyUpdater) {
+                                         Consumer<EntryRevision> revisionUpdater) {
         EntryRevision latest = posting.getCurrentRevision();
         if (latest != null && isPreserveRevision != null && isPreserveRevision.apply(latest)) {
             return postingRepository.saveAndFlush(posting);
@@ -90,22 +89,18 @@ public class PostingOperations {
             revisionUpdater.accept(current);
         }
         posting = postingRepository.saveAndFlush(posting);
-
-        Story story = existingStory(posting);
-        if (story == null) {
-            story = newStory(posting, storyUpdater);
-            storyOperations.updateMoment(story);
-            story = storyRepository.saveAndFlush(story);
-            requestContext.send(new StoryAddedEvent(story));
-        }
+        storyOperations.publish(posting, publications);
 
         current = posting.getCurrentRevision();
-
         PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
         current.setDigest(CryptoUtil.digest(fingerprint));
         current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
         current.setSignatureVersion(PostingFingerprint.VERSION);
-        updatePublicPages(story.getMoment());
+
+        Story timelineStory = posting.getStory(Feed.TIMELINE);
+        if (timelineStory != null) {
+            updatePublicPages(timelineStory.getMoment());
+        }
 
         return posting;
     }
@@ -162,20 +157,6 @@ public class PostingOperations {
         }
 
         return revision;
-    }
-
-    private Story newStory(Posting posting, Consumer<Story> initializer) {
-        Story story = new Story(
-                UUID.randomUUID(), requestContext.nodeId(), Feed.TIMELINE, StoryType.POSTING_ADDED, posting);
-        if (initializer != null) {
-            initializer.accept(story);
-        }
-        return story;
-    }
-
-    private Story existingStory(Posting posting) {
-        return storyRepository.findByFeedAndTypeAndEntryId(
-                requestContext.nodeId(), Feed.TIMELINE, StoryType.POSTING_ADDED, posting.getId());
     }
 
     private void updatePublicPages(long moment) {

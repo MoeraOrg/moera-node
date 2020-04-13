@@ -238,4 +238,11 @@ public class Entry {
         this.stories = stories;
     }
 
+    public Story getStory(String feedName) {
+        if (getStories() == null) {
+            return null;
+        }
+        return getStories().stream().filter(fr -> fr.getFeedName().equals(feedName)).findFirst().orElse(null);
+    }
+
 }

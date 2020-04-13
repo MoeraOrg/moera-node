@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
@@ -7,11 +8,9 @@ import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
-import org.moera.node.data.Story;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.Shortener;
 import org.moera.node.text.TextConverter;
-import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 
 public class PostingText {
@@ -21,16 +20,14 @@ public class PostingText {
 
     private String bodySrcFormat;
 
-    private Long publishAt;
-
-    private Boolean pinned;
-
     @Valid
     private AcceptedReactions acceptedReactions;
 
     private Boolean reactionsVisible;
 
     private Boolean reactionTotalsVisible;
+
+    private List<StoryAttributes> publications;
 
     public PostingText() {
     }
@@ -49,22 +46,6 @@ public class PostingText {
 
     public void setBodySrcFormat(String bodySrcFormat) {
         this.bodySrcFormat = bodySrcFormat;
-    }
-
-    public Long getPublishAt() {
-        return publishAt;
-    }
-
-    public void setPublishAt(Long publishAt) {
-        this.publishAt = publishAt;
-    }
-
-    public Boolean getPinned() {
-        return pinned;
-    }
-
-    public void setPinned(Boolean pinned) {
-        this.pinned = pinned;
     }
 
     public AcceptedReactions getAcceptedReactions() {
@@ -89,6 +70,14 @@ public class PostingText {
 
     public void setReactionTotalsVisible(Boolean reactionTotalsVisible) {
         this.reactionTotalsVisible = reactionTotalsVisible;
+    }
+
+    public List<StoryAttributes> getPublications() {
+        return publications;
+    }
+
+    public void setPublications(List<StoryAttributes> publications) {
+        this.publications = publications;
     }
 
     public void toEntry(Entry entry) {
@@ -134,15 +123,6 @@ public class PostingText {
                 revision.setBody(bodySrc);
                 revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
             }
-        }
-    }
-
-    public void toStory(Story story) {
-        if (publishAt != null) {
-            story.setPublishedAt(Util.toTimestamp(publishAt));
-        }
-        if (pinned != null) {
-            story.setPinned(pinned);
         }
     }
 

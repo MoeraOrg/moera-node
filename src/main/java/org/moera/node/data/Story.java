@@ -54,10 +54,9 @@ public class Story {
     public Story() {
     }
 
-    public Story(UUID id, UUID nodeId, String feedName, StoryType storyType, Entry entry) {
+    public Story(UUID id, UUID nodeId, StoryType storyType, Entry entry) {
         this.id = id;
         this.nodeId = nodeId;
-        this.feedName = feedName;
         this.storyType = storyType;
         this.entry = entry;
     }

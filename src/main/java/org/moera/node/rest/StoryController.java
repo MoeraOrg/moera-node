@@ -57,7 +57,7 @@ public class StoryController {
     public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) {
         log.info("PUT /stories/{id}, (id = {}, publishedAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
-                LogUtil.formatTimestamp(storyAttributes.getPublishedAt()),
+                LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
                 storyAttributes.getPinned() != null ? Boolean.toString(storyAttributes.getPinned()) : "null",
                 storyAttributes.getViewed() != null ? Boolean.toString(storyAttributes.getViewed()) : "null",
                 storyAttributes.getRead() != null ? Boolean.toString(storyAttributes.getRead()) : "null");
@@ -67,7 +67,9 @@ public class StoryController {
             throw new ObjectNotFoundFailure("story.not-found");
         }
         storyAttributes.toStory(story);
-        if (storyAttributes.getPublishedAt() != null || storyAttributes.getPinned() != null) {
+        if (storyAttributes.getFeedName() != null
+                || storyAttributes.getPublishAt() != null
+                || storyAttributes.getPinned() != null) {
             storyOperations.updateMoment(story);
         }
         requestContext.send(new StoryUpdatedEvent(story));
