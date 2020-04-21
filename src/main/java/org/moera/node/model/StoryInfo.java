@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,6 +20,7 @@ public class StoryInfo {
     private Long moment;
     private Boolean viewed;
     private Boolean read;
+    private Map<String, String[]> operations;
 
     public StoryInfo() {
     }
@@ -34,6 +37,9 @@ public class StoryInfo {
             viewed = story.isViewed();
             read = story.isRead();
         }
+        operations = new HashMap<>();
+        operations.put("edit", new String[]{"admin"});
+        operations.put("delete", new String[]{"admin"});
     }
 
     public static StoryInfo build(Story story, boolean isAdmin, Function<Story, PostingInfo> buildPostingInfo) {
@@ -116,6 +122,14 @@ public class StoryInfo {
 
     public void setRead(Boolean read) {
         this.read = read;
+    }
+
+    public Map<String, String[]> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, String[]> operations) {
+        this.operations = operations;
     }
 
 }
