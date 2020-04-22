@@ -55,7 +55,7 @@ public class StoryController {
     @Admin
     @Transactional
     public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) {
-        log.info("PUT /stories/{id}, (id = {}, publishedAt = {}, pinned = {}, viewed = {}, read = {})",
+        log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
                 LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
                 storyAttributes.getPinned() != null ? Boolean.toString(storyAttributes.getPinned()) : "null",
