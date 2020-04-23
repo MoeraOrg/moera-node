@@ -93,6 +93,9 @@ public class ReactionController {
     @Inject
     private EventManager eventManager;
 
+    @Inject
+    private InstantOperations instantOperations;
+
     private MomentFinder momentFinder = new MomentFinder();
 
     @PostMapping
@@ -154,6 +157,7 @@ public class ReactionController {
                 reaction.setDeletedAt(Util.now());
                 Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
                 reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
+                instantOperations.reactionDeleted(reaction);
             }
 
             reaction = new Reaction();
@@ -169,6 +173,9 @@ public class ReactionController {
             reaction = reactionRepository.save(reaction);
 
             changeTotals(posting, reaction, 1);
+            if (reaction.getSignature() != null) {
+                instantOperations.reactionAdded(posting, reaction);
+            }
         }
         reactionRepository.flush();
 
@@ -260,6 +267,7 @@ public class ReactionController {
 
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(postingId);
+        instantOperations.reactionsDeletedAll(postingId);
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
 
@@ -289,6 +297,7 @@ public class ReactionController {
             reaction.setDeletedAt(Util.now());
             Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
             reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
+            instantOperations.reactionDeleted(reaction);
         }
         reactionRepository.flush();
 

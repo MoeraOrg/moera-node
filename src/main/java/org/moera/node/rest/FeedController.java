@@ -134,6 +134,7 @@ public class FeedController {
         String clientName = requestContext.getClientName();
         if (!StringUtils.isEmpty(clientName)) {
             Map<String, PostingInfo> postingMap = stories.stream()
+                    .filter(s -> s instanceof StoryPostingAddedInfo)
                     .map(s -> ((StoryPostingAddedInfo) s).getPosting())
                     .collect(Collectors.toMap(PostingInfo::getId, Function.identity()));
             reactionRepository.findByStoriesInRangeAndOwner(

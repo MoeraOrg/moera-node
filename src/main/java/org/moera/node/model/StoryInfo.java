@@ -20,6 +20,7 @@ public class StoryInfo {
     private Long moment;
     private Boolean viewed;
     private Boolean read;
+    private String summary;
     private Map<String, String[]> operations;
 
     public StoryInfo() {
@@ -37,6 +38,7 @@ public class StoryInfo {
             viewed = story.isViewed();
             read = story.isRead();
         }
+        summary = story.getSummary();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"admin"});
         operations.put("delete", new String[]{"admin"});
@@ -122,6 +124,14 @@ public class StoryInfo {
 
     public void setRead(Boolean read) {
         this.read = read;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 
     public Map<String, String[]> getOperations() {
