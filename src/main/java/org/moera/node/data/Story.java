@@ -1,10 +1,15 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -48,8 +53,18 @@ public class Story {
     @NotNull
     private boolean read;
 
+    @NotNull
+    private String summary = "";
+
     @ManyToOne
     private Entry entry;
+
+    @ManyToMany
+    @JoinTable(
+            name = "stories_reactions",
+            joinColumns = @JoinColumn(name = "story_id"),
+            inverseJoinColumns = @JoinColumn(name = "reaction_id"))
+    private Set<Reaction> reactions = new HashSet<>();
 
     public Story() {
     }
@@ -141,12 +156,28 @@ public class Story {
         this.read = read;
     }
 
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
     public Entry getEntry() {
         return entry;
     }
 
     public void setEntry(Entry entry) {
         this.entry = entry;
+    }
+
+    public Set<Reaction> getReactions() {
+        return reactions;
+    }
+
+    public void setReactions(Set<Reaction> reactions) {
+        this.reactions = reactions;
     }
 
 }

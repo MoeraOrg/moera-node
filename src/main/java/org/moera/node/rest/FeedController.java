@@ -1,6 +1,6 @@
 package org.moera.node.rest;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
@@ -51,20 +50,20 @@ public class FeedController {
     private ReactionRepository reactionRepository;
 
     @GetMapping
-    public List<FeedInfo> getAll() {
+    public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
 
-        return Collections.singletonList(new FeedInfo(Feed.TIMELINE));
+        return FeedInfo.getAllStandard();
     }
 
     @GetMapping("/{feedName}")
     public FeedInfo get(@PathVariable String feedName) {
         log.info("GET /feeds/{feedName} (feedName = {})", LogUtil.format(feedName));
 
-        if (!feedName.equals(Feed.TIMELINE)) {
+        if (!FeedInfo.isStandard(feedName)) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
-        return new FeedInfo(feedName);
+        return FeedInfo.getStandard(feedName);
     }
 
     @GetMapping("/{feedName}/stories")
@@ -77,7 +76,7 @@ public class FeedController {
         log.info("GET /feeds/{feedName}/stories (feedName = {}, before = {}, after = {}, limit = {})",
                 LogUtil.format(feedName), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
 
-        if (!feedName.equals(Feed.TIMELINE)) {
+        if (!FeedInfo.isStandard(feedName)) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
         if (before != null && after != null) {

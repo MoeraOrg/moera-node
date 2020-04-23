@@ -2,7 +2,8 @@ package org.moera.node.data;
 
 public enum StoryType {
 
-    POSTING_ADDED;
+    POSTING_ADDED,
+    REACTION_ADDED;
 
     public String getValue() {
         return name().toLowerCase().replace('_', '-');

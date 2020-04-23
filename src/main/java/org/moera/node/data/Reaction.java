@@ -1,9 +1,12 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -43,6 +46,9 @@ public class Reaction {
     private byte[] signature;
 
     private short signatureVersion;
+
+    @ManyToMany(mappedBy = "reactions")
+    private Set<Story> stories = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -130,6 +136,14 @@ public class Reaction {
 
     public void setSignatureVersion(short signatureVersion) {
         this.signatureVersion = signatureVersion;
+    }
+
+    public Set<Story> getStories() {
+        return stories;
+    }
+
+    public void setStories(Set<Story> stories) {
+        this.stories = stories;
     }
 
     public void toReactionTotal(ReactionTotal total) {
