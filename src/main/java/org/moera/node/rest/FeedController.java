@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
@@ -53,17 +54,17 @@ public class FeedController {
     public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
 
-        return FeedInfo.getAllStandard();
+        return Feed.getAllStandard(requestContext.isAdmin());
     }
 
     @GetMapping("/{feedName}")
     public FeedInfo get(@PathVariable String feedName) {
         log.info("GET /feeds/{feedName} (feedName = {})", LogUtil.format(feedName));
 
-        if (!FeedInfo.isStandard(feedName)) {
+        if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin())) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
-        return FeedInfo.getStandard(feedName);
+        return Feed.getStandard(feedName);
     }
 
     @GetMapping("/{feedName}/stories")
@@ -76,7 +77,7 @@ public class FeedController {
         log.info("GET /feeds/{feedName}/stories (feedName = {}, before = {}, after = {}, limit = {})",
                 LogUtil.format(feedName), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
 
-        if (!FeedInfo.isStandard(feedName)) {
+        if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin())) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
         if (before != null && after != null) {
