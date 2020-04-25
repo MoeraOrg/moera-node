@@ -44,10 +44,15 @@ public class StoryInfo {
         operations.put("delete", new String[]{"admin"});
     }
 
-    public static StoryInfo build(Story story, boolean isAdmin, Function<Story, PostingInfo> buildPostingInfo) {
+    public static StoryInfo build(Story story, boolean isAdmin,
+                                  Function<Story, PostingInfo> buildPostingInfo) {
         switch (story.getStoryType()) {
             case POSTING_ADDED:
                 return new StoryPostingAddedInfo(story, buildPostingInfo.apply(story), isAdmin);
+
+            case REACTION_ADDED_POSITIVE:
+            case REACTION_ADDED_NEGATIVE:
+                return new StoryReactionAddedInfo(story, story.getEntry().getId(), isAdmin);
 
             default:
                 return new StoryInfo(story, isAdmin);
