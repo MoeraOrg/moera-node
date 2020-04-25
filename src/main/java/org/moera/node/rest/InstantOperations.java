@@ -100,7 +100,7 @@ public class InstantOperations {
         }
         buf.append(story.getStoryType() == StoryType.REACTION_ADDED_POSITIVE ? " supported" : " opposed");
         buf.append(" your post \"");
-        buf.append(story.getEntry().getCurrentRevision().getHeading());
+        buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));
         buf.append('"');
         return buf.toString();
     }
