@@ -62,12 +62,12 @@ public class MoeraUiController {
     }
 
     @GetMapping("/gotoname")
-    public String goToName(@RequestParam String name) {
+    public String goToName(@RequestParam String name, @RequestParam(required = false) String location) {
         RegisteredNameDetails details = namingCache.get(name);
         if (details == null || details.getNodeUri() == null) {
             throw new PageNotFoundException();
         }
-        return "redirect:" + details.getNodeUri();
+        return "redirect:" + details.getNodeUri() + (location != null ? location : "");
     }
 
 }
