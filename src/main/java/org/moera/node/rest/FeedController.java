@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionRepository;
@@ -19,6 +20,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedInfo;
 import org.moera.node.model.FeedSliceInfo;
+import org.moera.node.model.FeedStatus;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
@@ -65,6 +67,21 @@ public class FeedController {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
         return Feed.getStandard(feedName);
+    }
+
+    @GetMapping("/{feedName}/status")
+    @Admin
+    public FeedStatus getStatus(@PathVariable String feedName) {
+        log.info("GET /feeds/{feedName}/status (feedName = {})", LogUtil.format(feedName));
+
+        if (!Feed.isStandard(feedName)) {
+            throw new ObjectNotFoundFailure("feed.not-found");
+        }
+
+        int notViewed = storyRepository.countNotViewed(requestContext.nodeId(), feedName);
+        int notRead = storyRepository.countNotRead(requestContext.nodeId(), feedName);
+
+        return new FeedStatus(notViewed, notRead);
     }
 
     @GetMapping("/{feedName}/stories")
