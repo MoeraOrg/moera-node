@@ -15,6 +15,7 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
@@ -174,7 +175,12 @@ public class PostingController {
         requestContext.send(new PostingDeletedEvent(posting));
 
         storyRepository.findByEntryId(requestContext.nodeId(), id)
-                .forEach(story -> requestContext.send(new StoryDeletedEvent(story)));
+                .forEach(story -> {
+                    if (!Feed.isAdmin(story.getFeedName())) {
+                        requestContext.send(new StoryDeletedEvent(story, false));
+                    }
+                    requestContext.send(new StoryDeletedEvent(story, true));
+                });
         storyRepository.deleteByEntryId(requestContext.nodeId(), id);
 
         return Result.OK;

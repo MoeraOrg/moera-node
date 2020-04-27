@@ -7,6 +7,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.event.model.StoryUpdatedEvent;
@@ -72,7 +73,10 @@ public class StoryController {
                 || storyAttributes.getPinned() != null) {
             storyOperations.updateMoment(story);
         }
-        requestContext.send(new StoryUpdatedEvent(story));
+        if (!Feed.isAdmin(story.getFeedName())) {
+            requestContext.send(new StoryUpdatedEvent(story, false));
+        }
+        requestContext.send(new StoryUpdatedEvent(story, true));
 
         return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }

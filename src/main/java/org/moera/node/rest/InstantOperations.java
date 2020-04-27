@@ -80,7 +80,7 @@ public class InstantOperations {
         if (reactions.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                requestContext.send(new StoryDeletedEvent(story));
+                requestContext.send(new StoryDeletedEvent(story, true));
             }
             return;
         }
@@ -88,7 +88,7 @@ public class InstantOperations {
         story.setSummary(buildReactionAddedSummary(story, reactions));
         story.setPublishedAt(Util.now());
         storyOperations.updateMoment(story);
-        requestContext.send(isNew ? new StoryAddedEvent(story) : new StoryUpdatedEvent(story));
+        requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
     private String buildReactionAddedSummary(Story story, List<Reaction> reactions) {

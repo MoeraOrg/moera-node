@@ -8,8 +8,8 @@ public class StoryDeletedEvent extends StoryEvent {
         super(EventType.STORY_DELETED);
     }
 
-    public StoryDeletedEvent(Story story) {
-        super(EventType.STORY_DELETED, story);
+    public StoryDeletedEvent(Story story, boolean isAdmin) {
+        super(EventType.STORY_DELETED, story, isAdmin);
     }
 
 }

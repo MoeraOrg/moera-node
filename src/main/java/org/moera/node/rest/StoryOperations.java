@@ -6,6 +6,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.data.Entry;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
@@ -45,7 +46,10 @@ public class StoryOperations {
             updateMoment(story);
             story = storyRepository.saveAndFlush(story);
             posting.getStories().add(story);
-            requestContext.send(new StoryAddedEvent(story));
+            if (!Feed.isAdmin(story.getFeedName())) {
+                requestContext.send(new StoryAddedEvent(story, false));
+            }
+            requestContext.send(new StoryAddedEvent(story, true));
         }
     }
 

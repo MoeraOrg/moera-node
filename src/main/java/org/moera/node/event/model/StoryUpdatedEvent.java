@@ -8,8 +8,8 @@ public class StoryUpdatedEvent extends StoryEvent {
         super(EventType.STORY_UPDATED);
     }
 
-    public StoryUpdatedEvent(Story story) {
-        super(EventType.STORY_UPDATED, story);
+    public StoryUpdatedEvent(Story story, boolean isAdmin) {
+        super(EventType.STORY_UPDATED, story, isAdmin);
     }
 
 }

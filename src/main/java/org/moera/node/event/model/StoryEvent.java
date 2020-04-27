@@ -1,7 +1,12 @@
 package org.moera.node.event.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Story;
+import org.moera.node.event.EventSubscriber;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,12 +19,18 @@ public class StoryEvent extends Event {
     private boolean pinned;
     private long moment;
     private String postingId;
+    private Boolean viewed;
+    private Boolean read;
+    private String summary;
+    private Map<String, String[]> operations;
+    @JsonIgnore
+    private boolean isAdmin;
 
     public StoryEvent(EventType type) {
         super(type);
     }
 
-    public StoryEvent(EventType type, Story story) {
+    public StoryEvent(EventType type, Story story, boolean isAdmin) {
         super(type);
         id = story.getId().toString();
         storyType = story.getStoryType().getValue();
@@ -28,6 +39,15 @@ public class StoryEvent extends Event {
         pinned = story.isPinned();
         moment = story.getMoment();
         postingId = story.getEntry() != null ? story.getEntry().getId().toString() : null;
+        if (isAdmin) {
+            viewed = story.isViewed();
+            read = story.isRead();
+        }
+        summary = story.getSummary();
+        operations = new HashMap<>();
+        operations.put("edit", new String[]{"admin"});
+        operations.put("delete", new String[]{"admin"});
+        this.isAdmin = isAdmin;
     }
 
     public String getId() {
@@ -84,6 +104,43 @@ public class StoryEvent extends Event {
 
     public void setPostingId(String postingId) {
         this.postingId = postingId;
+    }
+
+    public Boolean getViewed() {
+        return viewed;
+    }
+
+    public void setViewed(Boolean viewed) {
+        this.viewed = viewed;
+    }
+
+    public Boolean getRead() {
+        return read;
+    }
+
+    public void setRead(Boolean read) {
+        this.read = read;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public Map<String, String[]> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, String[]> operations) {
+        this.operations = operations;
+    }
+
+    @Override
+    public boolean isPermitted(EventSubscriber subscriber) {
+        return subscriber.isAdmin() == isAdmin;
     }
 
 }
