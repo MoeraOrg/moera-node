@@ -56,6 +56,9 @@ public class Story {
     @NotNull
     private String summary = "";
 
+    @NotNull
+    private UUID trackingId;
+
     @ManyToOne
     private Entry entry;
 
@@ -73,6 +76,7 @@ public class Story {
         this.id = id;
         this.nodeId = nodeId;
         this.storyType = storyType;
+        this.trackingId = UUID.randomUUID();
         this.entry = entry;
     }
 
@@ -162,6 +166,14 @@ public class Story {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public UUID getTrackingId() {
+        return trackingId;
+    }
+
+    public void setTrackingId(UUID trackingId) {
+        this.trackingId = trackingId;
     }
 
     public Entry getEntry() {

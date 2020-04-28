@@ -22,6 +22,7 @@ public class StoryEvent extends Event {
     private Boolean viewed;
     private Boolean read;
     private String summary;
+    private String trackingId;
     private Map<String, String[]> operations;
     @JsonIgnore
     private boolean isAdmin;
@@ -42,6 +43,7 @@ public class StoryEvent extends Event {
         if (isAdmin) {
             viewed = story.isViewed();
             read = story.isRead();
+            trackingId = story.getTrackingId().toString();
         }
         summary = story.getSummary();
         operations = new HashMap<>();
@@ -128,6 +130,14 @@ public class StoryEvent extends Event {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getTrackingId() {
+        return trackingId;
+    }
+
+    public void setTrackingId(String trackingId) {
+        this.trackingId = trackingId;
     }
 
     public Map<String, String[]> getOperations() {

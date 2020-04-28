@@ -21,6 +21,7 @@ public class StoryInfo {
     private Boolean viewed;
     private Boolean read;
     private String summary;
+    private String trackingId;
     private Map<String, String[]> operations;
 
     public StoryInfo() {
@@ -37,6 +38,7 @@ public class StoryInfo {
         if (isAdmin) {
             viewed = story.isViewed();
             read = story.isRead();
+            trackingId = story.getTrackingId().toString();
         }
         summary = story.getSummary();
         operations = new HashMap<>();
@@ -115,7 +117,7 @@ public class StoryInfo {
         this.moment = moment;
     }
 
-    public Boolean isViewed() {
+    public Boolean getViewed() {
         return viewed;
     }
 
@@ -123,7 +125,7 @@ public class StoryInfo {
         this.viewed = viewed;
     }
 
-    public Boolean isRead() {
+    public Boolean getRead() {
         return read;
     }
 
@@ -137,6 +139,14 @@ public class StoryInfo {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public String getTrackingId() {
+        return trackingId;
+    }
+
+    public void setTrackingId(String trackingId) {
+        this.trackingId = trackingId;
     }
 
     public Map<String, String[]> getOperations() {

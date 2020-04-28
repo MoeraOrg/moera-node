@@ -61,4 +61,7 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("update Story s set s.read = ?3 where s.nodeId = ?1 and s.feedName = ?2 and s.moment <= ?4")
     void updateRead(UUID nodeId, String feedName, boolean read, long beforeMoment);
 
+    @Query("select s from Story s where s.nodeId = ?1 and s.trackingId = ?2")
+    Optional<Story> findByTrackingId(UUID nodeId, UUID trackingId);
+
 }
