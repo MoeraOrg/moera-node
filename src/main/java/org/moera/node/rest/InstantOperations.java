@@ -15,6 +15,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.event.model.FeedStatusUpdatedEvent;
 import org.moera.node.event.model.StoryAddedEvent;
 import org.moera.node.event.model.StoryDeletedEvent;
 import org.moera.node.event.model.StoryUpdatedEvent;
@@ -55,6 +56,7 @@ public class InstantOperations {
         }
         story.getReactions().add(reaction);
         reactionsUpdated(story, isNewStory);
+        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
     }
 
     public void reactionDeleted(Reaction reaction) {
@@ -63,6 +65,7 @@ public class InstantOperations {
         reaction.getStories().stream()
                 .filter(t -> t.getStoryType() == storyType)
                 .forEach(t -> reactionsUpdated(t, false));
+        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
     }
 
     public void reactionsDeletedAll(UUID postingId) {
@@ -70,6 +73,7 @@ public class InstantOperations {
                 requestContext.nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_POSITIVE, postingId);
         storyRepository.deleteByFeedAndTypeAndEntryId(
                 requestContext.nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_NEGATIVE, postingId);
+        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
     }
 
     private void reactionsUpdated(Story story, boolean isNew) {

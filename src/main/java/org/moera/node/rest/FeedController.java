@@ -17,6 +17,8 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
+import org.moera.node.event.model.FeedStatusUpdatedEvent;
+import org.moera.node.event.model.StoriesStatusUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ClientReactionInfo;
@@ -57,6 +59,9 @@ public class FeedController {
     @Inject
     private ReactionRepository reactionRepository;
 
+    @Inject
+    private StoryOperations storyOperations;
+
     @GetMapping
     public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
@@ -83,10 +88,7 @@ public class FeedController {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
 
-        int notViewed = storyRepository.countNotViewed(requestContext.nodeId(), feedName);
-        int notRead = storyRepository.countNotRead(requestContext.nodeId(), feedName);
-
-        return new FeedStatus(notViewed, notRead);
+        return storyOperations.getFeedStatus(feedName);
     }
 
     @PutMapping("/{feedName}/status")
@@ -109,10 +111,12 @@ public class FeedController {
         if (change.getRead() != null) {
             storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(), change.getBefore());
         }
-        int notViewed = storyRepository.countNotViewed(requestContext.nodeId(), feedName);
-        int notRead = storyRepository.countNotRead(requestContext.nodeId(), feedName);
 
-        return new FeedStatus(notViewed, notRead);
+        FeedStatus feedStatus = storyOperations.getFeedStatus(feedName);
+        requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus));
+        requestContext.send(new StoriesStatusUpdatedEvent(feedName, change));
+
+        return feedStatus;
     }
 
     @GetMapping("/{feedName}/stories")

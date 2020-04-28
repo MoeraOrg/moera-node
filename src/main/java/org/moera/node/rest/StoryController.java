@@ -10,6 +10,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
+import org.moera.node.event.model.FeedStatusUpdatedEvent;
 import org.moera.node.event.model.StoryUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -77,6 +78,8 @@ public class StoryController {
             requestContext.send(new StoryUpdatedEvent(story, false));
         }
         requestContext.send(new StoryUpdatedEvent(story, true));
+        requestContext.send(
+                new FeedStatusUpdatedEvent(story.getFeedName(), storyOperations.getFeedStatus(story.getFeedName())));
 
         return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }

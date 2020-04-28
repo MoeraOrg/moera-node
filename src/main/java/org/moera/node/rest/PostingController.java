@@ -4,6 +4,7 @@ import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +23,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
+import org.moera.node.event.model.FeedStatusUpdatedEvent;
 import org.moera.node.event.model.PostingAddedEvent;
 import org.moera.node.event.model.PostingDeletedEvent;
 import org.moera.node.event.model.PostingUpdatedEvent;
@@ -76,6 +78,9 @@ public class PostingController {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private StoryOperations storyOperations;
 
     @Inject
     private TextConverter textConverter;
@@ -174,14 +179,18 @@ public class PostingController {
         entryRevisionRepository.save(posting.getCurrentRevision());
         requestContext.send(new PostingDeletedEvent(posting));
 
+        Set<String> feedNames = new HashSet<>();
         storyRepository.findByEntryId(requestContext.nodeId(), id)
                 .forEach(story -> {
                     if (!Feed.isAdmin(story.getFeedName())) {
                         requestContext.send(new StoryDeletedEvent(story, false));
                     }
                     requestContext.send(new StoryDeletedEvent(story, true));
+                    feedNames.add(story.getFeedName());
                 });
         storyRepository.deleteByEntryId(requestContext.nodeId(), id);
+        feedNames.forEach(feedName ->
+                requestContext.send(new FeedStatusUpdatedEvent(feedName, storyOperations.getFeedStatus(feedName))));
 
         return Result.OK;
     }
