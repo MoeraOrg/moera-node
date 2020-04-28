@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -21,6 +23,7 @@ import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedInfo;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.FeedStatus;
+import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
@@ -34,6 +37,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -78,6 +83,32 @@ public class FeedController {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
 
+        int notViewed = storyRepository.countNotViewed(requestContext.nodeId(), feedName);
+        int notRead = storyRepository.countNotRead(requestContext.nodeId(), feedName);
+
+        return new FeedStatus(notViewed, notRead);
+    }
+
+    @PutMapping("/{feedName}/status")
+    @Admin
+    @Transactional
+    public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change) {
+        log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
+                LogUtil.format(feedName),
+                change.getViewed() != null ? Boolean.toString(change.getViewed()) : "null",
+                change.getRead() != null ? Boolean.toString(change.getRead()) : "null",
+                LogUtil.format(change.getBefore()));
+
+        if (!Feed.isStandard(feedName)) {
+            throw new ObjectNotFoundFailure("feed.not-found");
+        }
+
+        if (change.getViewed() != null) {
+            storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(), change.getBefore());
+        }
+        if (change.getRead() != null) {
+            storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(), change.getBefore());
+        }
         int notViewed = storyRepository.countNotViewed(requestContext.nodeId(), feedName);
         int notRead = storyRepository.countNotRead(requestContext.nodeId(), feedName);
 
