@@ -13,6 +13,7 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.notification.NotificationPacket;
 import org.moera.node.notification.NotificationRouter;
 import org.moera.node.notification.NotificationType;
+import org.moera.node.notification.model.Notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,13 +47,14 @@ public class NotificationController {
         }
 
         ObjectMapper mapper = new ObjectMapper();
-        Object notification;
+        Notification notification;
         try {
             notification = mapper.readValue(packet.getNotification(), type.getStructure());
         } catch (IOException e) {
             throw new ValidationFailure("notificationPacket.notification.invalid");
         }
 
+        notification.setNodeName(packet.getNodeName());
         handler.getMethod().invoke(handler.getBean(), notification);
 
         return Result.OK;

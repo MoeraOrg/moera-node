@@ -4,7 +4,8 @@ public enum StoryType {
 
     POSTING_ADDED,
     REACTION_ADDED_POSITIVE,
-    REACTION_ADDED_NEGATIVE;
+    REACTION_ADDED_NEGATIVE,
+    MENTION_POSTING;
 
     public String getValue() {
         return name().toLowerCase().replace('_', '-');

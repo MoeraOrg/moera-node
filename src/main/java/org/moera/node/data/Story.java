@@ -59,6 +59,10 @@ public class Story {
     @NotNull
     private UUID trackingId;
 
+    private String remoteNodeName;
+
+    private String remoteEntryId;
+
     @ManyToOne
     private Entry entry;
 
@@ -174,6 +178,22 @@ public class Story {
 
     public void setTrackingId(UUID trackingId) {
         this.trackingId = trackingId;
+    }
+
+    public String getRemoteNodeName() {
+        return remoteNodeName;
+    }
+
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteEntryId() {
+        return remoteEntryId;
+    }
+
+    public void setRemoteEntryId(String remoteEntryId) {
+        this.remoteEntryId = remoteEntryId;
     }
 
     public Entry getEntry() {

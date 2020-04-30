@@ -23,6 +23,8 @@ public class StoryEvent extends Event {
     private Boolean read;
     private String summary;
     private String trackingId;
+    private String remoteNodeName;
+    private String remotePostingId;
     private Map<String, String[]> operations;
     @JsonIgnore
     private boolean isAdmin;
@@ -138,6 +140,22 @@ public class StoryEvent extends Event {
 
     public void setTrackingId(String trackingId) {
         this.trackingId = trackingId;
+    }
+
+    public String getRemoteNodeName() {
+        return remoteNodeName;
+    }
+
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemotePostingId() {
+        return remotePostingId;
+    }
+
+    public void setRemotePostingId(String remotePostingId) {
+        this.remotePostingId = remotePostingId;
     }
 
     public Map<String, String[]> getOperations() {

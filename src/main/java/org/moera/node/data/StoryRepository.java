@@ -64,4 +64,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("select s from Story s where s.nodeId = ?1 and s.trackingId = ?2")
     Optional<Story> findByTrackingId(UUID nodeId, UUID trackingId);
 
+    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
+            + " and s.remoteNodeName = ?4 and s.remoteEntryId = ?5")
+    Story findByRemoteEntryId(UUID nodeId, String feedName, StoryType storyType,
+                              String remoteNodeName, String remoteEntryId);
+
 }

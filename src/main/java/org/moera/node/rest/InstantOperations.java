@@ -56,7 +56,7 @@ public class InstantOperations {
         }
         story.getReactions().add(reaction);
         reactionsUpdated(story, isNewStory);
-        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
+        feedStatusUpdated();
     }
 
     public void reactionDeleted(Reaction reaction) {
@@ -65,7 +65,7 @@ public class InstantOperations {
         reaction.getStories().stream()
                 .filter(t -> t.getStoryType() == storyType)
                 .forEach(t -> reactionsUpdated(t, false));
-        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
+        feedStatusUpdated();
     }
 
     public void reactionsDeletedAll(UUID postingId) {
@@ -73,7 +73,7 @@ public class InstantOperations {
                 requestContext.nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_POSITIVE, postingId);
         storyRepository.deleteByFeedAndTypeAndEntryId(
                 requestContext.nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_NEGATIVE, postingId);
-        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
+        feedStatusUpdated();
     }
 
     private void reactionsUpdated(Story story, boolean isNew) {
@@ -116,6 +116,43 @@ public class InstantOperations {
         buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));
         buf.append('"');
         return buf.toString();
+    }
+
+    public void mentionPostingAdded(String remoteNodeName, String remotePostingId, String remotePostingHeading) {
+        Story story = storyRepository.findByRemoteEntryId(
+                requestContext.nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING, remoteNodeName, remotePostingId);
+        if (story != null) {
+            return;
+        }
+        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.MENTION_POSTING, null);
+        story.setFeedName(Feed.INSTANT);
+        story.setRemoteNodeName(remoteNodeName);
+        story.setRemoteEntryId(remotePostingId);
+        story.setSummary(buildMentionPostingSummary(story, remotePostingHeading));
+        storyOperations.updateMoment(story);
+        story = storyRepository.saveAndFlush(story);
+        requestContext.send(new StoryAddedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    public void mentionPostingDeleted(String remoteNodeName, String remotePostingId) {
+        Story story = storyRepository.findByRemoteEntryId(
+                requestContext.nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING, remoteNodeName, remotePostingId);
+        if (story == null) {
+            return;
+        }
+        storyRepository.delete(story);
+        requestContext.send(new StoryDeletedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    private String buildMentionPostingSummary(Story story, String remotePostingHeading) {
+        return String.format("<b>%s</b> mentioned you in a post \"%s\"",
+                story.getRemoteNodeName(), Util.he(remotePostingHeading));
+    }
+
+    private void feedStatusUpdated() {
+        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
     }
 
 }

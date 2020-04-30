@@ -56,6 +56,9 @@ public class StoryInfo {
             case REACTION_ADDED_NEGATIVE:
                 return new StoryOfPostingInfo(story, story.getEntry().getId(), isAdmin);
 
+            case MENTION_POSTING:
+                return new StoryOfRemotePostingInfo(story, isAdmin);
+
             default:
                 return new StoryInfo(story, isAdmin);
         }
