@@ -29,7 +29,7 @@ import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
-import org.moera.node.model.StoryPostingAddedInfo;
+import org.moera.node.model.StoryOfPostingInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -187,8 +187,8 @@ public class FeedController {
         String clientName = requestContext.getClientName();
         if (!StringUtils.isEmpty(clientName)) {
             Map<String, PostingInfo> postingMap = stories.stream()
-                    .filter(s -> s instanceof StoryPostingAddedInfo)
-                    .map(s -> ((StoryPostingAddedInfo) s).getPosting())
+                    .filter(s -> s instanceof StoryOfPostingInfo)
+                    .map(s -> ((StoryOfPostingInfo) s).getPosting())
                     .collect(Collectors.toMap(PostingInfo::getId, Function.identity()));
             reactionRepository.findByStoriesInRangeAndOwner(
                     requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)

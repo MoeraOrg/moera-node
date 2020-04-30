@@ -50,11 +50,11 @@ public class StoryInfo {
                                   Function<Story, PostingInfo> buildPostingInfo) {
         switch (story.getStoryType()) {
             case POSTING_ADDED:
-                return new StoryPostingAddedInfo(story, buildPostingInfo.apply(story), isAdmin);
+                return new StoryOfPostingInfo(story, buildPostingInfo.apply(story), isAdmin);
 
             case REACTION_ADDED_POSITIVE:
             case REACTION_ADDED_NEGATIVE:
-                return new StoryReactionAddedInfo(story, story.getEntry().getId(), isAdmin);
+                return new StoryOfPostingInfo(story, story.getEntry().getId(), isAdmin);
 
             default:
                 return new StoryInfo(story, isAdmin);
