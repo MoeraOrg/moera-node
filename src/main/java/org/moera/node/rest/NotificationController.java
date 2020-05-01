@@ -11,7 +11,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.notification.NotificationPacket;
-import org.moera.node.notification.NotificationRouter;
+import org.moera.node.notification.receive.NotificationRouter;
 import org.moera.node.notification.NotificationType;
 import org.moera.node.notification.model.Notification;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class NotificationController {
             throw new ValidationFailure("notificationPacket.notification.invalid");
         }
 
-        notification.setNodeName(packet.getNodeName());
+        notification.setSenderNodeName(packet.getNodeName());
         handler.getMethod().invoke(handler.getBean(), notification);
 
         return Result.OK;

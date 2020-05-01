@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public abstract class Notification {
 
     @JsonIgnore
-    private String nodeName;
+    private String senderNodeName;
 
-    public String getNodeName() {
-        return nodeName;
+    public String getSenderNodeName() {
+        return senderNodeName;
     }
 
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
+    public void setSenderNodeName(String senderNodeName) {
+        this.senderNodeName = senderNodeName;
     }
 
 }
