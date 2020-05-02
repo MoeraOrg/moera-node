@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.moera.node.event.model.Event;
+import org.moera.node.notification.model.Notification;
 import org.moera.node.option.Options;
 
 public interface RequestContext {
@@ -47,5 +48,9 @@ public interface RequestContext {
     void send(Event event);
 
     List<Event> getAfterCommitEvents();
+
+    void send(String nodeName, Notification notification);
+
+    List<Notification> getAfterCommitNotifications();
 
 }

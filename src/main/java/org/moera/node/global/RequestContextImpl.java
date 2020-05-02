@@ -6,9 +6,11 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.moera.node.event.model.Event;
+import org.moera.node.notification.model.Notification;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
 @RequestScope(proxyMode = ScopedProxyMode.INTERFACES)
@@ -23,6 +25,7 @@ public class RequestContextImpl implements RequestContext {
     private String clientId;
     private String clientName;
     private List<Event> afterCommitEvents = new ArrayList<>();
+    private List<Notification> afterCommitNotifications = new ArrayList<>();
 
     @Override
     public boolean isBrowserExtension() {
@@ -127,6 +130,20 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public List<Event> getAfterCommitEvents() {
         return afterCommitEvents;
+    }
+
+    @Override
+    public void send(String nodeName, Notification notification) {
+        if (StringUtils.isEmpty(nodeName)) {
+            throw new IllegalArgumentException("Node name must not be empty");
+        }
+        notification.setReceiverNodeName(nodeName);
+        afterCommitNotifications.add(notification);
+    }
+
+    @Override
+    public List<Notification> getAfterCommitNotifications() {
+        return afterCommitNotifications;
     }
 
 }

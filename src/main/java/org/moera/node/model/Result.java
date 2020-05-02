@@ -28,4 +28,8 @@ public class Result {
         this.message = message;
     }
 
+    public boolean isOk() {
+        return errorCode.equals("ok");
+    }
+
 }
