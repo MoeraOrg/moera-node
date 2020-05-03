@@ -19,6 +19,7 @@ public class TaskAutowire {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(requestContext.nodeId());
         task.setNodeName(requestContext.nodeName());
+        task.setSigningKey(requestContext.getOptions().getPrivateKey("profile.signing-key"));
     }
 
 }

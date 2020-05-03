@@ -9,7 +9,6 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.event.EventManager;
 import org.moera.node.event.model.RemotePostingVerificationFailedEvent;
 import org.moera.node.event.model.RemotePostingVerifiedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
@@ -20,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.client.WebClient;
 
-public class RemotePostingVerifyTask extends RemoteVerificationTask implements Runnable {
+public class RemotePostingVerifyTask extends RemoteVerificationTask {
 
     private static Logger log = LoggerFactory.getLogger(RemotePostingVerifyTask.class);
 
@@ -29,16 +28,12 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
     private String nodeUri;
 
     @Inject
-    private EventManager eventManager;
-
-    @Inject
     private RemotePostingVerificationRepository remotePostingVerificationRepository;
 
     @Inject
     private FingerprintManager fingerprintManager;
 
     public RemotePostingVerifyTask(RemotePostingVerification data) {
-        super(data.getNodeId());
         this.data = data;
     }
 
@@ -122,7 +117,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
         updateData(data -> {
             data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
         });
-        eventManager.send(data.getNodeId(), new RemotePostingVerifiedEvent(data));
+        send(new RemotePostingVerifiedEvent(data));
     }
 
     @Override
@@ -134,7 +129,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask implements R
             data.setErrorCode(errorCode);
             data.setErrorMessage(errorMessage);
         });
-        eventManager.send(data.getNodeId(), new RemotePostingVerificationFailedEvent(data));
+        send(new RemotePostingVerificationFailedEvent(data));
     }
 
 }

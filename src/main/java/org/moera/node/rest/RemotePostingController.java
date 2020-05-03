@@ -6,18 +6,18 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
-import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.rest.task.RemotePostingVerifyTask;
+import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,7 +38,7 @@ public class RemotePostingController {
     private RequestContext requestContext;
 
     @Inject
-    private AutowireCapableBeanFactory autowireCapableBeanFactory;
+    private TaskAutowire taskAutowire;
 
     @Inject
     private RemotePostingVerificationRepository remotePostingVerificationRepository;
@@ -72,7 +72,7 @@ public class RemotePostingController {
         remotePostingVerificationRepository.saveAndFlush(data);
 
         RemotePostingVerifyTask task = new RemotePostingVerifyTask(data);
-        autowireCapableBeanFactory.autowireBean(task);
+        taskAutowire.autowire(task);
         taskExecutor.execute(task);
 
         return new AsyncOperationCreated(data.getId());

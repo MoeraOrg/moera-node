@@ -10,7 +10,6 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.event.EventManager;
 import org.moera.node.event.model.RemoteReactionVerificationFailedEvent;
 import org.moera.node.event.model.RemoteReactionVerifiedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
@@ -23,7 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.WebClient;
 
-public class RemoteReactionVerifyTask extends RemoteVerificationTask implements Runnable {
+public class RemoteReactionVerifyTask extends RemoteVerificationTask {
 
     private static Logger log = LoggerFactory.getLogger(RemoteReactionVerifyTask.class);
 
@@ -32,16 +31,12 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask implements 
     private String nodeUri;
 
     @Inject
-    private EventManager eventManager;
-
-    @Inject
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
 
     @Inject
     private FingerprintManager fingerprintManager;
 
     public RemoteReactionVerifyTask(RemoteReactionVerification data) {
-        super(data.getNodeId());
         this.data = data;
     }
 
@@ -122,7 +117,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask implements 
         updateData(data -> {
             data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
         });
-        eventManager.send(data.getNodeId(), new RemoteReactionVerifiedEvent(data));
+        send(new RemoteReactionVerifiedEvent(data));
     }
 
     @Override
@@ -134,7 +129,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask implements 
             data.setErrorCode(errorCode);
             data.setErrorMessage(errorMessage);
         });
-        eventManager.send(data.getNodeId(), new RemoteReactionVerificationFailedEvent(data));
+        send(new RemoteReactionVerificationFailedEvent(data));
     }
 
 }

@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.security.PrivateKey;
 import java.sql.Timestamp;
 import java.time.Instant;
 import javax.inject.Inject;
@@ -19,11 +18,11 @@ import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.rest.task.RemoteReactionPostTask;
 import org.moera.node.rest.task.RemoteReactionVerifyTask;
+import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,7 +44,7 @@ public class RemoteReactionController {
     private RequestContext requestContext;
 
     @Inject
-    private AutowireCapableBeanFactory autowireCapableBeanFactory;
+    private TaskAutowire taskAutowire;
 
     @Inject
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
@@ -62,12 +61,8 @@ public class RemoteReactionController {
                 attributes.isNegative() ? "yes" : "no",
                 LogUtil.format(attributes.getEmoji()));
 
-        String ownerName = requestContext.nodeName();
-        PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
-
-        RemoteReactionPostTask task = new RemoteReactionPostTask(
-                requestContext.nodeId(), nodeName, postingId, ownerName, signingKey, attributes);
-        autowireCapableBeanFactory.autowireBean(task);
+        RemoteReactionPostTask task = new RemoteReactionPostTask(nodeName, postingId, attributes);
+        taskAutowire.autowire(task);
         taskExecutor.execute(task);
 
         return Result.OK;
@@ -89,7 +84,7 @@ public class RemoteReactionController {
         remoteReactionVerificationRepository.saveAndFlush(data);
 
         RemoteReactionVerifyTask task = new RemoteReactionVerifyTask(data);
-        autowireCapableBeanFactory.autowireBean(task);
+        taskAutowire.autowire(task);
         taskExecutor.execute(task);
 
         return new AsyncOperationCreated(data.getId());

@@ -1,48 +1,41 @@
 package org.moera.node.rest.task;
 
-import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
-import java.util.UUID;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
-import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionCreated;
+import org.moera.node.model.ReactionDescription;
+import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.reactive.function.client.WebClient;
 
-public class RemoteReactionPostTask extends RemoteTask implements Runnable {
+public class RemoteReactionPostTask extends Task {
 
     private static Logger log = LoggerFactory.getLogger(RemoteReactionPostTask.class);
 
-    private String nodeName;
+    private String targetNodeName;
     private String postingId;
-    private String ownerName;
-    private PrivateKey ownerKey;
     private ReactionAttributes attributes;
 
     private String nodeUri;
 
-    public RemoteReactionPostTask(UUID nodeId, String nodeName, String postingId, String ownerName, PrivateKey ownerKey,
-                                  ReactionAttributes attributes) {
-        super(nodeId);
-        this.nodeName = nodeName;
+    public RemoteReactionPostTask(String targetNodeName, String postingId, ReactionAttributes attributes) {
+        this.targetNodeName = targetNodeName;
         this.postingId = postingId;
-        this.ownerName = ownerName;
-        this.ownerKey = ownerKey;
         this.attributes = attributes;
     }
 
     @Override
     public void run() {
-        nodeUri = fetchNodeUri(nodeName);
+        nodeUri = fetchNodeUri(targetNodeName);
         if (nodeUri == null) {
             initLoggingDomain();
-            log.error("Cannot find a node {}", nodeName);
+            log.error("Cannot find a node {}", targetNodeName);
             return;
         }
         WebClient.create(String.format("%s/api/postings/%s", nodeUri, postingId))
@@ -54,9 +47,9 @@ public class RemoteReactionPostTask extends RemoteTask implements Runnable {
 
     private void postReaction(PostingInfo postingInfo) {
         ReactionFingerprint fingerprint
-                = new ReactionFingerprint(ownerName, attributes, new PostingFingerprint(postingInfo));
-        ReactionDescription description = new ReactionDescription(ownerName, attributes);
-        description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) ownerKey));
+                = new ReactionFingerprint(nodeName, attributes, new PostingFingerprint(postingInfo));
+        ReactionDescription description = new ReactionDescription(nodeName, attributes);
+        description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
         description.setSignatureVersion(ReactionFingerprint.VERSION);
         WebClient.create(String.format("%s/api/postings/%s/reactions", nodeUri, postingId))
                 .post()
@@ -68,12 +61,13 @@ public class RemoteReactionPostTask extends RemoteTask implements Runnable {
 
     private void success(ReactionCreated info) {
         initLoggingDomain();
-        log.info("Succeeded to post reaction to posting {} at node {}", info.getReaction().getPostingId(), nodeName);
+        log.info("Succeeded to post reaction to posting {} at node {}",
+                info.getReaction().getPostingId(), targetNodeName);
     }
 
     private void error(Throwable e) {
         initLoggingDomain();
-        log.error("Error adding reaction to posting {} at node {}: {}", postingId, nodeName, e.getMessage());
+        log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
     }
 
 }

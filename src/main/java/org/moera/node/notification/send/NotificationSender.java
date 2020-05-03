@@ -4,18 +4,14 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.node.model.Result;
-import org.moera.node.naming.NamingCache;
-import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.notification.NotificationPacket;
 import org.moera.node.notification.model.Notification;
 import org.moera.node.task.Task;
-import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +21,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class NotificationSender extends Task {
 
     private static Logger log = LoggerFactory.getLogger(NotificationSender.class);
-
-    @Inject
-    private NamingCache namingCache;
 
     private String receiverNodeName;
     private BlockingQueue<Notification> queue = new LinkedBlockingQueue<>();
@@ -83,12 +76,6 @@ public class NotificationSender extends Task {
                 .retrieve()
                 .bodyToMono(Result.class)
                 .subscribe(this::succeeded, this::error);
-    }
-
-    private String fetchNodeUri(String nodeName) {
-        namingCache.setNodeId(nodeId);
-        RegisteredNameDetails details = namingCache.get(nodeName);
-        return details != null ? UriUtil.normalize(details.getNodeUri()) : null;
     }
 
     private NotificationPacket createPacket(Notification notification) {
