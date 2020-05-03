@@ -33,7 +33,7 @@ public class NotificationSenderPool {
             NotificationSender sender;
             do {
                 sender = senders.computeIfAbsent(direction, d -> createSender(d.getNodeName()));
-            } while (!sender.isStopped());
+            } while (sender.isStopped());
             try {
                 sender.put(notification);
             } catch (InterruptedException e) {

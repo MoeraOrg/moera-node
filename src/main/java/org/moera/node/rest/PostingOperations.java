@@ -1,7 +1,9 @@
 package org.moera.node.rest;
 
 import java.security.interfaces.ECPrivateKey;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -20,8 +22,12 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
+import org.moera.node.model.Body;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
+import org.moera.node.notification.model.MentionPostingAddedNotification;
+import org.moera.node.notification.model.MentionPostingDeletedNotification;
+import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -101,6 +107,8 @@ public class PostingOperations {
         if (timelineStory != null) {
             updatePublicPages(timelineStory.getMoment());
         }
+
+        notifyMentioned(posting.getId(), current, latest);
 
         return posting;
     }
@@ -206,6 +214,22 @@ public class PostingOperations {
                 publicPageRepository.save(prevPage);
             }
         }
+    }
+
+    private void notifyMentioned(UUID postingId, EntryRevision current, EntryRevision latest) {
+        Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
+        Set<String> latestMentions = latest != null
+                ? MentionsExtractor.extract(new Body(latest.getBody()))
+                : Collections.emptySet();
+        currentMentions.stream()
+                .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !latestMentions.contains(m))
+                .forEach(m ->
+                        requestContext.send(m, new MentionPostingAddedNotification(postingId, current.getHeading())));
+        latestMentions.stream()
+                .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !currentMentions.contains(m))
+                .forEach(m -> requestContext.send(m, new MentionPostingDeletedNotification(postingId)));
     }
 
 }

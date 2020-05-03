@@ -1,5 +1,7 @@
 package org.moera.node.notification.model;
 
+import java.util.UUID;
+
 import org.moera.node.notification.NotificationType;
 
 public class MentionPostingAddedNotification extends MentionPostingNotification {
@@ -8,6 +10,11 @@ public class MentionPostingAddedNotification extends MentionPostingNotification 
 
     public MentionPostingAddedNotification() {
         super(NotificationType.MENTION_POSTING_ADDED);
+    }
+
+    public MentionPostingAddedNotification(UUID postingId, String heading) {
+        super(NotificationType.MENTION_POSTING_ADDED, postingId);
+        this.heading = heading;
     }
 
     public String getHeading() {

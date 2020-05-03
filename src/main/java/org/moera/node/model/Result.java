@@ -7,6 +7,9 @@ public class Result {
     private String errorCode;
     private String message;
 
+    public Result() {
+    }
+
     public Result(String errorCode, String message) {
         this.errorCode = errorCode;
         this.message = message;
