@@ -17,6 +17,9 @@ public class NotificationPacket {
     @NotBlank
     private String notification;
 
+    private byte[] signature;
+    private short signatureVersion;
+
     public String getId() {
         return id;
     }
@@ -55,6 +58,22 @@ public class NotificationPacket {
 
     public void setNotification(String notification) {
         this.notification = notification;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
+    public short getSignatureVersion() {
+        return signatureVersion;
+    }
+
+    public void setSignatureVersion(short signatureVersion) {
+        this.signatureVersion = signatureVersion;
     }
 
 }

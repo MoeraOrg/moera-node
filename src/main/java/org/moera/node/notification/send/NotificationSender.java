@@ -1,5 +1,6 @@
 package org.moera.node.notification.send;
 
+import java.security.interfaces.ECPrivateKey;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -8,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
+import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.fingerprint.NotificationPacketFingerprint;
 import org.moera.node.model.Result;
 import org.moera.node.notification.NotificationPacket;
 import org.moera.node.notification.model.Notification;
@@ -91,6 +94,10 @@ public class NotificationSender extends Task {
         } catch (JsonProcessingException e) {
             failed("Cannot serialize the notification object");
         }
+
+        NotificationPacketFingerprint fingerprint = new NotificationPacketFingerprint(packet);
+        packet.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
+        packet.setSignatureVersion(NotificationPacketFingerprint.VERSION);
 
         return packet;
     }
