@@ -46,7 +46,7 @@ public class InstantOperations {
                 ? StoryType.REACTION_ADDED_NEGATIVE : StoryType.REACTION_ADDED_POSITIVE;
         boolean isNewStory = false;
         Story story = storyRepository.findByFeedAndTypeAndEntryId(
-                requestContext.nodeId(), Feed.INSTANT, storyType, posting.getId());
+                requestContext.nodeId(), Feed.INSTANT, storyType, posting.getId()).stream().findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(REACTION_GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType, posting);
@@ -119,8 +119,7 @@ public class InstantOperations {
     }
 
     public void mentionPostingAdded(String remoteNodeName, String remotePostingId, String remotePostingHeading) {
-        Story story = storyRepository.findByRemoteEntryId(
-                requestContext.nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING, remoteNodeName, remotePostingId);
+        Story story = findMentionPostingStory(remoteNodeName, remotePostingId);
         if (story != null) {
             return;
         }
@@ -136,14 +135,18 @@ public class InstantOperations {
     }
 
     public void mentionPostingDeleted(String remoteNodeName, String remotePostingId) {
-        Story story = storyRepository.findByRemoteEntryId(
-                requestContext.nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING, remoteNodeName, remotePostingId);
+        Story story = findMentionPostingStory(remoteNodeName, remotePostingId);
         if (story == null) {
             return;
         }
         storyRepository.delete(story);
         requestContext.send(new StoryDeletedEvent(story, true));
         feedStatusUpdated();
+    }
+
+    private Story findMentionPostingStory(String remoteNodeName, String remotePostingId) {
+        return storyRepository.findByRemoteEntryId(requestContext.nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING,
+                remoteNodeName, remotePostingId).stream().findFirst().orElse(null);
     }
 
     private String buildMentionPostingSummary(Story story, String remotePostingHeading) {

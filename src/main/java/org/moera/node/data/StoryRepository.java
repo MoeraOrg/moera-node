@@ -16,8 +16,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("select s from Story s where s.nodeId = ?1 and s.id = ?2")
     Optional<Story> findByNodeIdAndId(UUID nodeId, UUID id);
 
-    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4")
-    Story findByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
+    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4"
+            + " order by s.moment desc")
+    List<Story> findByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
     @Query("select s from Story s where s.nodeId = ?1 and s.entry.id = ?2 order by s.moment desc")
     List<Story> findByEntryId(UUID nodeId, UUID entryId);
@@ -65,8 +66,8 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     Optional<Story> findByTrackingId(UUID nodeId, UUID trackingId);
 
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
-            + " and s.remoteNodeName = ?4 and s.remoteEntryId = ?5")
-    Story findByRemoteEntryId(UUID nodeId, String feedName, StoryType storyType,
-                              String remoteNodeName, String remoteEntryId);
+            + " and s.remoteNodeName = ?4 and s.remoteEntryId = ?5 order by s.moment desc")
+    List<Story> findByRemoteEntryId(UUID nodeId, String feedName, StoryType storyType,
+                                    String remoteNodeName, String remoteEntryId);
 
 }
