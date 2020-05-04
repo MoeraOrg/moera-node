@@ -198,7 +198,7 @@ public class ReactionController {
 
         log.info("GET /postings/{postingId}/reactions"
                         + " (postingId = {}, negative = {} emoji = {} before = {}, limit = {})",
-                LogUtil.format(postingId), negative ? "true" : "false", LogUtil.format(emoji), LogUtil.format(before),
+                LogUtil.format(postingId), LogUtil.format(negative), LogUtil.format(emoji), LogUtil.format(before),
                 LogUtil.format(limit));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);

@@ -60,9 +60,9 @@ public class StoryController {
         log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
                 LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
-                storyAttributes.getPinned() != null ? Boolean.toString(storyAttributes.getPinned()) : "null",
-                storyAttributes.getViewed() != null ? Boolean.toString(storyAttributes.getViewed()) : "null",
-                storyAttributes.getRead() != null ? Boolean.toString(storyAttributes.getRead()) : "null");
+                LogUtil.format(storyAttributes.getPinned()),
+                LogUtil.format(storyAttributes.getViewed()),
+                LogUtil.format(storyAttributes.getRead()));
 
         Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (story == null) {

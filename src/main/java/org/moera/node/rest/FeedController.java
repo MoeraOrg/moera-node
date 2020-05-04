@@ -96,9 +96,7 @@ public class FeedController {
     @Transactional
     public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change) {
         log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
-                LogUtil.format(feedName),
-                change.getViewed() != null ? Boolean.toString(change.getViewed()) : "null",
-                change.getRead() != null ? Boolean.toString(change.getRead()) : "null",
+                LogUtil.format(feedName), LogUtil.format(change.getViewed()), LogUtil.format(change.getRead()),
                 LogUtil.format(change.getBefore()));
 
         if (!Feed.isStandard(feedName)) {
