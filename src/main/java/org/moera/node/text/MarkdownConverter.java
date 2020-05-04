@@ -28,6 +28,9 @@ public class MarkdownConverter {
 
     static final MutableDataHolder OPTIONS = new MutableDataSet()
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
+            .set(Parser.HTML_BLOCK_PARSER, false)
+            .set(Parser.HTML_BLOCK_DEEP_PARSER, true)
+            .set(Parser.HTML_BLOCK_DEEP_PARSE_BLANK_LINE_INTERRUPTS, false)
             .set(HtmlRenderer.SOFT_BREAK, "<br/>")
             .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
             .set(GitLabExtension.INS_PARSER, false)
