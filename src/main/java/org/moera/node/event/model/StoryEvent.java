@@ -171,4 +171,9 @@ public class StoryEvent extends Event {
         return subscriber.isAdmin() == isAdmin;
     }
 
+    @Override
+    public boolean avoidSelfSending() {
+        return false;
+    }
+
 }

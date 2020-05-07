@@ -146,6 +146,16 @@ public class Reaction {
         this.stories = stories;
     }
 
+    public void addStory(Story story) {
+        stories.add(story);
+        story.getReactions().add(this);
+    }
+
+    public void removeStory(Story story) {
+        stories.removeIf(t -> t.getId().equals(story.getId()));
+        story.getReactions().removeIf(r -> r.getId().equals(id));
+    }
+
     public void toReactionTotal(ReactionTotal total) {
         total.setNegative(negative);
         total.setEmoji(emoji);

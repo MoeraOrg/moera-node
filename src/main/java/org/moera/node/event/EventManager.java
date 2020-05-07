@@ -182,7 +182,9 @@ public class EventManager {
             packet.setQueueStartedAt(startedAt);
             packet.setOrdinal(++lastOrdinal);
             packet.setSentAt(Instant.now().getEpochSecond());
-            packet.setCid(clientId);
+            if (event.avoidSelfSending()) {
+                packet.setCid(clientId);
+            }
             packet.setEvent(event);
             queue.add(packet);
         } finally {

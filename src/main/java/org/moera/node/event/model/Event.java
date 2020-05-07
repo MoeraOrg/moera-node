@@ -22,4 +22,8 @@ public abstract class Event {
         return true;
     }
 
+    public boolean avoidSelfSending() {
+        return true;
+    }
+
 }

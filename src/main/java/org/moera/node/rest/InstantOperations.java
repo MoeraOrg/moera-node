@@ -38,7 +38,7 @@ public class InstantOperations {
     private StoryOperations storyOperations;
 
     public void reactionAdded(Posting posting, Reaction reaction) {
-        if (reaction.getOwnerName().equals(requestContext.getClientName())) {
+        if (reaction.getOwnerName().equals(requestContext.nodeName())) {
             return;
         }
 
@@ -54,17 +54,21 @@ public class InstantOperations {
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
-        story.getReactions().add(reaction);
-        reactionsUpdated(story, isNewStory);
+        story.addReaction(reaction);
+        reactionsUpdated(story, isNewStory, true);
         feedStatusUpdated();
     }
 
     public void reactionDeleted(Reaction reaction) {
+        if (reaction.getOwnerName().equals(requestContext.nodeName())) {
+            return;
+        }
+
         StoryType storyType = reaction.isNegative()
                 ? StoryType.REACTION_ADDED_NEGATIVE : StoryType.REACTION_ADDED_POSITIVE;
         reaction.getStories().stream()
                 .filter(t -> t.getStoryType() == storyType)
-                .forEach(t -> reactionsUpdated(t, false));
+                .forEach(t -> reactionsUpdated(t, false, false));
         feedStatusUpdated();
     }
 
@@ -76,7 +80,7 @@ public class InstantOperations {
         feedStatusUpdated();
     }
 
-    private void reactionsUpdated(Story story, boolean isNew) {
+    private void reactionsUpdated(Story story, boolean isNew, boolean isAdded) {
         List<Reaction> reactions = story.getReactions().stream()
                 .filter(r -> r.getDeletedAt() == null)
                 .sorted(Comparator.comparing(Reaction::getCreatedAt))
@@ -91,6 +95,10 @@ public class InstantOperations {
 
         story.setSummary(buildReactionAddedSummary(story, reactions));
         story.setPublishedAt(Util.now());
+        if (isAdded) {
+            story.setRead(false);
+            story.setViewed(false);
+        }
         storyOperations.updateMoment(story);
         requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }

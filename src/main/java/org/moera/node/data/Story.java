@@ -212,4 +212,14 @@ public class Story {
         this.reactions = reactions;
     }
 
+    public void addReaction(Reaction reaction) {
+        reactions.add(reaction);
+        reaction.getStories().add(this);
+    }
+
+    public void removeReaction(Reaction reaction) {
+        reactions.removeIf(r -> r.getId().equals(reaction.getId()));
+        reaction.getStories().removeIf(t -> t.getId().equals(id));
+    }
+
 }
