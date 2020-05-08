@@ -144,7 +144,6 @@ public class PostingOperations {
             }
             posting.setTotalRevisions(posting.getTotalRevisions() + 1);
         }
-        posting.getRevisions().add(revision);
         posting.setCurrentRevision(revision);
 
         return revision;
@@ -155,6 +154,7 @@ public class PostingOperations {
         revision.setId(UUID.randomUUID());
         revision.setEntry(posting);
         revision = entryRevisionRepository.save(revision);
+        posting.addRevision(revision);
 
         if (template != null) {
             revision.setBodyPreview(template.getBodyPreview());

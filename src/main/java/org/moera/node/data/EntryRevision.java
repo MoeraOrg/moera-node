@@ -177,12 +177,32 @@ public class EntryRevision {
         this.reactions = reactions;
     }
 
+    public void addReaction(Reaction reaction) {
+        reactions.add(reaction);
+        reaction.setEntryRevision(this);
+    }
+
+    public void removeReaction(Reaction reaction) {
+        reactions.removeIf(r -> r.getId().equals(reaction.getId()));
+        reaction.setEntryRevision(null);
+    }
+
     public Set<ReactionTotal> getReactionTotals() {
         return reactionTotals;
     }
 
     public void setReactionTotals(Set<ReactionTotal> reactionTotals) {
         this.reactionTotals = reactionTotals;
+    }
+
+    public void addReactionTotal(ReactionTotal reactionTotal) {
+        reactionTotals.add(reactionTotal);
+        reactionTotal.setEntryRevision(this);
+    }
+
+    public void removeReactionTotal(ReactionTotal reactionTotal) {
+        reactionTotals.removeIf(rt -> rt.getId().equals(reactionTotal.getId()));
+        reactionTotal.setEntryRevision(null);
     }
 
 }

@@ -222,6 +222,16 @@ public class Entry {
         this.revisions = revisions;
     }
 
+    public void addRevision(EntryRevision revision) {
+        revisions.add(revision);
+        revision.setEntry(this);
+    }
+
+    public void removeRevision(EntryRevision revision) {
+        revisions.removeIf(r -> r.getId().equals(revision.getId()));
+        revision.setEntry(null);
+    }
+
     public Set<ReactionTotal> getReactionTotals() {
         return reactionTotals;
     }
@@ -230,12 +240,32 @@ public class Entry {
         this.reactionTotals = reactionTotals;
     }
 
+    public void addReactionTotal(ReactionTotal reactionTotal) {
+        reactionTotals.add(reactionTotal);
+        reactionTotal.setEntry(this);
+    }
+
+    public void removeReactionTotal(ReactionTotal reactionTotal) {
+        reactionTotals.removeIf(rt -> rt.getId().equals(reactionTotal.getId()));
+        reactionTotal.setEntry(null);
+    }
+
     public Set<Story> getStories() {
         return stories;
     }
 
     public void setStories(Set<Story> stories) {
         this.stories = stories;
+    }
+
+    public void addStory(Story story) {
+        stories.add(story);
+        story.setEntry(this);
+    }
+
+    public void removeStory(Story story) {
+        stories.removeIf(t -> t.getId().equals(story.getId()));
+        story.setEntry(null);
     }
 
     public Story getStory(String feedName) {

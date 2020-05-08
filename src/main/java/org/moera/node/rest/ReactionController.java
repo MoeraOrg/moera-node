@@ -171,6 +171,7 @@ public class ReactionController {
                     moment -> reactionRepository.countMoments(postingId, moment) == 0,
                     Util.now()));
             reaction = reactionRepository.save(reaction);
+            posting.getCurrentRevision().addReaction(reaction);
 
             changeTotals(posting, reaction, 1);
             if (reaction.getSignature() != null) {
@@ -346,7 +347,8 @@ public class ReactionController {
             total.setEntryRevision(reaction.getEntryRevision());
             reaction.toReactionTotal(total);
             total.setTotal(delta);
-            reactionTotalRepository.save(total);
+            total = reactionTotalRepository.save(total);
+            reaction.getEntryRevision().addReactionTotal(total);
         } else {
             total.setTotal(total.getTotal() + delta);
         }
@@ -358,7 +360,8 @@ public class ReactionController {
             total.setEntry(entry);
             reaction.toReactionTotal(total);
             total.setTotal(delta);
-            reactionTotalRepository.save(total);
+            total = reactionTotalRepository.save(total);
+            entry.addReactionTotal(total);
         } else {
             total.setTotal(total.getTotal() + delta);
         }

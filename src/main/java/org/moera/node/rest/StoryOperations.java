@@ -50,7 +50,7 @@ public class StoryOperations {
             publication.toStory(story);
             updateMoment(story);
             story = storyRepository.saveAndFlush(story);
-            posting.getStories().add(story);
+            posting.addStory(story);
             if (!Feed.isAdmin(story.getFeedName())) {
                 requestContext.send(new StoryAddedEvent(story, false));
             }
