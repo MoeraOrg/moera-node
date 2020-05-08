@@ -107,10 +107,10 @@ public class InstantOperations {
 
     private String buildReactionAddedSummary(Story story, List<Reaction> reactions) {
         StringBuilder buf = new StringBuilder();
-        buf.append(formatNodeName(reactions.get(0).getOwnerName()));
+        appendReaction(buf, reactions.get(0));
         if (reactions.size() > 1) {
             buf.append(reactions.size() == 2 ? " and " : ", ");
-            buf.append(formatNodeName(reactions.get(1).getOwnerName()));
+            appendReaction(buf, reactions.get(1));
         }
         if (reactions.size() > 2) {
             buf.append(" and ");
@@ -122,6 +122,12 @@ public class InstantOperations {
         buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));
         buf.append('"');
         return buf.toString();
+    }
+
+    private static void appendReaction(StringBuilder buf, Reaction reaction) {
+        buf.append(Character.toChars(reaction.getEmoji()));
+        buf.append(' ');
+        buf.append(formatNodeName(reaction.getOwnerName()));
     }
 
     public void mentionPostingAdded(String remoteNodeName, String remotePostingId, String remotePostingHeading) {
