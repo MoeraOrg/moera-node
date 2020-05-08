@@ -20,6 +20,8 @@ import org.moera.node.event.model.StoryAddedEvent;
 import org.moera.node.event.model.StoryDeletedEvent;
 import org.moera.node.event.model.StoryUpdatedEvent;
 import org.moera.node.global.RequestContext;
+import org.moera.node.naming.NodeName;
+import org.moera.node.naming.RegisteredName;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -105,14 +107,10 @@ public class InstantOperations {
 
     private String buildReactionAddedSummary(Story story, List<Reaction> reactions) {
         StringBuilder buf = new StringBuilder();
-        buf.append("<b>");
-        buf.append(reactions.get(0).getOwnerName());
-        buf.append("</b>");
+        buf.append(formatNodeName(reactions.get(0).getOwnerName()));
         if (reactions.size() > 1) {
-            buf.append(reactions.size() == 2 ? " and" : ",");
-            buf.append(" <b>");
-            buf.append(reactions.get(1).getOwnerName());
-            buf.append("</b>");
+            buf.append(reactions.size() == 2 ? " and " : ", ");
+            buf.append(formatNodeName(reactions.get(1).getOwnerName()));
         }
         if (reactions.size() > 2) {
             buf.append(" and ");
@@ -159,7 +157,19 @@ public class InstantOperations {
 
     private String buildMentionPostingSummary(Story story, String remotePostingHeading) {
         return String.format("<b>%s</b> mentioned you in a post \"%s\"",
-                story.getRemoteNodeName(), Util.he(remotePostingHeading));
+                formatNodeName(story.getRemoteNodeName()), Util.he(remotePostingHeading));
+    }
+
+    private static String formatNodeName(String name) {
+        NodeName nodeName = NodeName.parse(name);
+        if (nodeName instanceof RegisteredName) {
+            RegisteredName registeredName = (RegisteredName) nodeName;
+            if (registeredName.getGeneration() != null) {
+                return String.format("<span class=\"node-name\">%s<span class=\"generation\">%d</span></span>",
+                        registeredName.getName(), registeredName.getGeneration());
+            }
+        }
+        return String.format("<span class=\"node-name\">%s</span>", name);
     }
 
     private void feedStatusUpdated() {
