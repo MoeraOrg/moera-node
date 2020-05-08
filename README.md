@@ -4,6 +4,8 @@ Read more about Moera at https://moera.org
 
 Learn more about Moera nodes: http://moera.org/overview/node.html
 
+Bugs and feature requests: https://github.com/MoeraOrg/moera-issues/issues
+
 How to setup a complete Moera Development Environment:
 http://moera.org/development/setup/index.html
 
