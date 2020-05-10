@@ -47,6 +47,8 @@ public class StoryEvent extends Event {
             read = story.isRead();
             trackingId = story.getTrackingId().toString();
         }
+        remoteNodeName = story.getRemoteNodeName();
+        remotePostingId = story.getRemoteEntryId();
         summary = story.getSummary();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"admin"});
