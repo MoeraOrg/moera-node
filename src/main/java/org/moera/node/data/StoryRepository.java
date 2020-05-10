@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -69,5 +70,8 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
             + " and s.remoteNodeName = ?4 and s.remoteEntryId = ?5 order by s.moment desc")
     List<Story> findByRemoteEntryId(UUID nodeId, String feedName, StoryType storyType,
                                     String remoteNodeName, String remoteEntryId);
+
+    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.viewed = false and s.createdAt < ?3")
+    List<Story> findExpired(UUID nodeId, String feedName, Timestamp createdBefore);
 
 }

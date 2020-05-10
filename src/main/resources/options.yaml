@@ -164,3 +164,11 @@
   modifiers:
     min: 30m
     max: 2000d
+
+- name: instants.lifetime
+  type: Duration
+  defaultValue: 30d
+  title: Purge viewed notifications after
+  modifiers:
+    min: 1d
+    max: 2000d

@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
@@ -15,6 +17,8 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.domain.Domains;
+import org.moera.node.event.EventManager;
 import org.moera.node.event.model.FeedStatusUpdatedEvent;
 import org.moera.node.event.model.StoryAddedEvent;
 import org.moera.node.event.model.StoryDeletedEvent;
@@ -23,6 +27,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
 import org.moera.node.util.Util;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -34,10 +39,16 @@ public class InstantOperations {
     private RequestContext requestContext;
 
     @Inject
+    private Domains domains;
+
+    @Inject
     private StoryRepository storyRepository;
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private EventManager eventManager;
 
     public void reactionAdded(Posting posting, Reaction reaction) {
         if (reaction.getOwnerName().equals(requestContext.nodeName())) {
@@ -180,6 +191,20 @@ public class InstantOperations {
 
     private void feedStatusUpdated() {
         requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @Transactional
+    public void purgeExpired() {
+        for (String domainName : domains.getAllDomainNames()) {
+            UUID nodeId = domains.getDomainNodeId(domainName);
+            Duration lifetime = domains.getDomainOptions(domainName).getDuration("instants.lifetime");
+            Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
+            storyRepository.findExpired(nodeId, "instants", createdBefore).forEach(story -> {
+                storyRepository.delete(story);
+                eventManager.send(nodeId, new StoryDeletedEvent(story, true));
+            });
+        }
     }
 
 }
