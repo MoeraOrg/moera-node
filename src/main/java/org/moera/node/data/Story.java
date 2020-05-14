@@ -59,8 +59,10 @@ public class Story {
     @NotNull
     private UUID trackingId;
 
+    @Size(max = 63)
     private String remoteNodeName;
 
+    @Size(max = 40)
     private String remoteEntryId;
 
     @ManyToOne
