@@ -39,7 +39,7 @@ public class ReactionTotalsController {
     public ReactionTotalsInfo get(@PathVariable UUID postingId) {
         log.info("GET /postings/{postingId}/reaction-totals (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction-totals.posting-not-found");
         }

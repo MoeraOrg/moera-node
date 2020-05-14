@@ -29,7 +29,7 @@ public class PostingRevisionController extends PostingRevisionControllerBase {
 
     @Override
     protected Posting findPosting(UUID postingId) {
-        return postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        return postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
     }
 
     @Override

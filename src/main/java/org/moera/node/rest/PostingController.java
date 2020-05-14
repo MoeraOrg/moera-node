@@ -131,7 +131,7 @@ public class PostingController {
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -153,7 +153,7 @@ public class PostingController {
 
         Set<String> includeSet = Util.setParam(include);
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -168,7 +168,7 @@ public class PostingController {
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }

@@ -106,10 +106,10 @@ public class ReactionController {
 
         log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {})",
                 LogUtil.format(postingId),
-                reactionDescription.isNegative() ? "yes" : "no",
+                LogUtil.format(reactionDescription.isNegative()),
                 LogUtil.format(reactionDescription.getEmoji()));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
@@ -202,7 +202,7 @@ public class ReactionController {
                 LogUtil.format(postingId), LogUtil.format(negative), LogUtil.format(emoji), LogUtil.format(before),
                 LogUtil.format(limit));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
@@ -241,7 +241,7 @@ public class ReactionController {
         log.info("GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
@@ -261,7 +261,7 @@ public class ReactionController {
     public Result deleteAll(@PathVariable UUID postingId) {
         log.info("DELETE /postings/{postingId}/reactions (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
@@ -287,7 +287,7 @@ public class ReactionController {
             throw new AuthenticationException();
         }
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }

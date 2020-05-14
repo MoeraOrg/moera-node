@@ -12,23 +12,27 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
-    @Query("select p from Posting p join fetch p.currentRevision left join fetch p.reactionTotals"
-            + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null and draft = false")
+    @Query("select p from Posting p"
+            + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null and p.draft = false")
     Optional<Posting> findByNodeIdAndId(UUID nodeId, UUID id);
 
-    @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is not null and draft = false")
+    @Query("select p from Posting p join fetch p.currentRevision left join fetch p.reactionTotals"
+            + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null and p.draft = false")
+    Optional<Posting> findFullByNodeIdAndId(UUID nodeId, UUID id);
+
+    @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is not null and p.draft = false")
     List<Posting> findDeleted(UUID nodeId, Pageable pageable);
 
     @Query("select p from Posting p join fetch p.currentRevision join fetch p.reactionTotals"
-            + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is not null and draft = false")
+            + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is not null and p.draft = false")
     Optional<Posting> findDeletedById(UUID nodeId, UUID id);
 
     @Query("select p from Posting p join fetch p.draftRevision"
-            + " where p.nodeId = ?1 and p.deletedAt is null and draft = true")
+            + " where p.nodeId = ?1 and p.deletedAt is null and p.draft = true")
     List<Posting> findDrafts(UUID nodeId, Pageable pageable);
 
     @Query("select p from Posting p join fetch p.draftRevision where p.nodeId = ?1 and p.id = ?2"
-            + " and p.deletedAt is null and draft = true")
+            + " and p.deletedAt is null and p.draft = true")
     Optional<Posting> findDraftById(UUID nodeId, UUID id);
 
     @Query("delete from Posting p where p.deadline < ?1")

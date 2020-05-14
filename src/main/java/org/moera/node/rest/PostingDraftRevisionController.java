@@ -57,7 +57,7 @@ public class PostingDraftRevisionController {
     public PostingInfo get(@PathVariable UUID postingId) {
         log.info("GET /postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -76,7 +76,7 @@ public class PostingDraftRevisionController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(postingText.getBodySrcFormat()));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -99,7 +99,7 @@ public class PostingDraftRevisionController {
     public Result delete(@PathVariable UUID postingId) {
         log.info("DELETE /postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
