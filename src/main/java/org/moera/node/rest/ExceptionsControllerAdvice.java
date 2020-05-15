@@ -3,11 +3,11 @@ package org.moera.node.rest;
 import java.util.Locale;
 import javax.inject.Inject;
 
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
-import org.moera.node.global.ApiController;
-import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.InvalidTokenException;
+import org.moera.node.global.ApiController;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -61,6 +62,16 @@ public class ExceptionsControllerAdvice {
                 ? objectError.getCodes()[0] : "";
         String message = messageSource.getMessage(objectError, Locale.getDefault());
         return new Result(errorCode.toLowerCase(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result missing(MissingServletRequestParameterException e) {
+        String errorCode = "missing-argument";
+        String message = messageSource.getMessage(errorCode, new Object[]{e.getParameterName()},
+                Locale.getDefault());
+        return new Result(errorCode, message);
+
     }
 
     @ExceptionHandler

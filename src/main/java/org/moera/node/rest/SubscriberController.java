@@ -1,6 +1,8 @@
 package org.moera.node.rest;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -22,9 +24,11 @@ import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/subscribers")
@@ -41,19 +45,40 @@ public class SubscriberController {
     @Inject
     private PostingRepository postingRepository;
 
+    @GetMapping
+    public List<SubscriberInfo> getAll(@RequestParam String nodeName, @RequestParam("type") String subscriptionType)
+            throws AuthenticationException {
+
+        log.info("GET /subscribers (nodeName = {}, type = {})",
+                LogUtil.format(nodeName), LogUtil.format(subscriptionType));
+
+        SubscriptionType type = SubscriptionType.forValue(subscriptionType);
+        if (type == null) {
+            throw new ValidationFailure("subscriptionType.unknown");
+        }
+        String ownerName = requestContext.getClientName();
+        if (!requestContext.isAdmin() && (StringUtils.isEmpty(ownerName) || !ownerName.equals(nodeName))) {
+            throw new AuthenticationException();
+        }
+
+        return subscriberRepository.findByType(requestContext.nodeId(), nodeName, type).stream()
+                .map(SubscriberInfo::new)
+                .collect(Collectors.toList());
+    }
+
     @PostMapping
     @Transactional
     public SubscriberInfo post(@Valid @RequestBody SubscriberDescription subscriberDescription)
             throws AuthenticationException {
 
-        log.info("POST /subscribers (subscriptionType = {}, feedName = {}, postingId = {})",
+        log.info("POST /subscribers (type = {}, feedName = {}, postingId = {})",
                 LogUtil.format(subscriberDescription.getType()),
                 LogUtil.format(subscriberDescription.getFeedName()),
                 LogUtil.format(subscriberDescription.getPostingId()));
 
         SubscriptionType type = SubscriptionType.forValue(subscriberDescription.getType());
         if (type == null) {
-            throw new ValidationFailure("subscriberDescription.subscriptionType.unknown");
+            throw new ValidationFailure("subscriberDescription.type.unknown");
         }
         String ownerName = requestContext.getClientName();
         if (StringUtils.isEmpty(ownerName)) {
