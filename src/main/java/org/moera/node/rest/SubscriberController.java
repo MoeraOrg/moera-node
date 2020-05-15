@@ -17,14 +17,18 @@ import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,6 +68,23 @@ public class SubscriberController {
         return subscriberRepository.findByType(requestContext.nodeId(), nodeName, type).stream()
                 .map(SubscriberInfo::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}")
+    public SubscriberInfo get(@PathVariable UUID id) throws AuthenticationException {
+        log.info("GET /subscribers/{id} (id = {})", LogUtil.format(id));
+
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        if (subscriber == null) {
+            throw new ObjectNotFoundFailure("subscriber.not-found");
+        }
+        String ownerName = requestContext.getClientName();
+        if (!requestContext.isAdmin()
+                && (StringUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
+            throw new AuthenticationException();
+        }
+
+        return new SubscriberInfo(subscriber);
     }
 
     @PostMapping
@@ -141,6 +162,27 @@ public class SubscriberController {
                 }
                 break;
         }
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public Result delete(@PathVariable UUID id) throws AuthenticationException {
+        log.info("DELETE /subscribers/{id} (id = {})", LogUtil.format(id));
+
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        if (subscriber == null) {
+            throw new ObjectNotFoundFailure("subscriber.not-found");
+        }
+        String ownerName = requestContext.getClientName();
+        if (!requestContext.isAdmin()
+                && (StringUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
+            throw new AuthenticationException();
+        }
+
+        subscriberRepository.delete(subscriber);
+        // TODO event
+
+        return Result.OK;
     }
 
 }

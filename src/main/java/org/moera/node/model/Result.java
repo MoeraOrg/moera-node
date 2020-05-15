@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Result {
 
     public static final Result OK = new Result("ok", "OK");
@@ -31,6 +33,7 @@ public class Result {
         this.message = message;
     }
 
+    @JsonIgnore
     public boolean isOk() {
         return errorCode.equals("ok");
     }
