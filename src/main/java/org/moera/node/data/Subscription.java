@@ -31,7 +31,7 @@ public class Subscription {
 
     @NotNull
     @Size(max = 40)
-    private String remoteSubscriptionId;
+    private String remoteSubscriberId;
 
     @NotNull
     @Size(max = 63)
@@ -78,12 +78,12 @@ public class Subscription {
         this.feedName = feedName;
     }
 
-    public String getRemoteSubscriptionId() {
-        return remoteSubscriptionId;
+    public String getRemoteSubscriberId() {
+        return remoteSubscriberId;
     }
 
-    public void setRemoteSubscriptionId(String remoteSubscriptionId) {
-        this.remoteSubscriptionId = remoteSubscriptionId;
+    public void setRemoteSubscriberId(String remoteSubscriberId) {
+        this.remoteSubscriberId = remoteSubscriberId;
     }
 
     public String getRemoteNodeName() {

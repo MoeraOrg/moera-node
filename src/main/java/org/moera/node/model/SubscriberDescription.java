@@ -2,13 +2,13 @@ package org.moera.node.model;
 
 import java.util.UUID;
 
-public class SubscriptionDescription {
+public class SubscriberDescription {
 
     private String type;
     private String feedName;
     private UUID postingId;
 
-    public SubscriptionDescription() {
+    public SubscriberDescription() {
     }
 
     public String getType() {

@@ -16,8 +16,8 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.SubscriptionDescription;
-import org.moera.node.model.SubscriptionInfo;
+import org.moera.node.model.SubscriberDescription;
+import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +27,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
-@RequestMapping("/moera/api/subscriptions")
-public class SubscriptionController {
+@RequestMapping("/moera/api/subscribers")
+public class SubscriberController {
 
-    private static Logger log = LoggerFactory.getLogger(SubscriptionController.class);
+    private static Logger log = LoggerFactory.getLogger(SubscriberController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -43,54 +43,55 @@ public class SubscriptionController {
 
     @PostMapping
     @Transactional
-    public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription description)
+    public SubscriberInfo post(@Valid @RequestBody SubscriberDescription subscriberDescription)
             throws AuthenticationException {
 
-        log.info("POST /subscriptions (subscriptionType = {}, feedName = {}, postingId = {})",
-                LogUtil.format(description.getType()),
-                LogUtil.format(description.getFeedName()),
-                LogUtil.format(description.getPostingId()));
+        log.info("POST /subscribers (subscriptionType = {}, feedName = {}, postingId = {})",
+                LogUtil.format(subscriberDescription.getType()),
+                LogUtil.format(subscriberDescription.getFeedName()),
+                LogUtil.format(subscriberDescription.getPostingId()));
 
-        SubscriptionType type = SubscriptionType.forValue(description.getType());
+        SubscriptionType type = SubscriptionType.forValue(subscriberDescription.getType());
         if (type == null) {
-            throw new ValidationFailure("subscriptionDescription.subscriptionType.unknown");
+            throw new ValidationFailure("subscriberDescription.subscriptionType.unknown");
         }
         String ownerName = requestContext.getClientName();
         if (StringUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
-        if (similarExists(type, description)) {
-            throw new OperationFailure("subscription.already-exists");
+        if (similarExists(type, subscriberDescription)) {
+            throw new OperationFailure("subscriber.already-exists");
         }
-        validate(type, description);
+        validate(type, subscriberDescription);
 
         Subscriber subscriber = new Subscriber();
         subscriber.setId(UUID.randomUUID());
         subscriber.setNodeId(requestContext.nodeId());
         subscriber.setSubscriptionType(type);
         subscriber.setRemoteNodeName(ownerName);
-        if (!StringUtils.isEmpty(description.getFeedName())) {
-            if (!Feed.isStandard(description.getFeedName())) {
-                throw new ValidationFailure("subscriptionDescription.feedName.not-found");
+        if (!StringUtils.isEmpty(subscriberDescription.getFeedName())) {
+            if (!Feed.isStandard(subscriberDescription.getFeedName())) {
+                throw new ValidationFailure("subscriberDescription.feedName.not-found");
             }
             // TODO check permissions
-            subscriber.setFeedName(description.getFeedName());
+            subscriber.setFeedName(subscriberDescription.getFeedName());
         }
-        if (description.getPostingId() != null) {
-            Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), description.getPostingId())
+        if (subscriberDescription.getPostingId() != null) {
+            Posting posting = postingRepository.findByNodeIdAndId(
+                    requestContext.nodeId(), subscriberDescription.getPostingId())
                     .orElse(null);
             if (posting == null) {
-                throw new ValidationFailure("subscriptionDescription.postingId.not-found");
+                throw new ValidationFailure("subscriberDescription.postingId.not-found");
             }
             subscriber.setEntry(posting);
         }
         subscriber = subscriberRepository.save(subscriber);
 
         // TODO event
-        return new SubscriptionInfo(subscriber);
+        return new SubscriberInfo(subscriber);
     }
 
-    private boolean similarExists(SubscriptionType type, SubscriptionDescription description) {
+    private boolean similarExists(SubscriptionType type, SubscriberDescription description) {
         switch (type) {
             case FEED:
                 return subscriberRepository.countByFeedName(requestContext.nodeId(), requestContext.getClientName(),
@@ -102,16 +103,16 @@ public class SubscriptionController {
         return false; // Should never be reached
     }
 
-    private void validate(SubscriptionType type, SubscriptionDescription description) {
+    private void validate(SubscriptionType type, SubscriberDescription description) {
         switch (type) {
             case FEED:
                 if (StringUtils.isEmpty(description.getFeedName())) {
-                    throw new ValidationFailure("subscriptionDescription.feedName.blank");
+                    throw new ValidationFailure("subscriberDescription.feedName.blank");
                 }
                 break;
             case POSTING:
                 if (description.getPostingId() == null) {
-                    throw new ValidationFailure("subscriptionDescription.postingId.blank");
+                    throw new ValidationFailure("subscriberDescription.postingId.blank");
                 }
                 break;
         }

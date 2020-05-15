@@ -5,7 +5,7 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SubscriptionInfo {
+public class SubscriberInfo {
 
     private String id;
     private String type;
@@ -14,10 +14,10 @@ public class SubscriptionInfo {
     private String nodeName;
     private Long createdAt;
 
-    public SubscriptionInfo() {
+    public SubscriberInfo() {
     }
 
-    public SubscriptionInfo(Subscriber subscriber) {
+    public SubscriberInfo(Subscriber subscriber) {
         id = subscriber.getId().toString();
         type = subscriber.getSubscriptionType().getValue();
         feedName = subscriber.getFeedName();
