@@ -21,6 +21,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.event.model.FeedStatusUpdatedEvent;
@@ -99,7 +100,7 @@ public class PostingController {
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
         log.info("POST /postings (bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()));
+                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
         if (StringUtils.isEmpty(postingText.getBodySrc())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
@@ -126,7 +127,7 @@ public class PostingController {
         log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(id),
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()));
+                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");

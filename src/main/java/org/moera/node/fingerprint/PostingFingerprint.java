@@ -4,6 +4,7 @@ import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.util.Util;
@@ -40,7 +41,7 @@ public class PostingFingerprint extends Fingerprint {
         receiverName = postingInfo.getReceiverName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingInfo.getBodySrcHash());
-        bodySrcFormat = postingInfo.getBodySrcFormat();
+        bodySrcFormat = SourceFormat.toValue(postingInfo.getBodySrcFormat());
         body = postingInfo.getBody().getEncoded();
         bodyFormat = postingInfo.getBodyFormat();
         createdAt = postingInfo.getEditedAt();
@@ -51,7 +52,7 @@ public class PostingFingerprint extends Fingerprint {
         receiverName = postingInfo.getReceiverName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingRevisionInfo.getBodySrcHash());
-        bodySrcFormat = postingRevisionInfo.getBodySrcFormat();
+        bodySrcFormat = SourceFormat.toValue(postingRevisionInfo.getBodySrcFormat());
         body = postingRevisionInfo.getBody().getEncoded();
         bodyFormat = postingRevisionInfo.getBodyFormat();
         createdAt = postingRevisionInfo.getCreatedAt();

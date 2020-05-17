@@ -11,6 +11,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.event.model.PostingDraftRevisionDeletedEvent;
 import org.moera.node.event.model.PostingDraftRevisionUpdatedEvent;
 import org.moera.node.global.ApiController;
@@ -74,7 +75,7 @@ public class PostingDraftRevisionController {
         log.info("PUT /postings/{postingId}/revisions/draft (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingId),
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()));
+                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {

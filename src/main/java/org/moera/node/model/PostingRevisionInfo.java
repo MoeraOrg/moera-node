@@ -3,6 +3,7 @@ package org.moera.node.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -11,7 +12,7 @@ public class PostingRevisionInfo {
     private String id;
     private Body bodyPreview;
     private byte[] bodySrcHash;
-    private String bodySrcFormat;
+    private SourceFormat bodySrcFormat;
     private Body body;
     private String bodyFormat;
     private String heading;
@@ -29,7 +30,7 @@ public class PostingRevisionInfo {
         id = revision.getId().toString();
         bodyPreview = new Body(revision.getBodyPreview());
         bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
-        bodySrcFormat = revision.getBodySrcFormat().getValue();
+        bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
@@ -64,11 +65,11 @@ public class PostingRevisionInfo {
         this.bodySrcHash = bodySrcHash;
     }
 
-    public String getBodySrcFormat() {
+    public SourceFormat getBodySrcFormat() {
         return bodySrcFormat;
     }
 
-    public void setBodySrcFormat(String bodySrcFormat) {
+    public void setBodySrcFormat(SourceFormat bodySrcFormat) {
         this.bodySrcFormat = bodySrcFormat;
     }
 

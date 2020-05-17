@@ -12,6 +12,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
 
@@ -26,7 +27,7 @@ public class PostingInfo {
     private Body bodyPreview;
     private Body bodySrc;
     private byte[] bodySrcHash;
-    private String bodySrcFormat;
+    private SourceFormat bodySrcFormat;
     private Body body;
     private String bodyFormat;
     private String heading;
@@ -81,7 +82,7 @@ public class PostingInfo {
             bodySrc = new Body(revision.getBodySrc());
         }
         bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
-        bodySrcFormat = revision.getBodySrcFormat().getValue();
+        bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
@@ -181,11 +182,11 @@ public class PostingInfo {
         this.bodySrcHash = bodySrcHash;
     }
 
-    public String getBodySrcFormat() {
+    public SourceFormat getBodySrcFormat() {
         return bodySrcFormat;
     }
 
-    public void setBodySrcFormat(String bodySrcFormat) {
+    public void setBodySrcFormat(SourceFormat bodySrcFormat) {
         this.bodySrcFormat = bodySrcFormat;
     }
 

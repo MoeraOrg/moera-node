@@ -18,7 +18,7 @@ public class PostingText {
     @Size(max = 65535)
     private String bodySrc;
 
-    private String bodySrcFormat;
+    private SourceFormat bodySrcFormat;
 
     @Valid
     private AcceptedReactions acceptedReactions;
@@ -40,11 +40,11 @@ public class PostingText {
         this.bodySrc = bodySrc;
     }
 
-    public String getBodySrcFormat() {
+    public SourceFormat getBodySrcFormat() {
         return bodySrcFormat;
     }
 
-    public void setBodySrcFormat(String bodySrcFormat) {
+    public void setBodySrcFormat(SourceFormat bodySrcFormat) {
         this.bodySrcFormat = bodySrcFormat;
     }
 
@@ -98,12 +98,8 @@ public class PostingText {
     }
 
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {
-        if (!StringUtils.isEmpty(bodySrcFormat)) {
-            SourceFormat format = SourceFormat.forValue(bodySrcFormat);
-            if (format == null) {
-                throw new ValidationFailure("postingText.bodySrcFormat.unknown");
-            }
-            revision.setBodySrcFormat(format);
+        if (bodySrcFormat != null) {
+            revision.setBodySrcFormat(bodySrcFormat);
         }
 
         if (!StringUtils.isEmpty(bodySrc)) {
@@ -127,7 +123,7 @@ public class PostingText {
     }
 
     public boolean sameAsRevision(EntryRevision revision) {
-        return (StringUtils.isEmpty(bodySrcFormat) || bodySrcFormat.equals(revision.getBodySrcFormat().getValue()))
+        return (StringUtils.isEmpty(bodySrcFormat) || bodySrcFormat == revision.getBodySrcFormat())
                 && (StringUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())));

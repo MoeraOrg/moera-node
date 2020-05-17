@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Story;
+import org.moera.node.data.StoryType;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.util.Util;
 
@@ -13,7 +14,7 @@ import org.moera.node.util.Util;
 public class StoryEvent extends Event {
 
     private String id;
-    private String storyType;
+    private StoryType storyType;
     private String feedName;
     private long publishedAt;
     private boolean pinned;
@@ -36,7 +37,7 @@ public class StoryEvent extends Event {
     public StoryEvent(EventType type, Story story, boolean isAdmin) {
         super(type);
         id = story.getId().toString();
-        storyType = story.getStoryType().getValue();
+        storyType = story.getStoryType();
         feedName = story.getFeedName();
         publishedAt = Util.toEpochSecond(story.getPublishedAt());
         pinned = story.isPinned();
@@ -64,11 +65,11 @@ public class StoryEvent extends Event {
         this.id = id;
     }
 
-    public String getStoryType() {
+    public StoryType getStoryType() {
         return storyType;
     }
 
-    public void setStoryType(String storyType) {
+    public void setStoryType(StoryType storyType) {
         this.storyType = storyType;
     }
 

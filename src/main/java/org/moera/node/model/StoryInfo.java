@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Story;
+import org.moera.node.data.StoryType;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -13,7 +14,7 @@ public class StoryInfo {
 
     private String id;
     private String feedName;
-    private String storyType;
+    private StoryType storyType;
     private long createdAt;
     private long publishedAt;
     private boolean pinned;
@@ -30,7 +31,7 @@ public class StoryInfo {
     protected StoryInfo(Story story, boolean isAdmin) {
         id = story.getId().toString();
         feedName = story.getFeedName();
-        storyType = story.getStoryType().getValue();
+        storyType = story.getStoryType();
         createdAt = Util.toEpochSecond(story.getCreatedAt());
         publishedAt = Util.toEpochSecond(story.getPublishedAt());
         pinned = story.isPinned();
@@ -80,11 +81,11 @@ public class StoryInfo {
         this.feedName = feedName;
     }
 
-    public String getStoryType() {
+    public StoryType getStoryType() {
         return storyType;
     }
 
-    public void setStoryType(String storyType) {
+    public void setStoryType(StoryType storyType) {
         this.storyType = storyType;
     }
 

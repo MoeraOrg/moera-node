@@ -16,6 +16,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.event.model.DraftPostingAddedEvent;
 import org.moera.node.event.model.DraftPostingDeletedEvent;
 import org.moera.node.event.model.DraftPostingUpdatedEvent;
@@ -97,7 +98,7 @@ public class DraftPostingController {
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
         log.info("POST /draft-postings (bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()));
+                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
         Posting posting = postingOperations.newPosting(postingText, p -> {
             p.setDraft(true);
@@ -125,7 +126,7 @@ public class DraftPostingController {
         log.info("PUT /draft-postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(id),
                 LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(postingText.getBodySrcFormat()));
+                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
         Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id).orElse(null);
         if (posting == null) {
