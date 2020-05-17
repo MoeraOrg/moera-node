@@ -10,12 +10,12 @@ public enum BodyFormat {
     }
 
     public static BodyFormat forValue(String value) {
-        for (BodyFormat bf : values()) {
-            if (bf.getValue().equalsIgnoreCase(value)) {
-                return bf;
-            }
+        String name = value.toUpperCase();
+        try {
+            return valueOf(name);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
-        return null;
     }
 
 }
