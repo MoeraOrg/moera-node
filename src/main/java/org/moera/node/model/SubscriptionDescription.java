@@ -3,6 +3,7 @@ package org.moera.node.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionType;
 
 public class SubscriptionDescription {
@@ -72,6 +73,14 @@ public class SubscriptionDescription {
 
     public void setRemotePostingId(String remotePostingId) {
         this.remotePostingId = remotePostingId;
+    }
+
+    public void toSubscription(Subscription subscription) {
+        subscription.setFeedName(feedName);
+        subscription.setRemoteSubscriberId(remoteSubscriberId);
+        subscription.setRemoteNodeName(remoteNodeName);
+        subscription.setRemoteFeedName(remoteFeedName);
+        subscription.setRemoteEntryId(remotePostingId);
     }
 
 }

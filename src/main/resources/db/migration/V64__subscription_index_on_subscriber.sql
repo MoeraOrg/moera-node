@@ -1,0 +1,3 @@
+DROP INDEX subscriptions_node_id_subscription_type_remote_node_name_idx;
+DROP INDEX subscriptions_remote_subscription_id_idx;
+CREATE UNIQUE INDEX ON subscriptions(node_id, subscription_type, remote_node_name, remote_subscriber_id);
