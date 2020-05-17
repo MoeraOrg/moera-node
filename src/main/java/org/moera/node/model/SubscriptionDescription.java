@@ -3,9 +3,11 @@ package org.moera.node.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import org.moera.node.data.SubscriptionType;
+
 public class SubscriptionDescription {
 
-    private String type;
+    private SubscriptionType type;
 
     @NotBlank
     private String feedName = "news";
@@ -24,11 +26,11 @@ public class SubscriptionDescription {
     @Size(max = 40)
     private String remotePostingId;
 
-    public String getType() {
+    public SubscriptionType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(SubscriptionType type) {
         this.type = type;
     }
 

@@ -50,16 +50,13 @@ public class SubscriberController {
     private PostingRepository postingRepository;
 
     @GetMapping
-    public List<SubscriberInfo> getAll(@RequestParam String nodeName, @RequestParam("type") String subscriptionType)
+    public List<SubscriberInfo> getAll(@RequestParam String nodeName,
+                                       @RequestParam(defaultValue = "feed") SubscriptionType type)
             throws AuthenticationException {
 
         log.info("GET /subscribers (nodeName = {}, type = {})",
-                LogUtil.format(nodeName), LogUtil.format(subscriptionType));
+                LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
-        SubscriptionType type = SubscriptionType.forValue(subscriptionType);
-        if (type == null) {
-            throw new ValidationFailure("subscriptionType.unknown");
-        }
         String ownerName = requestContext.getClientName();
         if (!requestContext.isAdmin() && (StringUtils.isEmpty(ownerName) || !ownerName.equals(nodeName))) {
             throw new AuthenticationException();
@@ -93,27 +90,26 @@ public class SubscriberController {
             throws AuthenticationException {
 
         log.info("POST /subscribers (type = {}, feedName = {}, postingId = {})",
-                LogUtil.format(subscriberDescription.getType()),
+                LogUtil.format(SubscriptionType.toValue(subscriberDescription.getType())),
                 LogUtil.format(subscriberDescription.getFeedName()),
                 LogUtil.format(subscriberDescription.getPostingId()));
 
-        SubscriptionType type = SubscriptionType.forValue(subscriberDescription.getType());
-        if (type == null) {
-            throw new ValidationFailure("subscriberDescription.type.unknown");
+        if (subscriberDescription.getType() == null) {
+            throw new ValidationFailure("subscriberDescription.type.blank");
         }
         String ownerName = requestContext.getClientName();
         if (StringUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
-        if (similarExists(type, subscriberDescription)) {
+        if (similarExists(subscriberDescription)) {
             throw new OperationFailure("subscriber.already-exists");
         }
-        validate(type, subscriberDescription);
+        validate(subscriberDescription);
 
         Subscriber subscriber = new Subscriber();
         subscriber.setId(UUID.randomUUID());
         subscriber.setNodeId(requestContext.nodeId());
-        subscriber.setSubscriptionType(type);
+        subscriber.setSubscriptionType(subscriberDescription.getType());
         subscriber.setRemoteNodeName(ownerName);
         if (!StringUtils.isEmpty(subscriberDescription.getFeedName())) {
             if (!Feed.isStandard(subscriberDescription.getFeedName())) {
@@ -137,20 +133,20 @@ public class SubscriberController {
         return new SubscriberInfo(subscriber);
     }
 
-    private boolean similarExists(SubscriptionType type, SubscriberDescription description) {
-        switch (type) {
+    private boolean similarExists(SubscriberDescription description) {
+        switch (description.getType()) {
             case FEED:
                 return subscriberRepository.countByFeedName(requestContext.nodeId(), requestContext.getClientName(),
-                        type, description.getFeedName()) > 0;
+                        SubscriptionType.FEED, description.getFeedName()) > 0;
             case POSTING:
                 return subscriberRepository.countByEntryId(requestContext.nodeId(), requestContext.getClientName(),
-                        type, description.getPostingId()) > 0;
+                        SubscriptionType.POSTING, description.getPostingId()) > 0;
         }
         return false; // Should never be reached
     }
 
-    private void validate(SubscriptionType type, SubscriberDescription description) {
-        switch (type) {
+    private void validate(SubscriberDescription description) {
+        switch (description.getType()) {
             case FEED:
                 if (StringUtils.isEmpty(description.getFeedName())) {
                     throw new ValidationFailure("subscriberDescription.feedName.blank");

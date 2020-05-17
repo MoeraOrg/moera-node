@@ -2,13 +2,14 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Subscriber;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SubscriberInfo {
 
     private String id;
-    private String type;
+    private SubscriptionType type;
     private String feedName;
     private String postingId;
     private String nodeName;
@@ -19,7 +20,7 @@ public class SubscriberInfo {
 
     public SubscriberInfo(Subscriber subscriber) {
         id = subscriber.getId().toString();
-        type = subscriber.getSubscriptionType().getValue();
+        type = subscriber.getSubscriptionType();
         feedName = subscriber.getFeedName();
         postingId = subscriber.getEntry() != null ? subscriber.getEntry().getId().toString() : null;
         nodeName = subscriber.getRemoteNodeName();
@@ -34,11 +35,11 @@ public class SubscriberInfo {
         this.id = id;
     }
 
-    public String getType() {
+    public SubscriptionType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(SubscriptionType type) {
         this.type = type;
     }
 

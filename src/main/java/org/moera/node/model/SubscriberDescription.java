@@ -2,20 +2,22 @@ package org.moera.node.model;
 
 import java.util.UUID;
 
+import org.moera.node.data.SubscriptionType;
+
 public class SubscriberDescription {
 
-    private String type;
+    private SubscriptionType type;
     private String feedName;
     private UUID postingId;
 
     public SubscriberDescription() {
     }
 
-    public String getType() {
+    public SubscriptionType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(SubscriptionType type) {
         this.type = type;
     }
 
