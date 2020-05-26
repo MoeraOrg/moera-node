@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -84,10 +84,10 @@ public class PostingOperations {
     }
 
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<StoryAttributes> publications,
-                                         Function<EntryRevision, Boolean> isPreserveRevision,
+                                         Predicate<EntryRevision> isPreserveRevision,
                                          Consumer<EntryRevision> revisionUpdater) {
         EntryRevision latest = posting.getCurrentRevision();
-        if (latest != null && isPreserveRevision != null && isPreserveRevision.apply(latest)) {
+        if (latest != null && isPreserveRevision != null && isPreserveRevision.test(latest)) {
             return postingRepository.saveAndFlush(posting);
         }
         EntryRevision current = newPostingRevision(posting, revision);

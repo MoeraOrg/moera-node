@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -41,10 +41,10 @@ public class SettingsController {
     @Inject
     private OptionsMetadata optionsMetadata;
 
-    private List<SettingInfo> getOptions(Function<String, Boolean> nameFilter) {
+    private List<SettingInfo> getOptions(Predicate<String> nameFilter) {
         List<SettingInfo> list = new ArrayList<>();
         requestContext.getOptions().forEach((name, value, optionType) -> {
-            if (!nameFilter.apply(name)) {
+            if (!nameFilter.test(name)) {
                 return;
             }
             list.add(new SettingInfo(name, optionType.getString(value)));
