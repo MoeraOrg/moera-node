@@ -12,6 +12,7 @@ public class Feed {
 
     public static final String TIMELINE = "timeline";
     public static final String INSTANT = "instant";
+    public static final String NEWS = "news";
 
     private static final Map<String, FeedInfo> STANDARD = new HashMap<>();
 
@@ -23,6 +24,10 @@ public class Feed {
         feedInfo = new FeedInfo(INSTANT);
         feedInfo.setOperations(Collections.singletonMap("add", new String[]{}));
         STANDARD.put(INSTANT, feedInfo);
+
+        feedInfo = new FeedInfo(NEWS);
+        feedInfo.setOperations(Collections.singletonMap("add", new String[]{}));
+        STANDARD.put(NEWS, feedInfo);
     }
 
     public static Collection<FeedInfo> getAllStandard(boolean isAdmin) {

@@ -76,6 +76,7 @@ public class SubscriptionDescription {
     }
 
     public void toSubscription(Subscription subscription) {
+        subscription.setSubscriptionType(type);
         subscription.setFeedName(feedName);
         subscription.setRemoteSubscriberId(remoteSubscriberId);
         subscription.setRemoteNodeName(remoteNodeName);
