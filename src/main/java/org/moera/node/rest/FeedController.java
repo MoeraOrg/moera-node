@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -17,6 +18,9 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
+import org.moera.node.data.Subscriber;
+import org.moera.node.data.SubscriberRepository;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.event.model.FeedStatusUpdatedEvent;
 import org.moera.node.event.model.StoriesStatusUpdatedEvent;
 import org.moera.node.global.ApiController;
@@ -60,13 +64,32 @@ public class FeedController {
     private ReactionRepository reactionRepository;
 
     @Inject
+    private SubscriberRepository subscriberRepository;
+
+    @Inject
     private StoryOperations storyOperations;
 
     @GetMapping
     public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
 
-        return Feed.getAllStandard(requestContext.isAdmin());
+        Collection<FeedInfo> feeds = Feed.getAllStandard(requestContext.isAdmin());
+        String clientName = requestContext.getClientName();
+        if (!requestContext.isAdmin() && !StringUtils.isEmpty(clientName)) {
+            Map<String, UUID> subscriberIds =
+                subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
+                        .stream()
+                        .collect(Collectors.toMap(Subscriber::getFeedName, Subscriber::getId, (id1, id2) -> id1));
+            feeds = feeds.stream().map(feedInfo -> {
+                UUID subscriberId = subscriberIds.get(feedInfo.getFeedName());
+                if (subscriberId != null) {
+                    feedInfo = feedInfo.clone();
+                    feedInfo.setSubscriberId(subscriberId.toString());
+                }
+                return feedInfo;
+            }).collect(Collectors.toList());
+        }
+        return feeds;
     }
 
     @GetMapping("/{feedName}")
@@ -76,7 +99,21 @@ public class FeedController {
         if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin())) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
-        return Feed.getStandard(feedName);
+        FeedInfo feedInfo = Feed.getStandard(feedName);
+        String clientName = requestContext.getClientName();
+        if (!requestContext.isAdmin() && !StringUtils.isEmpty(clientName)) {
+            Subscriber subscriber =
+                    subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
+                            .stream()
+                            .filter(s -> s.getFeedName().equals(feedName))
+                            .findFirst()
+                            .orElse(null);
+            if (subscriber != null) {
+                feedInfo = feedInfo.clone();
+                feedInfo.setSubscriberId(subscriber.getId().toString());
+            }
+        }
+        return feedInfo;
     }
 
     @GetMapping("/{feedName}/status")
