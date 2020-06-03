@@ -7,7 +7,7 @@ import javax.inject.Inject;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
-import org.moera.node.event.model.Event;
+import org.moera.node.model.event.Event;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;

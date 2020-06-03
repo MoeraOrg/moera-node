@@ -27,7 +27,7 @@ import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.auth.Admin;
-import org.moera.node.event.model.NodeNameChangedEvent;
+import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.NameToRegister;

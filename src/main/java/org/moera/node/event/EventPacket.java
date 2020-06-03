@@ -3,7 +3,7 @@ package org.moera.node.event;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.moera.node.event.model.Event;
+import org.moera.node.model.event.Event;
 
 public class EventPacket {
 

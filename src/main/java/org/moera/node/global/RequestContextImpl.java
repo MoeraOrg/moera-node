@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import org.moera.node.event.model.Event;
+import org.moera.node.model.event.Event;
 import org.moera.node.notification.model.Notification;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;

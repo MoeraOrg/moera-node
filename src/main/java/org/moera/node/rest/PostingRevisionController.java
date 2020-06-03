@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
-import org.moera.node.event.model.Event;
-import org.moera.node.event.model.PostingUpdatedEvent;
+import org.moera.node.model.event.Event;
+import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

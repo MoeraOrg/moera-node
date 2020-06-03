@@ -5,7 +5,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
-import org.moera.node.event.model.ProfileUpdatedEvent;
+import org.moera.node.model.event.ProfileUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Profile;

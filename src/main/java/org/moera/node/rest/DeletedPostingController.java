@@ -13,7 +13,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
-import org.moera.node.event.model.PostingRestoredEvent;
+import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;

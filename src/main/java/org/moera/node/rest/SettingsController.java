@@ -11,8 +11,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
-import org.moera.node.event.model.ClientSettingsChangedEvent;
-import org.moera.node.event.model.NodeSettingsChangedEvent;
+import org.moera.node.model.event.ClientSettingsChangedEvent;
+import org.moera.node.model.event.NodeSettingsChangedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.OperationFailure;

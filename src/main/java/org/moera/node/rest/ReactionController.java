@@ -29,7 +29,7 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.event.EventManager;
-import org.moera.node.event.model.PostingReactionsChangedEvent;
+import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
