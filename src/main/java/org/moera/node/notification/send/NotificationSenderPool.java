@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentMap;
 import javax.inject.Inject;
 
 import org.moera.node.global.RequestContext;
-import org.moera.node.notification.model.Notification;
+import org.moera.node.model.notification.Notification;
 import org.moera.node.task.TaskAutowire;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;

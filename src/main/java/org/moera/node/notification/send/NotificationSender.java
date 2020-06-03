@@ -13,7 +13,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
 import org.moera.node.model.Result;
 import org.moera.node.notification.NotificationPacket;
-import org.moera.node.notification.model.Notification;
+import org.moera.node.model.notification.Notification;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;

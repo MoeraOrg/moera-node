@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.moera.node.model.event.Event;
-import org.moera.node.notification.model.Notification;
+import org.moera.node.model.notification.Notification;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;

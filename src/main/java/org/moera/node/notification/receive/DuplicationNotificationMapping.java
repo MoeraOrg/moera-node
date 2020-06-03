@@ -2,7 +2,7 @@ package org.moera.node.notification.receive;
 
 import java.lang.reflect.Method;
 
-import org.moera.node.notification.NotificationType;
+import org.moera.node.model.notification.NotificationType;
 
 public class DuplicationNotificationMapping extends RuntimeException {
 

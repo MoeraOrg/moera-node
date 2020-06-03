@@ -1,8 +1,4 @@
-package org.moera.node.notification;
-
-import org.moera.node.notification.model.MentionPostingAddedNotification;
-import org.moera.node.notification.model.MentionPostingDeletedNotification;
-import org.moera.node.notification.model.Notification;
+package org.moera.node.model.notification;
 
 public enum NotificationType {
 

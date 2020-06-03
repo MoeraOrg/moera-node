@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.moera.node.notification.NotificationType;
+import org.moera.node.model.notification.NotificationType;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

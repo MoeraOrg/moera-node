@@ -1,7 +1,6 @@
-package org.moera.node.notification.model;
+package org.moera.node.model.notification;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.moera.node.notification.NotificationType;
 
 public abstract class Notification {
 

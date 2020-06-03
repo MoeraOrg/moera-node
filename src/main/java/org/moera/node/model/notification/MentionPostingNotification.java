@@ -1,8 +1,6 @@
-package org.moera.node.notification.model;
+package org.moera.node.model.notification;
 
 import java.util.UUID;
-
-import org.moera.node.notification.NotificationType;
 
 public abstract class MentionPostingNotification extends Notification {
 

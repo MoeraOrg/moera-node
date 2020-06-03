@@ -4,9 +4,9 @@ import javax.inject.Inject;
 
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
-import org.moera.node.notification.NotificationType;
-import org.moera.node.notification.model.MentionPostingAddedNotification;
-import org.moera.node.notification.model.MentionPostingDeletedNotification;
+import org.moera.node.model.notification.NotificationType;
+import org.moera.node.model.notification.MentionPostingAddedNotification;
+import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.rest.InstantOperations;
 
 @NotificationProcessor

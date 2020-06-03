@@ -1,6 +1,6 @@
 package org.moera.node.notification.receive;
 
-import org.moera.node.notification.NotificationType;
+import org.moera.node.model.notification.NotificationType;
 
 public class InvalidNotificationHandlerMethod extends RuntimeException {
 
