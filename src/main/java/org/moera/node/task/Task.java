@@ -91,6 +91,12 @@ public abstract class Task implements Runnable {
         eventManager.send(nodeId, event);
     }
 
+    protected <T> T callApi(String method, String remoteNodeName, String location, Class<T> result)
+            throws CallApiException {
+
+        return callApi(method, remoteNodeName, location, null, result);
+    }
+
     protected <T> T callApi(String method, String remoteNodeName, String location, Object body, Class<T> result)
             throws CallApiException {
 

@@ -1,7 +1,7 @@
 package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
-import java.util.List;
+import java.util.Arrays;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
@@ -10,25 +10,21 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.model.event.RemoteReactionVerificationFailedEvent;
-import org.moera.node.model.event.RemoteReactionVerifiedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.event.RemoteReactionVerificationFailedEvent;
+import org.moera.node.model.event.RemoteReactionVerifiedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.reactive.function.client.WebClient;
 
 public class RemoteReactionVerifyTask extends RemoteVerificationTask {
 
     private static Logger log = LoggerFactory.getLogger(RemoteReactionVerifyTask.class);
 
     private RemoteReactionVerification data;
-
-    private String nodeUri;
 
     @Inject
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
@@ -42,42 +38,26 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
 
     @Override
     public void run() {
-        nodeUri = fetchNodeUri(data.getNodeName());
-        if (nodeUri == null) {
-            failed("remote-node.not-found", null);
-            return;
+        try {
+            PostingInfo postingInfo = callApi("GET", data.getNodeName(),
+                    String.format("/postings/%s", data.getPostingId()), PostingInfo.class);
+            PostingRevisionInfo[] revisions = callApi("GET", data.getNodeName(),
+                    String.format("/postings/%s/revisions", data.getPostingId()), PostingRevisionInfo[].class);
+            ReactionInfo reactionInfo = callApi("GET", data.getNodeName(),
+                    String.format("/postings/%s/reactions/%s", data.getPostingId(), data.getReactionOwnerName()),
+                    ReactionInfo.class);
+            verify(postingInfo, revisions, reactionInfo);
+        } catch (Exception e) {
+            error(e);
         }
-        WebClient.create(String.format("%s/api/postings/%s", nodeUri, data.getPostingId()))
-                .get()
-                .retrieve()
-                .bodyToMono(PostingInfo.class)
-                .subscribe(this::fetchRevisions, this::error);
-    }
-
-    private void fetchRevisions(PostingInfo postingInfo) {
-        WebClient.create(String.format("%s/api/postings/%s/revisions", nodeUri, data.getPostingId()))
-                .get()
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<PostingRevisionInfo>>() {
-                })
-                .subscribe(r -> fetchReaction(postingInfo, r), this::error);
-    }
-
-    private void fetchReaction(PostingInfo postingInfo, List<PostingRevisionInfo> revisions) {
-        WebClient.create(String.format("%s/api/postings/%s/reactions/%s",
-                                       nodeUri, data.getPostingId(), data.getReactionOwnerName()))
-                .get()
-                .retrieve()
-                .bodyToMono(ReactionInfo.class)
-                .subscribe(r -> verify(postingInfo, revisions, r), this::error);
     }
 
     private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {
         return fingerprintManager.getConstructor(FingerprintObjectType.REACTION, version, parameterTypes);
     }
 
-    private void verify(PostingInfo postingInfo, List<PostingRevisionInfo> revisions, ReactionInfo reactionInfo) {
-        PostingRevisionInfo revisionInfo = revisions.stream()
+    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, ReactionInfo reactionInfo) {
+        PostingRevisionInfo revisionInfo = Arrays.stream(revisions)
                 .filter(r -> r.getCreatedAt() <= reactionInfo.getCreatedAt())
                 .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > reactionInfo.getCreatedAt())
                 .findFirst()

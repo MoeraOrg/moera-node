@@ -9,10 +9,10 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
+import org.moera.node.task.CallApiUnknownNameException;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.reactive.function.client.WebClient;
 
 public class RemoteReactionPostTask extends Task {
 
@@ -22,8 +22,6 @@ public class RemoteReactionPostTask extends Task {
     private String postingId;
     private ReactionAttributes attributes;
 
-    private String nodeUri;
-
     public RemoteReactionPostTask(String targetNodeName, String postingId, ReactionAttributes attributes) {
         this.targetNodeName = targetNodeName;
         this.postingId = postingId;
@@ -32,31 +30,23 @@ public class RemoteReactionPostTask extends Task {
 
     @Override
     public void run() {
-        nodeUri = fetchNodeUri(targetNodeName);
-        if (nodeUri == null) {
-            initLoggingDomain();
-            log.error("Cannot find a node {}", targetNodeName);
-            return;
+        try {
+            PostingInfo postingInfo = callApi("GET", targetNodeName, String.format("/postings/%s", postingId),
+                    PostingInfo.class);
+            success(callApi("POST", targetNodeName, String.format("/postings/%s/reactions", postingId),
+                    buildReaction(postingInfo), ReactionCreated.class));
+        } catch (Exception e) {
+            error(e);
         }
-        WebClient.create(String.format("%s/api/postings/%s", nodeUri, postingId))
-                .get()
-                .retrieve()
-                .bodyToMono(PostingInfo.class)
-                .subscribe(this::postReaction, this::error);
     }
 
-    private void postReaction(PostingInfo postingInfo) {
+    private ReactionDescription buildReaction(PostingInfo postingInfo) {
         ReactionFingerprint fingerprint
                 = new ReactionFingerprint(nodeName, attributes, new PostingFingerprint(postingInfo));
         ReactionDescription description = new ReactionDescription(nodeName, attributes);
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
         description.setSignatureVersion(ReactionFingerprint.VERSION);
-        WebClient.create(String.format("%s/api/postings/%s/reactions", nodeUri, postingId))
-                .post()
-                .syncBody(description)
-                .retrieve()
-                .bodyToMono(ReactionCreated.class)
-                .subscribe(this::success, this::error);
+        return description;
     }
 
     private void success(ReactionCreated info) {
@@ -67,7 +57,11 @@ public class RemoteReactionPostTask extends Task {
 
     private void error(Throwable e) {
         initLoggingDomain();
-        log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
+        if (e instanceof CallApiUnknownNameException) {
+            log.error("Cannot find a node {}", targetNodeName);
+        } else {
+            log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
+        }
     }
 
 }
