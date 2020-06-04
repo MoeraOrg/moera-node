@@ -7,19 +7,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
 import org.moera.node.model.Result;
-import org.moera.node.notification.NotificationPacket;
 import org.moera.node.model.notification.Notification;
+import org.moera.node.notification.NotificationPacket;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
 
 public class NotificationSender extends Task {
 
@@ -67,18 +64,11 @@ public class NotificationSender extends Task {
     private void deliver(Notification notification) {
         log.info("Delivering notification {} to node '{}'", notification.getType().name(), receiverNodeName);
 
-        String nodeUri = fetchNodeUri(receiverNodeName);
-        if (nodeUri == null) {
-            failed("Receiving node not found");
-            return;
+        try {
+            succeeded(callApi(POST, receiverNodeName, "/notifications", createPacket(notification), Result.class));
+        } catch (Exception e) {
+            error(e);
         }
-        WebClient.create(String.format("%s/api/notifications", nodeUri))
-                .post()
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(createPacket(notification))
-                .retrieve()
-                .bodyToMono(Result.class)
-                .subscribe(this::succeeded, this::error);
     }
 
     private NotificationPacket createPacket(Notification notification) {
@@ -88,9 +78,8 @@ public class NotificationSender extends Task {
         packet.setCreatedAt(Util.toEpochSecond(Util.now()));
         packet.setType(notification.getType().getValue());
 
-        ObjectMapper mapper = new ObjectMapper();
         try {
-            packet.setNotification(mapper.writeValueAsString(notification));
+            packet.setNotification(objectMapper.writeValueAsString(notification));
         } catch (JsonProcessingException e) {
             failed("Cannot serialize the notification object");
         }
@@ -111,11 +100,11 @@ public class NotificationSender extends Task {
         }
     }
 
-    protected void error(Throwable e) {
+    private void error(Throwable e) {
         failed(e.getMessage());
     }
 
-    protected final void failed(String message) {
+    private void failed(String message) {
         initLoggingDomain();
         log.error(message);
     }
