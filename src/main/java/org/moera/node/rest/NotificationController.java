@@ -55,6 +55,9 @@ public class NotificationController {
     @Inject
     private FingerprintManager fingerprintManager;
 
+    @Inject
+    private ObjectMapper objectMapper;
+
     @PostMapping
     public Result post(@Valid @RequestBody NotificationPacket packet)
             throws InvocationTargetException, IllegalAccessException {
@@ -77,10 +80,9 @@ public class NotificationController {
             throw new ValidationFailure("notificationPacket.signature.invalid");
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         Notification notification;
         try {
-            notification = mapper.readValue(packet.getNotification(), type.getStructure());
+            notification = objectMapper.readValue(packet.getNotification(), type.getStructure());
         } catch (IOException e) {
             throw new ValidationFailure("notificationPacket.notification.invalid");
         }
