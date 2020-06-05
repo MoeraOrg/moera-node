@@ -5,11 +5,11 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.moera.node.auth.AuthenticationInterceptor;
 import org.moera.node.domain.DomainInterceptor;
 import org.moera.node.event.AfterCommitEventsInterceptor;
-import org.moera.node.global.ClientIdInterceptor;
-import org.moera.node.auth.AuthenticationInterceptor;
 import org.moera.node.global.CacheControlInterceptor;
+import org.moera.node.global.ClientIdInterceptor;
 import org.moera.node.global.EntitledInterceptor;
 import org.moera.node.global.NetworkLatencyInterceptor;
 import org.moera.node.global.SyndFeedHttpMessageConverter;
