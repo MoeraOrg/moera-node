@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
+import org.moera.node.notification.send.DirectedNotification;
 import org.moera.node.option.Options;
 
 public interface RequestContext {
@@ -51,6 +52,6 @@ public interface RequestContext {
 
     void send(String nodeName, Notification notification);
 
-    List<Notification> getAfterCommitNotifications();
+    List<DirectedNotification> getAfterCommitNotifications();
 
 }

@@ -28,7 +28,8 @@ public class AfterCommitEventsInterceptor extends HandlerInterceptorAdapter {
             requestContext.getAfterCommitEvents().forEach(
                     event -> eventManager.send(requestContext.nodeId(), requestContext.getClientId(), event)
             );
-            requestContext.getAfterCommitNotifications().forEach(notificationSenderPool::send);
+            requestContext.getAfterCommitNotifications().forEach(
+                    dn -> notificationSenderPool.send(dn.getDirection(), dn.getNotification()));
         }
     }
 

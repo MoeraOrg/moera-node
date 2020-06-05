@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
+import org.moera.node.notification.send.DirectedNotification;
+import org.moera.node.notification.send.SingleDirection;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -25,7 +27,7 @@ public class RequestContextImpl implements RequestContext {
     private String clientId;
     private String clientName;
     private List<Event> afterCommitEvents = new ArrayList<>();
-    private List<Notification> afterCommitNotifications = new ArrayList<>();
+    private List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
 
     @Override
     public boolean isBrowserExtension() {
@@ -137,12 +139,11 @@ public class RequestContextImpl implements RequestContext {
         if (StringUtils.isEmpty(nodeName)) {
             throw new IllegalArgumentException("Node name must not be empty");
         }
-        notification.setReceiverNodeName(nodeName);
-        afterCommitNotifications.add(notification);
+        afterCommitNotifications.add(new DirectedNotification(new SingleDirection(nodeId(), nodeName), notification));
     }
 
     @Override
-    public List<Notification> getAfterCommitNotifications() {
+    public List<DirectedNotification> getAfterCommitNotifications() {
         return afterCommitNotifications;
     }
 

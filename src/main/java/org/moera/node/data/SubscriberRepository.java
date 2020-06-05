@@ -16,9 +16,15 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, UUID> {
             + " and s.feedName = ?4")
     int countByFeedName(UUID nodeId, String remoteNodeName, SubscriptionType subscriptionType, String feedName);
 
+    @Query("select s from Subscriber s where s.nodeId = ?1 and s.subscriptionType = ?2 and s.feedName = ?3")
+    List<Subscriber> findAllByFeedName(UUID nodeId, SubscriptionType subscriptionType, String feedName);
+
     @Query("select count(*) from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.subscriptionType = ?3"
             + " and s.entry.id = ?4")
     int countByEntryId(UUID nodeId, String remoteNodeName, SubscriptionType subscriptionType, UUID entryId);
+
+    @Query("select s from Subscriber s where s.nodeId = ?1 and s.subscriptionType = ?2 and s.entry.id = ?3")
+    List<Subscriber> findAllByEntryId(UUID nodeId, SubscriptionType subscriptionType, UUID entryId);
 
     @Query("select s from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.subscriptionType = ?3")
     List<Subscriber> findByType(UUID nodeId, String remoteNodeName, SubscriptionType subscriptionType);

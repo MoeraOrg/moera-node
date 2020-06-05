@@ -8,9 +8,6 @@ public abstract class Notification {
     private String senderNodeName;
 
     @JsonIgnore
-    private String receiverNodeName;
-
-    @JsonIgnore
     private NotificationType type;
 
     protected Notification(NotificationType type) {
@@ -23,14 +20,6 @@ public abstract class Notification {
 
     public void setSenderNodeName(String senderNodeName) {
         this.senderNodeName = senderNodeName;
-    }
-
-    public String getReceiverNodeName() {
-        return receiverNodeName;
-    }
-
-    public void setReceiverNodeName(String receiverNodeName) {
-        this.receiverNodeName = receiverNodeName;
     }
 
     public NotificationType getType() {

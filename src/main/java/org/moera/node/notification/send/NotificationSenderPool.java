@@ -1,11 +1,15 @@
 package org.moera.node.notification.send;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.inject.Inject;
 
-import org.moera.node.global.RequestContext;
+import org.moera.node.data.Subscriber;
+import org.moera.node.data.SubscriberRepository;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.task.TaskAutowire;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,10 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class NotificationSenderPool {
 
-    private ConcurrentMap<Direction, NotificationSender> senders = new ConcurrentHashMap<>();
-
-    @Inject
-    private RequestContext requestContext;
+    private ConcurrentMap<SingleDirection, NotificationSender> senders = new ConcurrentHashMap<>();
 
     @Inject
     @Qualifier("notificationSenderTaskExecutor")
@@ -27,8 +28,35 @@ public class NotificationSenderPool {
     @Inject
     private TaskAutowire taskAutowire;
 
-    public void send(Notification notification) {
-        Direction direction = new Direction(requestContext.nodeId(), notification.getReceiverNodeName());
+    @Inject
+    private SubscriberRepository subscriberRepository;
+
+    public void send(Direction direction, Notification notification) {
+        if (direction instanceof SingleDirection) {
+            sendSingle((SingleDirection) direction, notification);
+            return;
+        }
+        if (direction instanceof SubscribersDirection) {
+            SubscribersDirection sd = (SubscribersDirection) direction;
+            List<Subscriber> subscribers = Collections.emptyList();
+            switch (sd.getSubscriptionType()) {
+                case FEED:
+                    subscribers = subscriberRepository.findAllByFeedName(
+                            sd.getNodeId(), SubscriptionType.FEED, sd.getFeedName());
+                    break;
+                case POSTING:
+                    subscribers = subscriberRepository.findAllByEntryId(
+                            sd.getNodeId(), SubscriptionType.POSTING, sd.getPostingId());
+                    break;
+            }
+            subscribers.stream()
+                    .map(t -> new SingleDirection(t.getNodeId(), t.getRemoteNodeName()))
+                    .forEach(d ->sendSingle(d, notification));
+        }
+        throw new IllegalArgumentException("Unknown direction type");
+    }
+
+    private void sendSingle(SingleDirection direction, Notification notification) {
         while (true) {
             NotificationSender sender;
             do {
@@ -51,7 +79,7 @@ public class NotificationSenderPool {
     }
 
     void deleteSender(UUID nodeId, String nodeName) {
-        senders.remove(new Direction(nodeId, nodeName));
+        senders.remove(new SingleDirection(nodeId, nodeName));
     }
 
 }
