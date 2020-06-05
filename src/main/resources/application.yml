@@ -7,8 +7,6 @@ spring:
     url: jdbc:postgresql:moera_node?characterEncoding=UTF-8
     username: moera
     password: moera
-    testWhileIdle: true  # Keep the connection alive if idle for a long time (needed in production)
-    validationQuery: SELECT 1
 
   flyway:
     user: moera
