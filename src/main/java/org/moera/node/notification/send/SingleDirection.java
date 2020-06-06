@@ -3,12 +3,16 @@ package org.moera.node.notification.send;
 import java.util.Objects;
 import java.util.UUID;
 
-public class SingleDirection extends Direction {
+class SingleDirection extends Direction {
 
     private String nodeName;
 
-    public SingleDirection(UUID nodeId, String nodeName) {
+    SingleDirection(UUID nodeId, String nodeName) {
         super(nodeId);
+        this.nodeName = nodeName;
+    }
+
+    SingleDirection(String nodeName) {
         this.nodeName = nodeName;
     }
 

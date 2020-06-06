@@ -8,11 +8,10 @@ import java.util.UUID;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.notification.send.DirectedNotification;
-import org.moera.node.notification.send.SingleDirection;
+import org.moera.node.notification.send.Direction;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.context.annotation.RequestScope;
 
 @RequestScope(proxyMode = ScopedProxyMode.INTERFACES)
@@ -135,11 +134,9 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public void send(String nodeName, Notification notification) {
-        if (StringUtils.isEmpty(nodeName)) {
-            throw new IllegalArgumentException("Node name must not be empty");
-        }
-        afterCommitNotifications.add(new DirectedNotification(new SingleDirection(nodeId(), nodeName), notification));
+    public void send(Direction direction, Notification notification) {
+        direction.setNodeId(nodeId());
+        afterCommitNotifications.add(new DirectedNotification(direction, notification));
     }
 
     @Override

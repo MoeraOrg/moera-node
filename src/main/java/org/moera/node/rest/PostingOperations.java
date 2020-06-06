@@ -27,6 +27,7 @@ import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
@@ -224,12 +225,14 @@ public class PostingOperations {
         currentMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
                 .filter(m -> !latestMentions.contains(m))
-                .forEach(m ->
-                        requestContext.send(m, new MentionPostingAddedNotification(postingId, current.getHeading())));
+                .map(Directions::single)
+                .forEach(d -> requestContext.send(d,
+                        new MentionPostingAddedNotification(postingId, current.getHeading())));
         latestMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
                 .filter(m -> !currentMentions.contains(m))
-                .forEach(m -> requestContext.send(m, new MentionPostingDeletedNotification(postingId)));
+                .map(Directions::single)
+                .forEach(d -> requestContext.send(d, new MentionPostingDeletedNotification(postingId)));
     }
 
 }

@@ -4,11 +4,16 @@ import java.util.UUID;
 
 import org.moera.node.data.SubscriptionType;
 
-public class SubscribersDirection extends Direction {
+class SubscribersDirection extends Direction {
 
     private SubscriptionType subscriptionType;
     private String feedName;
     private UUID postingId;
+
+    SubscribersDirection(SubscriptionType subscriptionType, String feedName) {
+        this.subscriptionType = subscriptionType;
+        this.feedName = feedName;
+    }
 
     public SubscriptionType getSubscriptionType() {
         return subscriptionType;

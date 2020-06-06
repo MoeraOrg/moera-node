@@ -11,6 +11,7 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.model.notification.Notification;
+import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.task.TaskAutowire;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
@@ -49,9 +50,15 @@ public class NotificationSenderPool {
                             sd.getNodeId(), SubscriptionType.POSTING, sd.getPostingId());
                     break;
             }
-            subscribers.stream()
-                    .map(t -> new SingleDirection(t.getNodeId(), t.getRemoteNodeName()))
-                    .forEach(d ->sendSingle(d, notification));
+            for (Subscriber subscriber : subscribers) {
+                SingleDirection dir = new SingleDirection(subscriber.getNodeId(), subscriber.getRemoteNodeName());
+                Notification nt = notification.clone();
+                if (nt instanceof SubscriberNotification) {
+                    ((SubscriberNotification) nt).setSubscriberId(subscriber.getId().toString());
+                }
+                sendSingle(dir, nt);
+            }
+            return;
         }
         throw new IllegalArgumentException("Unknown direction type");
     }

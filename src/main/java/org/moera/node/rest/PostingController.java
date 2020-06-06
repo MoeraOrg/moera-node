@@ -24,11 +24,6 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.PostingAddedEvent;
-import org.moera.node.model.event.PostingDeletedEvent;
-import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
@@ -40,7 +35,15 @@ import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
+import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.model.event.PostingAddedEvent;
+import org.moera.node.model.event.PostingDeletedEvent;
+import org.moera.node.model.event.PostingUpdatedEvent;
+import org.moera.node.model.event.StoryDeletedEvent;
+import org.moera.node.model.notification.FeedPostingAddedNotification;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -114,6 +117,12 @@ public class PostingController {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
         requestContext.send(new PostingAddedEvent(posting));
+
+        final String postingId = posting.getId().toString();
+        postingText.getPublications().stream()
+                .map(StoryAttributes::getFeedName)
+                .forEach(fn -> requestContext.send(Directions.feedSubscribers(fn),
+                        new FeedPostingAddedNotification(fn, postingId)));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
                 .body(withStories(new PostingInfo(posting, true)));
