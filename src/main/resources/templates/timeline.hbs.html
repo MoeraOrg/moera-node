@@ -19,9 +19,9 @@
         {{/if}}
         <div class="owner">
             {{nodename posting.ownerName}}
-            {{#ifne posting.receiverName nodeName.name}}
+            {{#if posting.receiverName}}
                 &#x25b8; {{nodename posting.receiverName}}
-            {{/ifne}}
+            {{/if}}
             <span class="date">
                 <a href="/post/{{posting.id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt
                                                      fromNow="posting.time.relative"}}</a>

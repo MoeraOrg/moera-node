@@ -74,7 +74,6 @@ public class PostingOperations {
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
         posting.setNodeId(requestContext.nodeId());
-        posting.setReceiverName(requestContext.nodeName());
         posting.setOwnerName(requestContext.nodeName());
         if (initializer != null) {
             initializer.accept(posting);

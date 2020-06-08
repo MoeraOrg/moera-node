@@ -38,9 +38,8 @@ public class Entry {
     @Column(insertable = false, updatable = false)
     private EntryType entryType;
 
-    @NotNull
     @Size(max = 127)
-    private String receiverName = "";
+    private String receiverName;
 
     @NotNull
     @Size(max = 127)

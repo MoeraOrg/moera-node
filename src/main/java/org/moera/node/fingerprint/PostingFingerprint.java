@@ -27,7 +27,7 @@ public class PostingFingerprint extends Fingerprint {
 
     public PostingFingerprint(Posting posting, EntryRevision revision) {
         super(0);
-        receiverName = posting.getReceiverName();
+        receiverName = posting.getReceiverName() != null ? posting.getReceiverName() : posting.getOwnerName();
         ownerName = posting.getOwnerName();
         bodySrc.setValue(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat().getValue();
@@ -38,7 +38,7 @@ public class PostingFingerprint extends Fingerprint {
 
     public PostingFingerprint(PostingInfo postingInfo) {
         super(0);
-        receiverName = postingInfo.getReceiverName();
+        receiverName = postingInfo.getReceiverName() != null ? postingInfo.getReceiverName() : postingInfo.getOwnerName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingInfo.getBodySrcHash());
         bodySrcFormat = SourceFormat.toValue(postingInfo.getBodySrcFormat());
@@ -49,7 +49,7 @@ public class PostingFingerprint extends Fingerprint {
 
     public PostingFingerprint(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
         super(0);
-        receiverName = postingInfo.getReceiverName();
+        receiverName = postingInfo.getReceiverName() != null ? postingInfo.getReceiverName() : postingInfo.getOwnerName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingRevisionInfo.getBodySrcHash());
         bodySrcFormat = SourceFormat.toValue(postingRevisionInfo.getBodySrcFormat());
