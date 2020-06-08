@@ -6,6 +6,7 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.notification.receive.NotificationMapping;
@@ -31,7 +32,7 @@ public class PostingProcessor {
                 requestContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
                 notification.getSubscriberId()).orElse(null);
         if (subscription == null) {
-            return; // TODO error
+            throw new UnsubscribeFailure();
         }
 
         Pick pick = new Pick();

@@ -12,7 +12,9 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
 import org.moera.node.model.Result;
 import org.moera.node.model.notification.Notification;
+import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.notification.NotificationPacket;
+import org.moera.node.task.CallApiValidationException;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -67,7 +69,7 @@ public class NotificationSender extends Task {
         try {
             succeeded(callApi(POST, receiverNodeName, "/notifications", createPacket(notification), Result.class));
         } catch (Exception e) {
-            error(e);
+            error(e, notification);
         }
     }
 
@@ -100,7 +102,12 @@ public class NotificationSender extends Task {
         }
     }
 
-    private void error(Throwable e) {
+    private void error(Throwable e, Notification notification) {
+        if (e instanceof CallApiValidationException
+                && ((CallApiValidationException) e).getErrorCode().equals("subscription.unsubscribe")
+                && notification instanceof SubscriberNotification) {
+            pool.unsubscribe(UUID.fromString(((SubscriberNotification) notification).getSubscriberId()));
+        }
         failed(e.getMessage());
     }
 

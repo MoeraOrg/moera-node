@@ -16,6 +16,7 @@ import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.model.BodyMappingException;
+import org.moera.node.model.Result;
 import org.moera.node.model.event.Event;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NamingClient;
@@ -129,6 +130,15 @@ public abstract class Task implements Runnable {
                 // do nothing
                 break;
 
+            case BAD_REQUEST:
+                try {
+                    Result answer = jsonParse(response.body(), Result.class);
+                    throw new CallApiValidationException(answer.getErrorCode());
+                } catch (BodyMappingException e) {
+                    // fallthru
+                }
+                // fallthru
+
             default:
                 throw new CallApiErrorStatusException(response.statusCode(), response.body());
         }
@@ -146,7 +156,7 @@ public abstract class Task implements Runnable {
         }
     }
 
-    private <T> T jsonParse(String data, Class<T> klass) throws CallApiException {
+    private <T> T jsonParse(String data, Class<T> klass) {
         try {
             return objectMapper.readValue(data, klass);
         } catch (IOException e) {

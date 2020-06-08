@@ -54,6 +54,7 @@ public class Picker extends Task {
     }
 
     private void download(Pick pick) {
+        initLoggingDomain();
         log.info("Downloading from node '{}', postingId = {}", remoteNodeName, pick.getRemotePostingId());
 
         try {

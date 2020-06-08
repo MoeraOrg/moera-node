@@ -59,9 +59,7 @@ public class NotificationController {
     private ObjectMapper objectMapper;
 
     @PostMapping
-    public Result post(@Valid @RequestBody NotificationPacket packet)
-            throws InvocationTargetException, IllegalAccessException {
-
+    public Result post(@Valid @RequestBody NotificationPacket packet) throws Throwable {
         log.info("POST /notifications (nodeName = {}, id = {}, type = {})",
                 LogUtil.format(packet.getNodeName()), LogUtil.format(packet.getId()), LogUtil.format(packet.getType()));
 
@@ -88,7 +86,11 @@ public class NotificationController {
         }
 
         notification.setSenderNodeName(packet.getNodeName());
-        handler.getMethod().invoke(handler.getBean(), notification);
+        try {
+            handler.getMethod().invoke(handler.getBean(), notification);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        }
 
         return Result.OK;
     }

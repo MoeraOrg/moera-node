@@ -89,4 +89,8 @@ public class NotificationSenderPool {
         senders.remove(new SingleDirection(nodeId, nodeName));
     }
 
+    void unsubscribe(UUID subscriberId) {
+        subscriberRepository.deleteById(subscriberId);
+    }
+
 }
