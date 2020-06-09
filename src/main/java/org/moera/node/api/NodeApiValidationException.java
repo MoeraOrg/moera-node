@@ -1,10 +1,10 @@
-package org.moera.node.task;
+package org.moera.node.api;
 
-public class CallApiValidationException extends CallApiErrorStatusException {
+public class NodeApiValidationException extends NodeApiErrorStatusException {
 
     private String errorCode;
 
-    public CallApiValidationException(String errorCode) {
+    public NodeApiValidationException(String errorCode) {
         super("Validation failed: " + errorCode);
         this.errorCode = errorCode;
     }

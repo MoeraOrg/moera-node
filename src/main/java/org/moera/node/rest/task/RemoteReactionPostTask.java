@@ -3,13 +3,13 @@ package org.moera.node.rest.task;
 import java.security.interfaces.ECPrivateKey;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
-import org.moera.node.task.CallApiUnknownNameException;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +31,9 @@ public class RemoteReactionPostTask extends Task {
     @Override
     public void run() {
         try {
-            PostingInfo postingInfo = callApi("GET", targetNodeName, String.format("/postings/%s", postingId),
-                    PostingInfo.class);
-            success(callApi("POST", targetNodeName, String.format("/postings/%s/reactions", postingId),
-                    buildReaction(postingInfo), ReactionCreated.class));
+            nodeApi.setNodeId(nodeId);
+            PostingInfo postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            success(nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo)));
         } catch (Exception e) {
             error(e);
         }
@@ -57,7 +56,7 @@ public class RemoteReactionPostTask extends Task {
 
     private void error(Throwable e) {
         initLoggingDomain();
-        if (e instanceof CallApiUnknownNameException) {
+        if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
             log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());

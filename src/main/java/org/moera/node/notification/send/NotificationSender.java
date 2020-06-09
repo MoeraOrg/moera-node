@@ -5,16 +5,18 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiValidationException;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
 import org.moera.node.model.Result;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.notification.NotificationPacket;
-import org.moera.node.task.CallApiValidationException;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -28,6 +30,9 @@ public class NotificationSender extends Task {
     private BlockingQueue<Notification> queue = new LinkedBlockingQueue<>();
     private boolean stopped = false;
     private NotificationSenderPool pool;
+
+    @Inject
+    private ObjectMapper objectMapper;
 
     public NotificationSender(NotificationSenderPool pool, String receiverNodeName) {
         this.pool = pool;
@@ -66,8 +71,9 @@ public class NotificationSender extends Task {
     private void deliver(Notification notification) {
         log.info("Delivering notification {} to node '{}'", notification.getType().name(), receiverNodeName);
 
+        nodeApi.setNodeId(nodeId);
         try {
-            succeeded(callApi(POST, receiverNodeName, "/notifications", createPacket(notification), Result.class));
+            succeeded(nodeApi.postNotification(receiverNodeName, createPacket(notification)));
         } catch (Exception e) {
             error(e, notification);
         }
@@ -103,8 +109,8 @@ public class NotificationSender extends Task {
     }
 
     private void error(Throwable e, Notification notification) {
-        if (e instanceof CallApiValidationException
-                && ((CallApiValidationException) e).getErrorCode().equals("subscription.unsubscribe")
+        if (e instanceof NodeApiValidationException
+                && ((NodeApiValidationException) e).getErrorCode().equals("subscription.unsubscribe")
                 && notification instanceof SubscriberNotification) {
             pool.unsubscribe(UUID.fromString(((SubscriberNotification) notification).getSubscriberId()));
         }

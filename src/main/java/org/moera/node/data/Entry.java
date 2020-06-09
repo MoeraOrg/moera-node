@@ -67,7 +67,7 @@ public class Entry {
     private EntryRevision currentRevision;
 
     @Size(max = 40)
-    private String receiverCurrentRevisionId;
+    private String currentReceiverRevisionId;
 
     @OneToOne
     private EntryRevision draftRevision;
@@ -197,12 +197,12 @@ public class Entry {
         this.currentRevision = currentRevision;
     }
 
-    public String getReceiverCurrentRevisionId() {
-        return receiverCurrentRevisionId;
+    public String getCurrentReceiverRevisionId() {
+        return currentReceiverRevisionId;
     }
 
-    public void setReceiverCurrentRevisionId(String receiverCurrentRevisionId) {
-        this.receiverCurrentRevisionId = receiverCurrentRevisionId;
+    public void setCurrentReceiverRevisionId(String currentReceiverRevisionId) {
+        this.currentReceiverRevisionId = currentReceiverRevisionId;
     }
 
     public EntryRevision getDraftRevision() {

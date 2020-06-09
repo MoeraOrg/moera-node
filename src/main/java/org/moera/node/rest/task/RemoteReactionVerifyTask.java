@@ -39,13 +39,11 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     @Override
     public void run() {
         try {
-            PostingInfo postingInfo = callApi("GET", data.getNodeName(),
-                    String.format("/postings/%s", data.getPostingId()), PostingInfo.class);
-            PostingRevisionInfo[] revisions = callApi("GET", data.getNodeName(),
-                    String.format("/postings/%s/revisions", data.getPostingId()), PostingRevisionInfo[].class);
-            ReactionInfo reactionInfo = callApi("GET", data.getNodeName(),
-                    String.format("/postings/%s/reactions/%s", data.getPostingId(), data.getReactionOwnerName()),
-                    ReactionInfo.class);
+            nodeApi.setNodeId(nodeId);
+            PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), data.getPostingId());
+            PostingRevisionInfo[] revisions = nodeApi.getPostingRevisions(data.getNodeName(), data.getPostingId());
+            ReactionInfo reactionInfo = nodeApi.getPostingReaction(data.getNodeName(), data.getPostingId(),
+                    data.getReactionOwnerName());
             verify(postingInfo, revisions, reactionInfo);
         } catch (Exception e) {
             error(e);

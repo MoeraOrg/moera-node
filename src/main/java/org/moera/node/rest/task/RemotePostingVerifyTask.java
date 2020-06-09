@@ -37,8 +37,8 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
     @Override
     public void run() {
         try {
-            PostingInfo postingInfo = callApi("GET", data.getNodeName(),
-                    String.format("/postings/%s", data.getPostingId()), PostingInfo.class);
+            nodeApi.setNodeId(nodeId);
+            PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), data.getPostingId());
             updateData(data -> {
                 data.setReceiverName(postingInfo.getReceiverName());
             });
@@ -46,9 +46,8 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo);
             } else {
-                PostingRevisionInfo revisionInfo = callApi("GET", data.getNodeName(),
-                        String.format("/postings/%s/revisions/%s", data.getPostingId(), data.getRevisionId()),
-                        PostingRevisionInfo.class);
+                PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(data.getNodeName(), data.getPostingId(),
+                        data.getRevisionId());
                 verifySignature(postingInfo, revisionInfo);
             }
         } catch (Exception e) {
