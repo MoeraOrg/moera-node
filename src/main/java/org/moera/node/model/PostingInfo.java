@@ -363,4 +363,12 @@ public class PostingInfo {
         this.reactionTotalsVisible = reactionTotalsVisible;
     }
 
+    public void toPickedPosting(Posting posting) {
+        posting.setReceiverEntryId(id);
+        posting.setOwnerName(ownerName);
+        posting.setReceiverCreatedAt(Util.toTimestamp(createdAt));
+        posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());
+        posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
+    }
+
 }

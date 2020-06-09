@@ -145,4 +145,19 @@ public class PostingRevisionInfo {
         this.reactions = reactions;
     }
 
+    public void toPickedEntryRevision(EntryRevision entryRevision) {
+        entryRevision.setReceiverRevisionId(id);
+        entryRevision.setBodyPreview(bodyPreview.getEncoded());
+        entryRevision.setBodyFormat(bodyFormat);
+        entryRevision.setBody(body.getEncoded());
+        entryRevision.setHeading(heading);
+        if (deletedAt != null) {
+            entryRevision.setDeletedAt(Util.now());
+        }
+        entryRevision.setReceiverCreatedAt(Util.toTimestamp(createdAt));
+        entryRevision.setReceiverDeletedAt(Util.toTimestamp(deletedAt));
+        entryRevision.setSignature(signature);
+        entryRevision.setSignatureVersion(signatureVersion);
+    }
+
 }

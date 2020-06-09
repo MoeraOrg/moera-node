@@ -39,4 +39,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Modifying
     void deleteExpired(Timestamp deadlineBefore);
 
+    @Query("select p from Posting p where p.nodeId = ?1 and p.receiverName = ?2 and p.receiverEntryId = ?3")
+    Optional<Posting> findByReceiverId(UUID nodeId, String receiverName, String receiverEntryId);
+
 }

@@ -72,11 +72,13 @@ public class Entry {
     @OneToOne
     private EntryRevision draftRevision;
 
+    @NotNull
     @Size(max = 255)
-    private String acceptedReactionsPositive;
+    private String acceptedReactionsPositive = "";
 
+    @NotNull
     @Size(max = 255)
-    private String acceptedReactionsNegative;
+    private String acceptedReactionsNegative = "";
 
     @NotNull
     private boolean reactionsVisible = true;
