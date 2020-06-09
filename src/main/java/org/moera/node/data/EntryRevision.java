@@ -23,6 +23,9 @@ public class EntryRevision {
     @Id
     private UUID id;
 
+    @Size(max = 40)
+    private String receiverRevisionId;
+
     @ManyToOne
     @NotNull
     private Entry entry;
@@ -52,6 +55,10 @@ public class EntryRevision {
 
     private Timestamp deletedAt;
 
+    private Timestamp receiverCreatedAt;
+
+    private Timestamp receiverDeletedAt;
+
     private byte[] signature;
 
     @NotNull
@@ -71,6 +78,14 @@ public class EntryRevision {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getReceiverRevisionId() {
+        return receiverRevisionId;
+    }
+
+    public void setReceiverRevisionId(String receiverRevisionId) {
+        this.receiverRevisionId = receiverRevisionId;
     }
 
     public Entry getEntry() {
@@ -143,6 +158,22 @@ public class EntryRevision {
 
     public void setDeletedAt(Timestamp deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public Timestamp getReceiverCreatedAt() {
+        return receiverCreatedAt;
+    }
+
+    public void setReceiverCreatedAt(Timestamp receiverCreatedAt) {
+        this.receiverCreatedAt = receiverCreatedAt;
+    }
+
+    public Timestamp getReceiverDeletedAt() {
+        return receiverDeletedAt;
+    }
+
+    public void setReceiverDeletedAt(Timestamp receiverDeletedAt) {
+        this.receiverDeletedAt = receiverDeletedAt;
     }
 
     public byte[] getSignature() {

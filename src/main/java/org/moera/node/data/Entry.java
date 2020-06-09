@@ -41,6 +41,9 @@ public class Entry {
     @Size(max = 127)
     private String receiverName;
 
+    @Size(max = 40)
+    private String receiverEntryId;
+
     @NotNull
     @Size(max = 127)
     private String ownerName = "";
@@ -49,6 +52,8 @@ public class Entry {
     private Timestamp createdAt = Util.now();
 
     private Timestamp deletedAt;
+
+    private Timestamp receiverCreatedAt;
 
     private Timestamp deadline;
 
@@ -60,6 +65,9 @@ public class Entry {
 
     @OneToOne
     private EntryRevision currentRevision;
+
+    @Size(max = 40)
+    private String receiverCurrentRevisionId;
 
     @OneToOne
     private EntryRevision draftRevision;
@@ -117,6 +125,14 @@ public class Entry {
         this.receiverName = receiverName;
     }
 
+    public String getReceiverEntryId() {
+        return receiverEntryId;
+    }
+
+    public void setReceiverEntryId(String receiverEntryId) {
+        this.receiverEntryId = receiverEntryId;
+    }
+
     public String getOwnerName() {
         return ownerName;
     }
@@ -139,6 +155,14 @@ public class Entry {
 
     public void setDeletedAt(Timestamp deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public Timestamp getReceiverCreatedAt() {
+        return receiverCreatedAt;
+    }
+
+    public void setReceiverCreatedAt(Timestamp receiverCreatedAt) {
+        this.receiverCreatedAt = receiverCreatedAt;
     }
 
     public Timestamp getDeadline() {
@@ -171,6 +195,14 @@ public class Entry {
 
     public void setCurrentRevision(EntryRevision currentRevision) {
         this.currentRevision = currentRevision;
+    }
+
+    public String getReceiverCurrentRevisionId() {
+        return receiverCurrentRevisionId;
+    }
+
+    public void setReceiverCurrentRevisionId(String receiverCurrentRevisionId) {
+        this.receiverCurrentRevisionId = receiverCurrentRevisionId;
     }
 
     public EntryRevision getDraftRevision() {
