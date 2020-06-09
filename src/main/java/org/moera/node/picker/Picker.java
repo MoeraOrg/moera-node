@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiException;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
@@ -81,42 +82,49 @@ public class Picker extends Task {
         nodeApi.setNodeId(nodeId);
         TransactionStatus status = beginTransaction();
         try {
-            PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, pick.getRemotePostingId());
-            Posting posting = postingRepository.findByReceiverId(nodeId, remoteNodeName, pick.getRemotePostingId())
-                    .orElse(null);
-            if (posting == null) {
-                posting = new Posting();
-                posting.setId(UUID.randomUUID());
-                posting.setNodeId(nodeId);
-                posting.setReceiverName(remoteNodeName);
-                posting = postingRepository.save(posting);
-            }
-            postingInfo.toPickedPosting(posting);
-
-            PostingRevisionInfo[] revisionInfos = nodeApi.getPostingRevisions(remoteNodeName, pick.getRemotePostingId());
-            EntryRevision revision = null;
-            for (PostingRevisionInfo revisionInfo : revisionInfos) {
-                revision = new EntryRevision();
-                revision.setId(UUID.randomUUID());
-                revision.setEntry(posting);
-                revision = entryRevisionRepository.save(revision);
-                posting.addRevision(revision);
-                revisionInfo.toPickedEntryRevision(revision);
-                PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
-                revision.setDigest(CryptoUtil.digest(fingerprint));
-            }
-            posting.setTotalRevisions(revisionInfos.length);
-            posting.setCurrentRevision(revision);
-            if (revision != null) {
-                posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
-            }
-
+            Posting posting = downloadPosting(pick);
+            downloadRevisions(posting);
             commitTransaction(status);
-
             succeeded(posting);
         } catch (Exception e) {
             rollbackTransaction(status);
             error(e);
+        }
+    }
+
+    private Posting downloadPosting(Pick pick) throws NodeApiException {
+        PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, pick.getRemotePostingId());
+        Posting posting = postingRepository.findByReceiverId(nodeId, remoteNodeName, pick.getRemotePostingId())
+                .orElse(null);
+        if (posting == null) {
+            posting = new Posting();
+            posting.setId(UUID.randomUUID());
+            posting.setNodeId(nodeId);
+            posting.setReceiverName(remoteNodeName);
+            posting = postingRepository.save(posting);
+        }
+        postingInfo.toPickedPosting(posting);
+
+        return posting;
+    }
+
+    private void downloadRevisions(Posting posting) throws NodeApiException {
+        PostingRevisionInfo[] revisionInfos = nodeApi.getPostingRevisions(remoteNodeName, posting.getReceiverEntryId());
+        EntryRevision revision = null;
+        for (PostingRevisionInfo revisionInfo : revisionInfos) {
+            revision = new EntryRevision();
+            revision.setId(UUID.randomUUID());
+            revision.setEntry(posting);
+            revision = entryRevisionRepository.save(revision);
+            posting.addRevision(revision);
+            revisionInfo.toPickedEntryRevision(revision);
+            PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
+            revision.setDigest(CryptoUtil.digest(fingerprint));
+        }
+        posting.setTotalRevisions(revisionInfos.length);
+        posting.setCurrentRevision(revision);
+        if (revision != null) {
+            posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
         }
     }
 
