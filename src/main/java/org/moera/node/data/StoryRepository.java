@@ -17,6 +17,10 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("select s from Story s where s.nodeId = ?1 and s.id = ?2")
     Optional<Story> findByNodeIdAndId(UUID nodeId, UUID id);
 
+    @Query("select count(*) from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
+            + " and s.entry.id = ?4")
+    int countByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
+
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4"
             + " order by s.moment desc")
     List<Story> findByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);

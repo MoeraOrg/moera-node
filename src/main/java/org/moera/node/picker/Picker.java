@@ -1,5 +1,8 @@
 package org.moera.node.picker;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -13,9 +16,15 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.StoryRepository;
+import org.moera.node.data.StoryType;
+import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.event.Event;
+import org.moera.node.rest.StoryOperations;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +48,16 @@ public class Picker extends Task {
     private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
+    private StoryRepository storyRepository;
+
+    @Inject
     private PlatformTransactionManager txManager;
+
+    @Inject
+    private StoryOperations storyOperations;
+
+    @Inject
+    private EventManager eventManager;
 
     public Picker(PickerPool pool, String remoteNodeName) {
         this.pool = pool;
@@ -82,9 +100,13 @@ public class Picker extends Task {
         nodeApi.setNodeId(nodeId);
         TransactionStatus status = beginTransaction();
         try {
-            Posting posting = downloadPosting(pick);
+            Posting posting = downloadPosting(pick.getRemotePostingId());
             downloadRevisions(posting);
+            List<Event> events = new ArrayList<>();
+            publish(pick.getFeedName(), posting, events);
+
             commitTransaction(status);
+            events.forEach(event -> eventManager.send(nodeId, event));
             succeeded(posting);
         } catch (Exception e) {
             rollbackTransaction(status);
@@ -92,9 +114,9 @@ public class Picker extends Task {
         }
     }
 
-    private Posting downloadPosting(Pick pick) throws NodeApiException {
-        PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, pick.getRemotePostingId());
-        Posting posting = postingRepository.findByReceiverId(nodeId, remoteNodeName, pick.getRemotePostingId())
+    private Posting downloadPosting(String remotePostingId) throws NodeApiException {
+        PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+        Posting posting = postingRepository.findByReceiverId(nodeId, remoteNodeName, remotePostingId)
                 .orElse(null);
         if (posting == null) {
             posting = new Posting();
@@ -126,6 +148,17 @@ public class Picker extends Task {
         if (revision != null) {
             posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
         }
+    }
+
+    private void publish(String feedName, Posting posting, List<Event> events) {
+        int totalStories = storyRepository.countByFeedAndTypeAndEntryId(nodeId, feedName, StoryType.POSTING_ADDED,
+                posting.getId());
+        if (totalStories > 0) {
+            return;
+        }
+        StoryAttributes publication = new StoryAttributes();
+        publication.setFeedName(feedName);
+        storyOperations.publish(posting, Collections.singletonList(publication), nodeId, events::add);
     }
 
     private void succeeded(Posting posting) {
