@@ -54,4 +54,10 @@ public class MoeraUiController {
         return "redirect:/settings/" + tab;
     }
 
+    @GetMapping("/news")
+    @VirtualPage
+    public String news() {
+        throw new PageNotFoundException();
+    }
+
 }
