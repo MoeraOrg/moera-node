@@ -17,7 +17,9 @@
     <div class="owner">
         {{nodename posting.ownerName}}
         {{#if posting.receiverName}}
-            &#x25b8; {{nodename posting.receiverName}}
+            {{#ifne posting.receiverName posting.ownerName}}
+                &#x25b8; {{nodename posting.receiverName}}
+            {{/ifne}}
         {{/if}}
         <span class="date">
             {{cal "dd-MM-yyyy HH:mm" es=posting.timelinePublishedAt fromNow="posting.time.relative"}}
