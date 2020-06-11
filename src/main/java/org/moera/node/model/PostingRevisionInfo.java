@@ -18,6 +18,8 @@ public class PostingRevisionInfo {
     private String heading;
     private long createdAt;
     private Long deletedAt;
+    private Long receiverCreatedAt;
+    private Long receiverDeletedAt;
     private byte[] signature;
     private short signatureVersion;
     private ClientReactionInfo clientReaction;
@@ -29,13 +31,17 @@ public class PostingRevisionInfo {
     public PostingRevisionInfo(EntryRevision revision, boolean countsVisible) {
         id = revision.getId().toString();
         bodyPreview = new Body(revision.getBodyPreview());
-        bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
+        bodySrcHash = revision.getReceiverBodySrcHash() != null
+                ? revision.getReceiverBodySrcHash()
+                : CryptoUtil.digest(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(revision.getDeletedAt());
+        receiverCreatedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
+        receiverDeletedAt = Util.toEpochSecond(revision.getReceiverDeletedAt());
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         reactions = new ReactionTotalsInfo(revision.getReactionTotals(), countsVisible);
@@ -113,6 +119,22 @@ public class PostingRevisionInfo {
         this.deletedAt = deletedAt;
     }
 
+    public Long getReceiverCreatedAt() {
+        return receiverCreatedAt;
+    }
+
+    public void setReceiverCreatedAt(Long receiverCreatedAt) {
+        this.receiverCreatedAt = receiverCreatedAt;
+    }
+
+    public Long getReceiverDeletedAt() {
+        return receiverDeletedAt;
+    }
+
+    public void setReceiverDeletedAt(Long receiverDeletedAt) {
+        this.receiverDeletedAt = receiverDeletedAt;
+    }
+
     public byte[] getSignature() {
         return signature;
     }
@@ -148,6 +170,8 @@ public class PostingRevisionInfo {
     public void toPickedEntryRevision(EntryRevision entryRevision) {
         entryRevision.setReceiverRevisionId(id);
         entryRevision.setBodyPreview(bodyPreview.getEncoded());
+        entryRevision.setBodySrcFormat(bodySrcFormat);
+        entryRevision.setReceiverBodySrcHash(bodySrcHash);
         entryRevision.setBodyFormat(bodyFormat);
         entryRevision.setBody(body.getEncoded());
         entryRevision.setHeading(heading);

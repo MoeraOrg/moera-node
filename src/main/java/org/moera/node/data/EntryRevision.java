@@ -36,6 +36,8 @@ public class EntryRevision {
     @NotNull
     private String bodySrc = "";
 
+    private byte[] receiverBodySrcHash;
+
     @NotNull
     @Enumerated
     private SourceFormat bodySrcFormat = SourceFormat.PLAIN_TEXT;
@@ -110,6 +112,14 @@ public class EntryRevision {
 
     public void setBodySrc(String bodySrc) {
         this.bodySrc = bodySrc;
+    }
+
+    public byte[] getReceiverBodySrcHash() {
+        return receiverBodySrcHash;
+    }
+
+    public void setReceiverBodySrcHash(byte[] receiverBodySrcHash) {
+        this.receiverBodySrcHash = receiverBodySrcHash;
     }
 
     public SourceFormat getBodySrcFormat() {

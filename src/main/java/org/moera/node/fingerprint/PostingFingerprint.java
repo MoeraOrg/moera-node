@@ -27,35 +27,43 @@ public class PostingFingerprint extends Fingerprint {
 
     public PostingFingerprint(Posting posting, EntryRevision revision) {
         super(0);
-        receiverName = posting.getReceiverName() != null ? posting.getReceiverName() : posting.getOwnerName();
+        // TODO it should be posting.receiverName, if it is not null, and node name otherwise,
+        // to support postings in group nodes
+        receiverName = posting.getOwnerName();
         ownerName = posting.getOwnerName();
-        bodySrc.setValue(revision.getBodySrc());
+        if (posting.isOriginal()) {
+            bodySrc.setValue(revision.getBodySrc());
+        } else {
+            bodySrc.setDigest(revision.getReceiverBodySrcHash());
+        }
         bodySrcFormat = revision.getBodySrcFormat().getValue();
         body = revision.getBody();
         bodyFormat = revision.getBodyFormat();
-        createdAt = Util.toEpochSecond(revision.getCreatedAt());
+        createdAt = Util.toEpochSecond(
+                posting.isOriginal() ? revision.getCreatedAt() : revision.getReceiverCreatedAt());
     }
 
     public PostingFingerprint(PostingInfo postingInfo) {
         super(0);
-        receiverName = postingInfo.getReceiverName() != null ? postingInfo.getReceiverName() : postingInfo.getOwnerName();
+        receiverName = postingInfo.getOwnerName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingInfo.getBodySrcHash());
         bodySrcFormat = SourceFormat.toValue(postingInfo.getBodySrcFormat());
         body = postingInfo.getBody().getEncoded();
         bodyFormat = postingInfo.getBodyFormat();
-        createdAt = postingInfo.getEditedAt();
+        createdAt = postingInfo.isOriginal() ? postingInfo.getEditedAt() : postingInfo.getReceiverEditedAt();
     }
 
     public PostingFingerprint(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
         super(0);
-        receiverName = postingInfo.getReceiverName() != null ? postingInfo.getReceiverName() : postingInfo.getOwnerName();
+        receiverName = postingInfo.getOwnerName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingRevisionInfo.getBodySrcHash());
         bodySrcFormat = SourceFormat.toValue(postingRevisionInfo.getBodySrcFormat());
         body = postingRevisionInfo.getBody().getEncoded();
         bodyFormat = postingRevisionInfo.getBodyFormat();
-        createdAt = postingRevisionInfo.getCreatedAt();
+        createdAt = postingInfo.isOriginal()
+                ? postingRevisionInfo.getCreatedAt() : postingRevisionInfo.getReceiverCreatedAt();
     }
 
 }

@@ -34,6 +34,9 @@ public class PostingInfo {
     private Long createdAt;
     private Long editedAt;
     private Long deletedAt;
+    private Long receiverCreatedAt;
+    private Long receiverEditedAt;
+    private Long receiverDeletedAt;
     private Long deadline;
     private Boolean draft;
     private Boolean draftPending;
@@ -81,7 +84,9 @@ public class PostingInfo {
         if (includeSource) {
             bodySrc = new Body(revision.getBodySrc());
         }
-        bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
+        bodySrcHash = revision.getReceiverBodySrcHash() != null
+                ? revision.getReceiverBodySrcHash()
+                : CryptoUtil.digest(revision.getBodySrc());
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
@@ -89,6 +94,9 @@ public class PostingInfo {
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
         editedAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
+        receiverCreatedAt = Util.toEpochSecond(posting.getReceiverCreatedAt());
+        receiverEditedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
+        receiverDeletedAt = Util.toEpochSecond(revision.getReceiverDeletedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
         if (posting.isDraft()) {
             draft = true;
@@ -148,6 +156,11 @@ public class PostingInfo {
 
     public void setReceiverName(String receiverName) {
         this.receiverName = receiverName;
+    }
+
+    @JsonIgnore
+    public boolean isOriginal() {
+        return getReceiverName() == null;
     }
 
     public String getOwnerName() {
@@ -236,6 +249,30 @@ public class PostingInfo {
 
     public void setDeletedAt(Long deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public Long getReceiverCreatedAt() {
+        return receiverCreatedAt;
+    }
+
+    public void setReceiverCreatedAt(Long receiverCreatedAt) {
+        this.receiverCreatedAt = receiverCreatedAt;
+    }
+
+    public Long getReceiverEditedAt() {
+        return receiverEditedAt;
+    }
+
+    public void setReceiverEditedAt(Long receiverEditedAt) {
+        this.receiverEditedAt = receiverEditedAt;
+    }
+
+    public Long getReceiverDeletedAt() {
+        return receiverDeletedAt;
+    }
+
+    public void setReceiverDeletedAt(Long receiverDeletedAt) {
+        this.receiverDeletedAt = receiverDeletedAt;
     }
 
     public Long getDeadline() {
