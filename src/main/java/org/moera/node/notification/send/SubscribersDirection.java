@@ -15,6 +15,11 @@ class SubscribersDirection extends Direction {
         this.feedName = feedName;
     }
 
+    SubscribersDirection(SubscriptionType subscriptionType, UUID postingId) {
+        this.subscriptionType = subscriptionType;
+        this.postingId = postingId;
+    }
+
     public SubscriptionType getSubscriptionType() {
         return subscriptionType;
     }

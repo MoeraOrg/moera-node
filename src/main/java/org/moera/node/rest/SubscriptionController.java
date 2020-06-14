@@ -43,11 +43,13 @@ public class SubscriptionController {
     @Admin
     @Transactional
     public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) {
-        log.info("POST /subscriptions (type = {}, feedName = {}, remoteSubscriberId = {}, remoteNodeName = {})",
+        log.info("POST /subscriptions (type = {}, feedName = {}, remoteSubscriberId = {}, remoteNodeName = {},"
+                        + " remotePostingId = {})",
                 LogUtil.format(SubscriptionType.toValue(subscriptionDescription.getType())),
                 LogUtil.format(subscriptionDescription.getFeedName()),
                 LogUtil.format(subscriptionDescription.getRemoteSubscriberId()),
-                LogUtil.format(subscriptionDescription.getRemoteNodeName()));
+                LogUtil.format(subscriptionDescription.getRemoteNodeName()),
+                LogUtil.format(subscriptionDescription.getRemotePostingId()));
 
         if (subscriptionDescription.getType() == null) {
             throw new ValidationFailure("subscriptionDescription.type.blank");

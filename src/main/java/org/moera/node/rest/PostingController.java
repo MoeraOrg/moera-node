@@ -43,6 +43,7 @@ import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
+import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
@@ -118,7 +119,7 @@ public class PostingController {
         }
         requestContext.send(new PostingAddedEvent(posting));
 
-        final String postingId = posting.getId().toString();
+        final UUID postingId = posting.getId();
         postingText.getPublications().stream()
                 .map(StoryAttributes::getFeedName)
                 .forEach(fn -> requestContext.send(Directions.feedSubscribers(fn),
@@ -153,6 +154,9 @@ public class PostingController {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
         requestContext.send(new PostingUpdatedEvent(posting));
+        requestContext.send(
+                Directions.postingSubscribers(posting.getId()),
+                new PostingUpdatedNotification(posting.getId()));
 
         return withStories(withClientReaction(new PostingInfo(posting, true)));
     }

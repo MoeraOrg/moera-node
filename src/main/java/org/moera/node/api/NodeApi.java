@@ -19,6 +19,8 @@ import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.Result;
+import org.moera.node.model.SubscriberDescriptionQ;
+import org.moera.node.model.SubscriberInfo;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.notification.NotificationPacket;
@@ -165,6 +167,13 @@ public class NodeApi {
 
     public Result postNotification(String nodeName, NotificationPacket notificationPacket) throws NodeApiException {
         return call("POST", nodeName, "/notifications", notificationPacket, Result.class);
+    }
+
+    public SubscriberInfo postSubscriber(String nodeName, String carte, SubscriberDescriptionQ subscriber)
+            throws NodeApiException {
+
+        return call("POST", nodeName, String.format("/subscribers?carte=%s", Util.ue(carte)), subscriber,
+                SubscriberInfo.class);
     }
 
 }

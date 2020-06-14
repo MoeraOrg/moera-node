@@ -21,8 +21,10 @@ public class PostingInfo {
 
     private String id;
     private String revisionId;
+    private String receiverRevisionId;
     private Integer totalRevisions;
     private String receiverName;
+    private String receiverPostingId;
     private String ownerName;
     private Body bodyPreview;
     private Body bodySrc;
@@ -77,8 +79,10 @@ public class PostingInfo {
                        boolean isAdminOrOwner) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
+        receiverRevisionId = revision.getReceiverRevisionId();
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
+        receiverPostingId = posting.getReceiverEntryId();
         ownerName = posting.getOwnerName();
         bodyPreview = new Body(revision.getBodyPreview());
         if (includeSource) {
@@ -142,6 +146,14 @@ public class PostingInfo {
         this.revisionId = revisionId;
     }
 
+    public String getReceiverRevisionId() {
+        return receiverRevisionId;
+    }
+
+    public void setReceiverRevisionId(String receiverRevisionId) {
+        this.receiverRevisionId = receiverRevisionId;
+    }
+
     public Integer getTotalRevisions() {
         return totalRevisions;
     }
@@ -161,6 +173,14 @@ public class PostingInfo {
     @JsonIgnore
     public boolean isOriginal() {
         return getReceiverName() == null;
+    }
+
+    public String getReceiverPostingId() {
+        return receiverPostingId;
+    }
+
+    public void setReceiverPostingId(String receiverPostingId) {
+        this.receiverPostingId = receiverPostingId;
     }
 
     public String getOwnerName() {
@@ -401,11 +421,18 @@ public class PostingInfo {
     }
 
     public void toPickedPosting(Posting posting) {
-        posting.setReceiverEntryId(id);
+        posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
         posting.setOwnerName(ownerName);
-        posting.setReceiverCreatedAt(Util.toTimestamp(createdAt));
+        posting.setReceiverCreatedAt(Util.toTimestamp(isOriginal() ? createdAt : receiverCreatedAt));
         posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
+    }
+
+    public boolean differFromPickedPosting(Posting posting) {
+        return posting == null
+                || !posting.getAcceptedReactionsPositive().equals(acceptedReactions.getPositive())
+                || !posting.getAcceptedReactionsNegative().equals(acceptedReactions.getNegative())
+                || !posting.getCurrentReceiverRevisionId().equals(receiverRevisionId);
     }
 
 }

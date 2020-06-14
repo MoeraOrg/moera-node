@@ -1,14 +1,21 @@
 package org.moera.node.model;
 
-import java.util.UUID;
-
 import org.moera.node.data.SubscriptionType;
 
-public class SubscriberDescription {
+public class SubscriberDescriptionQ {
 
     private SubscriptionType type;
     private String feedName;
-    private UUID postingId;
+    private String postingId;
+
+    public SubscriberDescriptionQ() {
+    }
+
+    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId) {
+        this.type = type;
+        this.feedName = feedName;
+        this.postingId = postingId;
+    }
 
     public SubscriptionType getType() {
         return type;
@@ -26,11 +33,11 @@ public class SubscriberDescription {
         this.feedName = feedName;
     }
 
-    public UUID getPostingId() {
+    public String getPostingId() {
         return postingId;
     }
 
-    public void setPostingId(UUID postingId) {
+    public void setPostingId(String postingId) {
         this.postingId = postingId;
     }
 

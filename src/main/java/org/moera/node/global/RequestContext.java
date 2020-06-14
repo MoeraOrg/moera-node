@@ -1,5 +1,6 @@
 package org.moera.node.global;
 
+import java.net.InetAddress;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,6 +41,10 @@ public interface RequestContext {
     void setClientName(String clientName);
 
     boolean isClient(String name);
+
+    InetAddress getLocalAddr();
+
+    void setLocalAddr(InetAddress localAddr);
 
     RequestContext getPublic();
 

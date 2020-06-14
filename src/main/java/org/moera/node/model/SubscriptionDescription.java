@@ -11,7 +11,7 @@ public class SubscriptionDescription {
     private SubscriptionType type;
 
     @NotBlank
-    private String feedName = "news";
+    private String feedName;
 
     @NotBlank
     @Size(max = 40)

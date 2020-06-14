@@ -20,6 +20,7 @@ public class TaskAutowire {
         task.setNodeId(requestContext.nodeId());
         task.setNodeName(requestContext.nodeName());
         task.setSigningKey(requestContext.getOptions().getPrivateKey("profile.signing-key"));
+        task.setLocalAddr(requestContext.getLocalAddr());
     }
 
 }

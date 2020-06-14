@@ -18,14 +18,26 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.event.EventManager;
+import org.moera.node.data.Subscription;
+import org.moera.node.data.SubscriptionRepository;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.SubscriberDescriptionQ;
+import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.event.Event;
+import org.moera.node.model.event.PostingAddedEvent;
+import org.moera.node.model.event.PostingUpdatedEvent;
+import org.moera.node.model.notification.FeedPostingAddedNotification;
+import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.notification.send.DirectedNotification;
+import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.rest.StoryOperations;
 import org.moera.node.task.Task;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -51,13 +63,16 @@ public class Picker extends Task {
     private StoryRepository storyRepository;
 
     @Inject
+    private SubscriptionRepository subscriptionRepository;
+
+    @Inject
     private PlatformTransactionManager txManager;
 
     @Inject
     private StoryOperations storyOperations;
 
     @Inject
-    private EventManager eventManager;
+    private NotificationSenderPool notificationSenderPool;
 
     public Picker(PickerPool pool, String remoteNodeName) {
         this.pool = pool;
@@ -100,13 +115,16 @@ public class Picker extends Task {
         nodeApi.setNodeId(nodeId);
         TransactionStatus status = beginTransaction();
         try {
-            Posting posting = downloadPosting(pick.getRemotePostingId());
-            downloadRevisions(posting);
             List<Event> events = new ArrayList<>();
-            publish(pick.getFeedName(), posting, events);
+            List<DirectedNotification> notifications = new ArrayList<>();
 
+            Posting posting = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications);
             commitTransaction(status);
+
             events.forEach(event -> eventManager.send(nodeId, event));
+            notifications.forEach(
+                    dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
+
             succeeded(posting);
         } catch (Exception e) {
             rollbackTransaction(status);
@@ -114,27 +132,50 @@ public class Picker extends Task {
         }
     }
 
-    private Posting downloadPosting(String remotePostingId) throws NodeApiException {
+    private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
+                                    List<DirectedNotification> notifications) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
-        Posting posting = postingRepository.findByReceiverId(nodeId, remoteNodeName, remotePostingId)
-                .orElse(null);
+        Posting posting = postingRepository.findByReceiverId(nodeId, remoteNodeName, remotePostingId).orElse(null);
         if (posting == null) {
             posting = new Posting();
             posting.setId(UUID.randomUUID());
             posting.setNodeId(nodeId);
-            posting.setReceiverName(remoteNodeName);
+            posting.setReceiverName(postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName());
             posting = postingRepository.save(posting);
+            postingInfo.toPickedPosting(posting);
+            downloadRevisions(posting);
+            subscribe(remotePostingId);
+            events.add(new PostingAddedEvent(posting));
+            notifications.add(new DirectedNotification(
+                    Directions.feedSubscribers(feedName),
+                    new FeedPostingAddedNotification(feedName, posting.getId())));
+            publish(feedName, posting, events);
+        } else if (postingInfo.differFromPickedPosting(posting)) {
+            postingInfo.toPickedPosting(posting);
+            downloadRevisions(posting);
+            events.add(new PostingUpdatedEvent(posting));
+            notifications.add(new DirectedNotification(
+                    Directions.postingSubscribers(posting.getId()),
+                    new PostingUpdatedNotification(posting.getId())));
         }
-        postingInfo.toPickedPosting(posting);
 
         return posting;
     }
 
     private void downloadRevisions(Posting posting) throws NodeApiException {
         PostingRevisionInfo[] revisionInfos = nodeApi.getPostingRevisions(remoteNodeName, posting.getReceiverEntryId());
-        EntryRevision revision = null;
+        EntryRevision currentRevision = null;
         for (PostingRevisionInfo revisionInfo : revisionInfos) {
-            revision = new EntryRevision();
+            if (revisionInfo.getId().equals(posting.getCurrentReceiverRevisionId())) {
+                if (revisionInfo.getDeletedAt() == null) {
+                    currentRevision = posting.getCurrentRevision();
+                } else {
+                    posting.getCurrentRevision().setDeletedAt(Util.now());
+                    posting.getCurrentRevision().setReceiverDeletedAt(Util.toTimestamp(revisionInfo.getDeletedAt()));
+                }
+                break;
+            }
+            EntryRevision revision = new EntryRevision();
             revision.setId(UUID.randomUUID());
             revision.setEntry(posting);
             revision = entryRevisionRepository.save(revision);
@@ -142,11 +183,14 @@ public class Picker extends Task {
             revisionInfo.toPickedEntryRevision(revision);
             PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
             revision.setDigest(CryptoUtil.digest(fingerprint));
+            if (revisionInfo.getDeletedAt() == null) {
+                currentRevision = revision;
+            }
+            posting.setTotalRevisions(posting.getTotalRevisions() + 1);
         }
-        posting.setTotalRevisions(revisionInfos.length);
-        posting.setCurrentRevision(revision);
-        if (revision != null) {
-            posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
+        posting.setCurrentRevision(currentRevision);
+        if (currentRevision != null) {
+            posting.setCurrentReceiverRevisionId(currentRevision.getReceiverRevisionId());
         }
     }
 
@@ -159,6 +203,19 @@ public class Picker extends Task {
         StoryAttributes publication = new StoryAttributes();
         publication.setFeedName(feedName);
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, events::add);
+    }
+
+    private void subscribe(String remotePostingId) throws NodeApiException {
+        SubscriberInfo subscriberInfo = nodeApi.postSubscriber(remoteNodeName, generateCarte(),
+                new SubscriberDescriptionQ(SubscriptionType.POSTING, null, remotePostingId));
+        Subscription subscription = new Subscription();
+        subscription.setId(UUID.randomUUID());
+        subscription.setNodeId(nodeId);
+        subscription.setSubscriptionType(SubscriptionType.POSTING);
+        subscription.setRemoteSubscriberId(subscriberInfo.getId());
+        subscription.setRemoteNodeName(remoteNodeName);
+        subscription.setRemoteEntryId(remotePostingId);
+        subscriptionRepository.save(subscription);
     }
 
     private void succeeded(Posting posting) {

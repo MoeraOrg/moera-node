@@ -1,14 +1,20 @@
 package org.moera.node.model.notification;
 
+import java.util.UUID;
+
 public class FeedPostingAddedNotification extends SubscriberNotification {
 
     private String feedName;
     private String postingId;
 
-    public FeedPostingAddedNotification(String feedName, String postingId) {
+    public FeedPostingAddedNotification() {
+        super(NotificationType.FEED_POSTING_ADDED);
+    }
+
+    public FeedPostingAddedNotification(String feedName, UUID postingId) {
         super(NotificationType.FEED_POSTING_ADDED);
         this.feedName = feedName;
-        this.postingId = postingId;
+        this.postingId = postingId.toString();
     }
 
     public String getFeedName() {

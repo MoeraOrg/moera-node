@@ -1,5 +1,7 @@
 package org.moera.node.notification.send;
 
+import java.util.UUID;
+
 import org.moera.node.data.SubscriptionType;
 
 public class Directions {
@@ -10,6 +12,10 @@ public class Directions {
 
     public static Direction feedSubscribers(String feedName) {
         return new SubscribersDirection(SubscriptionType.FEED, feedName);
+    }
+
+    public static Direction postingSubscribers(UUID postingId) {
+        return new SubscribersDirection(SubscriptionType.POSTING, postingId);
     }
 
 }

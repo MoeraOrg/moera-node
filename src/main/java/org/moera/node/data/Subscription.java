@@ -25,9 +25,8 @@ public class Subscription {
     @Enumerated
     private SubscriptionType subscriptionType;
 
-    @NotNull
     @Size(max = 63)
-    private String feedName = "news";
+    private String feedName;
 
     @NotNull
     @Size(max = 40)

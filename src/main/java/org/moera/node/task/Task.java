@@ -1,6 +1,8 @@
 package org.moera.node.task;
 
+import java.net.InetAddress;
 import java.security.PrivateKey;
+import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -12,6 +14,7 @@ import org.moera.node.model.event.Event;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
+import org.moera.node.util.Carte;
 import org.slf4j.MDC;
 
 public abstract class Task implements Runnable {
@@ -19,18 +22,19 @@ public abstract class Task implements Runnable {
     protected UUID nodeId;
     protected String nodeName;
     protected PrivateKey signingKey;
+    protected InetAddress localAddr;
 
     @Inject
     protected NodeApi nodeApi;
+
+    @Inject
+    protected EventManager eventManager;
 
     @Inject
     private Domains domains;
 
     @Inject
     private NamingClient namingClient;
-
-    @Inject
-    private EventManager eventManager;
 
     public void setNodeId(UUID nodeId) {
         this.nodeId = nodeId;
@@ -44,6 +48,10 @@ public abstract class Task implements Runnable {
         this.signingKey = signingKey;
     }
 
+    public void setLocalAddr(InetAddress localAddr) {
+        this.localAddr = localAddr;
+    }
+
     protected void initLoggingDomain() {
         MDC.put("domain", domains.getDomainName(nodeId));
     }
@@ -54,6 +62,10 @@ public abstract class Task implements Runnable {
         RegisteredNameInfo nameInfo =
                 namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, namingLocation);
         return nameInfo != null ? nameInfo.getSigningKey() : null;
+    }
+
+    protected String generateCarte() {
+        return Carte.generate(nodeName, localAddr, Instant.now(), signingKey);
     }
 
     protected void send(Event event) {

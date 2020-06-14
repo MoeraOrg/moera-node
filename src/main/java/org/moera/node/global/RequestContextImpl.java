@@ -1,5 +1,6 @@
 package org.moera.node.global;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +26,7 @@ public class RequestContextImpl implements RequestContext {
     private String siteUrl;
     private String clientId;
     private String clientName;
+    private InetAddress localAddr;
     private List<Event> afterCommitEvents = new ArrayList<>();
     private List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
 
@@ -104,6 +106,16 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public InetAddress getLocalAddr() {
+        return localAddr;
+    }
+
+    @Override
+    public void setLocalAddr(InetAddress localAddr) {
+        this.localAddr = localAddr;
+    }
+
+    @Override
     public RequestContext getPublic() {
         RequestContext context = new RequestContextImpl();
         context.setBrowserExtension(false);
@@ -135,8 +147,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public void send(Direction direction, Notification notification) {
-        direction.setNodeId(nodeId());
-        afterCommitNotifications.add(new DirectedNotification(direction, notification));
+        afterCommitNotifications.add(new DirectedNotification(direction.nodeId(nodeId()), notification));
     }
 
     @Override
