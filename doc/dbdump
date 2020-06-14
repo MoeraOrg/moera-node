@@ -1,0 +1,3 @@
+#!/bin/sh
+
+pg_dump -sx -h localhost -d moera_node -U moera -W > create_tables.sql
