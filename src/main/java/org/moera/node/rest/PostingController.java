@@ -37,6 +37,8 @@ import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.StoryOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;

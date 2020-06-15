@@ -22,6 +22,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

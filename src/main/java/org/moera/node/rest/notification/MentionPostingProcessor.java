@@ -7,7 +7,7 @@ import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
-import org.moera.node.rest.InstantOperations;
+import org.moera.node.operations.InstantOperations;
 
 @NotificationProcessor
 public class MentionPostingProcessor {

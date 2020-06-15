@@ -43,6 +43,7 @@ import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.operations.InstantOperations;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;

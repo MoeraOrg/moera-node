@@ -1,4 +1,4 @@
-package org.moera.node.rest;
+package org.moera.node.operations;
 
 import java.sql.Timestamp;
 import java.time.Duration;

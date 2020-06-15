@@ -21,6 +21,7 @@ import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.PostingOperations;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

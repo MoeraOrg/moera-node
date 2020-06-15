@@ -1,4 +1,4 @@
-package org.moera.node.rest;
+package org.moera.node.operations;
 
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;

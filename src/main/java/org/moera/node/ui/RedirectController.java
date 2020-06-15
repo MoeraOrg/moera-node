@@ -13,7 +13,7 @@ import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.RegisteredNameDetails;
-import org.moera.node.rest.StoryOperations;
+import org.moera.node.operations.StoryOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

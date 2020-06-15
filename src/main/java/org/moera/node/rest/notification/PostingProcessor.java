@@ -18,8 +18,8 @@ import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.picker.Pick;
 import org.moera.node.picker.PickerPool;
-import org.moera.node.rest.PostingOperations;
-import org.moera.node.rest.StoryOperations;
+import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.StoryOperations;
 
 @NotificationProcessor
 public class PostingProcessor {

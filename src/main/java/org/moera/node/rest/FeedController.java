@@ -35,6 +35,8 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.StoryOfPostingInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.StoryOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

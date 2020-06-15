@@ -36,7 +36,7 @@ import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.DirectedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
-import org.moera.node.rest.StoryOperations;
+import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
