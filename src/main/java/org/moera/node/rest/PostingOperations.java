@@ -31,6 +31,7 @@ import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
+import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.Util;
@@ -244,6 +245,8 @@ public class PostingOperations {
         posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         posting.getCurrentRevision().setDeletedAt(Util.now());
         requestContext.send(new PostingDeletedEvent(posting));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingDeletedNotification(posting.getId()));
     }
 
 }

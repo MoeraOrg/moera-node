@@ -1,6 +1,7 @@
 package org.moera.node.rest.notification;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -11,11 +12,14 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.NotificationType;
+import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.picker.Pick;
 import org.moera.node.picker.PickerPool;
+import org.moera.node.rest.PostingOperations;
+import org.moera.node.rest.StoryOperations;
 
 @NotificationProcessor
 public class PostingProcessor {
@@ -31,6 +35,12 @@ public class PostingProcessor {
 
     @Inject
     private PickerPool pickerPool;
+
+    @Inject
+    private PostingOperations postingOperations;
+
+    @Inject
+    private StoryOperations storyOperations;
 
     @NotificationMapping(NotificationType.FEED_POSTING_ADDED)
     public void added(FeedPostingAddedNotification notification) {
@@ -67,6 +77,25 @@ public class PostingProcessor {
         pick.setRemoteNodeName(subscription.getRemoteNodeName());
         pick.setRemotePostingId(notification.getPostingId());
         pickerPool.pick(pick);
+    }
+
+    @NotificationMapping(NotificationType.POSTING_DELETED)
+    @Transactional
+    public void deleted(PostingDeletedNotification notification) {
+        Subscription subscription = subscriptionRepository.findBySubscriber(
+                requestContext.nodeId(), SubscriptionType.POSTING, notification.getSenderNodeName(),
+                notification.getSubscriberId()).orElse(null);
+        if (subscription == null || !notification.getPostingId().equals(subscription.getRemoteEntryId())) {
+            throw new UnsubscribeFailure();
+        }
+        Posting posting = postingRepository.findByReceiverId(requestContext.nodeId(), subscription.getRemoteNodeName(),
+                notification.getPostingId()).orElse(null);
+        if (posting == null) {
+            throw new UnsubscribeFailure();
+        }
+
+        postingOperations.deletePosting(posting);
+        storyOperations.unpublish(posting.getId());
     }
 
 }

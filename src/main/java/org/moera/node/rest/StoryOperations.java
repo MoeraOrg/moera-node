@@ -87,7 +87,7 @@ public class StoryOperations {
         unpublish(entryId, requestContext.nodeId(), requestContext::send);
     }
 
-    public void unpublish(UUID entryId, UUID nodeId, Consumer<Event> eventSender) {
+    private void unpublish(UUID entryId, UUID nodeId, Consumer<Event> eventSender) {
         Set<String> feedNames = new HashSet<>();
         storyRepository.findByEntryId(nodeId, entryId)
                 .forEach(story -> {
