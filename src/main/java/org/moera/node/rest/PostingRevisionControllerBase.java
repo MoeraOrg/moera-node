@@ -19,6 +19,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.notification.send.Directions;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -113,6 +115,8 @@ public abstract class PostingRevisionControllerBase {
         posting.setDeadline(null);
         posting = postingOperations.createOrUpdatePosting(posting, revision, null, null, null);
         requestContext.send(getRestorationEvent(posting));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingUpdatedNotification(posting.getId()));
 
         return new PostingRevisionInfo(revision, true);
     }

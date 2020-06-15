@@ -20,6 +20,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +107,8 @@ public class DeletedPostingController {
         posting.setDeadline(null);
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null, null, null);
         requestContext.send(new PostingRestoredEvent(posting));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingUpdatedNotification(posting.getId()));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
         return new PostingInfo(posting, stories, true);

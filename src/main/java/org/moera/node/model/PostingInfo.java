@@ -430,6 +430,7 @@ public class PostingInfo {
 
     public boolean differFromPickedPosting(Posting posting) {
         return posting == null
+                || posting.getDeletedAt() != null
                 || !posting.getAcceptedReactionsPositive().equals(acceptedReactions.getPositive())
                 || !posting.getAcceptedReactionsNegative().equals(acceptedReactions.getNegative())
                 || !posting.getCurrentReceiverRevisionId().equals(receiverRevisionId);

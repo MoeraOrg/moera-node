@@ -29,6 +29,7 @@ import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingAddedEvent;
+import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
@@ -153,7 +154,12 @@ public class Picker extends Task {
         } else if (postingInfo.differFromPickedPosting(posting)) {
             postingInfo.toPickedPosting(posting);
             downloadRevisions(posting);
-            events.add(new PostingUpdatedEvent(posting));
+            if (posting.getDeletedAt() == null) {
+                events.add(new PostingUpdatedEvent(posting));
+            } else {
+                posting.setDeletedAt(null);
+                events.add(new PostingRestoredEvent(posting));
+            }
             notifications.add(new DirectedNotification(
                     Directions.postingSubscribers(posting.getId()),
                     new PostingUpdatedNotification(posting.getId())));
