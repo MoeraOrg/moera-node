@@ -1,6 +1,9 @@
 package org.moera.node.rest;
 
 import java.security.interfaces.ECPrivateKey;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +28,7 @@ import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.Body;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.notification.send.Directions;
@@ -232,6 +236,14 @@ public class PostingOperations {
                 .filter(m -> !currentMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d, new MentionPostingDeletedNotification(postingId)));
+    }
+
+    public void deletePosting(Posting posting) {
+        posting.setDeletedAt(Util.now());
+        Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
+        posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
+        posting.getCurrentRevision().setDeletedAt(Util.now());
+        requestContext.send(new PostingDeletedEvent(posting));
     }
 
 }

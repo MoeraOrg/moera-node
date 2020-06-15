@@ -19,6 +19,7 @@ import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -80,6 +81,25 @@ public class StoryOperations {
         int notRead = storyRepository.countNotRead(nodeId, feedName);
 
         return new FeedStatus(notViewed, notRead);
+    }
+
+    public void unpublish(UUID entryId) {
+        unpublish(entryId, requestContext.nodeId(), requestContext::send);
+    }
+
+    public void unpublish(UUID entryId, UUID nodeId, Consumer<Event> eventSender) {
+        Set<String> feedNames = new HashSet<>();
+        storyRepository.findByEntryId(nodeId, entryId)
+                .forEach(story -> {
+                    if (!Feed.isAdmin(story.getFeedName())) {
+                        eventSender.accept(new StoryDeletedEvent(story, false));
+                    }
+                    eventSender.accept(new StoryDeletedEvent(story, true));
+                    feedNames.add(story.getFeedName());
+                });
+        storyRepository.deleteByEntryId(nodeId, entryId);
+        feedNames.forEach(feedName ->
+                eventSender.accept(new FeedStatusUpdatedEvent(feedName, getFeedStatus(feedName))));
     }
 
 }

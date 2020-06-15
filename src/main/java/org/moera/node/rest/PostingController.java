@@ -1,10 +1,6 @@
 package org.moera.node.rest;
 
 import java.net.URI;
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -16,7 +12,6 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryRevisionRepository;
-import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
@@ -37,11 +32,8 @@ import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.PostingAddedEvent;
-import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
@@ -186,24 +178,8 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        posting.setDeletedAt(Util.now());
-        Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
-        posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
-        posting.getCurrentRevision().setDeletedAt(Util.now());
-        requestContext.send(new PostingDeletedEvent(posting));
-
-        Set<String> feedNames = new HashSet<>();
-        storyRepository.findByEntryId(requestContext.nodeId(), id)
-                .forEach(story -> {
-                    if (!Feed.isAdmin(story.getFeedName())) {
-                        requestContext.send(new StoryDeletedEvent(story, false));
-                    }
-                    requestContext.send(new StoryDeletedEvent(story, true));
-                    feedNames.add(story.getFeedName());
-                });
-        storyRepository.deleteByEntryId(requestContext.nodeId(), id);
-        feedNames.forEach(feedName ->
-                requestContext.send(new FeedStatusUpdatedEvent(feedName, storyOperations.getFeedStatus(feedName))));
+        postingOperations.deletePosting(posting);
+        storyOperations.unpublish(posting.getId());
 
         return Result.OK;
     }
