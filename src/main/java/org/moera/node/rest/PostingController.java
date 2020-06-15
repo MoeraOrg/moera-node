@@ -190,7 +190,6 @@ public class PostingController {
         Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
         posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         posting.getCurrentRevision().setDeletedAt(Util.now());
-        entryRevisionRepository.save(posting.getCurrentRevision());
         requestContext.send(new PostingDeletedEvent(posting));
 
         Set<String> feedNames = new HashSet<>();
