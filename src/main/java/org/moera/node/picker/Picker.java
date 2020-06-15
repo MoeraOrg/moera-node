@@ -16,6 +16,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.Subscription;
@@ -36,6 +37,7 @@ import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.DirectedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
+import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
@@ -61,6 +63,9 @@ public class Picker extends Task {
     private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
+    private ReactionTotalRepository reactionTotalRepository;
+
+    @Inject
     private StoryRepository storyRepository;
 
     @Inject
@@ -71,6 +76,9 @@ public class Picker extends Task {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
     private NotificationSenderPool notificationSenderPool;
@@ -164,7 +172,10 @@ public class Picker extends Task {
                     Directions.postingSubscribers(posting.getId()),
                     new PostingUpdatedNotification(posting.getId())));
         }
-
+        var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());
+        if (!reactionTotalOperations.isSame(reactionTotals, postingInfo.getReactions())) {
+            reactionTotalOperations.replaceAll(posting, postingInfo.getReactions());
+        }
         return posting;
     }
 

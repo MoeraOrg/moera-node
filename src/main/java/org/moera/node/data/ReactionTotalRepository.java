@@ -20,7 +20,7 @@ public interface ReactionTotalRepository extends JpaRepository<ReactionTotal, UU
 
     @Modifying
     @Query("delete from ReactionTotal rt where rt.entry.id = ?1"
-            + " or rt.entryRevision.id = (select id from EntryRevision er where er.entry.id = ?1)")
+            + " or rt.entryRevision.id = any(select id from EntryRevision er where er.entry.id = ?1)")
     void deleteAllByEntryId(UUID postingId);
 
 }
