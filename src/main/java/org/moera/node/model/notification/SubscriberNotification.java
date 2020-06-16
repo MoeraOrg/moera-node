@@ -1,10 +1,10 @@
 package org.moera.node.model.notification;
 
-public class SubscriberNotification extends Notification {
+public abstract class SubscriberNotification extends Notification {
 
     private String subscriberId;
 
-    public SubscriberNotification(NotificationType type) {
+    protected SubscriberNotification(NotificationType type) {
         super(type);
     }
 

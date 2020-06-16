@@ -4,9 +4,8 @@ import java.util.UUID;
 
 import org.moera.node.model.ReactionTotalsInfo;
 
-public class PostingReactionsUpdatedNotification extends SubscriberNotification {
+public class PostingReactionsUpdatedNotification extends PostingSubscriberNotification {
 
-    private String postingId;
     private ReactionTotalsInfo totals;
 
     public PostingReactionsUpdatedNotification() {
@@ -14,17 +13,8 @@ public class PostingReactionsUpdatedNotification extends SubscriberNotification 
     }
 
     public PostingReactionsUpdatedNotification(UUID postingId, ReactionTotalsInfo totals) {
-        super(NotificationType.POSTING_REACTIONS_UPDATED);
-        this.postingId = postingId.toString();
+        super(NotificationType.POSTING_REACTIONS_UPDATED, postingId.toString());
         this.totals = totals;
-    }
-
-    public String getPostingId() {
-        return postingId;
-    }
-
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
     }
 
     public ReactionTotalsInfo getTotals() {
