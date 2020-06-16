@@ -108,6 +108,11 @@ public class NotificationSender extends Task {
         }
     }
 
+    @Override
+    protected void error(Throwable e) {
+        error(e, null);
+    }
+
     private void error(Throwable e, Notification notification) {
         if (e instanceof NodeApiValidationException
                 && ((NodeApiValidationException) e).getErrorCode().equals("subscription.unsubscribe")

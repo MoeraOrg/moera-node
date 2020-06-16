@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.global.ApiController;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +51,9 @@ public class RemoteReactionController {
     @Inject
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
 
+    @Inject
+    private OwnReactionRepository ownReactionRepository;
+
     @PostMapping
     @Admin
     @Entitled
@@ -64,6 +69,18 @@ public class RemoteReactionController {
         RemoteReactionPostTask task = new RemoteReactionPostTask(nodeName, postingId, attributes);
         taskAutowire.autowire(task);
         taskExecutor.execute(task);
+
+        return Result.OK;
+    }
+
+    @DeleteMapping
+    @Admin
+    public Result delete(@PathVariable String nodeName, @PathVariable String postingId) {
+        log.info("DELETE /nodes/{nodeName}/postings/{postingId}/reactions (nodeName = {}, postingId = {})",
+                LogUtil.format(nodeName),
+                LogUtil.format(postingId));
+
+        ownReactionRepository.deleteByRemotePostingId(requestContext.nodeId(), nodeName, postingId);
 
         return Result.OK;
     }

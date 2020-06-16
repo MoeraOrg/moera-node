@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.OwnReaction;
 import org.moera.node.data.Reaction;
 import org.moera.node.util.Util;
 
@@ -131,6 +132,13 @@ public class ReactionInfo {
 
     public void setOperations(Map<String, String[]> operations) {
         this.operations = operations;
+    }
+
+    public void toOwnReaction(OwnReaction ownReaction) {
+        ownReaction.setRemotePostingId(postingId);
+        ownReaction.setNegative(negative);
+        ownReaction.setEmoji(emoji);
+        ownReaction.setCreatedAt(Util.now());
     }
 
 }

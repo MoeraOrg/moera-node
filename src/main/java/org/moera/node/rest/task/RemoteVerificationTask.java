@@ -17,6 +17,7 @@ public abstract class RemoteVerificationTask extends Task {
     public RemoteVerificationTask() {
     }
 
+    @Override
     protected void error(Throwable e) {
         if (e instanceof NodeApiUnknownNameException) {
             failed("remote-node.not-found", null);

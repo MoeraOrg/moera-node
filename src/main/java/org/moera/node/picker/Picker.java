@@ -43,9 +43,6 @@ import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 public class Picker extends Task {
 
@@ -70,9 +67,6 @@ public class Picker extends Task {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
-
-    @Inject
-    private PlatformTransactionManager txManager;
 
     @Inject
     private StoryOperations storyOperations;
@@ -122,23 +116,19 @@ public class Picker extends Task {
         log.info("Downloading from node '{}', postingId = {}", remoteNodeName, pick.getRemotePostingId());
 
         nodeApi.setNodeId(nodeId);
-        TransactionStatus status = beginTransaction();
-        try {
-            List<Event> events = new ArrayList<>();
-            List<DirectedNotification> notifications = new ArrayList<>();
 
-            Posting posting = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications);
-            commitTransaction(status);
+        List<Event> events = new ArrayList<>();
+        List<DirectedNotification> notifications = new ArrayList<>();
+        inTransaction(
+            () -> downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications),
+            posting -> {
+                events.forEach(event -> eventManager.send(nodeId, event));
+                notifications.forEach(
+                        dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
 
-            events.forEach(event -> eventManager.send(nodeId, event));
-            notifications.forEach(
-                    dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
-
-            succeeded(posting);
-        } catch (Exception e) {
-            rollbackTransaction(status);
-            error(e);
-        }
+                succeeded(posting);
+            }
+        );
     }
 
     private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
@@ -240,29 +230,14 @@ public class Picker extends Task {
         log.info("Posting downloaded successfully, id = {}", posting.getId());
     }
 
-    private void error(Throwable e) {
+    @Override
+    protected void error(Throwable e) {
         failed(e.getMessage());
     }
 
     private void failed(String message) {
         initLoggingDomain();
         log.error(message);
-    }
-
-    private TransactionStatus beginTransaction() {
-        return txManager != null ? txManager.getTransaction(new DefaultTransactionDefinition()) : null;
-    }
-
-    private void commitTransaction(TransactionStatus status) {
-        if (status != null) {
-            txManager.commit(status);
-        }
-    }
-
-    private void rollbackTransaction(TransactionStatus status) {
-        if (status != null) {
-            txManager.rollback(status);
-        }
     }
 
 }
