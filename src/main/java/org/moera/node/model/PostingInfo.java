@@ -114,8 +114,8 @@ public class PostingInfo {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
         operations = new HashMap<>();
-        operations.put("edit", new String[]{"owner"});
-        operations.put("delete", new String[]{"owner", "admin"});
+        operations.put("edit", receiverName == null ? new String[]{"owner"} : new String[0]);
+        operations.put("delete", receiverName == null ? new String[]{"owner", "admin"} : new String[]{"admin"});
         operations.put("revisions", new String[0]);
         operations.put("reactions",
                 posting.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
