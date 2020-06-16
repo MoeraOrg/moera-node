@@ -13,15 +13,16 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.model.event.Event;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +41,9 @@ public abstract class PostingRevisionControllerBase {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private ReactionTotalOperations reactionTotalOperations;
 
     protected abstract Logger getLog();
 
@@ -61,8 +65,7 @@ public abstract class PostingRevisionControllerBase {
         }
 
         UUID draftId = posting.getDraftRevision() != null ? posting.getDraftRevision().getId() : null;
-        boolean countsVisible = posting.isReactionTotalsVisible() || requestContext.isAdmin()
-                || requestContext.isClient(posting.getOwnerName());
+        boolean countsVisible = reactionTotalOperations.isVisibleToClient(posting);
         return posting.getRevisions().stream()
                 .filter(r -> !r.getId().equals(draftId))
                 .map(r -> new PostingRevisionInfo(r, countsVisible))
@@ -86,8 +89,7 @@ public abstract class PostingRevisionControllerBase {
             throw new ObjectNotFoundFailure("posting-revision.not-found");
         }
 
-        return new PostingRevisionInfo(revision, posting.isReactionTotalsVisible() || requestContext.isAdmin()
-                || requestContext.isClient(posting.getOwnerName()));
+        return new PostingRevisionInfo(revision, reactionTotalOperations.isVisibleToClient(posting));
     }
 
     @PostMapping("/{id}/restore")

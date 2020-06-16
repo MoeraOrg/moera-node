@@ -5,17 +5,22 @@ import javax.transaction.Transactional;
 
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.UnsubscribeFailure;
+import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.PostingDeletedNotification;
+import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.picker.Pick;
 import org.moera.node.picker.PickerPool;
 import org.moera.node.operations.PostingOperations;
@@ -34,6 +39,9 @@ public class PostingProcessor {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private ReactionTotalRepository reactionTotalRepository;
+
+    @Inject
     private PickerPool pickerPool;
 
     @Inject
@@ -41,6 +49,9 @@ public class PostingProcessor {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private ReactionTotalOperations reactionTotalOperations;
 
     @NotificationMapping(NotificationType.FEED_POSTING_ADDED)
     public void added(FeedPostingAddedNotification notification) {
@@ -96,6 +107,31 @@ public class PostingProcessor {
 
         postingOperations.deletePosting(posting);
         storyOperations.unpublish(posting.getId());
+    }
+
+    @NotificationMapping(NotificationType.POSTING_REACTIONS_UPDATED)
+    @Transactional
+    public void reactionsUpdated(PostingReactionsUpdatedNotification notification) {
+        Subscription subscription = subscriptionRepository.findBySubscriber(
+                requestContext.nodeId(), SubscriptionType.POSTING, notification.getSenderNodeName(),
+                notification.getSubscriberId()).orElse(null);
+        if (subscription == null || !notification.getPostingId().equals(subscription.getRemoteEntryId())) {
+            throw new UnsubscribeFailure();
+        }
+        Posting posting = postingRepository.findByReceiverId(requestContext.nodeId(), subscription.getRemoteNodeName(),
+                notification.getPostingId()).orElse(null);
+        if (posting == null) {
+            throw new UnsubscribeFailure();
+        }
+
+        var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());
+        if (!reactionTotalOperations.isSame(reactionTotals, notification.getTotals())) {
+            reactionTotalOperations.replaceAll(posting, notification.getTotals());
+
+            requestContext.send(new PostingReactionsChangedEvent(posting));
+            requestContext.send(Directions.postingSubscribers(posting.getId()),
+                    new PostingReactionsUpdatedNotification(posting.getId(), notification.getTotals()));
+        }
     }
 
 }

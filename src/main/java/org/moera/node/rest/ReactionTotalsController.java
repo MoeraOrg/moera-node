@@ -1,19 +1,16 @@
 package org.moera.node.rest;
 
-import java.util.Set;
 import java.util.UUID;
-
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.data.ReactionTotal;
-import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +27,10 @@ public class ReactionTotalsController {
     private RequestContext requestContext;
 
     @Inject
-    private ReactionTotalRepository reactionTotalRepository;
+    private PostingRepository postingRepository;
 
     @Inject
-    private PostingRepository postingRepository;
+    private ReactionTotalOperations reactionTotalOperations;
 
     @GetMapping
     public ReactionTotalsInfo get(@PathVariable UUID postingId) {
@@ -44,9 +41,7 @@ public class ReactionTotalsController {
             throw new ObjectNotFoundFailure("reaction-totals.posting-not-found");
         }
 
-        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
-        return new ReactionTotalsInfo(totals, posting.isReactionTotalsVisible() || requestContext.isAdmin()
-                || requestContext.isClient(posting.getOwnerName()));
+        return reactionTotalOperations.getInfo(posting).getClientInfo();
     }
 
 }

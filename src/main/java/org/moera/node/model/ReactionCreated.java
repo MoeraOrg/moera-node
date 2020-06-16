@@ -1,10 +1,7 @@
 package org.moera.node.model;
 
-import java.util.Collection;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Reaction;
-import org.moera.node.data.ReactionTotal;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReactionCreated {
@@ -15,9 +12,9 @@ public class ReactionCreated {
     public ReactionCreated() {
     }
 
-    public ReactionCreated(Reaction reaction, Collection<ReactionTotal> totals, boolean countsVisible) {
+    public ReactionCreated(Reaction reaction, ReactionTotalsInfo totals) {
         this.reaction = new ReactionInfo(reaction);
-        this.totals = new ReactionTotalsInfo(totals, countsVisible);
+        this.totals = totals;
     }
 
     public ReactionInfo getReaction() {

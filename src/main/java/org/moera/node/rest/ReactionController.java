@@ -29,7 +29,6 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.event.EventManager;
-import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
@@ -42,8 +41,12 @@ import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.PostingReactionsChangedEvent;
+import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.InstantOperations;
+import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
@@ -93,6 +96,9 @@ public class ReactionController {
 
     @Inject
     private EventManager eventManager;
+
+    @Inject
+    private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
     private InstantOperations instantOperations;
@@ -183,11 +189,12 @@ public class ReactionController {
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
 
-        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
-        boolean countsVisible = posting.isReactionTotalsVisible() || requestContext.isAdmin()
-                || requestContext.isClient(posting.getOwnerName());
+        var totalsInfo = reactionTotalOperations.getInfo(posting);
+        requestContext.send(Directions.postingSubscribers(postingId),
+                new PostingReactionsUpdatedNotification(postingId, totalsInfo.getPublicInfo()));
+
         return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
-                .body(new ReactionCreated(reaction, totals, countsVisible));
+                .body(new ReactionCreated(reaction, totalsInfo.getClientInfo()));
     }
 
     @GetMapping
@@ -272,6 +279,9 @@ public class ReactionController {
         instantOperations.reactionsDeletedAll(postingId);
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
+        var totalsInfo = reactionTotalOperations.getInfo(posting);
+        requestContext.send(Directions.postingSubscribers(postingId),
+                new PostingReactionsUpdatedNotification(postingId, totalsInfo.getPublicInfo()));
 
         return Result.OK;
     }
@@ -304,10 +314,11 @@ public class ReactionController {
         reactionRepository.flush();
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
+        var totalsInfo = reactionTotalOperations.getInfo(posting);
+        requestContext.send(Directions.postingSubscribers(postingId),
+                new PostingReactionsUpdatedNotification(postingId, totalsInfo.getPublicInfo()));
 
-        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(postingId);
-        return new ReactionTotalsInfo(totals,
-                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()));
+        return totalsInfo.getClientInfo();
     }
 
     @Scheduled(fixedDelayString = "PT15M")
@@ -334,9 +345,13 @@ public class ReactionController {
             }
             reactionRepository.delete(reaction);
         });
-        changed.stream()
-                .map(e -> (Posting) e)
-                .forEach(p -> eventManager.send(p.getNodeId(), new PostingReactionsChangedEvent(p)));
+        for (Entry entry : changed) {
+            Posting posting = (Posting) entry;
+            eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
+            var totalsInfo = reactionTotalOperations.getInfo(posting);
+            requestContext.send(Directions.postingSubscribers(posting.getId()),
+                    new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
+        }
     }
 
     private void changeTotals(Entry entry, Reaction reaction, int delta) {

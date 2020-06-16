@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.springframework.stereotype.Component;
@@ -52,6 +53,39 @@ public class ReactionTotalOperations {
 
     }
 
+    public static class ReactionTotalsData {
+
+        private final RequestContext requestContext;
+        private final Posting posting;
+        private final Set<ReactionTotal> totals;
+
+        ReactionTotalsData(RequestContext requestContext, Posting posting, Set<ReactionTotal> totals) {
+            this.requestContext = requestContext;
+            this.posting = posting;
+            this.totals = totals;
+        }
+
+        public boolean isVisibleToClient() {
+            return isVisibleToPublic() || requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName());
+        }
+
+        public boolean isVisibleToPublic() {
+            return posting.isReactionTotalsVisible();
+        }
+
+        public ReactionTotalsInfo getClientInfo() {
+            return new ReactionTotalsInfo(totals, isVisibleToClient());
+        }
+
+        public ReactionTotalsInfo getPublicInfo() {
+            return new ReactionTotalsInfo(totals, isVisibleToPublic());
+        }
+
+    }
+
+    @Inject
+    private RequestContext requestContext;
+
     @Inject
     private ReactionTotalRepository reactionTotalRepository;
 
@@ -92,6 +126,16 @@ public class ReactionTotalOperations {
             }
         }
         return true;
+    }
+
+    public boolean isVisibleToClient(Posting posting) {
+        return posting.isReactionTotalsVisible() || requestContext.isAdmin()
+                || requestContext.isClient(posting.getOwnerName());
+    }
+
+    public ReactionTotalsData getInfo(Posting posting) {
+        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(posting.getId());
+        return new ReactionTotalsData(requestContext, posting, totals);
     }
 
 }
