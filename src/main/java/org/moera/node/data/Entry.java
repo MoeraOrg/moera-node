@@ -39,14 +39,14 @@ public class Entry {
     @Column(insertable = false, updatable = false)
     private EntryType entryType;
 
-    @Size(max = 127)
+    @Size(max = 63)
     private String receiverName;
 
     @Size(max = 40)
     private String receiverEntryId;
 
     @NotNull
-    @Size(max = 127)
+    @Size(max = 63)
     private String ownerName = "";
 
     @NotNull

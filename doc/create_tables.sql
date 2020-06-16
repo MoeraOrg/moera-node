@@ -54,12 +54,12 @@ CREATE TABLE public.entries (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     entry_type smallint NOT NULL,
-    owner_name character varying(127),
+    owner_name character varying(63),
     created_at timestamp without time zone NOT NULL,
     current_revision_id uuid,
     deleted_at timestamp without time zone,
     total_revisions integer NOT NULL,
-    receiver_name character varying(127),
+    receiver_name character varying(63),
     accepted_reactions_positive character varying(255) NOT NULL,
     accepted_reactions_negative character varying(255) NOT NULL,
     reactions_visible boolean DEFAULT true NOT NULL,
@@ -180,7 +180,7 @@ ALTER TABLE public.reaction_totals OWNER TO moera;
 
 CREATE TABLE public.reactions (
     id uuid NOT NULL,
-    owner_name character varying(127) NOT NULL,
+    owner_name character varying(63) NOT NULL,
     entry_revision_id uuid NOT NULL,
     negative boolean NOT NULL,
     emoji integer NOT NULL,

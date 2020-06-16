@@ -10,6 +10,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.moera.commons.util.Util;
 
@@ -21,6 +22,7 @@ public class Reaction {
     private UUID id;
 
     @NotNull
+    @Size(max = 63)
     private String ownerName = "";
 
     @ManyToOne
