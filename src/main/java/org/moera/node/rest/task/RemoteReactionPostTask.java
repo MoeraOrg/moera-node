@@ -60,9 +60,6 @@ public class RemoteReactionPostTask extends Task {
     }
 
     private void saveReaction(ReactionInfo info) {
-        if (targetNodeName.equals(nodeName)) {
-            return;
-        }
         inTransaction(
                 () -> {
                     OwnReaction ownReaction = ownReactionRepository

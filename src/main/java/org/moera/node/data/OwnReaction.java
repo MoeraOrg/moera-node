@@ -5,10 +5,12 @@ import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.Util;
+import org.moera.node.model.RemotePosting;
 
 @Entity
 @Table(name = "own_reactions")
@@ -91,6 +93,14 @@ public class OwnReaction {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Transient
+    public RemotePosting getRemotePosting() {
+        RemotePosting remotePosting = new RemotePosting();
+        remotePosting.setNodeName(remoteNodeName);
+        remotePosting.setPostingId(remotePostingId);
+        return remotePosting;
     }
 
 }
