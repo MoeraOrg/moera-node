@@ -75,6 +75,7 @@ public class RemoteReactionController {
 
     @DeleteMapping
     @Admin
+    @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId) {
         log.info("DELETE /nodes/{nodeName}/postings/{postingId}/reactions (nodeName = {}, postingId = {})",
                 LogUtil.format(nodeName),
