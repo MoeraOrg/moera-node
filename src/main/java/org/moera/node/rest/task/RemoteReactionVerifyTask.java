@@ -25,6 +25,8 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     private static Logger log = LoggerFactory.getLogger(RemoteReactionVerifyTask.class);
 
     private RemoteReactionVerification data;
+    private String remoteNodeName;
+    private String remotePostingId;
 
     @Inject
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
@@ -40,9 +42,16 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     public void run() {
         try {
             nodeApi.setNodeId(nodeId);
-            PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), data.getPostingId());
-            PostingRevisionInfo[] revisions = nodeApi.getPostingRevisions(data.getNodeName(), data.getPostingId());
-            ReactionInfo reactionInfo = nodeApi.getPostingReaction(data.getNodeName(), data.getPostingId(),
+            remoteNodeName = data.getNodeName();
+            remotePostingId = data.getPostingId();
+            PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+            if (postingInfo.getReceiverName() != null) {
+                remoteNodeName = postingInfo.getReceiverName();
+                remotePostingId = postingInfo.getReceiverPostingId();
+                postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+            }
+            PostingRevisionInfo[] revisions = nodeApi.getPostingRevisions(remoteNodeName, remotePostingId);
+            ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
                     data.getReactionOwnerName());
             verify(postingInfo, revisions, reactionInfo);
         } catch (Exception e) {
