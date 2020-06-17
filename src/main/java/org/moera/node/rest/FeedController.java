@@ -14,6 +14,8 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
+import org.moera.node.data.OwnReaction;
+import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
@@ -64,6 +66,9 @@ public class FeedController {
 
     @Inject
     private ReactionRepository reactionRepository;
+
+    @Inject
+    private OwnReactionRepository ownReactionRepository;
 
     @Inject
     private SubscriberRepository subscriberRepository;
@@ -233,11 +238,40 @@ public class FeedController {
                     .map(ClientReactionInfo::new)
                     .filter(r -> postingMap.containsKey(r.getPostingId()))
                     .forEach(r -> postingMap.get(r.getPostingId()).setClientReaction(r));
+            if (requestContext.isAdmin()) {
+                fillOwnReactions(stories, postingMap);
+            }
         }
         if (stories.size() > limit) {
             stories.remove(limit);
         }
         sliceInfo.setStories(stories);
+    }
+
+    private void fillOwnReactions(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
+        List<String> remotePostingIds = postingMap.values().stream()
+                .filter(p -> !p.isOriginal())
+                .map(PostingInfo::getReceiverPostingId)
+                .collect(Collectors.toList());
+        if (!remotePostingIds.isEmpty()) {
+            Map<String, OwnReaction> ownReactions = ownReactionRepository
+                    .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
+                    .stream()
+                    .collect(Collectors.toMap(
+                            OwnReaction::getRemotePostingId, Function.identity(), (p1, p2) -> p1));
+            stories.stream()
+                    .filter(s -> s instanceof StoryOfPostingInfo)
+                    .map(s -> ((StoryOfPostingInfo) s).getPosting())
+                    .filter(p -> !p.isOriginal())
+                    .forEach(posting -> {
+                        OwnReaction ownReaction = ownReactions.get(posting.getReceiverPostingId());
+                        if (ownReaction != null
+                                && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
+                                && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
+                            posting.setClientReaction(new ClientReactionInfo(ownReaction));
+                        }
+                    });
+        }
     }
 
     private StoryInfo buildStoryInfo(Story story) {

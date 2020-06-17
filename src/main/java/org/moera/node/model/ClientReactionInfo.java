@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.OwnReaction;
 import org.moera.node.data.Reaction;
 import org.moera.node.util.Util;
 
@@ -25,6 +26,13 @@ public class ClientReactionInfo {
         emoji = reaction.getEmoji();
         createdAt = Util.toEpochSecond(reaction.getCreatedAt());
         deadline = Util.toEpochSecond(reaction.getDeadline());
+    }
+
+    public ClientReactionInfo(OwnReaction reaction) {
+        postingId = reaction.getRemotePostingId();
+        negative = reaction.isNegative();
+        emoji = reaction.getEmoji();
+        createdAt = Util.toEpochSecond(reaction.getCreatedAt());
     }
 
     public String getPostingId() {

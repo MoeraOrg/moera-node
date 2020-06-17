@@ -11,7 +11,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.OwnReaction;
+import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
@@ -70,10 +71,10 @@ public class PostingController {
     private PostingRepository postingRepository;
 
     @Inject
-    private EntryRevisionRepository entryRevisionRepository;
+    private ReactionRepository reactionRepository;
 
     @Inject
-    private ReactionRepository reactionRepository;
+    private OwnReactionRepository ownReactionRepository;
 
     @Inject
     private PostingOperations postingOperations;
@@ -191,8 +192,16 @@ public class PostingController {
         if (StringUtils.isEmpty(clientName)) {
             return postingInfo;
         }
-        Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
-        postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        if (postingInfo.isOriginal()) {
+            Reaction reaction = reactionRepository.findByEntryIdAndOwner(
+                    UUID.fromString(postingInfo.getId()), clientName);
+            postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        } else if (requestContext.isAdmin()) {
+            OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(
+                    requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId())
+                    .orElse(null);
+            postingInfo.setClientReaction(ownReaction != null ? new ClientReactionInfo(ownReaction) : null);
+        }
         return postingInfo;
     }
 
