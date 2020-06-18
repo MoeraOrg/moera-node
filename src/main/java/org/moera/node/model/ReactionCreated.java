@@ -13,7 +13,7 @@ public class ReactionCreated {
     }
 
     public ReactionCreated(Reaction reaction, ReactionTotalsInfo totals) {
-        this.reaction = new ReactionInfo(reaction);
+        this.reaction = reaction != null ? new ReactionInfo(reaction) : null;
         this.totals = totals;
     }
 

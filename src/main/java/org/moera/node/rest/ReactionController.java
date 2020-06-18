@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,6 +23,9 @@ import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Entry;
+import org.moera.node.data.EntryRevision;
+import org.moera.node.data.OwnReaction;
+import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
@@ -84,6 +88,9 @@ public class ReactionController {
 
     @Inject
     private ReactionTotalRepository reactionTotalRepository;
+
+    @Inject
+    private OwnReactionRepository ownReactionRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -153,7 +160,18 @@ public class ReactionController {
             throw new ValidationFailure("reaction.not-accepted");
         }
 
-        Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, reactionDescription.getOwnerName());
+        if (posting.isOriginal()) {
+            return postToOriginal(reactionDescription, posting);
+        } else if (requestContext.isAdmin()) {
+            return postToPickedAtHome(reactionDescription, posting);
+        } else {
+            return postToPicked(reactionDescription, posting);
+        }
+    }
+
+    private ResponseEntity<ReactionCreated> postToOriginal(ReactionDescription reactionDescription, Posting posting) {
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(),
+                reactionDescription.getOwnerName());
         if (reaction == null || reaction.getDeadline() == null
                 || reaction.isNegative() != reactionDescription.isNegative()
                 || reaction.getEmoji() != reactionDescription.getEmoji()
@@ -175,7 +193,7 @@ public class ReactionController {
                 reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
             }
             reaction.setMoment(momentFinder.find(
-                    moment -> reactionRepository.countMoments(postingId, moment) == 0,
+                    moment -> reactionRepository.countMoments(posting.getId(), moment) == 0,
                     Util.now()));
             reaction = reactionRepository.save(reaction);
             posting.getCurrentRevision().addReaction(reaction);
@@ -190,11 +208,31 @@ public class ReactionController {
         requestContext.send(new PostingReactionsChangedEvent(posting));
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        requestContext.send(Directions.postingSubscribers(postingId),
-                new PostingReactionsUpdatedNotification(postingId, totalsInfo.getPublicInfo()));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
 
-        return ResponseEntity.created(URI.create("/postings/" + postingId + "/reactions" + reaction.getId()))
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
                 .body(new ReactionCreated(reaction, totalsInfo.getClientInfo()));
+    }
+
+    private ResponseEntity<ReactionCreated> postToPickedAtHome(ReactionDescription reactionDescription,
+                                                               Posting posting) {
+        Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
+                posting.getReceiverName(), posting.getReceiverEntryId());
+        ownReaction.ifPresent(r -> changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
+        changeEntryTotal(posting, reactionDescription.isNegative(), reactionDescription.getEmoji(), 1);
+
+        var totalsInfo = reactionTotalOperations.getInfo(posting);
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
+                .body(new ReactionCreated(null, totalsInfo.getClientInfo()));
+    }
+
+    private ResponseEntity<ReactionCreated> postToPicked(ReactionDescription reactionDescription, Posting posting) {
+        changeEntryTotal(posting, reactionDescription.isNegative(), reactionDescription.getEmoji(), 1);
+
+        var totalsInfo = reactionTotalOperations.getInfo(posting);
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
+                .body(new ReactionCreated(null, totalsInfo.getClientInfo()));
     }
 
     @GetMapping
@@ -303,7 +341,17 @@ public class ReactionController {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
 
-        Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
+        if (posting.isOriginal()) {
+            return deleteFromOriginal(ownerName, posting);
+        } else if (requestContext.isAdmin()) {
+            deleteFromPickedAtHome(posting);
+        }
+
+        return reactionTotalOperations.getInfo(posting).getClientInfo();
+    }
+
+    private ReactionTotalsInfo deleteFromOriginal(String ownerName, Posting posting) {
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(), ownerName);
         if (reaction != null) {
             changeTotals(posting, reaction, -1);
             reaction.setDeletedAt(Util.now());
@@ -315,10 +363,16 @@ public class ReactionController {
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        requestContext.send(Directions.postingSubscribers(postingId),
-                new PostingReactionsUpdatedNotification(postingId, totalsInfo.getPublicInfo()));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
 
         return totalsInfo.getClientInfo();
+    }
+
+    private void deleteFromPickedAtHome(Posting posting) {
+        Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
+                posting.getReceiverName(), posting.getReceiverEntryId());
+        ownReaction.ifPresent(r -> changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
     }
 
     @Scheduled(fixedDelayString = "PT15M")
@@ -355,26 +409,34 @@ public class ReactionController {
     }
 
     private void changeTotals(Entry entry, Reaction reaction, int delta) {
-        ReactionTotal total = reactionTotalRepository.findByEntryRevisionId(
-                reaction.getEntryRevision().getId(), reaction.isNegative(), reaction.getEmoji());
+        changeEntryRevisionTotal(reaction.getEntryRevision(), reaction.isNegative(), reaction.getEmoji(), delta);
+        changeEntryTotal(entry, reaction.isNegative(), reaction.getEmoji(), delta);
+    }
+
+    private void changeEntryRevisionTotal(EntryRevision entryRevision, boolean negative, int emoji, int delta) {
+        ReactionTotal total = reactionTotalRepository.findByEntryRevisionId(entryRevision.getId(), negative, emoji);
         if (total == null) {
             total = new ReactionTotal();
             total.setId(UUID.randomUUID());
-            total.setEntryRevision(reaction.getEntryRevision());
-            reaction.toReactionTotal(total);
+            total.setEntryRevision(entryRevision);
+            total.setNegative(negative);
+            total.setEmoji(emoji);
             total.setTotal(delta);
             total = reactionTotalRepository.save(total);
-            reaction.getEntryRevision().addReactionTotal(total);
+            entryRevision.addReactionTotal(total);
         } else {
             total.setTotal(total.getTotal() + delta);
         }
+    }
 
-        total = reactionTotalRepository.findByEntryId(entry.getId(), reaction.isNegative(), reaction.getEmoji());
+    private void changeEntryTotal(Entry entry, boolean negative, int emoji, int delta) {
+        ReactionTotal total = reactionTotalRepository.findByEntryId(entry.getId(), negative, emoji);
         if (total == null) {
             total = new ReactionTotal();
             total.setId(UUID.randomUUID());
             total.setEntry(entry);
-            reaction.toReactionTotal(total);
+            total.setNegative(negative);
+            total.setEmoji(emoji);
             total.setTotal(delta);
             total = reactionTotalRepository.save(total);
             entry.addReactionTotal(total);

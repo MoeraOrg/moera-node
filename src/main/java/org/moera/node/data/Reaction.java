@@ -158,9 +158,4 @@ public class Reaction {
         story.getReactions().removeIf(r -> r.getId().equals(id));
     }
 
-    public void toReactionTotal(ReactionTotal total) {
-        total.setNegative(negative);
-        total.setEmoji(emoji);
-    }
-
 }
