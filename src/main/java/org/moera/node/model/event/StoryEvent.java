@@ -30,11 +30,11 @@ public class StoryEvent extends Event {
     @JsonIgnore
     private boolean isAdmin;
 
-    public StoryEvent(EventType type) {
+    protected StoryEvent(EventType type) {
         super(type);
     }
 
-    public StoryEvent(EventType type, Story story, boolean isAdmin) {
+    protected StoryEvent(EventType type, Story story, boolean isAdmin) {
         super(type);
         id = story.getId().toString();
         storyType = story.getStoryType();

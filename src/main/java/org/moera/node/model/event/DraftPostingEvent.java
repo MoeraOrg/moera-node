@@ -7,11 +7,11 @@ public class DraftPostingEvent extends Event {
 
     private String id;
 
-    public DraftPostingEvent(EventType type) {
+    protected DraftPostingEvent(EventType type) {
         super(type);
     }
 
-    public DraftPostingEvent(EventType type, Posting posting) {
+    protected DraftPostingEvent(EventType type, Posting posting) {
         super(type);
         this.id = posting.getId().toString();
     }

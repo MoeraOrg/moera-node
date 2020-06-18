@@ -17,6 +17,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
+import org.moera.node.model.event.RemoteReactionDeletedEvent;
 import org.moera.node.rest.task.RemoteReactionPostTask;
 import org.moera.node.rest.task.RemoteReactionVerifyTask;
 import org.moera.node.task.TaskAutowire;
@@ -82,6 +83,7 @@ public class RemoteReactionController {
                 LogUtil.format(postingId));
 
         ownReactionRepository.deleteByRemotePostingId(requestContext.nodeId(), nodeName, postingId);
+        requestContext.send(new RemoteReactionDeletedEvent(nodeName, postingId));
 
         return Result.OK;
     }

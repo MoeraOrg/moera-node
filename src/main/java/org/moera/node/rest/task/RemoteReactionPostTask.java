@@ -16,6 +16,7 @@ import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.event.RemoteReactionAddedEvent;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,6 +78,7 @@ public class RemoteReactionPostTask extends Task {
                 },
                 null
         );
+        send(new RemoteReactionAddedEvent(targetNodeName, postingId, info));
     }
 
     private void success(ReactionCreated info) {

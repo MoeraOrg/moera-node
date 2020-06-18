@@ -32,10 +32,10 @@ public class ActivityReactionController {
     @Inject
     private OwnReactionRepository ownReactionRepository;
 
-    @PostMapping
+    @PostMapping("/search")
     @Admin
-    public List<ActivityReactionInfo> getAll(@Valid @RequestBody ActivityReactionFilter filter) {
-        log.info("GET /activity/reactions");
+    public List<ActivityReactionInfo> search(@Valid @RequestBody ActivityReactionFilter filter) {
+        log.info("GET /activity/reactions/search");
 
         if (filter.getPostings() == null || filter.getPostings().isEmpty()) {
             return Collections.emptyList();

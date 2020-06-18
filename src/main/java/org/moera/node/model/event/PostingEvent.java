@@ -6,11 +6,11 @@ public class PostingEvent extends Event {
 
     private String id;
 
-    public PostingEvent(EventType type) {
+    protected PostingEvent(EventType type) {
         super(type);
     }
 
-    public PostingEvent(EventType type, Posting posting) {
+    protected PostingEvent(EventType type, Posting posting) {
         super(type);
         this.id = posting.getId().toString();
     }
