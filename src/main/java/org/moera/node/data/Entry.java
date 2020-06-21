@@ -96,6 +96,9 @@ public class Entry {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<Story> stories = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    private Set<EntrySource> sources = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -312,6 +315,24 @@ public class Entry {
             return null;
         }
         return getStories().stream().filter(fr -> fr.getFeedName().equals(feedName)).findFirst().orElse(null);
+    }
+
+    public Set<EntrySource> getSources() {
+        return sources;
+    }
+
+    public void setSources(Set<EntrySource> sources) {
+        this.sources = sources;
+    }
+
+    public void addSource(EntrySource source) {
+        sources.add(source);
+        source.setEntry(this);
+    }
+
+    public void removeSource(EntrySource source) {
+        sources.removeIf(sr -> sr.getId().equals(source.getId()));
+        source.setEntry(null);
     }
 
 }

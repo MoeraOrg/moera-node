@@ -82,15 +82,17 @@ public abstract class Task implements Runnable {
 
     protected <T> void inTransaction(Callable<T> inside, Consumer<T> after) {
         TransactionStatus status = beginTransaction();
+        T result;
         try {
-            T result = inside.call();
+            result = inside.call();
             commitTransaction(status);
-            if (after != null) {
-                after.accept(result);
-            }
         } catch (Exception e) {
             rollbackTransaction(status);
             error(e);
+            return;
+        }
+        if (after != null) {
+            after.accept(result);
         }
     }
 

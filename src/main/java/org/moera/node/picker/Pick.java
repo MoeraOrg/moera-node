@@ -1,5 +1,7 @@
 package org.moera.node.picker;
 
+import org.moera.node.data.EntrySource;
+
 public class Pick {
 
     private String remoteNodeName;
@@ -37,6 +39,18 @@ public class Pick {
 
     public void setFeedName(String feedName) {
         this.feedName = feedName;
+    }
+
+    public boolean isSame(EntrySource entrySource) {
+        return entrySource.getRemoteFeedName().equals(remoteFeedName)
+                && entrySource.getRemoteNodeName().equals(remoteNodeName)
+                && entrySource.getRemotePostingId().equals(remotePostingId);
+    }
+
+    public void toEntrySource(EntrySource entrySource) {
+        entrySource.setRemoteFeedName(remoteFeedName);
+        entrySource.setRemoteNodeName(remoteNodeName);
+        entrySource.setRemotePostingId(remotePostingId);
     }
 
 }

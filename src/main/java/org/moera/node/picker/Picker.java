@@ -14,6 +14,8 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.EntrySource;
+import org.moera.node.data.EntrySourceRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
@@ -43,6 +45,7 @@ import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 public class Picker extends Task {
 
@@ -69,6 +72,9 @@ public class Picker extends Task {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private EntrySourceRepository entrySourceRepository;
+
+    @Inject
     private StoryOperations storyOperations;
 
     @Inject
@@ -92,23 +98,26 @@ public class Picker extends Task {
 
     @Override
     public void run() {
-        while (!stopped) {
-            Pick pick;
-            try {
-                pick = queue.poll(1, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                continue;
-            }
-            if (pick == null) {
-                stopped = true;
-                if (!queue.isEmpty()) { // queue may receive content before the previous statement
-                    stopped = false;
+        try {
+            while (!stopped) {
+                Pick pick;
+                try {
+                    pick = queue.poll(1, TimeUnit.MINUTES);
+                } catch (InterruptedException e) {
+                    continue;
                 }
-            } else {
-                download(pick);
+                if (pick == null) {
+                    stopped = true;
+                    if (!queue.isEmpty()) { // queue may receive content before the previous statement
+                        stopped = false;
+                    }
+                } else {
+                    download(pick);
+                }
             }
+        } finally {
+            pool.deletePicker(nodeId, remoteNodeName);
         }
-        pool.deletePicker(nodeId, remoteNodeName);
     }
 
     private void download(Pick pick) {
@@ -120,7 +129,11 @@ public class Picker extends Task {
         List<Event> events = new ArrayList<>();
         List<DirectedNotification> notifications = new ArrayList<>();
         inTransaction(
-            () -> downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications),
+            () -> {
+                Posting posting = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications);
+                saveSources(posting, pick);
+                return posting;
+            },
             posting -> {
                 events.forEach(event -> eventManager.send(nodeId, event));
                 notifications.forEach(
@@ -223,6 +236,21 @@ public class Picker extends Task {
         subscription.setRemoteNodeName(remoteNodeName);
         subscription.setRemoteEntryId(remotePostingId);
         subscriptionRepository.save(subscription);
+    }
+
+    private void saveSources(Posting posting, Pick pick) {
+        if (StringUtils.isEmpty(pick.getRemoteFeedName())) {
+            return;
+        }
+        List<EntrySource> sources = entrySourceRepository.findAllByEntryId(posting.getId());
+        if (sources.stream().anyMatch(pick::isSame)) {
+            return;
+        }
+        EntrySource entrySource = new EntrySource();
+        entrySource.setId(UUID.randomUUID());
+        entrySource.setEntry(posting);
+        pick.toEntrySource(entrySource);
+        entrySourceRepository.save(entrySource);
     }
 
     private void succeeded(Posting posting) {
