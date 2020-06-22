@@ -23,6 +23,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.InstantOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -48,6 +49,9 @@ public class SubscriberController {
 
     @Inject
     private PostingRepository postingRepository;
+
+    @Inject
+    private InstantOperations instantOperations;
 
     @GetMapping
     public List<SubscriberInfo> getAll(@RequestParam String nodeName,
@@ -128,6 +132,7 @@ public class SubscriberController {
             subscriber.setEntry(posting);
         }
         subscriber = subscriberRepository.save(subscriber);
+        instantOperations.subscriberAdded(subscriber);
 
         // TODO event
         return new SubscriberInfo(subscriber);
@@ -176,6 +181,7 @@ public class SubscriberController {
         }
 
         subscriberRepository.delete(subscriber);
+        instantOperations.subscriberDeleted(subscriber);
         // TODO event
 
         return Result.OK;

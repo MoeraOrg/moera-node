@@ -8,14 +8,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class FeedInfo implements Cloneable {
 
     private String feedName;
+    private String title;
     private String subscriberId;
     private Map<String, String[]> operations;
 
     public FeedInfo() {
     }
 
-    public FeedInfo(String feedName, String subscriberId, Map<String, String[]> operations) {
+    public FeedInfo(String feedName, String title, String subscriberId, Map<String, String[]> operations) {
         this.feedName = feedName;
+        this.title = title;
         this.subscriberId = subscriberId;
         this.operations = operations;
     }
@@ -30,6 +32,14 @@ public class FeedInfo implements Cloneable {
 
     public void setFeedName(String feedName) {
         this.feedName = feedName;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getSubscriberId() {
@@ -50,7 +60,7 @@ public class FeedInfo implements Cloneable {
 
     @Override
     public FeedInfo clone() {
-        return new FeedInfo(feedName, subscriberId, operations);
+        return new FeedInfo(feedName, title, subscriberId, operations);
     }
 
 }

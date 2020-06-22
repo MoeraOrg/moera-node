@@ -17,6 +17,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.data.Subscriber;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
@@ -175,6 +176,62 @@ public class InstantOperations {
     private String buildMentionPostingSummary(Story story, String remotePostingHeading) {
         return String.format("<b>%s</b> mentioned you in a post \"%s\"",
                 formatNodeName(story.getRemoteNodeName()), Util.he(remotePostingHeading));
+    }
+
+    public void subscriberAdded(Subscriber subscriber) {
+        Story story = findSubscriberDeletedStory(subscriber.getRemoteNodeName());
+        if (story != null && !story.isRead()) {
+            storyRepository.delete(story);
+            requestContext.send(new StoryDeletedEvent(story, true));
+        }
+
+        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.SUBSCRIBER_ADDED, null);
+        story.setFeedName(Feed.INSTANT);
+        story.setRemoteNodeName(subscriber.getRemoteNodeName());
+        story.setSummary(buildSubscriberAddedSummary(subscriber));
+        storyOperations.updateMoment(story);
+        story = storyRepository.saveAndFlush(story);
+        requestContext.send(new StoryAddedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    private String buildSubscriberAddedSummary(Subscriber subscriber) {
+        return String.format("%s subscribed to your %s",
+                formatNodeName(subscriber.getRemoteNodeName()),
+                Feed.getStandard(subscriber.getFeedName()).getTitle());
+    }
+
+    public void subscriberDeleted(Subscriber subscriber) {
+        Story story = findSubscriberAddedStory(subscriber.getRemoteNodeName());
+        if (story != null && !story.isRead()) {
+            storyRepository.delete(story);
+            requestContext.send(new StoryDeletedEvent(story, true));
+        }
+
+        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.SUBSCRIBER_DELETED, null);
+        story.setFeedName(Feed.INSTANT);
+        story.setRemoteNodeName(subscriber.getRemoteNodeName());
+        story.setSummary(buildSubscriberDeletedSummary(subscriber));
+        storyOperations.updateMoment(story);
+        story = storyRepository.saveAndFlush(story);
+        requestContext.send(new StoryAddedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    private String buildSubscriberDeletedSummary(Subscriber subscriber) {
+        return String.format("%s unsubscribed from your %s",
+                formatNodeName(subscriber.getRemoteNodeName()),
+                Feed.getStandard(subscriber.getFeedName()).getTitle());
+    }
+
+    private Story findSubscriberAddedStory(String remoteNodeName) {
+        return storyRepository.findByRemoteNodeName(requestContext.nodeId(), Feed.INSTANT, StoryType.SUBSCRIBER_ADDED,
+                remoteNodeName).stream().findFirst().orElse(null);
+    }
+
+    private Story findSubscriberDeletedStory(String remoteNodeName) {
+        return storyRepository.findByRemoteNodeName(requestContext.nodeId(), Feed.INSTANT, StoryType.SUBSCRIBER_DELETED,
+                remoteNodeName).stream().findFirst().orElse(null);
     }
 
     private static String formatNodeName(String name) {

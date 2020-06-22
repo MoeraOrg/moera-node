@@ -18,6 +18,7 @@ public class Feed {
 
     static {
         FeedInfo feedInfo = new FeedInfo(TIMELINE);
+        feedInfo.setTitle("Timeline");
         feedInfo.setOperations(Collections.singletonMap("add", new String[]{"admin"}));
         STANDARD.put(TIMELINE, feedInfo);
 
@@ -26,6 +27,7 @@ public class Feed {
         STANDARD.put(INSTANT, feedInfo);
 
         feedInfo = new FeedInfo(NEWS);
+        feedInfo.setTitle("News");
         feedInfo.setOperations(Collections.singletonMap("add", new String[]{}));
         STANDARD.put(NEWS, feedInfo);
     }
