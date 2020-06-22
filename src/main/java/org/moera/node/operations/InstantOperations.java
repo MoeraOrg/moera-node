@@ -18,6 +18,7 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.Subscriber;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
@@ -179,6 +180,10 @@ public class InstantOperations {
     }
 
     public void subscriberAdded(Subscriber subscriber) {
+        if (subscriber.getSubscriptionType() != SubscriptionType.FEED) {
+            return;
+        }
+
         Story story = findSubscriberDeletedStory(subscriber.getRemoteNodeName());
         if (story != null && !story.isRead()) {
             storyRepository.delete(story);
@@ -202,6 +207,10 @@ public class InstantOperations {
     }
 
     public void subscriberDeleted(Subscriber subscriber) {
+        if (subscriber.getSubscriptionType() != SubscriptionType.FEED) {
+            return;
+        }
+
         Story story = findSubscriberAddedStory(subscriber.getRemoteNodeName());
         if (story != null && !story.isRead()) {
             storyRepository.delete(story);
