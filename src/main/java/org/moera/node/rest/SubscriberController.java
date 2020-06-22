@@ -119,7 +119,9 @@ public class SubscriberController {
             if (!Feed.isStandard(subscriberDescription.getFeedName())) {
                 throw new ValidationFailure("subscriberDescription.feedName.not-found");
             }
-            // TODO check permissions
+            if (Feed.isAdmin(subscriberDescription.getFeedName())) {
+                throw new ValidationFailure("subscriberDescription.feedName.not-found");
+            }
             subscriber.setFeedName(subscriberDescription.getFeedName());
         }
         if (subscriberDescription.getPostingId() != null) {

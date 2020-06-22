@@ -47,7 +47,7 @@ public class StoryController {
         log.info("GET /stories/{id}, (id = {})", LogUtil.format(id));
 
         Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (story == null) {
+        if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin()) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
 
