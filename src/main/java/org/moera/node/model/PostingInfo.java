@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ public class PostingInfo {
     private ReactionTotalsInfo reactions;
     private Boolean reactionsVisible;
     private Boolean reactionTotalsVisible;
+    private List<PostingSourceInfo> sources;
 
     public PostingInfo() {
     }
@@ -128,6 +130,9 @@ public class PostingInfo {
             reactionsVisible = posting.isReactionsVisible();
             reactionTotalsVisible = posting.isReactionTotalsVisible();
         }
+        sources = posting.getSources() != null
+                ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
+                : Collections.emptyList();
     }
 
     public String getId() {
@@ -418,6 +423,14 @@ public class PostingInfo {
 
     public void setReactionTotalsVisible(Boolean reactionTotalsVisible) {
         this.reactionTotalsVisible = reactionTotalsVisible;
+    }
+
+    public List<PostingSourceInfo> getSources() {
+        return sources;
+    }
+
+    public void setSources(List<PostingSourceInfo> sources) {
+        this.sources = sources;
     }
 
     public void toPickedPosting(Posting posting) {

@@ -36,8 +36,8 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("delete from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4")
     void deleteByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
-    @Query("select s from Story s"
-            + " left join fetch s.entry e left join fetch e.currentRevision left join fetch e.reactionTotals"
+    @Query("select s from Story s left join fetch s.entry e"
+            + " left join fetch e.currentRevision left join fetch e.reactionTotals left join fetch e.sources"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
     Set<Story> findInRange(UUID nodeId, String feedName, long afterMoment, long beforeMoment);
 
