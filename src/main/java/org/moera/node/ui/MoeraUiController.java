@@ -45,18 +45,30 @@ public class MoeraUiController {
     @GetMapping("/settings")
     @VirtualPage
     public String settings() {
-        return "redirect:/settings";
+        throw new PageNotFoundException();
     }
 
     @GetMapping("/settings/{tab}")
     @VirtualPage
     public String settingsTab(@PathVariable String tab) {
-        return "redirect:/settings/" + tab;
+        throw new PageNotFoundException();
     }
 
     @GetMapping("/news")
     @VirtualPage
     public String news() {
+        throw new PageNotFoundException();
+    }
+
+    @GetMapping("/people")
+    @VirtualPage
+    public String people() {
+        throw new PageNotFoundException();
+    }
+
+    @GetMapping("/people/{tab}")
+    @VirtualPage
+    public String peopleTab(@PathVariable String tab) {
         throw new PageNotFoundException();
     }
 
