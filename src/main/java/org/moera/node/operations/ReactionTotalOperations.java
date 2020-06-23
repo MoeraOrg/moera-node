@@ -66,7 +66,9 @@ public class ReactionTotalOperations {
         }
 
         public boolean isVisibleToClient() {
-            return isVisibleToPublic() || requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName());
+            return isVisibleToPublic()
+                    || (requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()))
+                        && posting.isOriginal();
         }
 
         public boolean isVisibleToPublic() {
@@ -102,7 +104,7 @@ public class ReactionTotalOperations {
             reactionTotal.setEntry(posting);
             reactionTotal.setNegative(negative);
             reactionTotal.setEmoji(reactionTotalInfo.getEmoji());
-            reactionTotal.setTotal(reactionTotalInfo.getTotal());
+            reactionTotal.setTotal(realOrVirtualTotal(reactionTotalInfo));
             reactionTotalRepository.save(reactionTotal);
         }
     }
@@ -121,7 +123,7 @@ public class ReactionTotalOperations {
                                 Map<ReactionIndex, Integer> totals) {
         for (ReactionTotalInfo info : reactionTotalList) {
             int total = totals.getOrDefault(new ReactionIndex(negative, info.getEmoji()), 0);
-            if (total != info.getTotal()) {
+            if (total != realOrVirtualTotal(info)) {
                 return false;
             }
         }
@@ -136,6 +138,10 @@ public class ReactionTotalOperations {
     public ReactionTotalsData getInfo(Posting posting) {
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(posting.getId());
         return new ReactionTotalsData(requestContext, posting, totals);
+    }
+
+    private int realOrVirtualTotal(ReactionTotalInfo info) {
+        return info.getTotal() != null ? info.getTotal() : (int) (info.getShare() * 1000);
     }
 
 }

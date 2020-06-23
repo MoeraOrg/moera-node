@@ -125,11 +125,9 @@ public class PostingInfo {
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
         reactions = new ReactionTotalsInfo(posting.getReactionTotals(),
-                isAdminOrOwner || posting.isReactionTotalsVisible());
-        if (includeSource) {
-            reactionsVisible = posting.isReactionsVisible();
-            reactionTotalsVisible = posting.isReactionTotalsVisible();
-        }
+                isAdminOrOwner && posting.isOriginal() || posting.isReactionTotalsVisible());
+        reactionsVisible = posting.isReactionsVisible();
+        reactionTotalsVisible = posting.isReactionTotalsVisible();
         sources = posting.getSources() != null
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
@@ -439,6 +437,8 @@ public class PostingInfo {
         posting.setReceiverCreatedAt(Util.toTimestamp(isOriginal() ? createdAt : receiverCreatedAt));
         posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
+        posting.setReactionsVisible(reactionsVisible);
+        posting.setReactionTotalsVisible(reactionTotalsVisible);
     }
 
     public boolean differFromPickedPosting(Posting posting) {
@@ -446,6 +446,8 @@ public class PostingInfo {
                 || posting.getDeletedAt() != null
                 || !posting.getAcceptedReactionsPositive().equals(acceptedReactions.getPositive())
                 || !posting.getAcceptedReactionsNegative().equals(acceptedReactions.getNegative())
+                || posting.isReactionsVisible() != reactionsVisible
+                || posting.isReactionTotalsVisible() != reactionTotalsVisible
                 || !posting.getCurrentReceiverRevisionId().equals(receiverRevisionId);
     }
 
