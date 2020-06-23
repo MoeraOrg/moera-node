@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
-@RequestMapping("/moera/api/subscribers")
+@RequestMapping("/moera/api/people/subscribers")
 public class SubscriberController {
 
     private static Logger log = LoggerFactory.getLogger(SubscriberController.class);
@@ -58,7 +58,7 @@ public class SubscriberController {
                                        @RequestParam(defaultValue = "feed") SubscriptionType type)
             throws AuthenticationException {
 
-        log.info("GET /subscribers (nodeName = {}, type = {})",
+        log.info("GET /people/subscribers (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
         String ownerName = requestContext.getClientName();
@@ -73,7 +73,7 @@ public class SubscriberController {
 
     @GetMapping("/{id}")
     public SubscriberInfo get(@PathVariable UUID id) throws AuthenticationException {
-        log.info("GET /subscribers/{id} (id = {})", LogUtil.format(id));
+        log.info("GET /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (subscriber == null) {
@@ -93,7 +93,7 @@ public class SubscriberController {
     public SubscriberInfo post(@Valid @RequestBody SubscriberDescription subscriberDescription)
             throws AuthenticationException {
 
-        log.info("POST /subscribers (type = {}, feedName = {}, postingId = {})",
+        log.info("POST /people/subscribers (type = {}, feedName = {}, postingId = {})",
                 LogUtil.format(SubscriptionType.toValue(subscriberDescription.getType())),
                 LogUtil.format(subscriberDescription.getFeedName()),
                 LogUtil.format(subscriberDescription.getPostingId()));
@@ -170,7 +170,7 @@ public class SubscriberController {
     @DeleteMapping("/{id}")
     @Transactional
     public Result delete(@PathVariable UUID id) throws AuthenticationException {
-        log.info("DELETE /subscribers/{id} (id = {})", LogUtil.format(id));
+        log.info("DELETE /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (subscriber == null) {

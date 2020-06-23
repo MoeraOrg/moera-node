@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
-@RequestMapping("/moera/api/subscriptions")
+@RequestMapping("/moera/api/people/subscriptions")
 public class SubscriptionController {
 
     private static Logger log = LoggerFactory.getLogger(SubscriptionController.class);
@@ -43,7 +43,7 @@ public class SubscriptionController {
     @Admin
     @Transactional
     public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) {
-        log.info("POST /subscriptions (type = {}, feedName = {}, remoteSubscriberId = {}, remoteNodeName = {},"
+        log.info("POST /people/subscriptions (type = {}, feedName = {}, remoteSubscriberId = {}, remoteNodeName = {},"
                         + " remotePostingId = {})",
                 LogUtil.format(SubscriptionType.toValue(subscriptionDescription.getType())),
                 LogUtil.format(subscriptionDescription.getFeedName()),
@@ -83,7 +83,7 @@ public class SubscriptionController {
             @RequestParam("nodeName") String remoteNodeName,
             @RequestParam("subscriberId") String remoteSubscriberId) {
 
-        log.info("DELETE /subscriptions (type = {}, remoteSubscriberId = {}, remoteNodeName = {})",
+        log.info("DELETE /people/subscriptions (type = {}, remoteSubscriberId = {}, remoteNodeName = {})",
                 LogUtil.format(SubscriptionType.toValue(type)),
                 LogUtil.format(remoteSubscriberId),
                 LogUtil.format(remoteNodeName));

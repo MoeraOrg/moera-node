@@ -172,7 +172,7 @@ public class NodeApi {
     public SubscriberInfo postSubscriber(String nodeName, String carte, SubscriberDescriptionQ subscriber)
             throws NodeApiException {
 
-        return call("POST", nodeName, String.format("/subscribers?carte=%s", Util.ue(carte)), subscriber,
+        return call("POST", nodeName, String.format("/people/subscribers?carte=%s", Util.ue(carte)), subscriber,
                 SubscriberInfo.class);
     }
 

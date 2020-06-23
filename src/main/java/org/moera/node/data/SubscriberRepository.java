@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface SubscriberRepository extends JpaRepository<Subscriber, UUID> {
 
+    @Query("select count(*) from Subscriber s where s.nodeId = ?1 and s.subscriptionType = ?2")
+    int countByType(UUID nodeId, SubscriptionType subscriptionType);
+
     @Query("select s from Subscriber s where s.nodeId = ?1 and s.id = ?2")
     Optional<Subscriber> findByNodeIdAndId(UUID nodeId, UUID id);
 
