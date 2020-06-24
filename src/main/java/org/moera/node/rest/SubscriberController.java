@@ -3,15 +3,18 @@ package org.moera.node.rest;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.QSubscriber;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
@@ -54,19 +57,22 @@ public class SubscriberController {
     private InstantOperations instantOperations;
 
     @GetMapping
-    public List<SubscriberInfo> getAll(@RequestParam String nodeName,
-                                       @RequestParam(defaultValue = "feed") SubscriptionType type)
-            throws AuthenticationException {
-
+    public List<SubscriberInfo> getAll(@RequestParam(required = false) String nodeName,
+                                       @RequestParam(required = false) SubscriptionType type) {
         log.info("GET /people/subscribers (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
-        String ownerName = requestContext.getClientName();
-        if (!requestContext.isAdmin() && (StringUtils.isEmpty(ownerName) || !ownerName.equals(nodeName))) {
-            throw new AuthenticationException();
+        QSubscriber subscriber = QSubscriber.subscriber;
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(subscriber.nodeId.eq(requestContext.nodeId()));
+        if (!StringUtils.isEmpty(nodeName)) {
+            where.and(subscriber.remoteNodeName.eq(nodeName));
+        }
+        if (type != null) {
+            where.and(subscriber.subscriptionType.eq(type));
         }
 
-        return subscriberRepository.findByType(requestContext.nodeId(), nodeName, type).stream()
+        return StreamSupport.stream(subscriberRepository.findAll(where).spliterator(), false)
                 .map(SubscriberInfo::new)
                 .collect(Collectors.toList());
     }

@@ -6,8 +6,9 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
-public interface SubscriberRepository extends JpaRepository<Subscriber, UUID> {
+public interface SubscriberRepository extends JpaRepository<Subscriber, UUID>, QuerydslPredicateExecutor<Subscriber> {
 
     @Query("select count(*) from Subscriber s where s.nodeId = ?1 and s.subscriptionType = ?2")
     int countByType(UUID nodeId, SubscriptionType subscriptionType);
