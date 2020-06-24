@@ -1,13 +1,18 @@
 package org.moera.node.rest;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
+import org.moera.node.data.QSubscription;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
@@ -21,7 +26,9 @@ import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +45,27 @@ public class SubscriptionController {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
+
+    @GetMapping
+    public List<SubscriptionInfo> getAll(@RequestParam(required = false) String nodeName,
+                                         @RequestParam(required = false) SubscriptionType type) {
+        log.info("GET /people/subscriptions (nodeName = {}, type = {})",
+                LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
+
+        QSubscription subscription = QSubscription.subscription;
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(subscription.nodeId.eq(requestContext.nodeId()));
+        if (!StringUtils.isEmpty(nodeName)) {
+            where.and(subscription.remoteNodeName.eq(nodeName));
+        }
+        if (type != null) {
+            where.and(subscription.subscriptionType.eq(type));
+        }
+
+        return StreamSupport.stream(subscriptionRepository.findAll(where).spliterator(), false)
+                .map(SubscriptionInfo::new)
+                .collect(Collectors.toList());
+    }
 
     @PostMapping
     @Admin
