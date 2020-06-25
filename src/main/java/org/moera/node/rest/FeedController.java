@@ -187,7 +187,7 @@ public class FeedController {
             Map<String, PostingInfo> postingMap = stories.stream()
                     .filter(s -> s instanceof StoryOfPostingInfo)
                     .map(s -> ((StoryOfPostingInfo) s).getPosting())
-                    .collect(Collectors.toMap(PostingInfo::getId, Function.identity()));
+                    .collect(Collectors.toMap(PostingInfo::getId, Function.identity(), (t1, t2) -> t1));
             reactionRepository.findByStoriesInRangeAndOwner(
                     requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
                     .stream()
