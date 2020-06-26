@@ -10,6 +10,8 @@ import javax.inject.Inject;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.event.EventManager;
+import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.task.TaskAutowire;
@@ -31,6 +33,9 @@ public class NotificationSenderPool {
 
     @Inject
     private SubscriberRepository subscriberRepository;
+
+    @Inject
+    private EventManager eventManager;
 
     public void send(Direction direction, Notification notification) {
         if (direction instanceof SingleDirection) {
@@ -90,7 +95,10 @@ public class NotificationSenderPool {
     }
 
     void unsubscribe(UUID subscriberId) {
-        subscriberRepository.deleteById(subscriberId);
+        subscriberRepository.findById(subscriberId).ifPresent(subscriber -> {
+            eventManager.send(subscriber.getNodeId(), new SubscriberDeletedEvent(subscriber));
+            subscriberRepository.delete(subscriber);
+        });
     }
 
 }

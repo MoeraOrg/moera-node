@@ -34,6 +34,7 @@ import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
+import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.DirectedNotification;
@@ -156,7 +157,7 @@ public class Picker extends Task {
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             downloadRevisions(posting);
-            subscribe(remotePostingId);
+            subscribe(remotePostingId, events);
             events.add(new PostingAddedEvent(posting));
             notifications.add(new DirectedNotification(
                     Directions.feedSubscribers(feedName),
@@ -225,7 +226,7 @@ public class Picker extends Task {
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, events::add);
     }
 
-    private void subscribe(String remotePostingId) throws NodeApiException {
+    private void subscribe(String remotePostingId, List<Event> events) throws NodeApiException {
         SubscriberInfo subscriberInfo = nodeApi.postSubscriber(remoteNodeName, generateCarte(),
                 new SubscriberDescriptionQ(SubscriptionType.POSTING, null, remotePostingId));
         Subscription subscription = new Subscription();
@@ -235,7 +236,8 @@ public class Picker extends Task {
         subscription.setRemoteSubscriberId(subscriberInfo.getId());
         subscription.setRemoteNodeName(remoteNodeName);
         subscription.setRemoteEntryId(remotePostingId);
-        subscriptionRepository.save(subscription);
+        subscription = subscriptionRepository.save(subscription);
+        events.add(new SubscriptionAddedEvent(subscription));
     }
 
     private void saveSources(Posting posting, Pick pick) {

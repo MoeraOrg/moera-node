@@ -26,6 +26,8 @@ import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.SubscriberAddedEvent;
+import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.operations.InstantOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,8 +143,8 @@ public class SubscriberController {
         }
         subscriber = subscriberRepository.save(subscriber);
         instantOperations.subscriberAdded(subscriber);
+        requestContext.send(new SubscriberAddedEvent(subscriber));
 
-        // TODO event
         return new SubscriberInfo(subscriber);
     }
 
@@ -190,7 +192,7 @@ public class SubscriberController {
 
         subscriberRepository.delete(subscriber);
         instantOperations.subscriberDeleted(subscriber);
-        // TODO event
+        requestContext.send(new SubscriberDeletedEvent(subscriber));
 
         return Result.OK;
     }

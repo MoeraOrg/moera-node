@@ -1,15 +1,15 @@
-package org.moera.node.model;
+package org.moera.node.model.event;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.commons.util.Util;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SubscriptionInfo {
+public class SubscriptionEvent extends Event {
 
     private String id;
-    private SubscriptionType type;
+    private SubscriptionType subscriptionType;
     private String feedName;
     private String remoteSubscriberId;
     private String remoteNodeName;
@@ -17,12 +17,14 @@ public class SubscriptionInfo {
     private String remotePostingId;
     private Long createdAt;
 
-    public SubscriptionInfo() {
+    public SubscriptionEvent(EventType type) {
+        super(type);
     }
 
-    public SubscriptionInfo(Subscription subscription) {
+    public SubscriptionEvent(EventType type, Subscription subscription) {
+        super(type);
         id = subscription.getId().toString();
-        type = subscription.getSubscriptionType();
+        subscriptionType = subscription.getSubscriptionType();
         feedName = subscription.getFeedName();
         remoteSubscriberId = subscription.getRemoteSubscriberId();
         remoteNodeName = subscription.getRemoteNodeName();
@@ -39,12 +41,12 @@ public class SubscriptionInfo {
         this.id = id;
     }
 
-    public SubscriptionType getType() {
-        return type;
+    public SubscriptionType getSubscriptionType() {
+        return subscriptionType;
     }
 
-    public void setType(SubscriptionType type) {
-        this.type = type;
+    public void setSubscriptionType(SubscriptionType subscriptionType) {
+        this.subscriptionType = subscriptionType;
     }
 
     public String getFeedName() {

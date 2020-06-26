@@ -24,6 +24,8 @@ import org.moera.node.model.Result;
 import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.SubscriptionAddedEvent;
+import org.moera.node.model.event.SubscriptionDeletedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -99,6 +101,7 @@ public class SubscriptionController {
         subscription.setNodeId(requestContext.nodeId());
         subscriptionDescription.toSubscription(subscription);
         subscription = subscriptionRepository.save(subscription);
+        requestContext.send(new SubscriptionAddedEvent(subscription));
 
         return new SubscriptionInfo(subscription);
     }
@@ -123,6 +126,7 @@ public class SubscriptionController {
         }
 
         subscriptionRepository.delete(subscription);
+        requestContext.send(new SubscriptionDeletedEvent(subscription));
 
         return Result.OK;
     }
