@@ -25,7 +25,9 @@ public class SubscriberEvent extends Event {
         id = subscriber.getId().toString();
         subscriptionType = subscriber.getSubscriptionType();
         feedName = subscriber.getFeedName();
-        postingId = subscriber.getEntry().getId().toString();
+        if (subscriber.getEntry() != null) {
+            postingId = subscriber.getEntry().getId().toString();
+        }
         nodeName = subscriber.getRemoteNodeName();
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
     }
