@@ -19,6 +19,7 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -97,6 +98,7 @@ public class SubscriberController {
     }
 
     @PostMapping
+    @Entitled
     @Transactional
     public SubscriberInfo post(@Valid @RequestBody SubscriberDescription subscriberDescription)
             throws AuthenticationException {

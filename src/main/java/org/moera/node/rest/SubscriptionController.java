@@ -17,6 +17,7 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -71,6 +72,7 @@ public class SubscriptionController {
 
     @PostMapping
     @Admin
+    @Entitled
     @Transactional
     public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) {
         log.info("POST /people/subscriptions (type = {}, feedName = {}, remoteSubscriberId = {}, remoteNodeName = {},"
