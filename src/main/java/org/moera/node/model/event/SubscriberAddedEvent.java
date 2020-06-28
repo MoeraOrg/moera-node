@@ -9,7 +9,7 @@ public class SubscriberAddedEvent extends SubscriberEvent {
     }
 
     public SubscriberAddedEvent(Subscriber subscriber) {
-        super(EventType.SUBSCRIBER_DELETED, subscriber);
+        super(EventType.SUBSCRIBER_ADDED, subscriber);
     }
 
 }
