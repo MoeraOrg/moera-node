@@ -5,7 +5,6 @@ import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.function.Consumer;
 import javax.inject.Inject;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
@@ -80,20 +79,17 @@ public abstract class Task implements Runnable {
         eventManager.send(nodeId, event);
     }
 
-    protected <T> void inTransaction(Callable<T> inside, Consumer<T> after) {
+    protected <T> T inTransaction(Callable<T> inside) throws Throwable {
         TransactionStatus status = beginTransaction();
         T result;
         try {
             result = inside.call();
             commitTransaction(status);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             rollbackTransaction(status);
-            error(e);
-            return;
+            throw e;
         }
-        if (after != null) {
-            after.accept(result);
-        }
+        return result;
     }
 
     private TransactionStatus beginTransaction() {

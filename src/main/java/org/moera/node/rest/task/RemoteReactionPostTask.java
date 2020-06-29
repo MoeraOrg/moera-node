@@ -61,23 +61,24 @@ public class RemoteReactionPostTask extends Task {
     }
 
     private void saveReaction(ReactionInfo info) {
-        inTransaction(
-                () -> {
-                    OwnReaction ownReaction = ownReactionRepository
-                            .findByRemotePostingId(nodeId, targetNodeName, postingId)
-                            .orElse(null);
-                    if (ownReaction == null) {
-                        ownReaction = new OwnReaction();
-                        ownReaction.setId(UUID.randomUUID());
-                        ownReaction.setNodeId(nodeId);
-                        ownReaction.setRemoteNodeName(targetNodeName);
-                        ownReaction = ownReactionRepository.save(ownReaction);
-                    }
-                    info.toOwnReaction(ownReaction);
-                    return null;
-                },
-                null
-        );
+        try {
+            inTransaction(() -> {
+                OwnReaction ownReaction = ownReactionRepository
+                        .findByRemotePostingId(nodeId, targetNodeName, postingId)
+                        .orElse(null);
+                if (ownReaction == null) {
+                    ownReaction = new OwnReaction();
+                    ownReaction.setId(UUID.randomUUID());
+                    ownReaction.setNodeId(nodeId);
+                    ownReaction.setRemoteNodeName(targetNodeName);
+                    ownReaction = ownReactionRepository.save(ownReaction);
+                }
+                info.toOwnReaction(ownReaction);
+                return null;
+            });
+        } catch (Throwable e) {
+            error(e);
+        }
         send(new RemoteReactionAddedEvent(targetNodeName, postingId, info));
     }
 

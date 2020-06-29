@@ -116,12 +116,14 @@ public class Picker extends Task {
                     download(pick);
                 }
             }
+        } catch (Throwable e) {
+            error(e);
         } finally {
             pool.deletePicker(nodeId, remoteNodeName);
         }
     }
 
-    private void download(Pick pick) {
+    private void download(Pick pick) throws Throwable {
         initLoggingDomain();
         log.info("Downloading from node '{}', postingId = {}", remoteNodeName, pick.getRemotePostingId());
 
@@ -129,20 +131,16 @@ public class Picker extends Task {
 
         List<Event> events = new ArrayList<>();
         List<DirectedNotification> notifications = new ArrayList<>();
-        inTransaction(
-            () -> {
-                Posting posting = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications);
-                saveSources(posting, pick);
-                return posting;
-            },
-            posting -> {
-                events.forEach(event -> eventManager.send(nodeId, event));
-                notifications.forEach(
-                        dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
+        Posting posting = inTransaction(() -> {
+            Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications);
+            saveSources(p, pick);
+            return p;
+        });
+        events.forEach(event -> eventManager.send(nodeId, event));
+        notifications.forEach(
+                dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
 
-                succeeded(posting);
-            }
-        );
+        succeeded(posting);
     }
 
     private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
