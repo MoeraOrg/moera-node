@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.inject.Inject;
 
+import org.moera.node.data.Pick;
 import org.moera.node.global.RequestContext;
 import org.moera.node.task.TaskAutowire;
 import org.springframework.beans.factory.annotation.Qualifier;

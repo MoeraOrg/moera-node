@@ -27,7 +27,7 @@ public class OwnReaction {
     private String remoteNodeName = "";
 
     @NotNull
-    @Size(max = 63)
+    @Size(max = 40)
     private String remotePostingId = "";
 
     @NotNull

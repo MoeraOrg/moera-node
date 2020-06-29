@@ -16,10 +16,9 @@ import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
 import org.moera.node.util.Carte;
+import org.moera.node.util.Transaction;
 import org.slf4j.MDC;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 public abstract class Task implements Runnable {
 
@@ -80,32 +79,7 @@ public abstract class Task implements Runnable {
     }
 
     protected <T> T inTransaction(Callable<T> inside) throws Throwable {
-        TransactionStatus status = beginTransaction();
-        T result;
-        try {
-            result = inside.call();
-            commitTransaction(status);
-        } catch (Throwable e) {
-            rollbackTransaction(status);
-            throw e;
-        }
-        return result;
-    }
-
-    private TransactionStatus beginTransaction() {
-        return txManager != null ? txManager.getTransaction(new DefaultTransactionDefinition()) : null;
-    }
-
-    private void commitTransaction(TransactionStatus status) {
-        if (status != null) {
-            txManager.commit(status);
-        }
-    }
-
-    private void rollbackTransaction(TransactionStatus status) {
-        if (status != null) {
-            txManager.rollback(status);
-        }
+        return Transaction.execute(txManager, inside);
     }
 
     protected abstract void error(Throwable e);

@@ -24,7 +24,7 @@ import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.picker.Pick;
+import org.moera.node.data.Pick;
 import org.moera.node.picker.PickerPool;
 
 @NotificationProcessor

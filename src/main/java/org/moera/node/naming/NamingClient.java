@@ -26,18 +26,17 @@ import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.model.event.RegisteredNameOperationStatusEvent;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.option.Options;
+import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 @Service
 public class NamingClient {
@@ -115,12 +114,11 @@ public class NamingClient {
                 return;
             }
 
-            final TransactionStatus ts = txManager.getTransaction(new DefaultTransactionDefinition());
-            try {
+            Transaction.executeQuietly(txManager, () -> {
                 retries.set(0);
                 if (info.getStatus() == null) {
                     unknownOperationStatus(options);
-                    return;
+                    return null;
                 }
                 log.info("Naming operation {}, status is {}", id, info.getStatus().name());
                 updateOperationStatus(options, info.getStatus());
@@ -142,11 +140,8 @@ public class NamingClient {
                         options.reset("naming.operation.id");
                         break;
                 }
-                txManager.commit(ts);
-            } catch (Exception e) {
-                txManager.rollback(ts);
-                throw e;
-            }
+                return null;
+            });
 
             if (options.getUuid("naming.operation.id") == null) {
                 log.info("Stopped monitoring naming operation {}", id);

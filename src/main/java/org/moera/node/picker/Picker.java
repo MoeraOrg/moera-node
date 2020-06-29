@@ -16,6 +16,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntrySource;
 import org.moera.node.data.EntrySourceRepository;
+import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
