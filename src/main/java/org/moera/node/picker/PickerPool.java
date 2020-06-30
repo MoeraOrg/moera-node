@@ -1,24 +1,36 @@
 package org.moera.node.picker;
 
+import java.sql.Timestamp;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.inject.Inject;
 
 import org.moera.node.data.Pick;
+import org.moera.node.data.PickRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
 public class PickerPool {
+
+    private static Logger log = LoggerFactory.getLogger(PickerPool.class);
 
     // We create one picker per remote node to make sure there will not be two threads that download
     // the same posting and step on each other's toes.
     // This also makes possible in the future to implement fetching several postings in one query.
     private ConcurrentMap<PickingDirection, Picker> pickers = new ConcurrentHashMap<>();
+    private ConcurrentMap<UUID, Pick> pending = new ConcurrentHashMap<>();
 
     @Inject
     @Qualifier("pickerTaskExecutor")
@@ -30,7 +42,23 @@ public class PickerPool {
     @Inject
     private RequestContext requestContext;
 
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    @Inject
+    private PickRepository pickRepository;
+
     public void pick(Pick pick) {
+        pick.setRunning(true);
+        if (pick.getId() == null) {
+            try {
+                pick = storePick(pick);
+            } catch (Throwable e) {
+                log.error("Error storing a pick", e);
+                return;
+            }
+        }
+
         while (true) {
             Picker picker;
             do {
@@ -47,6 +75,15 @@ public class PickerPool {
         }
     }
 
+    @Scheduled(fixedDelayString = "PT10S")
+    public void retry() {
+        pending.values().stream()
+                .filter(p -> !p.isRunning())
+                .filter(p -> p.getRetryAt() != null)
+                .filter(p -> p.getRetryAt().after(Util.now()))
+                .forEach(this::pick);
+    }
+
     private Picker createPicker(String nodeName) {
         Picker sender = new Picker(this, nodeName);
         taskAutowire.autowire(sender);
@@ -56,6 +93,49 @@ public class PickerPool {
 
     void deletePicker(UUID nodeId, String nodeName) {
         pickers.remove(new PickingDirection(nodeId, nodeName));
+    }
+
+    private Pick storePick(final Pick detachedPick) throws Throwable {
+        detachedPick.setId(UUID.randomUUID());
+        detachedPick.setNodeId(requestContext.nodeId());
+        Pick pick = inTransaction(() -> pickRepository.save(detachedPick));
+        pending.put(pick.getId(), pick);
+        return pick;
+    }
+
+    void pickSucceeded(Pick pick) {
+        pending.remove(pick.getId());
+        try {
+            inTransaction(() -> {
+                pickRepository.deleteById(pick.getId());
+                return null;
+            });
+        } catch (Throwable e) {
+            log.error("Error deleting pick", e);
+        }
+    }
+
+    void pickFailed(Pick pick) {
+        long delay;
+        if (pick.getRetryAt() == null) {
+            delay = 30;
+        } else {
+            delay = Util.toEpochSecond(pick.getRetryAt()) - Util.toEpochSecond(pick.getCreatedAt());
+        }
+        pick.setRetryAt(Timestamp.from(pick.getCreatedAt().toInstant().plusSeconds(delay)));
+        try {
+            inTransaction(() -> {
+                pickRepository.save(pick);
+                return null;
+            });
+        } catch (Throwable e) {
+            log.error("Error updating pick", e);
+        }
+        pick.setRunning(false);
+    }
+
+    private <T> T inTransaction(Callable<T> inside) throws Throwable {
+        return Transaction.execute(txManager, inside);
     }
 
 }

@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -38,6 +39,9 @@ public class Pick {
     private Timestamp createdAt = Util.now();
 
     private Timestamp retryAt;
+
+    @Transient
+    private boolean running;
 
     public UUID getId() {
         return id;
@@ -101,6 +105,14 @@ public class Pick {
 
     public void setRetryAt(Timestamp retryAt) {
         this.retryAt = retryAt;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
     }
 
     public boolean isSame(EntrySource entrySource) {

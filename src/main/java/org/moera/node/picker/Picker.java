@@ -114,7 +114,12 @@ public class Picker extends Task {
                         stopped = false;
                     }
                 } else {
-                    download(pick);
+                    try {
+                        download(pick);
+                    } catch (Throwable e) {
+                        failed(pick);
+                        throw e;
+                    }
                 }
             }
         } catch (Throwable e) {
@@ -141,7 +146,7 @@ public class Picker extends Task {
         notifications.forEach(
                 dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
 
-        succeeded(posting);
+        succeeded(posting, pick);
     }
 
     private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
@@ -254,19 +259,20 @@ public class Picker extends Task {
         entrySourceRepository.save(entrySource);
     }
 
-    private void succeeded(Posting posting) {
+    private void succeeded(Posting posting, Pick pick) {
         initLoggingDomain();
         log.info("Posting downloaded successfully, id = {}", posting.getId());
+        pool.pickSucceeded(pick);
     }
 
     @Override
     protected void error(Throwable e) {
-        failed(e.getMessage());
+        initLoggingDomain();
+        log.error(e.getMessage());
     }
 
-    private void failed(String message) {
-        initLoggingDomain();
-        log.error(message);
+    private void failed(Pick pick) {
+        pool.pickFailed(pick);
     }
 
 }
