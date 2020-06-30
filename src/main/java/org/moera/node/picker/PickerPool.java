@@ -65,9 +65,10 @@ public class PickerPool {
         while (true) {
             Picker picker;
             do {
+                UUID nodeId = pick.getNodeId();
                 picker = pickers.computeIfAbsent(
-                        new PickingDirection(requestContext.nodeId(), pick.getRemoteNodeName()),
-                        d -> createPicker(d.getNodeName()));
+                        new PickingDirection(nodeId, pick.getRemoteNodeName()),
+                        d -> createPicker(d.getNodeName(), nodeId));
             } while (picker.isStopped());
             try {
                 picker.put(pick);
@@ -83,13 +84,13 @@ public class PickerPool {
         pending.values().stream()
                 .filter(p -> !p.isRunning())
                 .filter(p -> p.getRetryAt() != null)
-                .filter(p -> p.getRetryAt().after(Util.now()))
+                .filter(p -> p.getRetryAt().before(Util.now()))
                 .forEach(this::pick);
     }
 
-    private Picker createPicker(String nodeName) {
+    private Picker createPicker(String nodeName, UUID nodeId) {
         Picker sender = new Picker(this, nodeName);
-        taskAutowire.autowire(sender);
+        taskAutowire.autowireWithoutRequest(sender, nodeId);
         taskExecutor.execute(sender);
         return sender;
     }
@@ -125,6 +126,7 @@ public class PickerPool {
     void pickFailed(Pick pick) {
         long delay;
         if (pick.getRetryAt() == null) {
+            pick.setRetryAt(Util.now());
             delay = RETRY_MIN_DELAY;
         } else {
             delay = Util.toEpochSecond(pick.getRetryAt()) - Util.toEpochSecond(pick.getCreatedAt());
@@ -137,7 +139,7 @@ public class PickerPool {
         }
 
         log.info("Pick {} failed, retrying in {}s", pick.getId(), delay);
-        pick.setRetryAt(Timestamp.from(pick.getCreatedAt().toInstant().plusSeconds(delay)));
+        pick.setRetryAt(Timestamp.from(pick.getRetryAt().toInstant().plusSeconds(delay)));
         try {
             inTransaction(() -> {
                 pickRepository.save(pick);
