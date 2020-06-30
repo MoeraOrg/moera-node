@@ -25,7 +25,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class PickerPool {
 
     private static final long RETRY_MIN_DELAY = 30;
-    private static final long RETRY_MAX_DELAY = 3 * 60 * 60;
+    private static final long RETRY_MAX_DELAY = 6 * 60 * 60;
 
     private static Logger log = LoggerFactory.getLogger(PickerPool.class);
 
