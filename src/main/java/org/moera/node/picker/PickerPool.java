@@ -24,6 +24,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Service
 public class PickerPool {
 
+    private static final long RETRY_MIN_DELAY = 30;
+    private static final long RETRY_MAX_DELAY = 3 * 60 * 60;
+
     private static Logger log = LoggerFactory.getLogger(PickerPool.class);
 
     // We create one picker per remote node to make sure there will not be two threads that download
@@ -103,7 +106,7 @@ public class PickerPool {
         return pick;
     }
 
-    void pickSucceeded(Pick pick) {
+    private void deletePick(Pick pick) {
         pending.remove(pick.getId());
         try {
             inTransaction(() -> {
@@ -115,13 +118,25 @@ public class PickerPool {
         }
     }
 
+    void pickSucceeded(Pick pick) {
+        deletePick(pick);
+    }
+
     void pickFailed(Pick pick) {
         long delay;
         if (pick.getRetryAt() == null) {
-            delay = 30;
+            delay = RETRY_MIN_DELAY;
         } else {
             delay = Util.toEpochSecond(pick.getRetryAt()) - Util.toEpochSecond(pick.getCreatedAt());
         }
+
+        if (delay > RETRY_MAX_DELAY) {
+            log.info("Pick {} failed, all retries failed", pick.getId());
+            deletePick(pick);
+            return;
+        }
+
+        log.info("Pick {} failed, retrying in {}s", pick.getId(), delay);
         pick.setRetryAt(Timestamp.from(pick.getCreatedAt().toInstant().plusSeconds(delay)));
         try {
             inTransaction(() -> {
