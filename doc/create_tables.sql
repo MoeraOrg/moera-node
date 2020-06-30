@@ -116,6 +116,22 @@ CREATE TABLE public.entry_revisions (
 ALTER TABLE public.entry_revisions OWNER TO moera;
 
 --
+-- Name: entry_sources; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.entry_sources (
+    id uuid NOT NULL,
+    entry_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_feed_name character varying(63) NOT NULL,
+    remote_posting_id character varying(40) NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.entry_sources OWNER TO moera;
+
+--
 -- Name: hibernate_sequence; Type: SEQUENCE; Schema: public; Owner: moera
 --
 
@@ -142,6 +158,57 @@ CREATE TABLE public.options (
 
 
 ALTER TABLE public.options OWNER TO moera;
+
+--
+-- Name: own_reactions; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.own_reactions (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_posting_id character varying(40) NOT NULL,
+    negative boolean NOT NULL,
+    emoji integer NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.own_reactions OWNER TO moera;
+
+--
+-- Name: pending_notifications; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.pending_notifications (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    node_name character varying(63) NOT NULL,
+    notification text NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    subscription_created_at timestamp without time zone
+);
+
+
+ALTER TABLE public.pending_notifications OWNER TO moera;
+
+--
+-- Name: picks; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.picks (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    feed_name character varying(63),
+    remote_node_name character varying(63) NOT NULL,
+    remote_feed_name character varying(63),
+    remote_posting_id character varying(40) NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    retry_at timestamp without time zone
+);
+
+
+ALTER TABLE public.picks OWNER TO moera;
 
 --
 -- Name: public_pages; Type: TABLE; Schema: public; Owner: moera
@@ -376,6 +443,14 @@ ALTER TABLE ONLY public.entry_revisions
 
 
 --
+-- Name: entry_sources entry_sources_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_sources
+    ADD CONSTRAINT entry_sources_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: options options_node_id_name_key; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -389,6 +464,30 @@ ALTER TABLE ONLY public.options
 
 ALTER TABLE ONLY public.options
     ADD CONSTRAINT options_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: own_reactions own_reactions_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.own_reactions
+    ADD CONSTRAINT own_reactions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pending_notifications pending_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.pending_notifications
+    ADD CONSTRAINT pending_notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: picks picks_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.picks
+    ADD CONSTRAINT picks_pkey PRIMARY KEY (id);
 
 
 --
@@ -549,6 +648,13 @@ CREATE INDEX entry_revisions_entry_id_idx ON public.entry_revisions USING btree 
 
 
 --
+-- Name: entry_sources_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_sources_entry_id_idx ON public.entry_sources USING btree (entry_id);
+
+
+--
 -- Name: options_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -560,6 +666,34 @@ CREATE INDEX options_name_idx ON public.options USING btree (name);
 --
 
 CREATE INDEX options_node_id_idx ON public.options USING btree (node_id);
+
+
+--
+-- Name: own_reactions_node_id_remote_node_name_remote_posting_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX own_reactions_node_id_remote_node_name_remote_posting_id_idx ON public.own_reactions USING btree (node_id, remote_node_name, remote_posting_id);
+
+
+--
+-- Name: pending_notifications_created_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX pending_notifications_created_at_idx ON public.pending_notifications USING btree (created_at);
+
+
+--
+-- Name: pending_notifications_node_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX pending_notifications_node_id_idx ON public.pending_notifications USING btree (node_id);
+
+
+--
+-- Name: picks_node_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX picks_node_id_idx ON public.picks USING btree (node_id);
 
 
 --
@@ -774,6 +908,14 @@ ALTER TABLE ONLY public.entry_revision_upgrades
 
 ALTER TABLE ONLY public.entry_revisions
     ADD CONSTRAINT entry_revisions_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entry_sources entry_sources_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_sources
+    ADD CONSTRAINT entry_sources_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
