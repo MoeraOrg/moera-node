@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiException;
+import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntrySource;
@@ -117,7 +118,7 @@ public class Picker extends Task {
                     try {
                         download(pick);
                     } catch (Throwable e) {
-                        failed(pick);
+                        failed(pick, e);
                         throw e;
                     }
                 }
@@ -271,8 +272,9 @@ public class Picker extends Task {
         log.error(e.getMessage());
     }
 
-    private void failed(Pick pick) {
-        pool.pickFailed(pick);
+    private void failed(Pick pick, Throwable e) {
+        boolean fatal = e instanceof NodeApiNotFoundException;
+        pool.pickFailed(pick, fatal);
     }
 
 }

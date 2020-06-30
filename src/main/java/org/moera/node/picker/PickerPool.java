@@ -123,7 +123,13 @@ public class PickerPool {
         deletePick(pick);
     }
 
-    void pickFailed(Pick pick) {
+    void pickFailed(Pick pick, boolean fatal) {
+        if (fatal) {
+            log.info("Pick {} failed fatally", pick.getId());
+            deletePick(pick);
+            return;
+        }
+
         long delay;
         if (pick.getRetryAt() == null) {
             pick.setRetryAt(Util.now());
