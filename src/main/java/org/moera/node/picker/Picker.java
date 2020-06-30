@@ -266,8 +266,7 @@ public class Picker extends Task {
         pool.pickSucceeded(pick);
     }
 
-    @Override
-    protected void error(Throwable e) {
+    private void error(Throwable e) {
         initLoggingDomain();
         log.error(e.getMessage());
     }

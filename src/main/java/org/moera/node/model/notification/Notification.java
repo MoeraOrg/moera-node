@@ -1,6 +1,10 @@
 package org.moera.node.model.notification;
 
+import java.sql.Timestamp;
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.util.Util;
 
 public abstract class Notification implements Cloneable {
 
@@ -9,6 +13,12 @@ public abstract class Notification implements Cloneable {
 
     @JsonIgnore
     private NotificationType type;
+
+    @JsonIgnore
+    private UUID pendingNotificationId;
+
+    @JsonIgnore
+    private Timestamp createdAt = Util.now();
 
     protected Notification(NotificationType type) {
         this.type = type;
@@ -28,6 +38,22 @@ public abstract class Notification implements Cloneable {
 
     public void setType(NotificationType type) {
         this.type = type;
+    }
+
+    public UUID getPendingNotificationId() {
+        return pendingNotificationId;
+    }
+
+    public void setPendingNotificationId(UUID pendingNotificationId) {
+        this.pendingNotificationId = pendingNotificationId;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
     }
 
     @Override

@@ -90,8 +90,7 @@ public class PickerPool {
     public void retry() {
         pending.values().stream()
                 .filter(p -> !p.isRunning())
-                .filter(p -> p.getRetryAt() != null)
-                .filter(p -> p.getRetryAt().before(Util.now()))
+                .filter(p -> p.getRetryAt() == null || p.getRetryAt().before(Util.now()))
                 .forEach(this::pick);
     }
 
@@ -146,7 +145,7 @@ public class PickerPool {
         }
 
         if (delay > RETRY_MAX_DELAY) {
-            log.info("Pick {} failed, all retries failed", pick.getId());
+            log.info("Pick {} failed, giving up", pick.getId());
             deletePick(pick);
             return;
         }

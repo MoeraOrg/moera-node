@@ -1,9 +1,14 @@
 package org.moera.node.task;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
+import org.moera.node.option.Options;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +21,9 @@ public class TaskAutowire {
     @Inject
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
 
+    @Inject
+    private Domains domains;
+
     public void autowire(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(requestContext.nodeId());
@@ -27,6 +35,32 @@ public class TaskAutowire {
     public void autowireWithoutRequest(Task task, UUID nodeId) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(nodeId);
+        Options options = domains.getDomainOptions(nodeId);
+        task.setNodeName(options.nodeName());
+        task.setSigningKey(options.getPrivateKey("profile.signing-key"));
+        task.setLocalAddr(getLocalAddr(domains.getDomainName(nodeId)));
+    }
+
+    private InetAddress getLocalAddr(String domainName) {
+        try {
+            InetAddress[] ips = InetAddress.getAllByName(domainName);
+            if (ips != null && ips.length > 0) {
+                return ips[0];
+            }
+        } catch (UnknownHostException e) {
+        }
+
+        String local;
+        try {
+            local = Inet4Address.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            local = "127.0.0.1";
+        }
+        try {
+            return InetAddress.getByName(local);
+        } catch (UnknownHostException e) {
+            return null;
+        }
     }
 
 }

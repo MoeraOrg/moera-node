@@ -26,7 +26,7 @@ public class Pick {
 
     @NotNull
     @Size(max = 63)
-    private String remoteNodeName;
+    private String remoteNodeName = "";
 
     @Size(max = 63)
     private String remoteFeedName = "";

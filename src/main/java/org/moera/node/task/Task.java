@@ -82,6 +82,8 @@ public abstract class Task implements Runnable {
         return Transaction.execute(txManager, inside);
     }
 
-    protected abstract void error(Throwable e);
+    protected <T> T inTransactionQuietly(Callable<T> inside) {
+        return Transaction.executeQuietly(txManager, inside);
+    }
 
 }
