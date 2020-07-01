@@ -3,12 +3,14 @@ package org.moera.node.data;
 import java.sql.Timestamp;
 import java.util.UUID;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.Util;
+import org.moera.node.model.notification.NotificationType;
 
 @Entity
 @Table(name = "pending_notifications")
@@ -23,6 +25,10 @@ public class PendingNotification {
     @NotNull
     @Size(max = 63)
     private String nodeName = "";
+
+    @NotNull
+    @Enumerated
+    private NotificationType notificationType;
 
     @NotNull
     private String notification;
@@ -54,6 +60,14 @@ public class PendingNotification {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public NotificationType getNotificationType() {
+        return notificationType;
+    }
+
+    public void setNotificationType(NotificationType notificationType) {
+        this.notificationType = notificationType;
     }
 
     public String getNotification() {

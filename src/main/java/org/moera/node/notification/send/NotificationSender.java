@@ -144,6 +144,7 @@ public class NotificationSender extends Task {
         pending.setId(UUID.randomUUID());
         pending.setNodeId(nodeId);
         pending.setNodeName(receiverNodeName);
+        pending.setNotificationType(notification.getType());
         pending.setNotification(serialize(notification));
         inTransactionQuietly(() -> {
             pendingNotificationRepository.save(pending);
