@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
@@ -19,6 +20,7 @@ import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,6 +28,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
 public class NotificationSenderPool {
@@ -52,6 +55,9 @@ public class NotificationSenderPool {
 
     @Inject
     private ObjectMapper objectMapper;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     @EventListener(ApplicationReadyEvent.class)
     public void init() {
@@ -112,9 +118,12 @@ public class NotificationSenderPool {
                 sender = senders.computeIfAbsent(direction, d -> createSender(d.getNodeId(), d.getNodeName()));
             } while (sender.isStopped());
             try {
+                storePending(sender, notification);
                 sender.put(notification);
             } catch (InterruptedException e) {
                 continue;
+            } catch (JsonProcessingException e) {
+                log.error("Error serializing notification", e);
             }
             break;
         }
@@ -139,6 +148,23 @@ public class NotificationSenderPool {
         subscriberRepository.findById(subscriberId).ifPresent(subscriber -> {
             eventManager.send(subscriber.getNodeId(), new SubscriberDeletedEvent(subscriber));
             subscriberRepository.delete(subscriber);
+        });
+    }
+
+    private void storePending(NotificationSender sender, Notification notification) throws JsonProcessingException {
+        if (notification.getPendingNotificationId() != null) {
+            return;
+        }
+        PendingNotification pending = new PendingNotification();
+        pending.setId(UUID.randomUUID());
+        pending.setNodeId(sender.getNodeId());
+        pending.setNodeName(sender.getReceiverNodeName());
+        pending.setNotificationType(notification.getType());
+        pending.setNotification(objectMapper.writeValueAsString(notification));
+        Transaction.executeQuietly(txManager, () -> {
+            pendingNotificationRepository.save(pending);
+            notification.setPendingNotificationId(pending.getId());
+            return null;
         });
     }
 

@@ -42,6 +42,10 @@ public abstract class Task implements Runnable {
     @Inject
     private PlatformTransactionManager txManager;
 
+    public UUID getNodeId() {
+        return nodeId;
+    }
+
     public void setNodeId(UUID nodeId) {
         this.nodeId = nodeId;
     }

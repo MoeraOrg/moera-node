@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.api.NodeApiValidationException;
-import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
 import org.moera.node.model.Result;
@@ -47,6 +46,10 @@ public class NotificationSender extends Task {
     public NotificationSender(NotificationSenderPool pool, String receiverNodeName) {
         this.pool = pool;
         this.receiverNodeName = receiverNodeName;
+    }
+
+    public String getReceiverNodeName() {
+        return receiverNodeName;
     }
 
     public boolean isStopped() {
@@ -92,7 +95,6 @@ public class NotificationSender extends Task {
             log.info("Delivering notification {} to node '{}'", notification.getType().name(), receiverNodeName);
 
             try {
-                storePending(notification);
                 Result result = nodeApi.postNotification(receiverNodeName, createPacket(notification));
                 succeeded(result);
                 break;
@@ -123,34 +125,13 @@ public class NotificationSender extends Task {
         packet.setNodeName(nodeName);
         packet.setCreatedAt(Util.toEpochSecond(Util.now()));
         packet.setType(notification.getType().getValue());
-        packet.setNotification(serialize(notification));
+        packet.setNotification(objectMapper.writeValueAsString(notification));
 
         NotificationPacketFingerprint fingerprint = new NotificationPacketFingerprint(packet);
         packet.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
         packet.setSignatureVersion(NotificationPacketFingerprint.VERSION);
 
         return packet;
-    }
-
-    private String serialize(Notification notification) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(notification);
-    }
-
-    private void storePending(Notification notification) throws JsonProcessingException {
-        if (notification.getPendingNotificationId() != null) {
-            return;
-        }
-        PendingNotification pending = new PendingNotification();
-        pending.setId(UUID.randomUUID());
-        pending.setNodeId(nodeId);
-        pending.setNodeName(receiverNodeName);
-        pending.setNotificationType(notification.getType());
-        pending.setNotification(serialize(notification));
-        inTransactionQuietly(() -> {
-            pendingNotificationRepository.save(pending);
-            notification.setPendingNotificationId(pending.getId());
-            return null;
-        });
     }
 
     private void deletePending(Notification notification) {
