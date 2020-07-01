@@ -89,12 +89,13 @@ public class PostingOperations {
     }
 
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<StoryAttributes> publications,
-                                         Predicate<EntryRevision> isPreserveRevision,
+                                         Predicate<EntryRevision> isNothingChanged,
                                          Consumer<EntryRevision> revisionUpdater) {
         EntryRevision latest = posting.getCurrentRevision();
-        if (latest != null && isPreserveRevision != null && isPreserveRevision.test(latest)) {
+        if (latest != null && isNothingChanged != null && isNothingChanged.test(latest)) {
             return postingRepository.saveAndFlush(posting);
         }
+
         EntryRevision current = newPostingRevision(posting, revision);
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
@@ -119,9 +120,15 @@ public class PostingOperations {
     }
 
     public Posting createOrUpdatePostingDraft(Posting posting, EntryRevision template,
+                                              Predicate<EntryRevision> isNothingChanged,
                                               Consumer<EntryRevision> updater) {
         EntryRevision draft = posting.getDraftRevision();
         if (draft == null) {
+            EntryRevision latest = posting.getCurrentRevision();
+            if (latest != null && isNothingChanged != null && isNothingChanged.test(latest)) {
+                return postingRepository.saveAndFlush(posting);
+            }
+
             draft = newRevision(posting, template);
             posting.setDraftRevision(draft);
         }

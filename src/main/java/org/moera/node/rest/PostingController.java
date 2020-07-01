@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
@@ -77,6 +79,9 @@ public class PostingController {
     private OwnReactionRepository ownReactionRepository;
 
     @Inject
+    private EntityManager entityManager;
+
+    @Inject
     private PostingOperations postingOperations;
 
     @Inject
@@ -141,6 +146,7 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
+        entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingText.toEntry(posting);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null,
@@ -181,6 +187,7 @@ public class PostingController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
+        entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingOperations.deletePosting(posting);
         storyOperations.unpublish(posting.getId());
 
