@@ -1,6 +1,9 @@
 package org.moera.node.notification.send;
 
 import java.security.interfaces.ECPrivateKey;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -29,6 +32,7 @@ public class NotificationSender extends Task {
     private static final long RETRY_MIN_DELAY = 30;
     private static final long RETRY_MAX_DELAY = 6 * 60 * 60;
     private static final long RETRY_PERIOD = 7 * 24 * 60 * 60;
+    private static final Duration SUBSCRIPTION_DELAY = Duration.of(7, ChronoUnit.MINUTES);
 
     private static Logger log = LoggerFactory.getLogger(NotificationSender.class);
 
@@ -159,8 +163,14 @@ public class NotificationSender extends Task {
         if (e instanceof NodeApiValidationException
                 && ((NodeApiValidationException) e).getErrorCode().equals("subscription.unsubscribe")
                 && notification instanceof SubscriberNotification) {
-            pool.unsubscribe(UUID.fromString(((SubscriberNotification) notification).getSubscriberId()));
-            fatal = true;
+            SubscriberNotification sn = (SubscriberNotification) notification;
+            if (sn.getSubscriptionCreatedAt() != null
+                    && sn.getSubscriptionCreatedAt().toInstant().plus(SUBSCRIPTION_DELAY).isAfter(Instant.now())) {
+                fatal = false;
+            } else {
+                pool.unsubscribe(UUID.fromString(sn.getSubscriberId()));
+                fatal = true;
+            }
         } else if (e instanceof NodeApiNotFoundException || e instanceof JsonProcessingException) {
             fatal = true;
         }

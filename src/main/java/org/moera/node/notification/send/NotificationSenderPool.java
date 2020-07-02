@@ -77,6 +77,9 @@ public class NotificationSenderPool {
         notification.setType(pending.getNotificationType());
         notification.setPendingNotificationId(pending.getId());
         notification.setCreatedAt(pending.getCreatedAt());
+        if (notification instanceof SubscriberNotification) {
+            ((SubscriberNotification) notification).setSubscriptionCreatedAt(pending.getSubscriptionCreatedAt());
+        }
         send(direction, notification);
     }
 
@@ -103,6 +106,7 @@ public class NotificationSenderPool {
                 Notification nt = notification.clone();
                 if (nt instanceof SubscriberNotification) {
                     ((SubscriberNotification) nt).setSubscriberId(subscriber.getId().toString());
+                    ((SubscriberNotification) nt).setSubscriptionCreatedAt(subscriber.getCreatedAt());
                 }
                 sendSingle(dir, nt);
             }
@@ -161,6 +165,9 @@ public class NotificationSenderPool {
         pending.setNodeName(sender.getReceiverNodeName());
         pending.setNotificationType(notification.getType());
         pending.setNotification(objectMapper.writeValueAsString(notification));
+        if (notification instanceof SubscriberNotification) {
+            pending.setSubscriptionCreatedAt(((SubscriberNotification) notification).getSubscriptionCreatedAt());
+        }
         Transaction.executeQuietly(txManager, () -> {
             pendingNotificationRepository.save(pending);
             notification.setPendingNotificationId(pending.getId());
