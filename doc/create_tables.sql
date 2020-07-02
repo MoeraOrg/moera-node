@@ -186,7 +186,8 @@ CREATE TABLE public.pending_notifications (
     node_name character varying(63) NOT NULL,
     notification text NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    subscription_created_at timestamp without time zone
+    subscription_created_at timestamp without time zone,
+    notification_type smallint NOT NULL
 );
 
 
