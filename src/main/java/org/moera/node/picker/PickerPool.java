@@ -1,6 +1,8 @@
 package org.moera.node.picker;
 
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,8 +28,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Service
 public class PickerPool {
 
-    private static final long RETRY_MIN_DELAY = 30;
-    private static final long RETRY_MAX_DELAY = 6 * 60 * 60;
+    private static final Duration RETRY_MIN_DELAY = Duration.of(30, ChronoUnit.SECONDS);
+    private static final Duration RETRY_MAX_DELAY = Duration.of(6, ChronoUnit.HOURS);
 
     private static Logger log = LoggerFactory.getLogger(PickerPool.class);
 
@@ -136,22 +138,22 @@ public class PickerPool {
             return;
         }
 
-        long delay;
+        Duration delay;
         if (pick.getRetryAt() == null) {
             pick.setRetryAt(Util.now());
             delay = RETRY_MIN_DELAY;
         } else {
-            delay = Util.toEpochSecond(pick.getRetryAt()) - Util.toEpochSecond(pick.getCreatedAt());
+            delay = Duration.between(pick.getCreatedAt().toInstant(), pick.getRetryAt().toInstant());
         }
 
-        if (delay > RETRY_MAX_DELAY) {
+        if (delay.compareTo(RETRY_MAX_DELAY) > 0) {
             log.info("Pick {} failed, giving up", pick.getId());
             deletePick(pick);
             return;
         }
 
         log.info("Pick {} failed, retrying in {}s", pick.getId(), delay);
-        pick.setRetryAt(Timestamp.from(pick.getRetryAt().toInstant().plusSeconds(delay)));
+        pick.setRetryAt(Timestamp.from(pick.getRetryAt().toInstant().plus(delay)));
         try {
             inTransaction(() -> {
                 pickRepository.save(pick);
