@@ -29,9 +29,9 @@ import org.slf4j.LoggerFactory;
 
 public class NotificationSender extends Task {
 
-    private static final long RETRY_MIN_DELAY = 30;
-    private static final long RETRY_MAX_DELAY = 6 * 60 * 60;
-    private static final long RETRY_PERIOD = 7 * 24 * 60 * 60;
+    private static final Duration RETRY_MIN_DELAY = Duration.of(30, ChronoUnit.SECONDS);
+    private static final Duration RETRY_MAX_DELAY = Duration.of(6, ChronoUnit.HOURS);
+    private static final Duration RETRY_PERIOD = Duration.of(7, ChronoUnit.DAYS);
     private static final Duration SUBSCRIPTION_DELAY = Duration.of(7, ChronoUnit.MINUTES);
 
     private static Logger log = LoggerFactory.getLogger(NotificationSender.class);
@@ -89,11 +89,13 @@ public class NotificationSender extends Task {
         initLoggingDomain();
         nodeApi.setNodeId(nodeId);
 
-        long delay = 0;
+        Duration delay = null;
         do {
-            try {
-                Thread.sleep(delay * 1000);
-            } catch (InterruptedException e) {
+            if (delay != null) {
+                try {
+                    Thread.sleep(delay.toMillis());
+                } catch (InterruptedException e) {
+                }
             }
 
             log.info("Delivering notification {} to node '{}'", notification.getType().name(), receiverNodeName);
@@ -110,11 +112,11 @@ public class NotificationSender extends Task {
                 }
             }
 
-            long totalPeriod = Util.toEpochSecond(Util.now()) - Util.toEpochSecond(notification.getCreatedAt());
-            if (totalPeriod < RETRY_PERIOD) {
-                delay = delay == 0 ? RETRY_MIN_DELAY : delay * 2;
-                delay = Math.min(delay, RETRY_MAX_DELAY);
-                log.info("Notification delivery failed, retry in {}s", delay);
+            Duration totalPeriod = Duration.between(notification.getCreatedAt().toInstant(), Instant.now());
+            if (totalPeriod.compareTo(RETRY_PERIOD) < 0) {
+                delay = delay == null ? RETRY_MIN_DELAY : delay.multipliedBy(2);
+                delay = delay.compareTo(RETRY_MAX_DELAY) < 0 ? delay : RETRY_MAX_DELAY;
+                log.info("Notification delivery failed, retry in {}s", delay.toSeconds());
             } else {
                 log.info("Notification delivery failed, giving up");
                 break;
