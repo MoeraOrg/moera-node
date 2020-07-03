@@ -100,6 +100,7 @@ public class PostingOperations {
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
         }
+        posting.setEditedAt(Util.now());
         posting = postingRepository.saveAndFlush(posting);
         storyOperations.publish(posting, publications);
 

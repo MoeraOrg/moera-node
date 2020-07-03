@@ -96,9 +96,12 @@ public class PostingDraftRevisionController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
-        requestContext.send(new PostingDraftRevisionUpdatedEvent(posting));
-
-        return new PostingInfo(posting, posting.getDraftRevision(), true, true);
+        if (posting.getDraftRevision() != null) {
+            requestContext.send(new PostingDraftRevisionUpdatedEvent(posting));
+            return new PostingInfo(posting, posting.getDraftRevision(), true, true);
+        } else {
+            return new PostingInfo(posting, posting.getCurrentRevision(), true, true);
+        }
     }
 
     @DeleteMapping

@@ -52,6 +52,9 @@ public class Entry {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    @NotNull
+    private Timestamp editedAt = Util.now();
+
     private Timestamp deletedAt;
 
     private Timestamp receiverCreatedAt;
@@ -158,6 +161,14 @@ public class Entry {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getEditedAt() {
+        return editedAt;
+    }
+
+    public void setEditedAt(Timestamp editedAt) {
+        this.editedAt = editedAt;
     }
 
     public Timestamp getDeletedAt() {

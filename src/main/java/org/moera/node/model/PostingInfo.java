@@ -98,7 +98,7 @@ public class PostingInfo {
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
-        editedAt = Util.toEpochSecond(revision.getCreatedAt());
+        editedAt = Util.toEpochSecond(posting.getEditedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         receiverCreatedAt = Util.toEpochSecond(posting.getReceiverCreatedAt());
         receiverEditedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
@@ -432,6 +432,7 @@ public class PostingInfo {
     }
 
     public void toPickedPosting(Posting posting) {
+        posting.setEditedAt(Util.toTimestamp(editedAt));
         posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
         posting.setOwnerName(ownerName);
         posting.setReceiverCreatedAt(Util.toTimestamp(isOriginal() ? createdAt : receiverCreatedAt));
@@ -439,16 +440,6 @@ public class PostingInfo {
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
         posting.setReactionsVisible(reactionsVisible);
         posting.setReactionTotalsVisible(reactionTotalsVisible);
-    }
-
-    public boolean differFromPickedPosting(Posting posting) {
-        return posting == null
-                || posting.getDeletedAt() != null
-                || !posting.getAcceptedReactionsPositive().equals(acceptedReactions.getPositive())
-                || !posting.getAcceptedReactionsNegative().equals(acceptedReactions.getNegative())
-                || posting.isReactionsVisible() != reactionsVisible
-                || posting.isReactionTotalsVisible() != reactionTotalsVisible
-                || !posting.getCurrentReceiverRevisionId().equals(receiverRevisionId);
     }
 
 }

@@ -168,7 +168,7 @@ public class Picker extends Task {
                     Directions.feedSubscribers(feedName),
                     new FeedPostingAddedNotification(feedName, posting.getId())));
             publish(feedName, posting, events);
-        } else if (postingInfo.differFromPickedPosting(posting)) {
+        } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             postingInfo.toPickedPosting(posting);
             downloadRevisions(posting);
             if (posting.getDeletedAt() == null) {

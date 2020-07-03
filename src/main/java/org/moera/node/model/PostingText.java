@@ -11,6 +11,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.Shortener;
 import org.moera.node.text.TextConverter;
+import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 
 public class PostingText {
@@ -81,6 +82,11 @@ public class PostingText {
     }
 
     public void toEntry(Entry entry) {
+        if (sameAsEntry(entry)) {
+            return;
+        }
+
+        entry.setEditedAt(Util.now());
         if (acceptedReactions != null) {
             if (acceptedReactions.getPositive() != null) {
                 entry.setAcceptedReactionsPositive(acceptedReactions.getPositive());
@@ -95,6 +101,16 @@ public class PostingText {
         if (reactionTotalsVisible != null) {
             entry.setReactionTotalsVisible(reactionTotalsVisible);
         }
+    }
+
+    public boolean sameAsEntry(Entry entry) {
+        return (acceptedReactions == null
+                || (acceptedReactions.getPositive() == null
+                        || acceptedReactions.getPositive().equals(entry.getAcceptedReactionsPositive()))
+                    && (acceptedReactions.getNegative() == null
+                        || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
+                && (reactionsVisible == null || reactionsVisible.equals(entry.isReactionsVisible()))
+                && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()));
     }
 
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {
