@@ -29,7 +29,10 @@ import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
+import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.InstantOperations;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -142,6 +145,12 @@ public class SubscriberController {
                 throw new ValidationFailure("subscriberDescription.postingId.not-found");
             }
             subscriber.setEntry(posting);
+            if (!Util.toEpochSecond(posting.getEditedAt()).equals(subscriberDescription.getLastUpdatedAt())) {
+                PostingUpdatedNotification notification = new PostingUpdatedNotification(posting.getId());
+                notification.setSubscriberId(subscriber.getId().toString());
+                notification.setSubscriptionCreatedAt(Util.now());
+                requestContext.send(Directions.single(ownerName), notification);
+            }
         }
         subscriber = subscriberRepository.save(subscriber);
         instantOperations.subscriberAdded(subscriber);

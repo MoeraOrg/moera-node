@@ -9,6 +9,7 @@ public class SubscriberDescription {
     private SubscriptionType type;
     private String feedName;
     private UUID postingId;
+    private Long lastUpdatedAt;
 
     public SubscriptionType getType() {
         return type;
@@ -32,6 +33,14 @@ public class SubscriberDescription {
 
     public void setPostingId(UUID postingId) {
         this.postingId = postingId;
+    }
+
+    public Long getLastUpdatedAt() {
+        return lastUpdatedAt;
+    }
+
+    public void setLastUpdatedAt(Long lastUpdatedAt) {
+        this.lastUpdatedAt = lastUpdatedAt;
     }
 
 }

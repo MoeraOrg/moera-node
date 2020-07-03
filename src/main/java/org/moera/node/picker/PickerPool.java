@@ -110,7 +110,7 @@ public class PickerPool {
     private Pick storePick(final Pick detachedPick) throws Throwable {
         detachedPick.setId(UUID.randomUUID());
         detachedPick.setNodeId(requestContext.nodeId());
-        Pick pick = inTransaction(() -> pickRepository.save(detachedPick));
+        Pick pick = inTransaction(() -> pickRepository.saveAndFlush(detachedPick));
         pending.put(pick.getId(), pick);
         return pick;
     }
@@ -156,7 +156,7 @@ public class PickerPool {
         pick.setRetryAt(Timestamp.from(pick.getRetryAt().toInstant().plus(delay)));
         try {
             inTransaction(() -> {
-                pickRepository.save(pick);
+                pickRepository.saveAndFlush(pick);
                 return null;
             });
         } catch (Throwable e) {

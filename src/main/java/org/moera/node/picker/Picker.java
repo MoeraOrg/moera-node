@@ -1,5 +1,6 @@
 package org.moera.node.picker;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -162,7 +163,7 @@ public class Picker extends Task {
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             downloadRevisions(posting);
-            subscribe(remotePostingId, events);
+            subscribe(remotePostingId, posting.getEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
             notifications.add(new DirectedNotification(
                     Directions.feedSubscribers(feedName),
@@ -231,9 +232,10 @@ public class Picker extends Task {
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, events::add);
     }
 
-    private void subscribe(String remotePostingId, List<Event> events) throws NodeApiException {
-        SubscriberInfo subscriberInfo = nodeApi.postSubscriber(remoteNodeName, generateCarte(),
-                new SubscriberDescriptionQ(SubscriptionType.POSTING, null, remotePostingId));
+    private void subscribe(String remotePostingId, Timestamp lastUpdatedAt, List<Event> events) throws NodeApiException {
+        SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null, remotePostingId,
+                Util.toEpochSecond(lastUpdatedAt));
+        SubscriberInfo subscriberInfo = nodeApi.postSubscriber(remoteNodeName, generateCarte(), description);
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());
         subscription.setNodeId(nodeId);
