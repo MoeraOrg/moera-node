@@ -1,0 +1,25 @@
+{{> part/top}}
+
+<h2>People</h2>
+
+<div class="people">
+    <div class="people-tabs">
+        <div class="tab">
+            Subscribers {{#if subscribersTotal}}({{subscribersTotal}}){{/if}}
+        </div>
+        <a class="tab" href="/people/subscriptions">
+            Subscriptions {{#if subscriptionsTotal}}({{subscriptionsTotal}}){{/if}}
+        </a>
+        <div class="rest"></div>
+    </div>
+
+    <div class="row">
+        {{#each subscribers}}
+            <div class="col-md-3 col-sm-4">
+                {{nodename remoteNodeName}}
+            </div>
+        {{/each}}
+    </div>
+</div>
+
+{{> part/bottom}}

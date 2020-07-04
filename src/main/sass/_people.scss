@@ -1,0 +1,43 @@
+.people {
+    @include pane;
+    padding: 1rem;
+    min-height: 25vh;
+
+    .people-tabs {
+        display: flex;
+        margin-top: -.5em;
+        margin-bottom: 1.5em;
+
+        .tab {
+            flex: 1;
+            max-width: 10em;
+            padding: .3rem;
+            font-size: larger;
+            margin-right: 1rem;
+            color: var(--gray);
+        }
+
+        A.tab {
+            text-decoration: none;
+
+            &:hover {
+                color: var(--gray-dark);
+                border-bottom: solid .25rem var(--gray-dark);
+            }
+        }
+
+        DIV.tab {
+            color: var(--primary);
+            cursor: default;
+            border-bottom: solid .25rem var(--primary);
+        }
+
+        .rest {
+            flex: auto;
+        }
+    }
+
+    .node-name {
+        font-weight: bold;
+    }
+}

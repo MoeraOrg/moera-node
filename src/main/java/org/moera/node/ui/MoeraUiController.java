@@ -63,13 +63,13 @@ public class MoeraUiController {
     @GetMapping("/people")
     @VirtualPage
     public String people() {
-        throw new PageNotFoundException();
+        return "redirect:/people/subscribers";
     }
 
     @GetMapping("/people/{tab}")
     @VirtualPage
     public String peopleTab(@PathVariable String tab) {
-        throw new PageNotFoundException();
+        return "redirect:/people/" + tab;
     }
 
 }

@@ -20,13 +20,13 @@ public class IndexUiController {
     private TitleBuilder titleBuilder;
 
     @GetMapping("/")
-    @VirtualPage("/")
+    @VirtualPage
     private String index(Model model) {
         return "redirect:/timeline";
     }
 
     @GetMapping("/profile")
-    @VirtualPage("/profile")
+    @VirtualPage
     public String profile(Model model, HttpServletResponse response) {
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
