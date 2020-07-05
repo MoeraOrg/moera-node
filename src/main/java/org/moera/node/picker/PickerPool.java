@@ -109,7 +109,9 @@ public class PickerPool {
 
     private Pick storePick(final Pick detachedPick) throws Throwable {
         detachedPick.setId(UUID.randomUUID());
-        detachedPick.setNodeId(requestContext.nodeId());
+        if (detachedPick.getNodeId() == null) {
+            detachedPick.setNodeId(requestContext.nodeId());
+        }
         Pick pick = inTransaction(() -> pickRepository.saveAndFlush(detachedPick));
         pending.put(pick.getId(), pick);
         return pick;

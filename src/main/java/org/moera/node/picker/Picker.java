@@ -154,16 +154,18 @@ public class Picker extends Task {
     private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
                                     List<DirectedNotification> notifications) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
-        Posting posting = postingRepository.findByReceiverId(nodeId, remoteNodeName, remotePostingId).orElse(null);
+        String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
+        String receiverPostingId = postingInfo.isOriginal() ? remotePostingId : postingInfo.getReceiverPostingId();
+        Posting posting = postingRepository.findByReceiverId(nodeId, receiverName, receiverPostingId).orElse(null);
         if (posting == null) {
             posting = new Posting();
             posting.setId(UUID.randomUUID());
             posting.setNodeId(nodeId);
-            posting.setReceiverName(postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName());
+            posting.setReceiverName(receiverName);
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             downloadRevisions(posting);
-            subscribe(remotePostingId, posting.getEditedAt(), events);
+            subscribe(receiverName, receiverPostingId, posting.getEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
             notifications.add(new DirectedNotification(
                     Directions.feedSubscribers(feedName),
@@ -232,17 +234,19 @@ public class Picker extends Task {
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, events::add);
     }
 
-    private void subscribe(String remotePostingId, Timestamp lastUpdatedAt, List<Event> events) throws NodeApiException {
-        SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null, remotePostingId,
-                Util.toEpochSecond(lastUpdatedAt));
-        SubscriberInfo subscriberInfo = nodeApi.postSubscriber(remoteNodeName, generateCarte(), description);
+    private void subscribe(String receiverName, String receiverPostingId, Timestamp lastUpdatedAt, List<Event> events)
+            throws NodeApiException {
+
+        SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
+                receiverPostingId, Util.toEpochSecond(lastUpdatedAt));
+        SubscriberInfo subscriberInfo = nodeApi.postSubscriber(receiverName, generateCarte(), description);
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());
         subscription.setNodeId(nodeId);
         subscription.setSubscriptionType(SubscriptionType.POSTING);
         subscription.setRemoteSubscriberId(subscriberInfo.getId());
-        subscription.setRemoteNodeName(remoteNodeName);
-        subscription.setRemoteEntryId(remotePostingId);
+        subscription.setRemoteNodeName(receiverName);
+        subscription.setRemoteEntryId(receiverPostingId);
         subscription = subscriptionRepository.save(subscription);
         events.add(new SubscriptionAddedEvent(subscription));
     }

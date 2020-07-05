@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.BodyMappingException;
+import org.moera.node.model.FeedSliceInfoR;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionCreated;
@@ -174,6 +175,12 @@ public class NodeApi {
 
         return call("POST", nodeName, String.format("/people/subscribers?carte=%s", Util.ue(carte)), subscriber,
                 SubscriberInfo.class);
+    }
+
+    public FeedSliceInfoR getFeedStories(String nodeName, String feedName, int limit) throws NodeApiException {
+        return call("GET", nodeName,
+                String.format("/feeds/%s/stories?limit=%d", Util.ue(feedName), limit),
+                FeedSliceInfoR.class);
     }
 
 }

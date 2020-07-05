@@ -27,8 +27,12 @@ import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.model.event.SubscriptionDeletedEvent;
+import org.moera.node.rest.task.RemoteFeedFetchTask;
+import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,6 +52,13 @@ public class SubscriptionController {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
 
     @GetMapping
     public List<SubscriptionInfo> getAll(@RequestParam(required = false) String nodeName,
@@ -104,6 +115,11 @@ public class SubscriptionController {
         subscriptionDescription.toSubscription(subscription);
         subscription = subscriptionRepository.save(subscription);
         requestContext.send(new SubscriptionAddedEvent(subscription));
+
+        var task = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
+                subscription.getRemoteFeedName());
+        taskAutowire.autowire(task);
+        taskExecutor.execute(task);
 
         return new SubscriptionInfo(subscription);
     }
