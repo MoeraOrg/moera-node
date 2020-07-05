@@ -7,6 +7,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.crypto.Password;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.RootAdmin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Credentials;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -69,6 +71,20 @@ public class CredentialsController {
         requestContext.getOptions().runInTransaction(options -> {
             options.set("credentials.login", credentials.getLogin());
             options.set("credentials.password-hash", Password.hash(credentials.getPassword()));
+        });
+
+        return Result.OK;
+    }
+
+    @DeleteMapping
+    @RootAdmin
+    @Transactional
+    public Result delete() {
+        log.info("DELETE /credentials");
+
+        requestContext.getOptions().runInTransaction(options -> {
+            options.reset("credentials.login");
+            options.reset("credentials.password-hash");
         });
 
         return Result.OK;

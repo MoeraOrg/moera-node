@@ -9,10 +9,10 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.Domain;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
-import org.moera.node.auth.RootAdmin;
 import org.moera.node.model.DomainInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
