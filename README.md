@@ -11,7 +11,7 @@ http://moera.org/development/setup/index.html
 
 Installation instructions:
 
-1. As prerequisites you need to have OpenJDK 8+ and PostgreSQL 9.6+
+1. As prerequisites you need to have Java 11+ and PostgreSQL 9.6+
    installed. In all major Linux distributions you can install them from
    the main package repository.
 2. You need to have [moera-commons][1] installed.
