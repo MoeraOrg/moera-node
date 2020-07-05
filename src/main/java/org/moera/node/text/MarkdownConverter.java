@@ -1,7 +1,8 @@
 package org.moera.node.text;
 
 import java.util.Arrays;
-
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
@@ -28,9 +29,7 @@ public class MarkdownConverter {
 
     static final MutableDataHolder OPTIONS = new MutableDataSet()
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
-            .set(Parser.HTML_BLOCK_PARSER, false)
-            .set(Parser.HTML_BLOCK_DEEP_PARSER, true)
-            .set(Parser.HTML_BLOCK_DEEP_PARSE_BLANK_LINE_INTERRUPTS, false)
+            .set(Parser.HTML_BLOCK_TAGS, htmlBlockTags())
             .set(HtmlRenderer.SOFT_BREAK, "<br/>")
             .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
             .set(GitLabExtension.INS_PARSER, false)
@@ -52,6 +51,13 @@ public class MarkdownConverter {
 
     @Inject
     private NamingCache namingCache;
+
+    private static List<String> htmlBlockTags() {
+        return Parser.HTML_BLOCK_TAGS.get(null).stream()
+                .filter(tag -> !tag.equalsIgnoreCase("blockquote"))
+                .collect(Collectors.toList());
+
+    }
 
     public String toHtml(String source) {
         Parser parser = Parser.builder(OPTIONS.set(MentionsExtension.NAMING_CACHE, namingCache)).build();
