@@ -37,6 +37,7 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
             out.write("<!DOCTYPE html>\n"
                     + "<html>\n"
                     + "    <head>\n"
+                    + "        <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>\n"
                     + "        <title>Moera</title>\n"
                     + "    </head>\n"
                     + "    <body></body>\n"
