@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 
 public class HeadingExtractor {
 
-    private static final int HEADING_LENGTH = 65;
+    private static final int HEADING_LENGTH = 80;
 
     public static String extract(Body body) {
         if (!StringUtils.isEmpty(body.getSubject())) {

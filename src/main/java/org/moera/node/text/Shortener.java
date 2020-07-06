@@ -11,7 +11,7 @@ import org.moera.node.util.Util;
 
 public class Shortener {
 
-    private static final int SHORT_TITLE_MAX = 70;
+    private static final int SHORT_TITLE_MAX = 80;
 
     private static final int SHORT_TEXT_MIN = 400;
     private static final int SHORT_TEXT_AVG = 700;
