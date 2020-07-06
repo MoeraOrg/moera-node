@@ -60,6 +60,10 @@ public class StoryInfo {
             case MENTION_POSTING:
                 return new StoryOfRemotePostingInfo(story, isAdmin);
 
+            case SUBSCRIBER_ADDED:
+            case SUBSCRIBER_DELETED:
+                return new StoryOfRemoteNodeInfo(story, isAdmin);
+
             default:
                 return new StoryInfo(story, isAdmin);
         }
