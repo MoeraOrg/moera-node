@@ -11,6 +11,7 @@ import javax.inject.Inject;
 
 import org.moera.node.data.Pick;
 import org.moera.node.data.PickRepository;
+import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.RequestContext;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
@@ -18,7 +19,6 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -55,7 +55,7 @@ public class PickerPool {
     @Inject
     private PickRepository pickRepository;
 
-    @EventListener(ApplicationReadyEvent.class)
+    @EventListener(DomainsConfiguredEvent.class)
     public void init() {
         pickRepository.findAll().forEach(p -> pending.put(p.getId(), p));
     }

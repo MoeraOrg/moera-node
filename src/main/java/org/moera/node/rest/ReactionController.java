@@ -49,6 +49,7 @@ import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.InstantOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.EmojiList;
@@ -103,6 +104,9 @@ public class ReactionController {
 
     @Inject
     private EventManager eventManager;
+
+    @Inject
+    private NotificationSenderPool notificationSenderPool;
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
@@ -403,7 +407,7 @@ public class ReactionController {
             Posting posting = (Posting) entry;
             eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
             var totalsInfo = reactionTotalOperations.getInfo(posting);
-            requestContext.send(Directions.postingSubscribers(posting.getId()),
+            notificationSenderPool.send(Directions.postingSubscribers(posting.getId()),
                     new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
         }
     }

@@ -66,6 +66,8 @@ public class NotificationSender extends Task {
 
     @Override
     public void run() {
+        initLoggingDomain();
+        log.info("Sender from node ID = {} to '{}' started", nodeId, receiverNodeName);
         while (!stopped) {
             Notification notification;
             try {
@@ -83,10 +85,10 @@ public class NotificationSender extends Task {
             }
         }
         pool.deleteSender(nodeId, receiverNodeName);
+        log.info("Sender from node ID = {} to '{}' stopped", nodeId, receiverNodeName);
     }
 
     private void deliver(Notification notification) {
-        initLoggingDomain();
         nodeApi.setNodeId(nodeId);
 
         Duration delay = null;

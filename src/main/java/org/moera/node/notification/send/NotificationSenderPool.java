@@ -15,6 +15,7 @@ import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.notification.Notification;
@@ -24,7 +25,6 @@ import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
@@ -59,7 +59,7 @@ public class NotificationSenderPool {
     @Inject
     private PlatformTransactionManager txManager;
 
-    @EventListener(ApplicationReadyEvent.class)
+    @EventListener(DomainsConfiguredEvent.class)
     public void init() {
         pendingNotificationRepository.findAllInOrder().forEach(this::resend);
     }
@@ -134,6 +134,7 @@ public class NotificationSenderPool {
     }
 
     private NotificationSender createSender(UUID nodeId, String nodeName) {
+        log.info("Creating sender from node ID = {} to '{}'", nodeId, nodeName);
         NotificationSender sender = new NotificationSender(this, nodeName);
         if (nodeId == null) {
             taskAutowire.autowire(sender);
