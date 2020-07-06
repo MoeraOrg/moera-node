@@ -121,7 +121,7 @@ public class PickerPool {
         pending.remove(pick.getId());
         try {
             inTransaction(() -> {
-                pickRepository.deleteById(pick.getId());
+                pickRepository.findById(pick.getId()).ifPresent(pickRepository::delete);
                 return null;
             });
         } catch (Throwable e) {
