@@ -10,6 +10,7 @@ import org.moera.node.util.Util;
 public class PostingRevisionInfo {
 
     private String id;
+    private String receiverId;
     private Body bodyPreview;
     private byte[] bodySrcHash;
     private SourceFormat bodySrcFormat;
@@ -30,6 +31,7 @@ public class PostingRevisionInfo {
 
     public PostingRevisionInfo(EntryRevision revision, boolean countsVisible) {
         id = revision.getId().toString();
+        receiverId = revision.getReceiverRevisionId();
         bodyPreview = new Body(revision.getBodyPreview());
         bodySrcHash = revision.getReceiverBodySrcHash() != null
                 ? revision.getReceiverBodySrcHash()
@@ -53,6 +55,14 @@ public class PostingRevisionInfo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getReceiverId() {
+        return receiverId;
+    }
+
+    public void setReceiverId(String receiverId) {
+        this.receiverId = receiverId;
     }
 
     public Body getBodyPreview() {
