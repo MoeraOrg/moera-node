@@ -3,6 +3,7 @@ package org.moera.node.util;
 import java.util.concurrent.Callable;
 
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
@@ -30,7 +31,12 @@ public class Transaction {
     }
 
     private static TransactionStatus beginTransaction(PlatformTransactionManager txManager) {
-        return txManager != null ? txManager.getTransaction(new DefaultTransactionDefinition()) : null;
+        if (txManager == null) {
+            return null;
+        }
+        DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
+        definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        return txManager.getTransaction(definition);
     }
 
     private static void commitTransaction(PlatformTransactionManager txManager, TransactionStatus status) {
