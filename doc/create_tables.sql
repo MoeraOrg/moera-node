@@ -69,7 +69,9 @@ CREATE TABLE public.entries (
     draft_revision_id uuid,
     receiver_created_at timestamp without time zone,
     current_receiver_revision_id character varying(40),
-    receiver_entry_id character varying(40)
+    receiver_entry_id character varying(40),
+    edited_at timestamp without time zone DEFAULT now() NOT NULL,
+    receiver_edited_at timestamp without time zone
 );
 
 
