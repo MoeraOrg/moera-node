@@ -165,7 +165,7 @@ public class Picker extends Task {
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             downloadRevisions(posting);
-            subscribe(receiverName, receiverPostingId, posting.getEditedAt(), events);
+            subscribe(receiverName, receiverPostingId, posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
             notifications.add(new DirectedNotification(
                     Directions.feedSubscribers(feedName),

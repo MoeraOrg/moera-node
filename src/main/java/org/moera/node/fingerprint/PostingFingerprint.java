@@ -39,8 +39,7 @@ public class PostingFingerprint extends Fingerprint {
         bodySrcFormat = revision.getBodySrcFormat().getValue();
         body = revision.getBody();
         bodyFormat = revision.getBodyFormat();
-        createdAt = Util.toEpochSecond(
-                posting.isOriginal() ? revision.getCreatedAt() : revision.getReceiverCreatedAt());
+        createdAt = Util.toEpochSecond(posting.isOriginal() ? posting.getEditedAt() : posting.getReceiverEditedAt());
     }
 
     public PostingFingerprint(PostingInfo postingInfo) {
@@ -62,8 +61,7 @@ public class PostingFingerprint extends Fingerprint {
         bodySrcFormat = SourceFormat.toValue(postingRevisionInfo.getBodySrcFormat());
         body = postingRevisionInfo.getBody().getEncoded();
         bodyFormat = postingRevisionInfo.getBodyFormat();
-        createdAt = postingInfo.isOriginal()
-                ? postingRevisionInfo.getCreatedAt() : postingRevisionInfo.getReceiverCreatedAt();
+        createdAt = postingInfo.isOriginal() ? postingInfo.getEditedAt() : postingInfo.getReceiverEditedAt();
     }
 
 }

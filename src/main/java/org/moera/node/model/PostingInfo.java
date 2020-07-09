@@ -101,7 +101,7 @@ public class PostingInfo {
         editedAt = Util.toEpochSecond(posting.getEditedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         receiverCreatedAt = Util.toEpochSecond(posting.getReceiverCreatedAt());
-        receiverEditedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
+        receiverEditedAt = Util.toEpochSecond(posting.getReceiverEditedAt());
         receiverDeletedAt = Util.toEpochSecond(revision.getReceiverDeletedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
         if (posting.isDraft()) {
@@ -436,6 +436,7 @@ public class PostingInfo {
         posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
         posting.setOwnerName(ownerName);
         posting.setReceiverCreatedAt(Util.toTimestamp(isOriginal() ? createdAt : receiverCreatedAt));
+        posting.setReceiverEditedAt(Util.toTimestamp(isOriginal() ? editedAt : receiverEditedAt));
         posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
         posting.setReactionsVisible(reactionsVisible);

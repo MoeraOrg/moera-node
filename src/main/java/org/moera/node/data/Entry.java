@@ -59,6 +59,8 @@ public class Entry {
 
     private Timestamp receiverCreatedAt;
 
+    private Timestamp receiverEditedAt;
+
     private Timestamp deadline;
 
     @NotNull
@@ -185,6 +187,14 @@ public class Entry {
 
     public void setReceiverCreatedAt(Timestamp receiverCreatedAt) {
         this.receiverCreatedAt = receiverCreatedAt;
+    }
+
+    public Timestamp getReceiverEditedAt() {
+        return receiverEditedAt;
+    }
+
+    public void setReceiverEditedAt(Timestamp receiverEditedAt) {
+        this.receiverEditedAt = receiverEditedAt;
     }
 
     public Timestamp getDeadline() {
