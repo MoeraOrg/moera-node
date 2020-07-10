@@ -40,6 +40,8 @@ public class PostingInfo {
     private Long receiverCreatedAt;
     private Long receiverEditedAt;
     private Long receiverDeletedAt;
+    private Long revisionCreatedAt;
+    private Long receiverRevisionCreatedAt;
     private Long deadline;
     private Boolean draft;
     private Boolean draftPending;
@@ -103,6 +105,8 @@ public class PostingInfo {
         receiverCreatedAt = Util.toEpochSecond(posting.getReceiverCreatedAt());
         receiverEditedAt = Util.toEpochSecond(posting.getReceiverEditedAt());
         receiverDeletedAt = Util.toEpochSecond(revision.getReceiverDeletedAt());
+        revisionCreatedAt = Util.toEpochSecond(revision.getCreatedAt());
+        receiverRevisionCreatedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
         if (posting.isDraft()) {
             draft = true;
@@ -296,6 +300,22 @@ public class PostingInfo {
 
     public void setReceiverDeletedAt(Long receiverDeletedAt) {
         this.receiverDeletedAt = receiverDeletedAt;
+    }
+
+    public Long getRevisionCreatedAt() {
+        return revisionCreatedAt;
+    }
+
+    public void setRevisionCreatedAt(Long revisionCreatedAt) {
+        this.revisionCreatedAt = revisionCreatedAt;
+    }
+
+    public Long getReceiverRevisionCreatedAt() {
+        return receiverRevisionCreatedAt;
+    }
+
+    public void setReceiverRevisionCreatedAt(Long receiverRevisionCreatedAt) {
+        this.receiverRevisionCreatedAt = receiverRevisionCreatedAt;
     }
 
     public Long getDeadline() {
