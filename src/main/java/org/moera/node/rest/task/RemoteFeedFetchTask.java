@@ -8,9 +8,9 @@ import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.model.FeedSliceInfoR;
+import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.StoryInfoR;
+import org.moera.node.model.StoryInfo;
 import org.moera.node.picker.PickerPool;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
@@ -43,12 +43,12 @@ public class RemoteFeedFetchTask extends Task {
         initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
-            FeedSliceInfoR sliceInfo = nodeApi.getFeedStories(remoteNodeName, remoteFeedName, FETCH_LIMIT);
+            FeedSliceInfo sliceInfo = nodeApi.getFeedStories(remoteNodeName, remoteFeedName, FETCH_LIMIT);
             log.info("Got {} stories from feed {} at node {}", sliceInfo.getStories().size(), remoteFeedName,
                     remoteNodeName);
             List<PostingInfo> list = sliceInfo.getStories().stream()
                     .filter(t -> t.getStoryType() == StoryType.POSTING_ADDED)
-                    .map(StoryInfoR::getPosting)
+                    .map(StoryInfo::getPosting)
                     .collect(Collectors.toList());
             for (int i = list.size() - 1; i >= 0; i--) {
                 download(list.get(i));
