@@ -13,6 +13,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -92,6 +93,12 @@ public class Entry {
     @NotNull
     private boolean reactionTotalsVisible = true;
 
+    @ManyToOne
+    private Entry parent;
+
+    @NotNull
+    private int childrenTotal;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -103,6 +110,9 @@ public class Entry {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntrySource> sources = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
+    private Set<Entry> children = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -313,6 +323,22 @@ public class Entry {
         reactionTotal.setEntry(null);
     }
 
+    public Entry getParent() {
+        return parent;
+    }
+
+    public void setParent(Entry parent) {
+        this.parent = parent;
+    }
+
+    public int getChildrenTotal() {
+        return childrenTotal;
+    }
+
+    public void setChildrenTotal(int childrenTotal) {
+        this.childrenTotal = childrenTotal;
+    }
+
     public Set<Story> getStories() {
         return stories;
     }
@@ -354,6 +380,24 @@ public class Entry {
     public void removeSource(EntrySource source) {
         sources.removeIf(sr -> sr.getId().equals(source.getId()));
         source.setEntry(null);
+    }
+
+    public Set<Entry> getChildren() {
+        return children;
+    }
+
+    public void setChildren(Set<Entry> children) {
+        this.children = children;
+    }
+
+    public void addChild(Entry child) {
+        children.add(child);
+        child.setParent(this);
+    }
+
+    public void removeChild(Entry child) {
+        children.removeIf(sr -> sr.getId().equals(child.getId()));
+        child.setParent(null);
     }
 
 }

@@ -71,7 +71,9 @@ CREATE TABLE public.entries (
     current_receiver_revision_id character varying(40),
     receiver_entry_id character varying(40),
     edited_at timestamp without time zone DEFAULT now() NOT NULL,
-    receiver_edited_at timestamp without time zone
+    receiver_edited_at timestamp without time zone,
+    parent_id uuid,
+    children_total integer DEFAULT 0 NOT NULL
 );
 
 
@@ -630,6 +632,13 @@ CREATE UNIQUE INDEX entries_node_id_receiver_name_receiver_entry_id_idx ON publi
 
 
 --
+-- Name: entries_parent_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_parent_id_idx ON public.entries USING btree (parent_id);
+
+
+--
 -- Name: entry_revision_upgrades_entry_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -895,6 +904,14 @@ ALTER TABLE ONLY public.entries
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entries_draft_revision_id_fkey FOREIGN KEY (draft_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: entries entries_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
