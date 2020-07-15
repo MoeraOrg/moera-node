@@ -23,6 +23,9 @@ public class StoryInfo {
     private Boolean read;
     private String summary;
     private String trackingId;
+    private PostingInfo posting;
+    private String remoteNodeName;
+    private String remotePostingId;
     private Map<String, String[]> operations;
 
     public StoryInfo() {
@@ -49,24 +52,28 @@ public class StoryInfo {
 
     public static StoryInfo build(Story story, boolean isAdmin,
                                   Function<Story, PostingInfo> buildPostingInfo) {
+        StoryInfo info = new StoryInfo(story, isAdmin);
         switch (story.getStoryType()) {
             case POSTING_ADDED:
-                return new StoryOfPostingInfo(story, buildPostingInfo.apply(story), isAdmin);
+                info.setPosting(buildPostingInfo.apply(story));
+                break;
 
             case REACTION_ADDED_POSITIVE:
             case REACTION_ADDED_NEGATIVE:
-                return new StoryOfPostingInfo(story, story.getEntry().getId(), isAdmin);
+                info.setPosting(new PostingInfo(story.getEntry().getId()));
+                break;
 
             case MENTION_POSTING:
-                return new StoryOfRemotePostingInfo(story, isAdmin);
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemotePostingId(story.getRemoteEntryId());
+                break;
 
             case SUBSCRIBER_ADDED:
             case SUBSCRIBER_DELETED:
-                return new StoryOfRemoteNodeInfo(story, isAdmin);
-
-            default:
-                return new StoryInfo(story, isAdmin);
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                break;
         }
+        return info;
     }
 
     public String getId() {
@@ -155,6 +162,30 @@ public class StoryInfo {
 
     public void setTrackingId(String trackingId) {
         this.trackingId = trackingId;
+    }
+
+    public PostingInfo getPosting() {
+        return posting;
+    }
+
+    public void setPosting(PostingInfo posting) {
+        this.posting = posting;
+    }
+
+    public String getRemoteNodeName() {
+        return remoteNodeName;
+    }
+
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemotePostingId() {
+        return remotePostingId;
+    }
+
+    public void setRemotePostingId(String remotePostingId) {
+        this.remotePostingId = remotePostingId;
     }
 
     public Map<String, String[]> getOperations() {

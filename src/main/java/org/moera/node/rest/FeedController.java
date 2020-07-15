@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -23,8 +24,6 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ClientReactionInfo;
@@ -35,8 +34,9 @@ import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
-import org.moera.node.model.StoryOfPostingInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.slf4j.Logger;
@@ -229,8 +229,8 @@ public class FeedController {
         String clientName = requestContext.getClientName();
         if (!StringUtils.isEmpty(clientName)) {
             Map<String, PostingInfo> postingMap = stories.stream()
-                    .filter(s -> s instanceof StoryOfPostingInfo)
-                    .map(s -> ((StoryOfPostingInfo) s).getPosting())
+                    .map(StoryInfo::getPosting)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toMap(PostingInfo::getId, Function.identity(), (p1, p2) -> p1));
             reactionRepository.findByStoriesInRangeAndOwner(
                     requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
@@ -260,8 +260,8 @@ public class FeedController {
                     .collect(Collectors.toMap(
                             OwnReaction::getRemotePostingId, Function.identity(), (p1, p2) -> p1));
             stories.stream()
-                    .filter(s -> s instanceof StoryOfPostingInfo)
-                    .map(s -> ((StoryOfPostingInfo) s).getPosting())
+                    .map(StoryInfo::getPosting)
+                    .filter(Objects::nonNull)
                     .filter(p -> !p.isOriginal())
                     .forEach(posting -> {
                         OwnReaction ownReaction = ownReactions.get(posting.getReceiverPostingId());
