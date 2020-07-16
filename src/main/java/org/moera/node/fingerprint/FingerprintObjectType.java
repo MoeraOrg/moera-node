@@ -5,6 +5,7 @@ public enum FingerprintObjectType {
     POSTING,
     CARTE,
     REACTION,
-    NOTIFICATION_PACKET
+    NOTIFICATION_PACKET,
+    COMMENT
 
 }
