@@ -99,6 +99,8 @@ public class Entry {
     @NotNull
     private int childrenTotal;
 
+    private Long moment;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -337,6 +339,14 @@ public class Entry {
 
     public void setChildrenTotal(int childrenTotal) {
         this.childrenTotal = childrenTotal;
+    }
+
+    public Long getMoment() {
+        return moment;
+    }
+
+    public void setMoment(Long moment) {
+        this.moment = moment;
     }
 
     public Set<Story> getStories() {

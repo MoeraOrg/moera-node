@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.lang.reflect.Constructor;
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.SourceFormat;
@@ -20,11 +22,14 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.operations.CommentOperations;
+import org.moera.node.text.TextConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +59,12 @@ public class CommentController {
     @Inject
     private FingerprintManager fingerprintManager;
 
+    @Inject
+    private CommentOperations commentOperations;
+
+    @Inject
+    private TextConverter textConverter;
+
     @PostMapping
     @Transactional
     public ResponseEntity<CommentCreated> post(
@@ -70,6 +81,7 @@ public class CommentController {
             throw new ObjectNotFoundFailure("comment.posting-not-found");
         }
 
+        byte[] digest = null;
         if (commentText.getSignature() == null) {
             String ownerName = requestContext.getClientName();
             if (StringUtils.isEmpty(ownerName)) {
@@ -97,8 +109,9 @@ public class CommentController {
                     posting.getCurrentRevision().getDigest())) {
                 throw new IncorrectSignatureException();
             }
+            digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest());
 
-            if (StringUtils.isEmpty(commentText.getBody().getEncoded())) {
+            if (commentText.getBody() == null || StringUtils.isEmpty(commentText.getBody().getEncoded())) {
                 throw new ValidationFailure("commentText.body.blank");
             }
             if (StringUtils.isEmpty(commentText.getBodyFormat())) {
@@ -113,7 +126,17 @@ public class CommentController {
             }
         }
 
-        return null; // TODO
+        Comment comment = commentOperations.newComment(posting, commentText);
+        try {
+            byte[] commentDigest = digest;
+            comment = commentOperations.createOrUpdateComment(posting, comment, null, null,
+                    revision -> commentText.toEntryRevision(revision, commentDigest, textConverter));
+        } catch (BodyMappingException e) {
+            throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
+        }
+
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
+                .body(new CommentCreated(comment, posting.getChildrenTotal()));
     }
 
 }

@@ -114,7 +114,7 @@ public class ReactionController {
     @Inject
     private InstantOperations instantOperations;
 
-    private MomentFinder momentFinder = new MomentFinder();
+    private final MomentFinder momentFinder = new MomentFinder();
 
     @PostMapping
     @Transactional

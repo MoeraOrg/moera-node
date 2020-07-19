@@ -1,9 +1,14 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.Comment;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CommentInfo {
@@ -13,8 +18,8 @@ public class CommentInfo {
     private String postingId;
     private String postingRevisionId;
     private String revisionId;
-    private String receiverRevisionId;
     private Integer totalRevisions;
+    private Body bodyPreview;
     private Body bodySrc;
     private byte[] bodySrcHash;
     private SourceFormat bodySrcFormat;
@@ -35,6 +40,47 @@ public class CommentInfo {
     private ReactionTotalsInfo reactions;
 
     public CommentInfo() {
+    }
+
+    public CommentInfo(Comment comment, boolean isAdminOrOwner) {
+        this(comment, comment.getCurrentRevision(), false, isAdminOrOwner);
+    }
+
+    public CommentInfo(Comment comment, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
+        id = comment.getId().toString();
+        ownerName = comment.getOwnerName();
+        postingId = comment.getPosting().getId().toString();
+        postingRevisionId = revision.getParent().getId().toString();
+        revisionId = revision.getId().toString();
+        totalRevisions = comment.getTotalRevisions();
+        bodyPreview = new Body(revision.getBodyPreview());
+        if (includeSource) {
+            bodySrc = new Body(revision.getBodySrc());
+        }
+        bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
+        bodySrcFormat = revision.getBodySrcFormat();
+        body = new Body(revision.getBody());
+        bodyFormat = revision.getBodyFormat();
+        heading = revision.getHeading();
+        moment = comment.getMoment();
+        createdAt = Util.toEpochSecond(comment.getCreatedAt());
+        editedAt = Util.toEpochSecond(comment.getEditedAt());
+        deletedAt = Util.toEpochSecond(comment.getDeletedAt());
+        revisionCreatedAt = Util.toEpochSecond(revision.getCreatedAt());
+        deadline = Util.toEpochSecond(comment.getDeadline());
+        signature = revision.getSignature();
+        signatureVersion = revision.getSignatureVersion();
+        operations = new HashMap<>();
+        operations.put("edit", new String[]{"owner"});
+        operations.put("delete", new String[]{"owner", "senior", "admin"});
+        operations.put("revisions", new String[0]);
+        operations.put("reactions",
+                comment.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
+        acceptedReactions = new AcceptedReactions();
+        acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
+        acceptedReactions.setNegative(comment.getAcceptedReactionsNegative());
+        reactions = new ReactionTotalsInfo(comment.getReactionTotals(),
+                isAdminOrOwner && comment.isOriginal() || comment.isReactionTotalsVisible());
     }
 
     public String getId() {
@@ -77,20 +123,20 @@ public class CommentInfo {
         this.revisionId = revisionId;
     }
 
-    public String getReceiverRevisionId() {
-        return receiverRevisionId;
-    }
-
-    public void setReceiverRevisionId(String receiverRevisionId) {
-        this.receiverRevisionId = receiverRevisionId;
-    }
-
     public Integer getTotalRevisions() {
         return totalRevisions;
     }
 
     public void setTotalRevisions(Integer totalRevisions) {
         this.totalRevisions = totalRevisions;
+    }
+
+    public Body getBodyPreview() {
+        return bodyPreview;
+    }
+
+    public void setBodyPreview(Body bodyPreview) {
+        this.bodyPreview = bodyPreview;
     }
 
     public Body getBodySrc() {

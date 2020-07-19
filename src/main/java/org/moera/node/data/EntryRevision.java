@@ -68,11 +68,19 @@ public class EntryRevision {
 
     private byte[] digest;
 
+    @ManyToOne
+    private EntryRevision parent;
+
+    private Timestamp deadline;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
     private Set<Reaction> reactions = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
     private Set<ReactionTotal> reactionTotals = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
+    private Set<EntryRevision> children = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -210,6 +218,22 @@ public class EntryRevision {
         this.digest = digest;
     }
 
+    public EntryRevision getParent() {
+        return parent;
+    }
+
+    public void setParent(EntryRevision parent) {
+        this.parent = parent;
+    }
+
+    public Timestamp getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Timestamp deadline) {
+        this.deadline = deadline;
+    }
+
     public Set<Reaction> getReactions() {
         return reactions;
     }
@@ -244,6 +268,24 @@ public class EntryRevision {
     public void removeReactionTotal(ReactionTotal reactionTotal) {
         reactionTotals.removeIf(rt -> rt.getId().equals(reactionTotal.getId()));
         reactionTotal.setEntryRevision(null);
+    }
+
+    public Set<EntryRevision> getChildren() {
+        return children;
+    }
+
+    public void setChildren(Set<EntryRevision> children) {
+        this.children = children;
+    }
+
+    public void addChild(EntryRevision child) {
+        children.add(child);
+        child.setParent(this);
+    }
+
+    public void removeChild(EntryRevision child) {
+        children.removeIf(sr -> sr.getId().equals(child.getId()));
+        child.setParent(null);
     }
 
 }
