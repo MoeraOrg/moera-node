@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.global.RequestContext;
+import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,8 +69,8 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
                 authenticationManager.isAdminToken(request.getParameter("token"), requestContext.nodeId()));
         log.info("Authorized as {}", requestContext.isAdmin() ? "admin" : "non-admin");
         try {
-            requestContext.setClientName(authenticationManager.getClientName(request.getParameter("carte"),
-                    InetAddress.getByName(request.getRemoteAddr())));
+            requestContext.setClientName(
+                    authenticationManager.getClientName(request.getParameter("carte"), UriUtil.remoteAddress(request)));
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");
         }

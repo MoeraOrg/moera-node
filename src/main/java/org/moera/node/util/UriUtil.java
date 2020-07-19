@@ -1,5 +1,7 @@
 package org.moera.node.util;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.util.StringUtils;
@@ -42,6 +44,12 @@ public class UriUtil {
             return null;
         }
         return uri.endsWith("/") ? uri.substring(0, uri.length() - 1) : uri;
+    }
+
+    public static InetAddress remoteAddress(HttpServletRequest request) throws UnknownHostException {
+        String forwardedAddress = request.getHeader("X-Forwarded-For");
+        return InetAddress.getByName(
+                !StringUtils.isEmpty(forwardedAddress) ? forwardedAddress : request.getRemoteAddr());
     }
 
 }
