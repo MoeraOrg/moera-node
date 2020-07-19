@@ -84,24 +84,44 @@ public class CommentController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("comment.posting-not-found");
         }
+        byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName());
+
+        Comment comment = commentOperations.newComment(posting, commentText);
+        try {
+            comment = commentOperations.createOrUpdateComment(posting, comment, null, null,
+                    revision -> commentText.toEntryRevision(revision, digest, textConverter));
+        } catch (BodyMappingException e) {
+            throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
+        }
+
+        requestContext.send(new CommentAddedEvent(comment));
+        requestContext.send(new PostingCommentsChangedEvent(posting));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
+
+        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
+                .body(new CommentCreated(comment, posting.getChildrenTotal()));
+    }
+
+    private byte[] validateCommentText(Posting posting, CommentText commentText, String ownerName)
+            throws AuthenticationException {
 
         byte[] digest = null;
         if (commentText.getSignature() == null) {
-            String ownerName = requestContext.getClientName();
-            if (StringUtils.isEmpty(ownerName)) {
+            String clientName = requestContext.getClientName();
+            if (StringUtils.isEmpty(clientName)) {
                 throw new AuthenticationException();
             }
-            if (!StringUtils.isEmpty(commentText.getOwnerName())
-                    && !commentText.getOwnerName().equals(ownerName)) {
+            if (!StringUtils.isEmpty(ownerName) && !ownerName.equals(clientName)) {
                 throw new AuthenticationException();
             }
-            commentText.setOwnerName(ownerName);
+            commentText.setOwnerName(clientName);
 
             if (StringUtils.isEmpty(commentText.getBodySrc())) {
                 throw new ValidationFailure("commentText.bodySrc.blank");
             }
         } else {
-            byte[] signingKey = namingCache.get(commentText.getOwnerName()).getSigningKey();
+            byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
                     FingerprintObjectType.COMMENT, commentText.getSignatureVersion(),
                     CommentText.class, byte[].class);
@@ -129,23 +149,7 @@ public class CommentController {
                 throw new ValidationFailure("commentText.createdAt.out-of-range");
             }
         }
-
-        Comment comment = commentOperations.newComment(posting, commentText);
-        try {
-            byte[] commentDigest = digest;
-            comment = commentOperations.createOrUpdateComment(posting, comment, null, null,
-                    revision -> commentText.toEntryRevision(revision, commentDigest, textConverter));
-        } catch (BodyMappingException e) {
-            throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
-        }
-
-        requestContext.send(new CommentAddedEvent(comment));
-        requestContext.send(new PostingCommentsChangedEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
-                new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
-
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
-                .body(new CommentCreated(comment, posting.getChildrenTotal()));
+        return digest;
     }
 
 }
