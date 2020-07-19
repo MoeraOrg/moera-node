@@ -27,7 +27,11 @@ import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.CommentAddedEvent;
+import org.moera.node.model.event.PostingCommentsChangedEvent;
+import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.text.TextConverter;
 import org.slf4j.Logger;
@@ -134,6 +138,11 @@ public class CommentController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
         }
+
+        requestContext.send(new CommentAddedEvent(comment));
+        requestContext.send(new PostingCommentsChangedEvent(posting));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
                 .body(new CommentCreated(comment, posting.getChildrenTotal()));
