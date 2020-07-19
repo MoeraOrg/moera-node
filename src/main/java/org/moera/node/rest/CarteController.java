@@ -18,6 +18,7 @@ import org.moera.node.model.CarteInfo;
 import org.moera.node.model.CarteSet;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.util.Carte;
+import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,24 +51,24 @@ public class CarteController {
 
         List<CarteInfo> cartes = new ArrayList<>();
         Instant beginning = Instant.now();
-        for (int i = 0; i <  limit; i++) {
-            try {
-                CarteInfo carteInfo = new CarteInfo();
-                carteInfo.setCarte(Carte.generate(ownerName, InetAddress.getByName(request.getRemoteAddr()),
-                        beginning, signingKey));
-                carteInfo.setBeginning(beginning.getEpochSecond());
-                beginning = Carte.getDeadline(beginning);
-                carteInfo.setDeadline(beginning.getEpochSecond());
-                cartes.add(carteInfo);
-            } catch (UnknownHostException e) {
-                throw new OperationFailure("carte.client-address-unknown");
+        try {
+            InetAddress remoteAddress = UriUtil.remoteAddress(request);
+            for (int i = 0; i <  limit; i++) {
+                    CarteInfo carteInfo = new CarteInfo();
+                    carteInfo.setCarte(Carte.generate(ownerName, remoteAddress, beginning, signingKey));
+                    carteInfo.setBeginning(beginning.getEpochSecond());
+                    beginning = Carte.getDeadline(beginning);
+                    carteInfo.setDeadline(beginning.getEpochSecond());
+                    cartes.add(carteInfo);
             }
-        }
 
-        CarteSet carteSet = new CarteSet();
-        carteSet.setCartesIp(request.getRemoteAddr());
-        carteSet.setCartes(cartes);
-        return carteSet;
+            CarteSet carteSet = new CarteSet();
+            carteSet.setCartesIp(remoteAddress.getHostAddress());
+            carteSet.setCartes(cartes);
+            return carteSet;
+        } catch (UnknownHostException e) {
+            throw new OperationFailure("carte.client-address-unknown");
+        }
     }
 
 }
