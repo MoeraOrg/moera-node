@@ -4,6 +4,8 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -16,7 +18,12 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
+import org.moera.node.model.Body;
 import org.moera.node.model.CommentText;
+import org.moera.node.model.notification.MentionCommentAddedNotification;
+import org.moera.node.model.notification.MentionCommentDeletedNotification;
+import org.moera.node.notification.send.Directions;
+import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -74,6 +81,7 @@ public class CommentOperations {
             if (latest.getSignature() == null) {
                 entryRevisionRepository.delete(latest);
                 comment.setCurrentRevision(null);
+                latest = null;
             }
         }
 
@@ -88,7 +96,7 @@ public class CommentOperations {
         }
         comment = commentRepository.saveAndFlush(comment);
 
-        //  TODO notifyMentioned(comment.getId(), current, latest);
+        notifyMentioned(posting, comment.getId(), current, latest);
 
         return comment;
     }
@@ -127,6 +135,27 @@ public class CommentOperations {
         }
 
         return revision;
+    }
+
+    private void notifyMentioned(Posting posting, UUID commentId, EntryRevision current, EntryRevision latest) {
+        Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
+        Set<String> latestMentions = latest != null
+                ? MentionsExtractor.extract(new Body(latest.getBody()))
+                : Collections.emptySet();
+        currentMentions.stream()
+                .filter(m -> !m.equals(requestContext.getClientName()))
+                .filter(m -> !latestMentions.contains(m))
+                .map(Directions::single)
+                .forEach(d -> requestContext.send(d,
+                        new MentionCommentAddedNotification(posting.getId(),
+                                commentId, posting.getCurrentRevision().getHeading(), requestContext.getClientName(),
+                                current.getHeading())));
+        latestMentions.stream()
+                .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !currentMentions.contains(m))
+                .map(Directions::single)
+                .forEach(d -> requestContext.send(d,
+                        new MentionCommentDeletedNotification(posting.getId(), commentId)));
     }
 
 }

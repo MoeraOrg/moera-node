@@ -11,4 +11,5 @@ public class MentionPostingDeletedNotification extends MentionPostingNotificatio
     public MentionPostingDeletedNotification(UUID postingId) {
         super(NotificationType.MENTION_POSTING_DELETED, postingId);
     }
+
 }

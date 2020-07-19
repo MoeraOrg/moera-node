@@ -7,7 +7,9 @@ public enum NotificationType {
     FEED_POSTING_ADDED(FeedPostingAddedNotification.class),
     POSTING_UPDATED(PostingUpdatedNotification.class),
     POSTING_DELETED(PostingDeletedNotification.class),
-    POSTING_REACTIONS_UPDATED(PostingReactionsUpdatedNotification.class);
+    POSTING_REACTIONS_UPDATED(PostingReactionsUpdatedNotification.class),
+    MENTION_COMMENT_ADDED(MentionCommentAddedNotification.class),
+    MENTION_COMMENT_DELETED(MentionCommentDeletedNotification.class);
 
     private Class<? extends Notification> structure;
 
