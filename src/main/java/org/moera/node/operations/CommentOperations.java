@@ -20,8 +20,11 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.Body;
 import org.moera.node.model.CommentText;
+import org.moera.node.model.event.CommentDeletedEvent;
+import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.notification.MentionCommentAddedNotification;
 import org.moera.node.model.notification.MentionCommentDeletedNotification;
+import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.MomentFinder;
@@ -143,7 +146,7 @@ public class CommentOperations {
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
         currentMentions.stream()
-                .filter(m -> !m.equals(requestContext.getClientName()))
+                .filter(m -> !requestContext.isClient(m))
                 .filter(m -> !latestMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
@@ -156,6 +159,21 @@ public class CommentOperations {
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
                         new MentionCommentDeletedNotification(posting.getId(), commentId)));
+    }
+
+    public void deleteComment(Posting posting, Comment comment) {
+        comment.setDeletedAt(Util.now());
+        Duration postingTtl = requestContext.getOptions().getDuration("comment.deleted.lifetime");
+        comment.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
+        comment.getCurrentRevision().setDeletedAt(Util.now());
+        if (posting.getChildrenTotal() > 0) {
+            posting.setChildrenTotal(posting.getChildrenTotal() - 1);
+        }
+
+        requestContext.send(new CommentDeletedEvent(comment));
+        requestContext.send(new PostingCommentsChangedEvent(posting));
+        requestContext.send(Directions.postingSubscribers(posting.getId()),
+                new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
     }
 
 }

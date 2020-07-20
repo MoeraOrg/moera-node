@@ -32,6 +32,7 @@ import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentText;
+import org.moera.node.model.CommentTotalInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.CommentAddedEvent;
@@ -46,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -207,6 +209,36 @@ public class CommentController {
             }
         }
         return digest;
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public CommentTotalInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId)
+            throws AuthenticationException {
+
+        log.info("DELETE /postings/{postingId}/comments/{commentId} (postingId = {}, commentId = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId));
+
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("comment.posting-not-found");
+        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
+        if (comment == null) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (comment.getPosting().getId() != posting.getId()) {
+            throw new ObjectNotFoundFailure("comment.not-under-posting");
+        }
+        if (!requestContext.isAdmin()
+                && !requestContext.isClient(posting.getOwnerName())
+                && !requestContext.isClient(comment.getOwnerName())) {
+            throw new AuthenticationException();
+        }
+        entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
+        commentOperations.deleteComment(posting, comment);
+
+        return new CommentTotalInfo(posting.getChildrenTotal());
     }
 
     private CommentInfo withClientReaction(CommentInfo commentInfo) {
