@@ -6,6 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
@@ -15,19 +17,25 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Comment;
+import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.Reaction;
+import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.BodyMappingException;
+import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
+import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.CommentAddedEvent;
+import org.moera.node.model.event.CommentUpdatedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.naming.NamingCache;
@@ -40,6 +48,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -58,6 +67,12 @@ public class CommentController {
     private PostingRepository postingRepository;
 
     @Inject
+    private CommentRepository commentRepository;
+
+    @Inject
+    private ReactionRepository reactionRepository;
+
+    @Inject
     private NamingCache namingCache;
 
     @Inject
@@ -69,11 +84,13 @@ public class CommentController {
     @Inject
     private TextConverter textConverter;
 
+    @Inject
+    private EntityManager entityManager;
+
     @PostMapping
     @Transactional
-    public ResponseEntity<CommentCreated> post(
-            @PathVariable UUID postingId, @Valid @RequestBody CommentText commentText)
-            throws AuthenticationException {
+    public ResponseEntity<CommentCreated> post(@PathVariable UUID postingId,
+            @Valid @RequestBody CommentText commentText) throws AuthenticationException {
 
         log.info("POST /postings/{postingId}/comments (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingId),
@@ -101,6 +118,46 @@ public class CommentController {
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
                 .body(new CommentCreated(comment, posting.getChildrenTotal()));
+    }
+
+    @PutMapping("/{commentId}")
+    @Transactional
+    public CommentInfo put(@PathVariable UUID postingId, @PathVariable UUID commentId,
+                           @Valid @RequestBody CommentText commentText) throws AuthenticationException {
+
+        log.info("PUT /postings/{postingId}/comments/{commentId}"
+                        + " (postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
+                LogUtil.format(postingId),
+                LogUtil.format(commentId),
+                LogUtil.format(commentText.getBodySrc(), 64),
+                LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
+
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("comment.posting-not-found");
+        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
+        if (comment == null) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (comment.getPosting().getId() != posting.getId()) {
+            throw new ObjectNotFoundFailure("comment.not-under-posting");
+        }
+        byte[] digest = validateCommentText(posting, commentText, comment.getOwnerName());
+
+        entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
+        commentText.toEntry(comment);
+        try {
+            comment = commentOperations.createOrUpdateComment(posting, comment, comment.getCurrentRevision(),
+                    commentText::sameAsRevision,
+                    revision -> commentText.toEntryRevision(revision, digest, textConverter));
+        } catch (BodyMappingException e) {
+            throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
+        }
+
+        requestContext.send(new CommentUpdatedEvent(comment));
+
+        return withClientReaction(new CommentInfo(comment, true));
     }
 
     private byte[] validateCommentText(Posting posting, CommentText commentText, String ownerName)
@@ -150,6 +207,16 @@ public class CommentController {
             }
         }
         return digest;
+    }
+
+    private CommentInfo withClientReaction(CommentInfo commentInfo) {
+        String clientName = requestContext.getClientName();
+        if (StringUtils.isEmpty(clientName)) {
+            return commentInfo;
+        }
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);
+        commentInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        return commentInfo;
     }
 
 }
