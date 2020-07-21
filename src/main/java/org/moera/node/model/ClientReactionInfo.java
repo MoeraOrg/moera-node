@@ -10,7 +10,7 @@ import org.moera.node.util.Util;
 public class ClientReactionInfo {
 
     @JsonIgnore
-    private String postingId;
+    private String entryId;
 
     private boolean negative;
     private int emoji;
@@ -21,7 +21,7 @@ public class ClientReactionInfo {
     }
 
     public ClientReactionInfo(Reaction reaction) {
-        postingId = reaction.getEntryRevision().getEntry().getId().toString();
+        entryId = reaction.getEntryRevision().getEntry().getId().toString();
         negative = reaction.isNegative();
         emoji = reaction.getEmoji();
         createdAt = Util.toEpochSecond(reaction.getCreatedAt());
@@ -29,18 +29,18 @@ public class ClientReactionInfo {
     }
 
     public ClientReactionInfo(OwnReaction reaction) {
-        postingId = reaction.getRemotePostingId();
+        entryId = reaction.getRemotePostingId();
         negative = reaction.isNegative();
         emoji = reaction.getEmoji();
         createdAt = Util.toEpochSecond(reaction.getCreatedAt());
     }
 
-    public String getPostingId() {
-        return postingId;
+    public String getEntryId() {
+        return entryId;
     }
 
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
+    public void setEntryId(String entryId) {
+        this.entryId = entryId;
     }
 
     public boolean isNegative() {

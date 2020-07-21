@@ -30,6 +30,13 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
     Set<Reaction> findByStoriesInRangeAndOwner(UUID nodeId, String feedName, long afterMoment, long beforeMoment,
                                                String ownerName);
 
+    @Query("select r from Reaction r"
+            + " left join fetch r.entryRevision er left join fetch er.entry c"
+            + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4"
+            + " and r.ownerName = ?5 and r.deletedAt is null")
+    Set<Reaction> findByCommentsInRangeAndOwner(UUID nodeId, UUID postingId, long afterMoment, long beforeMoment,
+                                               String ownerName);
+
     @Query("select count(*) from Reaction r where r.entryRevision.entry.id = ?1 and r.moment = ?2")
     int countMoments(UUID entryId, long moment);
 

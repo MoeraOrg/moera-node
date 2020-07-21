@@ -4,8 +4,14 @@ import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -34,6 +40,7 @@ import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.CommentTotalInfo;
+import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.CommentAddedEvent;
@@ -47,6 +54,9 @@ import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -105,7 +115,7 @@ public class CommentController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
         if (posting == null) {
-            throw new ObjectNotFoundFailure("comment.posting-not-found");
+            throw new ObjectNotFoundFailure("posting.not-found");
         }
         byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName());
 
@@ -209,6 +219,90 @@ public class CommentController {
             }
         }
         return digest;
+    }
+
+    @GetMapping
+    public CommentsSliceInfo getAll(
+            @PathVariable UUID postingId,
+            @RequestParam(required = false) Long before,
+            @RequestParam(required = false) Long after,
+            @RequestParam(required = false) Integer limit) {
+
+        log.info("GET /postings/{postingId}/comments (postingId = {}, before = {}, after = {}, limit = {})",
+                LogUtil.format(postingId), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
+
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+        if (posting == null) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (before != null && after != null) {
+            throw new ValidationFailure("feed.before-after-exclusive");
+        }
+
+        limit = limit != null && limit <= CommentOperations.MAX_COMMENTS_PER_REQUEST
+                ? limit : CommentOperations.MAX_COMMENTS_PER_REQUEST;
+        if (limit < 0) {
+            throw new ValidationFailure("limit.invalid");
+        }
+        if (after == null) {
+            before = before != null ? before : Long.MAX_VALUE;
+            return getCommentsBefore(postingId, before, limit);
+        } else {
+            return getCommentsAfter(postingId, after, limit);
+        }
+    }
+
+    private CommentsSliceInfo getCommentsBefore(UUID postingId, long before, int limit) {
+        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId, Long.MIN_VALUE, before,
+                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+        CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
+        sliceInfo.setBefore(before);
+        if (page.getNumberOfElements() < limit + 1) {
+            sliceInfo.setAfter(Long.MIN_VALUE);
+        } else {
+            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+        }
+        fillSlice(sliceInfo, postingId, limit);
+        return sliceInfo;
+    }
+
+    private CommentsSliceInfo getCommentsAfter(UUID postingId, long after, int limit) {
+        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId, after, Long.MAX_VALUE,
+                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
+        CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
+        sliceInfo.setAfter(after);
+        if (page.getNumberOfElements() < limit + 1) {
+            sliceInfo.setBefore(Long.MAX_VALUE);
+        } else {
+            sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
+        }
+        fillSlice(sliceInfo, postingId, limit);
+        return sliceInfo;
+    }
+
+    private void fillSlice(CommentsSliceInfo sliceInfo, UUID postingId, int limit) {
+        List<CommentInfo> comments = commentRepository.findInRange(
+                requestContext.nodeId(), postingId, sliceInfo.getAfter(), sliceInfo.getBefore())
+                .stream()
+                .map(c -> new CommentInfo(c, requestContext.isAdmin() || requestContext.isClient(c.getOwnerName())))
+                .sorted(Comparator.comparing(CommentInfo::getMoment))
+                .collect(Collectors.toList());
+        String clientName = requestContext.getClientName();
+        if (!StringUtils.isEmpty(clientName)) {
+            Map<String, CommentInfo> commentMap = comments.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
+            reactionRepository.findByCommentsInRangeAndOwner(
+                    requestContext.nodeId(), postingId, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
+                    .stream()
+                    .map(ClientReactionInfo::new)
+                    .filter(r -> commentMap.containsKey(r.getEntryId()))
+                    .forEach(r -> commentMap.get(r.getEntryId()).setClientReaction(r));
+        }
+        if (comments.size() > limit) {
+            comments.remove(limit);
+        }
+        sliceInfo.setComments(comments);
     }
 
     @GetMapping("/{commentId}")

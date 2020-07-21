@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CommentOperations {
 
+    public static final int MAX_COMMENTS_PER_REQUEST = 200;
     private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
 
     @Inject

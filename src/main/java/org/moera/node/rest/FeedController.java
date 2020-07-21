@@ -236,8 +236,8 @@ public class FeedController {
                     requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
                     .stream()
                     .map(ClientReactionInfo::new)
-                    .filter(r -> postingMap.containsKey(r.getPostingId()))
-                    .forEach(r -> postingMap.get(r.getPostingId()).setClientReaction(r));
+                    .filter(r -> postingMap.containsKey(r.getEntryId()))
+                    .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
             if (requestContext.isAdmin()) {
                 fillOwnReactions(stories, postingMap);
             }
