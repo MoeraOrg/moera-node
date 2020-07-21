@@ -41,6 +41,22 @@ public class CommentText {
     public CommentText() {
     }
 
+    public CommentText(String ownerName, CommentSourceText sourceText, TextConverter textConverter) {
+        this.ownerName = ownerName;
+        bodySrc = sourceText.getBodySrc();
+        bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
+        createdAt = Util.toEpochSecond(Util.now());
+        acceptedReactions = sourceText.getAcceptedReactions();
+        if (bodySrcFormat != SourceFormat.APPLICATION) {
+            body = textConverter.toHtml(bodySrcFormat, new Body(bodySrc));
+            bodyFormat = BodyFormat.MESSAGE.getValue();
+            bodyPreview = !Shortener.isShort(body) ? Shortener.shorten(body) : new Body(Body.EMPTY);
+        } else {
+            body = new Body(bodySrc);
+            bodyFormat = BodyFormat.APPLICATION.getValue();
+        }
+    }
+
     public String getOwnerName() {
         return ownerName;
     }
@@ -153,25 +169,32 @@ public class CommentText {
         revision.setSignatureVersion(signatureVersion);
         revision.setDigest(digest);
 
-        if (signature == null
-                && (body == null || StringUtils.isEmpty(body.getEncoded()))
-                && !StringUtils.isEmpty(bodySrc)) {
-            if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
-                revision.setBodySrc(bodySrc);
-                Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
-                revision.setBody(body.getEncoded());
-                revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                if (!Shortener.isShort(body)) {
-                    revision.setBodyPreview(Shortener.shorten(body).getEncoded());
+        if (signature == null && (body == null || StringUtils.isEmpty(body.getEncoded()))) {
+            if (!StringUtils.isEmpty(bodySrc)) {
+                if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
+                    revision.setBodySrc(bodySrc);
+                    Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
+                    revision.setBody(body.getEncoded());
+                    revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
+                    if (!Shortener.isShort(body)) {
+                        revision.setBodyPreview(Shortener.shorten(body).getEncoded());
+                    } else {
+                        revision.setBodyPreview(Body.EMPTY);
+                    }
                 } else {
-                    revision.setBodyPreview(Body.EMPTY);
+                    revision.setBodySrc(Body.EMPTY);
+                    revision.setBody(bodySrc);
+                    revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
                 }
-                revision.setHeading(HeadingExtractor.extract(body));
-            } else {
-                revision.setBodySrc(Body.EMPTY);
-                revision.setBody(bodySrc);
-                revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
             }
+        } else {
+            revision.setBodySrc(bodySrc);
+            revision.setBodyPreview(bodyPreview.getEncoded());
+            revision.setBody(body.getEncoded());
+            revision.setBodyFormat(bodyFormat);
+        }
+        if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
+            revision.setHeading(HeadingExtractor.extract(body));
         }
     }
 

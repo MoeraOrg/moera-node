@@ -193,16 +193,18 @@ public class CommentController {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
                     FingerprintObjectType.COMMENT, commentText.getSignatureVersion(),
-                    CommentText.class, byte[].class);
+                    String.class, CommentText.class, byte[].class);
             if (!CryptoUtil.verify(
                     commentText.getSignature(),
                     signingKey,
                     constructor,
+                    requestContext.nodeName(),
                     commentText,
                     posting.getCurrentRevision().getDigest())) {
                 throw new IncorrectSignatureException();
             }
-            digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest());
+            digest = CryptoUtil.digest(constructor, requestContext.nodeName(), commentText,
+                    posting.getCurrentRevision().getDigest());
 
             if (commentText.getBody() == null || StringUtils.isEmpty(commentText.getBody().getEncoded())) {
                 throw new ValidationFailure("commentText.body.blank");

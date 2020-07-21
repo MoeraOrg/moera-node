@@ -10,6 +10,7 @@ public class CommentFingerprint extends Fingerprint {
     public static final short VERSION = 0;
 
     public String objectType = FingerprintObjectType.COMMENT.name();
+    public String receiverName;
     public String ownerName;
     public Digest<PostingFingerprint> postingFingerprint = new Digest<>();
     public Digest<String> bodySrc = new Digest<>();
@@ -20,10 +21,23 @@ public class CommentFingerprint extends Fingerprint {
     public byte permissions; // TODO for future use
     public byte attachments; // TODO for future use
 
-    public CommentFingerprint(CommentText commentText, byte[] postingDigest) {
+    public CommentFingerprint(String receiverName, CommentText commentText, byte[] postingDigest) {
         super(0);
+        this.receiverName = receiverName;
         ownerName = commentText.getOwnerName();
         postingFingerprint.setDigest(postingDigest);
+        bodySrc.setValue(commentText.getBodySrc());
+        bodySrcFormat = commentText.getBodySrcFormat().getValue();
+        body = commentText.getBody().getEncoded();
+        bodyFormat = commentText.getBodyFormat();
+        createdAt = commentText.getCreatedAt();
+    }
+
+    public CommentFingerprint(String receiverName, CommentText commentText, PostingFingerprint postingFingerprint) {
+        super(0);
+        this.receiverName = receiverName;
+        ownerName = commentText.getOwnerName();
+        this.postingFingerprint.setValue(postingFingerprint);
         bodySrc.setValue(commentText.getBodySrc());
         bodySrcFormat = commentText.getBodySrcFormat().getValue();
         body = commentText.getBody().getEncoded();

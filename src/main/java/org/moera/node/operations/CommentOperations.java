@@ -62,7 +62,7 @@ public class CommentOperations {
         Comment comment = new Comment();
         comment.setId(UUID.randomUUID());
         comment.setNodeId(requestContext.nodeId());
-        comment.setOwnerName(requestContext.getClientName());
+        comment.setOwnerName(commentText.getOwnerName());
         comment.setPosting(posting);
         commentText.toEntry(comment);
         comment.setMoment(momentFinder.find(

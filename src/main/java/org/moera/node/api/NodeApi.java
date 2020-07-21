@@ -13,6 +13,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.BodyMappingException;
+import org.moera.node.model.CommentCreated;
+import org.moera.node.model.CommentText;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
@@ -181,6 +183,13 @@ public class NodeApi {
         return call("GET", nodeName,
                 String.format("/feeds/%s/stories?limit=%d", Util.ue(feedName), limit),
                 FeedSliceInfo.class);
+    }
+
+    public CommentCreated postComment(String nodeName, String postingId, CommentText commentText)
+            throws NodeApiException {
+
+        return call("POST", nodeName, String.format("/postings/%s/comments", Util.ue(postingId)), commentText,
+                CommentCreated.class);
     }
 
 }
