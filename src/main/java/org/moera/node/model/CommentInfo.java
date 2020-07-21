@@ -46,6 +46,10 @@ public class CommentInfo {
         this(comment, comment.getCurrentRevision(), false, isAdminOrOwner);
     }
 
+    public CommentInfo(Comment comment, boolean includeSource, boolean isAdminOrOwner) {
+        this(comment, comment.getCurrentRevision(), includeSource, isAdminOrOwner);
+    }
+
     public CommentInfo(Comment comment, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
         id = comment.getId().toString();
         ownerName = comment.getOwnerName();

@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -43,16 +44,19 @@ import org.moera.node.naming.NamingCache;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.text.TextConverter;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/comments")
@@ -138,7 +142,7 @@ public class CommentController {
         if (comment == null) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (comment.getPosting().getId() != postingId) {
+        if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         byte[] digest = validateCommentText(comment.getPosting(), commentText, comment.getOwnerName());
@@ -207,7 +211,27 @@ public class CommentController {
         return digest;
     }
 
-    @DeleteMapping("/{id}")
+    @GetMapping("/{commentId}")
+    public CommentInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId,
+                           @RequestParam(required = false) String include) {
+        log.info("GET /postings/{postingId}/comments/{commentId}, (postingId = {}, commentId = {}, include = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(include));
+
+        Set<String> includeSet = Util.setParam(include);
+
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
+        if (comment == null) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!comment.getPosting().getId().equals(postingId)) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
+        }
+
+        return withClientReaction(new CommentInfo(comment, includeSet.contains("source"),
+                requestContext.isAdmin() || requestContext.isClient(comment.getOwnerName())));
+    }
+
+    @DeleteMapping("/{commentId}")
     @Transactional
     public CommentTotalInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId)
             throws AuthenticationException {
@@ -219,7 +243,7 @@ public class CommentController {
         if (comment == null) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (comment.getPosting().getId() != postingId) {
+        if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (!requestContext.isAdmin()
