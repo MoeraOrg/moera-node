@@ -134,24 +134,20 @@ public class CommentController {
                 LogUtil.format(commentText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("comment.posting-not-found");
-        }
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
         if (comment == null) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (comment.getPosting().getId() != posting.getId()) {
-            throw new ObjectNotFoundFailure("comment.not-under-posting");
+        if (comment.getPosting().getId() != postingId) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        byte[] digest = validateCommentText(posting, commentText, comment.getOwnerName());
+        byte[] digest = validateCommentText(comment.getPosting(), commentText, comment.getOwnerName());
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentText.toEntry(comment);
         try {
-            comment = commentOperations.createOrUpdateComment(posting, comment, comment.getCurrentRevision(),
-                    commentText::sameAsRevision,
+            comment = commentOperations.createOrUpdateComment(comment.getPosting(), comment,
+                    comment.getCurrentRevision(), commentText::sameAsRevision,
                     revision -> commentText.toEntryRevision(revision, digest, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
@@ -219,26 +215,22 @@ public class CommentController {
         log.info("DELETE /postings/{postingId}/comments/{commentId} (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("comment.posting-not-found");
-        }
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
         if (comment == null) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (comment.getPosting().getId() != posting.getId()) {
-            throw new ObjectNotFoundFailure("comment.not-under-posting");
+        if (comment.getPosting().getId() != postingId) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (!requestContext.isAdmin()
-                && !requestContext.isClient(posting.getOwnerName())
+                && !requestContext.isClient(comment.getPosting().getOwnerName())
                 && !requestContext.isClient(comment.getOwnerName())) {
             throw new AuthenticationException();
         }
-        entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
-        commentOperations.deleteComment(posting, comment);
+        entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
+        commentOperations.deleteComment(comment);
 
-        return new CommentTotalInfo(posting.getChildrenTotal());
+        return new CommentTotalInfo(comment.getPosting().getChildrenTotal());
     }
 
     private CommentInfo withClientReaction(CommentInfo commentInfo) {

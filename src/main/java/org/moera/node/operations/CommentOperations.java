@@ -161,19 +161,20 @@ public class CommentOperations {
                         new MentionCommentDeletedNotification(posting.getId(), commentId)));
     }
 
-    public void deleteComment(Posting posting, Comment comment) {
+    public void deleteComment(Comment comment) {
         comment.setDeletedAt(Util.now());
         Duration postingTtl = requestContext.getOptions().getDuration("comment.deleted.lifetime");
         comment.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         comment.getCurrentRevision().setDeletedAt(Util.now());
-        if (posting.getChildrenTotal() > 0) {
-            posting.setChildrenTotal(posting.getChildrenTotal() - 1);
+        if (comment.getPosting().getChildrenTotal() > 0) {
+            comment.getPosting().setChildrenTotal(comment.getPosting().getChildrenTotal() - 1);
         }
 
         requestContext.send(new CommentDeletedEvent(comment));
-        requestContext.send(new PostingCommentsChangedEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
-                new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
+        requestContext.send(new PostingCommentsChangedEvent(comment.getPosting()));
+        requestContext.send(Directions.postingSubscribers(comment.getPosting().getId()),
+                new PostingCommentsUpdatedNotification(
+                        comment.getPosting().getId(), comment.getPosting().getChildrenTotal()));
     }
 
 }
