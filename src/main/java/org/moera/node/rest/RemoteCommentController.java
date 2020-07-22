@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -53,7 +54,27 @@ public class RemoteCommentController {
                 LogUtil.format(sourceText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(sourceText.getBodySrcFormat())));
 
-        RemoteCommentPostTask task = new RemoteCommentPostTask(nodeName, postingId, sourceText);
+        RemoteCommentPostTask task = new RemoteCommentPostTask(nodeName, postingId, null, sourceText);
+        taskAutowire.autowire(task);
+        taskExecutor.execute(task);
+
+        return Result.OK;
+    }
+
+    @PutMapping("/{commentId}")
+    @Admin
+    @Entitled
+    public Result put(@PathVariable String nodeName, @PathVariable String postingId, @PathVariable String commentId,
+                      @Valid @RequestBody CommentSourceText sourceText) {
+        log.info("PUT /nodes/{nodeName}/postings/{postingId}/comments/{commentId}"
+                        + " (nodeName = {}, postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
+                LogUtil.format(nodeName),
+                LogUtil.format(postingId),
+                LogUtil.format(commentId),
+                LogUtil.format(sourceText.getBodySrc(), 64),
+                LogUtil.format(SourceFormat.toValue(sourceText.getBodySrcFormat())));
+
+        RemoteCommentPostTask task = new RemoteCommentPostTask(nodeName, postingId, commentId, sourceText);
         taskAutowire.autowire(task);
         taskExecutor.execute(task);
 

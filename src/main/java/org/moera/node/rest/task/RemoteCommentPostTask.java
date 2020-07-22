@@ -23,14 +23,17 @@ public class RemoteCommentPostTask extends Task {
 
     private String targetNodeName;
     private String postingId;
+    private String commentId;
     private CommentSourceText sourceText;
 
     @Inject
     private TextConverter textConverter;
 
-    public RemoteCommentPostTask(String targetNodeName, String postingId, CommentSourceText sourceText) {
+    public RemoteCommentPostTask(String targetNodeName, String postingId, String commentId,
+                                 CommentSourceText sourceText) {
         this.targetNodeName = targetNodeName;
         this.postingId = postingId;
+        this.commentId = commentId;
         this.sourceText = sourceText;
     }
 
@@ -39,9 +42,13 @@ public class RemoteCommentPostTask extends Task {
         try {
             nodeApi.setNodeId(nodeId);
             PostingInfo postingInfo = nodeApi.getPosting(targetNodeName, postingId);
-            CommentCreated created = nodeApi.postComment(targetNodeName, postingId, buildComment(postingInfo));
-            send(new RemoteCommentAddedEvent(targetNodeName, postingId, created.getComment().getId()));
-            success(created);
+            if (commentId == null) {
+                CommentCreated created = nodeApi.postComment(targetNodeName, postingId, buildComment(postingInfo));
+                send(new RemoteCommentAddedEvent(targetNodeName, postingId, created.getComment().getId()));
+            } else {
+                nodeApi.putComment(targetNodeName, postingId, commentId, buildComment(postingInfo));
+            }
+            success();
         } catch (Exception e) {
             error(e);
         }
@@ -56,10 +63,9 @@ public class RemoteCommentPostTask extends Task {
         return commentText;
     }
 
-    private void success(CommentCreated info) {
+    private void success() {
         initLoggingDomain();
-        log.info("Succeeded to post reaction to posting {} at node {}",
-                info.getComment().getPostingId(), targetNodeName);
+        log.info("Succeeded to post comment to posting {} at node {}", postingId, targetNodeName);
     }
 
     private void error(Throwable e) {
@@ -67,7 +73,7 @@ public class RemoteCommentPostTask extends Task {
         if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
-            log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
+            log.error("Error adding comment to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
         }
     }
 

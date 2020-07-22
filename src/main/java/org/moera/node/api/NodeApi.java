@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.CommentCreated;
+import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
@@ -185,11 +186,23 @@ public class NodeApi {
                 FeedSliceInfo.class);
     }
 
+    public CommentInfo getComment(String nodeName, String postingId, String commentId) throws NodeApiException {
+        return call("GET", nodeName, String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)),
+                CommentInfo.class);
+    }
+
     public CommentCreated postComment(String nodeName, String postingId, CommentText commentText)
             throws NodeApiException {
 
         return call("POST", nodeName, String.format("/postings/%s/comments", Util.ue(postingId)), commentText,
                 CommentCreated.class);
+    }
+
+    public CommentInfo putComment(String nodeName, String postingId, String commentId, CommentText commentText)
+            throws NodeApiException {
+
+        return call("PUT", nodeName, String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)),
+                commentText, CommentInfo.class);
     }
 
 }
