@@ -4,7 +4,9 @@ import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,11 +27,14 @@ import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.EntryRevision;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
@@ -44,13 +49,18 @@ import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.CommentAddedEvent;
+import org.moera.node.model.event.CommentDeletedEvent;
 import org.moera.node.model.event.CommentUpdatedEvent;
+import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
+import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.text.TextConverter;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +68,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -86,6 +98,9 @@ public class CommentController {
     private CommentRepository commentRepository;
 
     @Inject
+    private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
     private ReactionRepository reactionRepository;
 
     @Inject
@@ -102,6 +117,15 @@ public class CommentController {
 
     @Inject
     private EntityManager entityManager;
+
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    @Inject
+    private EventManager eventManager;
+
+    @Inject
+    private NotificationSenderPool notificationSenderPool;
 
     @PostMapping
     @Transactional
@@ -361,6 +385,49 @@ public class CommentController {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);
         commentInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
         return commentInfo;
+    }
+
+    @Scheduled(fixedDelayString = "PT15M")
+    public void purgeExpired() throws Throwable {
+        Map<UUID, List<Event>> events = new HashMap<>();
+        List<PostingSubscriberNotification> notifications = new ArrayList<>();
+
+        Transaction.execute(txManager, () -> {
+            List<Comment> comments = commentRepository.findExpired(Util.now());
+            for (Comment comment : comments) {
+                List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
+                if (comment.getTotalRevisions() <= 1) {
+                    Posting posting = comment.getPosting();
+                    posting.setChildrenTotal(posting.getChildrenTotal() - 1);
+                    commentRepository.delete(comment);
+
+                    eventList.add(new CommentDeletedEvent(comment));
+                    eventList.add(new PostingCommentsChangedEvent(posting));
+                    notifications.add(
+                            new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
+                } else {
+                    EntryRevision revision = comment.getRevisions().stream()
+                            .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                            .orElse(null);
+                    if (revision != null) { // always
+                        revision.setDeletedAt(null);
+                        entryRevisionRepository.delete(comment.getCurrentRevision());
+                        comment.setCurrentRevision(revision);
+                        comment.setTotalRevisions(comment.getTotalRevisions() - 1);
+
+                        eventList.add(new CommentUpdatedEvent(comment));
+                    }
+                }
+            }
+
+            return null;
+        });
+
+        for (var e : events.entrySet()) {
+            e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
+        }
+        notifications.forEach(notification -> notificationSenderPool.send(
+                Directions.postingSubscribers(UUID.fromString(notification.getPostingId())), notification));
     }
 
 }

@@ -1,5 +1,7 @@
 package org.moera.node.data;
 
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -24,5 +26,8 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
 
     @Query("select c from Comment c where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4")
     Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, Pageable pageable);
+
+    @Query("select c from Comment c left join fetch c.currentRevision where c.currentRevision.deadline < ?1")
+    List<Comment> findExpired(Timestamp deadline);
 
 }

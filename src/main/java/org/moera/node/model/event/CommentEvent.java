@@ -25,4 +25,12 @@ public class CommentEvent extends Event {
         this.id = id;
     }
 
+    public String getPostingId() {
+        return postingId;
+    }
+
+    public void setPostingId(String postingId) {
+        this.postingId = postingId;
+    }
+
 }
