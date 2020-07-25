@@ -262,7 +262,7 @@ public class CommentController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (before != null && after != null) {
-            throw new ValidationFailure("feed.before-after-exclusive");
+            throw new ValidationFailure("comments.before-after-exclusive");
         }
 
         limit = limit != null && limit <= CommentOperations.MAX_COMMENTS_PER_REQUEST
