@@ -55,6 +55,7 @@ public class PostingInfo {
     private Boolean reactionsVisible;
     private Boolean reactionTotalsVisible;
     private List<PostingSourceInfo> sources;
+    private Integer totalComments;
 
     public PostingInfo() {
     }
@@ -135,6 +136,7 @@ public class PostingInfo {
         sources = posting.getSources() != null
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
+        totalComments = posting.getChildrenTotal();
     }
 
     public String getId() {
@@ -451,6 +453,14 @@ public class PostingInfo {
         this.sources = sources;
     }
 
+    public Integer getTotalComments() {
+        return totalComments;
+    }
+
+    public void setTotalComments(Integer totalComments) {
+        this.totalComments = totalComments;
+    }
+
     public void toPickedPosting(Posting posting) {
         posting.setEditedAt(Util.toTimestamp(editedAt));
         posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
@@ -461,6 +471,7 @@ public class PostingInfo {
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
         posting.setReactionsVisible(reactionsVisible);
         posting.setReactionTotalsVisible(reactionTotalsVisible);
+        posting.setChildrenTotal(totalComments);
     }
 
 }
