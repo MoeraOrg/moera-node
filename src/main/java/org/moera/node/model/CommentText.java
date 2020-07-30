@@ -173,7 +173,7 @@ public class CommentText {
             if (!StringUtils.isEmpty(bodySrc)) {
                 if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
                     revision.setBodySrc(bodySrc);
-                    Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
+                    body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
                     revision.setBody(body.getEncoded());
                     revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
                     if (!Shortener.isShort(body)) {
