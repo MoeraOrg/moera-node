@@ -83,8 +83,9 @@ public class CommentOperations {
                 return commentRepository.saveAndFlush(comment);
             }
             if (latest.getSignature() == null) {
-                entryRevisionRepository.delete(latest);
+                comment.removeRevision(latest);
                 comment.setCurrentRevision(null);
+                entryRevisionRepository.delete(latest);
                 latest = null;
             }
         }
@@ -113,7 +114,7 @@ public class CommentOperations {
             comment.setTotalRevisions(1);
         } else {
             revision = newRevision(comment, template);
-            if (comment.getCurrentRevision().getDeletedAt() == null) {
+            if (comment.getCurrentRevision() != null && comment.getCurrentRevision().getDeletedAt() == null) {
                 comment.getCurrentRevision().setDeletedAt(Util.now());
             }
             comment.setTotalRevisions(comment.getTotalRevisions() + 1);
