@@ -84,6 +84,7 @@ public class CommentOperations {
             }
             if (latest.getSignature() == null) {
                 comment.removeRevision(latest);
+                comment.setTotalRevisions(comment.getTotalRevisions() - 1);
                 comment.setCurrentRevision(null);
                 entryRevisionRepository.delete(latest);
                 latest = null;
