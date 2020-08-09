@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.Arrays;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
@@ -204,7 +203,7 @@ public class CommentText {
                 && (StringUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
-                && Arrays.equals(signature, revision.getSignature());
+                && (revision.getSignature() != null || signature == null);
     }
 
 }
