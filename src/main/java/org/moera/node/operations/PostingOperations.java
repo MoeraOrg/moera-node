@@ -234,12 +234,17 @@ public class PostingOperations {
         Set<String> latestMentions = latest != null
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
+        notifyMentioned(postingId, current.getHeading(), currentMentions, latestMentions);
+    }
+
+    private void notifyMentioned(UUID postingId, String currentHeading, Set<String> currentMentions,
+                                 Set<String> latestMentions) {
         currentMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
                 .filter(m -> !latestMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
-                        new MentionPostingAddedNotification(postingId, current.getHeading())));
+                        new MentionPostingAddedNotification(postingId, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
                 .filter(m -> !currentMentions.contains(m))
@@ -252,6 +257,10 @@ public class PostingOperations {
         Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
         posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         posting.getCurrentRevision().setDeletedAt(Util.now());
+
+        Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));
+        notifyMentioned(posting.getId(), null, Collections.emptySet(), latestMentions);
+
         requestContext.send(new PostingDeletedEvent(posting));
         requestContext.send(Directions.postingSubscribers(posting.getId()),
                 new PostingDeletedNotification(posting.getId()));

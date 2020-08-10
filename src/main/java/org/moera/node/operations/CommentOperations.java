@@ -148,6 +148,11 @@ public class CommentOperations {
         Set<String> latestMentions = latest != null
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
+        notifyMentioned(posting, commentId, current.getHeading(), currentMentions, latestMentions);
+    }
+
+    private void notifyMentioned(Posting posting, UUID commentId, String currentHeading, Set<String> currentMentions,
+                                 Set<String> latestMentions) {
         currentMentions.stream()
                 .filter(m -> !requestContext.isClient(m))
                 .filter(m -> !latestMentions.contains(m))
@@ -155,7 +160,7 @@ public class CommentOperations {
                 .forEach(d -> requestContext.send(d,
                         new MentionCommentAddedNotification(posting.getId(),
                                 commentId, posting.getCurrentRevision().getHeading(), requestContext.getClientName(),
-                                current.getHeading())));
+                                currentHeading)));
         latestMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
                 .filter(m -> !currentMentions.contains(m))
@@ -172,6 +177,9 @@ public class CommentOperations {
         if (comment.getPosting().getChildrenTotal() > 0) {
             comment.getPosting().setChildrenTotal(comment.getPosting().getChildrenTotal() - 1);
         }
+
+        Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
+        notifyMentioned(comment.getPosting(), comment.getId(), null, Collections.emptySet(), latestMentions);
 
         requestContext.send(new CommentDeletedEvent(comment));
         requestContext.send(new PostingCommentsChangedEvent(comment.getPosting()));

@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -81,20 +82,21 @@ public class RemoteCommentController {
         return Result.OK;
     }
 
-    /* TODO @DeleteMapping
+    @DeleteMapping("/{commentId}")
     @Admin
-    @Transactional
-    public Result delete(@PathVariable String nodeName, @PathVariable String postingId) {
-        log.info("DELETE /nodes/{nodeName}/postings/{postingId}/reactions (nodeName = {}, postingId = {})",
+    public Result delete(@PathVariable String nodeName, @PathVariable String postingId, @PathVariable String commentId) {
+        log.info("DELETE /nodes/{nodeName}/postings/{postingId}/comments/{commentId}"
+                        + " (nodeName = {}, postingId = {}, commentId = {}",
                 LogUtil.format(nodeName),
-                LogUtil.format(postingId));
+                LogUtil.format(postingId),
+                LogUtil.format(commentId));
 
-        requestContext.send(new RemoteReactionDeletedEvent(nodeName, postingId));
+        // TODO remove the comment from the activity log
 
         return Result.OK;
     }
 
-    @PostMapping("/{ownerName}/verify")
+    /* TODO @PostMapping("/{ownerName}/verify")
     @Admin
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String postingId,
