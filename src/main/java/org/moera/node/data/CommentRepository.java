@@ -21,13 +21,18 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     int countMoments(UUID postingId, long moment);
 
     @Query("select c from Comment c left join fetch c.currentRevision"
-            + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4")
+            + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4 and c.deletedAt is null")
     Set<Comment> findInRange(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment);
 
-    @Query("select c from Comment c where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4")
+    @Query("select c from Comment c"
+            + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4 and c.deletedAt is null")
     Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, Pageable pageable);
 
-    @Query("select c from Comment c left join fetch c.currentRevision where c.currentRevision.deadline < ?1")
+    @Query("select c from Comment c left join fetch c.currentRevision"
+            + " where c.deletedAt is null and c.currentRevision.deadline < ?1")
+    List<Comment> findExpiredUnsigned(Timestamp deadline);
+
+    @Query("select c from Comment c where c.deletedAt is not null and c.deadline < ?1")
     List<Comment> findExpired(Timestamp deadline);
 
 }

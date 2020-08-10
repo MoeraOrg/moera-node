@@ -394,10 +394,11 @@ public class CommentController {
         List<PostingSubscriberNotification> notifications = new ArrayList<>();
 
         Transaction.execute(txManager, () -> {
-            List<Comment> comments = commentRepository.findExpired(Util.now());
+            List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
+            comments.addAll(commentRepository.findExpired(Util.now()));
             for (Comment comment : comments) {
                 List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
-                if (comment.getTotalRevisions() <= 1) {
+                if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
                     Posting posting = comment.getPosting();
                     posting.setChildrenTotal(posting.getChildrenTotal() - 1);
                     commentRepository.delete(comment);
