@@ -373,6 +373,7 @@ public class CommentController {
         }
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
+        requestContext.send(new CommentDeletedEvent(comment));
 
         return new CommentTotalInfo(comment.getPosting().getChildrenTotal());
     }
