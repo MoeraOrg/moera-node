@@ -22,6 +22,9 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
 
+        if (requestContext.isRegistrar()) {
+            return true;
+        }
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }

@@ -22,7 +22,7 @@ public class IndexUiController {
     @GetMapping("/")
     @VirtualPage
     private String index(Model model) {
-        return "redirect:/timeline";
+        return !requestContext.isRegistrar() ? "redirect:/timeline" : "redirect:/registrar";
     }
 
     @GetMapping("/profile")

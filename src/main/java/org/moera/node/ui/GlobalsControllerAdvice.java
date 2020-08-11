@@ -17,8 +17,10 @@ public class GlobalsControllerAdvice {
 
     @ModelAttribute
     public void session(Model model) {
-        model.addAttribute("nodeName", new NodeNameInfo(requestContext.getPublic()));
-        model.addAttribute("siteUrl", requestContext.getSiteUrl());
+        if (!requestContext.isRegistrar()) {
+            model.addAttribute("nodeName", new NodeNameInfo(requestContext.getPublic()));
+            model.addAttribute("siteUrl", requestContext.getSiteUrl());
+        }
     }
 
 }

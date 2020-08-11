@@ -12,6 +12,10 @@ import org.moera.node.option.Options;
 
 public interface RequestContext {
 
+    boolean isRegistrar();
+
+    void setRegistrar(boolean registrar);
+
     boolean isBrowserExtension();
 
     void setBrowserExtension(boolean browserExtension);
