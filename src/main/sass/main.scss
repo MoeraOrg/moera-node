@@ -92,5 +92,27 @@ SUB.generation {
     margin-top: 1rem;
 }
 
+.registration-form {
+    @include pane;
+    margin-top: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+
+    .title {
+        font-size: 4rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+
+        EM {
+            color: var(--green);
+        }
+    }
+
+    .domain {
+        font-weight: 500;
+        font-size: large;
+    }
+}
+
 @import 'posting';
 @import 'people';
