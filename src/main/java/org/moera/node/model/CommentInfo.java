@@ -76,7 +76,7 @@ public class CommentInfo {
         signatureVersion = revision.getSignatureVersion();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"owner"});
-        operations.put("delete", new String[]{"owner", "senior", "admin"});
+        operations.put("delete", new String[]{"owner", "admin"});
         operations.put("revisions", new String[0]);
         operations.put("reactions",
                 comment.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
