@@ -19,6 +19,7 @@ import org.springframework.web.context.annotation.RequestScope;
 @Component
 public class RequestContextImpl implements RequestContext {
 
+    private boolean registrar;
     private boolean browserExtension;
     private boolean rootAdmin;
     private boolean admin;
@@ -29,6 +30,16 @@ public class RequestContextImpl implements RequestContext {
     private InetAddress localAddr;
     private List<Event> afterCommitEvents = new ArrayList<>();
     private List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
+
+    @Override
+    public boolean isRegistrar() {
+        return registrar;
+    }
+
+    @Override
+    public void setRegistrar(boolean registrar) {
+        this.registrar = registrar;
+    }
 
     @Override
     public boolean isBrowserExtension() {

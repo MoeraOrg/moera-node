@@ -20,7 +20,10 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
     @Inject
     private RequestContext requestContext;
 
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if (requestContext.isRegistrar()) {
+            return true;
+        }
         UriComponents uriComponents = UriUtil.createBuilderFromRequest(request).build();
         String host = uriComponents.getHost();
         host = host != null ? host.toLowerCase() : host;
