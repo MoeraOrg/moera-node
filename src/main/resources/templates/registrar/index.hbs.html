@@ -1,39 +1,38 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="icon" href="/favicon.ico" type="image/x-icon">
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
-        <link href="/css/bootstrap.min.css" rel="stylesheet">
-        <link href="/css/fontawesome-all.min.css" rel="stylesheet">
-        <link href="/css/main.css" rel="stylesheet">
+{{> registrar/part/top}}
 
-        <script src="/js/jquery-3.3.1.min.js"></script>
-        <script src="/js/bootstrap.bundle.min.js"></script>
-        <script src="/js/registrar.js"></script>
-        <title>Get a blog | Moera</title>
-    </head>
-    <body>
-        <div class="ml-3 mt-3">{{image "/pics/logo-64.png" alt="Moera"}}</div>
-        <div class="container">
-            <div class="registration-form">
-                <div class="title">Get a <em>free</em> blog</div>
-                <form>
-                    <div class="form-group row">
-                        <input id="host" type="text" name="host" class="form-control offset-md-3 offset-1 col-3"
-                               placeholder="Choose a domain name" autofocus>
-                        <span class="form-text col-auto domain">.{{registrarDomain}}</span>
-                        <small class="form-text text-muted offset-md-3 col-md-8 pl-md-0">
-                            May contain latin letters, digits and minus (-) sign, must start with a letter
-                        </small>
-                    </div>
-                    <button id="host-submit" type="submit" class="btn btn-success btn-lg offset-md-5 mb-3">
-                        Create a blog
-                    </button>
-                </form>
-            </div>
+<div class="registration-form">
+    <div class="title">Get a <em>free</em> blog</div>
+    <form method="post" action="/registrar/register">
+        <div class="form-group row">
+            {{#if error}}
+                {{#assign "klass"}}d-none{{/assign}}
+            {{else}}
+                {{#assign "klass"}}{{/assign}}
+            {{/if}}
+            <input id="host" type="text" name="host" class="form-control offset-md-3 offset-1 col-3"
+                   placeholder="Choose a domain name" autofocus value="{{host}}">
+            <span class="form-text col-auto domain">.{{registrarDomain}}</span>
+            <small id="help" class="form-text text-muted offset-md-3 col-md-8 pl-md-0 {{klass}}">
+                May contain latin letters, digits and minus (-) sign, must start with a letter
+            </small>
+            {{#if error}}
+                <div id="feedback" class="invalid-feedback offset-md-3 col-md-8 pl-md-0 d-block">
+                    {{#ifeq error "blank"}}
+                        You must choose a domain name
+                    {{/ifeq}}
+                    {{#ifeq error "invalid"}}
+                        Domain name may only contain latin letters, digits and minus (-) sign and must start with a letter
+                    {{/ifeq}}
+                    {{#ifeq error "taken"}}
+                        Sorry this domain name is already taken
+                    {{/ifeq}}
+                </div>
+            {{/if}}
         </div>
-    </body>
-</html>
+        <button id="host-submit" type="submit" class="btn btn-success btn-lg offset-md-5 mb-3">
+            Create a blog
+        </button>
+    </form>
+</div>
+
+{{> registrar/part/bottom}}

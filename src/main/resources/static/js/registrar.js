@@ -1,4 +1,13 @@
-function hostChanged() {
+function hostChanged(event) {
+    if (event != null) {
+        $("#help").removeClass("d-none");
+        $("#feedback").removeClass("d-block").addClass("d-none").removeAttr("id");
+    }
+    if ($("#feedback").length) {
+        $("#host-submit").attr("disabled", true);
+        $("#host").addClass("is-invalid");
+        return;
+    }
     const host = $("#host").val();
     const valid = host.match(/^[a-z][a-z0-9-]*$/i);
     $("#host-submit").attr("disabled", !valid);
@@ -9,7 +18,7 @@ function hostChanged() {
 }
 
 function registrarInit() {
-    hostChanged();
+    hostChanged(null);
     $("#host").keyup(hostChanged);
     $("#host").on("input", hostChanged);
 }
