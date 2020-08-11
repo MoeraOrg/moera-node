@@ -12,6 +12,7 @@
 
         <script src="/js/jquery-3.3.1.min.js"></script>
         <script src="/js/bootstrap.bundle.min.js"></script>
+        <script src="/js/registrar.js"></script>
         <title>Get a blog | Moera</title>
     </head>
     <body>
@@ -21,14 +22,16 @@
                 <div class="title">Get a <em>free</em> blog</div>
                 <form>
                     <div class="form-group row">
-                        <input type="text" class="form-control offset-md-3 offset-1 col-3"
+                        <input id="host" type="text" name="host" class="form-control offset-md-3 offset-1 col-3"
                                placeholder="Choose a domain name" autofocus>
                         <span class="form-text col-auto domain">.{{registrarDomain}}</span>
                         <small class="form-text text-muted offset-md-3 col-md-8 pl-md-0">
                             May contain latin letters, digits and minus (-) sign, must start with a letter
                         </small>
                     </div>
-                    <button type="submit" class="btn btn-success btn-lg offset-md-5 mb-3">Create a blog</button>
+                    <button id="host-submit" type="submit" class="btn btn-success btn-lg offset-md-5 mb-3">
+                        Create a blog
+                    </button>
                 </form>
             </div>
         </div>
