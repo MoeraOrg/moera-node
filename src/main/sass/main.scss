@@ -114,5 +114,17 @@ SUB.generation {
     }
 }
 
+.registration-next {
+    @include pane;
+    padding: 1rem;
+
+    H1 {
+        color: var(--green);
+    }
+    LI {
+        font-size: 1.2rem;
+    }
+}
+
 @import 'posting';
 @import 'people';

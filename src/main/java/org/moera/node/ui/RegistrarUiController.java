@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 import org.moera.node.domain.Domains;
+import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.registrar.RegistrarHost;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,9 @@ public class RegistrarUiController {
 
     @Inject
     private Domains domains;
+
+    @Inject
+    private RequestContext requestContext;
 
     @GetMapping("/registrar")
     public String index(@RequestParam(required = false) String host, @RequestParam(required = false) String error,
@@ -78,6 +82,7 @@ public class RegistrarUiController {
     @GetMapping("/registrar/success")
     public String success(@RequestParam String host, Model model) {
         model.addAttribute("host", host);
+        model.addAttribute("browserExtension", requestContext.isBrowserExtension());
 
         return "registrar/success";
     }
