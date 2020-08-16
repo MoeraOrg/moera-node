@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StoryOperations {
 
-    private static final Timestamp PINNED_TIME = Util.toTimestamp(90000000000000L); // 9E+13
+    private static final Timestamp PINNED_TIME = Util.toTimestamp(9000000000000L); // 9E+12
 
     @Inject
     private RequestContext requestContext;
