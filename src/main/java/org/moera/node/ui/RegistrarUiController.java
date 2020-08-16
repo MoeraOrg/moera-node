@@ -3,11 +3,13 @@ package org.moera.node.ui;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.registrar.RegistrarHost;
+import org.moera.node.util.UriUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
@@ -80,9 +82,10 @@ public class RegistrarUiController {
     }
 
     @GetMapping("/registrar/success")
-    public String success(@RequestParam String host, Model model) {
-        model.addAttribute("host", host);
+    public String success(@RequestParam String host, HttpServletRequest request, Model model) {
         model.addAttribute("browserExtension", requestContext.isBrowserExtension());
+        int port = UriUtil.createBuilderFromRequest(request).build().getPort();
+        model.addAttribute("siteUrl", UriUtil.siteUrl(host, port));
 
         return "registrar/success";
     }

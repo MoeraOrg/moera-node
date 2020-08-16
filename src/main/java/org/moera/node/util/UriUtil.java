@@ -52,4 +52,15 @@ public class UriUtil {
                 !StringUtils.isEmpty(forwardedAddress) ? forwardedAddress : request.getRemoteAddr());
     }
 
+    public static String siteUrl(String host, int port) {
+        switch (port) {
+            case 80:
+                return String.format("http://%s", host);
+            case 443:
+                return String.format("https://%s", host);
+            default:
+                return String.format("http://%s:%d", host, port);
+        }
+    }
+
 }

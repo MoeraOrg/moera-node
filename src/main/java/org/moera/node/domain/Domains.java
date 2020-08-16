@@ -78,13 +78,17 @@ public class Domains {
         domainOptions.put(domain.getName(), options);
     }
 
-    public String getDomainEffectiveName(String name) {
+    public boolean isDomainDefined(String name) {
         lockRead();
         try {
-            return domainOptions.containsKey(name) ? name : DEFAULT_DOMAIN;
+            return domainOptions.containsKey(name);
         } finally {
             unlockRead();
         }
+    }
+
+    public String getDomainEffectiveName(String name) {
+        return isDomainDefined(name) ? name : DEFAULT_DOMAIN;
     }
 
     public UUID getDomainNodeId(String name) {
