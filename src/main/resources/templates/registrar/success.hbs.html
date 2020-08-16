@@ -1,7 +1,7 @@
 {{> registrar/part/top}}
 
 <div class="registration-next">
-    <h1>Congratulations! <a href="https://{{host}}">Your blog</a> was created.</h1>
+    <h1>Congratulations! <a href="{{siteUrl}}">Your blog</a> was created.</h1>
 
     <h2 class="mt-4 mb-2">What is next?</h2>
     <ol>
@@ -12,8 +12,8 @@
             </li>
         {{/unless}}
         <li>
-            Go to your blog at <a href="https://{{host}}">https://{{host}}</a>. The Moera client will be loaded
-            automatically and Moera logo in the top-left corner of the page will become orange.
+            Go to your blog at <a href="{{siteUrl}}">{{siteUrl}}</a>. The Moera client will be loaded automatically and
+            Moera logo in the top-left corner of the page will become orange.
             <p class="mt-1">{{image "/pics/registrar/logo.png"}}</p>
         </li>
         <li>
