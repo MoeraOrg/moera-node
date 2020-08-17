@@ -10,6 +10,7 @@ import com.vladsch.flexmark.ext.definition.DefinitionExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiImageType;
 import com.vladsch.flexmark.ext.footnotes.FootnoteExtension;
+import com.vladsch.flexmark.ext.gfm.strikethrough.StrikethroughSubscriptExtension;
 import com.vladsch.flexmark.ext.gitlab.GitLabExtension;
 import com.vladsch.flexmark.ext.media.tags.MediaTagsExtension;
 import com.vladsch.flexmark.ext.superscript.SuperscriptExtension;
@@ -44,6 +45,7 @@ public class MarkdownConverter {
                     GitLabExtension.create(),
                     MediaTagsExtension.create(),
                     MentionsExtension.create(),
+                    StrikethroughSubscriptExtension.create(),
                     SuperscriptExtension.create(),
                     TablesExtension.create(),
                     TocExtension.create()
