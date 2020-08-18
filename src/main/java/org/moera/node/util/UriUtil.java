@@ -59,7 +59,7 @@ public class UriUtil {
             case 443:
                 return String.format("https://%s", host);
             default:
-                return String.format("http://%s:%d", host, port);
+                return port > 0 ? String.format("http://%s:%d", host, port) : String.format("https://%s", host);
         }
     }
 
