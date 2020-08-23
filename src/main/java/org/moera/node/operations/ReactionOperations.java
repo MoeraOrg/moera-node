@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -20,11 +21,17 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -124,6 +131,23 @@ public class ReactionOperations {
         reactionRepository.flush();
 
         return reaction;
+    }
+
+    public ReactionsSliceInfo getBefore(UUID entryId, boolean negative, Integer emoji, long before, int limit) {
+        Pageable pageable = PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment");
+        Page<Reaction> page = emoji == null
+                ? reactionRepository.findSlice(entryId, negative, Long.MIN_VALUE, before, pageable)
+                : reactionRepository.findSliceWithEmoji(entryId, negative, emoji, Long.MIN_VALUE, before, pageable);
+        ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
+        sliceInfo.setBefore(before);
+        if (page.getNumberOfElements() < limit + 1) {
+            sliceInfo.setAfter(Long.MIN_VALUE);
+        } else {
+            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+        }
+        sliceInfo.setTotal((int) page.getTotalElements());
+        sliceInfo.setReactions(page.stream().map(ReactionInfo::new).collect(Collectors.toList()));
+        return sliceInfo;
     }
 
 }

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -46,9 +45,7 @@ import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -187,25 +184,7 @@ public class PostingReactionController {
             throw new ValidationFailure("limit.invalid");
         }
         before = before != null ? before : Long.MAX_VALUE;
-        return getReactionsBefore(postingId, negative, emoji, before, limit);
-    }
-
-    private ReactionsSliceInfo getReactionsBefore(UUID postingId, boolean negative, Integer emoji, long before,
-                                                  int limit) {
-        Pageable pageable = PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment");
-        Page<Reaction> page = emoji == null
-                ? reactionRepository.findSlice(postingId, negative, Long.MIN_VALUE, before, pageable)
-                : reactionRepository.findSliceWithEmoji(postingId, negative, emoji, Long.MIN_VALUE, before, pageable);
-        ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
-        sliceInfo.setBefore(before);
-        if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(Long.MIN_VALUE);
-        } else {
-            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
-        }
-        sliceInfo.setTotal((int) page.getTotalElements());
-        sliceInfo.setReactions(page.stream().map(ReactionInfo::new).collect(Collectors.toList()));
-        return sliceInfo;
+        return reactionOperations.getBefore(postingId, negative, emoji, before, limit);
     }
 
     @GetMapping("/{ownerName}")
