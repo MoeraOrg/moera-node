@@ -18,10 +18,10 @@ import org.springframework.web.util.UriComponents;
 @Component
 public class DomainInterceptor extends HandlerInterceptorAdapter {
 
-    @Value("${registrar.host}")
+    @Value("${registrar.host:#{null}}")
     private String registrarHost;
 
-    @Value("${registrar.domain}")
+    @Value("${registrar.domain:#{null}}")
     private String registrarDomain;
 
     @Inject

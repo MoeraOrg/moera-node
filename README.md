@@ -29,6 +29,9 @@ Installation instructions:
        url: jdbc:postgresql:<dbname>?characterEncoding=UTF-8
        username: <username>
        password: <password>
+     flyway:
+       user: <username>
+       password: <password>
    node:
      root-secret: <secret>
    ```

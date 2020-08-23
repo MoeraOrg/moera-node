@@ -16,7 +16,7 @@ import org.springframework.web.util.UriComponents;
 @Component
 public class RegistrarInterceptor extends HandlerInterceptorAdapter {
 
-    @Value("${registrar.host}")
+    @Value("${registrar.host:#{null}}")
     private String registrarHost;
 
     @Inject
