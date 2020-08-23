@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.Entry;
+import org.moera.node.data.EntryRevision;
+import org.moera.node.data.EntryType;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.Reaction;
 import org.moera.node.util.Util;
@@ -15,6 +18,8 @@ public class ReactionInfo {
     private String ownerName;
     private String postingId;
     private String postingRevisionId;
+    private String commentId;
+    private String commentRevisionId;
     private Boolean negative;
     private Integer emoji;
     private long moment;
@@ -29,8 +34,16 @@ public class ReactionInfo {
 
     public ReactionInfo(Reaction reaction) {
         ownerName = reaction.getOwnerName();
-        postingId = reaction.getEntryRevision().getEntry().getId().toString();
-        postingRevisionId = reaction.getEntryRevision().getId().toString();
+        EntryRevision entryRevision = reaction.getEntryRevision();
+        Entry entry = entryRevision.getEntry();
+        if (entry.getEntryType() == EntryType.POSTING) {
+            postingId = entry.getId().toString();
+            postingRevisionId = entryRevision.getId().toString();
+        } else {
+            commentId = entry.getId().toString();
+            commentRevisionId = entryRevision.getId().toString();
+            postingId = entry.getParent().getId().toString();
+        }
         negative = reaction.isNegative();
         emoji = reaction.getEmoji();
         moment = reaction.getMoment();
@@ -68,6 +81,22 @@ public class ReactionInfo {
 
     public void setPostingRevisionId(String postingRevisionId) {
         this.postingRevisionId = postingRevisionId;
+    }
+
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
+    }
+
+    public String getCommentRevisionId() {
+        return commentRevisionId;
+    }
+
+    public void setCommentRevisionId(String commentRevisionId) {
+        this.commentRevisionId = commentRevisionId;
     }
 
     public Boolean isNegative() {
