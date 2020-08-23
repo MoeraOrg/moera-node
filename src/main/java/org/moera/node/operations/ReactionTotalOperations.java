@@ -8,7 +8,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.data.Entry;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.RequestContext;
@@ -56,23 +59,23 @@ public class ReactionTotalOperations {
     public static class ReactionTotalsData {
 
         private final RequestContext requestContext;
-        private final Posting posting;
+        private final Entry entry;
         private final Set<ReactionTotal> totals;
 
-        ReactionTotalsData(RequestContext requestContext, Posting posting, Set<ReactionTotal> totals) {
+        ReactionTotalsData(RequestContext requestContext, Entry entry, Set<ReactionTotal> totals) {
             this.requestContext = requestContext;
-            this.posting = posting;
+            this.entry = entry;
             this.totals = totals;
         }
 
         public boolean isVisibleToClient() {
             return isVisibleToPublic()
-                    || (requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()))
-                        && posting.isOriginal();
+                    || (requestContext.isAdmin() || requestContext.isClient(entry.getOwnerName()))
+                        && entry.isOriginal();
         }
 
         public boolean isVisibleToPublic() {
-            return posting.isReactionTotalsVisible();
+            return entry.isReactionTotalsVisible();
         }
 
         public ReactionTotalsInfo getClientInfo() {
@@ -135,13 +138,50 @@ public class ReactionTotalOperations {
                 || requestContext.isClient(posting.getOwnerName());
     }
 
-    public ReactionTotalsData getInfo(Posting posting) {
-        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(posting.getId());
-        return new ReactionTotalsData(requestContext, posting, totals);
+    public ReactionTotalsData getInfo(Entry entry) {
+        Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(entry.getId());
+        return new ReactionTotalsData(requestContext, entry, totals);
     }
 
     private int realOrVirtualTotal(ReactionTotalInfo info) {
         return info.getTotal() != null ? info.getTotal() : (int) (info.getShare() * 1000);
+    }
+
+    public void changeTotals(Entry entry, Reaction reaction, int delta) {
+        changeEntryRevisionTotal(reaction.getEntryRevision(), reaction.isNegative(), reaction.getEmoji(), delta);
+        changeEntryTotal(entry, reaction.isNegative(), reaction.getEmoji(), delta);
+    }
+
+    private void changeEntryRevisionTotal(EntryRevision entryRevision, boolean negative, int emoji, int delta) {
+        ReactionTotal total = reactionTotalRepository.findByEntryRevisionId(entryRevision.getId(), negative, emoji);
+        if (total == null) {
+            total = new ReactionTotal();
+            total.setId(UUID.randomUUID());
+            total.setEntryRevision(entryRevision);
+            total.setNegative(negative);
+            total.setEmoji(emoji);
+            total.setTotal(delta);
+            total = reactionTotalRepository.save(total);
+            entryRevision.addReactionTotal(total);
+        } else {
+            total.setTotal(total.getTotal() + delta);
+        }
+    }
+
+    public void changeEntryTotal(Entry entry, boolean negative, int emoji, int delta) {
+        ReactionTotal total = reactionTotalRepository.findByEntryId(entry.getId(), negative, emoji);
+        if (total == null) {
+            total = new ReactionTotal();
+            total.setId(UUID.randomUUID());
+            total.setEntry(entry);
+            total.setNegative(negative);
+            total.setEmoji(emoji);
+            total.setTotal(delta);
+            total = reactionTotalRepository.save(total);
+            entry.addReactionTotal(total);
+        } else {
+            total.setTotal(total.getTotal() + delta);
+        }
     }
 
 }

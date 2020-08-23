@@ -1,7 +1,6 @@
 package org.moera.node.fingerprint;
 
 import org.moera.commons.crypto.Digest;
-import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
@@ -10,7 +9,7 @@ import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.util.Util;
 
 @FingerprintVersion(objectType = FingerprintObjectType.POSTING, version = 0)
-public class PostingFingerprint extends Fingerprint {
+public class PostingFingerprint extends EntryFingerprint {
 
     public static final short VERSION = 0;
 

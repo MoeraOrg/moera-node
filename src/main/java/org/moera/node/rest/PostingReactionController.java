@@ -1,11 +1,9 @@
 package org.moera.node.rest;
 
-import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -16,25 +14,18 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Entry;
-import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
-import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.event.EventManager;
-import org.moera.node.fingerprint.FingerprintManager;
-import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -47,13 +38,11 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
-import org.moera.node.naming.NamingCache;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.InstantOperations;
+import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
-import org.moera.node.util.EmojiList;
-import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +52,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,12 +62,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/reactions")
-public class ReactionController {
+public class PostingReactionController {
 
-    private static Logger log = LoggerFactory.getLogger(ReactionController.class);
-
-    private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
-    private static final int MAX_REACTIONS_PER_REQUEST = 200;
+    private static Logger log = LoggerFactory.getLogger(PostingReactionController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -97,24 +82,19 @@ public class ReactionController {
     private PostingRepository postingRepository;
 
     @Inject
-    private NamingCache namingCache;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
-
-    @Inject
     private EventManager eventManager;
 
     @Inject
     private NotificationSenderPool notificationSenderPool;
 
     @Inject
+    private ReactionOperations reactionOperations;
+
+    @Inject
     private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
     private InstantOperations instantOperations;
-
-    private final MomentFinder momentFinder = new MomentFinder();
 
     @PostMapping
     @Transactional
@@ -132,37 +112,7 @@ public class ReactionController {
             throw new ObjectNotFoundFailure("reaction.posting-not-found");
         }
 
-        if (reactionDescription.getSignature() == null) {
-            String ownerName = requestContext.getClientName();
-            if (StringUtils.isEmpty(ownerName)) {
-                throw new AuthenticationException();
-            }
-            if (!StringUtils.isEmpty(reactionDescription.getOwnerName())
-                    && !reactionDescription.getOwnerName().equals(ownerName)) {
-                throw new AuthenticationException();
-            }
-            reactionDescription.setOwnerName(ownerName);
-        } else {
-            byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
-            Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
-                    FingerprintObjectType.REACTION, reactionDescription.getSignatureVersion(),
-                    ReactionDescription.class, byte[].class);
-            if (!CryptoUtil.verify(
-                    reactionDescription.getSignature(),
-                    signingKey,
-                    constructor,
-                    reactionDescription,
-                    posting.getCurrentRevision().getDigest())) {
-                throw new IncorrectSignatureException();
-            }
-        }
-
-        EmojiList accepted = new EmojiList(!reactionDescription.isNegative()
-                ? posting.getAcceptedReactionsPositive()
-                : posting.getAcceptedReactionsNegative());
-        if (!accepted.isAccepted(reactionDescription.getEmoji())) {
-            throw new ValidationFailure("reaction.not-accepted");
-        }
+        reactionOperations.validate(reactionDescription, posting);
 
         if (posting.isOriginal()) {
             return postToOriginal(reactionDescription, posting);
@@ -174,40 +124,9 @@ public class ReactionController {
     }
 
     private ResponseEntity<ReactionCreated> postToOriginal(ReactionDescription reactionDescription, Posting posting) {
-        Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(),
-                reactionDescription.getOwnerName());
-        if (reaction == null || reaction.getDeadline() == null
-                || reaction.isNegative() != reactionDescription.isNegative()
-                || reaction.getEmoji() != reactionDescription.getEmoji()
-                || reaction.getSignature() == null && reactionDescription.getSignature() != null) {
-
-            if (reaction != null) {
-                changeTotals(posting, reaction, -1);
-                reaction.setDeletedAt(Util.now());
-                Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
-                reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
-                instantOperations.reactionDeleted(reaction);
-            }
-
-            reaction = new Reaction();
-            reaction.setId(UUID.randomUUID());
-            reaction.setEntryRevision(posting.getCurrentRevision());
-            reactionDescription.toReaction(reaction);
-            if (reactionDescription.getSignature() == null) {
-                reaction.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
-            }
-            reaction.setMoment(momentFinder.find(
-                    moment -> reactionRepository.countMoments(posting.getId(), moment) == 0,
-                    Util.now()));
-            reaction = reactionRepository.save(reaction);
-            posting.getCurrentRevision().addReaction(reaction);
-
-            changeTotals(posting, reaction, 1);
-            if (reaction.getSignature() != null) {
-                instantOperations.reactionAdded(posting, reaction);
-            }
-        }
-        reactionRepository.flush();
+        Reaction reaction = reactionOperations.post(reactionDescription, posting,
+                instantOperations::reactionDeleted,
+                r -> instantOperations.reactionAdded(posting, r));
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
 
@@ -223,8 +142,9 @@ public class ReactionController {
                                                                Posting posting) {
         Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
                 posting.getReceiverName(), posting.getReceiverEntryId());
-        ownReaction.ifPresent(r -> changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
-        changeEntryTotal(posting, reactionDescription.isNegative(), reactionDescription.getEmoji(), 1);
+        ownReaction.ifPresent(r -> reactionTotalOperations.changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
+        reactionTotalOperations.changeEntryTotal(posting, reactionDescription.isNegative(),
+                reactionDescription.getEmoji(), 1);
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
@@ -232,7 +152,8 @@ public class ReactionController {
     }
 
     private ResponseEntity<ReactionCreated> postToPicked(ReactionDescription reactionDescription, Posting posting) {
-        changeEntryTotal(posting, reactionDescription.isNegative(), reactionDescription.getEmoji(), 1);
+        reactionTotalOperations.changeEntryTotal(posting, reactionDescription.isNegative(),
+                reactionDescription.getEmoji(), 1);
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
@@ -260,7 +181,8 @@ public class ReactionController {
                 && !requestContext.isClient(posting.getOwnerName())) {
             return ReactionsSliceInfo.EMPTY;
         }
-        limit = limit != null && limit <= MAX_REACTIONS_PER_REQUEST ? limit : MAX_REACTIONS_PER_REQUEST;
+        limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
+                ? limit : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
@@ -357,7 +279,7 @@ public class ReactionController {
     private ReactionTotalsInfo deleteFromOriginal(String ownerName, Posting posting) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(), ownerName);
         if (reaction != null) {
-            changeTotals(posting, reaction, -1);
+            reactionTotalOperations.changeTotals(posting, reaction, -1);
             reaction.setDeletedAt(Util.now());
             Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
             reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
@@ -376,7 +298,7 @@ public class ReactionController {
     private void deleteFromPickedAtHome(Posting posting) {
         Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
                 posting.getReceiverName(), posting.getReceiverEntryId());
-        ownReaction.ifPresent(r -> changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
+        ownReaction.ifPresent(r -> reactionTotalOperations.changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
     }
 
     @Scheduled(fixedDelayString = "PT15M")
@@ -396,9 +318,9 @@ public class ReactionController {
                     if (next.getSignature() != null) {
                         next.setDeadline(null);
                     }
-                    changeTotals(entry, next, 1);
+                    reactionTotalOperations.changeTotals(entry, next, 1);
                 }
-                changeTotals(entry, reaction, -1);
+                reactionTotalOperations.changeTotals(entry, reaction, -1);
                 changed.add(entry);
             }
             reactionRepository.delete(reaction);
@@ -409,43 +331,6 @@ public class ReactionController {
             var totalsInfo = reactionTotalOperations.getInfo(posting);
             notificationSenderPool.send(Directions.postingSubscribers(posting.getId()),
                     new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
-        }
-    }
-
-    private void changeTotals(Entry entry, Reaction reaction, int delta) {
-        changeEntryRevisionTotal(reaction.getEntryRevision(), reaction.isNegative(), reaction.getEmoji(), delta);
-        changeEntryTotal(entry, reaction.isNegative(), reaction.getEmoji(), delta);
-    }
-
-    private void changeEntryRevisionTotal(EntryRevision entryRevision, boolean negative, int emoji, int delta) {
-        ReactionTotal total = reactionTotalRepository.findByEntryRevisionId(entryRevision.getId(), negative, emoji);
-        if (total == null) {
-            total = new ReactionTotal();
-            total.setId(UUID.randomUUID());
-            total.setEntryRevision(entryRevision);
-            total.setNegative(negative);
-            total.setEmoji(emoji);
-            total.setTotal(delta);
-            total = reactionTotalRepository.save(total);
-            entryRevision.addReactionTotal(total);
-        } else {
-            total.setTotal(total.getTotal() + delta);
-        }
-    }
-
-    private void changeEntryTotal(Entry entry, boolean negative, int emoji, int delta) {
-        ReactionTotal total = reactionTotalRepository.findByEntryId(entry.getId(), negative, emoji);
-        if (total == null) {
-            total = new ReactionTotal();
-            total.setId(UUID.randomUUID());
-            total.setEntry(entry);
-            total.setNegative(negative);
-            total.setEmoji(emoji);
-            total.setTotal(delta);
-            total = reactionTotalRepository.save(total);
-            entry.addReactionTotal(total);
-        } else {
-            total.setTotal(total.getTotal() + delta);
         }
     }
 

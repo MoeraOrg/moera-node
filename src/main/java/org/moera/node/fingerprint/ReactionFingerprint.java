@@ -2,6 +2,8 @@ package org.moera.node.fingerprint;
 
 import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionAttributes;
@@ -15,22 +17,22 @@ public class ReactionFingerprint extends Fingerprint {
 
     public String objectType = FingerprintObjectType.REACTION.name();
     public String ownerName;
-    public Digest<PostingFingerprint> postingFingerprint = new Digest<>();
+    public Digest<EntryFingerprint> entryFingerprint = new Digest<>();
     public boolean negative;
     public int emoji;
 
     public ReactionFingerprint(ReactionDescription description, byte[] postingDigest) {
         super(0);
         ownerName = description.getOwnerName();
-        postingFingerprint.setDigest(postingDigest);
+        entryFingerprint.setDigest(postingDigest);
         negative = description.isNegative();
         emoji = description.getEmoji();
     }
 
-    public ReactionFingerprint(String ownerName, ReactionAttributes attributes, PostingFingerprint postingFingerprint) {
+    public ReactionFingerprint(String ownerName, ReactionAttributes attributes, EntryFingerprint entryFingerprint) {
         super(0);
         this.ownerName = ownerName;
-        this.postingFingerprint.setValue(postingFingerprint);
+        this.entryFingerprint.setValue(entryFingerprint);
         negative = attributes.isNegative();
         emoji = attributes.getEmoji();
     }
@@ -39,7 +41,20 @@ public class ReactionFingerprint extends Fingerprint {
                                PostingRevisionInfo postingRevisionInfo) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
-        postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        entryFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        negative = reactionInfo.isNegative();
+        emoji = reactionInfo.getEmoji();
+    }
+
+    public ReactionFingerprint(ReactionInfo reactionInfo, String commentReceiverName, CommentInfo commentInfo,
+                               CommentRevisionInfo commentRevisionInfo, PostingInfo postingInfo,
+                               PostingRevisionInfo postingRevisionInfo) {
+        super(0);
+        ownerName = reactionInfo.getOwnerName();
+        PostingFingerprint postingFingerprint = new PostingFingerprint(postingInfo, postingRevisionInfo);
+        CommentFingerprint commentFingerprint = new CommentFingerprint(commentReceiverName, commentInfo,
+                commentRevisionInfo, postingFingerprint);
+        entryFingerprint.setValue(commentFingerprint);
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();
     }
