@@ -24,7 +24,7 @@ public class RegistrarUiController {
 
     private static final Pattern HOSTNAME = Pattern.compile("^[a-z][a-z0-9-]*$");
 
-    @Value("${registrar.domain}")
+    @Value("${registrar.domain:#{null}}")
     private String registrarDomain;
 
     @Inject
