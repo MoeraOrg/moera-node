@@ -7,22 +7,28 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Reaction;
+import org.moera.node.data.ReactionRepository;
+import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionsSliceInfo;
+import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +44,12 @@ public class CommentReactionController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private ReactionRepository reactionRepository;
+
+    @Inject
+    private ReactionTotalRepository reactionTotalRepository;
 
     @Inject
     private CommentRepository commentRepository;
@@ -113,6 +125,30 @@ public class CommentReactionController {
         }
         before = before != null ? before : Long.MAX_VALUE;
         return reactionOperations.getBefore(commentId, negative, emoji, before, limit);
+    }
+
+    @DeleteMapping
+    @Admin
+    @Transactional
+    public Result deleteAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+        log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions (postingId = {}, commentId = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId));
+
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
+        if (comment == null) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!comment.getPosting().getId().equals(postingId)) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
+        }
+
+        reactionRepository.deleteAllByEntryId(postingId, Util.now());
+        reactionTotalRepository.deleteAllByEntryId(postingId);
+        // TODO instantOperations.reactionsDeletedAll(postingId);
+
+        // TODO requestContext.send(new PostingReactionsChangedEvent(posting));
+
+        return Result.OK;
     }
 
 }
