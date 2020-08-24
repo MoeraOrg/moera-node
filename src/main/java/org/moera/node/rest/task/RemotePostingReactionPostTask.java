@@ -21,9 +21,9 @@ import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RemoteReactionPostTask extends Task {
+public class RemotePostingReactionPostTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteReactionPostTask.class);
+    private static Logger log = LoggerFactory.getLogger(RemotePostingReactionPostTask.class);
 
     private String targetNodeName;
     private String postingId;
@@ -32,7 +32,7 @@ public class RemoteReactionPostTask extends Task {
     @Inject
     private OwnReactionRepository ownReactionRepository;
 
-    public RemoteReactionPostTask(String targetNodeName, String postingId, ReactionAttributes attributes) {
+    public RemotePostingReactionPostTask(String targetNodeName, String postingId, ReactionAttributes attributes) {
         this.targetNodeName = targetNodeName;
         this.postingId = postingId;
         this.attributes = attributes;

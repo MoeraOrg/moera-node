@@ -169,6 +169,13 @@ public class NodeApi {
                 ReactionInfo.class);
     }
 
+    public ReactionCreated postCommentReaction(String nodeName, String postingId, String commentId,
+                                               ReactionDescription reactionDescription) throws NodeApiException {
+        return call("POST", nodeName,
+                String.format("/postings/%s/comments/%s/reactions", Util.ue(postingId), Util.ue(commentId)),
+                reactionDescription, ReactionCreated.class);
+    }
+
     public Result postNotification(String nodeName, NotificationPacket notificationPacket) throws NodeApiException {
         return call("POST", nodeName, "/notifications", notificationPacket, Result.class);
     }
