@@ -1,10 +1,7 @@
 package org.moera.node.rest;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -13,7 +10,6 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.data.Entry;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -21,7 +17,6 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotalRepository;
-import org.moera.node.event.EventManager;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -35,17 +30,13 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.notification.send.Directions;
-import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.InstantOperations;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,12 +65,6 @@ public class PostingReactionController {
 
     @Inject
     private PostingRepository postingRepository;
-
-    @Inject
-    private EventManager eventManager;
-
-    @Inject
-    private NotificationSenderPool notificationSenderPool;
 
     @Inject
     private ReactionOperations reactionOperations;
@@ -267,39 +252,6 @@ public class PostingReactionController {
         Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
                 posting.getReceiverName(), posting.getReceiverEntryId());
         ownReaction.ifPresent(r -> reactionTotalOperations.changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
-    }
-
-    @Scheduled(fixedDelayString = "PT15M")
-    @Transactional
-    public void purgeExpired() {
-        Set<Entry> changed = new HashSet<>();
-        reactionRepository.findExpired(Util.now()).forEach(reaction -> {
-            Entry entry = reaction.getEntryRevision().getEntry();
-            if (reaction.getDeletedAt() == null) {
-                List<Reaction> deleted = reactionRepository.findDeletedByEntryIdAndOwner(
-                        entry.getId(),
-                        reaction.getOwnerName(),
-                        PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
-                if (deleted.size() > 0) {
-                    Reaction next = deleted.get(0);
-                    next.setDeletedAt(null);
-                    if (next.getSignature() != null) {
-                        next.setDeadline(null);
-                    }
-                    reactionTotalOperations.changeTotals(entry, next, 1);
-                }
-                reactionTotalOperations.changeTotals(entry, reaction, -1);
-                changed.add(entry);
-            }
-            reactionRepository.delete(reaction);
-        });
-        for (Entry entry : changed) {
-            Posting posting = (Posting) entry;
-            eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
-            var totalsInfo = reactionTotalOperations.getInfo(posting);
-            notificationSenderPool.send(Directions.postingSubscribers(posting.getId()),
-                    new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
-        }
     }
 
 }

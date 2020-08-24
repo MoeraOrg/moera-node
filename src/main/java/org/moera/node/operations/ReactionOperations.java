@@ -5,18 +5,25 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
+import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
+import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.RequestContext;
@@ -24,7 +31,11 @@ import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.PostingReactionsChangedEvent;
+import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
@@ -32,6 +43,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -52,6 +64,12 @@ public class ReactionOperations {
 
     @Inject
     private FingerprintManager fingerprintManager;
+
+    @Inject
+    private EventManager eventManager;
+
+    @Inject
+    private NotificationSenderPool notificationSenderPool;
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
@@ -162,6 +180,50 @@ public class ReactionOperations {
             }
         }
         reactionRepository.flush();
+    }
+
+    @Scheduled(fixedDelayString = "PT15M")
+    @Transactional
+    public void purgeExpired() {
+        Set<Entry> changed = new HashSet<>();
+        reactionRepository.findExpired(Util.now()).forEach(reaction -> {
+            Entry entry = reaction.getEntryRevision().getEntry();
+            if (reaction.getDeletedAt() == null) {
+                List<Reaction> deleted = reactionRepository.findDeletedByEntryIdAndOwner(
+                        entry.getId(),
+                        reaction.getOwnerName(),
+                        PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
+                if (deleted.size() > 0) {
+                    Reaction next = deleted.get(0);
+                    next.setDeletedAt(null);
+                    if (next.getSignature() != null) {
+                        next.setDeadline(null);
+                    }
+                    reactionTotalOperations.changeTotals(entry, next, 1);
+                }
+                reactionTotalOperations.changeTotals(entry, reaction, -1);
+                changed.add(entry);
+            }
+            reactionRepository.delete(reaction);
+        });
+        for (Entry entry : changed) {
+            switch (entry.getEntryType()) {
+                case POSTING: {
+                    Posting posting = (Posting) entry;
+                    eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
+                    var totalsInfo = reactionTotalOperations.getInfo(posting);
+                    notificationSenderPool.send(Directions.postingSubscribers(posting.getId()),
+                            new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
+                    break;
+                }
+
+                case COMMENT: {
+                    Comment comment = (Comment) entry;
+                    // TODO eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
+                    break;
+                }
+            }
+        }
     }
 
 }
