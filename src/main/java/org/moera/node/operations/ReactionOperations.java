@@ -150,4 +150,18 @@ public class ReactionOperations {
         return sliceInfo;
     }
 
+    public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), ownerName);
+        if (reaction != null) {
+            reactionTotalOperations.changeTotals(entry, reaction, -1);
+            reaction.setDeletedAt(Util.now());
+            Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
+            reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
+            if (reactionDeleted != null) {
+                reactionDeleted.accept(reaction);
+            }
+        }
+        reactionRepository.flush();
+    }
+
 }

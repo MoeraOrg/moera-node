@@ -19,6 +19,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -149,6 +150,33 @@ public class CommentReactionController {
         // TODO requestContext.send(new PostingReactionsChangedEvent(posting));
 
         return Result.OK;
+    }
+
+    @DeleteMapping("/{ownerName}")
+    @Transactional
+    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId,
+                                     @PathVariable String ownerName) throws AuthenticationException {
+
+        log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
+                        + " (postingId = {}, commentId = {}, ownerName = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
+
+        if (!requestContext.isAdmin() && !requestContext.isClient(ownerName)) {
+            throw new AuthenticationException();
+        }
+
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
+        if (comment == null) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!comment.getPosting().getId().equals(postingId)) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
+        }
+
+        reactionOperations.delete(ownerName, comment, null);
+        // TODO requestContext.send(new PostingReactionsChangedEvent(posting));
+
+        return reactionTotalOperations.getInfo(comment).getClientInfo();
     }
 
 }

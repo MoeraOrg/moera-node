@@ -1,9 +1,6 @@
 package org.moera.node.rest;
 
 import java.net.URI;
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -256,15 +253,7 @@ public class PostingReactionController {
     }
 
     private ReactionTotalsInfo deleteFromOriginal(String ownerName, Posting posting) {
-        Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(), ownerName);
-        if (reaction != null) {
-            reactionTotalOperations.changeTotals(posting, reaction, -1);
-            reaction.setDeletedAt(Util.now());
-            Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
-            reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
-            instantOperations.reactionDeleted(reaction);
-        }
-        reactionRepository.flush();
+        reactionOperations.delete(ownerName, posting, instantOperations::reactionDeleted);
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
         var totalsInfo = reactionTotalOperations.getInfo(posting);
