@@ -28,6 +28,7 @@ public class HtmlProcessor {
     }
 
     private static class SpoilerCollector implements NodeVisitor {
+
         List<Element> spoilers = new ArrayList<>();
 
         @Override
@@ -41,6 +42,7 @@ public class HtmlProcessor {
         public void tail(Node node, int depth) {
 
         }
+
     }
 
 }
