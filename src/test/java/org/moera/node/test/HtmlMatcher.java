@@ -23,7 +23,9 @@ public class HtmlMatcher extends BaseMatcher<String> {
 
     @Override
     public boolean matches(Object o) {
-        if (!(o instanceof String)) return false;
+        if (!(o instanceof String)) {
+            return false;
+        }
         return expected.hasSameValue(normalizeHtml((String) o));
     }
 
