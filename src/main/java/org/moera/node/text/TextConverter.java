@@ -16,7 +16,7 @@ public class TextConverter {
     private String toHtml(SourceFormat format, String source) {
         switch (format) {
             case PLAIN_TEXT:
-                return PlainTextConverter.toHtml(source);
+                return HtmlProcessor.process(PlainTextConverter.toHtml(source));
             case HTML:
                 return HtmlProcessor.process(source);
             case MARKDOWN:
