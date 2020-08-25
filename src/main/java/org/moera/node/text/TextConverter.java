@@ -16,11 +16,11 @@ public class TextConverter {
     private String toHtml(SourceFormat format, String source) {
         switch (format) {
             case PLAIN_TEXT:
-                return HtmlProcessor.process(PlainTextConverter.toHtml(source));
+                return PlainTextConverter.toHtml(source);
             case HTML:
                 return HtmlProcessor.process(source);
             case MARKDOWN:
-                return markdownConverter.toHtml(source);
+                return HtmlProcessor.process(markdownConverter.toHtml(source));
             default:
                 throw new IllegalArgumentException("Unknown source format: " + format.name());
         }
