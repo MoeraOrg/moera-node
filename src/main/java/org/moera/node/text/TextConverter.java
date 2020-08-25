@@ -18,7 +18,7 @@ public class TextConverter {
             case PLAIN_TEXT:
                 return PlainTextConverter.toHtml(source);
             case HTML:
-                return source;
+                return HtmlProcessor.process(source);
             case MARKDOWN:
                 return markdownConverter.toHtml(source);
             default:
