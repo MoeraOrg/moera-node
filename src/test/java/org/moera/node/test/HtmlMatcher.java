@@ -9,6 +9,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.internal.hamcrest.HamcrestArgumentMatcher;
 
 public class HtmlMatcher extends BaseMatcher<String> {
+
     private final Element expected;
 
     public HtmlMatcher(String expected) {
@@ -47,4 +48,5 @@ public class HtmlMatcher extends BaseMatcher<String> {
     public static void assertEqHtml(String expected, String actual) {
         Assert.assertThat(actual, new HtmlMatcher(expected));
     }
+
 }

@@ -1,6 +1,5 @@
 package org.moera.node.text;
 
-import org.intellij.lang.annotations.Language;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HtmlProcessor {
-    @Language("HTML")
-    public static String process(@Language("HTML") String source) {
+
+    public static String process(String source) {
         Document document = Jsoup.parseBodyFragment(source);
 
         SpoilerCollector spoilerCollector = new SpoilerCollector();
@@ -43,4 +42,5 @@ public class HtmlProcessor {
 
         }
     }
+
 }
