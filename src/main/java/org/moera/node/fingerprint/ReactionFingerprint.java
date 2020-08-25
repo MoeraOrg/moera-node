@@ -21,10 +21,10 @@ public class ReactionFingerprint extends Fingerprint {
     public boolean negative;
     public int emoji;
 
-    public ReactionFingerprint(ReactionDescription description, byte[] postingDigest) {
+    public ReactionFingerprint(ReactionDescription description, byte[] entryDigest) {
         super(0);
         ownerName = description.getOwnerName();
-        entryFingerprint.setDigest(postingDigest);
+        entryFingerprint.setDigest(entryDigest);
         negative = description.isNegative();
         emoji = description.getEmoji();
     }

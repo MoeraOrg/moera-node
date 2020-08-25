@@ -162,6 +162,9 @@ public class CommentText {
     }
 
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter) {
+        if (createdAt != null) {
+            revision.setCreatedAt(Util.toTimestamp(createdAt));
+        }
         if (bodySrcFormat != null) {
             revision.setBodySrcFormat(bodySrcFormat);
         }

@@ -55,7 +55,7 @@ public class CommentFingerprint extends EntryFingerprint {
         bodySrcFormat = commentInfo.getBodySrcFormat().getValue();
         body = commentInfo.getBody().getEncoded();
         bodyFormat = commentInfo.getBodyFormat();
-        createdAt = commentInfo.getCreatedAt();
+        createdAt = commentInfo.getRevisionCreatedAt();
     }
 
     public CommentFingerprint(String receiverName, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
