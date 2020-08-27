@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/reaction-totals")
-public class ReactionTotalsController {
+public class PostingReactionTotalsController {
 
-    private static Logger log = LoggerFactory.getLogger(ReactionTotalsController.class);
+    private static Logger log = LoggerFactory.getLogger(PostingReactionTotalsController.class);
 
     @Inject
     private RequestContext requestContext;
