@@ -19,10 +19,12 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.CommentReactionsChangedEvent;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.Util;
@@ -84,8 +86,7 @@ public class CommentReactionController {
 
         reactionOperations.validate(reactionDescription, comment);
         Reaction reaction = reactionOperations.post(reactionDescription, comment, null, null); // TODO
-
-        // TODO requestContext.send(new PostingReactionsChangedEvent(posting));
+        requestContext.send(new CommentReactionsChangedEvent(comment));
 
         var totalsInfo = reactionTotalOperations.getInfo(comment);
         return ResponseEntity.created(
@@ -128,6 +129,29 @@ public class CommentReactionController {
         return reactionOperations.getBefore(commentId, negative, emoji, before, limit);
     }
 
+    @GetMapping("/{ownerName}")
+    public ReactionInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName) {
+        log.info("GET /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
+                        + " (postingId = {}, commentId = {}, ownerName = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
+
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
+        if (comment == null) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!comment.getPosting().getId().equals(postingId)) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
+        }
+        if (!comment.isReactionsVisible() && !requestContext.isAdmin()
+                && !requestContext.isClient(comment.getOwnerName())) {
+            return ReactionInfo.ofComment(commentId);
+        }
+
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentId, ownerName);
+
+        return reaction != null ? new ReactionInfo(reaction) : ReactionInfo.ofComment(commentId);
+    }
+
     @DeleteMapping
     @Admin
     @Transactional
@@ -146,8 +170,7 @@ public class CommentReactionController {
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(postingId);
         // TODO instantOperations.reactionsDeletedAll(postingId);
-
-        // TODO requestContext.send(new PostingReactionsChangedEvent(posting));
+        requestContext.send(new CommentReactionsChangedEvent(comment));
 
         return Result.OK;
     }
@@ -174,7 +197,7 @@ public class CommentReactionController {
         }
 
         reactionOperations.delete(ownerName, comment, null);
-        // TODO requestContext.send(new PostingReactionsChangedEvent(posting));
+        requestContext.send(new CommentReactionsChangedEvent(comment));
 
         return reactionTotalOperations.getInfo(comment).getClientInfo();
     }

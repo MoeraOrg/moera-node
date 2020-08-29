@@ -55,8 +55,16 @@ public class ReactionInfo {
         operations.put("delete", new String[]{"owner", "admin"});
     }
 
-    public ReactionInfo(UUID postingId) {
-        this.postingId = postingId.toString();
+    public static ReactionInfo ofPosting(UUID postingId) {
+        ReactionInfo info = new ReactionInfo();
+        info.setPostingId(postingId.toString());
+        return info;
+    }
+
+    public static ReactionInfo ofComment(UUID commentId) {
+        ReactionInfo info = new ReactionInfo();
+        info.setCommentId(commentId.toString());
+        return info;
     }
 
     public String getOwnerName() {

@@ -31,6 +31,7 @@ import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.CommentReactionsChangedEvent;
 import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.naming.NamingCache;
@@ -219,7 +220,7 @@ public class ReactionOperations {
 
                 case COMMENT: {
                     Comment comment = (Comment) entry;
-                    // TODO eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
+                    eventManager.send(comment.getNodeId(), new CommentReactionsChangedEvent(comment));
                     break;
                 }
             }

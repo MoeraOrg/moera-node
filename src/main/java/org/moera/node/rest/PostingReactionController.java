@@ -180,12 +180,12 @@ public class PostingReactionController {
         }
         if (!posting.isReactionsVisible() && !requestContext.isAdmin()
                 && !requestContext.isClient(posting.getOwnerName())) {
-            return new ReactionInfo(postingId);
+            return ReactionInfo.ofPosting(postingId);
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
 
-        return reaction != null ? new ReactionInfo(reaction) : new ReactionInfo(postingId);
+        return reaction != null ? new ReactionInfo(reaction) : ReactionInfo.ofPosting(postingId);
     }
 
     @DeleteMapping
