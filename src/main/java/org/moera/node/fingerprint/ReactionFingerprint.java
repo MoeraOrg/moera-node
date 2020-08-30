@@ -46,14 +46,14 @@ public class ReactionFingerprint extends Fingerprint {
         emoji = reactionInfo.getEmoji();
     }
 
-    public ReactionFingerprint(ReactionInfo reactionInfo, String commentReceiverName, CommentInfo commentInfo,
+    public ReactionFingerprint(ReactionInfo reactionInfo, CommentInfo commentInfo,
                                CommentRevisionInfo commentRevisionInfo, PostingInfo postingInfo,
                                PostingRevisionInfo postingRevisionInfo) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
         PostingFingerprint postingFingerprint = new PostingFingerprint(postingInfo, postingRevisionInfo);
-        CommentFingerprint commentFingerprint = new CommentFingerprint(commentReceiverName, commentInfo,
-                commentRevisionInfo, postingFingerprint);
+        CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, commentRevisionInfo,
+                postingFingerprint);
         entryFingerprint.setValue(commentFingerprint);
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();

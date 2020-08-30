@@ -49,7 +49,7 @@ public class RemoteCommentReactionPostTask extends Task {
 
     private ReactionDescription buildReaction(PostingInfo postingInfo, CommentInfo commentInfo) {
         PostingFingerprint postingFingerprint = new PostingFingerprint(postingInfo);
-        CommentFingerprint commentFingerprint = new CommentFingerprint(targetNodeName, commentInfo, postingFingerprint);
+        CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, postingFingerprint);
         ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName, attributes, commentFingerprint);
 
         ReactionDescription description = new ReactionDescription(nodeName, attributes);

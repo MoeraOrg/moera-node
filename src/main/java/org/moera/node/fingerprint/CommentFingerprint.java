@@ -11,9 +11,9 @@ public class CommentFingerprint extends EntryFingerprint {
     public static final short VERSION = 0;
 
     public String objectType = FingerprintObjectType.COMMENT.name();
-    public String receiverName;
     public String ownerName;
     public Digest<PostingFingerprint> postingFingerprint = new Digest<>();
+    public Digest<CommentFingerprint> repliedToFingerprint = new Digest<>();
     public Digest<String> bodySrc = new Digest<>();
     public String bodySrcFormat;
     public String body;
@@ -22,9 +22,8 @@ public class CommentFingerprint extends EntryFingerprint {
     public byte permissions; // TODO for future use
     public byte attachments; // TODO for future use
 
-    public CommentFingerprint(String receiverName, CommentText commentText, byte[] postingDigest) {
+    public CommentFingerprint(CommentText commentText, byte[] postingDigest) {
         super(0);
-        this.receiverName = receiverName;
         ownerName = commentText.getOwnerName();
         postingFingerprint.setDigest(postingDigest);
         bodySrc.setValue(commentText.getBodySrc());
@@ -34,9 +33,8 @@ public class CommentFingerprint extends EntryFingerprint {
         createdAt = commentText.getCreatedAt();
     }
 
-    public CommentFingerprint(String receiverName, CommentText commentText, PostingFingerprint postingFingerprint) {
+    public CommentFingerprint(CommentText commentText, PostingFingerprint postingFingerprint) {
         super(0);
-        this.receiverName = receiverName;
         ownerName = commentText.getOwnerName();
         this.postingFingerprint.setValue(postingFingerprint);
         bodySrc.setValue(commentText.getBodySrc());
@@ -46,9 +44,8 @@ public class CommentFingerprint extends EntryFingerprint {
         createdAt = commentText.getCreatedAt();
     }
 
-    public CommentFingerprint(String receiverName, CommentInfo commentInfo, PostingFingerprint postingFingerprint) {
+    public CommentFingerprint(CommentInfo commentInfo, PostingFingerprint postingFingerprint) {
         super(0);
-        this.receiverName = receiverName;
         ownerName = commentInfo.getOwnerName();
         this.postingFingerprint.setValue(postingFingerprint);
         bodySrc.setDigest(commentInfo.getBodySrcHash());
@@ -58,10 +55,9 @@ public class CommentFingerprint extends EntryFingerprint {
         createdAt = commentInfo.getRevisionCreatedAt();
     }
 
-    public CommentFingerprint(String receiverName, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
+    public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
                               PostingFingerprint postingFingerprint) {
         super(0);
-        this.receiverName = receiverName;
         ownerName = commentInfo.getOwnerName();
         this.postingFingerprint.setValue(postingFingerprint);
         bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
