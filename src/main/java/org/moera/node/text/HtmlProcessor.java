@@ -14,16 +14,17 @@ public class HtmlProcessor {
     public static String process(String source) {
         Document document = Jsoup.parseBodyFragment(source);
 
-        SpoilerCollector spoilerCollector = new SpoilerCollector();
-        document.traverse(spoilerCollector);
-        // We are not replacing spoilers during traversing, because we can't change node we're traversing
-        for (Element spoiler : spoilerCollector.spoilers) {
-            Element details = new Element("details").addClass("spoiler");
-            if (spoiler.childrenSize() == 0 || !"summary".equals(spoiler.child(0).tagName())) {
-                details.appendChild(new Element("summary").text("spoiler!"));
-            }
-            spoiler.replaceWith(details.insertChildren(details.childNodeSize(), spoiler.childNodes()));
-        }
+//        SpoilerCollector spoilerCollector = new SpoilerCollector();
+//        document.traverse(spoilerCollector);
+//        // We are not replacing spoilers during traversing, because we can't change node we're traversing
+//        for (Element spoiler : spoilerCollector.spoilers) {
+//            Element details = new Element("details").addClass("spoiler");
+//            if (spoiler.childrenSize() == 0 || !"summary".equals(spoiler.child(0).tagName())) {
+//                details.appendChild(new Element("summary").text("spoiler!"));
+//            }
+//            spoiler.replaceWith(details.insertChildren(details.childNodeSize(), spoiler.childNodes()));
+//        }
+
         return document.body().html();
     }
 

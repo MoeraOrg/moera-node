@@ -18,9 +18,11 @@ public class TextConverter {
             case PLAIN_TEXT:
                 return PlainTextConverter.toHtml(source);
             case HTML:
-                return HtmlProcessor.process(source);
+//                return HtmlProcessor.process(source);
+                return source;
             case MARKDOWN:
-                return HtmlProcessor.process(markdownConverter.toHtml(source));
+//                return HtmlProcessor.process(markdownConverter.toHtml(source));
+                return markdownConverter.toHtml(source);
             default:
                 throw new IllegalArgumentException("Unknown source format: " + format.name());
         }

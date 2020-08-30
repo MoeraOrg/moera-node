@@ -151,6 +151,12 @@
             <artifactId>moera-commons</artifactId>
             <version>0.6.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-test-util</artifactId>
+            <version>0.62.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <repositories>
