@@ -7,15 +7,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class MentionNode extends Node implements DoNotDecorate {
 
-    protected BasedSequence openingMarker = BasedSequence.NULL;
-    protected BasedSequence text = BasedSequence.NULL;
-
-    public MentionNode() {
-    }
-
-    public MentionNode(BasedSequence chars) {
-        super(chars);
-    }
+    protected BasedSequence openingMarker;
+    protected BasedSequence text;
 
     public MentionNode(BasedSequence openingMarker, BasedSequence text) {
         super(spanningChars(openingMarker, text));
@@ -32,14 +25,6 @@ public class MentionNode extends Node implements DoNotDecorate {
     @Override
     public void getAstExtra(@NotNull StringBuilder out) {
         delimitedSegmentSpanChars(out, openingMarker, text, BasedSequence.NULL, "text");
-    }
-
-    public BasedSequence getOpeningMarker() {
-        return openingMarker;
-    }
-
-    public void setOpeningMarker(BasedSequence openingMarker) {
-        this.openingMarker = openingMarker;
     }
 
     public BasedSequence getText() {
