@@ -1,6 +1,7 @@
 package org.moera.node.text.markdown.mention.internal;
 
 import org.jetbrains.annotations.NotNull;
+import org.moera.naming.rpc.Rules;
 import org.moera.node.text.markdown.mention.MentionNode;
 import com.vladsch.flexmark.parser.InlineParser;
 import com.vladsch.flexmark.parser.InlineParserExtension;
@@ -13,8 +14,7 @@ import java.util.regex.Pattern;
 
 public class MentionsInlineParserExtension implements InlineParserExtension {
 
-    private static final Pattern MENTION = Pattern.compile("^(@)([\\S&&[^<]]++)\\b",
-            Pattern.CASE_INSENSITIVE);
+    private static final Pattern LATIN_CHARS = Pattern.compile("^[A-Za-z]+$");
 
     public MentionsInlineParserExtension(LightInlineParser inlineParser) {
     }
@@ -29,26 +29,35 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
 
     @Override
     public boolean parse(LightInlineParser inlineParser) {
-        int index = inlineParser.getIndex();
-        boolean isPossible = index == 0;
+        final int startingIndex = inlineParser.getIndex();
+        boolean isPossible = startingIndex == 0;
         if (!isPossible) {
-            char c = inlineParser.getInput().charAt(index - 1);
+            char c = inlineParser.getInput().charAt(startingIndex - 1);
             if (!Character.isUnicodeIdentifierPart(c) && c != '-' && c != '.') {
                 isPossible = true;
             }
         }
         if (isPossible) {
-            BasedSequence[] matches = inlineParser.matchWithGroups(MENTION);
-            if (matches != null) {
-                inlineParser.flushTextNode();
-
-                BasedSequence openMarker = matches[1];
-                BasedSequence text = matches[2];
-
-                MentionNode mentionNode = new MentionNode(openMarker, text);
-                inlineParser.getBlock().appendChild(mentionNode);
-                return true;
+            BasedSequence inputText = inlineParser.getInput();
+            final int nameStartingSequence = startingIndex + 1;
+            int i = nameStartingSequence;
+            while (Rules.isNameCharacterValid(inputText.charAt(i))) {
+                i++;
             }
+            if (i - nameStartingSequence == 0) {
+                return false; // Name is empty
+            }
+
+            BasedSequence foundName = inputText.subSequence(nameStartingSequence, i);
+            if (foundName.length() <= 3 && LATIN_CHARS.matcher(foundName).matches()) {
+                return false; // Short latin names are disallowed
+            }
+
+            inlineParser.setIndex(i);
+            BasedSequence openMarker = inputText.subSequence(startingIndex, nameStartingSequence);
+            MentionNode mentionNode = new MentionNode(openMarker, foundName);
+            inlineParser.getBlock().appendChild(mentionNode);
+            return true;
         }
         return false;
     }
