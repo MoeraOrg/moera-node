@@ -73,7 +73,8 @@ CREATE TABLE public.entries (
     edited_at timestamp without time zone DEFAULT now() NOT NULL,
     receiver_edited_at timestamp without time zone,
     parent_id uuid,
-    children_total integer DEFAULT 0 NOT NULL
+    children_total integer DEFAULT 0 NOT NULL,
+    moment bigint
 );
 
 
@@ -113,7 +114,9 @@ CREATE TABLE public.entry_revisions (
     receiver_created_at timestamp without time zone,
     receiver_deleted_at timestamp without time zone,
     receiver_revision_id character varying(40),
-    receiver_body_src_hash bytea
+    receiver_body_src_hash bytea,
+    parent_id uuid,
+    deadline timestamp without time zone
 );
 
 
@@ -639,6 +642,13 @@ CREATE INDEX entries_parent_id_idx ON public.entries USING btree (parent_id);
 
 
 --
+-- Name: entries_parent_id_moment_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_parent_id_moment_idx ON public.entries USING btree (parent_id, moment);
+
+
+--
 -- Name: entry_revision_upgrades_entry_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -653,10 +663,24 @@ CREATE INDEX entry_revisions_created_at_idx ON public.entry_revisions USING btre
 
 
 --
+-- Name: entry_revisions_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_revisions_deadline_idx ON public.entry_revisions USING btree (deadline);
+
+
+--
 -- Name: entry_revisions_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE INDEX entry_revisions_entry_id_idx ON public.entry_revisions USING btree (entry_id);
+
+
+--
+-- Name: entry_revisions_parent_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_revisions_parent_id_idx ON public.entry_revisions USING btree (parent_id);
 
 
 --
@@ -928,6 +952,14 @@ ALTER TABLE ONLY public.entry_revision_upgrades
 
 ALTER TABLE ONLY public.entry_revisions
     ADD CONSTRAINT entry_revisions_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entry_revisions entry_revisions_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_revisions
+    ADD CONSTRAINT entry_revisions_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
