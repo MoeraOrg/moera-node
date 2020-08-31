@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class MentionsInlineParserExtension implements InlineParserExtension {
 
-    private static final Pattern MENTION = Pattern.compile("^(@)([\\S&&[^<]]+)\\b",
+    private static final Pattern MENTION = Pattern.compile("^(@)([\\S&&[^<]]++)\\b",
             Pattern.CASE_INSENSITIVE);
 
     public MentionsInlineParserExtension(LightInlineParser inlineParser) {

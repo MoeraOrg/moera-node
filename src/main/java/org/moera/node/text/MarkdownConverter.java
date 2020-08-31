@@ -1,10 +1,5 @@
 package org.moera.node.text;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.inject.Inject;
-
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.definition.DefinitionExtension;
 import com.vladsch.flexmark.ext.emoji.EmojiExtension;
@@ -19,16 +14,22 @@ import com.vladsch.flexmark.ext.toc.TocExtension;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
-import com.vladsch.flexmark.util.data.MutableDataHolder;
+import com.vladsch.flexmark.util.data.DataHolder;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.text.markdown.mention.MentionsExtension;
+import org.moera.node.text.markdown.spoiler.SpoilerExtension;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class MarkdownConverter {
 
-    static final MutableDataHolder OPTIONS = new MutableDataSet()
+    static final DataHolder DEFAULT_OPTIONS = new MutableDataSet()
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
             .set(Parser.HTML_BLOCK_TAGS, htmlBlockTags())
             .set(HtmlRenderer.SOFT_BREAK, "<br/>")
@@ -37,7 +38,7 @@ public class MarkdownConverter {
             .set(GitLabExtension.DEL_PARSER, false)
             .set(GitLabExtension.RENDER_BLOCK_MATH, false)
             .set(GitLabExtension.RENDER_BLOCK_MERMAID, false)
-            .set(Parser.EXTENSIONS, Arrays.asList(
+            .set(Parser.EXTENSIONS, List.of(
                     AutolinkExtension.create(),
                     DefinitionExtension.create(),
                     EmojiExtension.create(),
@@ -48,11 +49,19 @@ public class MarkdownConverter {
                     StrikethroughSubscriptExtension.create(),
                     SuperscriptExtension.create(),
                     TablesExtension.create(),
-                    TocExtension.create()
-            ));
+                    TocExtension.create(),
+                    SpoilerExtension.create()
+            )).toImmutable();
 
     @Inject
     private NamingCache namingCache;
+
+    private DataHolder options;
+
+    @PostConstruct
+    public void init() {
+        options = DEFAULT_OPTIONS.toMutable().set(MentionsExtension.NAMING_CACHE, namingCache);
+    }
 
     private static List<String> htmlBlockTags() {
         return Parser.HTML_BLOCK_TAGS.get(null).stream()
@@ -62,9 +71,9 @@ public class MarkdownConverter {
     }
 
     public String toHtml(String source) {
-        Parser parser = Parser.builder(OPTIONS.set(MentionsExtension.NAMING_CACHE, namingCache)).build();
+        Parser parser = Parser.builder(options).build();
         Node document = parser.parse(source);
-        HtmlRenderer renderer = HtmlRenderer.builder(OPTIONS).build();
+        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
         return renderer.render(document);
     }
 
