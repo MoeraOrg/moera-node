@@ -13,7 +13,7 @@ public final class MentionsExtension implements Parser.ParserExtension, HtmlRend
 
     public static final DataKey<NamingCache> NAMING_CACHE = new DataKey<>("NAMING_CACHE", (NamingCache) null);
 
-    public MentionsExtension() {
+    private MentionsExtension() {
     }
 
     public static MentionsExtension create() {
