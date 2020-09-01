@@ -42,7 +42,7 @@ public class MentionsNodeRenderer implements NodeRenderer {
                 try {
                     RegisteredNameDetails details = options.namingCache.get(name);
                     name = details.getNodeName() != null ? details.getNodeName() : name;
-                } catch (NamingNotAvailableException e) {
+                } catch (NamingNotAvailableException|NullPointerException ignore) {
                 }
             }
             html.srcPos(node.getChars())

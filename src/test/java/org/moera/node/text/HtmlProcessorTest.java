@@ -1,9 +1,10 @@
 package org.moera.node.text;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.moera.node.test.HtmlMatcher;
 
-
+@Disabled
 class HtmlProcessorTest {
 
     @Test

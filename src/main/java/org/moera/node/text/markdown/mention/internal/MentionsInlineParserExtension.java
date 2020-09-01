@@ -30,36 +30,34 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
     @Override
     public boolean parse(LightInlineParser inlineParser) {
         final int startingIndex = inlineParser.getIndex();
-        boolean isPossible = startingIndex == 0;
-        if (!isPossible) {
+        if (!(startingIndex == 0)) {
             char c = inlineParser.getInput().charAt(startingIndex - 1);
-            if (!Character.isUnicodeIdentifierPart(c) && c != '-' && c != '.') {
-                isPossible = true;
+            if (Character.isUnicodeIdentifierPart(c) || c == '-' || c == '.') {
+                return false; // Mention can't be in the middle of a word
             }
         }
-        if (isPossible) {
-            BasedSequence inputText = inlineParser.getInput();
-            final int nameStartingSequence = startingIndex + 1;
-            int i = nameStartingSequence;
-            while (Rules.isNameCharacterValid(inputText.charAt(i))) {
-                i++;
-            }
-            if (i - nameStartingSequence == 0) {
-                return false; // Name is empty
-            }
 
-            BasedSequence foundName = inputText.subSequence(nameStartingSequence, i);
-            if (foundName.length() <= 3 && LATIN_CHARS.matcher(foundName).matches()) {
-                return false; // Short latin names are disallowed
-            }
-
-            inlineParser.setIndex(i);
-            BasedSequence openMarker = inputText.subSequence(startingIndex, nameStartingSequence);
-            MentionNode mentionNode = new MentionNode(openMarker, foundName);
-            inlineParser.getBlock().appendChild(mentionNode);
-            return true;
+        BasedSequence inputText = inlineParser.getInput();
+        final int nameStartingSequence = startingIndex + 1;
+        int i = nameStartingSequence;
+        while (i < inputText.length() && Rules.isNameCharacterValid(inputText.charAt(i))) {
+            i++;
         }
-        return false;
+        if (i - nameStartingSequence == 0) {
+            return false; // Name is empty
+        }
+
+        BasedSequence foundName = inputText.subSequence(nameStartingSequence, i);
+        if (foundName.length() <= 3 && LATIN_CHARS.matcher(foundName).matches()) {
+            return false; // Short latin names are reserved
+        }
+
+        inlineParser.setIndex(i);
+        inlineParser.flushTextNode();
+        BasedSequence openMarker = inputText.subSequence(startingIndex, nameStartingSequence);
+        MentionNode mentionNode = new MentionNode(openMarker, foundName);
+        inlineParser.getBlock().appendChild(mentionNode);
+        return true;
     }
 
     public static class Factory implements InlineParserExtensionFactory {
