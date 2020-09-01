@@ -133,9 +133,9 @@ public class ReactionTotalOperations {
         return true;
     }
 
-    public boolean isVisibleToClient(Posting posting) {
-        return posting.isReactionTotalsVisible() || requestContext.isAdmin()
-                || requestContext.isClient(posting.getOwnerName());
+    public boolean isVisibleToClient(Entry entry) {
+        return entry.isReactionTotalsVisible() || requestContext.isAdmin()
+                || requestContext.isClient(entry.getOwnerName());
     }
 
     public ReactionTotalsData getInfo(Entry entry) {

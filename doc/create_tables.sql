@@ -271,6 +271,26 @@ CREATE TABLE public.reactions (
 ALTER TABLE public.reactions OWNER TO moera;
 
 --
+-- Name: remote_comment_verifications; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.remote_comment_verifications (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    node_name character varying(63) NOT NULL,
+    posting_id character varying(40) NOT NULL,
+    comment_id character varying(40) NOT NULL,
+    revision_id character varying(40),
+    status smallint NOT NULL,
+    error_code character varying(63),
+    error_message character varying(255),
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.remote_comment_verifications OWNER TO moera;
+
+--
 -- Name: remote_posting_verifications; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -520,6 +540,14 @@ ALTER TABLE ONLY public.reaction_totals
 
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT reactions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: remote_comment_verifications remote_comment_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.remote_comment_verifications
+    ADD CONSTRAINT remote_comment_verifications_pkey PRIMARY KEY (id);
 
 
 --

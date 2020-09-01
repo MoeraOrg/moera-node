@@ -25,8 +25,6 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     private static Logger log = LoggerFactory.getLogger(RemoteReactionVerifyTask.class);
 
     private RemoteReactionVerification data;
-    private String remoteNodeName;
-    private String remotePostingId;
 
     @Inject
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
@@ -42,8 +40,8 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     public void run() {
         try {
             nodeApi.setNodeId(nodeId);
-            remoteNodeName = data.getNodeName();
-            remotePostingId = data.getPostingId();
+            String remoteNodeName = data.getNodeName();
+            String remotePostingId = data.getPostingId();
             PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();

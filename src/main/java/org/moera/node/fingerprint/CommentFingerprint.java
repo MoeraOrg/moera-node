@@ -4,6 +4,8 @@ import org.moera.commons.crypto.Digest;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
+import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingRevisionInfo;
 
 @FingerprintVersion(objectType = FingerprintObjectType.COMMENT, version = 0)
 public class CommentFingerprint extends EntryFingerprint {
@@ -65,6 +67,18 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentRevisionInfo.getBody().getEncoded();
         bodyFormat = commentRevisionInfo.getBodyFormat();
         createdAt = commentRevisionInfo.getCreatedAt();
+    }
+
+    public CommentFingerprint(CommentInfo commentInfo, PostingInfo postingInfo,
+                              PostingRevisionInfo postingRevisionInfo) {
+        super(0);
+        ownerName = commentInfo.getOwnerName();
+        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        bodySrc.setDigest(commentInfo.getBodySrcHash());
+        bodySrcFormat = commentInfo.getBodySrcFormat().getValue();
+        body = commentInfo.getBody().getEncoded();
+        bodyFormat = commentInfo.getBodyFormat();
+        createdAt = commentInfo.getRevisionCreatedAt();
     }
 
 }

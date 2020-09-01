@@ -1,22 +1,31 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.RemoteCommentVerification;
+import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.rest.task.RemoteCommentPostTask;
+import org.moera.node.rest.task.RemoteCommentVerifyTask;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,8 +49,8 @@ public class RemoteCommentController {
     @Inject
     private TaskAutowire taskAutowire;
 
-    /* TODO @Inject
-    private RemoteReactionVerificationRepository remoteReactionVerificationRepository;*/
+    @Inject
+    private RemoteCommentVerificationRepository remoteCommentVerificationRepository;
 
     @PostMapping
     @Admin
@@ -96,22 +105,22 @@ public class RemoteCommentController {
         return Result.OK;
     }
 
-    /* TODO @PostMapping("/{ownerName}/verify")
+    @PostMapping("/{commentId}/verify")
     @Admin
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String postingId,
-                                        @PathVariable String ownerName) {
-        log.info("POST /nodes/{nodeName}/postings/{postingId}/reactions/{ownerName}/verify"
-                        + " (nodeName = {}, postingId = {}, ownerName = {})",
-                LogUtil.format(nodeName), LogUtil.format(postingId), LogUtil.format(ownerName));
+                                        @PathVariable String commentId) {
+        log.info("POST /nodes/{nodeName}/postings/{postingId}/comments/{commentId}/verify"
+                        + " (nodeName = {}, postingId = {}, commentId = {})",
+                LogUtil.format(nodeName), LogUtil.format(postingId), LogUtil.format(commentId));
 
-        RemoteReactionVerification data = new RemoteReactionVerification(
-                requestContext.nodeId(), nodeName, postingId, ownerName);
+        RemoteCommentVerification data = new RemoteCommentVerification(
+                requestContext.nodeId(), nodeName, postingId, commentId, null);
         data.setDeadline(Timestamp.from(Instant.now().plus(
-                requestContext.getOptions().getDuration("remote-reaction-verification.lifetime"))));
-        remoteReactionVerificationRepository.saveAndFlush(data);
+                requestContext.getOptions().getDuration("remote-comment-verification.lifetime"))));
+        remoteCommentVerificationRepository.saveAndFlush(data);
 
-        RemoteReactionVerifyTask task = new RemoteReactionVerifyTask(data);
+        RemoteCommentVerifyTask task = new RemoteCommentVerifyTask(data);
         taskAutowire.autowire(task);
         taskExecutor.execute(task);
 
@@ -121,7 +130,7 @@ public class RemoteCommentController {
     @Scheduled(fixedDelayString = "PT30M")
     @Transactional
     public void purgeExpiredVerifications() {
-        remoteReactionVerificationRepository.deleteExpired(Util.now());
-    }*/
+        remoteCommentVerificationRepository.deleteExpired(Util.now());
+    }
 
 }

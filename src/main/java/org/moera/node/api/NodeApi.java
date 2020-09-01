@@ -15,6 +15,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
@@ -196,6 +197,14 @@ public class NodeApi {
     public CommentInfo getComment(String nodeName, String postingId, String commentId) throws NodeApiException {
         return call("GET", nodeName, String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)),
                 CommentInfo.class);
+    }
+
+    public CommentRevisionInfo getCommentRevision(String nodeName, String postingId, String commentId,
+                                                  String revisionId) throws NodeApiException {
+        return call("GET", nodeName,
+                String.format("/postings/%s/comments/%s/revisions/%s",
+                        Util.ue(postingId), Util.ue(commentId), Util.ue(revisionId)),
+                CommentRevisionInfo.class);
     }
 
     public CommentCreated postComment(String nodeName, String postingId, CommentText commentText)
