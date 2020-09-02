@@ -30,7 +30,7 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
     @Override
     public boolean parse(LightInlineParser inlineParser) {
         final int startingIndex = inlineParser.getIndex();
-        if (!(startingIndex == 0)) {
+        if (startingIndex != 0) {
             char c = inlineParser.getInput().charAt(startingIndex - 1);
             if (Character.isUnicodeIdentifierPart(c) || c == '-' || c == '.') {
                 return false; // Mention can't be in the middle of a word
