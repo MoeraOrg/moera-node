@@ -51,9 +51,8 @@ public class ReactionFingerprint extends Fingerprint {
                                PostingRevisionInfo postingRevisionInfo) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
-        PostingFingerprint postingFingerprint = new PostingFingerprint(postingInfo, postingRevisionInfo);
         CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, commentRevisionInfo,
-                postingFingerprint);
+                postingInfo, postingRevisionInfo);
         entryFingerprint.setValue(commentFingerprint);
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();

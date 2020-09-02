@@ -8,6 +8,7 @@ public abstract class RemoteReactionVerificationEvent extends Event {
     private String id;
     private String nodeName;
     private String postingId;
+    private String commentId;
     private String reactionOwnerName;
 
     protected RemoteReactionVerificationEvent(EventType type) {
@@ -19,6 +20,7 @@ public abstract class RemoteReactionVerificationEvent extends Event {
         id = data.getId().toString();
         nodeName = data.getNodeName();
         postingId = data.getPostingId();
+        commentId = data.getCommentId();
         reactionOwnerName = data.getReactionOwnerName();
     }
 
@@ -44,6 +46,14 @@ public abstract class RemoteReactionVerificationEvent extends Event {
 
     public void setPostingId(String postingId) {
         this.postingId = postingId;
+    }
+
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
     }
 
     public String getReactionOwnerName() {

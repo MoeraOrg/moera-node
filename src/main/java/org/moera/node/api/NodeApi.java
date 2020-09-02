@@ -199,6 +199,13 @@ public class NodeApi {
                 CommentInfo.class);
     }
 
+    public CommentRevisionInfo[] getCommentRevisions(String nodeName, String postingId, String commentId)
+            throws NodeApiException {
+
+        return call("GET", nodeName, String.format("/postings/%s/comments/%s/revisions",
+                Util.ue(postingId), Util.ue(commentId)), CommentRevisionInfo[].class);
+    }
+
     public CommentRevisionInfo getCommentRevision(String nodeName, String postingId, String commentId,
                                                   String revisionId) throws NodeApiException {
         return call("GET", nodeName,
@@ -217,8 +224,17 @@ public class NodeApi {
     public CommentInfo putComment(String nodeName, String postingId, String commentId, CommentText commentText)
             throws NodeApiException {
 
-        return call("PUT", nodeName, String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)),
+        return call("PUT", nodeName,
+                String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)),
                 commentText, CommentInfo.class);
+    }
+
+    public ReactionInfo getCommentReaction(String nodeName, String postingId, String commentId,
+                                           String reactionOwnerName) throws NodeApiException {
+        return call("GET", nodeName,
+                String.format("/postings/%s/comments/%s/reactions/%s",
+                        Util.ue(postingId), Util.ue(commentId), Util.ue(reactionOwnerName)),
+                ReactionInfo.class);
     }
 
 }

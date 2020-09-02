@@ -7,7 +7,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PostingRevisionInfo {
+public class PostingRevisionInfo implements RevisionInfo {
 
     private String id;
     private String receiverId;
@@ -17,7 +17,7 @@ public class PostingRevisionInfo {
     private Body body;
     private String bodyFormat;
     private String heading;
-    private long createdAt;
+    private Long createdAt;
     private Long deletedAt;
     private Long receiverCreatedAt;
     private Long receiverDeletedAt;
@@ -113,14 +113,16 @@ public class PostingRevisionInfo {
         this.heading = heading;
     }
 
-    public long getCreatedAt() {
+    @Override
+    public Long getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(long createdAt) {
+    public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
     }
 
+    @Override
     public Long getDeletedAt() {
         return deletedAt;
     }

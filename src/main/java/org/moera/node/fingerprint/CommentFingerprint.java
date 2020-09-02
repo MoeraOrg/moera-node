@@ -81,4 +81,16 @@ public class CommentFingerprint extends EntryFingerprint {
         createdAt = commentInfo.getRevisionCreatedAt();
     }
 
+    public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo, PostingInfo postingInfo,
+                              PostingRevisionInfo postingRevisionInfo) {
+        super(0);
+        ownerName = commentInfo.getOwnerName();
+        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
+        bodySrcFormat = commentRevisionInfo.getBodySrcFormat().getValue();
+        body = commentRevisionInfo.getBody().getEncoded();
+        bodyFormat = commentRevisionInfo.getBodyFormat();
+        createdAt = commentRevisionInfo.getCreatedAt();
+    }
+
 }

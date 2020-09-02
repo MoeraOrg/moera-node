@@ -323,7 +323,8 @@ CREATE TABLE public.remote_reaction_verifications (
     status smallint NOT NULL,
     error_code character varying(63),
     error_message character varying(255),
-    deadline timestamp without time zone NOT NULL
+    deadline timestamp without time zone NOT NULL,
+    comment_id character varying(40)
 );
 
 

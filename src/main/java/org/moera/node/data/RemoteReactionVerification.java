@@ -27,6 +27,9 @@ public class RemoteReactionVerification {
     @Size(max = 40)
     private String postingId;
 
+    @Size(max = 40)
+    private String commentId;
+
     @Size(max = 63)
     private String reactionOwnerName;
 
@@ -46,12 +49,18 @@ public class RemoteReactionVerification {
     public RemoteReactionVerification() {
     }
 
-    public RemoteReactionVerification(UUID nodeId, String nodeName, String postingId, String reactionOwnerName) {
+    public RemoteReactionVerification(UUID nodeId, String nodeName, String postingId, String commentId,
+                                      String reactionOwnerName) {
         this.id = UUID.randomUUID();
         this.nodeId = nodeId;
         this.nodeName = nodeName;
         this.postingId = postingId;
+        this.commentId = commentId;
         this.reactionOwnerName = reactionOwnerName;
+    }
+
+    public RemoteReactionVerification(UUID nodeId, String nodeName, String postingId, String reactionOwnerName) {
+        this(nodeId, nodeName, postingId, null, reactionOwnerName);
     }
 
     public UUID getId() {
@@ -84,6 +93,14 @@ public class RemoteReactionVerification {
 
     public void setPostingId(String postingId) {
         this.postingId = postingId;
+    }
+
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
     }
 
     public String getReactionOwnerName() {

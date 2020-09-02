@@ -7,7 +7,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CommentRevisionInfo {
+public class CommentRevisionInfo implements RevisionInfo {
 
     private String id;
     private Body bodyPreview;
@@ -101,6 +101,7 @@ public class CommentRevisionInfo {
         this.heading = heading;
     }
 
+    @Override
     public Long getCreatedAt() {
         return createdAt;
     }
@@ -109,6 +110,7 @@ public class CommentRevisionInfo {
         this.createdAt = createdAt;
     }
 
+    @Override
     public Long getDeletedAt() {
         return deletedAt;
     }

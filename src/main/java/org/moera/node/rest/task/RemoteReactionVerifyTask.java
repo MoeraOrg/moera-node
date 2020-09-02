@@ -12,9 +12,12 @@ import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.RevisionInfo;
 import org.moera.node.model.event.RemoteReactionVerificationFailedEvent;
 import org.moera.node.model.event.RemoteReactionVerifiedEvent;
 import org.slf4j.Logger;
@@ -48,10 +51,19 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 remotePostingId = postingInfo.getReceiverPostingId();
                 postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
             }
-            PostingRevisionInfo[] revisions = nodeApi.getPostingRevisions(remoteNodeName, remotePostingId);
-            ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
-                    data.getReactionOwnerName());
-            verify(postingInfo, revisions, reactionInfo);
+            PostingRevisionInfo[] postingRevisions = nodeApi.getPostingRevisions(remoteNodeName, remotePostingId);
+            if (data.getCommentId() == null) {
+                ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
+                        data.getReactionOwnerName());
+                verify(postingInfo, postingRevisions, reactionInfo);
+            } else {
+                CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
+                CommentRevisionInfo[] commentRevisions = nodeApi.getCommentRevisions(remoteNodeName, remotePostingId,
+                        data.getCommentId());
+                ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, remotePostingId,
+                        data.getCommentId(), data.getReactionOwnerName());
+                verify(postingInfo, postingRevisions, commentInfo, commentRevisions, reactionInfo);
+            }
         } catch (Exception e) {
             error(e);
         }
@@ -61,13 +73,17 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         return fingerprintManager.getConstructor(FingerprintObjectType.REACTION, version, parameterTypes);
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, ReactionInfo reactionInfo) {
-        PostingRevisionInfo revisionInfo = Arrays.stream(revisions)
-                .filter(r -> r.getCreatedAt() <= reactionInfo.getCreatedAt())
-                .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > reactionInfo.getCreatedAt())
+    private <R extends RevisionInfo> R getRevisionByTimestamp(R[] postingRevisions, Long timestamp) {
+        return Arrays.stream(postingRevisions)
+                .filter(r -> r.getCreatedAt() <= timestamp)
+                .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > timestamp)
                 .findFirst()
                 .orElse(null);
-        if (revisionInfo == null || revisionInfo.getSignature() == null) {
+    }
+
+    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] postingRevisions, ReactionInfo reactionInfo) {
+        PostingRevisionInfo postingRevisionInfo = getRevisionByTimestamp(postingRevisions, reactionInfo.getCreatedAt());
+        if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }
@@ -81,7 +97,35 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 reactionInfo.getSignatureVersion(), ReactionInfo.class, PostingInfo.class, PostingRevisionInfo.class);
         succeeded(CryptoUtil.verify(
-                reactionInfo.getSignature(), signingKey, constructor, reactionInfo, postingInfo, revisionInfo));
+                reactionInfo.getSignature(), signingKey, constructor, reactionInfo, postingInfo, postingRevisionInfo));
+    }
+
+    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] postingRevisions,
+                        CommentInfo commentInfo, CommentRevisionInfo[] commentRevisions, ReactionInfo reactionInfo) {
+        PostingRevisionInfo postingRevisionInfo = getRevisionByTimestamp(postingRevisions, commentInfo.getEditedAt());
+        if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
+            succeeded(false);
+            return;
+        }
+
+        CommentRevisionInfo commentRevisionInfo = getRevisionByTimestamp(commentRevisions, reactionInfo.getCreatedAt());
+        if (commentRevisionInfo == null || commentRevisionInfo.getSignature() == null) {
+            succeeded(false);
+            return;
+        }
+
+        byte[] signingKey = fetchSigningKey(reactionInfo.getOwnerName(), reactionInfo.getCreatedAt());
+        if (signingKey == null) {
+            succeeded(false);
+            return;
+        }
+
+        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
+                reactionInfo.getSignatureVersion(), ReactionInfo.class, CommentInfo.class, CommentRevisionInfo.class,
+                PostingInfo.class, PostingRevisionInfo.class);
+        succeeded(CryptoUtil.verify(
+                reactionInfo.getSignature(), signingKey, constructor, reactionInfo, commentInfo, commentRevisionInfo,
+                postingInfo, postingRevisionInfo));
     }
 
     private void updateData(Consumer<RemoteReactionVerification> updater) {
@@ -96,9 +140,14 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
 
     @Override
     protected void reportSuccess(boolean correct) {
-        log.info("Verified reaction of {} to posting {} at node {}: {}",
-                data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(),
-                correct ? "correct" : "incorrect");
+        String status = correct ? "correct" : "incorrect";
+        if (data.getCommentId() == null) {
+            log.info("Verified reaction of {} to posting {} at node {}: {}",
+                    data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(), status);
+        } else {
+            log.info("Verified reaction of {} to comment {} to posting {} at node {}: {}",
+                    data.getReactionOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(), status);
+        }
         updateData(data -> {
             data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
         });
@@ -107,8 +156,14 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
 
     @Override
     protected void reportFailure(String errorCode, String errorMessage) {
-        log.info("Verification of reaction of {} to posting {} at node {} failed: {} ({})",
-                data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode);
+        if (data.getCommentId() == null) {
+            log.info("Verification of reaction of {} to posting {} at node {} failed: {} ({})",
+                    data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode);
+        } else {
+            log.info("Verification of reaction of {} to comment {} to posting {} at node {} failed: {} ({})",
+                    data.getReactionOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(),
+                    errorMessage, errorCode);
+        }
         updateData(data -> {
             data.setStatus(VerificationStatus.ERROR);
             data.setErrorCode(errorCode);

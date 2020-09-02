@@ -1,18 +1,23 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.rest.task.RemoteCommentReactionPostTask;
+import org.moera.node.rest.task.RemoteReactionVerifyTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,17 +82,18 @@ public class RemoteCommentReactionController {
         return Result.OK;
     }
 
-    /* TODO @PostMapping("/{ownerName}/verify")
+    @PostMapping("/{ownerName}/verify")
     @Admin
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String postingId,
-                                        @PathVariable String ownerName) {
-        log.info("POST /nodes/{nodeName}/postings/{postingId}/reactions/{ownerName}/verify"
-                        + " (nodeName = {}, postingId = {}, ownerName = {})",
-                LogUtil.format(nodeName), LogUtil.format(postingId), LogUtil.format(ownerName));
+                                        @PathVariable String commentId, @PathVariable String ownerName) {
+        log.info("POST /nodes/{nodeName}/postings/{postingId}/comments/{commentId}/reactions/{ownerName}/verify"
+                        + " (nodeName = {}, postingId = {}, commentId = {}, ownerName = {})",
+                LogUtil.format(nodeName), LogUtil.format(postingId), LogUtil.format(commentId),
+                LogUtil.format(ownerName));
 
         RemoteReactionVerification data = new RemoteReactionVerification(
-                requestContext.nodeId(), nodeName, postingId, ownerName);
+                requestContext.nodeId(), nodeName, postingId, commentId, ownerName);
         data.setDeadline(Timestamp.from(Instant.now().plus(
                 requestContext.getOptions().getDuration("remote-reaction-verification.lifetime"))));
         remoteReactionVerificationRepository.saveAndFlush(data);
@@ -98,11 +104,5 @@ public class RemoteCommentReactionController {
 
         return new AsyncOperationCreated(data.getId());
     }
-
-    @Scheduled(fixedDelayString = "PT30M")
-    @Transactional
-    public void purgeExpiredVerifications() {
-        remoteReactionVerificationRepository.deleteExpired(Util.now());
-    }*/
 
 }
