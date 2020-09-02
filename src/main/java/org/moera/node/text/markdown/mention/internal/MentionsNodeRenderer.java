@@ -38,11 +38,11 @@ public class MentionsNodeRenderer implements NodeRenderer {
             html.text(node.getChars());
         } else {
             String name = node.getText().toString();
-            if (RegisteredName.parse(name).getGeneration() == null) {
+            if (RegisteredName.parse(name).getGeneration() == null && options.namingCache != null) {
                 try {
                     RegisteredNameDetails details = options.namingCache.get(name);
                     name = details.getNodeName() != null ? details.getNodeName() : name;
-                } catch (NamingNotAvailableException e) {
+                } catch (NamingNotAvailableException ignore) {
                 }
             }
             html.srcPos(node.getChars())
