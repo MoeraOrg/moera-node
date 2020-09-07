@@ -26,6 +26,7 @@ public class CommentInfo {
     private Body body;
     private String bodyFormat;
     private String heading;
+    private RepliedTo repliedTo;
     private long moment;
     private Long createdAt;
     private Long editedAt;
@@ -66,6 +67,9 @@ public class CommentInfo {
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
+        if (comment.getRepliedTo() != null) {
+            repliedTo = new RepliedTo(comment);
+        }
         moment = comment.getMoment();
         createdAt = Util.toEpochSecond(comment.getCreatedAt());
         editedAt = Util.toEpochSecond(comment.getEditedAt());
@@ -189,6 +193,14 @@ public class CommentInfo {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public RepliedTo getRepliedTo() {
+        return repliedTo;
+    }
+
+    public void setRepliedTo(RepliedTo repliedTo) {
+        this.repliedTo = repliedTo;
     }
 
     public long getMoment() {

@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
@@ -34,6 +35,8 @@ public class CommentText {
     @Valid
     private AcceptedReactions acceptedReactions;
 
+    private UUID repliedToId;
+
     private byte[] signature;
 
     private short signatureVersion;
@@ -47,6 +50,7 @@ public class CommentText {
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
         createdAt = Util.toEpochSecond(Util.now());
         acceptedReactions = sourceText.getAcceptedReactions();
+        repliedToId = sourceText.getRepliedToId();
         if (bodySrcFormat != SourceFormat.APPLICATION) {
             body = textConverter.toHtml(bodySrcFormat, new Body(bodySrc));
             bodyFormat = BodyFormat.MESSAGE.getValue();
@@ -119,6 +123,14 @@ public class CommentText {
 
     public void setAcceptedReactions(AcceptedReactions acceptedReactions) {
         this.acceptedReactions = acceptedReactions;
+    }
+
+    public UUID getRepliedToId() {
+        return repliedToId;
+    }
+
+    public void setRepliedToId(UUID repliedToId) {
+        this.repliedToId = repliedToId;
     }
 
     public byte[] getSignature() {

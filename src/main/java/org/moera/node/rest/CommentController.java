@@ -141,9 +141,17 @@ public class CommentController {
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
+        Comment repliedTo = null;
+        if (commentText.getRepliedToId() != null) {
+            repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentText.getRepliedToId())
+                    .orElse(null);
+            if (repliedTo == null || !repliedTo.getPosting().getId().equals(posting.getId())) {
+                throw new ObjectNotFoundFailure("commentText.repliedToId.not-found");
+            }
+        }
         byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName());
 
-        Comment comment = commentOperations.newComment(posting, commentText);
+        Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
             comment = commentOperations.createOrUpdateComment(posting, comment, null, null,
                     revision -> commentText.toEntryRevision(revision, digest, textConverter));

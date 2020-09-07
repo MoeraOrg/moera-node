@@ -48,7 +48,7 @@ public class CommentOperations {
 
     private final MomentFinder momentFinder = new MomentFinder();
 
-    public Comment newComment(Posting posting, CommentText commentText) {
+    public Comment newComment(Posting posting, CommentText commentText, Comment repliedTo) {
         if (commentText.getAcceptedReactions() == null) {
             commentText.setAcceptedReactions(new AcceptedReactions());
         }
@@ -64,6 +64,11 @@ public class CommentOperations {
         comment.setNodeId(requestContext.nodeId());
         comment.setOwnerName(commentText.getOwnerName());
         comment.setPosting(posting);
+        if (repliedTo != null) {
+            comment.setRepliedTo(repliedTo);
+            comment.setRepliedToName(repliedTo.getOwnerName());
+            comment.setRepliedToHeading(repliedTo.getCurrentRevision().getHeading());
+        }
         commentText.toEntry(comment);
         comment.setMoment(momentFinder.find(
                 moment -> commentRepository.countMoments(posting.getId(), moment) == 0,

@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -16,6 +17,8 @@ public class CommentSourceText {
 
     @Valid
     private AcceptedReactions acceptedReactions;
+
+    private UUID repliedToId;
 
     public CommentSourceText() {
     }
@@ -42,6 +45,14 @@ public class CommentSourceText {
 
     public void setAcceptedReactions(AcceptedReactions acceptedReactions) {
         this.acceptedReactions = acceptedReactions;
+    }
+
+    public UUID getRepliedToId() {
+        return repliedToId;
+    }
+
+    public void setRepliedToId(UUID repliedToId) {
+        this.repliedToId = repliedToId;
     }
 
 }

@@ -101,6 +101,13 @@ public class Entry {
 
     private Long moment;
 
+    @ManyToOne
+    private Entry repliedTo;
+
+    private String repliedToName;
+
+    private String repliedToHeading;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -115,6 +122,9 @@ public class Entry {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
     private Set<Entry> children = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "repliedTo")
+    private Set<Entry> replies = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -349,6 +359,30 @@ public class Entry {
         this.moment = moment;
     }
 
+    public Entry getRepliedTo() {
+        return repliedTo;
+    }
+
+    public void setRepliedTo(Entry repliedTo) {
+        this.repliedTo = repliedTo;
+    }
+
+    public String getRepliedToName() {
+        return repliedToName;
+    }
+
+    public void setRepliedToName(String repliedToName) {
+        this.repliedToName = repliedToName;
+    }
+
+    public String getRepliedToHeading() {
+        return repliedToHeading;
+    }
+
+    public void setRepliedToHeading(String repliedToHeading) {
+        this.repliedToHeading = repliedToHeading;
+    }
+
     public Set<Story> getStories() {
         return stories;
     }
@@ -408,6 +442,24 @@ public class Entry {
     public void removeChild(Entry child) {
         children.removeIf(sr -> sr.getId().equals(child.getId()));
         child.setParent(null);
+    }
+
+    public Set<Entry> getReplies() {
+        return replies;
+    }
+
+    public void setReplies(Set<Entry> replies) {
+        this.replies = replies;
+    }
+
+    public void addReply(Entry reply) {
+        replies.add(reply);
+        reply.setRepliedTo(this);
+    }
+
+    public void removeReply(Entry reply) {
+        replies.removeIf(sr -> sr.getId().equals(reply.getId()));
+        reply.setRepliedTo(null);
     }
 
 }
