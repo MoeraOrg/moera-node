@@ -97,7 +97,7 @@ public class Entry {
     private Entry parent;
 
     @NotNull
-    private int childrenTotal;
+    private int totalChildren;
 
     private Long moment;
 
@@ -343,12 +343,12 @@ public class Entry {
         this.parent = parent;
     }
 
-    public int getChildrenTotal() {
-        return childrenTotal;
+    public int getTotalChildren() {
+        return totalChildren;
     }
 
-    public void setChildrenTotal(int childrenTotal) {
-        this.childrenTotal = childrenTotal;
+    public void setTotalChildren(int totalChildren) {
+        this.totalChildren = totalChildren;
     }
 
     public Long getMoment() {

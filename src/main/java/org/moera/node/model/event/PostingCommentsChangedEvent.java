@@ -13,7 +13,7 @@ public class PostingCommentsChangedEvent extends PostingEvent {
     public PostingCommentsChangedEvent(Posting posting) {
         super(EventType.POSTING_COMMENTS_CHANGED, posting);
 
-        total = posting.getChildrenTotal();
+        total = posting.getTotalChildren();
     }
 
     public int getTotal() {

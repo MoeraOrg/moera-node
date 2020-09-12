@@ -73,8 +73,11 @@ CREATE TABLE public.entries (
     edited_at timestamp without time zone DEFAULT now() NOT NULL,
     receiver_edited_at timestamp without time zone,
     parent_id uuid,
-    children_total integer DEFAULT 0 NOT NULL,
-    moment bigint
+    total_children integer DEFAULT 0 NOT NULL,
+    moment bigint,
+    replied_to_id uuid,
+    replied_to_name character varying(63),
+    replied_to_heading character varying(255)
 );
 
 
@@ -678,6 +681,13 @@ CREATE INDEX entries_parent_id_moment_idx ON public.entries USING btree (parent_
 
 
 --
+-- Name: entries_replied_to_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_replied_to_id_idx ON public.entries USING btree (replied_to_id);
+
+
+--
 -- Name: entry_revision_upgrades_entry_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -965,6 +975,14 @@ ALTER TABLE ONLY public.entries
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entries_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entries entries_replied_to_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_replied_to_id_fkey FOREIGN KEY (replied_to_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --

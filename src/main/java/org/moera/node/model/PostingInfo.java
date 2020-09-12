@@ -136,7 +136,7 @@ public class PostingInfo {
         sources = posting.getSources() != null
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
-        totalComments = posting.getChildrenTotal();
+        totalComments = posting.getTotalChildren();
     }
 
     public String getId() {
@@ -471,7 +471,7 @@ public class PostingInfo {
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
         posting.setReactionsVisible(reactionsVisible);
         posting.setReactionTotalsVisible(reactionTotalsVisible);
-        posting.setChildrenTotal(totalComments);
+        posting.setTotalChildren(totalComments);
     }
 
 }

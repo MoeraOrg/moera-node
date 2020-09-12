@@ -162,10 +162,10 @@ public class CommentController {
         requestContext.send(new CommentAddedEvent(comment));
         requestContext.send(new PostingCommentsChangedEvent(posting));
         requestContext.send(Directions.postingSubscribers(posting.getId()),
-                new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
+                new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
-                .body(new CommentCreated(comment, posting.getChildrenTotal()));
+                .body(new CommentCreated(comment, posting.getTotalChildren()));
     }
 
     @PutMapping("/{commentId}")
@@ -381,7 +381,7 @@ public class CommentController {
         commentOperations.deleteComment(comment);
         requestContext.send(new CommentDeletedEvent(comment));
 
-        return new CommentTotalInfo(comment.getPosting().getChildrenTotal());
+        return new CommentTotalInfo(comment.getPosting().getTotalChildren());
     }
 
     private CommentInfo withClientReaction(CommentInfo commentInfo) {
@@ -406,13 +406,13 @@ public class CommentController {
                 List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
                 if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
                     Posting posting = comment.getPosting();
-                    posting.setChildrenTotal(posting.getChildrenTotal() - 1);
+                    posting.setTotalChildren(posting.getTotalChildren() - 1);
                     commentRepository.delete(comment);
 
                     eventList.add(new CommentDeletedEvent(comment));
                     eventList.add(new PostingCommentsChangedEvent(posting));
                     notifications.add(
-                            new PostingCommentsUpdatedNotification(posting.getId(), posting.getChildrenTotal()));
+                            new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
                 } else {
                     EntryRevision revision = comment.getRevisions().stream()
                             .min(Comparator.comparing(EntryRevision::getCreatedAt))

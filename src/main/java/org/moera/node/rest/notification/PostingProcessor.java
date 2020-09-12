@@ -134,8 +134,8 @@ public class PostingProcessor {
     @Transactional
     public void commentsUpdated(PostingCommentsUpdatedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) -> {
-            if (posting.getChildrenTotal() != notification.getTotal()) {
-                posting.setChildrenTotal(notification.getTotal());
+            if (posting.getTotalChildren() != notification.getTotal()) {
+                posting.setTotalChildren(notification.getTotal());
 
                 requestContext.send(new PostingCommentsChangedEvent(posting));
                 requestContext.send(Directions.postingSubscribers(posting.getId()),

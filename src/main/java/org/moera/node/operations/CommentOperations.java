@@ -74,7 +74,7 @@ public class CommentOperations {
                 moment -> commentRepository.countMoments(posting.getId(), moment) == 0,
                 Util.now()));
 
-        posting.setChildrenTotal(posting.getChildrenTotal() + 1);
+        posting.setTotalChildren(posting.getTotalChildren() + 1);
 
         return commentRepository.save(comment);
     }
@@ -179,8 +179,8 @@ public class CommentOperations {
         Duration postingTtl = requestContext.getOptions().getDuration("comment.deleted.lifetime");
         comment.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         comment.getCurrentRevision().setDeletedAt(Util.now());
-        if (comment.getPosting().getChildrenTotal() > 0) {
-            comment.getPosting().setChildrenTotal(comment.getPosting().getChildrenTotal() - 1);
+        if (comment.getPosting().getTotalChildren() > 0) {
+            comment.getPosting().setTotalChildren(comment.getPosting().getTotalChildren() - 1);
         }
 
         Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
@@ -190,7 +190,7 @@ public class CommentOperations {
         requestContext.send(new PostingCommentsChangedEvent(comment.getPosting()));
         requestContext.send(Directions.postingSubscribers(comment.getPosting().getId()),
                 new PostingCommentsUpdatedNotification(
-                        comment.getPosting().getId(), comment.getPosting().getChildrenTotal()));
+                        comment.getPosting().getId(), comment.getPosting().getTotalChildren()));
     }
 
 }
