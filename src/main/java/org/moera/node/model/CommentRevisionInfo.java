@@ -19,6 +19,7 @@ public class CommentRevisionInfo implements RevisionInfo {
     private Long createdAt;
     private Long deletedAt;
     private Long deadline;
+    private byte[] digest;
     private byte[] signature;
     private Short signatureVersion;
     private ClientReactionInfo clientReaction;
@@ -40,6 +41,7 @@ public class CommentRevisionInfo implements RevisionInfo {
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(revision.getDeletedAt());
         deadline = Util.toEpochSecond(revision.getDeadline());
+        digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         reactions = new ReactionTotalsInfo(revision.getReactionTotals(), countsVisible);
@@ -125,6 +127,14 @@ public class CommentRevisionInfo implements RevisionInfo {
 
     public void setDeadline(Long deadline) {
         this.deadline = deadline;
+    }
+
+    public byte[] getDigest() {
+        return digest;
+    }
+
+    public void setDigest(byte[] digest) {
+        this.digest = digest;
     }
 
     public byte[] getSignature() {

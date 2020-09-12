@@ -33,6 +33,7 @@ public class CommentInfo {
     private Long deletedAt;
     private Long revisionCreatedAt;
     private Long deadline;
+    private byte[] digest;
     private byte[] signature;
     private Short signatureVersion;
     private Map<String, String[]> operations;
@@ -76,6 +77,7 @@ public class CommentInfo {
         deletedAt = Util.toEpochSecond(comment.getDeletedAt());
         revisionCreatedAt = Util.toEpochSecond(revision.getCreatedAt());
         deadline = Util.toEpochSecond(comment.getDeadline());
+        digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         operations = new HashMap<>();
@@ -249,6 +251,14 @@ public class CommentInfo {
 
     public void setDeadline(Long deadline) {
         this.deadline = deadline;
+    }
+
+    public byte[] getDigest() {
+        return digest;
+    }
+
+    public void setDigest(byte[] digest) {
+        this.digest = digest;
     }
 
     public byte[] getSignature() {
