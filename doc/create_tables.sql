@@ -77,7 +77,8 @@ CREATE TABLE public.entries (
     moment bigint,
     replied_to_id uuid,
     replied_to_name character varying(63),
-    replied_to_heading character varying(255)
+    replied_to_heading character varying(255),
+    replied_to_digest bytea
 );
 
 
