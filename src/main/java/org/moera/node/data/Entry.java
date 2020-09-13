@@ -108,6 +108,8 @@ public class Entry {
 
     private String repliedToHeading;
 
+    private byte[] repliedToDigest;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -381,6 +383,14 @@ public class Entry {
 
     public void setRepliedToHeading(String repliedToHeading) {
         this.repliedToHeading = repliedToHeading;
+    }
+
+    public byte[] getRepliedToDigest() {
+        return repliedToDigest;
+    }
+
+    public void setRepliedToDigest(byte[] repliedToDigest) {
+        this.repliedToDigest = repliedToDigest;
     }
 
     public Set<Story> getStories() {

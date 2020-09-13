@@ -7,6 +7,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.api.NodeApiException;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.VerificationStatus;
@@ -27,11 +28,16 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
     private RemoteCommentVerification data;
 
+    private String remoteNodeName;
+
     @Inject
     private RemoteCommentVerificationRepository remoteCommentVerificationRepository;
 
     @Inject
     private FingerprintManager fingerprintManager;
+
+    @Inject
+    private RepliedToDigestVerifier repliedToDigestVerifier;
 
     public RemoteCommentVerifyTask(RemoteCommentVerification data) {
         this.data = data;
@@ -41,7 +47,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
     public void run() {
         try {
             nodeApi.setNodeId(nodeId);
-            String remoteNodeName = data.getNodeName();
+            remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
             PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
             if (postingInfo.getReceiverName() != null) {
@@ -75,7 +81,9 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 .orElse(null);
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, CommentInfo commentInfo) {
+    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, CommentInfo commentInfo)
+            throws NodeApiException {
+
         PostingRevisionInfo revisionInfo = getPostingRevisionByComment(revisions, commentInfo);
         if (revisionInfo == null || revisionInfo.getSignature() == null) {
             succeeded(false);
@@ -92,14 +100,19 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             data.setRevisionId(commentInfo.getRevisionId());
         });
 
+        String repliedToId = commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getId() : null;
+        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, remoteNodeName, postingInfo,
+                revisions, repliedToId, commentInfo.getCreatedAt());
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
-                commentInfo.getSignatureVersion(), CommentInfo.class, PostingInfo.class, PostingRevisionInfo.class);
+                commentInfo.getSignatureVersion(), CommentInfo.class, PostingInfo.class, PostingRevisionInfo.class,
+                byte[].class);
         succeeded(CryptoUtil.verify(
-                commentInfo.getSignature(), signingKey, constructor, commentInfo, postingInfo, revisionInfo));
+                commentInfo.getSignature(), signingKey, constructor, commentInfo, postingInfo, revisionInfo,
+                repliedToDigest));
     }
 
     private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, CommentInfo commentInfo,
-                        CommentRevisionInfo commentRevisionInfo) {
+                        CommentRevisionInfo commentRevisionInfo) throws NodeApiException {
         PostingRevisionInfo postingRevisionInfo = getPostingRevisionByComment(revisions, commentInfo);
         if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
             succeeded(false);
@@ -112,12 +125,14 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             return;
         }
 
+        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, remoteNodeName, postingInfo,
+                revisions, commentInfo.getId(), commentInfo.getCreatedAt());
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
-                PostingInfo.class, PostingRevisionInfo.class);
+                PostingInfo.class, PostingRevisionInfo.class, byte[].class);
         succeeded(CryptoUtil.verify(
                 commentInfo.getSignature(), signingKey, constructor, commentInfo, commentRevisionInfo,
-                postingInfo, postingRevisionInfo));
+                postingInfo, postingRevisionInfo, repliedToDigest));
     }
 
     private void updateData(Consumer<RemoteCommentVerification> updater) {

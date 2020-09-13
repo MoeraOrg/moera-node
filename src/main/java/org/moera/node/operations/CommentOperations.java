@@ -68,6 +68,7 @@ public class CommentOperations {
             comment.setRepliedTo(repliedTo);
             comment.setRepliedToName(repliedTo.getOwnerName());
             comment.setRepliedToHeading(repliedTo.getCurrentRevision().getHeading());
+            comment.setRepliedToDigest(repliedTo.getCurrentRevision().getDigest());
         }
         commentText.toEntry(comment);
         comment.setMoment(momentFinder.find(

@@ -149,7 +149,8 @@ public class CommentController {
                 throw new ObjectNotFoundFailure("commentText.repliedToId.not-found");
             }
         }
-        byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName());
+        byte[] repliedToDigest = repliedTo != null ? repliedTo.getCurrentRevision().getDigest() : null;
+        byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName(), repliedToDigest);
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
@@ -187,7 +188,9 @@ public class CommentController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        byte[] digest = validateCommentText(comment.getPosting(), commentText, comment.getOwnerName());
+        byte[] repliedToDigest = comment.getRepliedTo() != null
+                ? comment.getRepliedTo().getCurrentRevision().getDigest() : null;
+        byte[] digest = validateCommentText(comment.getPosting(), commentText, comment.getOwnerName(), repliedToDigest);
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentText.toEntry(comment);
@@ -204,8 +207,8 @@ public class CommentController {
         return withClientReaction(new CommentInfo(comment, true));
     }
 
-    private byte[] validateCommentText(Posting posting, CommentText commentText, String ownerName)
-            throws AuthenticationException {
+    private byte[] validateCommentText(Posting posting, CommentText commentText, String ownerName,
+                                       byte[] repliedToDigest) throws AuthenticationException {
 
         byte[] digest = null;
         if (commentText.getSignature() == null) {
@@ -225,16 +228,18 @@ public class CommentController {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
                     FingerprintObjectType.COMMENT, commentText.getSignatureVersion(),
-                    CommentText.class, byte[].class);
+                    CommentText.class, byte[].class, byte[].class);
             if (!CryptoUtil.verify(
                     commentText.getSignature(),
                     signingKey,
                     constructor,
                     commentText,
-                    posting.getCurrentRevision().getDigest())) {
+                    posting.getCurrentRevision().getDigest(),
+                    repliedToDigest)) {
                 throw new IncorrectSignatureException();
             }
-            digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest());
+            digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest(),
+                    repliedToDigest);
 
             if (commentText.getBody() == null || StringUtils.isEmpty(commentText.getBody().getEncoded())) {
                 throw new ValidationFailure("commentText.body.blank");

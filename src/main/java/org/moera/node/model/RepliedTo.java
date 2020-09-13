@@ -9,6 +9,7 @@ public class RepliedTo {
     private String id;
     private String name;
     private String heading;
+    private byte[] digest;
 
     public RepliedTo() {
     }
@@ -18,6 +19,7 @@ public class RepliedTo {
             id = comment.getRepliedTo().getId().toString();
             name = comment.getRepliedToName();
             heading = comment.getRepliedToHeading();
+            digest = comment.getRepliedToDigest();
         }
     }
 
@@ -43,6 +45,14 @@ public class RepliedTo {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public byte[] getDigest() {
+        return digest;
+    }
+
+    public void setDigest(byte[] digest) {
+        this.digest = digest;
     }
 
 }
