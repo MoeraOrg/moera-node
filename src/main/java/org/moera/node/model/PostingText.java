@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 
 public class PostingText {
 
-    @Size(max = 65535)
+    @Size(max = 256 * 1024 * 1024)
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;
