@@ -6,6 +6,7 @@ import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -20,6 +21,9 @@ public class PublicPage {
 
     @NotNull
     private UUID nodeId;
+
+    @ManyToOne
+    private Entry entry;
 
     @NotNull
     private long afterMoment;
@@ -44,6 +48,14 @@ public class PublicPage {
 
     public void setNodeId(UUID nodeId) {
         this.nodeId = nodeId;
+    }
+
+    public Entry getEntry() {
+        return entry;
+    }
+
+    public void setEntry(Entry entry) {
+        this.entry = entry;
     }
 
     public long getAfterMoment() {

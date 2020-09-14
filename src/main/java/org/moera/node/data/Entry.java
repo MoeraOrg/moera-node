@@ -128,6 +128,9 @@ public class Entry {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "repliedTo")
     private Set<Entry> replies = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    private Set<PublicPage> publicPages = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -470,6 +473,24 @@ public class Entry {
     public void removeReply(Entry reply) {
         replies.removeIf(sr -> sr.getId().equals(reply.getId()));
         reply.setRepliedTo(null);
+    }
+
+    public Set<PublicPage> getPublicPages() {
+        return publicPages;
+    }
+
+    public void setPublicPages(Set<PublicPage> publicPages) {
+        this.publicPages = publicPages;
+    }
+
+    public void addPublicPage(PublicPage publicPage) {
+        publicPages.add(publicPage);
+        publicPage.setEntry(this);
+    }
+
+    public void removePublicPage(PublicPage publicPage) {
+        publicPages.removeIf(pp -> pp.getId() == publicPage.getId());
+        publicPage.setEntry(null);
     }
 
 }

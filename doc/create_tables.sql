@@ -230,7 +230,8 @@ CREATE TABLE public.public_pages (
     id bigint NOT NULL,
     node_id uuid NOT NULL,
     after_moment bigint NOT NULL,
-    before_moment bigint NOT NULL
+    before_moment bigint NOT NULL,
+    entry_id uuid
 );
 
 
@@ -773,17 +774,17 @@ CREATE INDEX picks_node_id_idx ON public.picks USING btree (node_id);
 
 
 --
--- Name: public_pages_node_id_after_moment_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: public_pages_node_id_entry_id_after_moment_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX public_pages_node_id_after_moment_idx ON public.public_pages USING btree (node_id, after_moment);
+CREATE INDEX public_pages_node_id_entry_id_after_moment_idx ON public.public_pages USING btree (node_id, entry_id, after_moment);
 
 
 --
--- Name: public_pages_node_id_before_moment_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: public_pages_node_id_entry_id_before_moment_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX public_pages_node_id_before_moment_idx ON public.public_pages USING btree (node_id, before_moment);
+CREATE INDEX public_pages_node_id_entry_id_before_moment_idx ON public.public_pages USING btree (node_id, entry_id, before_moment);
 
 
 --
@@ -1016,6 +1017,14 @@ ALTER TABLE ONLY public.entry_revisions
 
 ALTER TABLE ONLY public.entry_sources
     ADD CONSTRAINT entry_sources_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: public_pages public_pages_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.public_pages
+    ADD CONSTRAINT public_pages_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
