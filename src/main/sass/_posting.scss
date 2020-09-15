@@ -34,9 +34,16 @@
             }
         }
 
-        $max-width: unquote("min(900px - 3.5rem, 100vw - 4rem)");
-        P IMG {
-            max-width: $max-width;
+        @media only screen and (min-width: 901px) {
+            P IMG {
+                max-width: calc(900px - 3.5rem);
+            }
+        }
+
+        @media only screen and (max-width: 900px) {
+            P IMG {
+                max-width: calc(100vw - 4rem);
+            }
         }
     }
 
