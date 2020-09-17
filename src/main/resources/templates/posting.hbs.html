@@ -5,7 +5,7 @@
        href="/timeline?before={{posting.timelineMoment}}#m{{posting.timelineMoment}}">&larr; Timeline</a>
 {{/if}}
 
-<div class="posting">
+<div class="posting entry">
     {{#if posting.timelinePinned}}
         <div class="pin-line">
             <span class="badge badge-secondary">
@@ -32,7 +32,9 @@
         <div class="subject">{{posting.body.subject}}</div>
     {{/if}}
     <div class="content">{{{posting.body.text}}}</div>
-    {{reactions posting}}
+    <div class="reactions-line">
+        {{reactions posting}}
+    </div>
 </div>
 
 {{> part/bottom}}

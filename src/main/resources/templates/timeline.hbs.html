@@ -8,7 +8,7 @@
 
 {{#each stories}}
     <a name="m{{moment}}"></a>
-    <div class="posting">
+    <div class="posting entry preview">
         {{#if pinned}}
             <div class="pin-line">
                 <span class="badge badge-secondary">
@@ -47,7 +47,9 @@
         {{else}}
             <div class="content">{{{posting.body.text}}}</div>
         {{/if}}
-        {{reactions posting}}
+        <div class="reactions-line">
+            {{reactions posting}}
+        </div>
     </div>
 {{/each}}
 

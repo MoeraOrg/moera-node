@@ -2,9 +2,10 @@
     --body-background: #e9ebee;
     --highlight: rgba(0, 0, 0, .05);
     --highlight-blue: rgba(0, 123, 255, .1);
+    --highlight-cyan: #f0fafa;
     --cyan-light: #96d6e0;
-    --gray-light: #ced4da;
     --gray-medium: #a9a9a9;
+    --gray-light: #ced4da;
     --green-light: #42d042; /* forest green + 20% lighter */
     --red-light: #df5a5a; /* fire brick + 20% lighter */
 
@@ -14,9 +15,15 @@
     --correct-light: var(--green-light);
     --incorrect-light: var(--red-light);
     --node-name: #385898;
-    --blockquote: #fafaff;
+    --blockquote: var(--highlight-cyan);
 
     --status-icon: rgba(255, 255, 255, .5);
     --status-icon-highlight: rgba(255, 255, 255, .75);
     --shadow: rgba(0, 0, 0, .75);
+
+    --reactions-positive: #e9fce5;
+    --reactions-negative: #feeff0;
+    --reactions-positive-border: #cddfc9;
+    --reactions-negative-border: #e1d3d4;
+    --comments: #f8faff;
 }

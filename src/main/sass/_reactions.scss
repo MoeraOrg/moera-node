@@ -1,0 +1,39 @@
+.reactions {
+    font-size: .9rem;
+    font-weight: 600;
+    padding-top: .2em;
+    padding-left: .2em;
+    margin-top: .2em;
+
+    .emojis {
+        font-family: sans-serif;
+        font-size: 1.1em;
+        margin-right: .55em;
+    }
+
+    .positive {
+        margin-right: 1.45em;
+        color: var(--correct);
+        background-color: var(--reactions-positive);
+        border-radius: .9em;
+        padding: .44em 1.1em;
+
+        &:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    }
+
+
+    .negative {
+        color: var(--incorrect);
+        background-color: var(--reactions-negative);
+        border-radius: .9em;
+        padding: .44em 1.1em;
+
+        &:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    }
+}
