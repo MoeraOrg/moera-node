@@ -18,10 +18,7 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.data.PublicPage;
-import org.moera.node.data.PublicPageRepository;
 import org.moera.node.data.Story;
-import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
@@ -35,8 +32,6 @@ import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.Util;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -44,14 +39,8 @@ public class PostingOperations {
 
     public static final int MAX_POSTINGS_PER_REQUEST = 200;
 
-    private static final int PUBLIC_PAGE_MAX_SIZE = 30;
-    private static final int PUBLIC_PAGE_AVG_SIZE = 20;
-
     @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private StoryRepository storyRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -60,10 +49,10 @@ public class PostingOperations {
     private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
-    private PublicPageRepository publicPageRepository;
+    private StoryOperations storyOperations;
 
     @Inject
-    private StoryOperations storyOperations;
+    private PublicPageOperations publicPageOperations;
 
     public Posting newPosting(PostingText postingText, Consumer<Posting> initializer) {
         if (postingText.getAcceptedReactions() == null) {
@@ -112,7 +101,7 @@ public class PostingOperations {
 
         Story timelineStory = posting.getStory(Feed.TIMELINE);
         if (timelineStory != null) {
-            updatePublicPages(timelineStory.getMoment());
+            publicPageOperations.updatePublicPages(timelineStory.getMoment());
         }
 
         notifyMentioned(posting.getId(), current, latest);
@@ -178,55 +167,6 @@ public class PostingOperations {
         }
 
         return revision;
-    }
-
-    private void updatePublicPages(long moment) {
-        UUID nodeId = requestContext.nodeId();
-        PublicPage firstPage = publicPageRepository.findByBeforeMoment(nodeId, Long.MAX_VALUE);
-        if (firstPage == null) {
-            firstPage = new PublicPage();
-            firstPage.setNodeId(requestContext.nodeId());
-            firstPage.setAfterMoment(Long.MIN_VALUE);
-            firstPage.setBeforeMoment(Long.MAX_VALUE);
-            publicPageRepository.save(firstPage);
-            return;
-        }
-
-        long after = firstPage.getAfterMoment();
-        if (moment > after) {
-            int count = storyRepository.countInRange(nodeId, Feed.TIMELINE, after, Long.MAX_VALUE);
-            if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = storyRepository.findMomentsInRange(nodeId, Feed.TIMELINE, after, Long.MAX_VALUE,
-                        PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1,
-                                Sort.by(Sort.Direction.DESC, "moment")))
-                        .getContent().get(0);
-                firstPage.setAfterMoment(median);
-                PublicPage secondPage = new PublicPage();
-                secondPage.setNodeId(requestContext.nodeId());
-                secondPage.setAfterMoment(after);
-                secondPage.setBeforeMoment(median);
-                publicPageRepository.save(secondPage);
-            }
-            return;
-        }
-
-        PublicPage lastPage = publicPageRepository.findByAfterMoment(nodeId, Long.MIN_VALUE);
-        long end = lastPage.getBeforeMoment();
-        if (moment <= end) {
-            int count = storyRepository.countInRange(nodeId, Feed.TIMELINE, Long.MIN_VALUE, end);
-            if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = storyRepository.findMomentsInRange(nodeId, Feed.TIMELINE, Long.MIN_VALUE, end,
-                        PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1,
-                                Sort.by(Sort.Direction.DESC, "moment")))
-                        .getContent().get(0);
-                lastPage.setBeforeMoment(median);
-                PublicPage prevPage = new PublicPage();
-                prevPage.setNodeId(requestContext.nodeId());
-                prevPage.setAfterMoment(median);
-                prevPage.setBeforeMoment(end);
-                publicPageRepository.save(prevPage);
-            }
-        }
     }
 
     private void notifyMentioned(UUID postingId, EntryRevision current, EntryRevision latest) {
