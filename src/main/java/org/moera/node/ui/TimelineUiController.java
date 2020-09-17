@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -18,8 +19,10 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
+import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.ui.Model;
@@ -46,7 +49,13 @@ public class TimelineUiController {
     private PostingRepository postingRepository;
 
     @Inject
+    private CommentRepository commentRepository;
+
+    @Inject
     private TimelinePublicPageOperations timelinePublicPageOperations;
+
+    @Inject
+    private CommentPublicPageOperations commentPublicPageOperations;
 
     @GetMapping("/timeline")
     public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
@@ -87,8 +96,13 @@ public class TimelineUiController {
     }
 
     @GetMapping("/post/{id}")
-    public String posting(@PathVariable UUID id, HttpServletResponse response, Model model) {
-        VirtualPageHeader.put(response, String.format("/post/%s", id));
+    public String posting(@PathVariable UUID id, @RequestParam(required = false) Long before,
+                          HttpServletResponse response, Model model) {
+        if (before != null) {
+            VirtualPageHeader.put(response, String.format("/post/%s?before=%s", id, before));
+        } else {
+            VirtualPageHeader.put(response, String.format("/post/%s", id));
+        }
         if (requestContext.isBrowserExtension()) {
             return null;
         }
@@ -99,9 +113,31 @@ public class TimelineUiController {
         }
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
 
+        // TODO picked posts
+        before = before != null ? before : Long.MAX_VALUE;
+        List<CommentInfo> comments = Collections.emptyList();
+        PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
+        if (publicPage != null) {
+            if (publicPage.getBeforeMoment() != before) {
+                if (publicPage.getBeforeMoment() != Long.MAX_VALUE) {
+                    return String.format("redirect:/post/%s?before=%d#m%d", id, publicPage.getBeforeMoment(), before);
+                } else {
+                    return String.format("redirect:/post/%s#m%d", id, before);
+                }
+            }
+            comments = commentRepository.findInRange(
+                    requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
+                    .stream()
+                    .map(t -> new CommentInfo(t, false))
+                    .sorted(Comparator.comparing(CommentInfo::getMoment))
+                    .collect(Collectors.toList());
+        }
+
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
         model.addAttribute("posting", new PostingInfo(posting, stories, false));
+        model.addAttribute("comments", comments);
+        model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
 
         return "posting";
     }
