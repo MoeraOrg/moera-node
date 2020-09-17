@@ -18,6 +18,10 @@ public class TimelinePublicPageOperations extends PublicPageOperations {
     @Inject
     private StoryRepository storyRepository;
 
+    public TimelinePublicPageOperations() {
+        super(30, 20);
+    }
+
     public void updatePublicPages(long moment) {
         super.updatePublicPages(null, moment);
     }

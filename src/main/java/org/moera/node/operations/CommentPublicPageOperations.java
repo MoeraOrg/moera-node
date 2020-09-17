@@ -20,6 +20,10 @@ public class CommentPublicPageOperations extends PublicPageOperations {
     @Inject
     private PostingRepository postingRepository;
 
+    public CommentPublicPageOperations() {
+        super(60, 40);
+    }
+
     public void updatePublicPages(UUID postingId, long moment) {
         super.updatePublicPages(postingId, moment);
     }

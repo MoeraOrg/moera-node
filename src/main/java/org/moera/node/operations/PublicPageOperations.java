@@ -17,14 +17,19 @@ import org.springframework.data.domain.Sort;
 
 public abstract class PublicPageOperations {
 
-    private static final int PUBLIC_PAGE_MAX_SIZE = 30;
-    private static final int PUBLIC_PAGE_AVG_SIZE = 20;
-
     @Inject
     protected RequestContext requestContext;
 
     @Inject
     protected PublicPageRepository publicPageRepository;
+
+    protected int publicPageMaxSize;
+    protected int publicPageAvgSize;
+
+    protected PublicPageOperations(int publicPageMaxSize, int publicPageAvgSize) {
+        this.publicPageMaxSize = publicPageMaxSize;
+        this.publicPageAvgSize = publicPageAvgSize;
+    }
 
     protected void updatePublicPages(UUID entryId, long moment) {
         PublicPage firstPage = findByBeforeMoment(entryId, Long.MAX_VALUE);
@@ -41,9 +46,9 @@ public abstract class PublicPageOperations {
         long after = firstPage.getAfterMoment();
         if (moment > after) {
             int count = countInRange(entryId, after, Long.MAX_VALUE);
-            if (count >= PUBLIC_PAGE_MAX_SIZE) {
+            if (count >= publicPageMaxSize) {
                 long median = findMomentsInRange(entryId, after, Long.MAX_VALUE,
-                        PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1,
+                        PageRequest.of(count - publicPageAvgSize, 1,
                                 Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 firstPage.setAfterMoment(median);
@@ -61,9 +66,9 @@ public abstract class PublicPageOperations {
         long end = lastPage.getBeforeMoment();
         if (moment <= end) {
             int count = countInRange(entryId, Long.MIN_VALUE, end);
-            if (count >= PUBLIC_PAGE_MAX_SIZE) {
+            if (count >= publicPageMaxSize) {
                 long median = findMomentsInRange(entryId, Long.MIN_VALUE, end,
-                        PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1,
+                        PageRequest.of(publicPageAvgSize + 1, 1,
                                 Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 lastPage.setBeforeMoment(median);
