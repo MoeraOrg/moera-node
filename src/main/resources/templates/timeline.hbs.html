@@ -49,6 +49,15 @@
         {{/if}}
         <div class="reactions-line">
             {{reactions posting}}
+            {{#if posting.totalComments}}
+                <div class="posting-comments">
+                    <a class="total-comments" href="/post/{{posting.id}}#comments">
+                        <i class="fas fa-comment"></i>&nbsp;
+                        {{posting.totalComments}}
+                        {{#ifieq posting.totalComments 1}}comment{{else}}comments{{/ifieq}}
+                    </a>
+                </div>
+            {{/if}}
         </div>
     </div>
 {{/each}}

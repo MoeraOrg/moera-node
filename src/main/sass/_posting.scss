@@ -76,4 +76,19 @@
         justify-content: space-between;
         align-items: baseline;
     }
+
+    .posting-comments {
+        padding-top: .4rem;
+    }
+
+    .total-comments {
+        text-decoration: none;
+        background-color: var(--comments);
+        border-radius: .8rem;
+        padding: .4rem 1rem;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
 }
