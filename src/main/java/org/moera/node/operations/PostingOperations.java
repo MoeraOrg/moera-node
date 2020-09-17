@@ -52,7 +52,7 @@ public class PostingOperations {
     private StoryOperations storyOperations;
 
     @Inject
-    private PublicPageOperations publicPageOperations;
+    private TimelinePublicPageOperations timelinePublicPageOperations;
 
     public Posting newPosting(PostingText postingText, Consumer<Posting> initializer) {
         if (postingText.getAcceptedReactions() == null) {
@@ -101,7 +101,7 @@ public class PostingOperations {
 
         Story timelineStory = posting.getStory(Feed.TIMELINE);
         if (timelineStory != null) {
-            publicPageOperations.updatePublicPages(timelineStory.getMoment());
+            timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
         }
 
         notifyMentioned(posting.getId(), current, latest);

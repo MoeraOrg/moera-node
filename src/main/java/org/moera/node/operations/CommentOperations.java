@@ -46,6 +46,9 @@ public class CommentOperations {
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
 
+    @Inject
+    private CommentPublicPageOperations commentPublicPageOperations;
+
     private final MomentFinder momentFinder = new MomentFinder();
 
     public Comment newComment(Posting posting, CommentText commentText, Comment repliedTo) {
@@ -107,6 +110,7 @@ public class CommentOperations {
             current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
         }
         comment = commentRepository.saveAndFlush(comment);
+        commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
 
         notifyMentioned(posting, comment.getId(), current, latest);
 

@@ -3,40 +3,35 @@ package org.moera.node.operations;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-
 import javax.inject.Inject;
 
-import org.moera.node.data.Feed;
+import org.moera.node.data.Entry;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.PublicPageRepository;
-import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.ui.PaginationItem;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Component;
 
-@Component
-public class PublicPageOperations {
+public abstract class PublicPageOperations {
 
     private static final int PUBLIC_PAGE_MAX_SIZE = 30;
     private static final int PUBLIC_PAGE_AVG_SIZE = 20;
 
     @Inject
-    private RequestContext requestContext;
+    protected RequestContext requestContext;
 
     @Inject
-    private StoryRepository storyRepository;
+    protected PublicPageRepository publicPageRepository;
 
-    @Inject
-    private PublicPageRepository publicPageRepository;
-
-    public void updatePublicPages(long moment) {
-        UUID nodeId = requestContext.nodeId();
-        PublicPage firstPage = publicPageRepository.findByBeforeMoment(nodeId, Long.MAX_VALUE);
+    protected void updatePublicPages(UUID entryId, long moment) {
+        PublicPage firstPage = findByBeforeMoment(entryId, Long.MAX_VALUE);
         if (firstPage == null) {
             firstPage = new PublicPage();
             firstPage.setNodeId(requestContext.nodeId());
+            firstPage.setEntry(findEntryById(entryId));
             firstPage.setAfterMoment(Long.MIN_VALUE);
             firstPage.setBeforeMoment(Long.MAX_VALUE);
             publicPageRepository.save(firstPage);
@@ -45,15 +40,16 @@ public class PublicPageOperations {
 
         long after = firstPage.getAfterMoment();
         if (moment > after) {
-            int count = storyRepository.countInRange(nodeId, Feed.TIMELINE, after, Long.MAX_VALUE);
+            int count = countInRange(entryId, after, Long.MAX_VALUE);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = storyRepository.findMomentsInRange(nodeId, Feed.TIMELINE, after, Long.MAX_VALUE,
+                long median = findMomentsInRange(entryId, after, Long.MAX_VALUE,
                         PageRequest.of(count - PUBLIC_PAGE_AVG_SIZE, 1,
                                 Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 firstPage.setAfterMoment(median);
                 PublicPage secondPage = new PublicPage();
                 secondPage.setNodeId(requestContext.nodeId());
+                secondPage.setEntry(findEntryById(entryId));
                 secondPage.setAfterMoment(after);
                 secondPage.setBeforeMoment(median);
                 publicPageRepository.save(secondPage);
@@ -61,24 +57,35 @@ public class PublicPageOperations {
             return;
         }
 
-        PublicPage lastPage = publicPageRepository.findByAfterMoment(nodeId, Long.MIN_VALUE);
+        PublicPage lastPage = findByAfterMoment(entryId, Long.MIN_VALUE);
         long end = lastPage.getBeforeMoment();
         if (moment <= end) {
-            int count = storyRepository.countInRange(nodeId, Feed.TIMELINE, Long.MIN_VALUE, end);
+            int count = countInRange(entryId, Long.MIN_VALUE, end);
             if (count >= PUBLIC_PAGE_MAX_SIZE) {
-                long median = storyRepository.findMomentsInRange(nodeId, Feed.TIMELINE, Long.MIN_VALUE, end,
+                long median = findMomentsInRange(entryId, Long.MIN_VALUE, end,
                         PageRequest.of(PUBLIC_PAGE_AVG_SIZE + 1, 1,
                                 Sort.by(Sort.Direction.DESC, "moment")))
                         .getContent().get(0);
                 lastPage.setBeforeMoment(median);
                 PublicPage prevPage = new PublicPage();
                 prevPage.setNodeId(requestContext.nodeId());
+                prevPage.setEntry(findEntryById(entryId));
                 prevPage.setAfterMoment(median);
                 prevPage.setBeforeMoment(end);
                 publicPageRepository.save(prevPage);
             }
         }
     }
+
+    protected abstract Entry findEntryById(UUID entryId);
+
+    protected abstract PublicPage findByBeforeMoment(UUID entryId, long before);
+
+    protected abstract PublicPage findByAfterMoment(UUID entryId, long after);
+
+    protected abstract int countInRange(UUID entryId, long after, long before);
+
+    protected abstract Page<Long> findMomentsInRange(UUID entryId, long after, long before, Pageable pageable);
 
     public List<PaginationItem> createPagination(PublicPage page) {
         if (page == null) {

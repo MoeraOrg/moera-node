@@ -20,7 +20,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
-import org.moera.node.operations.PublicPageOperations;
+import org.moera.node.operations.TimelinePublicPageOperations;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +46,7 @@ public class TimelineUiController {
     private PostingRepository postingRepository;
 
     @Inject
-    private PublicPageOperations publicPageOperations;
+    private TimelinePublicPageOperations timelinePublicPageOperations;
 
     @GetMapping("/timeline")
     public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
@@ -81,7 +81,7 @@ public class TimelineUiController {
         model.addAttribute("pageTitle", titleBuilder.build("Timeline"));
         model.addAttribute("menuIndex", "timeline");
         model.addAttribute("stories", stories);
-        model.addAttribute("pagination", publicPageOperations.createPagination(publicPage));
+        model.addAttribute("pagination", timelinePublicPageOperations.createPagination(publicPage));
 
         return "timeline";
     }
