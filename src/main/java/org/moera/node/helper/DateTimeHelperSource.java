@@ -27,7 +27,19 @@ public class DateTimeHelperSource {
         Util.copyToCalendar(timestamp, calendar);
         String exactDate = new SimpleDateFormat(pattern, Locale.ENGLISH).format(calendar);
         String fromNowOption = options.hash("fromNow");
-        boolean fromNow = fromNowOption != null ? requestContext.getOptions().getBool(fromNowOption) : false;
+        boolean fromNow = false;
+        if (fromNowOption != null) {
+            switch (fromNowOption) {
+                case "true":
+                    fromNow = true;
+                    break;
+                case "false":
+                    fromNow = false;
+                    break;
+                default:
+                    fromNow = requestContext.getOptions().getBool(fromNowOption);
+            }
+        }
         if (!fromNow) {
             return exactDate;
         } else {

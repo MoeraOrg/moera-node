@@ -96,9 +96,10 @@ public abstract class PublicPageOperations {
         if (page == null) {
             return null;
         }
+        UUID entryId = page.getEntry() != null ? page.getEntry().getId() : null;
 
-        int current = publicPageRepository.countNumber(requestContext.nodeId(), page.getBeforeMoment());
-        int last = publicPageRepository.countTotal(requestContext.nodeId());
+        int current = countNumber(entryId, page.getBeforeMoment());
+        int last = countTotal(entryId);
         if (last <= 1) {
             return null;
         }
@@ -106,16 +107,13 @@ public abstract class PublicPageOperations {
         tillLast = Math.min(tillLast, 2);
         int rangeFirst = current + tillLast - 4;
         rangeFirst = Math.max(rangeFirst, 1);
-        PublicPage firstPage = publicPageRepository.findAllBeforeMoment(
-                requestContext.nodeId(), Long.MAX_VALUE,
+        PublicPage firstPage = findAllBeforeMoment(entryId, Long.MAX_VALUE,
                 PageRequest.of(rangeFirst - 1, 1, Sort.Direction.DESC, "beforeMoment"))
                 .getContent().get(0);
-        PublicPage lastPage = publicPageRepository.findAllBeforeMoment(
-                requestContext.nodeId(), Long.MAX_VALUE,
+        PublicPage lastPage = findAllBeforeMoment(entryId, Long.MAX_VALUE,
                 PageRequest.of(last - 1, 1, Sort.Direction.DESC, "beforeMoment"))
                 .getContent().get(0);
-        List<PublicPage> pages = publicPageRepository.findAllBeforeMoment(
-                requestContext.nodeId(), firstPage.getBeforeMoment(),
+        List<PublicPage> pages = findAllBeforeMoment(entryId, firstPage.getBeforeMoment(),
                 PageRequest.of(0, 5, Sort.Direction.DESC, "beforeMoment"))
                 .getContent();
         int rangeLast = rangeFirst + pages.size() - 1;
@@ -164,5 +162,11 @@ public abstract class PublicPageOperations {
         }
         return items;
     }
+
+    protected abstract int countNumber(UUID entryId, long moment);
+
+    protected abstract int countTotal(UUID entryId);
+
+    protected abstract Page<PublicPage> findAllBeforeMoment(UUID entryId, long before, Pageable pageable);
 
 }

@@ -11,7 +11,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CommentInfo {
+public class CommentInfo implements ReactionsInfo {
 
     private String id;
     private String ownerName;
@@ -277,6 +277,7 @@ public class CommentInfo {
         this.signatureVersion = signatureVersion;
     }
 
+    @Override
     public Map<String, String[]> getOperations() {
         return operations;
     }
@@ -301,6 +302,7 @@ public class CommentInfo {
         this.clientReaction = clientReaction;
     }
 
+    @Override
     public ReactionTotalsInfo getReactions() {
         return reactions;
     }

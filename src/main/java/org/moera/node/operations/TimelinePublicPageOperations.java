@@ -51,4 +51,19 @@ public class TimelinePublicPageOperations extends PublicPageOperations {
         return storyRepository.findMomentsInRange(requestContext.nodeId(), Feed.TIMELINE, after, before, pageable);
     }
 
+    @Override
+    protected int countNumber(UUID entryId, long moment) {
+        return publicPageRepository.countNumber(requestContext.nodeId(), moment);
+    }
+
+    @Override
+    protected int countTotal(UUID entryId) {
+        return publicPageRepository.countTotal(requestContext.nodeId());
+    }
+
+    @Override
+    protected Page<PublicPage> findAllBeforeMoment(UUID entryId, long before, Pageable pageable) {
+        return publicPageRepository.findAllBeforeMoment(requestContext.nodeId(), before, pageable);
+    }
+
 }

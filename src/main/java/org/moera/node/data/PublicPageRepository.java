@@ -32,11 +32,20 @@ public interface PublicPageRepository extends JpaRepository<PublicPage, Long> {
     @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id is null and p.beforeMoment <= ?2")
     Page<PublicPage> findAllBeforeMoment(UUID nodeId, long beforeMoment, Pageable pageable);
 
+    @Query("select p from PublicPage p where p.nodeId = ?1 and p.entry.id = ?2 and p.beforeMoment <= ?3")
+    Page<PublicPage> findAllBeforeMomentForEntry(UUID nodeId, UUID entryId, long beforeMoment, Pageable pageable);
+
     // Note: page numbers are counted from 1
     @Query("select count(*) from PublicPage p where p.nodeId = ?1 and p.entry.id is null and p.beforeMoment >= ?2")
     int countNumber(UUID nodeId, long moment);
 
+    @Query("select count(*) from PublicPage p where p.nodeId = ?1 and p.entry.id = ?2 and p.beforeMoment >= ?3")
+    int countNumberForEntry(UUID nodeId, UUID entryId, long moment);
+
     @Query("select count(*) from PublicPage p where p.nodeId = ?1 and p.entry.id is null")
     int countTotal(UUID nodeId);
+
+    @Query("select count(*) from PublicPage p where p.nodeId = ?1 and p.entry.id = ?2")
+    int countTotalForEntry(UUID nodeId, UUID entryId);
 
 }

@@ -18,7 +18,7 @@ import org.moera.node.data.Story;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PostingInfo {
+public class PostingInfo implements ReactionsInfo {
 
     private String id;
     private String revisionId;
@@ -397,6 +397,7 @@ public class PostingInfo {
 
     // end
 
+    @Override
     public Map<String, String[]> getOperations() {
         return operations;
     }
@@ -421,6 +422,7 @@ public class PostingInfo {
         this.clientReaction = clientReaction;
     }
 
+    @Override
     public ReactionTotalsInfo getReactions() {
         return reactions;
     }

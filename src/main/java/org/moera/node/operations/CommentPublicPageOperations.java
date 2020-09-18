@@ -54,4 +54,19 @@ public class CommentPublicPageOperations extends PublicPageOperations {
         return commentRepository.findMomentsInRange(requestContext.nodeId(), entryId, after, before, pageable);
     }
 
+    @Override
+    protected int countNumber(UUID entryId, long moment) {
+        return publicPageRepository.countNumberForEntry(requestContext.nodeId(), entryId, moment);
+    }
+
+    @Override
+    protected int countTotal(UUID entryId) {
+        return publicPageRepository.countTotalForEntry(requestContext.nodeId(), entryId);
+    }
+
+    @Override
+    protected Page<PublicPage> findAllBeforeMoment(UUID entryId, long before, Pageable pageable) {
+        return publicPageRepository.findAllBeforeMomentForEntry(requestContext.nodeId(), entryId, before, pageable);
+    }
+
 }

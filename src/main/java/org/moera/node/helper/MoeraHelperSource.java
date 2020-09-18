@@ -8,9 +8,9 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.node.model.ReactionsInfo;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
@@ -60,9 +60,9 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
-    public CharSequence reactions(PostingInfo postingInfo) {
-        ReactionTotalsInfo totalsInfo = postingInfo.getReactions();
-        boolean totalsVisible = Arrays.asList(postingInfo.getOperations().get("reactions")).contains("public");
+    public CharSequence reactions(ReactionsInfo reactionsInfo) {
+        ReactionTotalsInfo totalsInfo = reactionsInfo.getReactions();
+        boolean totalsVisible = Arrays.asList(reactionsInfo.getOperations().get("reactions")).contains("public");
 
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");

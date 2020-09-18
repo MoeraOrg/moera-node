@@ -131,6 +131,7 @@ public class TimelineUiController {
                     .map(t -> new CommentInfo(t, false))
                     .sorted(Comparator.comparing(CommentInfo::getMoment))
                     .collect(Collectors.toList());
+            // TODO mark single-emoji comments
         }
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
