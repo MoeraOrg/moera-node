@@ -14,6 +14,7 @@ class MoeraSpoilerElement extends HTMLElement {
 				background-color: black;
 				font-weight: bold;
 				border: none;
+                cursor: pointer;
 			}
 		`
         shadowRoot.appendChild(this._button);
@@ -55,4 +56,3 @@ class MoeraSpoilerElement extends HTMLElement {
 }
 
 customElements.define("mr-spoiler", MoeraSpoilerElement);
-
