@@ -50,11 +50,16 @@
         {{#each comments}}
             <a name="comment-{{id}}"></a>
             {{#ifeq id commentId}}
-                {{#assign "klass"}}focused{{/assign}}
+                {{#assign "focusedClass"}}focused{{/assign}}
             {{else}}
-                {{#assign "klass"}}{{/assign}}
+                {{#assign "focusedClass"}}{{/assign}}
             {{/ifeq}}
-            <div class="comment entry {{klass}}">
+            {{#ifeq posting.ownerName ownerName}}
+                {{#assign "tsClass"}}topic-starter{{/assign}}
+            {{else}}
+                {{#assign "tsClass"}}{{/assign}}
+            {{/ifeq}}
+            <div class="comment entry {{focusedClass}} {{tsClass}}">
                 <div class="owner-line">
                     <span class="owner">{{nodename ownerName}}</span>
                     <span class="date">

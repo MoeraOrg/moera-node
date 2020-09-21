@@ -10,6 +10,14 @@
     width: max-content;
     max-width: calc(100% - 2rem);
 
+    .owner {
+        margin-left: .3em;
+    }
+
+    &.topic-starter .owner A {
+        color: var(--node-name-ts);
+    }
+
     .content {
         background-color: var(--comments);
         border-radius: 5px;
