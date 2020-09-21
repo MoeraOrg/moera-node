@@ -19,22 +19,19 @@ public class StatementsHelperSource {
         return "";
     }
 
-    public CharSequence assignIeq(String variableName, Object value1, Object value2, Options options)
-            throws IOException {
+    public CharSequence assignIeq(String variableName, Object value1, Object value2, Options options) {
         boolean condition = HelperUtil.intArg(0, value1) == HelperUtil.intArg(1, value2);
         options.data(variableName, condition);
         return "";
     }
 
-    public CharSequence assignIne(String variableName, Object value1, Object value2, Options options)
-            throws IOException {
+    public CharSequence assignIne(String variableName, Object value1, Object value2, Options options) {
         boolean condition = HelperUtil.intArg(0, value1) != HelperUtil.intArg(1, value2);
         options.data(variableName, condition);
         return "";
     }
 
-    public CharSequence assignDivisive(String variableName, Object value1, Object value2, Options options)
-            throws IOException {
+    public CharSequence assignDivisive(String variableName, Object value1, Object value2, Options options) {
         boolean condition = HelperUtil.intArg(0, value1) % HelperUtil.intArg(1, value2) == 0;
         options.data(variableName, condition);
         return "";
