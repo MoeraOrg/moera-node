@@ -46,48 +46,55 @@
     </div>
 
     <a name="comments"></a>
-    <div id="comments">
-        {{#each comments}}
-            <a name="comment-{{id}}"></a>
-            {{#ifeq id commentId}}
-                {{#assign "focusedClass"}}focused{{/assign}}
-            {{else}}
-                {{#assign "focusedClass"}}{{/assign}}
-            {{/ifeq}}
-            {{#ifeq posting.ownerName ownerName}}
-                {{#assign "tsClass"}}topic-starter{{/assign}}
-            {{else}}
-                {{#assign "tsClass"}}{{/assign}}
-            {{/ifeq}}
-            <div class="comment entry {{focusedClass}} {{tsClass}}">
-                <div class="owner-line">
-                    <span class="owner">{{nodename ownerName}}</span>
-                    <span class="date">
-                        <a href="/post/{{posting.id}}?comment={{id}}">{{cal "dd-MM-yyyy HH:mm" es=createdAt
-                                                                            fromNow="true"}}</a>
-                        {{#ifgt totalRevisions 1}}
-                            (updated {{cal "dd-MM-yyyy HH:mm" es=editedAt fromNow="true"}})
-                        {{/ifgt}}
-                    </span>
+    {{#if comments}}
+        <div id="comments">
+            {{#each comments}}
+                <a name="comment-{{id}}"></a>
+                {{#ifeq id commentId}}
+                    {{#assign "focusedClass"}}focused{{/assign}}
+                {{else}}
+                    {{#assign "focusedClass"}}{{/assign}}
+                {{/ifeq}}
+                {{#ifeq posting.ownerName ownerName}}
+                    {{#assign "tsClass"}}topic-starter{{/assign}}
+                {{else}}
+                    {{#assign "tsClass"}}{{/assign}}
+                {{/ifeq}}
+                <div class="comment entry {{focusedClass}} {{tsClass}}">
+                    <div class="owner-line">
+                        <span class="owner">{{nodename ownerName}}</span>
+                        <span class="date">
+                            <a href="/post/{{posting.id}}?comment={{id}}">{{cal "dd-MM-yyyy HH:mm" es=createdAt
+                                                                                fromNow="true"}}</a>
+                            {{#ifgt totalRevisions 1}}
+                                (updated {{cal "dd-MM-yyyy HH:mm" es=editedAt fromNow="true"}})
+                            {{/ifgt}}
+                        </span>
+                    </div>
+                    <div class="content">
+                        {{#if repliedTo}}
+                            <div class="replied-to">
+                                <a href="/post/{{posting.id}}?comment={{repliedTo.id}}">
+                                    <i class="icon fas fa-reply"></i>&nbsp;
+                                    {{nodename repliedTo.name linked=false}}
+                                    <span class="heading">{{repliedTo.heading}}</span>
+                                </a>
+                            </div>
+                        {{/if}}
+                        {{{body.text}}}
+                    </div>
+                    <div class="reactions-line">
+                        {{reactions this}}
+                    </div>
                 </div>
-                <div class="content">
-                    {{#if repliedTo}}
-                        <div class="replied-to">
-                            <a href="/post/{{posting.id}}?comment={{repliedTo.id}}">
-                                <i class="icon fas fa-reply"></i>&nbsp;
-                                {{nodename repliedTo.name linked=false}}
-                                <span class="heading">{{repliedTo.heading}}</span>
-                            </a>
-                        </div>
-                    {{/if}}
-                    {{{body.text}}}
-                </div>
-                <div class="reactions-line">
-                    {{reactions this}}
-                </div>
-            </div>
-        {{/each}}
-    </div>
+            {{/each}}
+        </div>
+    {{/if}}
+    {{#if commentsHref}}
+        <div id="comments-original">
+            See comments under <a href="{{commentsHref}}">original post</a>
+        </div>
+    {{/if}}
 </div>
 
 {{#if pagination}}

@@ -25,6 +25,7 @@ import org.moera.node.global.VirtualPage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
 import org.moera.node.util.VirtualPageHeader;
@@ -101,33 +102,40 @@ public class TimelineUiController {
         if (posting == null) {
             throw new PageNotFoundException();
         }
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
-
-        // TODO picked posts
-        before = comment != null ? comment.getMoment() : before;
-        before = before != null ? before : Long.MAX_VALUE;
-        List<CommentInfo> comments = Collections.emptyList();
-        PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
-        if (publicPage != null) {
-            comments = commentRepository.findInRange(
-                    requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
-                    .stream()
-                    .map(t -> new CommentInfo(t, false))
-                    .sorted(Comparator.comparing(CommentInfo::getMoment))
-                    .collect(Collectors.toList());
-            // TODO mark single-emoji comments
-        }
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
-        if (commentId != null) {
-            model.addAttribute("anchor", "comment-" + commentId);
-        }
         model.addAttribute("posting", new PostingInfo(posting, stories, false));
-        model.addAttribute("comments", comments);
-        model.addAttribute("commentId", Objects.toString(commentId, null));
-        model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
+
+        if (posting.isOriginal()) {
+            Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                    .orElse(null);
+            before = comment != null ? comment.getMoment() : before;
+            before = before != null ? before : Long.MAX_VALUE;
+            List<CommentInfo> comments = Collections.emptyList();
+            PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
+            if (publicPage != null) {
+                comments = commentRepository.findInRange(
+                        requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
+                        .stream()
+                        .map(t -> new CommentInfo(t, false))
+                        .sorted(Comparator.comparing(CommentInfo::getMoment))
+                        .collect(Collectors.toList());
+            }
+
+            if (commentId != null) {
+                model.addAttribute("anchor", "comment-" + commentId);
+            }
+            model.addAttribute("comments", comments);
+            model.addAttribute("commentId", Objects.toString(commentId, null));
+            model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
+        } else {
+            String location = commentId != null
+                    ? String.format("/post/%s?comment=%s", posting.getReceiverEntryId(), commentId)
+                    : String.format("/post/%s", posting.getReceiverEntryId());
+            model.addAttribute("commentsHref", NamingCache.getRedirector(posting.getReceiverName(), location));
+        }
 
         return "posting";
     }

@@ -203,8 +203,12 @@ public class NamingCache {
         }
     }
 
+    public static String getRedirector(String name, String location) {
+        return "/moera/gotoname?name=" + Util.ue(name) + (location != null ? "&location=" + Util.ue(location) : "");
+    }
+
     public static String getRedirector(String name) {
-        return "/moera/gotoname?name=" + Util.ue(name);
+        return getRedirector(name, null);
     }
 
     @Scheduled(fixedDelayString = "PT1M")
