@@ -27,6 +27,17 @@
         <script src="/js/bootstrap.bundle.min.js"></script>
         <script src="/js/moera-spoiler-element.js"></script>
         <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+        {{#if anchor}}
+            <script>
+                $(function() {
+                    const element = $("a[name={{anchor}}]")[0];
+                    if (element != null) {
+                        element.scrollIntoView();
+                        window.scrollBy(0, -$(".navbar-moera").height());
+                    }
+                })
+            </script>
+        {{/if}}
         <title>{{pageTitle}}</title>
     </head>
     <body>

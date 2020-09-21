@@ -19,6 +19,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
+import org.moera.node.global.VirtualPage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
@@ -58,27 +59,12 @@ public class TimelineUiController {
     private CommentPublicPageOperations commentPublicPageOperations;
 
     @GetMapping("/timeline")
+    @VirtualPage
     public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
-        if (before != null) {
-            VirtualPageHeader.put(response, String.format("/timeline?before=%d", before));
-        } else {
-            VirtualPageHeader.put(response, "/timeline");
-        }
-        if (requestContext.isBrowserExtension()) {
-            return null;
-        }
-
         before = before != null ? before : Long.MAX_VALUE;
         List<StoryInfo> stories = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContaining(requestContext.nodeId(), before);
         if (publicPage != null) {
-            if (publicPage.getBeforeMoment() != before) {
-                if (publicPage.getBeforeMoment() != Long.MAX_VALUE) {
-                    return String.format("redirect:/timeline?before=%d#m%d", publicPage.getBeforeMoment(), before);
-                } else {
-                    return String.format("redirect:/timeline#m%d", before);
-                }
-            }
             stories = storyRepository.findInRange(
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
@@ -89,6 +75,7 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build("Timeline"));
         model.addAttribute("menuIndex", "timeline");
+        model.addAttribute("anchor", "m" + before);
         model.addAttribute("stories", stories);
         model.addAttribute("pagination", timelinePublicPageOperations.createPagination(publicPage));
 
