@@ -21,6 +21,39 @@
         P:last-child {
             margin-bottom: 0;
         }
+
+        .replied-to {
+            margin-bottom: .3rem;
+            font-size: 90%;
+            border-left: 3px var(--gray-light) solid;
+            padding-left: .5em;
+
+            A {
+                text-decoration: none;
+            }
+
+            .icon {
+                color: var(--gray-medium);
+            }
+
+            .node-name {
+                color: var(--gray);
+                font-weight: bold;
+                position: relative;
+                top: -.1em;
+            }
+
+            .heading {
+                color: var(--gray);
+                position: relative;
+                top: -.1em;
+                margin-left: .3em;
+            }
+
+            A:hover .heading {
+                text-decoration: underline;
+            }
+        }
     }
 
     &.focused .content {

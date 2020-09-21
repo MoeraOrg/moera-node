@@ -65,7 +65,18 @@
                         {{/ifgt}}
                     </span>
                 </div>
-                <div class="content">{{{body.text}}}</div>
+                <div class="content">
+                    {{#if repliedTo}}
+                        <div class="replied-to">
+                            <a href="/post/{{posting.id}}?comment={{repliedTo.id}}">
+                                <i class="icon fas fa-reply"></i>&nbsp;
+                                {{nodename repliedTo.name linked=false}}
+                                <span class="heading">{{repliedTo.heading}}</span>
+                            </a>
+                        </div>
+                    {{/if}}
+                    {{{body.text}}}
+                </div>
                 <div class="reactions-line">
                     {{reactions this}}
                 </div>
