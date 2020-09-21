@@ -48,12 +48,18 @@
     <a name="comments"></a>
     <div id="comments">
         {{#each comments}}
-            <a name="m{{moment}}"></a>
-            <div class="comment entry">
+            <a name="comment-{{id}}"></a>
+            {{#ifeq id commentId}}
+                {{#assign "klass"}}focused{{/assign}}
+            {{else}}
+                {{#assign "klass"}}{{/assign}}
+            {{/ifeq}}
+            <div class="comment entry {{klass}}">
                 <div class="owner-line">
                     <span class="owner">{{nodename ownerName}}</span>
                     <span class="date">
-                        {{cal "dd-MM-yyyy HH:mm" es=createdAt fromNow="true"}}
+                        <a href="/post/{{posting.id}}?comment={{id}}">{{cal "dd-MM-yyyy HH:mm" es=createdAt
+                                                                            fromNow="true"}}</a>
                         {{#ifgt totalRevisions 1}}
                             (updated {{cal "dd-MM-yyyy HH:mm" es=editedAt fromNow="true"}})
                         {{/ifgt}}

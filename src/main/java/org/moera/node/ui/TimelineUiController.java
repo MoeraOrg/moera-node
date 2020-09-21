@@ -3,11 +3,13 @@ package org.moera.node.ui;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
@@ -84,9 +86,10 @@ public class TimelineUiController {
 
     @GetMapping("/post/{id}")
     public String posting(@PathVariable UUID id, @RequestParam(required = false) Long before,
+                          @RequestParam(name = "comment", required = false) UUID commentId,
                           HttpServletResponse response, Model model) {
-        if (before != null) {
-            VirtualPageHeader.put(response, String.format("/post/%s?before=%s", id, before));
+        if (commentId != null) {
+            VirtualPageHeader.put(response, String.format("/post/%s?comment=%s", id, commentId));
         } else {
             VirtualPageHeader.put(response, String.format("/post/%s", id));
         }
@@ -98,20 +101,15 @@ public class TimelineUiController {
         if (posting == null) {
             throw new PageNotFoundException();
         }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
 
         // TODO picked posts
+        before = comment != null ? comment.getMoment() : before;
         before = before != null ? before : Long.MAX_VALUE;
         List<CommentInfo> comments = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
         if (publicPage != null) {
-            if (publicPage.getBeforeMoment() != before) {
-                if (publicPage.getBeforeMoment() != Long.MAX_VALUE) {
-                    return String.format("redirect:/post/%s?before=%d#m%d", id, publicPage.getBeforeMoment(), before);
-                } else {
-                    return String.format("redirect:/post/%s#m%d", id, before);
-                }
-            }
             comments = commentRepository.findInRange(
                     requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
@@ -123,8 +121,12 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
+        if (commentId != null) {
+            model.addAttribute("anchor", "comment-" + commentId);
+        }
         model.addAttribute("posting", new PostingInfo(posting, stories, false));
         model.addAttribute("comments", comments);
+        model.addAttribute("commentId", Objects.toString(commentId, null));
         model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
 
         return "posting";
