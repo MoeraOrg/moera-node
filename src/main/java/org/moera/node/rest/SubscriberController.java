@@ -21,6 +21,7 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
+import org.moera.node.instant.SubscriberInstants;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -31,7 +32,6 @@ import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
-import org.moera.node.operations.InstantOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ public class SubscriberController {
     private PostingRepository postingRepository;
 
     @Inject
-    private InstantOperations instantOperations;
+    private SubscriberInstants subscriberInstants;
 
     @GetMapping
     public List<SubscriberInfo> getAll(@RequestParam(required = false) String nodeName,
@@ -153,7 +153,7 @@ public class SubscriberController {
             }
         }
         subscriber = subscriberRepository.save(subscriber);
-        instantOperations.subscriberAdded(subscriber);
+        subscriberInstants.added(subscriber);
         requestContext.send(new SubscriberAddedEvent(subscriber));
 
         return new SubscriberInfo(subscriber);
@@ -202,7 +202,7 @@ public class SubscriberController {
         }
 
         subscriberRepository.delete(subscriber);
-        instantOperations.subscriberDeleted(subscriber);
+        subscriberInstants.deleted(subscriber);
         requestContext.send(new SubscriberDeletedEvent(subscriber));
 
         return Result.OK;

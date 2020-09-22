@@ -19,6 +19,7 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.instant.ReactionInstants;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -30,7 +31,6 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.notification.send.Directions;
-import org.moera.node.operations.InstantOperations;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.Util;
@@ -73,7 +73,7 @@ public class PostingReactionController {
     private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
-    private InstantOperations instantOperations;
+    private ReactionInstants reactionInstants;
 
     @PostMapping
     @Transactional
@@ -104,8 +104,8 @@ public class PostingReactionController {
 
     private ResponseEntity<ReactionCreated> postToOriginal(ReactionDescription reactionDescription, Posting posting) {
         Reaction reaction = reactionOperations.post(reactionDescription, posting,
-                instantOperations::reactionDeleted,
-                r -> instantOperations.reactionAdded(posting, r));
+                reactionInstants::deleted,
+                r -> reactionInstants.added(posting, r));
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
 
@@ -201,7 +201,7 @@ public class PostingReactionController {
 
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(postingId);
-        instantOperations.reactionsDeletedAll(postingId);
+        reactionInstants.deletedAll(postingId);
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
         var totalsInfo = reactionTotalOperations.getInfo(posting);
@@ -238,7 +238,7 @@ public class PostingReactionController {
     }
 
     private ReactionTotalsInfo deleteFromOriginal(String ownerName, Posting posting) {
-        reactionOperations.delete(ownerName, posting, instantOperations::reactionDeleted);
+        reactionOperations.delete(ownerName, posting, reactionInstants::deleted);
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
         var totalsInfo = reactionTotalOperations.getInfo(posting);
