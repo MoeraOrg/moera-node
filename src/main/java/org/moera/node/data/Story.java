@@ -4,13 +4,12 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -27,13 +26,15 @@ public class Story {
     @NotNull
     private UUID nodeId;
 
-    @NotNull
     @Size(max = 63)
-    private String feedName = "timeline";
+    private String feedName;
 
     @NotNull
     @Enumerated
     private StoryType storyType = StoryType.POSTING_ADDED;
+
+    @ManyToOne
+    private Story parent;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -63,27 +64,25 @@ public class Story {
     private String remoteNodeName;
 
     @Size(max = 40)
-    private String remoteEntryId;
+    private String remotePostingId;
+
+    @Size(max = 40)
+    private String remoteCommentId;
 
     @ManyToOne
     private Entry entry;
 
-    @ManyToMany
-    @JoinTable(
-            name = "stories_reactions",
-            joinColumns = @JoinColumn(name = "story_id"),
-            inverseJoinColumns = @JoinColumn(name = "reaction_id"))
-    private Set<Reaction> reactions = new HashSet<>();
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
+    private Set<Story> substories = new HashSet<>();
 
     public Story() {
     }
 
-    public Story(UUID id, UUID nodeId, StoryType storyType, Entry entry) {
+    public Story(UUID id, UUID nodeId, StoryType storyType) {
         this.id = id;
         this.nodeId = nodeId;
         this.storyType = storyType;
         this.trackingId = UUID.randomUUID();
-        this.entry = entry;
     }
 
     public UUID getId() {
@@ -116,6 +115,14 @@ public class Story {
 
     public void setStoryType(StoryType storyType) {
         this.storyType = storyType;
+    }
+
+    public Story getParent() {
+        return parent;
+    }
+
+    public void setParent(Story parent) {
+        this.parent = parent;
     }
 
     public Timestamp getCreatedAt() {
@@ -190,12 +197,20 @@ public class Story {
         this.remoteNodeName = remoteNodeName;
     }
 
-    public String getRemoteEntryId() {
-        return remoteEntryId;
+    public String getRemotePostingId() {
+        return remotePostingId;
     }
 
-    public void setRemoteEntryId(String remoteEntryId) {
-        this.remoteEntryId = remoteEntryId;
+    public void setRemotePostingId(String remotePostingId) {
+        this.remotePostingId = remotePostingId;
+    }
+
+    public String getRemoteCommentId() {
+        return remoteCommentId;
+    }
+
+    public void setRemoteCommentId(String remoteCommentId) {
+        this.remoteCommentId = remoteCommentId;
     }
 
     public Entry getEntry() {
@@ -206,22 +221,22 @@ public class Story {
         this.entry = entry;
     }
 
-    public Set<Reaction> getReactions() {
-        return reactions;
+    public Set<Story> getSubstories() {
+        return substories;
     }
 
-    public void setReactions(Set<Reaction> reactions) {
-        this.reactions = reactions;
+    public void setSubstories(Set<Story> substories) {
+        this.substories = substories;
     }
 
-    public void addReaction(Reaction reaction) {
-        reactions.add(reaction);
-        reaction.getStories().add(this);
+    public void addSubstory(Story substory) {
+        substories.add(substory);
+        substory.setParent(this);
     }
 
-    public void removeReaction(Reaction reaction) {
-        reactions.removeIf(r -> r.getId().equals(reaction.getId()));
-        reaction.getStories().removeIf(t -> t.getId().equals(id));
+    public void removeSubstory(Story substory) {
+        substories.removeIf(sr -> sr.getId().equals(substory.getId()));
+        substory.setParent(null);
     }
 
 }

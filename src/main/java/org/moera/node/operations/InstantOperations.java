@@ -21,11 +21,11 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
-import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
 import org.moera.node.util.Util;
@@ -59,17 +59,27 @@ public class InstantOperations {
 
         StoryType storyType = reaction.isNegative()
                 ? StoryType.REACTION_ADDED_NEGATIVE : StoryType.REACTION_ADDED_POSITIVE;
+
         boolean isNewStory = false;
-        Story story = storyRepository.findByFeedAndTypeAndEntryId(
+        Story story = storyRepository.findFullByFeedAndTypeAndEntryId(
                 requestContext.nodeId(), Feed.INSTANT, storyType, posting.getId()).stream().findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(REACTION_GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
-            story = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType, posting);
+            story = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
+            story.setEntry(posting);
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
-        story.addReaction(reaction);
+
+        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType);
+        substory.setEntry(posting);
+        substory.setRemoteNodeName(reaction.getOwnerName());
+        substory.setSummary(buildReactionSummary(reaction));
+        substory.setMoment(0L);
+        substory = storyRepository.save(substory);
+        story.addSubstory(substory);
+
         reactionsUpdated(story, isNewStory, true);
         feedStatusUpdated();
     }
@@ -81,9 +91,19 @@ public class InstantOperations {
 
         StoryType storyType = reaction.isNegative()
                 ? StoryType.REACTION_ADDED_NEGATIVE : StoryType.REACTION_ADDED_POSITIVE;
-        reaction.getStories().stream()
-                .filter(t -> t.getStoryType() == storyType)
-                .forEach(t -> reactionsUpdated(t, false, false));
+        List<Story> stories = storyRepository.findFullByFeedAndTypeAndEntryId(
+                requestContext.nodeId(), Feed.INSTANT, storyType, reaction.getEntryRevision().getEntry().getId());
+        for (Story story : stories) {
+            Story substory = story.getSubstories().stream()
+                    .filter(t -> t.getRemoteNodeName().equals(reaction.getOwnerName()))
+                    .findAny()
+                    .orElse(null);
+            if (substory != null) {
+                story.removeSubstory(substory);
+                storyRepository.delete(substory);
+                reactionsUpdated(story, false, false);
+            }
+        }
         feedStatusUpdated();
     }
 
@@ -96,11 +116,10 @@ public class InstantOperations {
     }
 
     private void reactionsUpdated(Story story, boolean isNew, boolean isAdded) {
-        List<Reaction> reactions = story.getReactions().stream()
-                .filter(r -> r.getDeletedAt() == null)
-                .sorted(Comparator.comparing(Reaction::getCreatedAt))
+        List<Story> stories = story.getSubstories().stream()
+                .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
                 .collect(Collectors.toList());
-        if (reactions.size() == 0) {
+        if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
                 requestContext.send(new StoryDeletedEvent(story, true));
@@ -108,7 +127,7 @@ public class InstantOperations {
             return;
         }
 
-        story.setSummary(buildReactionAddedSummary(story, reactions));
+        story.setSummary(buildReactionAddedSummary(story, stories));
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
@@ -118,17 +137,17 @@ public class InstantOperations {
         requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
-    private String buildReactionAddedSummary(Story story, List<Reaction> reactions) {
+    private String buildReactionAddedSummary(Story story, List<Story> stories) {
         StringBuilder buf = new StringBuilder();
-        appendReaction(buf, reactions.get(0));
-        if (reactions.size() > 1) {
-            buf.append(reactions.size() == 2 ? " and " : ", ");
-            appendReaction(buf, reactions.get(1));
+        buf.append(stories.get(0).getSummary());
+        if (stories.size() > 1) {
+            buf.append(stories.size() == 2 ? " and " : ", ");
+            buf.append(stories.get(1).getSummary());
         }
-        if (reactions.size() > 2) {
+        if (stories.size() > 2) {
             buf.append(" and ");
-            buf.append(reactions.size() - 2);
-            buf.append(reactions.size() == 3 ? " other" : " others");
+            buf.append(stories.size() - 2);
+            buf.append(stories.size() == 3 ? " other" : " others");
         }
         buf.append(story.getStoryType() == StoryType.REACTION_ADDED_POSITIVE ? " supported" : " opposed");
         buf.append(" your post \"");
@@ -137,10 +156,12 @@ public class InstantOperations {
         return buf.toString();
     }
 
-    private static void appendReaction(StringBuilder buf, Reaction reaction) {
+    private static String buildReactionSummary(Reaction reaction) {
+        StringBuilder buf = new StringBuilder();
         buf.append(Character.toChars(reaction.getEmoji()));
         buf.append(' ');
         buf.append(formatNodeName(reaction.getOwnerName()));
+        return buf.toString();
     }
 
     public void mentionPostingAdded(String remoteNodeName, String remotePostingId, String remotePostingHeading) {
@@ -148,10 +169,10 @@ public class InstantOperations {
         if (story != null) {
             return;
         }
-        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.MENTION_POSTING, null);
+        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.MENTION_POSTING);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
-        story.setRemoteEntryId(remotePostingId);
+        story.setRemotePostingId(remotePostingId);
         story.setSummary(buildMentionPostingSummary(story, remotePostingHeading));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
@@ -170,7 +191,7 @@ public class InstantOperations {
     }
 
     private Story findMentionPostingStory(String remoteNodeName, String remotePostingId) {
-        return storyRepository.findByRemoteEntryId(requestContext.nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING,
+        return storyRepository.findByRemotePostingId(requestContext.nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING,
                 remoteNodeName, remotePostingId).stream().findFirst().orElse(null);
     }
 
@@ -190,7 +211,7 @@ public class InstantOperations {
             requestContext.send(new StoryDeletedEvent(story, true));
         }
 
-        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.SUBSCRIBER_ADDED, null);
+        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.SUBSCRIBER_ADDED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
         story.setSummary(buildSubscriberAddedSummary(subscriber));
@@ -217,7 +238,7 @@ public class InstantOperations {
             requestContext.send(new StoryDeletedEvent(story, true));
         }
 
-        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.SUBSCRIBER_DELETED, null);
+        story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.SUBSCRIBER_DELETED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
         story.setSummary(buildSubscriberDeletedSummary(subscriber));

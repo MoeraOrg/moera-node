@@ -65,7 +65,7 @@ public class StoryInfo {
 
             case MENTION_POSTING:
                 info.setRemoteNodeName(story.getRemoteNodeName());
-                info.setRemotePostingId(story.getRemoteEntryId());
+                info.setRemotePostingId(story.getRemotePostingId());
                 break;
 
             case SUBSCRIBER_ADDED:

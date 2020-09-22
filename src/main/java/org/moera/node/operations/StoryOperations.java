@@ -13,12 +13,12 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.event.Event;
+import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
@@ -57,7 +57,9 @@ public class StoryOperations {
         }
         Set<String> feedNames = new HashSet<>();
         for (StoryAttributes publication : publications) {
-            Story story = new Story(UUID.randomUUID(), nodeId, StoryType.POSTING_ADDED, posting);
+            Story story = new Story(UUID.randomUUID(), nodeId, StoryType.POSTING_ADDED);
+            story.setEntry(posting);
+            story.setFeedName(Feed.TIMELINE);
             publication.toStory(story);
             updateMoment(story, nodeId);
             story = storyRepository.saveAndFlush(story);

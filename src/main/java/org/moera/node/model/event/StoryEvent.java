@@ -49,7 +49,7 @@ public class StoryEvent extends Event {
             trackingId = story.getTrackingId().toString();
         }
         remoteNodeName = story.getRemoteNodeName();
-        remotePostingId = story.getRemoteEntryId();
+        remotePostingId = story.getRemotePostingId();
         summary = story.getSummary();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"admin"});

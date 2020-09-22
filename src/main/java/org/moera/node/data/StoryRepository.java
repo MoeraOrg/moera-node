@@ -21,9 +21,10 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
             + " and s.entry.id = ?4")
     int countByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
-    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4"
+    @Query("select s from Story s left join fetch s.substories"
+            + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4"
             + " order by s.moment desc")
-    List<Story> findByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
+    List<Story> findFullByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
     @Query("select s from Story s where s.nodeId = ?1 and s.entry.id = ?2 order by s.moment desc")
     List<Story> findByEntryId(UUID nodeId, UUID entryId);
@@ -75,9 +76,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     List<Story> findByRemoteNodeName(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName);
 
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
-            + " and s.remoteNodeName = ?4 and s.remoteEntryId = ?5 order by s.moment desc")
-    List<Story> findByRemoteEntryId(UUID nodeId, String feedName, StoryType storyType,
-                                    String remoteNodeName, String remoteEntryId);
+            + " and s.remoteNodeName = ?4 and s.remotePostingId = ?5 order by s.moment desc")
+    List<Story> findByRemotePostingId(UUID nodeId, String feedName, StoryType storyType,
+                                      String remoteNodeName, String remotePostingId);
 
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.viewed = false and s.createdAt < ?3")
     List<Story> findExpired(UUID nodeId, String feedName, Timestamp createdBefore);
