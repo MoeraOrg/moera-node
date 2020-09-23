@@ -63,11 +63,17 @@ public class Story {
     @Size(max = 63)
     private String remoteNodeName;
 
+    @Size(max = 63)
+    private String remoteOwnerName;
+
     @Size(max = 40)
     private String remotePostingId;
 
     @Size(max = 40)
     private String remoteCommentId;
+
+    @Size(max = 255)
+    private String remoteHeading;
 
     @ManyToOne
     private Entry entry;
@@ -197,6 +203,14 @@ public class Story {
         this.remoteNodeName = remoteNodeName;
     }
 
+    public String getRemoteOwnerName() {
+        return remoteOwnerName;
+    }
+
+    public void setRemoteOwnerName(String remoteOwnerName) {
+        this.remoteOwnerName = remoteOwnerName;
+    }
+
     public String getRemotePostingId() {
         return remotePostingId;
     }
@@ -211,6 +225,14 @@ public class Story {
 
     public void setRemoteCommentId(String remoteCommentId) {
         this.remoteCommentId = remoteCommentId;
+    }
+
+    public String getRemoteHeading() {
+        return remoteHeading;
+    }
+
+    public void setRemoteHeading(String remoteHeading) {
+        this.remoteHeading = remoteHeading;
     }
 
     public Entry getEntry() {

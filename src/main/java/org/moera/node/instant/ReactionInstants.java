@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -63,7 +64,7 @@ public class ReactionInstants {
 
         Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType);
         substory.setEntry(posting);
-        substory.setRemoteNodeName(reaction.getOwnerName());
+        substory.setRemoteOwnerName(reaction.getOwnerName());
         substory.setSummary(buildSummary(reaction));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
@@ -84,7 +85,7 @@ public class ReactionInstants {
                 requestContext.nodeId(), Feed.INSTANT, storyType, reaction.getEntryRevision().getEntry().getId());
         for (Story story : stories) {
             Story substory = story.getSubstories().stream()
-                    .filter(t -> t.getRemoteNodeName().equals(reaction.getOwnerName()))
+                    .filter(t -> Objects.equals(t.getRemoteOwnerName(), reaction.getOwnerName()))
                     .findAny()
                     .orElse(null);
             if (substory != null) {
