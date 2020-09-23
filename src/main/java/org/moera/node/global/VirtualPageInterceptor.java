@@ -35,17 +35,10 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
         VirtualPageHeader.put(response, virtualPage.value());
 
         if (requestContext.isBrowserExtension()) {
-            response.setContentType("text/html; charset=utf-8");
-            Writer out = new OutputStreamWriter(response.getOutputStream());
-            out.write("<!DOCTYPE html>\n"
-                    + "<html>\n"
-                    + "    <head>\n"
-                    + "        <meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>\n"
-                    + "        <title>Moera</title>\n"
-                    + "    </head>\n"
-                    + "    <body></body>\n"
-                    + "</html>\n");
-            out.close();
+            response.setContentType("text/plain; charset=utf-8");
+            try (Writer outputStream = new OutputStreamWriter(response.getOutputStream())) {
+                outputStream.write("Moera client is loading...");
+            }
             return false;
         }
 
