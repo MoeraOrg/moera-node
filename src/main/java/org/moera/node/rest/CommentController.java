@@ -39,6 +39,7 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.instant.CommentInstants;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
@@ -127,6 +128,9 @@ public class CommentController {
     @Inject
     private NotificationSenderPool notificationSenderPool;
 
+    @Inject
+    private CommentInstants commentInstants;
+
     @PostMapping
     @Transactional
     public ResponseEntity<CommentCreated> post(@PathVariable UUID postingId,
@@ -158,6 +162,10 @@ public class CommentController {
                     revision -> commentText.toEntryRevision(revision, digest, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
+        }
+
+        if (comment.getCurrentRevision().getSignature() != null) {
+            commentInstants.added(comment);
         }
 
         requestContext.send(new CommentAddedEvent(comment));
@@ -200,6 +208,10 @@ public class CommentController {
                     revision -> commentText.toEntryRevision(revision, digest, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
+        }
+
+        if (comment.getCurrentRevision().getSignature() != null) {
+            commentInstants.added(comment);
         }
 
         requestContext.send(new CommentUpdatedEvent(comment));
@@ -384,6 +396,7 @@ public class CommentController {
         }
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
+        commentInstants.deleted(comment);
         requestContext.send(new CommentDeletedEvent(comment));
 
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());

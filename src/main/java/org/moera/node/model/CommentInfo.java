@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
@@ -42,6 +43,10 @@ public class CommentInfo implements ReactionsInfo {
     private ReactionTotalsInfo reactions;
 
     public CommentInfo() {
+    }
+
+    public CommentInfo(UUID id) {
+        this.id = id.toString();
     }
 
     public CommentInfo(Comment comment, boolean isAdminOrOwner) {
