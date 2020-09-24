@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 public class MentionsInlineParserExtension implements InlineParserExtension {
 
     private static final Pattern LATIN_CHARS = Pattern.compile("^[A-Za-z]+$");
+    private static final String END_PUNCTUATION = ".,:;!?";
 
     public MentionsInlineParserExtension(LightInlineParser inlineParser) {
     }
@@ -42,6 +43,9 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
         int i = nameStartingSequence;
         while (i < inputText.length() && Rules.isNameCharacterValid(inputText.charAt(i))) {
             i++;
+        }
+        if (i > nameStartingSequence && END_PUNCTUATION.indexOf(inputText.charAt(i - 1)) >= 0) {
+            i--;
         }
         if (i - nameStartingSequence == 0) {
             return false; // Name is empty
