@@ -26,6 +26,8 @@ import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.notification.MentionCommentAddedNotification;
 import org.moera.node.model.notification.MentionCommentDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
+import org.moera.node.model.notification.ReplyCommentAddedNotification;
+import org.moera.node.model.notification.ReplyCommentDeletedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.MomentFinder;
@@ -112,6 +114,7 @@ public class CommentOperations {
         }
         comment = commentRepository.saveAndFlush(comment);
         commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
+        notifyReplyAdded(posting, comment);
         notifyMentioned(posting, comment.getId(), comment.getOwnerName(), current, latest);
 
         return comment;
@@ -153,6 +156,26 @@ public class CommentOperations {
         return revision;
     }
 
+    private void notifyReplyAdded(Posting posting, Comment comment) {
+        if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null
+                || comment.getRevisions().size() > 1) {
+            return;
+        }
+        requestContext.send(Directions.single(comment.getRepliedToName()),
+                new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
+                        posting.getCurrentRevision().getHeading(), comment.getOwnerName(),
+                        comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
+    }
+
+    private void notifyReplyDeleted(Posting posting, Comment comment) {
+        if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null) {
+            return;
+        }
+        requestContext.send(Directions.single(comment.getRepliedToName()),
+                new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
+                        comment.getOwnerName()));
+    }
+
     private void notifyMentioned(Posting posting, UUID commentId, String ownerName, EntryRevision current,
                                  EntryRevision latest) {
         Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
@@ -189,6 +212,7 @@ public class CommentOperations {
         }
 
         Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
+        notifyReplyDeleted(comment.getPosting(), comment);
         notifyMentioned(comment.getPosting(), comment.getId(), requestContext.getClientName(), null,
                 Collections.emptySet(), latestMentions);
 

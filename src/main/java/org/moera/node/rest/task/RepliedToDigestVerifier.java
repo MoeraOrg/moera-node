@@ -3,7 +3,6 @@ package org.moera.node.rest.task;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -85,8 +84,9 @@ public class RepliedToDigestVerifier {
         }
 
         visited.add(id);
+        String repliedToId = commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getId() : null;
         byte[] repliedToDigest = getRepliedToDigest(targetNodeName, postingInfo, postingRevisions, depth + 1,
-                visited, Objects.toString(commentInfo.getRepliedTo(), null), commentInfo.getCreatedAt());
+                visited, repliedToId, commentInfo.getCreatedAt());
 
         PostingRevisionInfo postingRevisionInfo = getRevisionByTimestamp(postingRevisions, repliedAt);
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(

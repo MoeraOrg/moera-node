@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
-import org.moera.node.data.Comment;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -23,7 +22,7 @@ import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CommentInstants {
+public class ReplyCommentInstants {
 
     private static final Duration GROUP_PERIOD = Duration.of(6, ChronoUnit.HOURS);
 
@@ -39,34 +38,39 @@ public class CommentInstants {
     @Inject
     private InstantOperations instantOperations;
 
-    public void added(Comment comment) {
-        if (comment.getOwnerName().equals(requestContext.nodeName())
-                // 'reply-comment' instant is expected to be created for such a comment
-                || comment.getRepliedTo() != null && comment.getRepliedToName().equals(requestContext.nodeName())) {
+    public void added(String nodeName, String postingId, String commentId, String repliedToId, String commentOwnerName,
+                      String postingHeading, String repliedToHeading) {
+        if (commentOwnerName.equals(requestContext.nodeName())) {
             return;
         }
 
-        boolean alreadyReported = !storyRepository.findSubsByTypeAndEntryId(requestContext.nodeId(),
-                StoryType.COMMENT_ADDED, comment.getId()).isEmpty();
+        boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(requestContext.nodeId(),
+                StoryType.REPLY_COMMENT, nodeName, postingId, commentId).isEmpty();
         if (alreadyReported) {
             return;
         }
 
         boolean isNewStory = false;
-        Story story = storyRepository.findFullByFeedAndTypeAndEntryId(requestContext.nodeId(), Feed.INSTANT,
-                StoryType.COMMENT_ADDED, comment.getPosting().getId()).stream().findFirst().orElse(null);
+        Story story = storyRepository.findFullByRemotePostingAndRepliedToId(requestContext.nodeId(), Feed.INSTANT,
+                StoryType.REPLY_COMMENT, nodeName, postingId, repliedToId).stream().findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
-            story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.COMMENT_ADDED);
+            story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.REPLY_COMMENT);
             story.setFeedName(Feed.INSTANT);
-            story.setEntry(comment.getPosting());
+            story.setRemoteNodeName(nodeName);
+            story.setRemotePostingId(postingId);
+            story.setRemoteHeading(postingHeading);
+            story.setRemoteRepliedToId(repliedToId);
+            story.setRemoteRepliedToHeading(repliedToHeading);
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
 
-        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.COMMENT_ADDED);
-        substory.setEntry(comment);
-        substory.setRemoteOwnerName(comment.getOwnerName());
+        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.REPLY_COMMENT);
+        substory.setRemoteNodeName(nodeName);
+        substory.setRemotePostingId(postingId);
+        substory.setRemoteCommentId(commentId);
+        substory.setRemoteOwnerName(commentOwnerName);
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
@@ -75,13 +79,13 @@ public class CommentInstants {
         instantOperations.feedStatusUpdated();
     }
 
-    public void deleted(Comment comment) {
-        if (comment.getOwnerName().equals(requestContext.nodeName())) {
+    public void deleted(String nodeName, String postingId, String commentId, String commentOwnerName) {
+        if (commentOwnerName.equals(requestContext.nodeName())) {
             return;
         }
 
-        List<Story> stories = storyRepository.findSubsByTypeAndEntryId(requestContext.nodeId(),
-                StoryType.COMMENT_ADDED, comment.getId());
+        List<Story> stories = storyRepository.findSubsByRemotePostingAndCommentId(requestContext.nodeId(),
+                StoryType.REPLY_COMMENT, nodeName, postingId, commentId);
         for (Story substory : stories) {
             Story story = substory.getParent();
             story.removeSubstory(substory);
@@ -104,7 +108,7 @@ public class CommentInstants {
         }
 
         story.setSummary(buildAddedSummary(story, stories));
-        story.setRemoteCommentId(stories.get(0).getEntry().getId().toString());
+        story.setRemoteCommentId(stories.get(0).getRemoteCommentId());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
@@ -119,10 +123,10 @@ public class CommentInstants {
         String firstName = stories.get(0).getRemoteOwnerName();
         buf.append(InstantUtil.formatNodeName(firstName));
         if (stories.size() > 1) { // just for optimization
-            var names = stories.stream().map(Story::getRemoteNodeName).collect(Collectors.toSet());
+            var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
                 buf.append(names.size() == 2 ? " and " : ", ");
-                String secondName = stories.stream().map(Story::getRemoteNodeName).filter(nm -> !nm.equals(firstName))
+                String secondName = stories.stream().map(Story::getRemoteOwnerName).filter(nm -> !nm.equals(firstName))
                         .findFirst().orElse("");
                 buf.append(InstantUtil.formatNodeName(secondName));
             }
@@ -132,8 +136,10 @@ public class CommentInstants {
                 buf.append(names.size() == 3 ? " other" : " others");
             }
         }
-        buf.append(" commented on your post \"");
-        buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));
+        buf.append(" replied to your comment \"");
+        buf.append(story.getRemoteRepliedToHeading());
+        buf.append("\" on your post \"");
+        buf.append(Util.he(story.getRemoteHeading()));
         buf.append('"');
         return buf.toString();
     }

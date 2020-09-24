@@ -81,6 +81,7 @@ public class StoryInfo {
                 break;
 
             case MENTION_COMMENT:
+            case REPLY_COMMENT:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());

@@ -75,6 +75,12 @@ public class Story {
     @Size(max = 255)
     private String remoteHeading;
 
+    @Size(max = 40)
+    private String remoteRepliedToId;
+
+    @Size(max = 255)
+    private String remoteRepliedToHeading;
+
     @ManyToOne
     private Entry entry;
 
@@ -233,6 +239,22 @@ public class Story {
 
     public void setRemoteHeading(String remoteHeading) {
         this.remoteHeading = remoteHeading;
+    }
+
+    public String getRemoteRepliedToId() {
+        return remoteRepliedToId;
+    }
+
+    public void setRemoteRepliedToId(String remoteRepliedToId) {
+        this.remoteRepliedToId = remoteRepliedToId;
+    }
+
+    public String getRemoteRepliedToHeading() {
+        return remoteRepliedToHeading;
+    }
+
+    public void setRemoteRepliedToHeading(String remoteRepliedToHeading) {
+        this.remoteRepliedToHeading = remoteRepliedToHeading;
     }
 
     public Entry getEntry() {

@@ -63,6 +63,7 @@ public class PostingProcessor {
     private ReactionTotalOperations reactionTotalOperations;
 
     @NotificationMapping(NotificationType.FEED_POSTING_ADDED)
+    @Transactional
     public void added(FeedPostingAddedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
                 requestContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
@@ -97,6 +98,7 @@ public class PostingProcessor {
     }
 
     @NotificationMapping(NotificationType.POSTING_UPDATED)
+    @Transactional
     public void updated(PostingUpdatedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) -> {
             Pick pick = new Pick();
