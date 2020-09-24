@@ -114,15 +114,21 @@ public class CommentInstants {
 
     private static String buildAddedSummary(Story story, List<Story> stories) {
         StringBuilder buf = new StringBuilder();
-        buf.append(InstantUtil.formatNodeName(stories.get(0).getRemoteOwnerName()));
-        if (stories.size() > 1) {
-            buf.append(stories.size() == 2 ? " and " : ", ");
-            buf.append(InstantUtil.formatNodeName(stories.get(1).getRemoteOwnerName()));
-        }
-        if (stories.size() > 2) {
-            buf.append(" and ");
-            buf.append(stories.size() - 2);
-            buf.append(stories.size() == 3 ? " other" : " others");
+        String firstName = stories.get(0).getRemoteOwnerName();
+        buf.append(InstantUtil.formatNodeName(firstName));
+        if (stories.size() > 1) { // just for optimization
+            var names = stories.stream().map(Story::getRemoteNodeName).collect(Collectors.toSet());
+            if (names.size() > 1) {
+                buf.append(names.size() == 2 ? " and " : ", ");
+                String secondName = stories.stream().map(Story::getRemoteNodeName).filter(nm -> !nm.equals(firstName))
+                        .findFirst().orElse("");
+                buf.append(InstantUtil.formatNodeName(secondName));
+            }
+            if (names.size() > 2) {
+                buf.append(" and ");
+                buf.append(names.size() - 2);
+                buf.append(names.size() == 3 ? " other" : " others");
+            }
         }
         buf.append(" commented on your post \"");
         buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));

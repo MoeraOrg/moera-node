@@ -11,7 +11,8 @@ public enum StoryType {
     MENTION_POSTING,
     SUBSCRIBER_ADDED,
     SUBSCRIBER_DELETED,
-    COMMENT_ADDED;
+    COMMENT_ADDED,
+    MENTION_COMMENT;
 
     @JsonValue
     public String getValue() {

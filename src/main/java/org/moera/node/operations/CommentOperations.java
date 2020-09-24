@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -111,8 +112,7 @@ public class CommentOperations {
         }
         comment = commentRepository.saveAndFlush(comment);
         commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
-
-        notifyMentioned(posting, comment.getId(), current, latest);
+        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), current, latest);
 
         return comment;
     }
@@ -153,24 +153,24 @@ public class CommentOperations {
         return revision;
     }
 
-    private void notifyMentioned(Posting posting, UUID commentId, EntryRevision current, EntryRevision latest) {
+    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, EntryRevision current,
+                                 EntryRevision latest) {
         Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
         Set<String> latestMentions = latest != null
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
-        notifyMentioned(posting, commentId, current.getHeading(), currentMentions, latestMentions);
+        notifyMentioned(posting, commentId, ownerName, current.getHeading(), currentMentions, latestMentions);
     }
 
-    private void notifyMentioned(Posting posting, UUID commentId, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions) {
+    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String currentHeading,
+                                 Set<String> currentMentions, Set<String> latestMentions) {
         currentMentions.stream()
-                .filter(m -> !requestContext.isClient(m))
+                .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !latestMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
-                        new MentionCommentAddedNotification(posting.getId(),
-                                commentId, posting.getCurrentRevision().getHeading(), requestContext.getClientName(),
-                                currentHeading)));
+                        new MentionCommentAddedNotification(posting.getId(), commentId,
+                                posting.getCurrentRevision().getHeading(), ownerName, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
                 .filter(m -> !currentMentions.contains(m))
@@ -189,7 +189,8 @@ public class CommentOperations {
         }
 
         Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
-        notifyMentioned(comment.getPosting(), comment.getId(), null, Collections.emptySet(), latestMentions);
+        notifyMentioned(comment.getPosting(), comment.getId(), requestContext.getClientName(), null,
+                Collections.emptySet(), latestMentions);
 
         requestContext.send(new CommentDeletedEvent(comment));
         requestContext.send(new PostingCommentsChangedEvent(comment.getPosting()));

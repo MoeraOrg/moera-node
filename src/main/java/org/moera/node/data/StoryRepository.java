@@ -85,6 +85,11 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     List<Story> findByRemotePostingId(UUID nodeId, String feedName, StoryType storyType,
                                       String remoteNodeName, String remotePostingId);
 
+    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
+            + " and s.remoteNodeName = ?4 and s.remotePostingId = ?5 and s.remoteCommentId = ?6 order by s.moment desc")
+    List<Story> findByRemotePostingAndCommentId(UUID nodeId, String feedName, StoryType storyType,
+                                                String remoteNodeName, String remotePostingId, String remoteCommentId);
+
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.viewed = false and s.createdAt < ?3")
     List<Story> findExpired(UUID nodeId, String feedName, Timestamp createdBefore);
 

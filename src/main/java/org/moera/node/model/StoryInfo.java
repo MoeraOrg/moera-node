@@ -79,6 +79,12 @@ public class StoryInfo {
                 info.setPosting(new PostingInfo(story.getEntry().getId()));
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 break;
+
+            case MENTION_COMMENT:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemotePostingId(story.getRemotePostingId());
+                info.setRemoteCommentId(story.getRemoteCommentId());
+                break;
         }
         return info;
     }
