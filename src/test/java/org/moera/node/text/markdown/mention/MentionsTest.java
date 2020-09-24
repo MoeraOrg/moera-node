@@ -74,4 +74,24 @@ class MentionsTest {
         assertRendering("very @-=!!.??weird**UsErNamEE+-- indeed", expectedResult);
     }
 
+    @Test
+    void mentionWithPunctuation() {
+        String expectedResult = "<p>mention just " +
+                "<a href=\"/moera/gotoname?name=username\" data-nodename=\"username\">" +
+                "@username" +
+                "</a>" +
+                ".</p>\n";
+        assertRendering("mention just @username.", expectedResult);
+    }
+
+    @Test
+    void mentionWithGeneration() {
+        String expectedResult = "<p>only one generation of " +
+                "<a href=\"/moera/gotoname?name=username_123\" data-nodename=\"username_123\">" +
+                "@username_123" +
+                "</a>" +
+                ".</p>\n";
+        assertRendering("only one generation of @username_123.", expectedResult);
+    }
+
 }

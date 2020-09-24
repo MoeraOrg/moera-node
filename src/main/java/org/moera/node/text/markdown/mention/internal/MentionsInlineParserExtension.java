@@ -41,12 +41,22 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
         BasedSequence inputText = inlineParser.getInput();
         final int nameStartingSequence = startingIndex + 1;
         int i = nameStartingSequence;
+        // the name itself
         while (i < inputText.length() && Rules.isNameCharacterValid(inputText.charAt(i))) {
             i++;
         }
+        // generation prefix
+        if (i + 1 < inputText.length() && inputText.charAt(i) == '_' && Character.isDigit(inputText.charAt(i + 1))) {
+            i++;
+            while (i < inputText.length() && Character.isDigit(inputText.charAt(i))) {
+                i++;
+            }
+        }
+        // final punctuation
         if (i > nameStartingSequence && END_PUNCTUATION.indexOf(inputText.charAt(i - 1)) >= 0) {
             i--;
         }
+
         if (i - nameStartingSequence == 0) {
             return false; // Name is empty
         }
