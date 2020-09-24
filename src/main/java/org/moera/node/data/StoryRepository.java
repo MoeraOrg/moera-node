@@ -42,6 +42,13 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("delete from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4")
     void deleteByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
+    @Modifying
+    @Query("delete from Story s"
+            + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.remoteNodeName = ?4"
+            + " and s.remotePostingId = ?5 and s.remoteCommentId = ?6")
+    void deleteByRemotePostingAndCommentId(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName,
+                                           String remotePostingId, String remoteCommentId);
+
     @Query("select s from Story s left join fetch s.entry e"
             + " left join fetch e.currentRevision left join fetch e.reactionTotals left join fetch e.sources"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
@@ -85,10 +92,12 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     List<Story> findByRemotePostingId(UUID nodeId, String feedName, StoryType storyType,
                                       String remoteNodeName, String remotePostingId);
 
-    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
-            + " and s.remoteNodeName = ?4 and s.remotePostingId = ?5 and s.remoteCommentId = ?6 order by s.moment desc")
-    List<Story> findByRemotePostingAndCommentId(UUID nodeId, String feedName, StoryType storyType,
-                                                String remoteNodeName, String remotePostingId, String remoteCommentId);
+    @Query("select s from Story s left join fetch s.substories"
+            + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.remoteNodeName = ?4"
+            + " and s.remotePostingId = ?5 and s.remoteCommentId = ?6 order by s.moment desc")
+    List<Story> findFullByRemotePostingAndCommentId(UUID nodeId, String feedName, StoryType storyType,
+                                                    String remoteNodeName, String remotePostingId,
+                                                    String remoteCommentId);
 
     @Query("select s from Story s left join fetch s.substories"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.remoteNodeName = ?4"

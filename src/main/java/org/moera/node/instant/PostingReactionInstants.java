@@ -26,7 +26,7 @@ import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReactionInstants {
+public class PostingReactionInstants {
 
     private static final Duration GROUP_PERIOD = Duration.of(6, ChronoUnit.HOURS);
 

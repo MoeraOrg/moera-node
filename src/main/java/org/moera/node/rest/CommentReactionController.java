@@ -25,6 +25,10 @@ import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.CommentReactionsChangedEvent;
+import org.moera.node.model.notification.CommentReactionAddedNotification;
+import org.moera.node.model.notification.CommentReactionDeletedAllNotification;
+import org.moera.node.model.notification.CommentReactionDeletedNotification;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.Util;
@@ -85,7 +89,8 @@ public class CommentReactionController {
         }
 
         reactionOperations.validate(reactionDescription, comment);
-        Reaction reaction = reactionOperations.post(reactionDescription, comment, null, null); // TODO
+        Reaction reaction = reactionOperations.post(reactionDescription, comment, r -> notifyDeleted(comment, r),
+                r -> notifyAdded(comment, r));
         requestContext.send(new CommentReactionsChangedEvent(comment));
 
         var totalsInfo = reactionTotalOperations.getInfo(comment);
@@ -93,6 +98,23 @@ public class CommentReactionController {
                 URI.create(String.format("/postings/%s/comments/%s/reactions/%s",
                         postingId, comment.getId(), reaction.getId())))
                 .body(new ReactionCreated(reaction, totalsInfo.getClientInfo()));
+    }
+
+    private void notifyAdded(Comment comment, Reaction reaction) {
+        if (reaction.getSignature() == null) {
+            return;
+        }
+        requestContext.send(Directions.single(comment.getOwnerName()),
+                new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
+                        comment.getPosting().getCurrentRevision().getHeading(),
+                        comment.getCurrentRevision().getHeading(), reaction.getOwnerName(), reaction.isNegative(),
+                        reaction.getEmoji()));
+    }
+
+    private void notifyDeleted(Comment comment, Reaction reaction) {
+        requestContext.send(Directions.single(comment.getOwnerName()),
+                new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
+                        reaction.getOwnerName(), reaction.isNegative()));
     }
 
     @GetMapping
@@ -167,12 +189,17 @@ public class CommentReactionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        reactionRepository.deleteAllByEntryId(postingId, Util.now());
-        reactionTotalRepository.deleteAllByEntryId(postingId);
-        // TODO instantOperations.reactionsDeletedAll(postingId);
+        reactionRepository.deleteAllByEntryId(commentId, Util.now());
+        reactionTotalRepository.deleteAllByEntryId(commentId);
+        notifyDeletedAll(comment);
         requestContext.send(new CommentReactionsChangedEvent(comment));
 
         return Result.OK;
+    }
+
+    private void notifyDeletedAll(Comment comment) {
+        requestContext.send(Directions.single(comment.getOwnerName()),
+                new CommentReactionDeletedAllNotification(comment.getPosting().getId(), comment.getId()));
     }
 
     @DeleteMapping("/{ownerName}")
@@ -196,7 +223,7 @@ public class CommentReactionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        reactionOperations.delete(ownerName, comment, null);
+        reactionOperations.delete(ownerName, comment, r -> notifyDeleted(comment, r));
         requestContext.send(new CommentReactionsChangedEvent(comment));
 
         return reactionTotalOperations.getInfo(comment).getClientInfo();

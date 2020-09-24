@@ -59,7 +59,7 @@ public class MentionCommentInstants {
     }
 
     private Story findStory(String remoteNodeName, String remotePostingId, String remoteCommentId) {
-        return storyRepository.findByRemotePostingAndCommentId(requestContext.nodeId(), Feed.INSTANT,
+        return storyRepository.findFullByRemotePostingAndCommentId(requestContext.nodeId(), Feed.INSTANT,
                 StoryType.MENTION_COMMENT, remoteNodeName, remotePostingId, remoteCommentId)
                 .stream().findFirst().orElse(null);
     }
