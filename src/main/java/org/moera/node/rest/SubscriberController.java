@@ -163,10 +163,11 @@ public class SubscriberController {
         switch (description.getType()) {
             case FEED:
                 return subscriberRepository.countByFeedName(requestContext.nodeId(), requestContext.getClientName(),
-                        SubscriptionType.FEED, description.getFeedName()) > 0;
+                        description.getType(), description.getFeedName()) > 0;
             case POSTING:
+            case POSTING_COMMENTS:
                 return subscriberRepository.countByEntryId(requestContext.nodeId(), requestContext.getClientName(),
-                        SubscriptionType.POSTING, description.getPostingId()) > 0;
+                        description.getType(), description.getPostingId()) > 0;
         }
         return false; // Should never be reached
     }
@@ -179,6 +180,7 @@ public class SubscriberController {
                 }
                 break;
             case POSTING:
+            case POSTING_COMMENTS:
                 if (description.getPostingId() == null) {
                     throw new ValidationFailure("subscriberDescription.postingId.blank");
                 }

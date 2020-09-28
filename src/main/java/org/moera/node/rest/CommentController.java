@@ -54,6 +54,7 @@ import org.moera.node.model.event.CommentDeletedEvent;
 import org.moera.node.model.event.CommentUpdatedEvent;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
+import org.moera.node.model.notification.PostingCommentAddedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.naming.NamingCache;
@@ -166,6 +167,9 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             commentInstants.added(comment);
+            requestContext.send(Directions.postingCommentsSubscribers(posting.getId()),
+                    new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
+                            comment.getId(), comment.getOwnerName(), comment.getCurrentRevision().getHeading()));
         }
 
         requestContext.send(new CommentAddedEvent(comment));
@@ -212,6 +216,10 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             commentInstants.added(comment);
+            requestContext.send(Directions.postingCommentsSubscribers(postingId),
+                    new PostingCommentAddedNotification(postingId,
+                            comment.getPosting().getCurrentRevision().getHeading(), comment.getId(),
+                            comment.getOwnerName(), comment.getCurrentRevision().getHeading()));
         }
 
         requestContext.send(new CommentUpdatedEvent(comment));

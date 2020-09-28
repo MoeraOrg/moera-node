@@ -18,4 +18,8 @@ public class Directions {
         return new SubscribersDirection(SubscriptionType.POSTING, postingId);
     }
 
+    public static Direction postingCommentsSubscribers(UUID postingId) {
+        return new SubscribersDirection(SubscriptionType.POSTING_COMMENTS, postingId);
+    }
+
 }

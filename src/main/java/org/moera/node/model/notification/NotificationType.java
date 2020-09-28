@@ -15,7 +15,8 @@ public enum NotificationType {
     REPLY_COMMENT_DELETED(ReplyCommentDeletedNotification.class),
     COMMENT_REACTION_ADDED(CommentReactionAddedNotification.class),
     COMMENT_REACTION_DELETED(CommentReactionDeletedNotification.class),
-    COMMENT_REACTION_DELETED_ALL(CommentReactionDeletedAllNotification.class);
+    COMMENT_REACTION_DELETED_ALL(CommentReactionDeletedAllNotification.class),
+    POSTING_COMMENT_ADDED(PostingCommentAddedNotification.class);
 
     private Class<? extends Notification> structure;
 

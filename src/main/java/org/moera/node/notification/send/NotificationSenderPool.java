@@ -14,7 +14,6 @@ import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.event.EventManager;
 import org.moera.node.model.event.SubscriberDeletedEvent;
@@ -94,11 +93,12 @@ public class NotificationSenderPool {
             switch (sd.getSubscriptionType()) {
                 case FEED:
                     subscribers = subscriberRepository.findAllByFeedName(
-                            sd.getNodeId(), SubscriptionType.FEED, sd.getFeedName());
+                            sd.getNodeId(), sd.getSubscriptionType(), sd.getFeedName());
                     break;
                 case POSTING:
+                case POSTING_COMMENTS:
                     subscribers = subscriberRepository.findAllByEntryId(
-                            sd.getNodeId(), SubscriptionType.POSTING, sd.getPostingId());
+                            sd.getNodeId(), sd.getSubscriptionType(), sd.getPostingId());
                     break;
             }
             for (Subscriber subscriber : subscribers) {

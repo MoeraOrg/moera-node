@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum SubscriptionType {
 
     FEED,
-    POSTING;
+    POSTING,
+    POSTING_COMMENTS;
 
     @JsonValue
     public String getValue() {
