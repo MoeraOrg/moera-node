@@ -2,7 +2,7 @@ package org.moera.node.model.notification;
 
 import java.util.UUID;
 
-public class PostingCommentAddedNotification extends Notification {
+public class PostingCommentAddedNotification extends SubscriberNotification {
 
     private String postingId;
     private String postingHeading;
