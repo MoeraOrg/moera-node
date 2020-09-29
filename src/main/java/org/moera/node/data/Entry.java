@@ -122,6 +122,9 @@ public class Entry {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntrySource> sources = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    private Set<Subscriber> subscribers = new HashSet<>();
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
     private Set<Entry> children = new HashSet<>();
 
@@ -437,6 +440,24 @@ public class Entry {
     public void removeSource(EntrySource source) {
         sources.removeIf(sr -> sr.getId().equals(source.getId()));
         source.setEntry(null);
+    }
+
+    public Set<Subscriber> getSubscribers() {
+        return subscribers;
+    }
+
+    public void setSubscribers(Set<Subscriber> subscribers) {
+        this.subscribers = subscribers;
+    }
+
+    public void addSubscriber(Subscriber subscriber) {
+        subscribers.add(subscriber);
+        subscriber.setEntry(this);
+    }
+
+    public void removeSubscriber(Subscriber subscriber) {
+        subscribers.removeIf(sr -> sr.getId().equals(subscriber.getId()));
+        subscriber.setEntry(null);
     }
 
     public Set<Entry> getChildren() {

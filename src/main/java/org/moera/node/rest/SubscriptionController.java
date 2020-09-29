@@ -97,8 +97,13 @@ public class SubscriptionController {
         if (subscriptionDescription.getType() == null) {
             throw new ValidationFailure("subscriptionDescription.type.blank");
         }
-        if (!Feed.isStandard(subscriptionDescription.getFeedName())) {
-            throw new ValidationFailure("subscriptionDescription.feedName.not-found");
+        if (subscriptionDescription.getType() == SubscriptionType.FEED) {
+            if (StringUtils.isEmpty(subscriptionDescription.getFeedName())) {
+                throw new ValidationFailure("subscriptionDescription.feedName.blank");
+            }
+            if (!Feed.isStandard(subscriptionDescription.getFeedName())) {
+                throw new ValidationFailure("subscriptionDescription.feedName.not-found");
+            }
         }
         boolean exists = subscriptionRepository.countBySubscriber(
                 requestContext.nodeId(),
@@ -116,10 +121,12 @@ public class SubscriptionController {
         subscription = subscriptionRepository.save(subscription);
         requestContext.send(new SubscriptionAddedEvent(subscription));
 
-        var task = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
-                subscription.getRemoteFeedName());
-        taskAutowire.autowire(task);
-        taskExecutor.execute(task);
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            var task = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
+                    subscription.getRemoteFeedName());
+            taskAutowire.autowire(task);
+            taskExecutor.execute(task);
+        }
 
         return new SubscriptionInfo(subscription);
     }
@@ -128,17 +135,15 @@ public class SubscriptionController {
     @Admin
     @Transactional
     public Result delete(
-            @RequestParam(defaultValue = "feed") SubscriptionType type,
             @RequestParam("nodeName") String remoteNodeName,
             @RequestParam("subscriberId") String remoteSubscriberId) {
 
-        log.info("DELETE /people/subscriptions (type = {}, remoteSubscriberId = {}, remoteNodeName = {})",
-                LogUtil.format(SubscriptionType.toValue(type)),
+        log.info("DELETE /people/subscriptions (remoteSubscriberId = {}, remoteNodeName = {})",
                 LogUtil.format(remoteSubscriberId),
                 LogUtil.format(remoteNodeName));
 
-        Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), type,
-                remoteNodeName, remoteSubscriberId).orElse(null);
+        Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
+                remoteSubscriberId).orElse(null);
         if (subscription == null) {
             throw new ObjectNotFoundFailure("subscription.not-found");
         }

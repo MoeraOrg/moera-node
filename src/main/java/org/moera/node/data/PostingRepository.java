@@ -18,6 +18,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query("select p from Posting p"
             + " join fetch p.currentRevision left join fetch p.reactionTotals left join fetch p.sources"
+            + " left join fetch p.subscribers"
             + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null and p.draft = false")
     Optional<Posting> findFullByNodeIdAndId(UUID nodeId, UUID id);
 

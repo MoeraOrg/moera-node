@@ -56,6 +56,7 @@ public class PostingInfo implements ReactionsInfo {
     private Boolean reactionTotalsVisible;
     private List<PostingSourceInfo> sources;
     private Integer totalComments;
+    private PostingSubscriptionsInfo subscriptions = new PostingSubscriptionsInfo();
 
     public PostingInfo() {
     }
@@ -137,6 +138,7 @@ public class PostingInfo implements ReactionsInfo {
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
         totalComments = posting.getTotalChildren();
+        subscriptions = new PostingSubscriptionsInfo(posting.getSubscribers());
     }
 
     public String getId() {
@@ -461,6 +463,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setTotalComments(Integer totalComments) {
         this.totalComments = totalComments;
+    }
+
+    public PostingSubscriptionsInfo getSubscriptions() {
+        return subscriptions;
+    }
+
+    public void setSubscriptions(PostingSubscriptionsInfo subscriptions) {
+        this.subscriptions = subscriptions;
     }
 
     public void toPickedPosting(Posting posting) {

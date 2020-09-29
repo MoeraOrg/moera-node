@@ -145,11 +145,14 @@ public class SubscriberController {
                 throw new ValidationFailure("subscriberDescription.postingId.not-found");
             }
             subscriber.setEntry(posting);
-            if (!Util.toEpochSecond(posting.getEditedAt()).equals(subscriberDescription.getLastUpdatedAt())) {
-                PostingUpdatedNotification notification = new PostingUpdatedNotification(posting.getId());
-                notification.setSubscriberId(subscriber.getId().toString());
-                notification.setSubscriptionCreatedAt(Util.now());
-                requestContext.send(Directions.single(ownerName), notification);
+
+            if (subscriber.getSubscriptionType() == SubscriptionType.POSTING) {
+                if (!Util.toEpochSecond(posting.getEditedAt()).equals(subscriberDescription.getLastUpdatedAt())) {
+                    PostingUpdatedNotification notification = new PostingUpdatedNotification(posting.getId());
+                    notification.setSubscriberId(subscriber.getId().toString());
+                    notification.setSubscriptionCreatedAt(Util.now());
+                    requestContext.send(Directions.single(ownerName), notification);
+                }
             }
         }
         subscriber = subscriberRepository.save(subscriber);

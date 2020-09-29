@@ -66,9 +66,9 @@ public class PostingProcessor {
     @Transactional
     public void added(FeedPostingAddedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
-                notification.getSubscriberId()).orElse(null);
-        if (subscription == null || !notification.getFeedName().equals(subscription.getRemoteFeedName())) {
+                requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+        if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.FEED
+                || !notification.getFeedName().equals(subscription.getRemoteFeedName())) {
             throw new UnsubscribeFailure();
         }
 
@@ -83,9 +83,9 @@ public class PostingProcessor {
     private void withValidPostingSubscription(PostingSubscriberNotification notification,
                                               PostingSubscriptionRunnable runnable) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), SubscriptionType.POSTING, notification.getSenderNodeName(),
-                notification.getSubscriberId()).orElse(null);
-        if (subscription == null || !notification.getPostingId().equals(subscription.getRemoteEntryId())) {
+                requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+        if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.POSTING
+                || !notification.getPostingId().equals(subscription.getRemoteEntryId())) {
             throw new UnsubscribeFailure();
         }
         Posting posting = postingRepository.findByReceiverId(requestContext.nodeId(), subscription.getRemoteNodeName(),

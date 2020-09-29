@@ -10,7 +10,6 @@ public class SubscriptionDescription {
 
     private SubscriptionType type;
 
-    @NotBlank
     private String feedName;
 
     @NotBlank
