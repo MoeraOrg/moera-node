@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,8 +22,10 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.RemotePosting;
 import org.moera.node.model.Result;
 import org.moera.node.model.SubscriptionDescription;
+import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.SubscriptionAddedEvent;
@@ -152,6 +155,27 @@ public class SubscriptionController {
         requestContext.send(new SubscriptionDeletedEvent(subscription));
 
         return Result.OK;
+    }
+
+    @PostMapping("/search")
+    @Admin
+    public List<SubscriptionInfo> search(@Valid @RequestBody SubscriptionFilter filter) {
+        log.info("GET /people/subscriptions/search");
+
+        if (filter.getPostings() == null || filter.getPostings().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> remotePostingIds = filter.getPostings().stream()
+                .map(RemotePosting::getPostingId)
+                .collect(Collectors.toList());
+        List<Subscription> subscriptions = subscriptionRepository.findAllByRemotePostingIds(
+                requestContext.nodeId(), remotePostingIds);
+
+        return subscriptions.stream()
+                .filter(r -> filter.getPostings().contains(r.getRemotePosting()))
+                .map(SubscriptionInfo::new)
+                .collect(Collectors.toList());
     }
 
 }
