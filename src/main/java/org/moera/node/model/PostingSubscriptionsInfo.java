@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.moera.node.data.Subscriber;
-import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionType;
 
 public class PostingSubscriptionsInfo {
@@ -23,14 +22,6 @@ public class PostingSubscriptionsInfo {
                 .filter(sr -> sr.getSubscriptionType() == type)
                 .map(Subscriber::getId)
                 .map(UUID::toString)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private static String getRemoteSubscriberId(Set<Subscription> subscriptions, SubscriptionType type) {
-        return subscriptions.stream()
-                .filter(sr -> sr.getSubscriptionType() == type)
-                .map(Subscription::getRemoteSubscriberId)
                 .findFirst()
                 .orElse(null);
     }

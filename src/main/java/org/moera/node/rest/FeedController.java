@@ -23,6 +23,8 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
+import org.moera.node.data.Subscription;
+import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -72,6 +74,9 @@ public class FeedController {
 
     @Inject
     private SubscriberRepository subscriberRepository;
+
+    @Inject
+    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private StoryOperations storyOperations;
@@ -239,7 +244,7 @@ public class FeedController {
                     .filter(r -> postingMap.containsKey(r.getEntryId()))
                     .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
             if (requestContext.isAdmin()) {
-                fillOwnReactions(stories, postingMap);
+                fillOwnInfo(stories, postingMap);
             }
         }
         if (stories.size() > limit) {
@@ -248,30 +253,56 @@ public class FeedController {
         sliceInfo.setStories(stories);
     }
 
-    private void fillOwnReactions(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
+    private void fillOwnInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
         List<String> remotePostingIds = postingMap.values().stream()
                 .filter(p -> !p.isOriginal())
                 .map(PostingInfo::getReceiverPostingId)
                 .collect(Collectors.toList());
         if (!remotePostingIds.isEmpty()) {
-            Map<String, OwnReaction> ownReactions = ownReactionRepository
-                    .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
-                    .stream()
-                    .collect(Collectors.toMap(
-                            OwnReaction::getRemotePostingId, Function.identity(), (p1, p2) -> p1));
-            stories.stream()
-                    .map(StoryInfo::getPosting)
-                    .filter(Objects::nonNull)
-                    .filter(p -> !p.isOriginal())
-                    .forEach(posting -> {
-                        OwnReaction ownReaction = ownReactions.get(posting.getReceiverPostingId());
-                        if (ownReaction != null
-                                && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
-                                && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
-                            posting.setClientReaction(new ClientReactionInfo(ownReaction));
-                        }
-                    });
+            fillOwnReactions(stories, remotePostingIds);
+            fillSubscriptions(stories, remotePostingIds);
         }
+    }
+
+    private void fillOwnReactions(List<StoryInfo> stories, List<String> remotePostingIds) {
+        Map<String, OwnReaction> ownReactions = ownReactionRepository
+                .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        OwnReaction::getRemotePostingId, Function.identity(), (p1, p2) -> p1));
+        stories.stream()
+                .map(StoryInfo::getPosting)
+                .filter(Objects::nonNull)
+                .filter(p -> !p.isOriginal())
+                .forEach(posting -> {
+                    OwnReaction ownReaction = ownReactions.get(posting.getReceiverPostingId());
+                    if (ownReaction != null
+                            && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
+                            && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
+                        posting.setClientReaction(new ClientReactionInfo(ownReaction));
+                    }
+                });
+    }
+
+    private void fillSubscriptions(List<StoryInfo> stories, List<String> remotePostingIds) {
+        Map<String, Subscription> subscriptionMap = subscriptionRepository
+                .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
+                .stream()
+                .filter(sr -> sr.getSubscriptionType() == SubscriptionType.POSTING_COMMENTS)
+                .collect(Collectors.toMap(
+                        Subscription::getRemoteEntryId, Function.identity(), (p1, p2) -> p1));
+        stories.stream()
+                .map(StoryInfo::getPosting)
+                .filter(Objects::nonNull)
+                .filter(p -> !p.isOriginal())
+                .forEach(posting -> {
+                    Subscription subscription = subscriptionMap.get(posting.getReceiverPostingId());
+                    if (subscription != null
+                            && subscription.getRemoteNodeName().equals(posting.getReceiverName())
+                            && subscription.getRemoteEntryId().equals(posting.getReceiverPostingId())) {
+                        posting.getSubscriptions().setComments(subscription.getRemoteSubscriberId());
+                    }
+                });
     }
 
     private StoryInfo buildStoryInfo(Story story) {
