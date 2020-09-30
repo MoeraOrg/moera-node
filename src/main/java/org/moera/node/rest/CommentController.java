@@ -55,6 +55,7 @@ import org.moera.node.model.event.CommentUpdatedEvent;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.notification.PostingCommentAddedNotification;
+import org.moera.node.model.notification.PostingCommentDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.naming.NamingCache;
@@ -405,6 +406,8 @@ public class CommentController {
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
         commentInstants.deleted(comment);
+        requestContext.send(Directions.postingCommentsSubscribers(postingId),
+                new PostingCommentDeletedNotification(postingId, comment.getId(), comment.getOwnerName()));
         requestContext.send(new CommentDeletedEvent(comment));
 
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());

@@ -84,6 +84,7 @@ public class StoryInfo {
             case REPLY_COMMENT:
             case COMMENT_REACTION_ADDED_POSITIVE:
             case COMMENT_REACTION_ADDED_NEGATIVE:
+            case REMOTE_COMMENT_ADDED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
