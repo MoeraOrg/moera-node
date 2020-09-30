@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import java.time.Instant;
+
 import org.moera.node.data.SubscriptionType;
 
 public class SubscriberDescriptionQ {
@@ -10,6 +12,10 @@ public class SubscriberDescriptionQ {
     private Long lastUpdatedAt;
 
     public SubscriberDescriptionQ() {
+    }
+
+    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId) {
+        this(type, feedName, postingId, Instant.now().getEpochSecond());
     }
 
     public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, Long lastUpdatedAt) {

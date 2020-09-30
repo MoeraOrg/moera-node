@@ -119,10 +119,10 @@ public class CommentInstants {
         String firstName = stories.get(0).getRemoteOwnerName();
         buf.append(InstantUtil.formatNodeName(firstName));
         if (stories.size() > 1) { // just for optimization
-            var names = stories.stream().map(Story::getRemoteNodeName).collect(Collectors.toSet());
+            var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
                 buf.append(names.size() == 2 ? " and " : ", ");
-                String secondName = stories.stream().map(Story::getRemoteNodeName).filter(nm -> !nm.equals(firstName))
+                String secondName = stories.stream().map(Story::getRemoteOwnerName).filter(nm -> !nm.equals(firstName))
                         .findFirst().orElse("");
                 buf.append(InstantUtil.formatNodeName(secondName));
             }

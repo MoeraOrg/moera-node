@@ -19,6 +19,7 @@ import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.rest.task.RemoteCommentPostTask;
 import org.moera.node.rest.task.RemoteCommentVerifyTask;
+import org.moera.node.rest.task.RemotePostingCommentsSubscribeTask;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -64,9 +65,7 @@ public class RemoteCommentController {
                 LogUtil.format(sourceText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(sourceText.getBodySrcFormat())));
 
-        RemoteCommentPostTask task = new RemoteCommentPostTask(nodeName, postingId, null, sourceText);
-        taskAutowire.autowire(task);
-        taskExecutor.execute(task);
+        update(nodeName, postingId, null, sourceText);
 
         return Result.OK;
     }
@@ -84,11 +83,20 @@ public class RemoteCommentController {
                 LogUtil.format(sourceText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(sourceText.getBodySrcFormat())));
 
-        RemoteCommentPostTask task = new RemoteCommentPostTask(nodeName, postingId, commentId, sourceText);
-        taskAutowire.autowire(task);
-        taskExecutor.execute(task);
+        update(nodeName, postingId, commentId, sourceText);
 
         return Result.OK;
+    }
+
+    private void update(String nodeName, String postingId, String commentId, CommentSourceText sourceText) {
+        var postTask = new RemoteCommentPostTask(nodeName, postingId, commentId, sourceText);
+        taskAutowire.autowire(postTask);
+        taskExecutor.execute(postTask);
+        if (!nodeName.equals(requestContext.nodeName())) {
+            var subscribeTask = new RemotePostingCommentsSubscribeTask(nodeName, postingId);
+            taskAutowire.autowire(subscribeTask);
+            taskExecutor.execute(subscribeTask);
+        }
     }
 
     @DeleteMapping("/{commentId}")

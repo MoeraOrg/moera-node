@@ -94,6 +94,12 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
 
     @Query("select s from Story s left join fetch s.substories"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.remoteNodeName = ?4"
+            + " and s.remotePostingId = ?5 order by s.moment desc")
+    List<Story> findFullByRemotePostingId(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName,
+                                          String remotePostingId);
+
+    @Query("select s from Story s left join fetch s.substories"
+            + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.remoteNodeName = ?4"
             + " and s.remotePostingId = ?5 and s.remoteCommentId = ?6 order by s.moment desc")
     List<Story> findFullByRemotePostingAndCommentId(UUID nodeId, String feedName, StoryType storyType,
                                                     String remoteNodeName, String remotePostingId,

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -51,8 +52,8 @@ public class RemoteCommentInstants {
         }
 
         boolean isNewStory = false;
-        Story story = storyRepository.findFullByRemotePostingAndCommentId(requestContext.nodeId(), Feed.INSTANT,
-                StoryType.REMOTE_COMMENT_ADDED, remoteNodeName, remotePostingId, remoteCommentId).stream()
+        Story story = storyRepository.findFullByRemotePostingId(requestContext.nodeId(), Feed.INSTANT,
+                StoryType.REMOTE_COMMENT_ADDED, remoteNodeName, remotePostingId).stream()
                 .findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
@@ -124,10 +125,10 @@ public class RemoteCommentInstants {
         String firstName = stories.get(0).getRemoteOwnerName();
         buf.append(InstantUtil.formatNodeName(firstName));
         if (stories.size() > 1) { // just for optimization
-            var names = stories.stream().map(Story::getRemoteNodeName).collect(Collectors.toSet());
+            var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
                 buf.append(names.size() == 2 ? " and " : ", ");
-                String secondName = stories.stream().map(Story::getRemoteNodeName).filter(nm -> !nm.equals(firstName))
+                String secondName = stories.stream().map(Story::getRemoteOwnerName).filter(nm -> !nm.equals(firstName))
                         .findFirst().orElse("");
                 buf.append(InstantUtil.formatNodeName(secondName));
             }
@@ -138,7 +139,8 @@ public class RemoteCommentInstants {
             }
         }
         buf.append(" commented on ");
-        buf.append(InstantUtil.formatNodeName(story.getRemoteNodeName()));
+        buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)
+                ? "their" : InstantUtil.formatNodeName(story.getRemoteNodeName()));
         buf.append(" post \"");
         buf.append(Util.he(story.getRemoteHeading()));
         buf.append('"');

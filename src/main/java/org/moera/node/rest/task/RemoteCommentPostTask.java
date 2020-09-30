@@ -60,7 +60,6 @@ public class RemoteCommentPostTask extends Task {
             }
             success();
         } catch (Exception e) {
-            e.printStackTrace();
             error(e);
         }
     }
