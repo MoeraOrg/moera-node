@@ -300,7 +300,8 @@ public class FeedController {
                     if (subscription != null
                             && subscription.getRemoteNodeName().equals(posting.getReceiverName())
                             && subscription.getRemoteEntryId().equals(posting.getReceiverPostingId())) {
-                        posting.getSubscriptions().setComments(subscription.getRemoteSubscriberId());
+                        posting.getSubscriptions().setSubscriberId(SubscriptionType.POSTING_COMMENTS,
+                                subscription.getRemoteSubscriberId());
                     }
                 });
     }

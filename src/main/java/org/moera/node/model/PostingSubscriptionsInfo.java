@@ -14,16 +14,27 @@ public class PostingSubscriptionsInfo {
     }
 
     public PostingSubscriptionsInfo(Set<Subscriber> subscribers) {
-        comments = getSubscriberId(subscribers, SubscriptionType.POSTING_COMMENTS);
+        comments = findSubscriberId(subscribers, SubscriptionType.POSTING_COMMENTS);
     }
 
-    private static String getSubscriberId(Set<Subscriber> subscribers, SubscriptionType type) {
+    private static String findSubscriberId(Set<Subscriber> subscribers, SubscriptionType type) {
         return subscribers.stream()
                 .filter(sr -> sr.getSubscriptionType() == type)
                 .map(Subscriber::getId)
                 .map(UUID::toString)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public void setSubscriberId(SubscriptionType type, String id) {
+        switch (type) {
+            case POSTING_COMMENTS:
+                setComments(id);
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        String.format("Subscription type %s is not allowed here", type.name()));
+        }
     }
 
     public String getComments() {
