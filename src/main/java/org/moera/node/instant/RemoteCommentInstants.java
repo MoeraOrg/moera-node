@@ -14,6 +14,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.data.SubscriptionReason;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
@@ -40,7 +41,8 @@ public class RemoteCommentInstants {
     private InstantOperations instantOperations;
 
     public void added(String remoteNodeName, String remotePostingId, String remotePostingHeading,
-                      String remoteOwnerName, String remoteCommentId, String remoteCommentHeading) {
+                      String remoteOwnerName, String remoteCommentId, String remoteCommentHeading,
+                      SubscriptionReason reason) {
         if (remoteOwnerName.equals(requestContext.nodeName())) {
             return;
         }
@@ -76,11 +78,12 @@ public class RemoteCommentInstants {
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
 
-        updated(story, isNewStory, true);
+        updated(story, reason, isNewStory, true);
         instantOperations.feedStatusUpdated();
     }
 
-    public void deleted(String remoteNodeName, String remotePostingId, String remoteOwnerName, String remoteCommentId) {
+    public void deleted(String remoteNodeName, String remotePostingId, String remoteOwnerName, String remoteCommentId,
+                        SubscriptionReason reason) {
         if (remoteOwnerName.equals(requestContext.nodeName())) {
             return;
         }
@@ -91,12 +94,12 @@ public class RemoteCommentInstants {
             Story story = substory.getParent();
             story.removeSubstory(substory);
             storyRepository.delete(substory);
-            updated(story, false, false);
+            updated(story, reason, false, false);
         }
         instantOperations.feedStatusUpdated();
     }
 
-    private void updated(Story story, boolean isNew, boolean isAdded) {
+    private void updated(Story story, SubscriptionReason reason, boolean isNew, boolean isAdded) {
         List<Story> stories = story.getSubstories().stream()
                 .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
                 .collect(Collectors.toList());
@@ -108,7 +111,7 @@ public class RemoteCommentInstants {
             return;
         }
 
-        story.setSummary(buildAddedSummary(story, stories));
+        story.setSummary(buildAddedSummary(story, stories, reason));
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setRemoteCommentId(stories.get(0).getRemoteCommentId());
         story.setPublishedAt(Util.now());
@@ -120,7 +123,7 @@ public class RemoteCommentInstants {
         requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
-    private static String buildAddedSummary(Story story, List<Story> stories) {
+    private static String buildAddedSummary(Story story, List<Story> stories, SubscriptionReason reason) {
         StringBuilder buf = new StringBuilder();
         String firstName = stories.get(0).getRemoteOwnerName();
         buf.append(InstantUtil.formatNodeName(firstName));
@@ -141,10 +144,24 @@ public class RemoteCommentInstants {
         buf.append(" commented on ");
         buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)
                 ? "their" : InstantUtil.formatNodeName(story.getRemoteNodeName()));
-        buf.append(" post \"");
+        buf.append(" post ");
+        buf.append(getReasonForHuman(reason));
+        buf.append(" \"");
         buf.append(Util.he(story.getRemoteHeading()));
         buf.append('"');
         return buf.toString();
+    }
+
+    private static String getReasonForHuman(SubscriptionReason reason) {
+        switch (reason) {
+            default:
+            case USER:
+                return "you subscribed to";
+            case MENTION:
+                return "you have been mentioned in";
+            case COMMENT:
+                return "you commented";
+        }
     }
 
 }

@@ -100,6 +100,9 @@ public class SubscriptionController {
         if (subscriptionDescription.getType() == null) {
             throw new ValidationFailure("subscriptionDescription.type.blank");
         }
+        if (subscriptionDescription.getReason() == null) {
+            throw new ValidationFailure("subscriptionDescription.reason.blank");
+        }
         if (subscriptionDescription.getType() == SubscriptionType.FEED) {
             if (StringUtils.isEmpty(subscriptionDescription.getFeedName())) {
                 throw new ValidationFailure("subscriptionDescription.feedName.blank");

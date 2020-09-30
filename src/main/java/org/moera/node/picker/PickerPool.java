@@ -154,7 +154,7 @@ public class PickerPool {
             return;
         }
 
-        log.info("Pick {} failed, retrying in {}s", pick.getId(), delay);
+        log.info("Pick {} failed, retrying in {}s", pick.getId(), delay.getSeconds());
         pick.setRetryAt(Timestamp.from(pick.getRetryAt().toInstant().plus(delay)));
         try {
             inTransaction(() -> {

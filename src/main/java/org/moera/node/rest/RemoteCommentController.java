@@ -11,6 +11,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.data.SubscriptionReason;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
@@ -93,7 +94,7 @@ public class RemoteCommentController {
         taskAutowire.autowire(postTask);
         taskExecutor.execute(postTask);
         if (!nodeName.equals(requestContext.nodeName())) {
-            var subscribeTask = new RemotePostingCommentsSubscribeTask(nodeName, postingId);
+            var subscribeTask = new RemotePostingCommentsSubscribeTask(nodeName, postingId, SubscriptionReason.COMMENT);
             taskAutowire.autowire(subscribeTask);
             taskExecutor.execute(subscribeTask);
         }

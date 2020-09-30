@@ -47,6 +47,10 @@ public class Subscription {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    @NotNull
+    @Enumerated
+    private SubscriptionReason reason;
+
     public UUID getId() {
         return id;
     }
@@ -117,6 +121,14 @@ public class Subscription {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public SubscriptionReason getReason() {
+        return reason;
+    }
+
+    public void setReason(SubscriptionReason reason) {
+        this.reason = reason;
     }
 
     @Transient

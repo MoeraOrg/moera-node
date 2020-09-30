@@ -3,6 +3,7 @@ package org.moera.node.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.Util;
 import org.moera.node.data.Subscription;
+import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -16,6 +17,7 @@ public class SubscriptionInfo {
     private String remoteFeedName;
     private String remotePostingId;
     private Long createdAt;
+    private SubscriptionReason reason;
 
     public SubscriptionInfo() {
     }
@@ -29,6 +31,7 @@ public class SubscriptionInfo {
         remoteFeedName = subscription.getRemoteFeedName();
         remotePostingId = subscription.getRemoteEntryId();
         createdAt = Util.toEpochSecond(subscription.getCreatedAt());
+        reason = subscription.getReason();
     }
 
     public String getId() {
@@ -93,6 +96,14 @@ public class SubscriptionInfo {
 
     public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public SubscriptionReason getReason() {
+        return reason;
+    }
+
+    public void setReason(SubscriptionReason reason) {
+        this.reason = reason;
     }
 
 }

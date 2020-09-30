@@ -4,6 +4,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import org.moera.node.data.Subscription;
+import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
 
 public class SubscriptionDescription {
@@ -25,6 +26,8 @@ public class SubscriptionDescription {
 
     @Size(max = 40)
     private String remotePostingId;
+
+    private SubscriptionReason reason = SubscriptionReason.USER;
 
     public SubscriptionType getType() {
         return type;
@@ -74,6 +77,14 @@ public class SubscriptionDescription {
         this.remotePostingId = remotePostingId;
     }
 
+    public SubscriptionReason getReason() {
+        return reason;
+    }
+
+    public void setReason(SubscriptionReason reason) {
+        this.reason = reason;
+    }
+
     public void toSubscription(Subscription subscription) {
         subscription.setSubscriptionType(type);
         subscription.setFeedName(feedName);
@@ -81,6 +92,7 @@ public class SubscriptionDescription {
         subscription.setRemoteNodeName(remoteNodeName);
         subscription.setRemoteFeedName(remoteFeedName);
         subscription.setRemoteEntryId(remotePostingId);
+        subscription.setReason(reason);
     }
 
 }

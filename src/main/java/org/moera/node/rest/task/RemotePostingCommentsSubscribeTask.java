@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.Subscription;
+import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.model.SubscriberDescriptionQ;
@@ -20,13 +21,15 @@ public class RemotePostingCommentsSubscribeTask extends Task {
 
     private String targetNodeName;
     private String postingId;
+    private SubscriptionReason reason;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
 
-    public RemotePostingCommentsSubscribeTask(String targetNodeName, String postingId) {
+    public RemotePostingCommentsSubscribeTask(String targetNodeName, String postingId, SubscriptionReason reason) {
         this.targetNodeName = targetNodeName;
         this.postingId = postingId;
+        this.reason = reason;
     }
 
     @Override
@@ -48,6 +51,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             subscription.setRemoteSubscriberId(subscriberInfo.getId());
             subscription.setRemoteNodeName(targetNodeName);
             subscription.setRemoteEntryId(postingId);
+            subscription.setReason(reason);
             subscription = subscriptionRepository.save(subscription);
             send(new SubscriptionAddedEvent(subscription));
             success();

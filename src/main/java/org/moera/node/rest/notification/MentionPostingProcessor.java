@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.SubscriptionReason;
 import org.moera.node.instant.MentionPostingInstants;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
@@ -33,7 +34,7 @@ public class MentionPostingProcessor {
         mentionPostingInstants.added(
                 notification.getSenderNodeName(), notification.getPostingId(), notification.getHeading());
         var task = new RemotePostingCommentsSubscribeTask(
-                notification.getSenderNodeName(), notification.getPostingId());
+                notification.getSenderNodeName(), notification.getPostingId(), SubscriptionReason.MENTION);
         taskAutowire.autowire(task);
         taskExecutor.execute(task);
     }
