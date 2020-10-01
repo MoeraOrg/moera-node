@@ -87,6 +87,9 @@ public class CommentReactionController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
+        if (comment.getCurrentRevision().getSignature() == null) {
+            throw new ValidationFailure("comment.not-signed");
+        }
 
         reactionOperations.validate(reactionDescription, comment);
         Reaction reaction = reactionOperations.post(reactionDescription, comment, r -> notifyDeleted(comment, r),
