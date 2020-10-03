@@ -26,7 +26,10 @@
     <springProfile name="dev">
         <logger name="org.moera" level="DEBUG"/>
         <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <!-- to log all bound parameters in SQL -->
+        <!--
         <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/>
         <logger name="org.springframework.transaction.interceptor" level="TRACE"/>
+        -->
     </springProfile>
 </configuration>
