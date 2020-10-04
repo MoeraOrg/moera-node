@@ -65,10 +65,8 @@ public class StoryController {
                 LogUtil.format(storyAttributes.getViewed()),
                 LogUtil.format(storyAttributes.getRead()));
 
-        Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (story == null) {
-            throw new ObjectNotFoundFailure("story.not-found");
-        }
+        Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
         storyAttributes.toStory(story);
         if (storyAttributes.getFeedName() != null
                 || storyAttributes.getPublishAt() != null

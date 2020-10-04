@@ -98,10 +98,8 @@ public class TimelineUiController {
             return null;
         }
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new PageNotFoundException();
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(PageNotFoundException::new);
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));

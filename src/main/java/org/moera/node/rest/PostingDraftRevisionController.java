@@ -64,10 +64,8 @@ public class PostingDraftRevisionController {
     public PostingInfo get(@PathVariable UUID postingId) {
         log.info("GET /postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         EntryRevision revision = posting.getDraftRevision() != null
                 ? posting.getDraftRevision() : posting.getCurrentRevision();
@@ -83,10 +81,8 @@ public class PostingDraftRevisionController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         try {
             EntryRevision revision = posting.getDraftRevision() != null
@@ -110,10 +106,8 @@ public class PostingDraftRevisionController {
     public Result delete(@PathVariable UUID postingId) {
         log.info("DELETE /postings/{postingId}/revisions/draft (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         if (posting.getDraftRevision() == null) {
             return Result.OK;

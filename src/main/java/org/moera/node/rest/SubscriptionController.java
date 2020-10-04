@@ -149,10 +149,8 @@ public class SubscriptionController {
                 LogUtil.format(remoteNodeName));
 
         Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
-                remoteSubscriberId).orElse(null);
-        if (subscription == null) {
-            throw new ObjectNotFoundFailure("subscription.not-found");
-        }
+                remoteSubscriberId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
 
         subscriptionRepository.delete(subscription);
         requestContext.send(new SubscriptionDeletedEvent(subscription));

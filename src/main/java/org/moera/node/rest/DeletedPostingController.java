@@ -84,10 +84,8 @@ public class DeletedPostingController {
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /deleted-postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         return new PostingInfo(posting, true);
     }
@@ -99,10 +97,8 @@ public class DeletedPostingController {
     public PostingInfo restore(@PathVariable UUID id) {
         log.info("POST /deleted-postings/{id}/restore (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);

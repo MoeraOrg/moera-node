@@ -142,10 +142,8 @@ public class PostingController {
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingText.toEntry(posting);
         try {
@@ -168,10 +166,8 @@ public class PostingController {
 
         Set<String> includeSet = Util.setParam(include);
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         return withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
                 requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()))));
@@ -183,10 +179,8 @@ public class PostingController {
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingOperations.deletePosting(posting);
         storyOperations.unpublish(posting.getId());

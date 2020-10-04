@@ -80,10 +80,8 @@ public class CommentReactionController {
                 LogUtil.format(reactionDescription.isNegative()),
                 LogUtil.format(reactionDescription.getEmoji()));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -134,10 +132,8 @@ public class CommentReactionController {
                 LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(negative), LogUtil.format(emoji),
                 LogUtil.format(before), LogUtil.format(limit));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -160,10 +156,8 @@ public class CommentReactionController {
                         + " (postingId = {}, commentId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -184,10 +178,8 @@ public class CommentReactionController {
         log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -218,10 +210,8 @@ public class CommentReactionController {
             throw new AuthenticationException();
         }
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }

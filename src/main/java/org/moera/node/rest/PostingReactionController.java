@@ -86,10 +86,8 @@ public class PostingReactionController {
                 LogUtil.format(reactionDescription.isNegative()),
                 LogUtil.format(reactionDescription.getEmoji()));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("reaction.posting-not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         reactionOperations.validate(reactionDescription, posting);
 
@@ -152,10 +150,8 @@ public class PostingReactionController {
                 LogUtil.format(postingId), LogUtil.format(negative), LogUtil.format(emoji), LogUtil.format(before),
                 LogUtil.format(limit));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("reaction.posting-not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!posting.isReactionsVisible() && !requestContext.isAdmin()
                 && !requestContext.isClient(posting.getOwnerName())) {
             return ReactionsSliceInfo.EMPTY;
@@ -174,10 +170,8 @@ public class PostingReactionController {
         log.info("GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("reaction.posting-not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!posting.isReactionsVisible() && !requestContext.isAdmin()
                 && !requestContext.isClient(posting.getOwnerName())) {
             return ReactionInfo.ofPosting(postingId);
@@ -194,10 +188,8 @@ public class PostingReactionController {
     public Result deleteAll(@PathVariable UUID postingId) {
         log.info("DELETE /postings/{postingId}/reactions (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("reaction.posting-not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(postingId);
@@ -223,10 +215,8 @@ public class PostingReactionController {
             throw new AuthenticationException();
         }
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("reaction.posting-not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         if (posting.isOriginal()) {
             return deleteFromOriginal(ownerName, posting);

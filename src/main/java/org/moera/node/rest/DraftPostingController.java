@@ -129,10 +129,8 @@ public class DraftPostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
-        Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         postingText.toEntry(posting);
         Duration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
         posting.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
@@ -152,10 +150,8 @@ public class DraftPostingController {
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /draft-postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         return new PostingInfo(posting, posting.getDraftRevision(), true,
                 requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()));
@@ -167,10 +163,8 @@ public class DraftPostingController {
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /draft-postings/{id}, (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         posting.setDeletedAt(Util.now());
         Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
         posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));

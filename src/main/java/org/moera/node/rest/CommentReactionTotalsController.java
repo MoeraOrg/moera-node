@@ -37,10 +37,8 @@ public class CommentReactionTotalsController {
         log.info("GET /postings/{postingId}/comments/{commentId}/reaction-totals (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }

@@ -41,10 +41,8 @@ public class AsyncOperationController {
         log.info("GET /async-operations/remote-posting-verification/{id}, (id = {})", LogUtil.format(id));
 
         RemotePostingVerification data =
-                remotePostingVerificationRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (data == null) {
-            throw new ObjectNotFoundFailure("async-operation.not-found");
-        }
+                remotePostingVerificationRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                        .orElseThrow(() -> new ObjectNotFoundFailure("async-operation.not-found"));
 
         return new RemotePostingVerificationInfo(data);
     }
@@ -55,10 +53,8 @@ public class AsyncOperationController {
         log.info("GET /async-operations/remote-reaction-verification/{id}, (id = {})", LogUtil.format(id));
 
         RemoteReactionVerification data =
-                remoteReactionVerificationRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (data == null) {
-            throw new ObjectNotFoundFailure("async-operation.not-found");
-        }
+                remoteReactionVerificationRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                        .orElseThrow(() -> new ObjectNotFoundFailure("async-operation.not-found"));
 
         return new RemoteReactionVerificationInfo(data);
     }

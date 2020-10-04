@@ -87,10 +87,8 @@ public class SubscriberController {
     public SubscriberInfo get(@PathVariable UUID id) throws AuthenticationException {
         log.info("GET /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
-        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (subscriber == null) {
-            throw new ObjectNotFoundFailure("subscriber.not-found");
-        }
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         String ownerName = requestContext.getClientName();
         if (!requestContext.isAdmin()
                 && (StringUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
@@ -140,10 +138,7 @@ public class SubscriberController {
         if (subscriberDescription.getPostingId() != null) {
             Posting posting = postingRepository.findByNodeIdAndId(
                     requestContext.nodeId(), subscriberDescription.getPostingId())
-                    .orElse(null);
-            if (posting == null) {
-                throw new ValidationFailure("subscriberDescription.postingId.not-found");
-            }
+                    .orElseThrow(() -> new ValidationFailure("subscriberDescription.postingId.not-found"));
             subscriber.setEntry(posting);
 
             if (subscriber.getSubscriptionType() == SubscriptionType.POSTING) {
@@ -196,10 +191,8 @@ public class SubscriberController {
     public Result delete(@PathVariable UUID id) throws AuthenticationException {
         log.info("DELETE /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
-        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (subscriber == null) {
-            throw new ObjectNotFoundFailure("subscriber.not-found");
-        }
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         String ownerName = requestContext.getClientName();
         if (!requestContext.isAdmin()
                 && (StringUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {

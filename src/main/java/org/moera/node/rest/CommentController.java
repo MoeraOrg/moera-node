@@ -143,10 +143,8 @@ public class CommentController {
                 LogUtil.format(commentText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         Comment repliedTo = null;
         if (commentText.getRepliedToId() != null) {
             repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentText.getRepliedToId())
@@ -194,10 +192,8 @@ public class CommentController {
                 LogUtil.format(commentText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -289,10 +285,8 @@ public class CommentController {
         log.info("GET /postings/{postingId}/comments (postingId = {}, before = {}, after = {}, limit = {})",
                 LogUtil.format(postingId), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
 
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (before != null && after != null) {
             throw new ValidationFailure("comments.before-after-exclusive");
         }
@@ -371,10 +365,8 @@ public class CommentController {
 
         Set<String> includeSet = Util.setParam(include);
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -391,10 +383,8 @@ public class CommentController {
         log.info("DELETE /postings/{postingId}/comments/{commentId} (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null);
-        if (comment == null) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }

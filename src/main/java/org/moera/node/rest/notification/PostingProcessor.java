@@ -89,10 +89,7 @@ public class PostingProcessor {
             throw new UnsubscribeFailure();
         }
         Posting posting = postingRepository.findByReceiverId(requestContext.nodeId(), subscription.getRemoteNodeName(),
-                notification.getPostingId()).orElse(null);
-        if (posting == null) {
-            throw new UnsubscribeFailure();
-        }
+                notification.getPostingId()).orElseThrow(UnsubscribeFailure::new);
 
         runnable.run(subscription, posting);
     }
