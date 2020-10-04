@@ -49,7 +49,7 @@ public class Subscription {
 
     @NotNull
     @Enumerated
-    private SubscriptionReason reason;
+    private SubscriptionReason reason = SubscriptionReason.USER;
 
     public UUID getId() {
         return id;
