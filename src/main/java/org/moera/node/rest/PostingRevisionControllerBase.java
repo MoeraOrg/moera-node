@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class PostingRevisionControllerBase {
 
-    private static final int MAX_REVISIONS_PER_REQUEST = 20;
+    private static final int MAX_REVISIONS_PER_REQUEST = 10;
 
     @Inject
     protected RequestContext requestContext;
