@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,11 +23,16 @@ import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 public abstract class PostingRevisionControllerBase {
+
+    private static final int MAX_REVISIONS_PER_REQUEST = 20;
 
     @Inject
     protected RequestContext requestContext;
@@ -56,20 +60,26 @@ public abstract class PostingRevisionControllerBase {
     protected abstract Event getRestorationEvent(Posting posting);
 
     @GetMapping
-    public List<PostingRevisionInfo> getAll(@PathVariable UUID postingId) {
-        getLog().info("GET {}/{postingId}/revisions (postingId = {})", getDirectory(), LogUtil.format(postingId));
+    public List<PostingRevisionInfo> getAll(@PathVariable UUID postingId,
+                                            @RequestParam(required = false) Integer limit) {
+        getLog().info("GET {}/{postingId}/revisions (postingId = {}, limit = {})",
+                getDirectory(), LogUtil.format(postingId), LogUtil.format(limit));
 
         Posting posting = findPosting(postingId);
         if (posting == null) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        UUID draftId = posting.getDraftRevision() != null ? posting.getDraftRevision().getId() : null;
+        limit = limit != null && limit <= MAX_REVISIONS_PER_REQUEST ? limit : MAX_REVISIONS_PER_REQUEST;
+        if (limit < 0) {
+            throw new ValidationFailure("limit.invalid");
+        }
+
         boolean countsVisible = reactionTotalOperations.isVisibleToClient(posting);
-        return posting.getRevisions().stream()
-                .filter(r -> !r.getId().equals(draftId))
+        return entryRevisionRepository.findAllByEntryId(requestContext.nodeId(), postingId,
+                PageRequest.of(0, limit, Sort.Direction.DESC, "createdAt"))
+                .get()
                 .map(r -> new PostingRevisionInfo(r, countsVisible))
-                .sorted(Comparator.comparing(PostingRevisionInfo::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
 

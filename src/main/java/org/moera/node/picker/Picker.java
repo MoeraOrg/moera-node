@@ -12,6 +12,7 @@ import javax.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiErrorStatusException;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.data.EntryRevision;
@@ -194,12 +195,12 @@ public class Picker extends Task {
     private void downloadRevisions(Posting posting) throws NodeApiException {
         PostingRevisionInfo[] revisionInfos = nodeApi.getPostingRevisions(remoteNodeName, posting.getReceiverEntryId());
         EntryRevision currentRevision = null;
+        EntryRevision latestRevision = null;
         for (PostingRevisionInfo revisionInfo : revisionInfos) {
             if (revisionInfo.getId().equals(posting.getCurrentReceiverRevisionId())) {
                 if (revisionInfo.getDeletedAt() == null) {
                     currentRevision = posting.getCurrentRevision();
                 } else {
-                    posting.getCurrentRevision().setDeletedAt(Util.now());
                     posting.getCurrentRevision().setReceiverDeletedAt(Util.toTimestamp(revisionInfo.getDeletedAt()));
                 }
                 break;
@@ -215,10 +216,22 @@ public class Picker extends Task {
             if (revisionInfo.getDeletedAt() == null) {
                 currentRevision = revision;
             }
+            if (latestRevision == null) {
+                latestRevision = revision;
+            }
             posting.setTotalRevisions(posting.getTotalRevisions() + 1);
         }
-        posting.setCurrentRevision(currentRevision);
-        if (currentRevision != null) {
+
+        currentRevision = currentRevision != null ? currentRevision : latestRevision;
+        if (currentRevision != null && (posting.getCurrentRevision() == null
+                || !currentRevision.getId().equals(posting.getCurrentRevision().getId()))) {
+            if (posting.getCurrentRevision() != null) {
+                posting.getCurrentRevision().setDeletedAt(Util.now());
+                if (posting.getCurrentRevision().getReceiverDeletedAt() == null) {
+                    posting.getCurrentRevision().setReceiverDeletedAt(Util.now());
+                }
+            }
+            posting.setCurrentRevision(currentRevision);
             posting.setCurrentReceiverRevisionId(currentRevision.getReceiverRevisionId());
         }
     }
@@ -239,16 +252,22 @@ public class Picker extends Task {
 
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
                 receiverPostingId, Util.toEpochSecond(lastUpdatedAt));
-        SubscriberInfo subscriberInfo = nodeApi.postSubscriber(receiverName, generateCarte(), description);
-        Subscription subscription = new Subscription();
-        subscription.setId(UUID.randomUUID());
-        subscription.setNodeId(nodeId);
-        subscription.setSubscriptionType(SubscriptionType.POSTING);
-        subscription.setRemoteSubscriberId(subscriberInfo.getId());
-        subscription.setRemoteNodeName(receiverName);
-        subscription.setRemoteEntryId(receiverPostingId);
-        subscription = subscriptionRepository.save(subscription);
-        events.add(new SubscriptionAddedEvent(subscription));
+        try {
+            SubscriberInfo subscriberInfo = nodeApi.postSubscriber(receiverName, generateCarte(), description);
+            Subscription subscription = new Subscription();
+            subscription.setId(UUID.randomUUID());
+            subscription.setNodeId(nodeId);
+            subscription.setSubscriptionType(SubscriptionType.POSTING);
+            subscription.setRemoteSubscriberId(subscriberInfo.getId());
+            subscription.setRemoteNodeName(receiverName);
+            subscription.setRemoteEntryId(receiverPostingId);
+            subscription = subscriptionRepository.save(subscription);
+            events.add(new SubscriptionAddedEvent(subscription));
+        } catch (NodeApiErrorStatusException e) {
+            if (!e.getResult().getErrorCode().equals("subscriber.already-exists")) {
+                throw e;
+            }
+        }
     }
 
     private void saveSources(Posting posting, Pick pick) {
