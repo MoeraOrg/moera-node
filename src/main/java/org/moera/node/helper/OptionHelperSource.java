@@ -12,12 +12,16 @@ public class OptionHelperSource {
     @Inject
     private RequestContext requestContext;
 
+    private String getOptionString(String name) {
+        return requestContext.getOptions() != null ? requestContext.getOptions().getString(name) : "";
+    }
+
     public CharSequence optionHtml(String name) {
-        return new SafeString(requestContext.getOptions().getString(name));
+        return new SafeString(getOptionString(name));
     }
 
     public CharSequence assignOption(String variableName, String name, Options options) {
-        options.data(variableName, requestContext.getOptions().getString(name));
+        options.data(variableName, getOptionString(name));
         return "";
     }
 
