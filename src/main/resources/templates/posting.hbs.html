@@ -14,13 +14,18 @@
             </span>
         </div>
     {{/if}}
-    <div class="owner">
-        {{nodename posting.ownerName}}
-        {{#if posting.receiverName}}
-            {{#ifne posting.receiverName posting.ownerName}}
-                &#x25b8; {{nodename posting.receiverName}}
-            {{/ifne}}
+    <div class="owner-line">
+        {{#if originalHref}}
+            <a class="posting-source" href="{{originalHref}}"><i class="fas fa-retweet"></i></a>
         {{/if}}
+        <span class="owner">
+            {{nodename posting.ownerName}}
+            {{#if posting.receiverName}}
+                {{#ifne posting.receiverName posting.ownerName}}
+                    &#x25b8; {{nodename posting.receiverName}}
+                {{/ifne}}
+            {{/if}}
+        </span>
         <span class="date">
             {{cal "dd-MM-yyyy HH:mm" es=posting.timelinePublishedAt fromNow="posting.time.relative"}}
             {{#ifgt posting.totalRevisions 1}}

@@ -46,23 +46,31 @@
         }
     }
 
-    .owner {
-        font-weight: bold;
+    & > .owner-line {
         margin-bottom: 0.2em;
 
-        A {
-            color: var(--node-name);
+        .posting-source {
+            color: var(--info);
+            margin-right: .3em;
         }
-    }
 
-    .date {
-        font-size: 0.8rem;
-        font-weight: normal;
-        color: var(--gray-medium);
-        margin-left: 0.5em;
+        .owner {
+            font-weight: bold;
 
-        A {
-            color: inherit;
+            A {
+                color: var(--node-name);
+            }
+        }
+
+        .date {
+            font-size: 0.8rem;
+            font-weight: normal;
+            color: var(--gray-medium);
+            margin-left: 0.5em;
+
+            A {
+                color: inherit;
+            }
         }
     }
 

@@ -129,6 +129,8 @@ public class TimelineUiController {
             model.addAttribute("commentId", Objects.toString(commentId, null));
             model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
         } else {
+            model.addAttribute("originalHref", NamingCache.getRedirector(posting.getReceiverName(),
+                    String.format("/post/%s", posting.getReceiverEntryId())));
             String location = commentId != null
                     ? String.format("/post/%s?comment=%s", posting.getReceiverEntryId(), commentId)
                     : String.format("/post/%s", posting.getReceiverEntryId());
