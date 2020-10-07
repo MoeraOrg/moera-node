@@ -144,6 +144,9 @@ public class PostingController {
         }
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!posting.isOriginal()) {
+            throw new ValidationFailure("posting.not-original");
+        }
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingText.toEntry(posting);
         try {
