@@ -16,39 +16,34 @@
         color: var(--node-name);
     }
 
-    .content {
-        BLOCKQUOTE {
-            padding: 0.2rem 0.2rem 0.2rem 3rem;
-            position: relative;
-            background-color: var(--blockquote);
-            border-radius: 0.5rem;
-
-            &::before {
-                content: "\201C";
-                font-family: serif;
-                font-size: 4rem;
-                color: var(--cyan);
-                position: absolute;
-                left: 0.5rem;
-                top: -1rem;
-            }
-        }
-
+    & > .content {
         @media only screen and (min-width: 901px) {
-            P IMG {
+            IMG {
                 max-width: calc(900px - 3.5rem);
             }
         }
 
         @media only screen and (max-width: 900px) {
-            P IMG {
+            IMG {
                 max-width: calc(100vw - 4rem);
             }
         }
     }
 
-    &.preview .content IMG {
-        max-height: 35rem;
+    &.preview > .content {
+        IMG {
+            max-height: 35rem;
+        }
+
+        @media only screen and (min-width: 901px) {
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        @media only screen and (max-width: 900px) {
+            max-height: 150vh;
+            overflow-y: auto;
+        }
     }
 
     .owner {
