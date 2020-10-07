@@ -47,7 +47,13 @@
 
     <a name="comments"></a>
     {{#if comments}}
-        <div id="comments">
+        {{#if commentId}}
+            {{#assign "openness"}}open{{/assign}}
+        {{else}}
+            {{#assign "openness"}}{{/assign}}
+        {{/if}}
+        <details id="comments" {{openness}}>
+            <summary>Comments ({{posting.totalComments}})</summary>
             {{#each comments}}
                 <a name="comment-{{id}}"></a>
                 {{#ifeq id commentId}}
@@ -88,7 +94,7 @@
                     </div>
                 </div>
             {{/each}}
-        </div>
+        </details>
     {{/if}}
     {{#if commentsHref}}
         <div id="comments-original">
