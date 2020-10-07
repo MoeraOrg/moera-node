@@ -296,12 +296,17 @@ public class CommentController {
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
+
+        CommentsSliceInfo sliceInfo;
         if (after == null) {
             before = before != null ? before : Long.MAX_VALUE;
-            return getCommentsBefore(postingId, before, limit);
+            sliceInfo = getCommentsBefore(postingId, before, limit);
         } else {
-            return getCommentsAfter(postingId, after, limit);
+            sliceInfo = getCommentsAfter(postingId, after, limit);
         }
+        calcSliceTotals(sliceInfo, posting);
+
+        return sliceInfo;
     }
 
     private CommentsSliceInfo getCommentsBefore(UUID postingId, long before, int limit) {
@@ -355,6 +360,21 @@ public class CommentController {
             comments.remove(limit);
         }
         sliceInfo.setComments(comments);
+    }
+
+    private void calcSliceTotals(CommentsSliceInfo sliceInfo, Posting posting) {
+        if (sliceInfo.getAfter() == Long.MIN_VALUE) {
+            sliceInfo.setTotalInPast(0);
+            sliceInfo.setTotalInFuture(posting.getTotalChildren() - sliceInfo.getComments().size());
+        } else if (sliceInfo.getBefore() == Long.MAX_VALUE) {
+            sliceInfo.setTotalInFuture(0);
+            sliceInfo.setTotalInPast(posting.getTotalChildren() - sliceInfo.getComments().size());
+        } else {
+            int totalInFuture = commentRepository.countInRange(requestContext.nodeId(), posting.getId(),
+                    sliceInfo.getBefore(), Long.MAX_VALUE);
+            sliceInfo.setTotalInFuture(totalInFuture);
+            sliceInfo.setTotalInPast(posting.getTotalChildren() - totalInFuture - sliceInfo.getComments().size());
+        }
     }
 
     @GetMapping("/{commentId}")
