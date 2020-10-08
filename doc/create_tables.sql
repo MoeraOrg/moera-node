@@ -171,6 +171,23 @@ CREATE TABLE public.options (
 ALTER TABLE public.options OWNER TO moera;
 
 --
+-- Name: own_comments; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.own_comments (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_posting_id character varying(40) NOT NULL,
+    remote_comment_id character varying(40) NOT NULL,
+    heading character varying(255) NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.own_comments OWNER TO moera;
+
+--
 -- Name: own_reactions; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -362,7 +379,7 @@ ALTER TABLE public.schema_history OWNER TO moera;
 CREATE TABLE public.stories (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     node_id uuid NOT NULL,
-    feed_name character varying(63) DEFAULT 'timeline'::character varying NOT NULL,
+    feed_name character varying(63) DEFAULT 'timeline'::character varying,
     story_type smallint DEFAULT 0 NOT NULL,
     created_at timestamp without time zone NOT NULL,
     moment bigint NOT NULL,
@@ -374,23 +391,17 @@ CREATE TABLE public.stories (
     summary character varying(512) DEFAULT ''::character varying NOT NULL,
     tracking_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     remote_node_name character varying(63),
-    remote_entry_id character varying(40)
+    remote_posting_id character varying(40),
+    parent_id uuid,
+    remote_comment_id character varying(40),
+    remote_owner_name character varying(63),
+    remote_heading character varying(255),
+    remote_replied_to_id character varying(40),
+    remote_replied_to_heading character varying(255)
 );
 
 
 ALTER TABLE public.stories OWNER TO moera;
-
---
--- Name: stories_reactions; Type: TABLE; Schema: public; Owner: moera
---
-
-CREATE TABLE public.stories_reactions (
-    story_id uuid NOT NULL,
-    reaction_id uuid NOT NULL
-);
-
-
-ALTER TABLE public.stories_reactions OWNER TO moera;
 
 --
 -- Name: subscribers; Type: TABLE; Schema: public; Owner: moera
@@ -422,7 +433,8 @@ CREATE TABLE public.subscriptions (
     remote_node_name character varying(63) NOT NULL,
     remote_feed_name character varying(63),
     remote_entry_id character varying(40),
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    reason smallint DEFAULT 0 NOT NULL
 );
 
 
@@ -498,6 +510,14 @@ ALTER TABLE ONLY public.options
 
 ALTER TABLE ONLY public.options
     ADD CONSTRAINT options_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: own_comments own_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.own_comments
+    ADD CONSTRAINT own_comments_pkey PRIMARY KEY (id);
 
 
 --
@@ -746,6 +766,13 @@ CREATE INDEX options_node_id_idx ON public.options USING btree (node_id);
 
 
 --
+-- Name: own_comments_node_id_remote_node_name_remote_posting_id_rem_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX own_comments_node_id_remote_node_name_remote_posting_id_rem_idx ON public.own_comments USING btree (node_id, remote_node_name, remote_posting_id, remote_comment_id);
+
+
+--
 -- Name: own_reactions_node_id_remote_node_name_remote_posting_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -907,24 +934,24 @@ CREATE INDEX stories_node_id_feed_name_viewed_idx ON public.stories USING btree 
 
 
 --
--- Name: stories_node_id_remote_node_name_remote_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: stories_node_id_remote_node_name_remote_posting_id_remote_c_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX stories_node_id_remote_node_name_remote_entry_id_idx ON public.stories USING btree (node_id, remote_node_name, remote_entry_id);
-
-
---
--- Name: stories_reactions_reaction_id_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX stories_reactions_reaction_id_idx ON public.stories_reactions USING btree (reaction_id);
+CREATE INDEX stories_node_id_remote_node_name_remote_posting_id_remote_c_idx ON public.stories USING btree (node_id, remote_node_name, remote_posting_id, remote_comment_id);
 
 
 --
--- Name: stories_reactions_story_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: stories_node_id_remote_node_name_remote_posting_id_remote_r_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX stories_reactions_story_id_idx ON public.stories_reactions USING btree (story_id);
+CREATE INDEX stories_node_id_remote_node_name_remote_posting_id_remote_r_idx ON public.stories USING btree (node_id, remote_node_name, remote_posting_id, remote_replied_to_id);
+
+
+--
+-- Name: stories_parent_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX stories_parent_id_idx ON public.stories USING btree (parent_id);
 
 
 --
@@ -1060,19 +1087,11 @@ ALTER TABLE ONLY public.stories
 
 
 --
--- Name: stories_reactions stories_reactions_reaction_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: stories stories_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
-ALTER TABLE ONLY public.stories_reactions
-    ADD CONSTRAINT stories_reactions_reaction_id_fkey FOREIGN KEY (reaction_id) REFERENCES public.reactions(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: stories_reactions stories_reactions_story_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.stories_reactions
-    ADD CONSTRAINT stories_reactions_story_id_fkey FOREIGN KEY (story_id) REFERENCES public.stories(id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.stories
+    ADD CONSTRAINT stories_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.stories(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

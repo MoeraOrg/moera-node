@@ -3,11 +3,14 @@ package org.moera.node.rest.task;
 import java.security.interfaces.ECPrivateKey;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.data.OwnComment;
+import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.CommentCreated;
@@ -36,6 +39,9 @@ public class RemoteCommentPostTask extends Task {
     @Inject
     private RepliedToDigestVerifier repliedToDigestVerifier;
 
+    @Inject
+    private OwnCommentRepository ownCommentRepository;
+
     public RemoteCommentPostTask(String targetNodeName, String postingId, String commentId,
                                  CommentSourceText sourceText) {
         this.targetNodeName = targetNodeName;
@@ -52,12 +58,16 @@ public class RemoteCommentPostTask extends Task {
             byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, targetNodeName, postingInfo,
                     Objects.toString(sourceText.getRepliedToId(), null), getCommentRepliedAt());
             CommentText commentText = buildComment(postingInfo, repliedToDigest);
+            CommentInfo commentInfo;
             if (commentId == null) {
                 CommentCreated created = nodeApi.postComment(targetNodeName, postingId, commentText);
-                send(new RemoteCommentAddedEvent(targetNodeName, postingId, created.getComment().getId()));
+                commentInfo = created.getComment();
+                commentId = commentInfo.getId();
+                send(new RemoteCommentAddedEvent(targetNodeName, postingId, commentId));
             } else {
-                nodeApi.putComment(targetNodeName, postingId, commentId, commentText);
+                commentInfo = nodeApi.putComment(targetNodeName, postingId, commentId, commentText);
             }
+            saveComment(commentInfo);
             success();
         } catch (Exception e) {
             error(e);
@@ -76,6 +86,27 @@ public class RemoteCommentPostTask extends Task {
         commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
         commentText.setSignatureVersion(CommentFingerprint.VERSION);
         return commentText;
+    }
+
+    private void saveComment(CommentInfo info) {
+        try {
+            inTransaction(() -> {
+                OwnComment ownComment = ownCommentRepository
+                        .findByRemoteCommentId(nodeId, targetNodeName, postingId, commentId)
+                        .orElse(null);
+                if (ownComment == null) {
+                    ownComment = new OwnComment();
+                    ownComment.setId(UUID.randomUUID());
+                    ownComment.setNodeId(nodeId);
+                    ownComment.setRemoteNodeName(targetNodeName);
+                    ownComment = ownCommentRepository.save(ownComment);
+                }
+                info.toOwnComment(ownComment);
+                return null;
+            });
+        } catch (Throwable e) {
+            error(e);
+        }
     }
 
     private void success() {

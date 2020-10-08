@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.SourceFormat;
@@ -53,6 +54,9 @@ public class RemoteCommentController {
 
     @Inject
     private RemoteCommentVerificationRepository remoteCommentVerificationRepository;
+
+    @Inject
+    private OwnCommentRepository ownCommentRepository;
 
     @PostMapping
     @Admin
@@ -102,6 +106,7 @@ public class RemoteCommentController {
 
     @DeleteMapping("/{commentId}")
     @Admin
+    @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId, @PathVariable String commentId) {
         log.info("DELETE /nodes/{nodeName}/postings/{postingId}/comments/{commentId}"
                         + " (nodeName = {}, postingId = {}, commentId = {}",
@@ -109,7 +114,7 @@ public class RemoteCommentController {
                 LogUtil.format(postingId),
                 LogUtil.format(commentId));
 
-        // TODO remove the comment from the activity log
+        ownCommentRepository.deleteByRemoteCommentId(requestContext.nodeId(), nodeName, postingId, commentId);
 
         return Result.OK;
     }

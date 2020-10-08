@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.OwnComment;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
 
@@ -314,6 +315,13 @@ public class CommentInfo implements ReactionsInfo {
 
     public void setReactions(ReactionTotalsInfo reactions) {
         this.reactions = reactions;
+    }
+
+    public void toOwnComment(OwnComment ownComment) {
+        ownComment.setRemotePostingId(postingId);
+        ownComment.setRemoteCommentId(id);
+        ownComment.setHeading(heading);
+        ownComment.setCreatedAt(Util.now());
     }
 
 }
