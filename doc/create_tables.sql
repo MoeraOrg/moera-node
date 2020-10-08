@@ -40,7 +40,8 @@ SET default_with_oids = false;
 
 CREATE TABLE public.domains (
     name character varying(63) NOT NULL,
-    node_id uuid NOT NULL
+    node_id uuid NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
