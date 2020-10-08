@@ -12,7 +12,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
@@ -39,6 +38,7 @@ import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.MomentFinder;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +46,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 
 @Component
@@ -74,6 +75,9 @@ public class ReactionOperations {
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
@@ -184,28 +188,30 @@ public class ReactionOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    @Transactional
-    public void purgeExpired() {
+    public void purgeExpired() throws Throwable {
         Set<Entry> changed = new HashSet<>();
-        reactionRepository.findExpired(Util.now()).forEach(reaction -> {
-            Entry entry = reaction.getEntryRevision().getEntry();
-            if (reaction.getDeletedAt() == null) {
-                List<Reaction> deleted = reactionRepository.findDeletedByEntryIdAndOwner(
-                        entry.getId(),
-                        reaction.getOwnerName(),
-                        PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
-                if (deleted.size() > 0) {
-                    Reaction next = deleted.get(0);
-                    next.setDeletedAt(null);
-                    if (next.getSignature() != null) {
-                        next.setDeadline(null);
+        Transaction.execute(txManager, () -> {
+            reactionRepository.findExpired(Util.now()).forEach(reaction -> {
+                Entry entry = reaction.getEntryRevision().getEntry();
+                if (reaction.getDeletedAt() == null) {
+                    List<Reaction> deleted = reactionRepository.findDeletedByEntryIdAndOwner(
+                            entry.getId(),
+                            reaction.getOwnerName(),
+                            PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
+                    if (deleted.size() > 0) {
+                        Reaction next = deleted.get(0);
+                        next.setDeletedAt(null);
+                        if (next.getSignature() != null) {
+                            next.setDeadline(null);
+                        }
+                        reactionTotalOperations.changeTotals(entry, next, 1);
                     }
-                    reactionTotalOperations.changeTotals(entry, next, 1);
+                    reactionTotalOperations.changeTotals(entry, reaction, -1);
+                    changed.add(entry);
                 }
-                reactionTotalOperations.changeTotals(entry, reaction, -1);
-                changed.add(entry);
-            }
-            reactionRepository.delete(reaction);
+                reactionRepository.delete(reaction);
+            });
+            return null;
         });
         for (Entry entry : changed) {
             switch (entry.getEntryType()) {
