@@ -27,7 +27,6 @@ import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.auth.Admin;
-import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.NameToRegister;
@@ -36,6 +35,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
@@ -113,7 +113,7 @@ public class NodeNameController {
 
             namingClient.register(
                     nameToRegister.getName(),
-                    UriUtil.createBuilderFromRequest(request).replacePath("/moera").replaceQuery(null).toUriString(),
+                    getNodeUri(request),
                     publicUpdatingKey,
                     (ECPrivateKey) signingKeyPair.getPrivate(),
                     (ECPublicKey) signingKeyPair.getPublic(),
@@ -128,7 +128,7 @@ public class NodeNameController {
     @PutMapping
     @Admin
     @Transactional
-    public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret) {
+    public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret, HttpServletRequest request) {
         log.info("PUT /node-name");
 
         Options options = requestContext.getOptions();
@@ -176,8 +176,8 @@ public class NodeNameController {
                 signingKey = (ECPublicKey) signingKeyPair.getPublic();
             }
 
-            namingClient.update(registeredName.getName(), registeredName.getGeneration(), privateUpdatingKey,
-                    privateSigningKey, signingKey, options);
+            namingClient.update(registeredName.getName(), registeredName.getGeneration(), getNodeUri(request),
+                    privateUpdatingKey, privateSigningKey, signingKey, options);
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {
@@ -185,6 +185,10 @@ public class NodeNameController {
         }
 
         return Result.OK;
+    }
+
+    private static String getNodeUri(HttpServletRequest request) {
+        return UriUtil.createBuilderFromRequest(request).replacePath("/moera").replaceQuery(null).toUriString();
     }
 
     @DeleteMapping

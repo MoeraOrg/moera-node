@@ -279,7 +279,7 @@ public class NamingClient {
         monitorOperation(options);
     }
 
-    public void update(String name, int generation, ECPrivateKey privateUpdatingKey,
+    public void update(String name, int generation, String nodeUri, ECPrivateKey privateUpdatingKey,
                        ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
 
         NamingService namingService = getNamingService(options);
@@ -302,6 +302,7 @@ public class NamingClient {
 
         byte[] previousDigest = info.getDigest();
         log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
+        nodeUri = nodeUri != null ? nodeUri : info.getNodeUri();
         byte[] signingKeyR = signingKey != null ? CryptoUtil.toRawPublicKey(signingKey) : info.getSigningKey();
         long validFrom = signingKey != null
                 ? Instant.now()
@@ -312,7 +313,7 @@ public class NamingClient {
                 info.getName(),
                 info.getGeneration(),
                 info.getUpdatingKey(),
-                info.getNodeUri(),
+                nodeUri,
                 signingKeyR,
                 validFrom,
                 info.getDigest());
