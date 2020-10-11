@@ -26,6 +26,7 @@ public class StoryEvent extends Event {
     private String trackingId;
     private String remoteNodeName;
     private String remotePostingId;
+    private String remoteCommentId;
     private Map<String, String[]> operations;
     @JsonIgnore
     private boolean isAdmin;
@@ -50,6 +51,7 @@ public class StoryEvent extends Event {
         }
         remoteNodeName = story.getRemoteNodeName();
         remotePostingId = story.getRemotePostingId();
+        remoteCommentId = story.getRemoteCommentId();
         summary = story.getSummary();
         operations = new HashMap<>();
         operations.put("edit", new String[]{"admin"});
@@ -159,6 +161,14 @@ public class StoryEvent extends Event {
 
     public void setRemotePostingId(String remotePostingId) {
         this.remotePostingId = remotePostingId;
+    }
+
+    public String getRemoteCommentId() {
+        return remoteCommentId;
+    }
+
+    public void setRemoteCommentId(String remoteCommentId) {
+        this.remoteCommentId = remoteCommentId;
     }
 
     public Map<String, String[]> getOperations() {
