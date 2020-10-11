@@ -25,6 +25,9 @@ public class HtmlSanitizer {
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
                     .allowElements("h1", "h2", "h3", "h4", "h5", "h6")
+                    .allowAttributes("target")
+                        .matching(false, "_blank")
+                        .onElements("a")
                     .toFactory());
     private static final PolicyFactory SAFE_PREVIEW_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
@@ -37,7 +40,7 @@ public class HtmlSanitizer {
         if (html == null) {
             return null;
         }
-        return SAFE_HTML.sanitize(html);
+        return (preview ? SAFE_PREVIEW_HTML : SAFE_HTML).sanitize(html);
     }
 
     public static String sanitizeIfNeeded(String html, boolean preview) {
