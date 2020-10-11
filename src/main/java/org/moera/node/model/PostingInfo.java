@@ -28,10 +28,12 @@ public class PostingInfo implements ReactionsInfo {
     private String receiverPostingId;
     private String ownerName;
     private Body bodyPreview;
+    private String saneBodyPreview;
     private Body bodySrc;
     private byte[] bodySrcHash;
     private SourceFormat bodySrcFormat;
     private Body body;
+    private String saneBody;
     private String bodyFormat;
     private String heading;
     private Long createdAt;
@@ -141,6 +143,19 @@ public class PostingInfo implements ReactionsInfo {
         subscriptions = new PostingSubscriptionsInfo(posting.getSubscribers());
     }
 
+    public static PostingInfo forUi(Posting posting) {
+        return forUi(posting, null);
+    }
+
+    public static PostingInfo forUi(Posting posting, List<Story> stories) {
+        PostingInfo info = new PostingInfo(posting, stories, false);
+        String saneBodyPreview = posting.getCurrentRevision().getSaneBodyPreview();
+        info.setSaneBodyPreview(saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());
+        String saneBody = posting.getCurrentRevision().getSaneBody();
+        info.setSaneBody(saneBody != null ? saneBody : info.getBody().getText());
+        return info;
+    }
+
     public String getId() {
         return id;
     }
@@ -210,6 +225,14 @@ public class PostingInfo implements ReactionsInfo {
         this.bodyPreview = bodyPreview;
     }
 
+    public String getSaneBodyPreview() {
+        return saneBodyPreview;
+    }
+
+    public void setSaneBodyPreview(String saneBodyPreview) {
+        this.saneBodyPreview = saneBodyPreview;
+    }
+
     public Body getBodySrc() {
         return bodySrc;
     }
@@ -240,6 +263,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setBody(Body body) {
         this.body = body;
+    }
+
+    public String getSaneBody() {
+        return saneBody;
+    }
+
+    public void setSaneBody(String saneBody) {
+        this.saneBody = saneBody;
     }
 
     public String getBodyFormat() {

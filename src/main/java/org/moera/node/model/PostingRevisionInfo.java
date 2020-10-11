@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -182,10 +183,12 @@ public class PostingRevisionInfo implements RevisionInfo {
     public void toPickedEntryRevision(EntryRevision entryRevision) {
         entryRevision.setReceiverRevisionId(id);
         entryRevision.setBodyPreview(bodyPreview.getEncoded());
+        entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
         entryRevision.setBodySrcFormat(bodySrcFormat);
         entryRevision.setReceiverBodySrcHash(bodySrcHash);
         entryRevision.setBodyFormat(bodyFormat);
         entryRevision.setBody(body.getEncoded());
+        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
         entryRevision.setHeading(heading);
         if (deletedAt != null) {
             entryRevision.setDeletedAt(Util.now());

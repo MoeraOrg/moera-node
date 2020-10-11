@@ -147,9 +147,11 @@ public class CommentOperations {
 
         if (template != null) {
             revision.setBodyPreview(template.getBodyPreview());
+            revision.setSaneBodyPreview(template.getSaneBodyPreview());
             revision.setBodySrc(template.getBodySrc());
             revision.setBodySrcFormat(template.getBodySrcFormat());
             revision.setBody(template.getBody());
+            revision.setSaneBody(template.getSaneBody());
             revision.setHeading(template.getHeading());
         }
 

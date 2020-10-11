@@ -33,6 +33,8 @@ public class EntryRevision {
     @NotNull
     private String bodyPreview = "";
 
+    private String saneBodyPreview;
+
     @NotNull
     private String bodySrc = "";
 
@@ -48,6 +50,8 @@ public class EntryRevision {
 
     @NotNull
     private String body = "";
+
+    private String saneBody;
 
     @NotNull
     private String heading = "";
@@ -114,6 +118,14 @@ public class EntryRevision {
         this.bodyPreview = bodyPreview;
     }
 
+    public String getSaneBodyPreview() {
+        return saneBodyPreview;
+    }
+
+    public void setSaneBodyPreview(String saneBodyPreview) {
+        this.saneBodyPreview = saneBodyPreview;
+    }
+
     public String getBodySrc() {
         return bodySrc;
     }
@@ -138,6 +150,14 @@ public class EntryRevision {
         this.bodySrcFormat = bodySrcFormat;
     }
 
+    public String getBodyFormat() {
+        return bodyFormat;
+    }
+
+    public void setBodyFormat(String bodyFormat) {
+        this.bodyFormat = bodyFormat;
+    }
+
     public String getBody() {
         return body;
     }
@@ -146,12 +166,12 @@ public class EntryRevision {
         this.body = body;
     }
 
-    public String getBodyFormat() {
-        return bodyFormat;
+    public String getSaneBody() {
+        return saneBody;
     }
 
-    public void setBodyFormat(String bodyFormat) {
-        this.bodyFormat = bodyFormat;
+    public void setSaneBody(String saneBody) {
+        this.saneBody = saneBody;
     }
 
     public String getHeading() {

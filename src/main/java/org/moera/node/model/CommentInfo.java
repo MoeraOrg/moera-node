@@ -22,10 +22,12 @@ public class CommentInfo implements ReactionsInfo {
     private String revisionId;
     private Integer totalRevisions;
     private Body bodyPreview;
+    private String saneBodyPreview;
     private Body bodySrc;
     private byte[] bodySrcHash;
     private SourceFormat bodySrcFormat;
     private Body body;
+    private String saneBody;
     private String bodyFormat;
     private String heading;
     private RepliedTo repliedTo;
@@ -99,6 +101,15 @@ public class CommentInfo implements ReactionsInfo {
                 isAdminOrOwner && comment.isOriginal() || comment.isReactionTotalsVisible());
     }
 
+    public static CommentInfo forUi(Comment comment) {
+        CommentInfo info = new CommentInfo(comment, false);
+        String saneBodyPreview = comment.getCurrentRevision().getSaneBodyPreview();
+        info.setSaneBodyPreview(saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());
+        String saneBody = comment.getCurrentRevision().getSaneBody();
+        info.setSaneBody(saneBody != null ? saneBody : info.getBody().getText());
+        return info;
+    }
+
     public String getId() {
         return id;
     }
@@ -155,6 +166,14 @@ public class CommentInfo implements ReactionsInfo {
         this.bodyPreview = bodyPreview;
     }
 
+    public String getSaneBodyPreview() {
+        return saneBodyPreview;
+    }
+
+    public void setSaneBodyPreview(String saneBodyPreview) {
+        this.saneBodyPreview = saneBodyPreview;
+    }
+
     public Body getBodySrc() {
         return bodySrc;
     }
@@ -185,6 +204,14 @@ public class CommentInfo implements ReactionsInfo {
 
     public void setBody(Body body) {
         this.body = body;
+    }
+
+    public String getSaneBody() {
+        return saneBody;
+    }
+
+    public void setSaneBody(String saneBody) {
+        this.saneBody = saneBody;
     }
 
     public String getBodyFormat() {

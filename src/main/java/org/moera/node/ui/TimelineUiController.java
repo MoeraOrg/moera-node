@@ -71,7 +71,7 @@ public class TimelineUiController {
             stories = storyRepository.findInRange(
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
-                    .map(s -> StoryInfo.build(s, false, t -> new PostingInfo((Posting) t.getEntry(), false)))
+                    .map(s -> StoryInfo.build(s, false, t -> PostingInfo.forUi((Posting) t.getEntry())))
                     .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                     .collect(Collectors.toList());
         }
@@ -104,7 +104,7 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
-        model.addAttribute("posting", new PostingInfo(posting, stories, false));
+        model.addAttribute("posting", PostingInfo.forUi(posting, stories));
 
         if (posting.isOriginal()) {
             Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
@@ -117,7 +117,7 @@ public class TimelineUiController {
                 comments = commentRepository.findInRange(
                         requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                         .stream()
-                        .map(t -> new CommentInfo(t, false))
+                        .map(CommentInfo::forUi)
                         .sorted(Comparator.comparing(CommentInfo::getMoment))
                         .collect(Collectors.toList());
             }

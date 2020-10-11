@@ -9,6 +9,7 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
+import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.text.Shortener;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
@@ -123,9 +124,12 @@ public class PostingText {
                 revision.setBodySrc(bodySrc);
                 Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
                 revision.setBody(body.getEncoded());
+                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
                 revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
                 if (!Shortener.isShort(body)) {
-                    revision.setBodyPreview(Shortener.shorten(body).getEncoded());
+                    Body bodyPreview = Shortener.shorten(body);
+                    revision.setBodyPreview(bodyPreview.getEncoded());
+                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
                 } else {
                     revision.setBodyPreview(Body.EMPTY);
                 }

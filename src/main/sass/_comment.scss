@@ -27,10 +27,26 @@
 
     .owner {
         margin-left: .3em;
+        font-weight: bold;
+
+        A {
+            color: var(--node-name);
+        }
     }
 
     &.topic-starter .owner A {
         color: var(--node-name-ts);
+    }
+
+    .date {
+        font-size: 0.8rem;
+        font-weight: normal;
+        color: var(--gray-medium);
+        margin-left: 0.5em;
+
+        A {
+            color: inherit;
+        }
     }
 
     .content {
@@ -40,6 +56,7 @@
         width: max-content;
         min-width: 16rem;
         max-width: 100%;
+        overflow-wrap: break-word;
 
         P:last-child {
             margin-bottom: 0;

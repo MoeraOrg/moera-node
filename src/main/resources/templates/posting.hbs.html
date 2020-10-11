@@ -36,7 +36,7 @@
     {{#if posting.body.subject}}
         <div class="subject">{{posting.body.subject}}</div>
     {{/if}}
-    <div class="content">{{{posting.body.text}}}</div>
+    <div class="content">{{{posting.saneBody}}}</div>
     <div class="reactions-line">
         {{reactions posting}}
         {{#if posting.totalComments}}
@@ -92,7 +92,7 @@
                                 </a>
                             </div>
                         {{/if}}
-                        {{{body.text}}}
+                        {{{saneBody}}}
                     </div>
                     <div class="reactions-line">
                         {{reactions this}}
