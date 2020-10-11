@@ -17,13 +17,15 @@
                 </span>
             </div>
         {{/if}}
-        <div class="owner">
-            {{nodename posting.ownerName}}
-            {{#if posting.receiverName}}
-                {{#ifne posting.receiverName posting.ownerName}}
-                    &#x25b8; {{nodename posting.receiverName}}
-                {{/ifne}}
-            {{/if}}
+        <div class="owner-line">
+            <span class="owner">
+                {{nodename posting.ownerName}}
+                {{#if posting.receiverName}}
+                    {{#ifne posting.receiverName posting.ownerName}}
+                        &#x25b8; {{nodename posting.receiverName}}
+                    {{/ifne}}
+                {{/if}}
+            </span>
             <span class="date">
                 <a href="/post/{{posting.id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt
                                                      fromNow="posting.time.relative"}}</a>
@@ -39,13 +41,13 @@
                 <div class="subject"><a href="/post/{{posting.id}}">{{posting.body.subject}}</a></div>
             {{/if}}
         {{/if}}
-        {{#if posting.saneBodyPreview}}
+        {{#if posting.bodyPreview.text}}
             <div class="content">
                 <div>{{{posting.saneBodyPreview}}}</div>
                 <p><a href="/post/{{posting.id}}">Continue Reading &rarr;</a></p>
             </div>
         {{else}}
-            <div class="content">{{{posting.saneBody}}}</div>
+            <div class="content">{{{posting.saneBodyPreview}}}</div>
         {{/if}}
         <div class="reactions-line">
             {{reactions posting}}

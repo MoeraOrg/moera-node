@@ -121,7 +121,9 @@ CREATE TABLE public.entry_revisions (
     receiver_revision_id character varying(40),
     receiver_body_src_hash bytea,
     parent_id uuid,
-    deadline timestamp without time zone
+    deadline timestamp without time zone,
+    sane_body text,
+    sane_body_preview text
 );
 
 

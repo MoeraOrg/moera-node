@@ -199,7 +199,7 @@ public class CommentText {
                         revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
                     } else {
                         revision.setBodyPreview(Body.EMPTY);
-                        revision.setSaneBodyPreview(null);
+                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true));
                     }
                 } else {
                     revision.setBodySrc(Body.EMPTY);
@@ -211,7 +211,8 @@ public class CommentText {
         } else {
             revision.setBodySrc(bodySrc);
             revision.setBodyPreview(bodyPreview.getEncoded());
-            revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
+            revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
+                    !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
             revision.setBody(body.getEncoded());
             revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
             revision.setBodyFormat(bodyFormat);

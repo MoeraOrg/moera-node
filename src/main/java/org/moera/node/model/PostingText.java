@@ -132,6 +132,7 @@ public class PostingText {
                     revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
                 } else {
                     revision.setBodyPreview(Body.EMPTY);
+                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true));
                 }
                 revision.setHeading(HeadingExtractor.extract(body));
             } else {

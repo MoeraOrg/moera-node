@@ -6,6 +6,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.util.Util;
+import org.springframework.util.StringUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingRevisionInfo implements RevisionInfo {
@@ -183,7 +184,8 @@ public class PostingRevisionInfo implements RevisionInfo {
     public void toPickedEntryRevision(EntryRevision entryRevision) {
         entryRevision.setReceiverRevisionId(id);
         entryRevision.setBodyPreview(bodyPreview.getEncoded());
-        entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
+        entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
+                !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
         entryRevision.setBodySrcFormat(bodySrcFormat);
         entryRevision.setReceiverBodySrcHash(bodySrcHash);
         entryRevision.setBodyFormat(bodyFormat);

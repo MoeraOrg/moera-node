@@ -16,6 +16,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
+import org.springframework.util.StringUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingInfo implements ReactionsInfo {
@@ -150,7 +151,12 @@ public class PostingInfo implements ReactionsInfo {
     public static PostingInfo forUi(Posting posting, List<Story> stories) {
         PostingInfo info = new PostingInfo(posting, stories, false);
         String saneBodyPreview = posting.getCurrentRevision().getSaneBodyPreview();
-        info.setSaneBodyPreview(saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());
+        if (saneBodyPreview != null) {
+            info.setSaneBodyPreview(saneBodyPreview);
+        } else {
+            info.setSaneBodyPreview(!StringUtils.isEmpty(
+                    info.getBodyPreview().getText()) ? info.getBodyPreview().getText() : info.getBody().getText());
+        }
         String saneBody = posting.getCurrentRevision().getSaneBody();
         info.setSaneBody(saneBody != null ? saneBody : info.getBody().getText());
         return info;
