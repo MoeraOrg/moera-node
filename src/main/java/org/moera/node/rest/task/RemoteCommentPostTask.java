@@ -7,7 +7,6 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
@@ -55,8 +54,14 @@ public class RemoteCommentPostTask extends Task {
         try {
             nodeApi.setNodeId(nodeId);
             PostingInfo postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            CommentInfo prevCommentInfo = commentId != null
+                    ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
+            long repliedAt = prevCommentInfo != null
+                    ? prevCommentInfo.getCreatedAt() : Instant.now().getEpochSecond();
+            String repliedToId = prevCommentInfo != null
+                    ? prevCommentInfo.getRepliedToId() : Objects.toString(sourceText.getRepliedToId(), null);
             byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, targetNodeName, postingInfo,
-                    Objects.toString(sourceText.getRepliedToId(), null), getCommentRepliedAt());
+                    repliedToId, repliedAt);
             CommentText commentText = buildComment(postingInfo, repliedToDigest);
             CommentInfo commentInfo;
             if (commentId == null) {
@@ -72,11 +77,6 @@ public class RemoteCommentPostTask extends Task {
         } catch (Exception e) {
             error(e);
         }
-    }
-
-    private long getCommentRepliedAt() throws NodeApiException {
-        CommentInfo commentInfo = commentId != null ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
-        return commentInfo != null ? commentInfo.getCreatedAt() : Instant.now().getEpochSecond();
     }
 
     private CommentText buildComment(PostingInfo postingInfo, byte[] repliedToDigest) {

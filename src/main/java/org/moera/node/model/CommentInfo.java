@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.persistence.Transient;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Comment;
@@ -236,6 +238,11 @@ public class CommentInfo implements ReactionsInfo {
 
     public void setRepliedTo(RepliedTo repliedTo) {
         this.repliedTo = repliedTo;
+    }
+
+    @Transient
+    public String getRepliedToId() {
+        return getRepliedTo() != null ? getRepliedTo().getId() : null;
     }
 
     public long getMoment() {
