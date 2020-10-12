@@ -18,18 +18,6 @@
 
     & > .content {
         overflow-wrap: break-word;
-
-        @media only screen and (min-width: 901px) {
-            IMG {
-                max-width: calc(900px - 3.5rem);
-            }
-        }
-
-        @media only screen and (max-width: 900px) {
-            IMG {
-                max-width: calc(100vw - 4rem);
-            }
-        }
     }
 
     &.preview > .content {

@@ -134,6 +134,14 @@
     min: 1d
     max: 2000d
 
+- name: feed.width
+  type: int
+  defaultValue: 900
+  title: "Web UI: Feed width (in pixels)"
+  modifiers:
+    min: 100
+    max: 10000
+
 - name: reaction.deleted.lifetime
   type: Duration
   defaultValue: 10d
