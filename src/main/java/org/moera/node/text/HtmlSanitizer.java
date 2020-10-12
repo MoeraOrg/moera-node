@@ -1,6 +1,9 @@
 package org.moera.node.text;
 
+import java.util.Set;
+
 import org.moera.node.model.Body;
+import org.owasp.html.CssSchema;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 
@@ -14,6 +17,7 @@ public class HtmlSanitizer {
                     "caption", "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "img", "del",
                     "ins", "details", "summary", "mr-spoiler")
             .allowUrlProtocols("http", "https", "ftp", "mailto")
+            .allowAttributes("style").onElements("p")
             .allowAttributes("href", "data-nodename").onElements("a")
             .allowAttributes("src", "srcset", "width", "height", "alt").onElements("img")
             .allowAttributes("class")
@@ -21,6 +25,7 @@ public class HtmlSanitizer {
                 .onElements("img")
             .allowAttributes("title").onElements("mr-spoiler")
             .allowAttributes("dir").globally()
+            .allowStyling(CssSchema.withProperties(Set.of("text-align")))
             .toFactory();
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
