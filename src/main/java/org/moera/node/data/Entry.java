@@ -259,6 +259,11 @@ public class Entry {
         this.currentRevision = currentRevision;
     }
 
+    public boolean isMessage() {
+        return getCurrentRevision() != null
+                && BodyFormat.MESSAGE.getValue().equals(getCurrentRevision().getBodyFormat());
+    }
+
     public String getCurrentReceiverRevisionId() {
         return currentReceiverRevisionId;
     }

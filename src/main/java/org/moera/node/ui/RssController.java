@@ -47,6 +47,7 @@ public class RssController {
         if (publicPage != null) {
             stories = storyRepository.findInRange(
                     rcp.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment()).stream()
+                    .filter(t -> t.getEntry().isMessage())
                     .sorted(Collections.reverseOrder(Comparator.comparingLong(Story::getMoment)))
                     .collect(Collectors.toList());
         }

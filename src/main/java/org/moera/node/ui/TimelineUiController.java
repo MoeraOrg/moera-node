@@ -71,6 +71,7 @@ public class TimelineUiController {
             stories = storyRepository.findInRange(
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
+                    .filter(t -> t.getEntry().isMessage())
                     .map(s -> StoryInfo.build(s, false, t -> PostingInfo.forUi((Posting) t.getEntry())))
                     .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                     .collect(Collectors.toList());
@@ -98,8 +99,10 @@ public class TimelineUiController {
             return null;
         }
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(PageNotFoundException::new);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        if (posting == null || !posting.isMessage()) {
+            throw new PageNotFoundException();
+        }
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
@@ -118,6 +121,7 @@ public class TimelineUiController {
                 comments = commentRepository.findInRange(
                         requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                         .stream()
+                        .filter(Comment::isMessage)
                         .map(CommentInfo::forUi)
                         .sorted(Comparator.comparing(CommentInfo::getMoment))
                         .collect(Collectors.toList());
