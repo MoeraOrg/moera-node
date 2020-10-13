@@ -107,15 +107,9 @@ public abstract class PublicPageOperations {
         tillLast = Math.min(tillLast, 2);
         int rangeFirst = current + tillLast - 4;
         rangeFirst = Math.max(rangeFirst, 1);
-        PublicPage firstPage = findAllBeforeMoment(entryId, Long.MAX_VALUE,
-                PageRequest.of(rangeFirst - 1, 1, Sort.Direction.DESC, "beforeMoment"))
-                .getContent().get(0);
-        PublicPage lastPage = findAllBeforeMoment(entryId, Long.MAX_VALUE,
-                PageRequest.of(last - 1, 1, Sort.Direction.DESC, "beforeMoment"))
-                .getContent().get(0);
-        List<PublicPage> pages = findAllBeforeMoment(entryId, firstPage.getBeforeMoment(),
-                PageRequest.of(0, 5, Sort.Direction.DESC, "beforeMoment"))
-                .getContent();
+        PublicPage firstPage = findPages(entryId, null, rangeFirst - 1, 1).getContent().get(0);
+        PublicPage lastPage = findPages(entryId, null, last - 1, 1).getContent().get(0);
+        List<PublicPage> pages = findPages(entryId, firstPage.getBeforeMoment(), 0, 5).getContent();
         int rangeLast = rangeFirst + pages.size() - 1;
 
         LinkedList<PaginationItem> items = new LinkedList<>();
@@ -127,7 +121,7 @@ public abstract class PublicPageOperations {
             items.addFirst(PaginationItem.pageDots());
         }
         if (rangeFirst > 1) {
-            items.addFirst(PaginationItem.pageLink(1, Long.MAX_VALUE, false));
+            items.addFirst(PaginationItem.pageLink(1, firstPage.getBeforeMoment(), false));
         }
         if (last - rangeLast > 1) {
             items.addLast(PaginationItem.pageDots());
@@ -167,6 +161,6 @@ public abstract class PublicPageOperations {
 
     protected abstract int countTotal(UUID entryId);
 
-    protected abstract Page<PublicPage> findAllBeforeMoment(UUID entryId, long before, Pageable pageable);
+    protected abstract Page<PublicPage> findPages(UUID entryId, Long moment, int page, int size);
 
 }

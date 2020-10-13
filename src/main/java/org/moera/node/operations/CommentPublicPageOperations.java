@@ -8,7 +8,9 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.PublicPage;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -65,8 +67,10 @@ public class CommentPublicPageOperations extends PublicPageOperations {
     }
 
     @Override
-    protected Page<PublicPage> findAllBeforeMoment(UUID entryId, long before, Pageable pageable) {
-        return publicPageRepository.findAllBeforeMomentForEntry(requestContext.nodeId(), entryId, before, pageable);
+    protected Page<PublicPage> findPages(UUID entryId, Long moment, int page, int size) {
+        moment = moment != null ? moment : Long.MIN_VALUE;
+        return publicPageRepository.findAllAfterMomentForEntry(requestContext.nodeId(), entryId, moment,
+                PageRequest.of(page, size, Sort.Direction.ASC, "beforeMoment"));
     }
 
 }

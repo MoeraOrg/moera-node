@@ -105,12 +105,13 @@ public class TimelineUiController {
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
         model.addAttribute("posting", PostingInfo.forUi(posting, stories));
+        model.addAttribute("openComments", commentId != null || before != null);
 
         if (posting.isOriginal()) {
             Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                     .orElse(null);
             before = comment != null ? comment.getMoment() : before;
-            before = before != null ? before : Long.MAX_VALUE;
+            before = before != null ? before : Long.MIN_VALUE + 1;
             List<CommentInfo> comments = Collections.emptyList();
             PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
             if (publicPage != null) {

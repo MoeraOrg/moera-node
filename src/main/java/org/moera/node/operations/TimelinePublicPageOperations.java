@@ -9,7 +9,9 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.PublicPage;
 import org.moera.node.data.StoryRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -62,8 +64,10 @@ public class TimelinePublicPageOperations extends PublicPageOperations {
     }
 
     @Override
-    protected Page<PublicPage> findAllBeforeMoment(UUID entryId, long before, Pageable pageable) {
-        return publicPageRepository.findAllBeforeMoment(requestContext.nodeId(), before, pageable);
+    protected Page<PublicPage> findPages(UUID entryId, Long moment, int page, int size) {
+        moment = moment != null ? moment : Long.MAX_VALUE;
+        return publicPageRepository.findAllBeforeMoment(requestContext.nodeId(), moment,
+                PageRequest.of(page, size, Sort.Direction.DESC, "beforeMoment"));
     }
 
 }

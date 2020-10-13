@@ -1,5 +1,25 @@
 {{> part/top}}
 
+{{#*inline "pages"}}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {{#each pagination}}
+                {{#if dots}}
+                    <li class="page-item"><span class="page-link page-dots">⋯</span></li>
+                {{else}}
+                    {{#if active}}
+                        <li class="page-item active"><span class="page-link">{{title}}</span></li>
+                    {{else}}
+                        <li class="page-item">
+                            <a class="page-link" href="/post/{{posting.id}}?before={{moment}}#comments">{{title}}</a>
+                        </li>
+                    {{/if}}
+                {{/if}}
+            {{/each}}
+        </ul>
+    </nav>
+{{/inline}}
+
 {{#if posting.timelineMoment}}
     <a class="btn btn-outline-secondary btn-sm"
        href="/timeline?before={{posting.timelineMoment}}">&larr; Timeline</a>
@@ -52,13 +72,17 @@
 
     <a name="comments"></a>
     {{#if comments}}
-        {{#if commentId}}
+        {{#if openComments}}
             {{#assign "openness"}}open{{/assign}}
         {{else}}
             {{#assign "openness"}}{{/assign}}
         {{/if}}
         <details id="comments" {{openness}}>
             <summary>Comments ({{posting.totalComments}})</summary>
+            {{#if pagination}}
+                {{> pages}}
+            {{/if}}
+
             {{#each comments}}
                 <a name="comment-{{id}}"></a>
                 {{#ifeq id commentId}}
@@ -99,6 +123,10 @@
                     </div>
                 </div>
             {{/each}}
+
+            {{#if pagination}}
+                {{> pages}}
+            {{/if}}
         </details>
     {{/if}}
     {{#if commentsHref}}
@@ -107,29 +135,5 @@
         </div>
     {{/if}}
 </div>
-
-{{#if pagination}}
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            {{#each pagination}}
-                {{#if dots}}
-                    <li class="page-item"><span class="page-link page-dots">⋯</span></li>
-                {{else}}
-                    {{#if active}}
-                        <li class="page-item active"><span class="page-link">{{title}}</span></li>
-                    {{else}}
-                        <li class="page-item">
-                            {{#if first}}
-                                <a class="page-link" href="/post/{{posting.id}}#comments">{{title}}</a>
-                            {{else}}
-                                <a class="page-link" href="/post/{{posting.id}}?before={{moment}}#comments">{{title}}</a>
-                            {{/if}}
-                        </li>
-                    {{/if}}
-                {{/if}}
-            {{/each}}
-        </ul>
-    </nav>
-{{/if}}
 
 {{> part/bottom}}
