@@ -423,10 +423,10 @@ public class Entry {
     }
 
     public Story getStory(String feedName) {
-        if (getStories() == null) {
+        if (getStories() == null || feedName == null) {
             return null;
         }
-        return getStories().stream().filter(fr -> fr.getFeedName().equals(feedName)).findFirst().orElse(null);
+        return getStories().stream().filter(fr -> feedName.equals(fr.getFeedName())).findFirst().orElse(null);
     }
 
     public Set<EntrySource> getSources() {
