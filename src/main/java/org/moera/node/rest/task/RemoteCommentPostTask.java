@@ -18,6 +18,7 @@ import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
+import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.task.Task;
 import org.moera.node.text.TextConverter;
 import org.slf4j.Logger;
@@ -71,6 +72,7 @@ public class RemoteCommentPostTask extends Task {
                 send(new RemoteCommentAddedEvent(targetNodeName, postingId, commentId));
             } else {
                 commentInfo = nodeApi.putComment(targetNodeName, postingId, commentId, commentText);
+                send(new RemoteCommentUpdatedEvent(targetNodeName, postingId, commentId));
             }
             saveComment(commentInfo);
             success();

@@ -19,6 +19,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.Result;
+import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.rest.task.RemoteCommentPostTask;
 import org.moera.node.rest.task.RemoteCommentVerifyTask;
 import org.moera.node.rest.task.RemotePostingCommentsSubscribeTask;
@@ -115,6 +116,7 @@ public class RemoteCommentController {
                 LogUtil.format(commentId));
 
         ownCommentRepository.deleteByRemoteCommentId(requestContext.nodeId(), nodeName, postingId, commentId);
+        requestContext.send(new RemoteCommentUpdatedEvent(nodeName, postingId, commentId));
 
         return Result.OK;
     }
