@@ -161,7 +161,8 @@ public class CommentController {
             comment = commentOperations.createOrUpdateComment(posting, comment, null, null,
                     revision -> commentText.toEntryRevision(revision, digest, textConverter));
         } catch (BodyMappingException e) {
-            throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
+            String field = e.getField() != null ? e.getField() : "bodySrc";
+            throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
         }
 
         if (comment.getCurrentRevision().getSignature() != null) {
@@ -208,7 +209,8 @@ public class CommentController {
                     comment.getCurrentRevision(), commentText::sameAsRevision,
                     revision -> commentText.toEntryRevision(revision, digest, textConverter));
         } catch (BodyMappingException e) {
-            throw new ValidationFailure("commentText.bodySrc.wrong-encoding");
+            String field = e.getField() != null ? e.getField() : "bodySrc";
+            throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
         }
 
         if (comment.getCurrentRevision().getSignature() != null) {
@@ -258,7 +260,7 @@ public class CommentController {
             digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest(),
                     repliedToDigest);
 
-            if (commentText.getBody() == null || StringUtils.isEmpty(commentText.getBody().getEncoded())) {
+            if (commentText.getBody() == null || StringUtils.isEmpty(commentText.getBody())) {
                 throw new ValidationFailure("commentText.body.blank");
             }
             if (StringUtils.isEmpty(commentText.getBodyFormat())) {

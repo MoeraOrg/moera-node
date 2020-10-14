@@ -19,14 +19,14 @@ public class CommentText {
 
     private String ownerName;
 
-    private Body bodyPreview;
+    private String bodyPreview;
 
     @Size(max = 65535)
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;
 
-    private Body body;
+    private String body;
 
     @Size(max = 75)
     private String bodyFormat;
@@ -53,11 +53,14 @@ public class CommentText {
         acceptedReactions = sourceText.getAcceptedReactions();
         repliedToId = sourceText.getRepliedToId();
         if (bodySrcFormat != SourceFormat.APPLICATION) {
-            body = textConverter.toHtml(bodySrcFormat, new Body(bodySrc));
+            Body decodedBody = textConverter.toHtml(bodySrcFormat, new Body(bodySrc));
+            body = decodedBody.getEncoded();
             bodyFormat = BodyFormat.MESSAGE.getValue();
-            bodyPreview = !Shortener.isShort(body) ? Shortener.shorten(body) : new Body(Body.EMPTY);
+            Body decodedBodyPreview = !Shortener.isShort(decodedBody)
+                    ? Shortener.shorten(decodedBody) : new Body(Body.EMPTY);
+            bodyPreview = decodedBodyPreview.getEncoded();
         } else {
-            body = new Body(bodySrc);
+            body = new Body(bodySrc).getEncoded();
             bodyFormat = BodyFormat.APPLICATION.getValue();
         }
     }
@@ -70,11 +73,11 @@ public class CommentText {
         this.ownerName = ownerName;
     }
 
-    public Body getBodyPreview() {
+    public String getBodyPreview() {
         return bodyPreview;
     }
 
-    public void setBodyPreview(Body bodyPreview) {
+    public void setBodyPreview(String bodyPreview) {
         this.bodyPreview = bodyPreview;
     }
 
@@ -94,11 +97,11 @@ public class CommentText {
         this.bodySrcFormat = bodySrcFormat;
     }
 
-    public Body getBody() {
+    public String getBody() {
         return body;
     }
 
-    public void setBody(Body body) {
+    public void setBody(String body) {
         this.body = body;
     }
 
@@ -185,7 +188,8 @@ public class CommentText {
         revision.setSignatureVersion(signatureVersion);
         revision.setDigest(digest);
 
-        if (signature == null && (body == null || StringUtils.isEmpty(body.getEncoded()))) {
+        Body body = new Body();
+        if (signature == null && (this.body == null || StringUtils.isEmpty(this.body))) {
             if (!StringUtils.isEmpty(bodySrc)) {
                 if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
                     revision.setBodySrc(bodySrc);
@@ -210,12 +214,29 @@ public class CommentText {
             }
         } else {
             revision.setBodySrc(bodySrc);
-            revision.setBodyPreview(bodyPreview.getEncoded());
-            revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                    !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
-            revision.setBody(body.getEncoded());
-            revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
             revision.setBodyFormat(bodyFormat);
+            if (BodyFormat.MESSAGE.getValue().equals(bodyFormat)) {
+                try {
+                    body = new Body(this.body);
+                    revision.setBody(this.body);
+                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
+                } catch (BodyMappingException e) {
+                    e.setField("body");
+                    throw e;
+                }
+                try {
+                    Body bodyPreview = new Body(this.bodyPreview);
+                    revision.setBodyPreview(this.bodyPreview);
+                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
+                            !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
+                } catch (BodyMappingException e) {
+                    e.setField("bodyPreview");
+                    throw e;
+                }
+            } else {
+                revision.setBody(this.body);
+                revision.setSaneBody(null);
+            }
         }
         if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
             revision.setHeading(HeadingExtractor.extract(body));

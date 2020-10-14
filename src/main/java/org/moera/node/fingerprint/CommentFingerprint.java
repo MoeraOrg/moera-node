@@ -31,7 +31,7 @@ public class CommentFingerprint extends EntryFingerprint {
         repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setValue(commentText.getBodySrc());
         bodySrcFormat = commentText.getBodySrcFormat().getValue();
-        body = commentText.getBody().getEncoded();
+        body = commentText.getBody();
         bodyFormat = commentText.getBodyFormat();
         createdAt = commentText.getCreatedAt();
     }
@@ -43,7 +43,7 @@ public class CommentFingerprint extends EntryFingerprint {
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setValue(commentText.getBodySrc());
         bodySrcFormat = commentText.getBodySrcFormat().getValue();
-        body = commentText.getBody().getEncoded();
+        body = commentText.getBody();
         bodyFormat = commentText.getBodyFormat();
         createdAt = commentText.getCreatedAt();
     }

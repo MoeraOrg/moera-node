@@ -41,14 +41,14 @@ public class HtmlSanitizer {
                             "h1", "h2", "h3", "h4", "h5", "h6")
                     .toFactory());
 
-    public static String sanitize(String html, boolean preview) {
+    private static String sanitize(String html, boolean preview) {
         if (html == null) {
             return null;
         }
         return (preview ? SAFE_PREVIEW_HTML : SAFE_HTML).sanitize(html);
     }
 
-    public static String sanitizeIfNeeded(String html, boolean preview) {
+    private static String sanitizeIfNeeded(String html, boolean preview) {
         String saneHtml = sanitize(html, preview);
         return saneHtml == null || saneHtml.equals(html) ? null : saneHtml;
     }
