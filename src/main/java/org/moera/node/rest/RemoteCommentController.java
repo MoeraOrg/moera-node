@@ -63,15 +63,15 @@ public class RemoteCommentController {
     @Admin
     @Entitled
     public Result post(@PathVariable String nodeName, @PathVariable String postingId,
-                       @Valid @RequestBody CommentSourceText sourceText) {
+                       @Valid @RequestBody CommentSourceText commentText) {
         log.info("POST /nodes/{nodeName}/postings/{postingId}/comments"
                         + " (nodeName = {}, postingId = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(nodeName),
                 LogUtil.format(postingId),
-                LogUtil.format(sourceText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(sourceText.getBodySrcFormat())));
+                LogUtil.format(commentText.getBodySrc(), 64),
+                LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
 
-        update(nodeName, postingId, null, sourceText);
+        update(nodeName, postingId, null, commentText);
 
         return Result.OK;
     }
@@ -80,22 +80,22 @@ public class RemoteCommentController {
     @Admin
     @Entitled
     public Result put(@PathVariable String nodeName, @PathVariable String postingId, @PathVariable String commentId,
-                      @Valid @RequestBody CommentSourceText sourceText) {
+                      @Valid @RequestBody CommentSourceText commentText) {
         log.info("PUT /nodes/{nodeName}/postings/{postingId}/comments/{commentId}"
                         + " (nodeName = {}, postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(nodeName),
                 LogUtil.format(postingId),
                 LogUtil.format(commentId),
-                LogUtil.format(sourceText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(sourceText.getBodySrcFormat())));
+                LogUtil.format(commentText.getBodySrc(), 64),
+                LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
 
-        update(nodeName, postingId, commentId, sourceText);
+        update(nodeName, postingId, commentId, commentText);
 
         return Result.OK;
     }
 
-    private void update(String nodeName, String postingId, String commentId, CommentSourceText sourceText) {
-        var postTask = new RemoteCommentPostTask(nodeName, postingId, commentId, sourceText);
+    private void update(String nodeName, String postingId, String commentId, CommentSourceText commentText) {
+        var postTask = new RemoteCommentPostTask(nodeName, postingId, commentId, commentText);
         taskAutowire.autowire(postTask);
         taskExecutor.execute(postTask);
         if (!nodeName.equals(requestContext.nodeName())) {
