@@ -6,6 +6,7 @@ import org.moera.node.model.Body;
 import org.owasp.html.CssSchema;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class HtmlSanitizer {
 
@@ -15,7 +16,7 @@ public class HtmlSanitizer {
                     "bdi", "bdo", "br", "cite", "code", "data", "dfn", "em", "i", "kbd", "mark", "q", "rb", "rp", "rt",
                     "rtc", "ruby", "s", "samp", "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr",
                     "caption", "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "img", "del",
-                    "ins", "details", "summary", "mr-spoiler")
+                    "ins", "details", "summary", "mr-spoiler", "iframe")
             .allowUrlProtocols("http", "https", "ftp", "mailto")
             .allowAttributes("style").onElements("p")
             .allowAttributes("href", "data-nodename").onElements("a")
@@ -24,9 +25,14 @@ public class HtmlSanitizer {
                 .matching(false, "emoji")
                 .onElements("img")
             .allowAttributes("title").onElements("mr-spoiler")
+            .allowAttributes("src").matching(HtmlSanitizer::validateIframeSrc).onElements("iframe")
+            .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen").onElements("iframe")
             .allowAttributes("dir").globally()
             .allowStyling(CssSchema.withProperties(Set.of("text-align")))
             .toFactory();
+    private static final Set<String> IFRAME_HOSTNAMES = Set.of(
+            "www.youtube.com", "player.vimeo.com"
+    );
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
                     .allowElements("h1", "h2", "h3", "h4", "h5", "h6")
@@ -40,6 +46,11 @@ public class HtmlSanitizer {
                             (elementName, attrs) -> "b",
                             "h1", "h2", "h3", "h4", "h5", "h6")
                     .toFactory());
+
+    private static boolean validateIframeSrc(String src) {
+        String hostname = UriComponentsBuilder.fromHttpUrl(src).build().getHost();
+        return IFRAME_HOSTNAMES.contains(hostname);
+    }
 
     private static String sanitize(String html, boolean preview) {
         if (html == null) {
