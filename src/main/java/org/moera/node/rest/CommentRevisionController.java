@@ -15,7 +15,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,7 @@ public class CommentRevisionController {
     }
 
     @GetMapping("/{id}")
-    public PostingRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable UUID id) {
+    public CommentRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable UUID id) {
         log.info("GET /postings/{postingId}/comments/{commentId}/revisions/{id}"
                         + " (postingId = {}, commentId = {}, id = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(id));
@@ -73,7 +72,7 @@ public class CommentRevisionController {
         EntryRevision revision = entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), commentId, id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment-revision.not-found"));
 
-        return new PostingRevisionInfo(revision, reactionTotalOperations.isVisibleToClient(comment));
+        return new CommentRevisionInfo(revision, reactionTotalOperations.isVisibleToClient(comment));
     }
 
 }

@@ -26,12 +26,13 @@ public class HtmlSanitizer {
                 .onElements("img")
             .allowAttributes("title").onElements("mr-spoiler")
             .allowAttributes("src").matching(HtmlSanitizer::validateIframeSrc).onElements("iframe")
-            .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen").onElements("iframe")
+            .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen", "sandbox", "scrolling",
+                    "allowtransparency").onElements("iframe")
             .allowAttributes("dir").globally()
             .allowStyling(CssSchema.withProperties(Set.of("text-align")))
             .toFactory();
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(
-            "www.youtube.com", "player.vimeo.com"
+            "www.youtube.com", "player.vimeo.com", "www.facebook.com", "peer.tube"
     );
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
