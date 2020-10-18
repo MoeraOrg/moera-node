@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -232,7 +233,8 @@ public class EventManager {
         try {
             for (int i = beginIndex; i < queue.size(); i++) {
                 EventPacket packet = queue.get(i);
-                if (!packet.getNodeId().equals(subscriber.getNodeId()) || !packet.getEvent().isPermitted(subscriber)) {
+                if (!Objects.equals(packet.getNodeId(), subscriber.getNodeId())
+                        || !packet.getEvent().isPermitted(subscriber)) {
                     subscriber.setLastEventSeen(first + i);
                     continue;
                 }
