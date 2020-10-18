@@ -21,7 +21,7 @@
     }
 
     &.preview > .content {
-        IMG {
+        IMG, IFRAME {
             max-height: 35rem;
         }
 
