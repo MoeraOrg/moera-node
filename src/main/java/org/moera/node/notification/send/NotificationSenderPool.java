@@ -10,6 +10,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
@@ -83,12 +84,20 @@ public class NotificationSenderPool {
     }
 
     public void send(Direction direction, Notification notification) {
+        log.info("Sending notification of type '{}'", notification.getType().getValue());
         if (direction instanceof SingleDirection) {
+            log.info("Sending to node '{}' only", ((SingleDirection) direction).getNodeName());
             sendSingle((SingleDirection) direction, notification);
             return;
         }
         if (direction instanceof SubscribersDirection) {
             SubscribersDirection sd = (SubscribersDirection) direction;
+
+            log.info("Sending to '{}' subscribers (feedName = {}, postingId = {})",
+                    sd.getSubscriptionType().getValue(),
+                    LogUtil.format(sd.getFeedName()),
+                    LogUtil.format(sd.getPostingId()));
+
             List<Subscriber> subscribers = Collections.emptyList();
             switch (sd.getSubscriptionType()) {
                 case FEED:
