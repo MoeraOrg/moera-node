@@ -7,14 +7,16 @@ import javax.transaction.Transactional;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.util.Util;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,7 +53,8 @@ public class RedirectController {
 
     @GetMapping("/gotoname")
     @Transactional
-    public String goToName(@RequestParam String name,
+    public String goToName(@RequestParam String client,
+                           @RequestParam String name,
                            @RequestParam(required = false) String location,
                            @RequestParam(required = false) UUID trackingId) {
         RegisteredNameDetails details = namingCache.get(name);
@@ -61,7 +64,9 @@ public class RedirectController {
         if (trackingId != null) {
             markAsRead(trackingId);
         }
-        return "redirect:" + details.getNodeUri() + (location != null ? location : "");
+        String href = details.getNodeUri() + (location != null ? location : "");
+        href = StringUtils.isEmpty(client) ? href : client + "/?href=" + Util.ue(href);
+        return "redirect:" + href;
     }
 
     @GetMapping("/track")
