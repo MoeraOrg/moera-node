@@ -53,7 +53,7 @@ public class RedirectController {
 
     @GetMapping("/gotoname")
     @Transactional
-    public String goToName(@RequestParam String client,
+    public String goToName(@RequestParam(required = false) String client,
                            @RequestParam String name,
                            @RequestParam(required = false) String location,
                            @RequestParam(required = false) UUID trackingId) {
