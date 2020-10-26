@@ -91,7 +91,8 @@ public class StoryOperations {
 
     private void unpublish(UUID entryId, UUID nodeId, Consumer<Event> eventSender) {
         Set<String> feedNames = new HashSet<>();
-        storyRepository.findByEntryId(nodeId, entryId)
+        storyRepository.findByEntryId(nodeId, entryId).stream()
+                .filter(story -> story.getFeedName() != null)
                 .forEach(story -> {
                     if (!Feed.isAdmin(story.getFeedName())) {
                         eventSender.accept(new StoryDeletedEvent(story, false));
