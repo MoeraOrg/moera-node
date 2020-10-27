@@ -1,7 +1,6 @@
 package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
@@ -19,6 +18,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.event.RemoteCommentVerificationFailedEvent;
 import org.moera.node.model.event.RemoteCommentVerifiedEvent;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,18 +73,10 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         return fingerprintManager.getConstructor(FingerprintObjectType.COMMENT, version, parameterTypes);
     }
 
-    private PostingRevisionInfo getPostingRevisionByComment(PostingRevisionInfo[] revisions, CommentInfo commentInfo) {
-        return Arrays.stream(revisions)
-                .filter(r -> r.getCreatedAt() <= commentInfo.getEditedAt())
-                .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > commentInfo.getEditedAt())
-                .findFirst()
-                .orElse(null);
-    }
-
     private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, CommentInfo commentInfo)
             throws NodeApiException {
 
-        PostingRevisionInfo revisionInfo = getPostingRevisionByComment(revisions, commentInfo);
+        PostingRevisionInfo revisionInfo = Util.revisionByTimestamp(revisions, commentInfo.getEditedAt());
         if (revisionInfo == null || revisionInfo.getSignature() == null) {
             succeeded(false);
             return;
@@ -113,7 +105,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
     private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, CommentInfo commentInfo,
                         CommentRevisionInfo commentRevisionInfo) throws NodeApiException {
-        PostingRevisionInfo postingRevisionInfo = getPostingRevisionByComment(revisions, commentInfo);
+        PostingRevisionInfo postingRevisionInfo = Util.revisionByTimestamp(revisions, commentInfo.getEditedAt());
         if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;

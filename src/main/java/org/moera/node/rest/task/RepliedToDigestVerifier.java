@@ -1,7 +1,6 @@
 package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -19,7 +18,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.model.RevisionInfo;
+import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,19 +31,6 @@ public class RepliedToDigestVerifier {
 
     @Inject
     private FingerprintManager fingerprintManager;
-
-    public byte[] getRepliedToDigest(UUID nodeId, String targetNodeName, PostingInfo postingInfo, String repliedToId,
-                                     long repliedAt) throws NodeApiException {
-
-        if (repliedToId == null) {
-            return null;
-        }
-
-        nodeApi.setNodeId(nodeId);
-        PostingRevisionInfo[] revisions = nodeApi.getPostingRevisions(targetNodeName, postingInfo.getId());
-        return getRepliedToDigest(targetNodeName, postingInfo, revisions, 0, new HashSet<>(), repliedToId,
-                repliedAt);
-    }
 
     public byte[] getRepliedToDigest(UUID nodeId, String targetNodeName, PostingInfo postingInfo,
                                      PostingRevisionInfo[] revisions, String repliedToId, long repliedAt)
@@ -74,7 +60,7 @@ public class RepliedToDigestVerifier {
         if (commentInfo == null || commentRevisions == null) {
             throw new ObjectNotFoundFailure("comment.reply-not-found");
         }
-        CommentRevisionInfo commentRevisionInfo = getRevisionByTimestamp(commentRevisions, repliedAt);
+        CommentRevisionInfo commentRevisionInfo = Util.revisionByTimestamp(commentRevisions, repliedAt);
         if (commentRevisionInfo == null) {
             throw new ObjectNotFoundFailure("comment.reply-not-found");
         }
@@ -88,7 +74,7 @@ public class RepliedToDigestVerifier {
         byte[] repliedToDigest = getRepliedToDigest(targetNodeName, postingInfo, postingRevisions, depth + 1,
                 visited, repliedToId, commentInfo.getCreatedAt());
 
-        PostingRevisionInfo postingRevisionInfo = getRevisionByTimestamp(postingRevisions, repliedAt);
+        PostingRevisionInfo postingRevisionInfo = Util.revisionByTimestamp(postingRevisions, repliedAt);
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
                 PostingInfo.class, PostingRevisionInfo.class, byte[].class);
@@ -98,14 +84,6 @@ public class RepliedToDigestVerifier {
 
     private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {
         return fingerprintManager.getConstructor(FingerprintObjectType.COMMENT, version, parameterTypes);
-    }
-
-    private <R extends RevisionInfo> R getRevisionByTimestamp(R[] postingRevisions, Long timestamp) {
-        return Arrays.stream(postingRevisions)
-                .filter(r -> r.getCreatedAt() <= timestamp)
-                .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > timestamp)
-                .findFirst()
-                .orElse(null);
     }
 
 }

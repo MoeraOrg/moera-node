@@ -11,6 +11,7 @@ import java.util.Set;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.ibm.icu.util.Calendar;
+import org.moera.node.model.RevisionInfo;
 import org.springframework.web.util.HtmlUtils;
 
 public class Util extends org.moera.commons.util.Util {
@@ -108,6 +109,14 @@ public class Util extends org.moera.commons.util.Util {
             return s.substring(0, size) + '\u2026';
         }
         return s;
+    }
+
+    public static <R extends RevisionInfo> R revisionByTimestamp(R[] revisions, Long timestamp) {
+        return Arrays.stream(revisions)
+                .filter(r -> r.getCreatedAt() <= timestamp)
+                .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > timestamp)
+                .findFirst()
+                .orElse(null);
     }
 
 }

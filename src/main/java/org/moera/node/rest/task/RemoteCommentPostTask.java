@@ -17,6 +17,7 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.task.Task;
@@ -55,6 +56,7 @@ public class RemoteCommentPostTask extends Task {
         try {
             nodeApi.setNodeId(nodeId);
             PostingInfo postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            PostingRevisionInfo[] postingRevisions = nodeApi.getPostingRevisions(targetNodeName, postingId);
             CommentInfo prevCommentInfo = commentId != null
                     ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
             long repliedAt = prevCommentInfo != null
@@ -62,7 +64,7 @@ public class RemoteCommentPostTask extends Task {
             String repliedToId = prevCommentInfo != null
                     ? prevCommentInfo.getRepliedToId() : Objects.toString(sourceText.getRepliedToId(), null);
             byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, targetNodeName, postingInfo,
-                    repliedToId, repliedAt);
+                    postingRevisions, repliedToId, repliedAt);
             CommentText commentText = buildComment(postingInfo, repliedToDigest);
             CommentInfo commentInfo;
             if (commentId == null) {
