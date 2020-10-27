@@ -74,7 +74,8 @@ public class RepliedToDigestVerifier {
         byte[] repliedToDigest = getRepliedToDigest(targetNodeName, postingInfo, postingRevisions, depth + 1,
                 visited, repliedToId, commentInfo.getCreatedAt());
 
-        PostingRevisionInfo postingRevisionInfo = Util.revisionByTimestamp(postingRevisions, repliedAt);
+        PostingRevisionInfo postingRevisionInfo =
+                Util.revisionByTimestamp(postingRevisions, commentRevisionInfo.getCreatedAt());
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
                 PostingInfo.class, PostingRevisionInfo.class, byte[].class);
