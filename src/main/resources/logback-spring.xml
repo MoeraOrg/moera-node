@@ -42,7 +42,7 @@
             <cleanHistoryOnStart>false</cleanHistoryOnStart>
             <fileNamePattern>${LOG_FILE_DEBUG}.%d{yyyy-MM-dd}.%i.gz}</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>7</maxHistory>
+            <maxHistory>3</maxHistory>
             <totalSizeCap>0</totalSizeCap>
         </rollingPolicy>
     </appender>
