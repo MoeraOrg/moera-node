@@ -3,9 +3,11 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
     <springProperty name="PROFILE" source="spring.profiles.active"/>
-    <property name="LOG_FILE" value="log/node-${PROFILE}.log"/>
+    <property name="LOG_FILE_INFO" value="log/node.log"/>
+    <property name="LOG_FILE_DEBUG" value="log/node-debug.log"/>
     <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%.-10X{domain:-}){blue} - %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
     <property name="FILE_LOG_PATTERN" value="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %X{domain:-} - %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <!-- deny all events with a level below INFO, that is TRACE and DEBUG -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -15,16 +17,45 @@
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
         </encoder>
     </appender>
-    <include resource="org/springframework/boot/logging/logback/file-appender.xml" />
+    <appender name="FILE_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <file>${LOG_FILE_INFO}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+            <fileNamePattern>${LOG_FILE_INFO}.%d{yyyy-MM-dd}.%i.gz}</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>0</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+    <appender name="FILE_DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+        </encoder>
+        <file>${LOG_FILE_DEBUG}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+            <fileNamePattern>${LOG_FILE_DEBUG}.%d{yyyy-MM-dd}.%i.gz}</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>0</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="FILE_INFO" />
+        <appender-ref ref="FILE_DEBUG" />
     </root>
-
     <logger name="org.hibernate.engine.jdbc.env.internal" level="WARN"/>
+    <logger name="org.moera" level="DEBUG"/>
 
     <springProfile name="dev">
-        <logger name="org.moera" level="DEBUG"/>
         <logger name="org.hibernate.SQL" level="DEBUG"/>
         <!-- to log all bound parameters in SQL -->
         <!--
