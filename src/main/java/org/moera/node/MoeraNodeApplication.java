@@ -106,22 +106,22 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
 
     @Bean
     public TaskExecutor namingTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).maxPoolSize(16).build();
+        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(16).build();
     }
 
     @Bean
     public TaskExecutor remoteTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).maxPoolSize(16).build();
+        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(16).build();
     }
 
     @Bean
     public TaskExecutor notificationSenderTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).maxPoolSize(64).build();
+        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(64).build();
     }
 
     @Bean
     public TaskExecutor pickerTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).maxPoolSize(16).build();
+        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(16).build();
     }
 
     public static void main(String[] args) {
