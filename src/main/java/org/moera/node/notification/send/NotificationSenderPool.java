@@ -1,11 +1,14 @@
 package org.moera.node.notification.send;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -36,6 +40,7 @@ public class NotificationSenderPool {
     private static Logger log = LoggerFactory.getLogger(NotificationSenderPool.class);
 
     private ConcurrentMap<SingleDirection, NotificationSender> senders = new ConcurrentHashMap<>();
+    private List<NotificationSender> pausedSenders = Collections.synchronizedList(new ArrayList<>());
 
     @Inject
     @Qualifier("notificationSenderTaskExecutor")
@@ -182,6 +187,25 @@ public class NotificationSenderPool {
             pendingNotificationRepository.save(pending);
             notification.setPendingNotificationId(pending.getId());
             return null;
+        });
+    }
+
+    void pauseSender(NotificationSender sender) {
+        pausedSenders.add(sender);
+    }
+
+    void resumeSender(NotificationSender sender) {
+        pausedSenders.remove(sender);
+    }
+
+    @Scheduled(fixedDelayString = "PT1M")
+    public void resumeSenders() {
+        List<NotificationSender> resumed = pausedSenders.stream()
+                .filter(sender -> Instant.now().compareTo(sender.getPausedTill()) >= 0)
+                .collect(Collectors.toList());
+        resumed.forEach(sender -> {
+            resumeSender(sender);
+            taskExecutor.execute(sender);
         });
     }
 

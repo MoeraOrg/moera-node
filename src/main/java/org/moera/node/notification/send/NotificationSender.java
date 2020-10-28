@@ -38,7 +38,10 @@ public class NotificationSender extends Task {
 
     private String receiverNodeName;
     private BlockingQueue<Notification> queue = new LinkedBlockingQueue<>();
+    private Notification notification;
+    private Duration delay;
     private boolean stopped = false;
+    private Instant pausedTill;
     private NotificationSenderPool pool;
 
     @Inject
@@ -60,6 +63,10 @@ public class NotificationSender extends Task {
         return stopped;
     }
 
+    public Instant getPausedTill() {
+        return pausedTill;
+    }
+
     public void put(@NotNull Notification notification) throws InterruptedException {
         queue.put(notification);
     }
@@ -67,13 +74,19 @@ public class NotificationSender extends Task {
     @Override
     public void run() {
         initLoggingDomain();
-        log.info("Sender from node ID = {} to '{}' started", nodeId, receiverNodeName);
+        if (notification == null) {
+            log.info("Sender from node ID = {} to '{}' started", nodeId, receiverNodeName);
+        } else {
+            log.info("Sender from node ID = {} to '{}' resumed", nodeId, receiverNodeName);
+        }
         while (!stopped) {
-            Notification notification;
-            try {
-                notification = queue.poll(1, TimeUnit.MINUTES);
-            } catch (InterruptedException e) {
-                continue;
+            if (notification == null) {
+                try {
+                    notification = queue.poll(1, TimeUnit.MINUTES);
+                    delay = null;
+                } catch (InterruptedException e) {
+                    continue;
+                }
             }
             if (notification == null) {
                 stopped = true;
@@ -82,6 +95,13 @@ public class NotificationSender extends Task {
                 }
             } else {
                 deliver(notification);
+                if (pausedTill == null) {
+                    notification = null;
+                } else {
+                    pool.pauseSender(this);
+                    log.info("Sender from node ID = {} to '{}' paused", nodeId, receiverNodeName);
+                    return;
+                }
             }
         }
         pool.deleteSender(nodeId, receiverNodeName);
@@ -90,15 +110,19 @@ public class NotificationSender extends Task {
 
     private void deliver(Notification notification) {
         nodeApi.setNodeId(nodeId);
-
-        Duration delay = null;
         do {
-            if (delay != null) {
-                try {
-                    Thread.sleep(delay.toMillis());
-                } catch (InterruptedException e) {
+            if (delay != null && pausedTill == null) {
+                if (delay.compareTo(Duration.ofMinutes(2)) <= 0) {
+                    try {
+                        Thread.sleep(delay.toMillis());
+                    } catch (InterruptedException e) {
+                    }
+                } else {
+                    pausedTill = Instant.now().plus(delay);
+                    return;
                 }
             }
+            pausedTill = null;
 
             log.info("Delivering notification {} to node '{}'", notification.getType().name(), receiverNodeName);
 
