@@ -9,10 +9,12 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.Domain;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.DomainInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -20,6 +22,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,6 +38,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class DomainsController {
 
     private static Logger log = LoggerFactory.getLogger(DomainsController.class);
+
+    @Value("${registrar.domain:#{null}}")
+    private String registrarDomain;
+
+    @Inject
+    private RequestContext requestContext;
 
     @Inject
     private Domains domains;
@@ -63,12 +72,14 @@ public class DomainsController {
         return new DomainInfo(name, nodeId.toString());
     }
 
-    @RootAdmin
     @PostMapping
     @Transactional
-    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainInfo domainInfo) {
+    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainInfo domainInfo) throws AuthenticationException {
         log.info("POST /domains");
 
+        if (StringUtils.isEmpty(registrarDomain) && !requestContext.isRootAdmin()) {
+            throw new AuthenticationException();
+        }
         if (StringUtils.isEmpty(domainInfo.getName())) {
             throw new ValidationFailure("domainInfo.name.blank");
         }
