@@ -138,6 +138,11 @@
             <artifactId>owasp-java-html-sanitizer</artifactId>
             <version>20200713.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.slugify</groupId>
+            <artifactId>slugify</artifactId>
+            <version>2.4</version>
+        </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>

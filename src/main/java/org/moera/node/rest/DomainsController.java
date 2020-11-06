@@ -9,12 +9,14 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import com.github.slugify.Slugify;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.Domain;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.DomainAvailable;
 import org.moera.node.model.DomainInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/domains")
@@ -155,6 +158,30 @@ public class DomainsController {
             domains.unlockWrite();
         }
         return Result.OK;
+    }
+
+    @GetMapping("/available")
+    public DomainAvailable findAvailable(@RequestParam String nodeName) {
+        log.info("GET /domains/available (nodeName = {})", nodeName);
+
+        if (StringUtils.isEmpty(registrarDomain)) {
+            throw new OperationFailure("domains.registration-not-available");
+        }
+
+        Slugify slugify = new Slugify().withTransliterator(true);
+        String domainName = slugify.slugify(nodeName);
+        if (StringUtils.isEmpty(domainName)) {
+            domainName = "x";
+        }
+        String fqdn = domainName + "." + registrarDomain;
+        if (domainName.equals("x") || domains.isDomainDefined(fqdn)) {
+            int i = -1;
+            do {
+                i++;
+                fqdn = domainName + i + "." + registrarDomain;
+            } while (domains.isDomainDefined(fqdn));
+        }
+        return new DomainAvailable(fqdn);
     }
 
 }
