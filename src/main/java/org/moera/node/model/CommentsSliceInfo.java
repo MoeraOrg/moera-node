@@ -7,6 +7,7 @@ public class CommentsSliceInfo {
     private long before;
     private long after;
     private List<CommentInfo> comments;
+    private int total;
     private int totalInPast;
     private int totalInFuture;
 
@@ -35,6 +36,14 @@ public class CommentsSliceInfo {
 
     public void setComments(List<CommentInfo> comments) {
         this.comments = comments;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public void setTotal(int total) {
+        this.total = total;
     }
 
     public int getTotalInPast() {

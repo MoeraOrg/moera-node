@@ -366,6 +366,7 @@ public class CommentController {
     }
 
     private void calcSliceTotals(CommentsSliceInfo sliceInfo, Posting posting) {
+        sliceInfo.setTotal(posting.getTotalChildren());
         if (sliceInfo.getAfter() == Long.MIN_VALUE) {
             sliceInfo.setTotalInPast(0);
             sliceInfo.setTotalInFuture(posting.getTotalChildren() - sliceInfo.getComments().size());
