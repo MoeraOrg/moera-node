@@ -5,7 +5,7 @@
 
 - name: naming.unavailable.max-retries
   type: int
-  defaultValue: 5
+  defaultValue: 30
   title: Naming server connection retries
   modifiers:
     min: 1
@@ -84,10 +84,10 @@
 
 - name: profile.signing-key.valid-from.layover
   type: Duration
-  defaultValue: 1h
+  defaultValue: 10m
   title: Signing key activation layover
   modifiers:
-    min: 10m
+    min: 1m
     max: 7d
 
 - name: webmaster.name

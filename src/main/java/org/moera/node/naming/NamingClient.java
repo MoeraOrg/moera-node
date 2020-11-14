@@ -151,7 +151,7 @@ public class NamingClient {
                 return null;
             }
             Date last = context.lastCompletionTime();
-            return last == null ? new Date() : Date.from(last.toInstant().plusSeconds(60));
+            return last == null ? new Date() : Date.from(last.toInstant().plusSeconds(10));
         });
     }
 
