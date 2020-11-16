@@ -62,11 +62,13 @@ public class DomainsController {
                 .collect(Collectors.toList());
     }
 
-    @RootAdmin
     @GetMapping("/{name}")
-    public DomainInfo get(@PathVariable String name) {
+    public DomainInfo get(@PathVariable String name) throws AuthenticationException {
         log.info("GET /domains/{}", name);
 
+        if (StringUtils.isEmpty(registrarDomain) && !requestContext.isRootAdmin()) {
+            throw new AuthenticationException();
+        }
         name = name.toLowerCase();
         UUID nodeId = domains.getDomainNodeId(name);
         if (nodeId == null) {
