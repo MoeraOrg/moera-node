@@ -24,11 +24,13 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class MarkdownConverter {
 
+    static final Set<String> BLOCK_TAGS_MARKDOWN_ALLOWED = Set.of("blockquote", "details");
     static final DataHolder DEFAULT_OPTIONS = new MutableDataSet()
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
             .set(Parser.HTML_BLOCK_TAGS, htmlBlockTags())
@@ -65,9 +67,8 @@ public class MarkdownConverter {
 
     private static List<String> htmlBlockTags() {
         return Parser.HTML_BLOCK_TAGS.get(null).stream()
-                .filter(tag -> !tag.equalsIgnoreCase("blockquote"))
+                .filter(tag -> !BLOCK_TAGS_MARKDOWN_ALLOWED.contains(tag.toLowerCase()))
                 .collect(Collectors.toList());
-
     }
 
     public String toHtml(String source) {
