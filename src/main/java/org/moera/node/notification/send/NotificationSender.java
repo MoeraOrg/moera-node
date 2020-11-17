@@ -75,9 +75,9 @@ public class NotificationSender extends Task {
     public void run() {
         initLoggingDomain();
         if (notification == null) {
-            log.info("Sender from node ID = {} to '{}' started", nodeId, receiverNodeName);
+            log.debug("Sender from node ID = {} to '{}' started", nodeId, receiverNodeName);
         } else {
-            log.info("Sender from node ID = {} to '{}' resumed", nodeId, receiverNodeName);
+            log.debug("Sender from node ID = {} to '{}' resumed", nodeId, receiverNodeName);
         }
         while (!stopped) {
             if (notification == null) {
@@ -99,13 +99,13 @@ public class NotificationSender extends Task {
                     notification = null;
                 } else {
                     pool.pauseSender(this);
-                    log.info("Sender from node ID = {} to '{}' paused", nodeId, receiverNodeName);
+                    log.debug("Sender from node ID = {} to '{}' paused", nodeId, receiverNodeName);
                     return;
                 }
             }
         }
         pool.deleteSender(nodeId, receiverNodeName);
-        log.info("Sender from node ID = {} to '{}' stopped", nodeId, receiverNodeName);
+        log.debug("Sender from node ID = {} to '{}' stopped", nodeId, receiverNodeName);
     }
 
     private void deliver(Notification notification) {

@@ -15,6 +15,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Comment;
@@ -40,6 +41,8 @@ import org.moera.node.util.EmojiList;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -54,6 +57,8 @@ public class ReactionOperations {
 
     public static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
     public static final int MAX_REACTIONS_PER_REQUEST = 200;
+
+    private static Logger log = LoggerFactory.getLogger(ReactionOperations.class);
 
     @Inject
     private RequestContext requestContext;
@@ -118,12 +123,19 @@ public class ReactionOperations {
     public Reaction post(ReactionDescription reactionDescription, Entry entry, Consumer<Reaction> reactionDeleted,
                          Consumer<Reaction> reactionAdded) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), reactionDescription.getOwnerName());
+        if (reaction != null) {
+            log.debug("Found previous reaction {}, deadline {}",
+                    LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeadline()));
+        } else {
+            log.debug("Previous reaction not found");
+        }
         if (reaction == null || reaction.getDeadline() == null
                 || reaction.isNegative() != reactionDescription.isNegative()
                 || reaction.getEmoji() != reactionDescription.getEmoji()
                 || reaction.getSignature() == null && reactionDescription.getSignature() != null) {
 
             if (reaction != null) {
+                log.debug("Deleting reaction {}", LogUtil.format(reaction.getId()));
                 reactionTotalOperations.changeTotals(entry, reaction, -1);
                 reaction.setDeletedAt(Util.now());
                 Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
@@ -144,6 +156,8 @@ public class ReactionOperations {
                     moment -> reactionRepository.countMoments(entry.getId(), moment) == 0,
                     Util.now()));
             reaction = reactionRepository.save(reaction);
+            log.debug("Created reaction {}, deadline {}",
+                    LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeadline()));
             entry.getCurrentRevision().addReaction(reaction);
 
             reactionTotalOperations.changeTotals(entry, reaction, 1);
@@ -176,6 +190,7 @@ public class ReactionOperations {
     public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), ownerName);
         if (reaction != null) {
+            log.debug("Deleting reaction {}", LogUtil.format(reaction.getId()));
             reactionTotalOperations.changeTotals(entry, reaction, -1);
             reaction.setDeletedAt(Util.now());
             Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
@@ -192,6 +207,8 @@ public class ReactionOperations {
         Set<Entry> changed = new HashSet<>();
         Transaction.execute(txManager, () -> {
             reactionRepository.findExpired(Util.now()).forEach(reaction -> {
+                log.debug("Purging reaction {}, deletedAt = {}",
+                        LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
                 Entry entry = reaction.getEntryRevision().getEntry();
                 if (reaction.getDeletedAt() == null) {
                     List<Reaction> deleted = reactionRepository.findDeletedByEntryIdAndOwner(
@@ -204,6 +221,8 @@ public class ReactionOperations {
                         if (next.getSignature() != null) {
                             next.setDeadline(null);
                         }
+                        log.debug("Restored reaction {}, deadline {}",
+                                LogUtil.format(next.getId()), LogUtil.format(next.getDeadline()));
                         reactionTotalOperations.changeTotals(entry, next, 1);
                     }
                     reactionTotalOperations.changeTotals(entry, reaction, -1);

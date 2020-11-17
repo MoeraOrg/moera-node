@@ -148,7 +148,7 @@ public class NotificationSenderPool {
     }
 
     private NotificationSender createSender(UUID nodeId, String nodeName) {
-        log.info("Creating sender from node ID = {} to '{}'", nodeId, nodeName);
+        log.debug("Creating sender from node ID = {} to '{}'", nodeId, nodeName);
         NotificationSender sender = new NotificationSender(this, nodeName);
         if (nodeId == null) {
             taskAutowire.autowire(sender);
