@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
@@ -26,6 +27,9 @@ public class RemotePostingProcessor {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private OwnCommentRepository ownCommentRepository;
+
+    @Inject
     private RemoteCommentInstants remoteCommentInstants;
 
     private Subscription getSubscription(PostingCommentNotification notification) {
@@ -42,6 +46,13 @@ public class RemotePostingProcessor {
     @Transactional
     public void commentAdded(PostingCommentAddedNotification notification) {
         Subscription subscription = getSubscription(notification);
+        if (notification.getCommentRepliedTo() != null) {
+            int count = ownCommentRepository.countByRemoteCommentId(requestContext.nodeId(),
+                    notification.getSenderNodeName(), notification.getPostingId(), notification.getCommentRepliedTo());
+            if (count > 0) {
+                return; // We should receive another notification about somebody replied to our comment
+            }
+        }
         remoteCommentInstants.added(
                 notification.getSenderNodeName(), notification.getPostingId(), notification.getPostingHeading(),
                 notification.getCommentOwnerName(), notification.getCommentId(), notification.getCommentHeading(),

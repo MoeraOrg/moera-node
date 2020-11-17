@@ -168,9 +168,11 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             commentInstants.added(comment);
+            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
             requestContext.send(Directions.postingCommentsSubscribers(posting.getId()),
                     new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
-                            comment.getId(), comment.getOwnerName(), comment.getCurrentRevision().getHeading()));
+                            comment.getId(), comment.getOwnerName(), comment.getCurrentRevision().getHeading(),
+                            repliedToId));
         }
 
         requestContext.send(new CommentAddedEvent(comment));
@@ -216,10 +218,11 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             commentInstants.added(comment);
+            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
             requestContext.send(Directions.postingCommentsSubscribers(postingId),
                     new PostingCommentAddedNotification(postingId,
                             comment.getPosting().getCurrentRevision().getHeading(), comment.getId(),
-                            comment.getOwnerName(), comment.getCurrentRevision().getHeading()));
+                            comment.getOwnerName(), comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
         requestContext.send(new CommentUpdatedEvent(comment));

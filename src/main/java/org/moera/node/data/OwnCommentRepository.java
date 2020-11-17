@@ -14,6 +14,10 @@ public interface OwnCommentRepository extends JpaRepository<OwnComment, UUID> {
     Optional<OwnComment> findByRemoteCommentId(UUID nodeId, String remoteNodeName, String remotePostingId,
                                                String remoteCommentId);
 
+    @Query("select count(*) from OwnComment c where c.nodeId = ?1 and c.remoteNodeName = ?2 and c.remotePostingId = ?3"
+            + " and c.remoteCommentId = ?4")
+    int countByRemoteCommentId(UUID nodeId, String remoteNodeName, String remotePostingId, String remoteCommentId);
+
     @Modifying
     @Query("delete OwnComment c where c.nodeId = ?1 and c.remoteNodeName = ?2 and c.remotePostingId = ?3"
             + " and c.remoteCommentId = ?4")
