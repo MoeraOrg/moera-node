@@ -33,10 +33,11 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
 
+        UriComponents uriComponents = UriUtil.createBuilderFromRequest(request).build();
+        requestContext.setUrl(uriComponents.toUriString());
         if (requestContext.isRegistrar()) {
             return true;
         }
-        UriComponents uriComponents = UriUtil.createBuilderFromRequest(request).build();
         String host = uriComponents.getHost();
         host = host != null ? host.toLowerCase() : host;
         if (host == null || domains.isDomainDefined(host) || StringUtils.isEmpty(registrarDomain)) {

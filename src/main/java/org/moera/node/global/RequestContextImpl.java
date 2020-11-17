@@ -24,10 +24,13 @@ public class RequestContextImpl implements RequestContext {
     private boolean rootAdmin;
     private boolean admin;
     private Options options;
+    private String url;
     private String siteUrl;
     private String clientId;
     private String clientName;
     private InetAddress localAddr;
+    private UserAgent userAgent = UserAgent.UNKNOWN;
+    private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
     private List<Event> afterCommitEvents = new ArrayList<>();
     private List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
 
@@ -82,6 +85,16 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public String getUrl() {
+        return url;
+    }
+
+    @Override
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    @Override
     public String getSiteUrl() {
         return siteUrl;
     }
@@ -124,6 +137,26 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setLocalAddr(InetAddress localAddr) {
         this.localAddr = localAddr;
+    }
+
+    @Override
+    public UserAgent getUserAgent() {
+        return userAgent;
+    }
+
+    @Override
+    public void setUserAgent(UserAgent userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    @Override
+    public UserAgentOs getUserAgentOs() {
+        return userAgentOs;
+    }
+
+    @Override
+    public void setUserAgentOs(UserAgentOs userAgentOs) {
+        this.userAgentOs = userAgentOs;
     }
 
     @Override

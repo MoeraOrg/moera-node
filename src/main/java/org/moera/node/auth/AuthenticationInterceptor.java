@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.UserAgent;
+import org.moera.node.global.UserAgentOs;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,7 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         processAuthParameters(request);
+        processUserAgent(request);
 
         if (!(handler instanceof HandlerMethod)) {
             return true;
@@ -76,6 +79,37 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
         }
         if (!requestContext.isAdmin() && !StringUtils.isEmpty(requestContext.getClientName())) {
             log.info("Authorized with node name {}", requestContext.getClientName());
+        }
+    }
+
+    private void processUserAgent(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (StringUtils.isEmpty(userAgent)) {
+            return;
+        }
+
+        if (userAgent.contains("Firefox")) {
+            requestContext.setUserAgent(UserAgent.FIREFOX);
+        } else if (userAgent.contains("Opera")) {
+            requestContext.setUserAgent(UserAgent.OPERA);
+        } else if (userAgent.contains("Chrome")) {
+            if (userAgent.contains("YaBrowser")) {
+                requestContext.setUserAgent(UserAgent.YANDEX);
+            } else if (userAgent.contains("Brave")) {
+                requestContext.setUserAgent(UserAgent.BRAVE);
+            } else if (userAgent.contains("Vivaldi")) {
+                requestContext.setUserAgent(UserAgent.VIVALDI);
+            } else {
+                requestContext.setUserAgent(UserAgent.CHROME);
+            }
+        } else if (userAgent.contains("Dolphin")) {
+            requestContext.setUserAgent(UserAgent.DOLPHIN);
+        }
+
+        if (userAgent.contains("Android")) {
+            requestContext.setUserAgentOs(UserAgentOs.ANDROID);
+        } else if (userAgent.contains("iPhone")) {
+            requestContext.setUserAgentOs(UserAgentOs.IOS);
         }
     }
 

@@ -32,6 +32,10 @@ public interface RequestContext {
 
     void setOptions(Options options);
 
+    String getUrl();
+
+    void setUrl(String url);
+
     String getSiteUrl();
 
     void setSiteUrl(String siteUrl);
@@ -49,6 +53,14 @@ public interface RequestContext {
     InetAddress getLocalAddr();
 
     void setLocalAddr(InetAddress localAddr);
+
+    UserAgent getUserAgent();
+
+    void setUserAgent(UserAgent userAgent);
+
+    UserAgentOs getUserAgentOs();
+
+    void setUserAgentOs(UserAgentOs userAgentOs);
 
     RequestContext getPublic();
 

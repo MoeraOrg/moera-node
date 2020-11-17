@@ -8,6 +8,9 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
+import org.moera.node.global.RequestContext;
+import org.moera.node.global.UserAgent;
+import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsInfo;
@@ -15,10 +18,14 @@ import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.RegisteredNameDetails;
+import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 
 @HelperSource
 public class MoeraHelperSource {
+
+    @Inject
+    private RequestContext requestContext;
 
     @Inject
     private NamingCache namingCache;
@@ -99,6 +106,44 @@ public class MoeraHelperSource {
             buf.append(String.format("&#%d;", totals.get(i).getEmoji()));
         }
         buf.append("</span>");
+    }
+
+    private boolean isAddonSupported() {
+        switch (requestContext.getUserAgent()) {
+            default:
+            case UNKNOWN:
+            case OPERA:
+            case DOLPHIN:
+                return false;
+            case FIREFOX:
+            case CHROME:
+                return requestContext.getUserAgentOs() == UserAgentOs.UNKNOWN;
+            case YANDEX:
+            case BRAVE:
+            case VIVALDI:
+                return true;
+        }
+    }
+
+    public CharSequence invitation() {
+        StringBuilder buf = new StringBuilder();
+        buf.append("This site participates in <a href=\"http://moera.org/\">Moera</a> Network. ");
+        buf.append("To unlock all features, ");
+        if (isAddonSupported()) {
+            buf.append("install ");
+            if (requestContext.getUserAgent() == UserAgent.FIREFOX) {
+                buf.append("<a href=\"https://addons.mozilla.org/en-US/firefox/addon/moera/\">"
+                        + "the Moera add-on for Firefox</a>");
+            } else {
+                buf.append("<a href=\"https://chrome.google.com/webstore/detail/moera/"
+                        + "endpkknmpgamhhlojbgifimfcleeeghb\">the Moera add-on for Chrome</a>");
+            }
+            buf.append(" or ");
+        }
+        buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
+        buf.append(Util.ue(requestContext.getUrl()));
+        buf.append("\">View in Web Client</a>");
+        return new SafeString(buf);
     }
 
 }
