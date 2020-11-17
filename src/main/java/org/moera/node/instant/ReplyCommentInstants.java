@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -118,7 +119,7 @@ public class ReplyCommentInstants {
         requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
-    private static String buildAddedSummary(Story story, List<Story> stories) {
+    private String buildAddedSummary(Story story, List<Story> stories) {
         StringBuilder buf = new StringBuilder();
         String firstName = stories.get(0).getRemoteOwnerName();
         buf.append(InstantUtil.formatNodeName(firstName));
@@ -138,7 +139,14 @@ public class ReplyCommentInstants {
         }
         buf.append(" replied to your comment \"");
         buf.append(story.getRemoteRepliedToHeading());
-        buf.append("\" on your post \"");
+        buf.append("\" on ");
+        if (Objects.equals(story.getRemoteNodeName(), requestContext.nodeName())) {
+            buf.append("your");
+        } else {
+            buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)
+                    ? "their" : InstantUtil.formatNodeName(story.getRemoteNodeName()));
+        }
+        buf.append(" post \"");
         buf.append(Util.he(story.getRemoteHeading()));
         buf.append('"');
         return buf.toString();
