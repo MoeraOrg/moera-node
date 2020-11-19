@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -18,6 +20,7 @@ import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.domain.Domains;
 import org.moera.node.model.event.Event;
+import org.moera.node.model.event.PingEvent;
 import org.moera.node.model.event.SubscribedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -195,10 +198,24 @@ public class EventManager {
     }
 
     @Scheduled(fixedDelayString = "PT1M")
-    public void retryDelivery() {
+    public void everyMinute() {
+        retryDelivery();
+        pingAll();
+    }
+
+    private void retryDelivery() {
         synchronized (deliverySignal) {
             deliverySignal.notifyAll();
         }
+    }
+
+    private void pingAll() {
+        Set<UUID> nodeIds = subscribers.values().stream()
+                .filter(EventSubscriber::isSubscribed)
+                .filter(EventSubscriber::isAdmin)
+                .map(EventSubscriber::getNodeId)
+                .collect(Collectors.toSet());
+        nodeIds.forEach(nodeId -> send(nodeId, new PingEvent()));
     }
 
     private void deliver() {
