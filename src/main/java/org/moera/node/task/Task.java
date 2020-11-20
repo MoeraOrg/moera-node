@@ -74,8 +74,8 @@ public abstract class Task implements Runnable {
         return nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
-    protected String generateCarte() {
-        return Carte.generate(nodeName, localAddr, Instant.now(), signingKey);
+    protected String generateCarte(String targetNodeName) {
+        return Carte.generate(nodeName, localAddr, Instant.now(), signingKey, targetNodeName);
     }
 
     protected void send(Event event) {

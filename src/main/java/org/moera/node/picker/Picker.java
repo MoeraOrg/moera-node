@@ -253,7 +253,8 @@ public class Picker extends Task {
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
                 receiverPostingId, Util.toEpochSecond(lastUpdatedAt));
         try {
-            SubscriberInfo subscriberInfo = nodeApi.postSubscriber(receiverName, generateCarte(), description);
+            SubscriberInfo subscriberInfo =
+                    nodeApi.postSubscriber(receiverName, generateCarte(receiverName), description);
             Subscription subscription = new Subscription();
             subscription.setId(UUID.randomUUID());
             subscription.setNodeId(nodeId);

@@ -18,8 +18,10 @@ public class Carte {
         return beginning.plus(TTL);
     }
 
-    public static String generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey) {
-        CarteFingerprint fingerprint = new CarteFingerprint(ownerName, address, beginning, getDeadline(beginning));
+    public static String generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey,
+                                  String nodeName) {
+        CarteFingerprint fingerprint =
+                new CarteFingerprint(ownerName, address, beginning, getDeadline(beginning), nodeName);
         byte[] content = CryptoUtil.fingerprint(fingerprint);
         byte[] signature = CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey);
         byte[] carte = new byte[content.length + signature.length];

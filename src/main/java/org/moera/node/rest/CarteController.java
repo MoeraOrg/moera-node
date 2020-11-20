@@ -55,7 +55,7 @@ public class CarteController {
             InetAddress remoteAddress = UriUtil.remoteAddress(request);
             for (int i = 0; i <  limit; i++) {
                     CarteInfo carteInfo = new CarteInfo();
-                    carteInfo.setCarte(Carte.generate(ownerName, remoteAddress, beginning, signingKey));
+                    carteInfo.setCarte(Carte.generate(ownerName, remoteAddress, beginning, signingKey, null));
                     carteInfo.setBeginning(beginning.getEpochSecond());
                     beginning = Carte.getDeadline(beginning);
                     carteInfo.setDeadline(beginning.getEpochSecond());

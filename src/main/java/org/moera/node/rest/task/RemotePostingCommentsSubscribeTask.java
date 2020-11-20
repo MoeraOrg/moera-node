@@ -43,7 +43,8 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             }
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING_COMMENTS,
                     null, postingId);
-            SubscriberInfo subscriberInfo = nodeApi.postSubscriber(targetNodeName, generateCarte(), description);
+            SubscriberInfo subscriberInfo =
+                    nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
             Subscription subscription = new Subscription();
             subscription.setId(UUID.randomUUID());
             subscription.setNodeId(nodeId);
