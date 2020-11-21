@@ -104,6 +104,9 @@ public class Entry {
     @ManyToOne
     private Entry repliedTo;
 
+    @ManyToOne
+    private EntryRevision repliedToRevision;
+
     private String repliedToName;
 
     private String repliedToHeading;
@@ -378,6 +381,14 @@ public class Entry {
 
     public void setRepliedTo(Entry repliedTo) {
         this.repliedTo = repliedTo;
+    }
+
+    public EntryRevision getRepliedToRevision() {
+        return repliedToRevision;
+    }
+
+    public void setRepliedToRevision(EntryRevision repliedToRevision) {
+        this.repliedToRevision = repliedToRevision;
     }
 
     public String getRepliedToName() {

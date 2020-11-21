@@ -7,6 +7,7 @@ import org.moera.node.data.Comment;
 public class RepliedTo {
 
     private String id;
+    private String revisionId;
     private String name;
     private String heading;
     private byte[] digest;
@@ -17,6 +18,9 @@ public class RepliedTo {
     public RepliedTo(Comment comment) {
         if (comment.getRepliedTo() != null) {
             id = comment.getRepliedTo().getId().toString();
+            if (comment.getRepliedToRevision() != null) {
+                revisionId = comment.getRepliedToRevision().getId().toString();
+            }
             name = comment.getRepliedToName();
             heading = comment.getRepliedToHeading();
             digest = comment.getRepliedToDigest();
@@ -29,6 +33,14 @@ public class RepliedTo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getRevisionId() {
+        return revisionId;
+    }
+
+    public void setRevisionId(String revisionId) {
+        this.revisionId = revisionId;
     }
 
     public String getName() {

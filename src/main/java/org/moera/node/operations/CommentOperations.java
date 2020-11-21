@@ -72,6 +72,7 @@ public class CommentOperations {
         comment.setPosting(posting);
         if (repliedTo != null) {
             comment.setRepliedTo(repliedTo);
+            comment.setRepliedToRevision(repliedTo.getCurrentRevision());
             comment.setRepliedToName(repliedTo.getOwnerName());
             comment.setRepliedToHeading(repliedTo.getCurrentRevision().getHeading());
             comment.setRepliedToDigest(repliedTo.getCurrentRevision().getDigest());

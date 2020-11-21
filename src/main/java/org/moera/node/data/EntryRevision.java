@@ -86,6 +86,9 @@ public class EntryRevision {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
     private Set<EntryRevision> children = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "repliedToRevision")
+    private Set<Entry> replies = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -306,6 +309,24 @@ public class EntryRevision {
     public void removeChild(EntryRevision child) {
         children.removeIf(sr -> sr.getId().equals(child.getId()));
         child.setParent(null);
+    }
+
+    public Set<Entry> getReplies() {
+        return replies;
+    }
+
+    public void setReplies(Set<Entry> replies) {
+        this.replies = replies;
+    }
+
+    public void addReply(Entry reply) {
+        replies.add(reply);
+        reply.setRepliedToRevision(this);
+    }
+
+    public void removeReply(Entry reply) {
+        replies.removeIf(sr -> sr.getId().equals(reply.getId()));
+        reply.setRepliedToRevision(null);
     }
 
 }
