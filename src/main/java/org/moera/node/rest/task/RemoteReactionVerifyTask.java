@@ -50,17 +50,19 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 remotePostingId = postingInfo.getReceiverPostingId();
                 postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
             }
-            PostingRevisionInfo[] postingRevisions = nodeApi.getPostingRevisions(remoteNodeName, remotePostingId);
             if (data.getCommentId() == null) {
                 ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
                         data.getReactionOwnerName());
-                verify(postingInfo, postingRevisions, reactionInfo);
+                PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, remotePostingId,
+                        reactionInfo.getPostingRevisionId());
+                verify(postingInfo, postingRevisionInfo, reactionInfo);
             } else {
                 CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
                 CommentRevisionInfo[] commentRevisions = nodeApi.getCommentRevisions(remoteNodeName, remotePostingId,
                         data.getCommentId());
                 ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, remotePostingId,
                         data.getCommentId(), data.getReactionOwnerName());
+                PostingRevisionInfo[] postingRevisions = nodeApi.getPostingRevisions(remoteNodeName, remotePostingId);
                 verify(postingInfo, postingRevisions, commentInfo, commentRevisions, reactionInfo);
             }
         } catch (Exception e) {
@@ -72,8 +74,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         return fingerprintManager.getConstructor(FingerprintObjectType.REACTION, version, parameterTypes);
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] postingRevisions, ReactionInfo reactionInfo) {
-        PostingRevisionInfo postingRevisionInfo = Util.revisionByTimestamp(postingRevisions, reactionInfo.getCreatedAt());
+    private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo, ReactionInfo reactionInfo) {
         if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
