@@ -18,7 +18,6 @@ import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.event.RemoteReactionVerificationFailedEvent;
 import org.moera.node.model.event.RemoteReactionVerifiedEvent;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,13 +56,14 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                         reactionInfo.getPostingRevisionId());
                 verify(postingInfo, postingRevisionInfo, reactionInfo);
             } else {
-                CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
-                CommentRevisionInfo[] commentRevisions = nodeApi.getCommentRevisions(remoteNodeName, remotePostingId,
-                        data.getCommentId());
                 ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, remotePostingId,
                         data.getCommentId(), data.getReactionOwnerName());
-                PostingRevisionInfo[] postingRevisions = nodeApi.getPostingRevisions(remoteNodeName, remotePostingId);
-                verify(postingInfo, postingRevisions, commentInfo, commentRevisions, reactionInfo);
+                CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
+                CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName, remotePostingId,
+                        data.getCommentId(), reactionInfo.getCommentRevisionId());
+                PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, remotePostingId,
+                        commentInfo.getPostingRevisionId());
+                verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
             }
         } catch (Exception e) {
             error(e);
@@ -92,16 +92,10 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 reactionInfo.getSignature(), signingKey, constructor, reactionInfo, postingInfo, postingRevisionInfo));
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] postingRevisions,
-                        CommentInfo commentInfo, CommentRevisionInfo[] commentRevisions, ReactionInfo reactionInfo) {
-        PostingRevisionInfo postingRevisionInfo = Util.revisionByTimestamp(postingRevisions, commentInfo.getEditedAt());
-        if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
-            succeeded(false);
-            return;
-        }
-
-        CommentRevisionInfo commentRevisionInfo = Util.revisionByTimestamp(commentRevisions, reactionInfo.getCreatedAt());
-        if (commentRevisionInfo == null || commentRevisionInfo.getSignature() == null) {
+    private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                        CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo, ReactionInfo reactionInfo) {
+        if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null
+                || commentRevisionInfo == null || commentRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }
