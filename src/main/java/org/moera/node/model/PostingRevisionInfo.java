@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
-import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingRevisionInfo implements RevisionInfo {
@@ -179,26 +177,6 @@ public class PostingRevisionInfo implements RevisionInfo {
 
     public void setReactions(ReactionTotalsInfo reactions) {
         this.reactions = reactions;
-    }
-
-    public void toPickedEntryRevision(EntryRevision entryRevision) {
-        entryRevision.setReceiverRevisionId(id);
-        entryRevision.setBodyPreview(bodyPreview.getEncoded());
-        entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
-        entryRevision.setBodySrcFormat(bodySrcFormat);
-        entryRevision.setReceiverBodySrcHash(bodySrcHash);
-        entryRevision.setBodyFormat(bodyFormat);
-        entryRevision.setBody(body.getEncoded());
-        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
-        entryRevision.setHeading(heading);
-        if (deletedAt != null) {
-            entryRevision.setDeletedAt(Util.now());
-        }
-        entryRevision.setReceiverCreatedAt(Util.toTimestamp(createdAt));
-        entryRevision.setReceiverDeletedAt(Util.toTimestamp(deletedAt));
-        entryRevision.setSignature(signature);
-        entryRevision.setSignatureVersion(signatureVersion);
     }
 
 }

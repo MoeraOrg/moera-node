@@ -15,6 +15,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
+import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 
@@ -521,6 +522,26 @@ public class PostingInfo implements ReactionsInfo {
         posting.setReactionsVisible(reactionsVisible);
         posting.setReactionTotalsVisible(reactionTotalsVisible);
         posting.setTotalChildren(totalComments);
+    }
+
+    public void toPickedEntryRevision(EntryRevision entryRevision) {
+        entryRevision.setReceiverRevisionId(revisionId);
+        entryRevision.setBodyPreview(bodyPreview.getEncoded());
+        entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
+                !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
+        entryRevision.setBodySrcFormat(bodySrcFormat);
+        entryRevision.setReceiverBodySrcHash(bodySrcHash);
+        entryRevision.setBodyFormat(bodyFormat);
+        entryRevision.setBody(body.getEncoded());
+        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
+        entryRevision.setHeading(heading);
+        if (deletedAt != null) {
+            entryRevision.setDeletedAt(Util.now());
+        }
+        entryRevision.setReceiverCreatedAt(Util.toTimestamp(revisionCreatedAt));
+        entryRevision.setReceiverDeletedAt(Util.toTimestamp(deletedAt));
+        entryRevision.setSignature(signature);
+        entryRevision.setSignatureVersion(signatureVersion);
     }
 
 }

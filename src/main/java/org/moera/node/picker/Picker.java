@@ -30,7 +30,6 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
@@ -165,7 +164,7 @@ public class Picker extends Task {
             posting.setReceiverName(receiverName);
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
-            downloadRevisions(posting);
+            updateRevision(posting, postingInfo);
             subscribe(receiverName, receiverPostingId, posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
             notifications.add(new DirectedNotification(
@@ -174,7 +173,7 @@ public class Picker extends Task {
             publish(feedName, posting, events);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             postingInfo.toPickedPosting(posting);
-            downloadRevisions(posting);
+            updateRevision(posting, postingInfo);
             if (posting.getDeletedAt() == null) {
                 events.add(new PostingUpdatedEvent(posting));
             } else {
@@ -192,48 +191,29 @@ public class Picker extends Task {
         return posting;
     }
 
-    private void downloadRevisions(Posting posting) throws NodeApiException {
-        PostingRevisionInfo[] revisionInfos = nodeApi.getPostingRevisions(remoteNodeName, posting.getReceiverEntryId());
-        EntryRevision currentRevision = null;
-        EntryRevision latestRevision = null;
-        for (PostingRevisionInfo revisionInfo : revisionInfos) {
-            if (revisionInfo.getId().equals(posting.getCurrentReceiverRevisionId())) {
-                if (revisionInfo.getDeletedAt() == null) {
-                    currentRevision = posting.getCurrentRevision();
-                } else {
-                    posting.getCurrentRevision().setReceiverDeletedAt(Util.toTimestamp(revisionInfo.getDeletedAt()));
-                }
-                break;
-            }
-            EntryRevision revision = new EntryRevision();
-            revision.setId(UUID.randomUUID());
-            revision.setEntry(posting);
-            revision = entryRevisionRepository.save(revision);
-            posting.addRevision(revision);
-            revisionInfo.toPickedEntryRevision(revision);
-            PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
-            revision.setDigest(CryptoUtil.digest(fingerprint));
-            if (revisionInfo.getDeletedAt() == null) {
-                currentRevision = revision;
-            }
-            if (latestRevision == null) {
-                latestRevision = revision;
-            }
-            posting.setTotalRevisions(posting.getTotalRevisions() + 1);
+    private void updateRevision(Posting posting, PostingInfo postingInfo) {
+        if (postingInfo.getRevisionId().equals(posting.getCurrentReceiverRevisionId())) {
+            return;
         }
 
-        currentRevision = currentRevision != null ? currentRevision : latestRevision;
-        if (currentRevision != null && (posting.getCurrentRevision() == null
-                || !currentRevision.getId().equals(posting.getCurrentRevision().getId()))) {
-            if (posting.getCurrentRevision() != null) {
-                posting.getCurrentRevision().setDeletedAt(Util.now());
-                if (posting.getCurrentRevision().getReceiverDeletedAt() == null) {
-                    posting.getCurrentRevision().setReceiverDeletedAt(Util.now());
-                }
+        EntryRevision revision = new EntryRevision();
+        revision.setId(UUID.randomUUID());
+        revision.setEntry(posting);
+        revision = entryRevisionRepository.save(revision);
+        posting.addRevision(revision);
+        postingInfo.toPickedEntryRevision(revision);
+        PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
+        revision.setDigest(CryptoUtil.digest(fingerprint));
+        posting.setTotalRevisions(posting.getTotalRevisions() + 1);
+
+        if (posting.getCurrentRevision() != null) {
+            posting.getCurrentRevision().setDeletedAt(Util.now());
+            if (posting.getCurrentRevision().getReceiverDeletedAt() == null) {
+                posting.getCurrentRevision().setReceiverDeletedAt(Util.toTimestamp(postingInfo.getRevisionCreatedAt()));
             }
-            posting.setCurrentRevision(currentRevision);
-            posting.setCurrentReceiverRevisionId(currentRevision.getReceiverRevisionId());
         }
+        posting.setCurrentRevision(revision);
+        posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
     }
 
     private void publish(String feedName, Posting posting, List<Event> events) {
