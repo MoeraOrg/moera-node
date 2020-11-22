@@ -1,7 +1,9 @@
 package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -18,7 +20,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -33,21 +34,21 @@ public class RepliedToDigestVerifier {
     private FingerprintManager fingerprintManager;
 
     public byte[] getRepliedToDigest(UUID nodeId, String targetNodeName, PostingInfo postingInfo,
-                                     PostingRevisionInfo[] revisions, String repliedToId, long repliedAt)
-            throws NodeApiException {
-
+                                     Map<String, PostingRevisionInfo> revisions, String repliedToId,
+                                     String repliedToRevisionId) throws NodeApiException {
         if (repliedToId == null) {
             return null;
         }
 
         nodeApi.setNodeId(nodeId);
         return getRepliedToDigest(targetNodeName, postingInfo, revisions, 0, new HashSet<>(), repliedToId,
-                repliedAt);
+                new HashMap<>(), repliedToRevisionId);
     }
 
     private byte[] getRepliedToDigest(String targetNodeName, PostingInfo postingInfo,
-                                      PostingRevisionInfo[] postingRevisions, int depth, Set<String> visited,
-                                      String id, long repliedAt) throws NodeApiException {
+                                      Map<String, PostingRevisionInfo> postingRevisions, int depth, Set<String> visited,
+                                      String id, Map<String, CommentRevisionInfo> commentRevisions,
+                                      String revisionId) throws NodeApiException {
         if (id == null) {
             return null;
         }
@@ -56,13 +57,16 @@ public class RepliedToDigestVerifier {
         }
 
         CommentInfo commentInfo = nodeApi.getComment(targetNodeName, postingInfo.getId(), id);
-        CommentRevisionInfo[] commentRevisions = nodeApi.getCommentRevisions(targetNodeName, postingInfo.getId(), id);
-        if (commentInfo == null || commentRevisions == null) {
+        if (commentInfo == null) {
             throw new ObjectNotFoundFailure("comment.reply-not-found");
         }
-        CommentRevisionInfo commentRevisionInfo = Util.revisionByTimestamp(commentRevisions, repliedAt);
+        CommentRevisionInfo commentRevisionInfo = commentRevisions.get(revisionId);
         if (commentRevisionInfo == null) {
-            throw new ObjectNotFoundFailure("comment.reply-not-found");
+            commentRevisionInfo = nodeApi.getCommentRevision(targetNodeName, postingInfo.getId(), id, revisionId);
+            if (commentRevisionInfo == null) {
+                throw new ObjectNotFoundFailure("comment.reply-not-found");
+            }
+            commentRevisions.put(revisionId, commentRevisionInfo);
         }
 
         if (depth >= MAX_REPLY_DEPTH) {
@@ -70,12 +74,21 @@ public class RepliedToDigestVerifier {
         }
 
         visited.add(id);
-        String repliedToId = commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getId() : null;
+        String repliedToId = null;
+        String repliedToRevisionId = null;
+        if (commentInfo.getRepliedTo() != null) {
+            repliedToId = commentInfo.getRepliedTo().getId();
+            repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
+        }
         byte[] repliedToDigest = getRepliedToDigest(targetNodeName, postingInfo, postingRevisions, depth + 1,
-                visited, repliedToId, commentInfo.getCreatedAt());
+                visited, repliedToId, commentRevisions, repliedToRevisionId);
 
-        PostingRevisionInfo postingRevisionInfo =
-                Util.revisionByTimestamp(postingRevisions, commentRevisionInfo.getCreatedAt());
+        PostingRevisionInfo postingRevisionInfo = postingRevisions.get(commentRevisionInfo.getPostingRevisionId());
+        if (postingRevisionInfo == null) {
+            postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, postingInfo.getId(),
+                    commentRevisionInfo.getPostingRevisionId());
+            postingRevisions.put(commentRevisionInfo.getPostingRevisionId(), postingRevisionInfo);
+        }
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
                 PostingInfo.class, PostingRevisionInfo.class, byte[].class);

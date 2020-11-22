@@ -10,6 +10,7 @@ import org.moera.node.util.Util;
 public class CommentRevisionInfo implements RevisionInfo {
 
     private String id;
+    private String postingRevisionId;
     private Body bodyPreview;
     private byte[] bodySrcHash;
     private SourceFormat bodySrcFormat;
@@ -30,6 +31,7 @@ public class CommentRevisionInfo implements RevisionInfo {
 
     public CommentRevisionInfo(EntryRevision revision, boolean countsVisible) {
         id = revision.getId().toString();
+        postingRevisionId = revision.getParent().getId().toString();
         bodyPreview = new Body(revision.getBodyPreview());
         bodySrcHash = revision.getReceiverBodySrcHash() != null
                 ? revision.getReceiverBodySrcHash()
@@ -53,6 +55,14 @@ public class CommentRevisionInfo implements RevisionInfo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getPostingRevisionId() {
+        return postingRevisionId;
+    }
+
+    public void setPostingRevisionId(String postingRevisionId) {
+        this.postingRevisionId = postingRevisionId;
     }
 
     public Body getBodyPreview() {

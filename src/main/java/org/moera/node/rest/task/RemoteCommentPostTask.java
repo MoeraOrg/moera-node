@@ -1,8 +1,7 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
-import java.time.Instant;
-import java.util.Objects;
+import java.util.HashMap;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -17,7 +16,6 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.task.Task;
@@ -56,15 +54,23 @@ public class RemoteCommentPostTask extends Task {
         try {
             nodeApi.setNodeId(nodeId);
             PostingInfo postingInfo = nodeApi.getPosting(targetNodeName, postingId);
-            PostingRevisionInfo[] postingRevisions = nodeApi.getPostingRevisions(targetNodeName, postingId);
             CommentInfo prevCommentInfo = commentId != null
                     ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
-            long repliedAt = prevCommentInfo != null
-                    ? prevCommentInfo.getCreatedAt() : Instant.now().getEpochSecond();
-            String repliedToId = prevCommentInfo != null
-                    ? prevCommentInfo.getRepliedToId() : Objects.toString(sourceText.getRepliedToId(), null);
+            String repliedToId = null;
+            String repliedToRevisionId = null;
+            if (prevCommentInfo != null) {
+                repliedToId = prevCommentInfo.getRepliedToId();
+                repliedToRevisionId = prevCommentInfo.getRepliedToRevisionId();
+            } else if (sourceText.getRepliedToId() != null) {
+                CommentInfo repliedToCommentInfo =
+                        nodeApi.getComment(targetNodeName, postingId, sourceText.getRepliedToId().toString());
+                if (repliedToCommentInfo != null) {
+                    repliedToId = repliedToCommentInfo.getId();
+                    repliedToRevisionId = repliedToCommentInfo.getRevisionId();
+                }
+            }
             byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, targetNodeName, postingInfo,
-                    postingRevisions, repliedToId, repliedAt);
+                    new HashMap<>(), repliedToId, repliedToRevisionId);
             CommentText commentText = buildComment(postingInfo, repliedToDigest);
             CommentInfo commentInfo;
             if (commentId == null) {

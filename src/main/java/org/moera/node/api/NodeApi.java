@@ -199,13 +199,6 @@ public class NodeApi {
                 CommentInfo.class);
     }
 
-    public CommentRevisionInfo[] getCommentRevisions(String nodeName, String postingId, String commentId)
-            throws NodeApiException {
-
-        return call("GET", nodeName, String.format("/postings/%s/comments/%s/revisions",
-                Util.ue(postingId), Util.ue(commentId)), CommentRevisionInfo[].class);
-    }
-
     public CommentRevisionInfo getCommentRevision(String nodeName, String postingId, String commentId,
                                                   String revisionId) throws NodeApiException {
         return call("GET", nodeName,

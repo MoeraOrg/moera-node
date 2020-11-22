@@ -1,6 +1,8 @@
 package org.moera.node.rest.task;
 
 import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
@@ -18,7 +20,6 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.event.RemoteCommentVerificationFailedEvent;
 import org.moera.node.model.event.RemoteCommentVerifiedEvent;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,14 +56,13 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 remotePostingId = postingInfo.getReceiverPostingId();
                 postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
             }
-            PostingRevisionInfo[] revisions = nodeApi.getPostingRevisions(remoteNodeName, remotePostingId);
             CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
             if (data.getRevisionId() == null) {
-                verify(postingInfo, revisions, commentInfo);
+                verify(postingInfo, commentInfo);
             } else {
                 CommentRevisionInfo revisionInfo = nodeApi.getCommentRevision(data.getNodeName(), data.getPostingId(),
                         data.getCommentId(), data.getRevisionId());
-                verify(postingInfo, revisions, commentInfo, revisionInfo);
+                verify(postingInfo, commentInfo, revisionInfo);
             }
         } catch (Exception e) {
             error(e);
@@ -73,14 +73,15 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         return fingerprintManager.getConstructor(FingerprintObjectType.COMMENT, version, parameterTypes);
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, CommentInfo commentInfo)
-            throws NodeApiException {
-
-        PostingRevisionInfo revisionInfo = Util.revisionByTimestamp(revisions, commentInfo.getEditedAt());
+    private void verify(PostingInfo postingInfo, CommentInfo commentInfo) throws NodeApiException {
+        PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
+                commentInfo.getPostingRevisionId());
         if (revisionInfo == null || revisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }
+        Map<String, PostingRevisionInfo> revisions = new HashMap<>();
+        revisions.put(revisionInfo.getId(), revisionInfo);
 
         byte[] signingKey = fetchSigningKey(commentInfo.getOwnerName(), commentInfo.getEditedAt());
         if (signingKey == null) {
@@ -92,9 +93,14 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             data.setRevisionId(commentInfo.getRevisionId());
         });
 
-        String repliedToId = commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getId() : null;
+        String repliedToId = null;
+        String repliedToRevisionId = null;
+        if (commentInfo.getRepliedTo() != null) {
+            repliedToId = commentInfo.getRepliedTo().getId();
+            repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
+        }
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, remoteNodeName, postingInfo,
-                revisions, repliedToId, commentInfo.getCreatedAt());
+                revisions, repliedToId, repliedToRevisionId);
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, PostingInfo.class, PostingRevisionInfo.class,
                 byte[].class);
@@ -103,13 +109,17 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 repliedToDigest));
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo[] revisions, CommentInfo commentInfo,
-                        CommentRevisionInfo commentRevisionInfo) throws NodeApiException {
-        PostingRevisionInfo postingRevisionInfo = Util.revisionByTimestamp(revisions, commentInfo.getEditedAt());
+    private void verify(PostingInfo postingInfo, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo)
+            throws NodeApiException {
+
+        PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
+                commentInfo.getPostingRevisionId());
         if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }
+        Map<String, PostingRevisionInfo> revisions = new HashMap<>();
+        revisions.put(postingRevisionInfo.getId(), postingRevisionInfo);
 
         byte[] signingKey = fetchSigningKey(commentInfo.getOwnerName(), commentRevisionInfo.getCreatedAt());
         if (signingKey == null) {
@@ -117,8 +127,14 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             return;
         }
 
+        String repliedToId = null;
+        String repliedToRevisionId = null;
+        if (commentInfo.getRepliedTo() != null) {
+            repliedToId = commentInfo.getRepliedTo().getId();
+            repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
+        }
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, remoteNodeName, postingInfo,
-                revisions, commentInfo.getId(), commentInfo.getCreatedAt());
+                revisions, repliedToId, repliedToRevisionId);
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
                 PostingInfo.class, PostingRevisionInfo.class, byte[].class);
