@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;
@@ -52,18 +53,26 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             if (data.getCommentId() == null) {
                 ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
                         data.getReactionOwnerName());
-                PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, remotePostingId,
-                        reactionInfo.getPostingRevisionId());
-                verify(postingInfo, postingRevisionInfo, reactionInfo);
+                try {
+                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
+                            remotePostingId, reactionInfo.getPostingRevisionId());
+                    verify(postingInfo, postingRevisionInfo, reactionInfo);
+                } catch (NodeApiNotFoundException e) {
+                    succeeded(false);
+                }
             } else {
                 ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, remotePostingId,
                         data.getCommentId(), data.getReactionOwnerName());
                 CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
-                CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName, remotePostingId,
-                        data.getCommentId(), reactionInfo.getCommentRevisionId());
-                PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, remotePostingId,
-                        commentInfo.getPostingRevisionId());
-                verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
+                try {
+                    CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName,
+                            remotePostingId, data.getCommentId(), reactionInfo.getCommentRevisionId());
+                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
+                            remotePostingId, commentInfo.getPostingRevisionId());
+                    verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
+                } catch (NodeApiNotFoundException e) {
+                    succeeded(false);
+                }
             }
         } catch (Exception e) {
             error(e);
@@ -75,7 +84,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     }
 
     private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo, ReactionInfo reactionInfo) {
-        if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
+        if (postingRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }
@@ -94,8 +103,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
 
     private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
                         CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo, ReactionInfo reactionInfo) {
-        if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null
-                || commentRevisionInfo == null || commentRevisionInfo.getSignature() == null) {
+        if (postingRevisionInfo.getSignature() == null || commentRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }

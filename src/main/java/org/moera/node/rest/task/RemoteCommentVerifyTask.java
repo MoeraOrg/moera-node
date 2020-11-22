@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApiException;
+import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.VerificationStatus;
@@ -74,9 +75,15 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
     }
 
     private void verify(PostingInfo postingInfo, CommentInfo commentInfo) throws NodeApiException {
-        PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
-                commentInfo.getPostingRevisionId());
-        if (revisionInfo == null || revisionInfo.getSignature() == null) {
+        PostingRevisionInfo revisionInfo;
+        try {
+            revisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
+                    commentInfo.getPostingRevisionId());
+        } catch (NodeApiNotFoundException e) {
+            succeeded(false);
+            return;
+        }
+        if (revisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }
@@ -112,9 +119,15 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
     private void verify(PostingInfo postingInfo, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo)
             throws NodeApiException {
 
-        PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
-                commentInfo.getPostingRevisionId());
-        if (postingRevisionInfo == null || postingRevisionInfo.getSignature() == null) {
+        PostingRevisionInfo postingRevisionInfo;
+        try {
+            postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
+                    commentInfo.getPostingRevisionId());
+        } catch (NodeApiNotFoundException e) {
+            succeeded(false);
+            return;
+        }
+        if (postingRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
         }

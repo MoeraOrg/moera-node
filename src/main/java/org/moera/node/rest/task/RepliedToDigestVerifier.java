@@ -12,6 +12,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApi;
 import org.moera.node.api.NodeApiException;
+import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.model.CommentInfo;
@@ -56,14 +57,17 @@ public class RepliedToDigestVerifier {
             throw new OperationFailure("comment.reply-loop");
         }
 
-        CommentInfo commentInfo = nodeApi.getComment(targetNodeName, postingInfo.getId(), id);
-        if (commentInfo == null) {
+        CommentInfo commentInfo;
+        try {
+            commentInfo = nodeApi.getComment(targetNodeName, postingInfo.getId(), id);
+        } catch (NodeApiNotFoundException e) {
             throw new ObjectNotFoundFailure("comment.reply-not-found");
         }
         CommentRevisionInfo commentRevisionInfo = commentRevisions.get(revisionId);
         if (commentRevisionInfo == null) {
-            commentRevisionInfo = nodeApi.getCommentRevision(targetNodeName, postingInfo.getId(), id, revisionId);
-            if (commentRevisionInfo == null) {
+            try {
+                commentRevisionInfo = nodeApi.getCommentRevision(targetNodeName, postingInfo.getId(), id, revisionId);
+            } catch (NodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }
             commentRevisions.put(revisionId, commentRevisionInfo);
@@ -85,8 +89,12 @@ public class RepliedToDigestVerifier {
 
         PostingRevisionInfo postingRevisionInfo = postingRevisions.get(commentRevisionInfo.getPostingRevisionId());
         if (postingRevisionInfo == null) {
-            postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, postingInfo.getId(),
-                    commentRevisionInfo.getPostingRevisionId());
+            try {
+                postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, postingInfo.getId(),
+                        commentRevisionInfo.getPostingRevisionId());
+            } catch (NodeApiNotFoundException e) {
+                throw new ObjectNotFoundFailure("comment.reply-not-found");
+            }
             postingRevisions.put(commentRevisionInfo.getPostingRevisionId(), postingRevisionInfo);
         }
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
