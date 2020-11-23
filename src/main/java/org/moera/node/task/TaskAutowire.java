@@ -6,12 +6,12 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +21,9 @@ public class TaskAutowire {
     private static Logger log = LoggerFactory.getLogger(TaskAutowire.class);
 
     @Inject
+    private Config config;
+
+    @Inject
     private RequestContext requestContext;
 
     @Inject
@@ -28,9 +31,6 @@ public class TaskAutowire {
 
     @Inject
     private Domains domains;
-
-    @Value("${node.address:#{null}}")
-    private String serverAddress;
 
     public void autowire(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
@@ -54,7 +54,7 @@ public class TaskAutowire {
     }
 
     private InetAddress getLocalAddr(String domainName) {
-        domainName = domainName != null && !domainName.equals(Domains.DEFAULT_DOMAIN) ? domainName : serverAddress;
+        domainName = domainName != null && !domainName.equals(Domains.DEFAULT_DOMAIN) ? domainName : config.getAddress();
         if (domainName != null) {
             try {
                 InetAddress[] ips = InetAddress.getAllByName(domainName);

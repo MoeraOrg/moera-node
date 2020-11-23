@@ -1,13 +1,14 @@
 package org.moera.node.global;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.config.Config;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
@@ -18,12 +19,12 @@ public class NetworkLatencyInterceptor extends HandlerInterceptorAdapter {
 
     private static Logger log = LoggerFactory.getLogger(NetworkLatencyInterceptor.class);
 
-    @Value("${node.mock-network-latency}")
-    private boolean enabled;
+    @Inject
+    private Config config;
 
     @PostConstruct
     public void init() {
-        if (enabled) {
+        if (config.isMockNetworkLatency()) {
             log.info("Emulation of network latency is enabled."
                     + " Random delay of 200ms up to 2s will be added to all responses");
         }
@@ -31,7 +32,7 @@ public class NetworkLatencyInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if (!enabled) {
+        if (!config.isMockNetworkLatency()) {
             return true;
         }
         if (!(handler instanceof HandlerMethod)) {

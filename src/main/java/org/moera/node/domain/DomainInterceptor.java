@@ -5,11 +5,11 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -18,11 +18,8 @@ import org.springframework.web.util.UriComponents;
 @Component
 public class DomainInterceptor extends HandlerInterceptorAdapter {
 
-    @Value("${registrar.host:#{null}}")
-    private String registrarHost;
-
-    @Value("${registrar.domain:#{null}}")
-    private String registrarDomain;
+    @Inject
+    private Config config;
 
     @Inject
     private Domains domains;
@@ -40,15 +37,15 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
         }
         String host = uriComponents.getHost();
         host = host != null ? host.toLowerCase() : host;
-        if (host == null || domains.isDomainDefined(host) || StringUtils.isEmpty(registrarDomain)) {
+        if (host == null || domains.isDomainDefined(host) || StringUtils.isEmpty(config.getRegistrar().getDomain())) {
             MDC.put("domain", domains.getDomainEffectiveName(host));
             requestContext.setOptions(domains.getDomainOptions(host));
             requestContext.setSiteUrl(UriUtil.siteUrl(host, uriComponents.getPort()));
             return true;
-        } else if (!StringUtils.isEmpty(registrarHost)) {
-            String hostname = host.substring(0, host.length() - registrarDomain.length() - 1);
+        } else if (!StringUtils.isEmpty(config.getRegistrar().getHost())) {
+            String hostname = host.substring(0, host.length() - config.getRegistrar().getDomain().length() - 1);
             response.sendRedirect(String.format("%s/registrar?host=%s",
-                    UriUtil.siteUrl(registrarHost, uriComponents.getPort()), Util.ue(hostname)));
+                    UriUtil.siteUrl(config.getRegistrar().getHost(), uriComponents.getPort()), Util.ue(hostname)));
             return false;
         }
         return true;

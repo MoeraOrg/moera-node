@@ -5,13 +5,13 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.registrar.RegistrarHost;
 import org.moera.node.util.UriUtil;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -25,11 +25,8 @@ public class RegistrarUiController {
 
     private static final Pattern HOSTNAME = Pattern.compile("^[a-z][a-z0-9-]*$");
 
-    @Value("${registrar.host:#{null}}")
-    private String registrarHost;
-
-    @Value("${registrar.domain:#{null}}")
-    private String registrarDomain;
+    @Inject
+    private Config config;
 
     @Inject
     private Domains domains;
@@ -38,7 +35,8 @@ public class RegistrarUiController {
     private RequestContext requestContext;
 
     private boolean registrarEnabled() {
-        return !StringUtils.isEmpty(registrarHost) && !StringUtils.isEmpty(registrarDomain);
+        return !StringUtils.isEmpty(config.getRegistrar().getHost())
+                && !StringUtils.isEmpty(config.getRegistrar().getDomain());
     }
 
     @GetMapping("/registrar")
@@ -50,7 +48,7 @@ public class RegistrarUiController {
 
         model.addAttribute("host", host);
         model.addAttribute("error", error);
-        model.addAttribute("registrarDomain", registrarDomain);
+        model.addAttribute("registrarDomain", config.getRegistrar().getDomain());
 
         return "registrar/index";
     }
@@ -94,7 +92,7 @@ public class RegistrarUiController {
     }
 
     private String getFullName(String hostName) {
-        return hostName + "." + registrarDomain;
+        return hostName + "." + config.getRegistrar().getDomain();
     }
 
     @GetMapping("/registrar/success")

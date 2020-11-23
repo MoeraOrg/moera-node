@@ -2,18 +2,19 @@ package org.moera.node.auth;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -24,8 +25,8 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
 
     private static Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
 
-    @Value("${node.root-secret}")
-    private String rootSecret;
+    @Inject
+    private Config config;
 
     @Inject
     private AuthenticationManager authenticationManager;
@@ -35,7 +36,7 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
 
     @PostConstruct
     public void init() throws RootSecretNotSetException {
-        if (StringUtils.isEmpty(rootSecret)) {
+        if (StringUtils.isEmpty(config.getRootSecret())) {
             throw new RootSecretNotSetException();
         }
     }
@@ -64,7 +65,7 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
         requestContext.setLocalAddr(InetAddress.getByName(request.getLocalAddr()));
         requestContext.setBrowserExtension(request.getHeader("X-Accept-Moera") != null);
         String secret = request.getParameter("secret");
-        if (rootSecret.equals(secret)) {
+        if (Objects.equals(config.getRootSecret(), secret)) {
             requestContext.setRootAdmin(true);
             log.info("Authorized as root admin");
         }

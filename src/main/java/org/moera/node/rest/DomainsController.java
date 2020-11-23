@@ -12,6 +12,7 @@ import javax.validation.Valid;
 import com.github.slugify.Slugify;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
+import org.moera.node.config.Config;
 import org.moera.node.data.Domain;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
@@ -24,7 +25,6 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,8 +42,8 @@ public class DomainsController {
 
     private static Logger log = LoggerFactory.getLogger(DomainsController.class);
 
-    @Value("${registrar.domain:#{null}}")
-    private String registrarDomain;
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -66,7 +66,7 @@ public class DomainsController {
     public DomainInfo get(@PathVariable String name) throws AuthenticationException {
         log.info("GET /domains/{}", name);
 
-        if (StringUtils.isEmpty(registrarDomain) && !requestContext.isRootAdmin()) {
+        if (StringUtils.isEmpty(config.getRegistrar().getDomain()) && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
         }
         name = name.toLowerCase();
@@ -82,7 +82,7 @@ public class DomainsController {
     public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainInfo domainInfo) throws AuthenticationException {
         log.info("POST /domains");
 
-        if (StringUtils.isEmpty(registrarDomain) && !requestContext.isRootAdmin()) {
+        if (StringUtils.isEmpty(config.getRegistrar().getDomain()) && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
         }
         if (StringUtils.isEmpty(domainInfo.getName())) {
@@ -166,7 +166,7 @@ public class DomainsController {
     public DomainAvailable findAvailable(@RequestParam String nodeName) {
         log.info("GET /domains/available (nodeName = {})", nodeName);
 
-        if (StringUtils.isEmpty(registrarDomain)) {
+        if (StringUtils.isEmpty(config.getRegistrar().getDomain())) {
             throw new OperationFailure("domains.registration-not-available");
         }
 
@@ -175,12 +175,12 @@ public class DomainsController {
         if (StringUtils.isEmpty(domainName)) {
             domainName = "x";
         }
-        String fqdn = domainName + "." + registrarDomain;
+        String fqdn = domainName + "." + config.getRegistrar().getDomain();
         if (domainName.equals("x") || domains.isDomainDefined(fqdn)) {
             int i = -1;
             do {
                 i++;
-                fqdn = domainName + i + "." + registrarDomain;
+                fqdn = domainName + i + "." + config.getRegistrar().getDomain();
             } while (domains.isDomainDefined(fqdn));
         }
         return new DomainAvailable(fqdn);
