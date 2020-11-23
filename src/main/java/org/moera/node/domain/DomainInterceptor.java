@@ -45,12 +45,13 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
             requestContext.setOptions(domains.getDomainOptions(host));
             requestContext.setSiteUrl(UriUtil.siteUrl(host, uriComponents.getPort()));
             return true;
-        } else {
+        } else if (!StringUtils.isEmpty(registrarHost)) {
             String hostname = host.substring(0, host.length() - registrarDomain.length() - 1);
             response.sendRedirect(String.format("%s/registrar?host=%s",
                     UriUtil.siteUrl(registrarHost, uriComponents.getPort()), Util.ue(hostname)));
             return false;
         }
+        return true;
     }
 
 }

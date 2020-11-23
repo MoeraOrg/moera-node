@@ -16,6 +16,8 @@ public interface RequestContext {
 
     void setRegistrar(boolean registrar);
 
+    boolean isUndefinedDomain();
+
     boolean isBrowserExtension();
 
     void setBrowserExtension(boolean browserExtension);

@@ -45,6 +45,11 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public boolean isUndefinedDomain() {
+        return options == null;
+    }
+
+    @Override
     public boolean isBrowserExtension() {
         return browserExtension;
     }

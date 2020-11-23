@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.moera.node.domain.Domains;
+import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.registrar.RegistrarHost;
@@ -24,6 +25,9 @@ public class RegistrarUiController {
 
     private static final Pattern HOSTNAME = Pattern.compile("^[a-z][a-z0-9-]*$");
 
+    @Value("${registrar.host:#{null}}")
+    private String registrarHost;
+
     @Value("${registrar.domain:#{null}}")
     private String registrarDomain;
 
@@ -33,9 +37,17 @@ public class RegistrarUiController {
     @Inject
     private RequestContext requestContext;
 
+    private boolean registrarEnabled() {
+        return !StringUtils.isEmpty(registrarHost) && !StringUtils.isEmpty(registrarDomain);
+    }
+
     @GetMapping("/registrar")
     public String index(@RequestParam(required = false) String host, @RequestParam(required = false) String error,
                         Model model) {
+        if (!registrarEnabled()) {
+            throw new PageNotFoundException();
+        }
+
         model.addAttribute("host", host);
         model.addAttribute("error", error);
         model.addAttribute("registrarDomain", registrarDomain);
@@ -45,6 +57,10 @@ public class RegistrarUiController {
 
     @PostMapping(value = "/registrar/register", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String register(RegistrarHost registrarHost, RedirectAttributes attributes) {
+        if (!registrarEnabled()) {
+            throw new PageNotFoundException();
+        }
+
         String error = createDomain(registrarHost.getHost() != null ? registrarHost.getHost().toLowerCase() : null);
         if (error != null) {
             attributes.addAttribute("host", registrarHost.getHost());
@@ -83,6 +99,10 @@ public class RegistrarUiController {
 
     @GetMapping("/registrar/success")
     public String success(@RequestParam String host, HttpServletRequest request, Model model) {
+        if (!registrarEnabled()) {
+            throw new PageNotFoundException();
+        }
+
         model.addAttribute("browserExtension", requestContext.isBrowserExtension());
         int port = UriUtil.createBuilderFromRequest(request).build().getPort();
         model.addAttribute("siteUrl", UriUtil.siteUrl(host, port));

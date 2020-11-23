@@ -22,7 +22,7 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
 
-        if (requestContext.isRegistrar()) {
+        if (requestContext.isRegistrar() || requestContext.isUndefinedDomain()) {
             return true;
         }
         if (!(handler instanceof HandlerMethod)) {
