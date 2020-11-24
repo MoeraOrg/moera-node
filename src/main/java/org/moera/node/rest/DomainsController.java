@@ -66,7 +66,7 @@ public class DomainsController {
     public DomainInfo get(@PathVariable String name) throws AuthenticationException {
         log.info("GET /domains/{}", name);
 
-        if (StringUtils.isEmpty(config.getRegistrar().getDomain()) && !requestContext.isRootAdmin()) {
+        if (!config.isRegistrationPublic() && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
         }
         name = name.toLowerCase();
@@ -82,7 +82,7 @@ public class DomainsController {
     public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainInfo domainInfo) throws AuthenticationException {
         log.info("POST /domains");
 
-        if (StringUtils.isEmpty(config.getRegistrar().getDomain()) && !requestContext.isRootAdmin()) {
+        if (!config.isRegistrationPublic() && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
         }
         if (StringUtils.isEmpty(domainInfo.getName())) {
@@ -166,7 +166,7 @@ public class DomainsController {
     public DomainAvailable findAvailable(@RequestParam String nodeName) {
         log.info("GET /domains/available (nodeName = {})", nodeName);
 
-        if (StringUtils.isEmpty(config.getRegistrar().getDomain())) {
+        if (!config.isRegistrationPublic()) {
             throw new OperationFailure("domains.registration-not-available");
         }
 

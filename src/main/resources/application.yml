@@ -35,3 +35,5 @@ spring:
 node:
   root-secret:
   mock-network-latency: false
+  multi: none
+

@@ -2,6 +2,7 @@ package org.moera.node.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 @Configuration
 @ConfigurationProperties("node")
@@ -10,6 +11,7 @@ public class Config {
     private String rootSecret;
     private String address;
     private boolean mockNetworkLatency;
+    private MultiHost multi = MultiHost.NONE;
     private RegistrarConfig registrar;
 
     public String getRootSecret() {
@@ -36,12 +38,30 @@ public class Config {
         this.mockNetworkLatency = mockNetworkLatency;
     }
 
+    public MultiHost getMulti() {
+        return multi;
+    }
+
+    public void setMulti(MultiHost multi) {
+        this.multi = multi;
+    }
+
     public RegistrarConfig getRegistrar() {
         return registrar;
     }
 
     public void setRegistrar(RegistrarConfig registrar) {
         this.registrar = registrar;
+    }
+
+    public boolean isRegistrarEnabled() {
+        return getMulti() == MultiHost.PUBLIC
+                && !StringUtils.isEmpty(getRegistrar().getHost())
+                && !StringUtils.isEmpty(getRegistrar().getDomain());
+    }
+
+    public boolean isRegistrationPublic() {
+        return getMulti() == MultiHost.PUBLIC && !StringUtils.isEmpty(getRegistrar().getDomain());
     }
 
 }

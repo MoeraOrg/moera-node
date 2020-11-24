@@ -15,7 +15,6 @@ import org.moera.node.global.NetworkLatencyInterceptor;
 import org.moera.node.global.SyndFeedHttpMessageConverter;
 import org.moera.node.global.VirtualPageInterceptor;
 import org.moera.node.helper.HelperSource;
-import org.moera.node.registrar.RegistrarInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -37,9 +36,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MoeraNodeApplication implements WebMvcConfigurer {
 
     private static Logger log = LoggerFactory.getLogger(MoeraNodeApplication.class);
-
-    @Inject
-    private RegistrarInterceptor registrarInterceptor;
 
     @Inject
     private DomainInterceptor domainInterceptor;
@@ -82,7 +78,6 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(registrarInterceptor).order(-2);
         registry.addInterceptor(domainInterceptor).order(-1);
         registry.addInterceptor(authenticationInterceptor);
         registry.addInterceptor(virtualPageInterceptor);

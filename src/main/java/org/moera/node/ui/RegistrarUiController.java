@@ -34,15 +34,10 @@ public class RegistrarUiController {
     @Inject
     private RequestContext requestContext;
 
-    private boolean registrarEnabled() {
-        return !StringUtils.isEmpty(config.getRegistrar().getHost())
-                && !StringUtils.isEmpty(config.getRegistrar().getDomain());
-    }
-
     @GetMapping("/registrar")
     public String index(@RequestParam(required = false) String host, @RequestParam(required = false) String error,
                         Model model) {
-        if (!registrarEnabled()) {
+        if (!config.isRegistrarEnabled()) {
             throw new PageNotFoundException();
         }
 
@@ -55,7 +50,7 @@ public class RegistrarUiController {
 
     @PostMapping(value = "/registrar/register", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String register(RegistrarHost registrarHost, RedirectAttributes attributes) {
-        if (!registrarEnabled()) {
+        if (!config.isRegistrarEnabled()) {
             throw new PageNotFoundException();
         }
 
@@ -97,7 +92,7 @@ public class RegistrarUiController {
 
     @GetMapping("/registrar/success")
     public String success(@RequestParam String host, HttpServletRequest request, Model model) {
-        if (!registrarEnabled()) {
+        if (!config.isRegistrarEnabled()) {
             throw new PageNotFoundException();
         }
 
