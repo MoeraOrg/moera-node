@@ -33,6 +33,7 @@ import org.moera.node.option.Options;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -79,6 +80,7 @@ public class NamingClient {
     }
 
     private void monitorOperation(Options options) {
+        MDC.put("domain", domains.getDomainName(options.nodeId()));
         UUID operationId = options.getUuid("naming.operation.id");
         if (operationId == null) {
             log.info("No pending naming operation");
