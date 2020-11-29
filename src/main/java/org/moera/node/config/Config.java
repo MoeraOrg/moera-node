@@ -56,12 +56,15 @@ public class Config {
 
     public boolean isRegistrarEnabled() {
         return getMulti() == MultiHost.PUBLIC
+                && getRegistrar() != null
                 && !StringUtils.isEmpty(getRegistrar().getHost())
                 && !StringUtils.isEmpty(getRegistrar().getDomain());
     }
 
     public boolean isRegistrationPublic() {
-        return getMulti() == MultiHost.PUBLIC && !StringUtils.isEmpty(getRegistrar().getDomain());
+        return getMulti() == MultiHost.PUBLIC
+                && getRegistrar() != null
+                && !StringUtils.isEmpty(getRegistrar().getDomain());
     }
 
 }

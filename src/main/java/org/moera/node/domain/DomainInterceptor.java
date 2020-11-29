@@ -9,11 +9,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.moera.node.config.Config;
 import org.moera.node.config.MultiHost;
 import org.moera.node.global.PageNotFoundException;
+import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.util.UriComponents;
@@ -47,6 +49,10 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
             return true;
         }
 
+        if (handler instanceof HandlerMethod && ((HandlerMethod) handler).hasMethodAnnotation(ProviderApi.class)) {
+            return true;
+        }
+
         if (host == null || domains.isDomainDefined(host) || config.getMulti() == MultiHost.NONE) {
             MDC.put("domain", domains.getDomainEffectiveName(host));
             requestContext.setOptions(domains.getDomainOptions(host));
@@ -54,7 +60,7 @@ public class DomainInterceptor extends HandlerInterceptorAdapter {
             return true;
         }
 
-        if (request.getDispatcherType() == DispatcherType.ERROR) {
+        if (request.getDispatcherType() == DispatcherType.ERROR || request.getMethod().equals("OPTIONS")) {
             return true;
         }
 

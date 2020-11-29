@@ -16,6 +16,7 @@ import org.moera.node.config.Config;
 import org.moera.node.data.Domain;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.DomainAvailable;
 import org.moera.node.model.DomainInfo;
@@ -51,6 +52,7 @@ public class DomainsController {
     @Inject
     private Domains domains;
 
+    @ProviderApi
     @RootAdmin
     @GetMapping
     public List<DomainInfo> get() {
@@ -62,6 +64,7 @@ public class DomainsController {
                 .collect(Collectors.toList());
     }
 
+    @ProviderApi
     @GetMapping("/{name}")
     public DomainInfo get(@PathVariable String name) throws AuthenticationException {
         log.info("GET /domains/{}", name);
@@ -77,6 +80,7 @@ public class DomainsController {
         return new DomainInfo(name, nodeId.toString());
     }
 
+    @ProviderApi
     @PostMapping
     @Transactional
     public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainInfo domainInfo) throws AuthenticationException {
@@ -106,6 +110,7 @@ public class DomainsController {
                 .body(new DomainInfo(domain.getName(), domain.getNodeId()));
     }
 
+    @ProviderApi
     @RootAdmin
     @PutMapping("/{name}")
     @Transactional
@@ -139,6 +144,7 @@ public class DomainsController {
         return new DomainInfo(domain.getName(), domain.getNodeId());
     }
 
+    @ProviderApi
     @RootAdmin
     @DeleteMapping("/{name}")
     @Transactional
@@ -162,6 +168,7 @@ public class DomainsController {
         return Result.OK;
     }
 
+    @ProviderApi
     @GetMapping("/available")
     public DomainAvailable findAvailable(@RequestParam String nodeName) {
         log.info("GET /domains/available (nodeName = {})", nodeName);
