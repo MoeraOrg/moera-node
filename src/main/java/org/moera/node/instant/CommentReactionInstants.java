@@ -133,6 +133,7 @@ public class CommentReactionInstants {
 
     private String buildAddedSummary(Story story, List<Story> stories) {
         StringBuilder buf = new StringBuilder();
+        String firstName = stories.get(0).getRemoteOwnerName();
         buf.append(stories.get(0).getSummary());
         if (stories.size() > 1) {
             buf.append(stories.size() == 2 ? " and " : ", ");
@@ -147,8 +148,13 @@ public class CommentReactionInstants {
         buf.append(" your comment \"");
         buf.append(Util.he(story.getRemoteHeading()));
         buf.append("\" on ");
-        buf.append(Objects.equals(story.getRemoteNodeName(), requestContext.nodeName()) ? "your"
-                : InstantUtil.formatNodeName(story.getRemoteNodeName()));
+        if (Objects.equals(story.getRemoteNodeName(), requestContext.nodeName())) {
+            buf.append("your");
+        } else if (stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)) {
+            buf.append("their");
+        } else {
+            buf.append(InstantUtil.formatNodeName(story.getRemoteNodeName()));
+        }
         buf.append(" post");
         return buf.toString();
     }
