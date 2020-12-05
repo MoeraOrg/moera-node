@@ -11,6 +11,7 @@ import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.instant.CommentInstants;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
@@ -31,6 +32,8 @@ public class RemoteCommentPostTask extends Task {
     private String postingId;
     private String commentId;
     private CommentSourceText sourceText;
+    private PostingInfo postingInfo;
+    private CommentInfo prevCommentInfo;
 
     @Inject
     private TextConverter textConverter;
@@ -40,6 +43,9 @@ public class RemoteCommentPostTask extends Task {
 
     @Inject
     private OwnCommentRepository ownCommentRepository;
+
+    @Inject
+    private CommentInstants commentInstants;
 
     public RemoteCommentPostTask(String targetNodeName, String postingId, String commentId,
                                  CommentSourceText sourceText) {
@@ -53,9 +59,8 @@ public class RemoteCommentPostTask extends Task {
     public void run() {
         try {
             nodeApi.setNodeId(nodeId);
-            PostingInfo postingInfo = nodeApi.getPosting(targetNodeName, postingId);
-            CommentInfo prevCommentInfo = commentId != null
-                    ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
+            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            prevCommentInfo = commentId != null ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
             String repliedToId = null;
             String repliedToRevisionId = null;
             if (prevCommentInfo != null) {
@@ -130,6 +135,13 @@ public class RemoteCommentPostTask extends Task {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
             log.error("Error adding comment to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
+        }
+
+        commentInstants.associate(this);
+        if (prevCommentInfo == null) {
+            commentInstants.addingFailed(postingId, postingInfo);
+        } else {
+            commentInstants.updateFailed(postingId, postingInfo, commentId, prevCommentInfo);
         }
     }
 

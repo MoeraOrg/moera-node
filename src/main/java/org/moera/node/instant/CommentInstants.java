@@ -14,57 +14,48 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.global.RequestContext;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
-import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CommentInstants {
+public class CommentInstants extends InstantsCreator {
 
     private static final Duration GROUP_PERIOD = Duration.of(6, ChronoUnit.HOURS);
 
     @Inject
-    private RequestContext requestContext;
-
-    @Inject
     private StoryRepository storyRepository;
 
-    @Inject
-    private StoryOperations storyOperations;
-
-    @Inject
-    private InstantOperations instantOperations;
-
     public void added(Comment comment) {
-        if (comment.getOwnerName().equals(requestContext.nodeName())
+        if (comment.getOwnerName().equals(nodeName())
                 // 'reply-comment' instant is expected to be created for such a comment
-                || comment.getRepliedTo() != null && comment.getRepliedToName().equals(requestContext.nodeName())) {
+                || comment.getRepliedTo() != null && comment.getRepliedToName().equals(nodeName())) {
             return;
         }
 
-        boolean alreadyReported = !storyRepository.findSubsByTypeAndEntryId(requestContext.nodeId(),
-                StoryType.COMMENT_ADDED, comment.getId()).isEmpty();
+        boolean alreadyReported = !storyRepository.findSubsByTypeAndEntryId(nodeId(), StoryType.COMMENT_ADDED,
+                comment.getId()).isEmpty();
         if (alreadyReported) {
             return;
         }
 
         boolean isNewStory = false;
-        Story story = storyRepository.findFullByFeedAndTypeAndEntryId(requestContext.nodeId(), Feed.INSTANT,
+        Story story = storyRepository.findFullByFeedAndTypeAndEntryId(nodeId(), Feed.INSTANT,
                 StoryType.COMMENT_ADDED, comment.getPosting().getId()).stream().findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
-            story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.COMMENT_ADDED);
+            story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_ADDED);
             story.setFeedName(Feed.INSTANT);
             story.setEntry(comment.getPosting());
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
 
-        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.COMMENT_ADDED);
+        Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_ADDED);
         substory.setEntry(comment);
         substory.setRemoteOwnerName(comment.getOwnerName());
         substory.setMoment(0L);
@@ -72,23 +63,23 @@ public class CommentInstants {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     public void deleted(Comment comment) {
-        if (comment.getOwnerName().equals(requestContext.nodeName())) {
+        if (comment.getOwnerName().equals(nodeName())) {
             return;
         }
 
-        List<Story> stories = storyRepository.findSubsByTypeAndEntryId(requestContext.nodeId(),
-                StoryType.COMMENT_ADDED, comment.getId());
+        List<Story> stories = storyRepository.findSubsByTypeAndEntryId(nodeId(), StoryType.COMMENT_ADDED,
+                comment.getId());
         for (Story substory : stories) {
             Story story = substory.getParent();
             story.removeSubstory(substory);
             storyRepository.delete(substory);
             updated(story, false, false);
         }
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -98,7 +89,7 @@ public class CommentInstants {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                requestContext.send(new StoryDeletedEvent(story, true));
+                send(new StoryDeletedEvent(story, true));
             }
             return;
         }
@@ -110,8 +101,8 @@ public class CommentInstants {
             story.setRead(false);
             story.setViewed(false);
         }
-        storyOperations.updateMoment(story);
-        requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        updateMoment(story);
+        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories) {
@@ -136,6 +127,50 @@ public class CommentInstants {
         buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));
         buf.append('"');
         return buf.toString();
+    }
+
+    public void addingFailed(String postingId, PostingInfo postingInfo) {
+        String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
+        String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
+
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
+        story.setFeedName(Feed.INSTANT);
+        story.setRemoteNodeName(postingOwnerName);
+        story.setRemotePostingId(postingId);
+        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingHeading));
+        story.setPublishedAt(Util.now());
+        updateMoment(story);
+        story = storyRepository.save(story);
+        send(new StoryAddedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    public void updateFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
+        String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
+        String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
+        String commentHeading = commentInfo != null ? commentInfo.getHeading() : "";
+
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
+        story.setFeedName(Feed.INSTANT);
+        story.setRemoteNodeName(postingOwnerName);
+        story.setRemotePostingId(postingId);
+        story.setRemoteCommentId(commentId);
+        story.setSummary(buildUpdateFailedSummary(postingOwnerName, postingHeading, commentHeading));
+        story.setPublishedAt(Util.now());
+        updateMoment(story);
+        story = storyRepository.save(story);
+        send(new StoryAddedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    private static String buildAddingFailedSummary(String nodeName, String postingHeading) {
+        return String.format("Failed to add a comment to %s post \"%s\"",
+                InstantUtil.formatNodeName(nodeName), Util.he(postingHeading));
+    }
+
+    private static String buildUpdateFailedSummary(String nodeName, String postingHeading, String commentHeading) {
+        return String.format("Failed to sign the comment \"%s\" to %s post \"%s\"",
+                Util.he(commentHeading), InstantUtil.formatNodeName(nodeName), Util.he(postingHeading));
     }
 
 }

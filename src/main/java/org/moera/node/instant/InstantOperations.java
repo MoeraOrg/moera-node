@@ -8,15 +8,11 @@ import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.node.data.Feed;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
-import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.Event;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
-import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Transaction;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,26 +22,16 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class InstantOperations {
 
     @Inject
-    private RequestContext requestContext;
-
-    @Inject
     private Domains domains;
 
     @Inject
     private StoryRepository storyRepository;
 
     @Inject
-    private StoryOperations storyOperations;
-
-    @Inject
     private EventManager eventManager;
 
     @Inject
     private PlatformTransactionManager txManager;
-
-    public void feedStatusUpdated() {
-        requestContext.send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT)));
-    }
 
     @Scheduled(fixedDelayString = "P1D")
     public void purgeExpired() throws Throwable {

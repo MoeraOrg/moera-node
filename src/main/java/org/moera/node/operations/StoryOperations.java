@@ -41,7 +41,7 @@ public class StoryOperations {
         updateMoment(story, requestContext.nodeId());
     }
 
-    private void updateMoment(Story story, UUID nodeId) {
+    public void updateMoment(Story story, UUID nodeId) {
         story.setMoment(momentFinder.find(
                 moment -> storyRepository.countMoments(nodeId, story.getFeedName(), moment) == 0,
                 !story.isPinned() ? story.getPublishedAt() : PINNED_TIME));
@@ -78,7 +78,7 @@ public class StoryOperations {
         return getFeedStatus(feedName, requestContext.nodeId());
     }
 
-    private FeedStatus getFeedStatus(String feedName, UUID nodeId) {
+    public FeedStatus getFeedStatus(String feedName, UUID nodeId) {
         int notViewed = storyRepository.countNotViewed(nodeId, feedName);
         int notRead = storyRepository.countNotRead(nodeId, feedName);
 

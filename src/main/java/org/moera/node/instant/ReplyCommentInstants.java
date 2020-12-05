@@ -14,7 +14,6 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -23,12 +22,9 @@ import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ReplyCommentInstants {
+public class ReplyCommentInstants extends InstantsCreator {
 
     private static final Duration GROUP_PERIOD = Duration.of(6, ChronoUnit.HOURS);
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private StoryRepository storyRepository;
@@ -36,27 +32,24 @@ public class ReplyCommentInstants {
     @Inject
     private StoryOperations storyOperations;
 
-    @Inject
-    private InstantOperations instantOperations;
-
     public void added(String nodeName, String postingId, String commentId, String repliedToId, String commentOwnerName,
                       String postingHeading, String repliedToHeading) {
-        if (commentOwnerName.equals(requestContext.nodeName())) {
+        if (commentOwnerName.equals(nodeName())) {
             return;
         }
 
-        boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(requestContext.nodeId(),
+        boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(nodeId(),
                 StoryType.REPLY_COMMENT, nodeName, postingId, commentId).isEmpty();
         if (alreadyReported) {
             return;
         }
 
         boolean isNewStory = false;
-        Story story = storyRepository.findFullByRemotePostingAndRepliedToId(requestContext.nodeId(), Feed.INSTANT,
+        Story story = storyRepository.findFullByRemotePostingAndRepliedToId(nodeId(), Feed.INSTANT,
                 StoryType.REPLY_COMMENT, nodeName, postingId, repliedToId).stream().findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
-            story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.REPLY_COMMENT);
+            story = new Story(UUID.randomUUID(), nodeId(), StoryType.REPLY_COMMENT);
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
             story.setRemotePostingId(postingId);
@@ -67,7 +60,7 @@ public class ReplyCommentInstants {
             story = storyRepository.save(story);
         }
 
-        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.REPLY_COMMENT);
+        Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.REPLY_COMMENT);
         substory.setRemoteNodeName(nodeName);
         substory.setRemotePostingId(postingId);
         substory.setRemoteCommentId(commentId);
@@ -77,23 +70,23 @@ public class ReplyCommentInstants {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     public void deleted(String nodeName, String postingId, String commentId, String commentOwnerName) {
-        if (commentOwnerName.equals(requestContext.nodeName())) {
+        if (commentOwnerName.equals(nodeName())) {
             return;
         }
 
-        List<Story> stories = storyRepository.findSubsByRemotePostingAndCommentId(requestContext.nodeId(),
-                StoryType.REPLY_COMMENT, nodeName, postingId, commentId);
+        List<Story> stories = storyRepository.findSubsByRemotePostingAndCommentId(nodeId(), StoryType.REPLY_COMMENT,
+                nodeName, postingId, commentId);
         for (Story substory : stories) {
             Story story = substory.getParent();
             story.removeSubstory(substory);
             storyRepository.delete(substory);
             updated(story, false, false);
         }
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -103,7 +96,7 @@ public class ReplyCommentInstants {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                requestContext.send(new StoryDeletedEvent(story, true));
+                send(new StoryDeletedEvent(story, true));
             }
             return;
         }
@@ -116,7 +109,7 @@ public class ReplyCommentInstants {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {
@@ -140,7 +133,7 @@ public class ReplyCommentInstants {
         buf.append(" replied to your comment \"");
         buf.append(story.getRemoteRepliedToHeading());
         buf.append("\" on ");
-        if (Objects.equals(story.getRemoteNodeName(), requestContext.nodeName())) {
+        if (Objects.equals(story.getRemoteNodeName(), nodeName())) {
             buf.append("your");
         } else {
             buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)

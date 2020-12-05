@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 import org.moera.node.data.Feed;
@@ -17,7 +16,6 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -26,12 +24,9 @@ import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PostingReactionInstants {
+public class PostingReactionInstants extends InstantsCreator {
 
     private static final Duration GROUP_PERIOD = Duration.of(6, ChronoUnit.HOURS);
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private StoryRepository storyRepository;
@@ -39,11 +34,8 @@ public class PostingReactionInstants {
     @Inject
     private StoryOperations storyOperations;
 
-    @Inject
-    private InstantOperations instantOperations;
-
     public void added(Posting posting, Reaction reaction) {
-        if (reaction.getOwnerName().equals(requestContext.nodeName())) {
+        if (reaction.getOwnerName().equals(nodeName())) {
             return;
         }
 
@@ -52,17 +44,17 @@ public class PostingReactionInstants {
 
         boolean isNewStory = false;
         Story story = storyRepository.findFullByFeedAndTypeAndEntryId(
-                requestContext.nodeId(), Feed.INSTANT, storyType, posting.getId()).stream().findFirst().orElse(null);
+                nodeId(), Feed.INSTANT, storyType, posting.getId()).stream().findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
-            story = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType);
+            story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
             story.setEntry(posting);
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
 
-        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType);
+        Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         substory.setEntry(posting);
         substory.setRemoteOwnerName(reaction.getOwnerName());
         substory.setSummary(buildSummary(reaction));
@@ -71,18 +63,18 @@ public class PostingReactionInstants {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     public void deleted(Reaction reaction) {
-        if (reaction.getOwnerName().equals(requestContext.nodeName())) {
+        if (reaction.getOwnerName().equals(nodeName())) {
             return;
         }
 
         StoryType storyType = reaction.isNegative()
                 ? StoryType.REACTION_ADDED_NEGATIVE : StoryType.REACTION_ADDED_POSITIVE;
         List<Story> stories = storyRepository.findFullByFeedAndTypeAndEntryId(
-                requestContext.nodeId(), Feed.INSTANT, storyType, reaction.getEntryRevision().getEntry().getId());
+                nodeId(), Feed.INSTANT, storyType, reaction.getEntryRevision().getEntry().getId());
         for (Story story : stories) {
             Story substory = story.getSubstories().stream()
                     .filter(t -> Objects.equals(t.getRemoteOwnerName(), reaction.getOwnerName()))
@@ -94,15 +86,15 @@ public class PostingReactionInstants {
                 updated(story, false, false);
             }
         }
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     public void deletedAll(UUID postingId) {
         storyRepository.deleteByFeedAndTypeAndEntryId(
-                requestContext.nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_POSITIVE, postingId);
+                nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_POSITIVE, postingId);
         storyRepository.deleteByFeedAndTypeAndEntryId(
-                requestContext.nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_NEGATIVE, postingId);
-        instantOperations.feedStatusUpdated();
+                nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_NEGATIVE, postingId);
+        feedStatusUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -112,7 +104,7 @@ public class PostingReactionInstants {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                requestContext.send(new StoryDeletedEvent(story, true));
+                send(new StoryDeletedEvent(story, true));
             }
             return;
         }
@@ -124,7 +116,7 @@ public class PostingReactionInstants {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories) {

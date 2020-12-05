@@ -15,7 +15,6 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.SubscriptionReason;
-import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -24,12 +23,9 @@ import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RemoteCommentInstants {
+public class RemoteCommentInstants extends InstantsCreator {
 
     private static final Duration GROUP_PERIOD = Duration.of(6, ChronoUnit.HOURS);
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private StoryRepository storyRepository;
@@ -37,29 +33,26 @@ public class RemoteCommentInstants {
     @Inject
     private StoryOperations storyOperations;
 
-    @Inject
-    private InstantOperations instantOperations;
-
     public void added(String remoteNodeName, String remotePostingId, String remotePostingHeading,
                       String remoteOwnerName, String remoteCommentId, String remoteCommentHeading,
                       SubscriptionReason reason) {
-        if (remoteOwnerName.equals(requestContext.nodeName())) {
+        if (remoteOwnerName.equals(nodeName())) {
             return;
         }
 
-        boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(requestContext.nodeId(),
+        boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(nodeId(),
                 StoryType.REMOTE_COMMENT_ADDED, remoteNodeName, remotePostingId, remoteCommentId).isEmpty();
         if (alreadyReported) {
             return;
         }
 
         boolean isNewStory = false;
-        Story story = storyRepository.findFullByRemotePostingId(requestContext.nodeId(), Feed.INSTANT,
-                StoryType.REMOTE_COMMENT_ADDED, remoteNodeName, remotePostingId).stream()
+        Story story = storyRepository.findFullByRemotePostingId(nodeId(), Feed.INSTANT, StoryType.REMOTE_COMMENT_ADDED,
+                remoteNodeName, remotePostingId).stream()
                 .findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
-            story = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.REMOTE_COMMENT_ADDED);
+            story = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(remoteNodeName);
             story.setRemotePostingId(remotePostingId);
@@ -68,7 +61,7 @@ public class RemoteCommentInstants {
             story = storyRepository.save(story);
         }
 
-        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), StoryType.REMOTE_COMMENT_ADDED);
+        Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
         substory.setRemoteNodeName(remoteNodeName);
         substory.setRemotePostingId(remotePostingId);
         substory.setRemoteOwnerName(remoteOwnerName);
@@ -79,16 +72,16 @@ public class RemoteCommentInstants {
         story.addSubstory(substory);
 
         updated(story, reason, isNewStory, true);
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     public void deleted(String remoteNodeName, String remotePostingId, String remoteOwnerName, String remoteCommentId,
                         SubscriptionReason reason) {
-        if (remoteOwnerName.equals(requestContext.nodeName())) {
+        if (remoteOwnerName.equals(nodeName())) {
             return;
         }
 
-        List<Story> stories = storyRepository.findSubsByRemotePostingAndCommentId(requestContext.nodeId(),
+        List<Story> stories = storyRepository.findSubsByRemotePostingAndCommentId(nodeId(),
                 StoryType.REMOTE_COMMENT_ADDED, remoteNodeName, remotePostingId, remoteCommentId);
         for (Story substory : stories) {
             Story story = substory.getParent();
@@ -96,7 +89,7 @@ public class RemoteCommentInstants {
             storyRepository.delete(substory);
             updated(story, reason, false, false);
         }
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     private void updated(Story story, SubscriptionReason reason, boolean isNew, boolean isAdded) {
@@ -106,7 +99,7 @@ public class RemoteCommentInstants {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                requestContext.send(new StoryDeletedEvent(story, true));
+                send(new StoryDeletedEvent(story, true));
             }
             return;
         }
@@ -120,7 +113,7 @@ public class RemoteCommentInstants {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories, SubscriptionReason reason) {

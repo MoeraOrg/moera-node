@@ -14,7 +14,6 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -23,12 +22,9 @@ import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CommentReactionInstants {
+public class CommentReactionInstants extends InstantsCreator {
 
     private static final Duration GROUP_PERIOD = Duration.of(6, ChronoUnit.HOURS);
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private StoryRepository storyRepository;
@@ -36,12 +32,9 @@ public class CommentReactionInstants {
     @Inject
     private StoryOperations storyOperations;
 
-    @Inject
-    private InstantOperations instantOperations;
-
     public void added(String nodeName, String postingId, String commentId, String ownerName, String commentHeading,
                       boolean negative, int emoji) {
-        if (ownerName.equals(requestContext.nodeName())) {
+        if (ownerName.equals(nodeName())) {
             return;
         }
 
@@ -50,11 +43,11 @@ public class CommentReactionInstants {
 
         boolean isNewStory = false;
         Story story = storyRepository.findFullByRemotePostingAndCommentId(
-                requestContext.nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId).stream()
+                nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId).stream()
                 .findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
-            story = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType);
+            story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
             story.setRemotePostingId(postingId);
@@ -64,7 +57,7 @@ public class CommentReactionInstants {
             story = storyRepository.save(story);
         }
 
-        Story substory = new Story(UUID.randomUUID(), requestContext.nodeId(), storyType);
+        Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setRemoteNodeName(nodeName);
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
@@ -75,18 +68,18 @@ public class CommentReactionInstants {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     public void deleted(String nodeName, String postingId, String commentId, String ownerName, boolean negative) {
-        if (ownerName.equals(requestContext.nodeName())) {
+        if (ownerName.equals(nodeName())) {
             return;
         }
 
         StoryType storyType = negative ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
                 : StoryType.COMMENT_REACTION_ADDED_POSITIVE;
         List<Story> stories = storyRepository.findFullByRemotePostingAndCommentId(
-                requestContext.nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId);
+                nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId);
         for (Story story : stories) {
             Story substory = story.getSubstories().stream()
                     .filter(t -> Objects.equals(t.getRemoteOwnerName(), ownerName))
@@ -98,15 +91,15 @@ public class CommentReactionInstants {
                 updated(story, false, false);
             }
         }
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     public void deletedAll(String nodeName, String postingId, String commentId) {
-        storyRepository.deleteByRemotePostingAndCommentId(requestContext.nodeId(), Feed.INSTANT,
+        storyRepository.deleteByRemotePostingAndCommentId(nodeId(), Feed.INSTANT,
                 StoryType.COMMENT_REACTION_ADDED_POSITIVE, nodeName, postingId, commentId);
-        storyRepository.deleteByRemotePostingAndCommentId(requestContext.nodeId(), Feed.INSTANT,
+        storyRepository.deleteByRemotePostingAndCommentId(nodeId(), Feed.INSTANT,
                 StoryType.COMMENT_REACTION_ADDED_NEGATIVE, nodeName, postingId, commentId);
-        instantOperations.feedStatusUpdated();
+        feedStatusUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -116,7 +109,7 @@ public class CommentReactionInstants {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                requestContext.send(new StoryDeletedEvent(story, true));
+                send(new StoryDeletedEvent(story, true));
             }
             return;
         }
@@ -128,7 +121,7 @@ public class CommentReactionInstants {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        requestContext.send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {
@@ -148,7 +141,7 @@ public class CommentReactionInstants {
         buf.append(" your comment \"");
         buf.append(Util.he(story.getRemoteHeading()));
         buf.append("\" on ");
-        if (Objects.equals(story.getRemoteNodeName(), requestContext.nodeName())) {
+        if (Objects.equals(story.getRemoteNodeName(), nodeName())) {
             buf.append("your");
         } else if (stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)) {
             buf.append("their");
