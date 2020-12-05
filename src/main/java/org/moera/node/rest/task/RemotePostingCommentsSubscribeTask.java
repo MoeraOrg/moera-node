@@ -8,6 +8,8 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.instant.PostingInstants;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.event.SubscriptionAddedEvent;
@@ -25,6 +27,9 @@ public class RemotePostingCommentsSubscribeTask extends Task {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
+
+    @Inject
+    private PostingInstants postingInstants;
 
     public RemotePostingCommentsSubscribeTask(String targetNodeName, String postingId, SubscriptionReason reason) {
         this.targetNodeName = targetNodeName;
@@ -74,6 +79,15 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             log.error("Error subscribing to comments to posting {} at node {}: {}", postingId, targetNodeName,
                     e.getMessage());
         }
+
+        PostingInfo postingInfo = null;
+        try {
+            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+        } catch (Exception ex) {
+            // ignore
+        }
+        postingInstants.associate(this);
+        postingInstants.subscribingToCommentsFailed(postingId, postingInfo);
     }
 
 }

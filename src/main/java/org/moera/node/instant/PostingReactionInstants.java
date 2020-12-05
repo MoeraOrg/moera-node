@@ -16,6 +16,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -141,6 +142,27 @@ public class PostingReactionInstants extends InstantsCreator {
     private static String buildSummary(Reaction reaction) {
         return String.valueOf(Character.toChars(reaction.getEmoji())) + ' '
                 + InstantUtil.formatNodeName(reaction.getOwnerName());
+    }
+
+    public void addingFailed(String postingId, PostingInfo postingInfo) {
+        String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
+        String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
+
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_TASK_FAILED);
+        story.setFeedName(Feed.INSTANT);
+        story.setRemoteNodeName(postingOwnerName);
+        story.setRemotePostingId(postingId);
+        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingHeading));
+        story.setPublishedAt(Util.now());
+        updateMoment(story);
+        story = storyRepository.save(story);
+        send(new StoryAddedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    private static String buildAddingFailedSummary(String nodeName, String postingHeading) {
+        return String.format("Failed to sign a reaction to %s post \"%s\"",
+                InstantUtil.formatNodeName(nodeName), Util.he(postingHeading));
     }
 
 }

@@ -133,7 +133,7 @@ public class CommentInstants extends InstantsCreator {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
-        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
         story.setRemotePostingId(postingId);

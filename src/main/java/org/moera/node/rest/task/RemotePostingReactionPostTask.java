@@ -11,6 +11,7 @@ import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.fingerprint.ReactionFingerprint;
+import org.moera.node.instant.PostingReactionInstants;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
@@ -28,9 +29,13 @@ public class RemotePostingReactionPostTask extends Task {
     private String targetNodeName;
     private String postingId;
     private ReactionAttributes attributes;
+    private PostingInfo postingInfo;
 
     @Inject
     private OwnReactionRepository ownReactionRepository;
+
+    @Inject
+    private PostingReactionInstants postingReactionInstants;
 
     public RemotePostingReactionPostTask(String targetNodeName, String postingId, ReactionAttributes attributes) {
         this.targetNodeName = targetNodeName;
@@ -42,7 +47,7 @@ public class RemotePostingReactionPostTask extends Task {
     public void run() {
         try {
             nodeApi.setNodeId(nodeId);
-            PostingInfo postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             ReactionCreated created = nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo));
             saveReaction(created.getReaction());
             success(created);
@@ -95,6 +100,9 @@ public class RemotePostingReactionPostTask extends Task {
         } else {
             log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
         }
+
+        postingReactionInstants.associate(this);
+        postingReactionInstants.addingFailed(postingId, postingInfo);
     }
 
 }

@@ -14,6 +14,8 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -154,6 +156,33 @@ public class CommentReactionInstants extends InstantsCreator {
 
     private static String buildSummary(String ownerName, int emoji) {
         return String.valueOf(Character.toChars(emoji)) + ' ' + InstantUtil.formatNodeName(ownerName);
+    }
+
+    public void addingFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
+        String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
+        String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
+        String commentOwnerName = commentInfo != null ? commentInfo.getOwnerName() : "";
+        String commentHeading = commentInfo != null ? commentInfo.getHeading() : "";
+
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
+        story.setFeedName(Feed.INSTANT);
+        story.setRemoteNodeName(postingOwnerName);
+        story.setRemotePostingId(postingId);
+        story.setRemoteOwnerName(commentOwnerName);
+        story.setRemoteCommentId(commentId);
+        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingHeading, commentOwnerName, commentHeading));
+        story.setPublishedAt(Util.now());
+        updateMoment(story);
+        story = storyRepository.save(story);
+        send(new StoryAddedEvent(story, true));
+        feedStatusUpdated();
+    }
+
+    private static String buildAddingFailedSummary(String postingOwnerName, String postingHeading,
+                                                   String commentOwnerName, String commentHeading) {
+        return String.format("Failed to sign a reaction to %s comment \"%s\" to %s post \"%s\"",
+                InstantUtil.formatNodeName(commentOwnerName), Util.he(commentHeading),
+                InstantUtil.formatNodeName(postingOwnerName), Util.he(postingHeading));
     }
 
 }
