@@ -126,8 +126,8 @@ public class PostingText {
                 revision.setBody(body.getEncoded());
                 revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
                 revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                if (!Shortener.isShort(body)) {
-                    Body bodyPreview = Shortener.shorten(body);
+                Body bodyPreview = Shortener.shorten(body);
+                if (bodyPreview != null) {
                     revision.setBodyPreview(bodyPreview.getEncoded());
                     revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
                 } else {

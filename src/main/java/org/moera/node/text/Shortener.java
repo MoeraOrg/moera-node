@@ -20,30 +20,44 @@ public class Shortener {
     private static final String SENTENCE_END = ".?!";
     private static final String PHRASE_END = ":,;)";
 
-    public static boolean isShort(Body body) {
+    private static boolean isShort(Body body) {
         return (body.getSubject() == null || body.getSubject().length() <= SHORT_TITLE_MAX)
                 && body.getText().length() <= SHORT_TEXT_MAX;
     }
 
+    private static boolean isShortened(Body body, Body shortBody) {
+        return body.getSubject() != null && body.getSubject().length() > SHORT_TITLE_MAX
+                && shortBody.getSubject() != null && shortBody.getSubject().length() < body.getSubject().length()
+                || shortBody.getText() != null /* null is a signal that the text is short enough */;
+    }
+
     public static Body shorten(Body body) {
-        Body shortened = new Body();
+        if (isShort(body)) {
+            return null;
+        }
+
+        Body shortBody = new Body();
         if (body.getSubject() != null && body.getSubject().length() > SHORT_TITLE_MAX) {
-            shortened.setSubject(Util.ellipsize(body.getSubject(), SHORT_TITLE_MAX));
+            shortBody.setSubject(Util.ellipsize(body.getSubject(), SHORT_TITLE_MAX));
         }
         if (body.getText().length() > SHORT_TEXT_MAX) {
-            shortened.setText(shorten(body.getText()));
+            shortBody.setText(shorten(body.getText()));
         }
-        return shortened;
+        return isShortened(body, shortBody) ? shortBody : null;
     }
 
     private static String shorten(String html) {
         if (html.length() <= SHORT_TEXT_MAX) {
-            return html;
+            return null;
         }
 
         Document document = Jsoup.parseBodyFragment(html);
         Measurer measurer = new Measurer();
         document.body().filter(measurer);
+
+        if (measurer.isTextShort()) {
+            return null;
+        }
 
         Document result = Document.createShell("");
         Cutter cutter = new Cutter(measurer.getCut(), measurer.needsEllipsis(), result.body());
@@ -58,6 +72,7 @@ public class Shortener {
         private int sentenceCut = -1;
         private int phraseCut = -1;
         private int wordCut = -1;
+        private boolean textShort = true;
 
         int getCut() {
             if (paragraphCut > 0) {
@@ -73,6 +88,10 @@ public class Shortener {
                 return wordCut;
             }
             return SHORT_TEXT_AVG;
+        }
+
+        boolean isTextShort() {
+            return textShort;
         }
 
         boolean needsEllipsis() {
@@ -130,7 +149,12 @@ public class Shortener {
                 scanText(text);
                 offset += text.length();
             }
-            return offset <= SHORT_TEXT_MAX ? FilterResult.CONTINUE : FilterResult.STOP;
+            if (offset <= SHORT_TEXT_MAX) {
+                return FilterResult.CONTINUE;
+            } else {
+                textShort = false;
+                return FilterResult.STOP;
+            }
         }
 
         @Override
