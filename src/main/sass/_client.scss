@@ -1,0 +1,17 @@
+.open-client {
+    @include pane;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5rem;
+    width: 35rem;
+    padding: 2rem;
+    font-size: 20pt;
+    font-weight: bold;
+    color: var(--info);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.open-client .btn {
+    margin-top: 2rem;
+}
