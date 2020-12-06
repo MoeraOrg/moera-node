@@ -79,6 +79,7 @@
         {{/if}}
         <details id="comments" {{openness}}>
             <summary>Comments ({{posting.totalComments}})</summary>
+            {{commentInvitation}}
             {{#if pagination}}
                 {{> pages}}
             {{/if}}

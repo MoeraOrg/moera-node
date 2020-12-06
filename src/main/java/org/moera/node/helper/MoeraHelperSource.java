@@ -146,4 +146,13 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
+    public CharSequence commentInvitation() {
+        StringBuilder buf = new StringBuilder();
+        buf.append("<div class=\"alert alert-info\">To add comments, you need to&nbsp; ");
+        buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
+        buf.append(Util.ue(requestContext.getUrl()));
+        buf.append("\">View in Web Client</a></div>");
+        return new SafeString(buf);
+    }
+
 }
