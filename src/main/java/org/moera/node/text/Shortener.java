@@ -145,7 +145,7 @@ public class Shortener {
         @Override
         public FilterResult head(Node node, int depth) {
             if (node instanceof TextNode) {
-                String text = ((TextNode) node).text();
+                String text = ((TextNode) node).getWholeText();
                 scanText(text);
                 offset += text.length();
             }
@@ -183,7 +183,7 @@ public class Shortener {
         @Override
         public FilterResult head(Node node, int i) {
             if (node instanceof TextNode) {
-                String text = ((TextNode) node).text();
+                String text = ((TextNode) node).getWholeText();
                 if (offset + text.length() < cut) {
                     target.appendChild(node.clone());
                 } else {
