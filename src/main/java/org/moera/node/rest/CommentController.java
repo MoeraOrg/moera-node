@@ -5,7 +5,6 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -446,9 +445,8 @@ public class CommentController {
         List<PostingSubscriberNotification> notifications = new ArrayList<>();
 
         Transaction.execute(txManager, () -> {
-//            List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
-//            comments.addAll(commentRepository.findExpired(Util.now()));
-            List<Comment> comments = Collections.emptyList(); // FIXME temporarily disabled
+            List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
+            comments.addAll(commentRepository.findExpired(Util.now()));
             for (Comment comment : comments) {
                 List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
                 if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
