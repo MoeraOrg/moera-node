@@ -1,6 +1,7 @@
 package org.moera.node.option.type;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.UUID;
@@ -49,6 +50,10 @@ public abstract class OptionTypeBase {
 
     public PrivateKey getPrivateKey(Object value) {
         throw new InvalidOptionTypeConversionException(getTypeName(), PrivateKey.class);
+    }
+
+    public PublicKey getPublicKey(Object value) {
+        throw new InvalidOptionTypeConversionException(getTypeName(), PublicKey.class);
     }
 
     public Duration getDuration(Object value) {

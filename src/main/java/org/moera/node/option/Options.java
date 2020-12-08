@@ -1,6 +1,7 @@
 package org.moera.node.option;
 
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.HashMap;
@@ -196,6 +197,10 @@ public class Options {
 
     public PrivateKey getPrivateKey(String name) {
         return forName(name, (value, optionType) -> optionType.getPrivateKey(value));
+    }
+
+    public PublicKey getPublicKey(String name) {
+        return forName(name, (value, optionType) -> optionType.getPublicKey(value));
     }
 
     public Duration getDuration(String name) {

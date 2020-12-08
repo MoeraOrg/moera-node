@@ -196,3 +196,11 @@
   modifiers:
     min: 7d
     max: 2000d
+
+- name: web-push.private-key
+  type: PrivateKeyWebPush
+  internal: true
+
+- name: web-push.public-key
+  type: PublicKeyWebPush
+  internal: true
