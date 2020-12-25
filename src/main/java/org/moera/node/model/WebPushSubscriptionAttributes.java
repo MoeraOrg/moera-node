@@ -12,7 +12,7 @@ public class WebPushSubscriptionAttributes {
     private String endpoint;
 
     @NotBlank
-    @Size(max = 64)
+    @Size(max = 128)
     private String publicKey;
 
     @NotBlank
