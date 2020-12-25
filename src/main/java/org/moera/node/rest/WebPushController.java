@@ -4,6 +4,7 @@ import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -53,15 +54,20 @@ public class WebPushController {
 
     @PostMapping("/subscriptions")
     @Admin
+    @Transactional
     public WebPushSubscriptionInfo subscribe(
             @Valid @RequestBody WebPushSubscriptionAttributes webPushSubscriptionAttributes) {
         log.info("POST /web-push/subscriptions");
 
-        WebPushSubscription subscription = new WebPushSubscription();
-        subscription.setId(UUID.randomUUID());
-        subscription.setNodeId(requestContext.nodeId());
-        webPushSubscriptionAttributes.toWebPushSubscription(subscription);
-        webPushSubscriptionRepository.save(subscription);
+        WebPushSubscription subscription = webPushSubscriptionRepository.findByKeys(requestContext.nodeId(),
+                webPushSubscriptionAttributes.getPublicKey(), webPushSubscriptionAttributes.getAuthKey()).orElse(null);
+        if (subscription == null) {
+            subscription = new WebPushSubscription();
+            subscription.setId(UUID.randomUUID());
+            subscription.setNodeId(requestContext.nodeId());
+            webPushSubscriptionAttributes.toWebPushSubscription(subscription);
+            webPushSubscriptionRepository.save(subscription);
+        }
 
         return new WebPushSubscriptionInfo(subscription);
     }
