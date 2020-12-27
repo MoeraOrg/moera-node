@@ -8,11 +8,14 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.WebPushSubscription;
 import org.moera.node.data.WebPushSubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.Result;
 import org.moera.node.model.WebPushKey;
 import org.moera.node.model.WebPushSubscriptionAttributes;
 import org.moera.node.model.WebPushSubscriptionInfo;
@@ -20,7 +23,9 @@ import org.moera.node.util.Util;
 import org.moera.node.webpush.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,6 +75,22 @@ public class WebPushController {
         }
 
         return new WebPushSubscriptionInfo(subscription);
+    }
+
+    @DeleteMapping("/subscriptions/{id}")
+    @Admin
+    @Transactional
+    public Result unsubscribe(@PathVariable UUID id) {
+        log.info("DELETE /web-push/subscriptions/{id} (id = {})", LogUtil.format(id));
+
+        WebPushSubscription subscription = webPushSubscriptionRepository.findById(id).orElse(null);
+        if (subscription == null || !subscription.getNodeId().equals(requestContext.nodeId())) {
+            throw new ObjectNotFoundFailure("web-push-subscription.not-found");
+        }
+
+        webPushSubscriptionRepository.delete(subscription);
+
+        return Result.OK;
     }
 
 }
