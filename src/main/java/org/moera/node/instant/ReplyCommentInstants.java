@@ -110,19 +110,20 @@ public class ReplyCommentInstants extends InstantsCreator {
         }
         storyOperations.updateMoment(story);
         send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        webPush(story);
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {
         StringBuilder buf = new StringBuilder();
         String firstName = stories.get(0).getRemoteOwnerName();
-        buf.append(InstantUtil.formatNodeName(firstName));
+        buf.append(formatNodeName(firstName));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
                 buf.append(names.size() == 2 ? " and " : ", ");
                 String secondName = stories.stream().map(Story::getRemoteOwnerName).filter(nm -> !nm.equals(firstName))
                         .findFirst().orElse("");
-                buf.append(InstantUtil.formatNodeName(secondName));
+                buf.append(formatNodeName(secondName));
             }
             if (names.size() > 2) {
                 buf.append(" and ");
@@ -137,7 +138,7 @@ public class ReplyCommentInstants extends InstantsCreator {
             buf.append("your");
         } else {
             buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)
-                    ? "their" : InstantUtil.formatNodeName(story.getRemoteNodeName()));
+                    ? "their" : formatNodeName(story.getRemoteNodeName()));
         }
         buf.append(" post \"");
         buf.append(Util.he(story.getRemoteHeading()));

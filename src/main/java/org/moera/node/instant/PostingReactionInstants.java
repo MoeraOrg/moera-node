@@ -118,6 +118,7 @@ public class PostingReactionInstants extends InstantsCreator {
         }
         storyOperations.updateMoment(story);
         send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        webPush(story);
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories) {
@@ -140,8 +141,7 @@ public class PostingReactionInstants extends InstantsCreator {
     }
 
     private static String buildSummary(Reaction reaction) {
-        return String.valueOf(Character.toChars(reaction.getEmoji())) + ' '
-                + InstantUtil.formatNodeName(reaction.getOwnerName());
+        return String.valueOf(Character.toChars(reaction.getEmoji())) + ' ' + formatNodeName(reaction.getOwnerName());
     }
 
     public void addingFailed(String postingId, PostingInfo postingInfo) {
@@ -157,12 +157,13 @@ public class PostingReactionInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
     private static String buildAddingFailedSummary(String nodeName, String postingHeading) {
         return String.format("Failed to sign a reaction to %s post \"%s\"",
-                InstantUtil.formatNodeName(nodeName), Util.he(postingHeading));
+                formatNodeName(nodeName), Util.he(postingHeading));
     }
 
 }

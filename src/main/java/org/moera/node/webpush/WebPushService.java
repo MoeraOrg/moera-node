@@ -1,22 +1,67 @@
 package org.moera.node.webpush;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collection;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.novacrypto.bip39.Words;
+import nl.martijndwars.webpush.Notification;
+import nl.martijndwars.webpush.PushService;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECPoint;
+import org.jose4j.lang.JoseException;
 import org.moera.commons.crypto.CryptoException;
+import org.moera.node.data.Posting;
+import org.moera.node.data.Story;
+import org.moera.node.data.WebPushSubscription;
+import org.moera.node.data.WebPushSubscriptionRepository;
+import org.moera.node.domain.Domains;
+import org.moera.node.model.PostingInfo;
+import org.moera.node.model.StoryInfo;
 import org.moera.node.option.Options;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 public class WebPushService {
+
+    private static Logger log = LoggerFactory.getLogger(WebPushService.class);
+
+    @Inject
+    private Domains domains;
+
+    @Inject
+    private WebPushSubscriptionRepository webPushSubscriptionRepository;
+
+    private final BlockingQueue<Story> queue = new LinkedBlockingQueue<>();
+
+    @PostConstruct
+    public void init() {
+        Thread thread = new Thread(this::run);
+        thread.setDaemon(true);
+        thread.start();
+    }
 
     public PublicKey generateKeys(Options options) {
         try {
@@ -38,6 +83,118 @@ public class WebPushService {
             return keyPair.getPublic();
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
+        }
+    }
+
+    private void run() {
+        while (true) {
+            Story story;
+            try {
+                story = queue.take();
+            } catch (InterruptedException e) {
+                continue;
+            }
+            deliver(story);
+        }
+    }
+
+    public void send(Story story) {
+        try {
+            queue.put(story);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+    }
+
+    private void deliver(Story story) {
+        Collection<WebPushSubscription> subscriptions = webPushSubscriptionRepository.findAllByNodeId(story.getNodeId());
+        if (subscriptions.isEmpty()) {
+            return;
+        }
+
+        log.debug("Delivering story '{}' to Web Push subscribers", story.getId());
+
+        Options options = domains.getDomainOptions(story.getNodeId());
+        PushService pushService = new PushService(new KeyPair(
+                options.getPublicKey("web-push.public-key"),
+                options.getPrivateKey("web-push.private-key")));
+
+        StoryInfo storyInfo = StoryInfo.build(story, true,
+                t -> new PostingInfo((Posting) t.getEntry(), true));
+        ObjectMapper mapper = new ObjectMapper();
+        String payload;
+        try {
+            payload = mapper.writeValueAsString(storyInfo);
+        } catch (JsonProcessingException e) {
+            log.error("Error encoding a story for Web Push notification", e);
+            return;
+        }
+
+        subscriptions.forEach(sub -> deliver(pushService, sub, payload));
+    }
+
+    private void deliver(PushService pushService, WebPushSubscription subscription, String payload) {
+        log.debug("Delivering to Web Push subscriber '{}'", subscription.getId());
+
+        try {
+            Notification notification = new Notification(subscription.getEndpoint(), subscription.getPublicKey(),
+                    subscription.getAuthKey(), payload);
+            while (true) {
+                HttpResponse response = pushService.send(notification);
+                HttpStatus status = HttpStatus.valueOf(response.getStatusLine().getStatusCode());
+                switch (status) {
+                    case CREATED:
+                        log.debug("Web Push notification delivered successfully");
+                        return;
+                    case TOO_MANY_REQUESTS:
+                        try {
+                            Thread.sleep(getRetryDelay(response).toMillis());
+                        } catch (InterruptedException e) {
+                            // ignore
+                        }
+                        break;
+
+                    case BAD_REQUEST:
+                        log.error("Web Push service returned BAD_REQUEST status");
+                        return;
+
+                    case NOT_FOUND:
+                    case GONE:
+                        log.info("Web Push subscription '{}' reported as gone, deleting", subscription.getId());
+                        webPushSubscriptionRepository.delete(subscription);
+                        return;
+
+                    case PAYLOAD_TOO_LARGE:
+                        log.error("Web Push service returned PAYLOAD_TOO_LARGE status");
+                        return;
+
+                    default:
+                        log.warn("Web Push service returned unexpected status: {}", status);
+                        return;
+                }
+            }
+        } catch (GeneralSecurityException | IOException | JoseException | ExecutionException
+                | InterruptedException e) {
+            log.error("Error sending Web Push notification", e);
+        }
+    }
+
+    private Duration getRetryDelay(HttpResponse response) {
+        Header header = response.getFirstHeader("Retry-After");
+        if (header == null) {
+            return Duration.ofMinutes(1);
+        }
+        try {
+            int seconds = Integer.parseInt(header.getValue());
+            return Duration.ofSeconds(seconds);
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+        try {
+            LocalDateTime dateTime = LocalDateTime.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(header.getValue()));
+            return Duration.between(Instant.now(), dateTime);
+        } catch (Exception e) {
+            return Duration.ofMinutes(1);
         }
     }
 

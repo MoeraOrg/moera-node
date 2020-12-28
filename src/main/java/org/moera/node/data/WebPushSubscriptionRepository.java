@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,5 +11,8 @@ public interface WebPushSubscriptionRepository extends JpaRepository<WebPushSubs
 
     @Query("select s from WebPushSubscription s where s.nodeId = ?1 and s.publicKey = ?2 and s.authKey = ?3")
     Optional<WebPushSubscription> findByKeys(UUID nodeId, String publicKey, String authKey);
+
+    @Query("select s from WebPushSubscription s where s.nodeId = ?1")
+    Collection<WebPushSubscription> findAllByNodeId(UUID nodeId);
 
 }

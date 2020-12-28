@@ -38,6 +38,7 @@ public class MentionCommentInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
@@ -58,10 +59,11 @@ public class MentionCommentInstants extends InstantsCreator {
     }
 
     private static String buildSummary(Story story, String remotePostingHeading, String remoteCommentHeading) {
-        String postingOwner = story.getRemoteNodeName().equals(story.getRemoteOwnerName()) ? "their"
-                : InstantUtil.formatNodeName(story.getRemoteNodeName());
+        String postingOwner = story.getRemoteNodeName().equals(story.getRemoteOwnerName())
+                ? "their"
+                : formatNodeName(story.getRemoteNodeName());
         return String.format("%s mentioned you in a comment \"%s\" on %s post \"%s\"",
-                InstantUtil.formatNodeName(story.getRemoteOwnerName()), Util.he(remoteCommentHeading), postingOwner,
+                formatNodeName(story.getRemoteOwnerName()), Util.he(remoteCommentHeading), postingOwner,
                 Util.he(remotePostingHeading));
     }
 

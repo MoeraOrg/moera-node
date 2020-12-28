@@ -103,19 +103,20 @@ public class CommentInstants extends InstantsCreator {
         }
         updateMoment(story);
         send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        webPush(story);
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories) {
         StringBuilder buf = new StringBuilder();
         String firstName = stories.get(0).getRemoteOwnerName();
-        buf.append(InstantUtil.formatNodeName(firstName));
+        buf.append(formatNodeName(firstName));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
                 buf.append(names.size() == 2 ? " and " : ", ");
                 String secondName = stories.stream().map(Story::getRemoteOwnerName).filter(nm -> !nm.equals(firstName))
                         .findFirst().orElse("");
-                buf.append(InstantUtil.formatNodeName(secondName));
+                buf.append(formatNodeName(secondName));
             }
             if (names.size() > 2) {
                 buf.append(" and ");
@@ -142,6 +143,7 @@ public class CommentInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
@@ -160,17 +162,18 @@ public class CommentInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
     private static String buildAddingFailedSummary(String nodeName, String postingHeading) {
         return String.format("Failed to add a comment to %s post \"%s\"",
-                InstantUtil.formatNodeName(nodeName), Util.he(postingHeading));
+                formatNodeName(nodeName), Util.he(postingHeading));
     }
 
     private static String buildUpdateFailedSummary(String nodeName, String postingHeading, String commentHeading) {
         return String.format("Failed to sign the comment \"%s\" to %s post \"%s\"",
-                Util.he(commentHeading), InstantUtil.formatNodeName(nodeName), Util.he(postingHeading));
+                Util.he(commentHeading), formatNodeName(nodeName), Util.he(postingHeading));
     }
 
 }

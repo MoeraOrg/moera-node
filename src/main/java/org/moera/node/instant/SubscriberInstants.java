@@ -41,13 +41,13 @@ public class SubscriberInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
     private static String buildAddedSummary(Subscriber subscriber) {
         return String.format("%s subscribed to your %s",
-                InstantUtil.formatNodeName(subscriber.getRemoteNodeName()),
-                Feed.getStandard(subscriber.getFeedName()).getTitle());
+                formatNodeName(subscriber.getRemoteNodeName()), Feed.getStandard(subscriber.getFeedName()).getTitle());
     }
 
     public void deleted(Subscriber subscriber) {
@@ -68,13 +68,13 @@ public class SubscriberInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
     private static String buildDeletedSummary(Subscriber subscriber) {
         return String.format("%s unsubscribed from your %s",
-                InstantUtil.formatNodeName(subscriber.getRemoteNodeName()),
-                Feed.getStandard(subscriber.getFeedName()).getTitle());
+                formatNodeName(subscriber.getRemoteNodeName()), Feed.getStandard(subscriber.getFeedName()).getTitle());
     }
 
     private Story findAddedStory(String remoteNodeName) {

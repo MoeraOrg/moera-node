@@ -9,8 +9,11 @@ import org.moera.node.event.EventManager;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.naming.NodeName;
+import org.moera.node.naming.RegisteredName;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
+import org.moera.node.webpush.WebPushService;
 
 public class InstantsCreator {
 
@@ -25,6 +28,9 @@ public class InstantsCreator {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private WebPushService webPushService;
 
     protected UUID nodeId() {
         return nodeId.get() != null ? nodeId.get() : requestContext.nodeId();
@@ -61,6 +67,22 @@ public class InstantsCreator {
         } else {
             requestContext.send(event);
         }
+    }
+
+    protected void webPush(Story story) {
+        webPushService.send(story);
+    }
+
+    protected static String formatNodeName(String name) {
+        NodeName nodeName = NodeName.parse(name);
+        if (nodeName instanceof RegisteredName) {
+            RegisteredName registeredName = (RegisteredName) nodeName;
+            if (registeredName.getGeneration() != null) {
+                return String.format("<span class=\"node-name\">%s<span class=\"generation\">%d</span></span>",
+                        registeredName.getName(), registeredName.getGeneration());
+            }
+        }
+        return String.format("<span class=\"node-name\">%s</span>", name);
     }
 
 }

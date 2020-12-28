@@ -31,12 +31,13 @@ public class PostingInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
     private static String buildSubscribingToCommentsFailedSummary(String nodeName, String postingHeading) {
         return String.format("Failed to subscribe to comments to %s post \"%s\"",
-                InstantUtil.formatNodeName(nodeName), Util.he(postingHeading));
+                formatNodeName(nodeName), Util.he(postingHeading));
     }
 
 }

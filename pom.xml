@@ -143,6 +143,11 @@
             <artifactId>slugify</artifactId>
             <version>2.4</version>
         </dependency>
+        <dependency>
+            <groupId>nl.martijndwars</groupId>
+            <artifactId>web-push</artifactId>
+            <version>5.1.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>

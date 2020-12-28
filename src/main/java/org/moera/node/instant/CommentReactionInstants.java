@@ -124,6 +124,7 @@ public class CommentReactionInstants extends InstantsCreator {
         }
         storyOperations.updateMoment(story);
         send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
+        webPush(story);
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {
@@ -148,14 +149,14 @@ public class CommentReactionInstants extends InstantsCreator {
         } else if (stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)) {
             buf.append("their");
         } else {
-            buf.append(InstantUtil.formatNodeName(story.getRemoteNodeName()));
+            buf.append(formatNodeName(story.getRemoteNodeName()));
         }
         buf.append(" post");
         return buf.toString();
     }
 
     private static String buildSummary(String ownerName, int emoji) {
-        return String.valueOf(Character.toChars(emoji)) + ' ' + InstantUtil.formatNodeName(ownerName);
+        return String.valueOf(Character.toChars(emoji)) + ' ' + formatNodeName(ownerName);
     }
 
     public void addingFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
@@ -175,14 +176,15 @@ public class CommentReactionInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
     private static String buildAddingFailedSummary(String postingOwnerName, String postingHeading,
                                                    String commentOwnerName, String commentHeading) {
         return String.format("Failed to sign a reaction to %s comment \"%s\" to %s post \"%s\"",
-                InstantUtil.formatNodeName(commentOwnerName), Util.he(commentHeading),
-                InstantUtil.formatNodeName(postingOwnerName), Util.he(postingHeading));
+                formatNodeName(commentOwnerName), Util.he(commentHeading),
+                formatNodeName(postingOwnerName), Util.he(postingHeading));
     }
 
 }

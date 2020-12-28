@@ -35,6 +35,7 @@ public class MentionPostingInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         send(new StoryAddedEvent(story, true));
+        webPush(story);
         feedStatusUpdated();
     }
 
@@ -55,7 +56,7 @@ public class MentionPostingInstants extends InstantsCreator {
 
     private static String buildSummary(Story story, String remotePostingHeading) {
         return String.format("%s mentioned you in a post \"%s\"",
-                InstantUtil.formatNodeName(story.getRemoteNodeName()), Util.he(remotePostingHeading));
+                formatNodeName(story.getRemoteNodeName()), Util.he(remotePostingHeading));
     }
 
 }
