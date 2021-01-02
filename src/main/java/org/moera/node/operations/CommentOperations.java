@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.inject.Inject;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryRevision;
@@ -32,6 +33,8 @@ import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,6 +42,8 @@ public class CommentOperations {
 
     public static final int MAX_COMMENTS_PER_REQUEST = 200;
     private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
+
+    private static Logger log = LoggerFactory.getLogger(CommentOperations.class);
 
     @Inject
     private RequestContext requestContext;
@@ -82,6 +87,10 @@ public class CommentOperations {
                 moment -> commentRepository.countMoments(posting.getId(), moment) == 0,
                 Util.now()));
 
+        log.debug("Total comments for posting {} = {} + 1: new comment {}",
+                LogUtil.format(posting.getId()),
+                LogUtil.format(posting.getTotalChildren()),
+                LogUtil.format(comment.getId()));
         posting.setTotalChildren(posting.getTotalChildren() + 1);
 
         return commentRepository.save(comment);
@@ -211,7 +220,15 @@ public class CommentOperations {
         comment.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
         comment.getCurrentRevision().setDeletedAt(Util.now());
         if (comment.getPosting().getTotalChildren() > 0) {
+            log.debug("Total comments for posting {} = {} - 1: deleted comment {}",
+                    LogUtil.format(comment.getPosting().getId()),
+                    LogUtil.format(comment.getPosting().getTotalChildren()),
+                    LogUtil.format(comment.getId()));
             comment.getPosting().setTotalChildren(comment.getPosting().getTotalChildren() - 1);
+        } else {
+            log.debug("Total comments for posting {} = 0 before deleting comment {}",
+                    LogUtil.format(comment.getPosting().getId()),
+                    LogUtil.format(comment.getId()));
         }
 
         Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));

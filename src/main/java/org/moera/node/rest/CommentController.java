@@ -451,7 +451,13 @@ public class CommentController {
                 List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
                 if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
                     Posting posting = comment.getPosting();
-                    posting.setTotalChildren(posting.getTotalChildren() - 1);
+                    if (comment.getDeletedAt() == null) {
+                        log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
+                                LogUtil.format(posting.getId()),
+                                LogUtil.format(posting.getTotalChildren()),
+                                LogUtil.format(comment.getId()));
+                        posting.setTotalChildren(posting.getTotalChildren() - 1);
+                    }
                     commentRepository.delete(comment);
 
                     eventList.add(new CommentDeletedEvent(comment));

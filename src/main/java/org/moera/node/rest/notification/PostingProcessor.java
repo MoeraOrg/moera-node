@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -28,9 +29,13 @@ import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.picker.PickerPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @NotificationProcessor
 public class PostingProcessor {
+
+    private static Logger log = LoggerFactory.getLogger(PostingProcessor.class);
 
     private interface PostingSubscriptionRunnable {
 
@@ -134,6 +139,8 @@ public class PostingProcessor {
     public void commentsUpdated(PostingCommentsUpdatedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) -> {
             if (posting.getTotalChildren() != notification.getTotal()) {
+                log.debug("Total comments for posting {} = {}: updated from notification",
+                        LogUtil.format(posting.getId()), LogUtil.format(notification.getTotal()));
                 posting.setTotalChildren(notification.getTotal());
 
                 requestContext.send(new PostingCommentsChangedEvent(posting));
