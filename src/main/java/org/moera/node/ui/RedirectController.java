@@ -39,9 +39,10 @@ public class RedirectController {
 
     private void markAsRead(UUID trackingId) {
         Story story = storyRepository.findByTrackingId(requestContext.nodeId(), trackingId).orElse(null);
-        if (story == null || story.isRead()) {
+        if (story == null || story.isViewed() && story.isRead()) {
             return;
         }
+        story.setViewed(true);
         story.setRead(true);
         if (!Feed.isAdmin(story.getFeedName())) {
             requestContext.send(new StoryUpdatedEvent(story, false));
