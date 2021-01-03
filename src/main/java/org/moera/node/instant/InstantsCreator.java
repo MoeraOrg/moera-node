@@ -13,6 +13,7 @@ import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
+import org.moera.node.webpush.WebPushPacket;
 import org.moera.node.webpush.WebPushService;
 
 public class InstantsCreator {
@@ -70,7 +71,11 @@ public class InstantsCreator {
     }
 
     protected void webPush(Story story) {
-        webPushService.send(story);
+        webPushService.send(WebPushPacket.storyAdded(story));
+    }
+
+    protected void webPushDeleted(UUID id) {
+        webPushService.send(WebPushPacket.storyDeleted(nodeId(), id));
     }
 
     protected static String formatNodeName(String name) {

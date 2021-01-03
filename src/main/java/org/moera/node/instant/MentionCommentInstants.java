@@ -49,6 +49,7 @@ public class MentionCommentInstants extends InstantsCreator {
         }
         storyRepository.delete(story);
         send(new StoryDeletedEvent(story, true));
+        webPushDeleted(story.getId());
         feedStatusUpdated();
     }
 

@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -30,16 +29,13 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.jose4j.lang.JoseException;
 import org.moera.commons.crypto.CryptoException;
-import org.moera.node.data.Posting;
-import org.moera.node.data.Story;
 import org.moera.node.data.WebPushSubscription;
 import org.moera.node.data.WebPushSubscriptionRepository;
 import org.moera.node.domain.Domains;
-import org.moera.node.model.PostingInfo;
-import org.moera.node.model.StoryInfo;
 import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -54,7 +50,10 @@ public class WebPushService {
     @Inject
     private WebPushSubscriptionRepository webPushSubscriptionRepository;
 
-    private final BlockingQueue<Story> queue = new LinkedBlockingQueue<>();
+    @Inject
+    private ObjectMapper objectMapper;
+
+    private final BlockingQueue<WebPushPacket> queue = new LinkedBlockingQueue<>();
 
     @PostConstruct
     public void init() {
@@ -88,43 +87,45 @@ public class WebPushService {
 
     private void run() {
         while (true) {
-            Story story;
+            WebPushPacket packet;
             try {
-                story = queue.take();
+                packet = queue.take();
             } catch (InterruptedException e) {
                 continue;
             }
-            deliver(story);
+            deliver(packet);
         }
     }
 
-    public void send(Story story) {
+    public void send(WebPushPacket packet) {
         try {
-            queue.put(story);
+            queue.put(packet);
         } catch (InterruptedException e) {
             // ignore
         }
     }
 
-    private void deliver(Story story) {
-        Collection<WebPushSubscription> subscriptions = webPushSubscriptionRepository.findAllByNodeId(story.getNodeId());
+    private void deliver(WebPushPacket packet) {
+        var subscriptions = webPushSubscriptionRepository.findAllByNodeId(packet.getNodeId());
         if (subscriptions.isEmpty()) {
             return;
         }
 
-        log.debug("Delivering story '{}' to Web Push subscribers", story.getId());
+        String domainName = domains.getDomainName(packet.getNodeId());
+        packet.setOriginUrl(String.format("https://%s/moera", domainName));
 
-        Options options = domains.getDomainOptions(story.getNodeId());
+        MDC.put("domain", domainName);
+        String id = packet.getId() != null ? packet.getId() : packet.getStory().getId();
+        log.debug("Delivering story '{}' to Web Push subscribers", id);
+
+        Options options = domains.getDomainOptions(packet.getNodeId());
         PushService pushService = new PushService(new KeyPair(
                 options.getPublicKey("web-push.public-key"),
                 options.getPrivateKey("web-push.private-key")));
 
-        StoryInfo storyInfo = StoryInfo.build(story, true,
-                t -> new PostingInfo((Posting) t.getEntry(), true));
-        ObjectMapper mapper = new ObjectMapper();
         String payload;
         try {
-            payload = mapper.writeValueAsString(storyInfo);
+            payload = objectMapper.writeValueAsString(packet);
         } catch (JsonProcessingException e) {
             log.error("Error encoding a story for Web Push notification", e);
             return;

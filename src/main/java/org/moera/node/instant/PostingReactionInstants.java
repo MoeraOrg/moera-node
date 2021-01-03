@@ -107,6 +107,7 @@ public class PostingReactionInstants extends InstantsCreator {
             if (!isNew) {
                 send(new StoryDeletedEvent(story, true));
             }
+            webPushDeleted(story.getId());
             return;
         }
 
