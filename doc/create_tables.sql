@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.7
--- Dumped by pg_dump version 11.7
+-- Dumped from database version 12.4
+-- Dumped by pg_dump version 12.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -17,7 +17,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: 
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
 --
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
@@ -32,7 +32,7 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: domains; Type: TABLE; Schema: public; Owner: moera
@@ -79,7 +79,8 @@ CREATE TABLE public.entries (
     replied_to_id uuid,
     replied_to_name character varying(63),
     replied_to_heading character varying(255),
-    replied_to_digest bytea
+    replied_to_digest bytea,
+    replied_to_revision_id uuid
 );
 
 
@@ -460,6 +461,22 @@ CREATE TABLE public.tokens (
 ALTER TABLE public.tokens OWNER TO moera;
 
 --
+-- Name: web_push_subscriptions; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.web_push_subscriptions (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    endpoint character varying(255) NOT NULL,
+    public_key character varying(128) NOT NULL,
+    auth_key character varying(32) NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.web_push_subscriptions OWNER TO moera;
+
+--
 -- Name: domains domains_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -636,6 +653,14 @@ ALTER TABLE ONLY public.tokens
 
 
 --
+-- Name: web_push_subscriptions web_push_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.web_push_subscriptions
+    ADD CONSTRAINT web_push_subscriptions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: entries_current_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -710,6 +735,13 @@ CREATE INDEX entries_parent_id_moment_idx ON public.entries USING btree (parent_
 --
 
 CREATE INDEX entries_replied_to_id_idx ON public.entries USING btree (replied_to_id);
+
+
+--
+-- Name: entries_replied_to_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_replied_to_revision_id_idx ON public.entries USING btree (replied_to_revision_id);
 
 
 --
@@ -986,6 +1018,13 @@ CREATE UNIQUE INDEX subscriptions_node_id_subscription_type_remote_node_name_re_
 
 
 --
+-- Name: web_push_subscriptions_node_id_public_key_auth_key_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX web_push_subscriptions_node_id_public_key_auth_key_idx ON public.web_push_subscriptions USING btree (node_id, public_key, auth_key);
+
+
+--
 -- Name: entries entries_current_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1015,6 +1054,14 @@ ALTER TABLE ONLY public.entries
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entries_replied_to_id_fkey FOREIGN KEY (replied_to_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: entries entries_replied_to_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_replied_to_revision_id_fkey FOREIGN KEY (replied_to_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
