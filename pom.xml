@@ -194,6 +194,11 @@
             <layout>default</layout>
             <url>https://dl.bintray.com/novacrypto/Hashing/</url>
         </repository>
+        <repository>
+            <id>moera-commons</id>
+            <name>MoeraOrg/moera-commons</name>
+            <url>https://maven.pkg.github.com/moeraorg/moera-commons</url>
+        </repository>
     </repositories>
 
     <build>
