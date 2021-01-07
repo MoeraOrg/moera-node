@@ -46,3 +46,7 @@ Installation instructions:
      port: <port number>
    ```
 6. Execute `./run` script.
+7. If you use your own [naming server][1], make sure its location is set
+   correctly in node settings.
+
+[1]: https://github.com/MoeraOrg/moera-naming
