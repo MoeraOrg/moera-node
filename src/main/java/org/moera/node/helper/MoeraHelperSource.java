@@ -20,6 +20,7 @@ import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @HelperSource
 public class MoeraHelperSource {
@@ -156,6 +157,20 @@ public class MoeraHelperSource {
         buf.append("<div class=\"alert alert-info\">To add reactions or comments, you need to&nbsp; ");
         buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
         buf.append(Util.ue(requestContext.getUrl()));
+        buf.append("\">View in Web Client</a></div>");
+        return new SafeString(buf);
+    }
+
+    public CharSequence buttonsInvitation(Long moment) {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromHttpUrl(requestContext.getUrl());
+        if (moment != null) {
+            builder.replaceQuery("before=" + moment);
+        }
+        StringBuilder buf = new StringBuilder();
+        buf.append("<div class=\"buttons-invitation\">To add reactions or comments, you need to&nbsp; ");
+        buf.append("<a class=\"btn btn-outline-success btn-sm\" href=\"https://web.moera.org/?href=");
+        buf.append(Util.ue(builder.toUriString()));
         buf.append("\">View in Web Client</a></div>");
         return new SafeString(buf);
     }
