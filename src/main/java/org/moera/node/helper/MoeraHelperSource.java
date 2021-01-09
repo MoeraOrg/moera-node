@@ -140,6 +140,11 @@ public class MoeraHelperSource {
             }
             buf.append(" or ");
         }
+        if (requestContext.getUserAgentOs() == UserAgentOs.ANDROID) {
+            buf.append("<a href=\"https://play.google.com/store/apps/details"
+                    + "?id=org.moera.web.twa&pcampaignid=invitation-node\">"
+                    + "get Moera app on Google Play</a> or ");
+        }
         buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
         buf.append(Util.ue(requestContext.getUrl()));
         buf.append("\">View in Web Client</a>");
@@ -148,7 +153,7 @@ public class MoeraHelperSource {
 
     public CharSequence commentInvitation() {
         StringBuilder buf = new StringBuilder();
-        buf.append("<div class=\"alert alert-info\">To add comments, you need to&nbsp; ");
+        buf.append("<div class=\"alert alert-info\">To add reactions or comments, you need to&nbsp; ");
         buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
         buf.append(Util.ue(requestContext.getUrl()));
         buf.append("\">View in Web Client</a></div>");
