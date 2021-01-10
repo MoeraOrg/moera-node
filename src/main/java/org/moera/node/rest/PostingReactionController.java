@@ -33,6 +33,7 @@ import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
+import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,7 +162,7 @@ public class PostingReactionController {
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
-        before = before != null ? before : Long.MAX_VALUE;
+        before = before != null ? before : SafeInteger.MAX_VALUE;
         return reactionOperations.getBefore(postingId, negative, emoji, before, limit);
     }
 

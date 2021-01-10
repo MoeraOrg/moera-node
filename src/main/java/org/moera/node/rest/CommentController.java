@@ -63,6 +63,7 @@ import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.text.TextConverter;
+import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -304,7 +305,7 @@ public class CommentController {
 
         CommentsSliceInfo sliceInfo;
         if (after == null) {
-            before = before != null ? before : Long.MAX_VALUE;
+            before = before != null ? before : SafeInteger.MAX_VALUE;
             sliceInfo = getCommentsBefore(postingId, before, limit);
         } else {
             sliceInfo = getCommentsAfter(postingId, after, limit);
@@ -315,12 +316,13 @@ public class CommentController {
     }
 
     private CommentsSliceInfo getCommentsBefore(UUID postingId, long before, int limit) {
-        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId, Long.MIN_VALUE, before,
+        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId,
+                SafeInteger.MIN_VALUE, before,
                 PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(Long.MIN_VALUE);
+            sliceInfo.setAfter(SafeInteger.MIN_VALUE);
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
@@ -329,12 +331,13 @@ public class CommentController {
     }
 
     private CommentsSliceInfo getCommentsAfter(UUID postingId, long after, int limit) {
-        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId, after, Long.MAX_VALUE,
+        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId,
+                after, SafeInteger.MAX_VALUE,
                 PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
         sliceInfo.setAfter(after);
         if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setBefore(Long.MAX_VALUE);
+            sliceInfo.setBefore(SafeInteger.MAX_VALUE);
         } else {
             sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
         }
@@ -369,15 +372,15 @@ public class CommentController {
 
     private void calcSliceTotals(CommentsSliceInfo sliceInfo, Posting posting) {
         sliceInfo.setTotal(posting.getTotalChildren());
-        if (sliceInfo.getAfter() == Long.MIN_VALUE) {
+        if (sliceInfo.getAfter() <= SafeInteger.MIN_VALUE) {
             sliceInfo.setTotalInPast(0);
             sliceInfo.setTotalInFuture(posting.getTotalChildren() - sliceInfo.getComments().size());
-        } else if (sliceInfo.getBefore() == Long.MAX_VALUE) {
+        } else if (sliceInfo.getBefore() >= SafeInteger.MAX_VALUE) {
             sliceInfo.setTotalInFuture(0);
             sliceInfo.setTotalInPast(posting.getTotalChildren() - sliceInfo.getComments().size());
         } else {
             int totalInFuture = commentRepository.countInRange(requestContext.nodeId(), posting.getId(),
-                    sliceInfo.getBefore(), Long.MAX_VALUE);
+                    sliceInfo.getBefore(), SafeInteger.MAX_VALUE);
             sliceInfo.setTotalInFuture(totalInFuture);
             sliceInfo.setTotalInPast(posting.getTotalChildren() - totalInFuture - sliceInfo.getComments().size());
         }

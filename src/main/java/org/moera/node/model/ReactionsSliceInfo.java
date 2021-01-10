@@ -3,6 +3,8 @@ package org.moera.node.model;
 import java.util.Collections;
 import java.util.List;
 
+import org.moera.node.util.SafeInteger;
+
 public class ReactionsSliceInfo {
 
     public static final ReactionsSliceInfo EMPTY = ReactionsSliceInfo.empty();
@@ -17,8 +19,8 @@ public class ReactionsSliceInfo {
 
     private static ReactionsSliceInfo empty() {
         ReactionsSliceInfo info = new ReactionsSliceInfo();
-        info.before = Long.MAX_VALUE;
-        info.after = Long.MIN_VALUE;
+        info.before = SafeInteger.MAX_VALUE;
+        info.after = SafeInteger.MIN_VALUE;
         info.total = 0;
         info.reactions = Collections.emptyList();
         return info;

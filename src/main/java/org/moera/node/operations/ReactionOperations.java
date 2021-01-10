@@ -39,6 +39,7 @@ import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.MomentFinder;
+import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -173,12 +174,14 @@ public class ReactionOperations {
     public ReactionsSliceInfo getBefore(UUID entryId, boolean negative, Integer emoji, long before, int limit) {
         Pageable pageable = PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment");
         Page<Reaction> page = emoji == null
-                ? reactionRepository.findSlice(entryId, negative, Long.MIN_VALUE, before, pageable)
-                : reactionRepository.findSliceWithEmoji(entryId, negative, emoji, Long.MIN_VALUE, before, pageable);
+                ? reactionRepository.findSlice(entryId, negative,
+                                                SafeInteger.MIN_VALUE, before, pageable)
+                : reactionRepository.findSliceWithEmoji(entryId, negative, emoji,
+                                                SafeInteger.MIN_VALUE, before, pageable);
         ReactionsSliceInfo sliceInfo = new ReactionsSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(Long.MIN_VALUE);
+            sliceInfo.setAfter(SafeInteger.MIN_VALUE);
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }

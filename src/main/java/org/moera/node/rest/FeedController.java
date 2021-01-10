@@ -41,6 +41,7 @@ import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.util.SafeInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -189,7 +190,7 @@ public class FeedController {
             throw new ValidationFailure("limit.invalid");
         }
         if (after == null) {
-            before = before != null ? before : Long.MAX_VALUE;
+            before = before != null ? before : SafeInteger.MAX_VALUE;
             return getStoriesBefore(feedName, before, limit);
         } else {
             return getStoriesAfter(feedName, after, limit);
@@ -197,12 +198,12 @@ public class FeedController {
     }
 
     private FeedSliceInfo getStoriesBefore(String feedName, long before, int limit) {
-        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, Long.MIN_VALUE, before,
+        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE, before,
                 PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         FeedSliceInfo sliceInfo = new FeedSliceInfo();
         sliceInfo.setBefore(before);
         if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(Long.MIN_VALUE);
+            sliceInfo.setAfter(SafeInteger.MIN_VALUE);
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
@@ -211,12 +212,12 @@ public class FeedController {
     }
 
     private FeedSliceInfo getStoriesAfter(String feedName, long after, int limit) {
-        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, after, Long.MAX_VALUE,
+        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, after, SafeInteger.MAX_VALUE,
                 PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
         FeedSliceInfo sliceInfo = new FeedSliceInfo();
         sliceInfo.setAfter(after);
         if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setBefore(Long.MAX_VALUE);
+            sliceInfo.setBefore(SafeInteger.MAX_VALUE);
         } else {
             sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
         }
