@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
@@ -42,11 +41,13 @@ import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.SafeInteger;
+import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -81,6 +82,9 @@ public class FeedController {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     @GetMapping
     public Collection<FeedInfo> getAll() {
@@ -143,8 +147,8 @@ public class FeedController {
 
     @PutMapping("/{feedName}/status")
     @Admin
-    @Transactional
-    public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change) {
+    public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change)
+            throws Throwable {
         log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
                 LogUtil.format(feedName), LogUtil.format(change.getViewed()), LogUtil.format(change.getRead()),
                 LogUtil.format(change.getBefore()));
@@ -153,12 +157,17 @@ public class FeedController {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
 
-        if (change.getViewed() != null) {
-            storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(), change.getBefore());
-        }
-        if (change.getRead() != null) {
-            storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(), change.getBefore());
-        }
+        Transaction.execute(txManager, () -> {
+            if (change.getViewed() != null) {
+                storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(),
+                        change.getBefore(), !change.getViewed());
+            }
+            if (change.getRead() != null) {
+                storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(),
+                        change.getBefore(), !change.getRead());
+            }
+            return null;
+        });
 
         FeedStatus feedStatus = storyOperations.getFeedStatus(feedName);
         requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus));

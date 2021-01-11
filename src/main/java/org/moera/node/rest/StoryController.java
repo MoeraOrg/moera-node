@@ -2,7 +2,6 @@ package org.moera.node.rest;
 
 import java.util.UUID;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
@@ -10,17 +9,19 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,6 +43,9 @@ public class StoryController {
     @Inject
     private StoryOperations storyOperations;
 
+    @Inject
+    private PlatformTransactionManager txManager;
+
     @GetMapping("/{id}")
     public StoryInfo get(@PathVariable UUID id) {
         log.info("GET /stories/{id}, (id = {})", LogUtil.format(id));
@@ -56,8 +60,7 @@ public class StoryController {
 
     @PutMapping("/{id}")
     @Admin
-    @Transactional
-    public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) {
+    public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) throws Throwable {
         log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
                 LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
@@ -65,14 +68,18 @@ public class StoryController {
                 LogUtil.format(storyAttributes.getViewed()),
                 LogUtil.format(storyAttributes.getRead()));
 
-        Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-        storyAttributes.toStory(story);
-        if (storyAttributes.getFeedName() != null
-                || storyAttributes.getPublishAt() != null
-                || storyAttributes.getPinned() != null) {
-            storyOperations.updateMoment(story);
-        }
+        Story story = Transaction.execute(txManager, () -> {
+            Story currentStory = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
+            storyAttributes.toStory(currentStory);
+            if (storyAttributes.getFeedName() != null
+                    || storyAttributes.getPublishAt() != null
+                    || storyAttributes.getPinned() != null) {
+                storyOperations.updateMoment(currentStory);
+            }
+            return currentStory;
+        });
+
         if (!Feed.isAdmin(story.getFeedName())) {
             requestContext.send(new StoryUpdatedEvent(story, false));
         }
