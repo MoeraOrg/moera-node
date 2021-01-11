@@ -33,6 +33,7 @@ public class CarteController {
 
     private static final int DEFAULT_SET_SIZE = 16;
     private static final int MAX_SET_SIZE = 128;
+    private static final int BEGINNING_IN_PAST = 120; // seconds
 
     @Inject
     private RequestContext requestContext;
@@ -50,7 +51,7 @@ public class CarteController {
         PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
 
         List<CarteInfo> cartes = new ArrayList<>();
-        Instant beginning = Instant.now();
+        Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
         try {
             InetAddress remoteAddress = UriUtil.remoteAddress(request);
             for (int i = 0; i <  limit; i++) {
