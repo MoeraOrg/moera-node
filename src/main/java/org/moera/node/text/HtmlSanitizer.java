@@ -16,7 +16,7 @@ public class HtmlSanitizer {
                     "bdi", "bdo", "br", "cite", "code", "data", "dfn", "em", "i", "kbd", "mark", "q", "rb", "rp", "rt",
                     "rtc", "ruby", "s", "samp", "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr",
                     "caption", "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "img", "del",
-                    "ins", "details", "summary", "mr-spoiler", "iframe")
+                    "ins", "details", "summary", "mr-spoiler", "iframe", "video", "audio")
             .allowUrlProtocols("http", "https", "ftp", "mailto")
             .allowAttributes("style").onElements("p")
             .allowAttributes("href", "data-nodename").onElements("a")
@@ -32,7 +32,7 @@ public class HtmlSanitizer {
             .allowStyling(CssSchema.withProperties(Set.of("text-align")))
             .toFactory();
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(
-            "www.youtube.com", "player.vimeo.com", "www.facebook.com", "peer.tube"
+            "www.youtube.com", "player.vimeo.com", "www.facebook.com", "peer.tube", "rumble.com"
     );
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
