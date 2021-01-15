@@ -32,7 +32,7 @@ public class HtmlSanitizer {
             .allowStyling(CssSchema.withProperties(Set.of("text-align")))
             .toFactory();
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(
-            "www.youtube.com", "player.vimeo.com", "www.facebook.com", "peer.tube", "rumble.com"
+            "www.youtube.com", "player.vimeo.com", "www.facebook.com", "peer.tube", "rumble.com", "open.spotify.com"
     );
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
