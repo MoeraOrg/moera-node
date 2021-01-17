@@ -2,9 +2,11 @@ package org.moera.node.rest;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,6 +44,8 @@ import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
+import org.moera.node.webpush.WebPushPacket;
+import org.moera.node.webpush.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -85,6 +89,9 @@ public class FeedController {
 
     @Inject
     private PlatformTransactionManager txManager;
+
+    @Inject
+    private WebPushService webPushService;
 
     @GetMapping
     public Collection<FeedInfo> getAll() {
@@ -157,17 +164,33 @@ public class FeedController {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
 
+        Set<Story> instantsUpdated = new HashSet<>();
         Transaction.execute(txManager, () -> {
-            if (change.getViewed() != null) {
-                storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(),
-                        change.getBefore(), !change.getViewed());
+            if (feedName.equals("instants") && change.getViewed() != null) {
+                instantsUpdated.addAll(storyRepository.findViewed(requestContext.nodeId(), feedName, !change.getViewed(),
+                        change.getBefore()));
             }
+            storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(),
+                    change.getBefore(), !change.getViewed());
             if (change.getRead() != null) {
                 storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(),
                         change.getBefore(), !change.getRead());
             }
             return null;
         });
+
+        if (!instantsUpdated.isEmpty()) {
+            if (change.getViewed()) {
+                instantsUpdated.stream()
+                        .map(Story::getId)
+                        .map(id -> WebPushPacket.storyDeleted(requestContext.nodeId(), id))
+                        .forEach(webPushService::send);
+            } else {
+                instantsUpdated.stream()
+                        .map(WebPushPacket::storyAdded)
+                        .forEach(webPushService::send);
+            }
+        }
 
         FeedStatus feedStatus = storyOperations.getFeedStatus(feedName);
         requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus));

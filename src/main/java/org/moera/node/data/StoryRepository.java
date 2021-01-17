@@ -72,6 +72,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("select count(*) from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.read = false")
     int countNotRead(UUID nodeId, String feedName);
 
+    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.moment <= ?4 and s.viewed = ?3")
+    Set<Story> findViewed(UUID nodeId, String feedName, boolean viewed, long beforeMoment);
+
     @Modifying
     @Query("update Story s set s.viewed = ?3"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment <= ?4 and s.viewed = ?5")
