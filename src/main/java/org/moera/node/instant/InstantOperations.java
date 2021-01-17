@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.data.Feed;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
@@ -41,7 +42,7 @@ public class InstantOperations {
             Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
             List<Event> events = new ArrayList<>();
             Transaction.execute(txManager, () -> {
-                storyRepository.findExpired(nodeId, "instants", createdBefore).forEach(story -> {
+                storyRepository.findExpired(nodeId, Feed.INSTANT, createdBefore).forEach(story -> {
                     storyRepository.delete(story);
                     events.add(new StoryDeletedEvent(story, true));
                 });
