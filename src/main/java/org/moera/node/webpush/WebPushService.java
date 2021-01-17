@@ -115,8 +115,14 @@ public class WebPushService {
         packet.setOriginUrl(String.format("https://%s/moera", domainName));
 
         MDC.put("domain", domainName);
-        String id = packet.getId() != null ? packet.getId() : packet.getStory().getId();
-        log.debug("Delivering story '{}' to Web Push subscribers", id);
+        switch (packet.getType()) {
+            case STORY_ADDED:
+                log.debug("Delivering added story '{}' to Web Push subscribers", packet.getStory().getId());
+                break;
+            case STORY_DELETED:
+                log.debug("Delivering deleted story '{}' to Web Push subscribers", packet.getId());
+                break;
+        }
 
         Options options = domains.getDomainOptions(packet.getNodeId());
         PushService pushService = new PushService(new KeyPair(
