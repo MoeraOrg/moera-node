@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.moera.node.auth.AuthenticationInterceptor;
+import org.moera.node.config.Config;
 import org.moera.node.domain.DomainInterceptor;
 import org.moera.node.event.AfterCommitEventsInterceptor;
 import org.moera.node.global.CacheControlInterceptor;
@@ -36,6 +37,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MoeraNodeApplication implements WebMvcConfigurer {
 
     private static Logger log = LoggerFactory.getLogger(MoeraNodeApplication.class);
+
+    @Inject
+    private Config config;
 
     @Inject
     private DomainInterceptor domainInterceptor;
@@ -101,22 +105,26 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
 
     @Bean
     public TaskExecutor namingTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(16).build();
+        return buildTaskExecutor(config.getPools().getNaming());
     }
 
     @Bean
     public TaskExecutor remoteTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(16).build();
+        return buildTaskExecutor(config.getPools().getRemoteTask());
     }
 
     @Bean
     public TaskExecutor notificationSenderTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(64).build();
+        return buildTaskExecutor(config.getPools().getNotificationSender());
     }
 
     @Bean
     public TaskExecutor pickerTaskExecutor() {
-        return new TaskExecutorBuilder().corePoolSize(8).queueCapacity(8).maxPoolSize(16).build();
+        return buildTaskExecutor(config.getPools().getPicker());
+    }
+
+    private TaskExecutor buildTaskExecutor(int size) {
+        return new TaskExecutorBuilder().corePoolSize(size).maxPoolSize(size).build();
     }
 
     public static void main(String[] args) {

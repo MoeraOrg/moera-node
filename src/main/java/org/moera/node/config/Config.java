@@ -11,6 +11,7 @@ public class Config {
     private String rootSecret;
     private String address;
     private boolean mockNetworkLatency;
+    private PoolsConfig pools = new PoolsConfig();
     private MultiHost multi = MultiHost.NONE;
     private RegistrarConfig registrar;
 
@@ -36,6 +37,14 @@ public class Config {
 
     public void setMockNetworkLatency(boolean mockNetworkLatency) {
         this.mockNetworkLatency = mockNetworkLatency;
+    }
+
+    public PoolsConfig getPools() {
+        return pools;
+    }
+
+    public void setPools(PoolsConfig pools) {
+        this.pools = pools;
     }
 
     public MultiHost getMulti() {
