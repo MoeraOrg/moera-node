@@ -11,14 +11,12 @@ import com.vladsch.flexmark.html.renderer.NodeRenderingHandler;
 import com.vladsch.flexmark.util.data.DataHolder;
 import org.jetbrains.annotations.NotNull;
 import org.moera.node.naming.NamingCache;
-import org.moera.node.naming.NamingNotAvailableException;
-import org.moera.node.naming.RegisteredName;
-import org.moera.node.naming.RegisteredNameDetails;
+import org.moera.node.naming.NodeName;
 import org.moera.node.text.markdown.mention.MentionNode;
 
 public class MentionsNodeRenderer implements NodeRenderer {
 
-    private final MentionsOptions options;
+    private final MentionsOptions options; // TODO may be of use in the future
 
     public MentionsNodeRenderer(DataHolder options) {
         this.options = new MentionsOptions(options);
@@ -37,14 +35,7 @@ public class MentionsNodeRenderer implements NodeRenderer {
         if (context.isDoNotRenderLinks()) {
             html.text(node.getChars());
         } else {
-            String name = node.getText().toString();
-            if (RegisteredName.parse(name).getGeneration() == null && options.namingCache != null) {
-                try {
-                    RegisteredNameDetails details = options.namingCache.get(name);
-                    name = details.getNodeName() != null ? details.getNodeName() : name;
-                } catch (NamingNotAvailableException ignore) {
-                }
-            }
+            String name = NodeName.parse(node.getText().toString()).toString();
             html.srcPos(node.getChars())
                     .attr("href", NamingCache.getRedirector(name))
                     .attr("data-nodename", name)

@@ -37,8 +37,6 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.naming.NamingClient;
-import org.moera.node.naming.NodeName;
-import org.moera.node.naming.RegisteredName;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -136,9 +134,7 @@ public class NodeNameController {
             throw new OperationFailure("naming.operation-pending");
         }
         String nodeName = registeredNameSecret.getName() != null ? registeredNameSecret.getName() : options.nodeName();
-        RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
-
-        if (StringUtils.isEmpty(registeredName.getName()) || registeredName.getGeneration() == null) {
+        if (StringUtils.isEmpty(nodeName)) {
             throw new ValidationFailure("node-name.name-absent");
         }
         if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
@@ -176,8 +172,8 @@ public class NodeNameController {
                 signingKey = (ECPublicKey) signingKeyPair.getPublic();
             }
 
-            namingClient.update(registeredName.getName(), registeredName.getGeneration(), getNodeUri(request),
-                    privateUpdatingKey, privateSigningKey, signingKey, options);
+            namingClient.update(nodeName, getNodeUri(request), privateUpdatingKey, privateSigningKey, signingKey,
+                    options);
         } catch (GeneralSecurityException e) {
             throw new CryptoException(e);
         } catch (OperationFailure of) {

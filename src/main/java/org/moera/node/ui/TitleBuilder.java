@@ -3,7 +3,6 @@ package org.moera.node.ui;
 import javax.inject.Inject;
 
 import org.moera.node.global.RequestContext;
-import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NodeName;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,9 +12,6 @@ public class TitleBuilder {
 
     @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private NamingCache namingCache;
 
     public CharSequence build(String title) {
         StringBuilder buf = new StringBuilder();
@@ -28,9 +24,8 @@ public class TitleBuilder {
             } catch (Exception e) {
             }
             if (!StringUtils.isEmpty(name)) {
-                boolean latest = namingCache.getFast(name).isLatest();
                 buf.append("@ ");
-                buf.append(!latest ? name : NodeName.shorten(name));
+                buf.append(NodeName.shorten(name));
                 buf.append(' ');
             }
         }

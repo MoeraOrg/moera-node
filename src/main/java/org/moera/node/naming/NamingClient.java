@@ -213,15 +213,6 @@ public class NamingClient {
         return namingService.getCurrent(name, generation);
     }
 
-    public RegisteredNameInfo getCurrentForLatest(String name, String namingLocation) {
-        NamingService namingService = getNamingService(namingLocation);
-        if (namingService == null) {
-            log.error("No naming service available");
-            return null;
-        }
-        return namingService.getCurrentForLatest(name);
-    }
-
     public RegisteredNameInfo getPast(String name, int generation, long at, String namingLocation) {
         NamingService namingService = getNamingService(namingLocation);
         if (namingService == null) {
@@ -229,15 +220,6 @@ public class NamingClient {
             return null;
         }
         return namingService.getPast(name, generation, at);
-    }
-
-    public RegisteredNameInfo getPastForLatest(String name, long at, String namingLocation) {
-        NamingService namingService = getNamingService(namingLocation);
-        if (namingService == null) {
-            log.error("No naming service available");
-            return null;
-        }
-        return namingService.getPastForLatest(name, at);
     }
 
     public void register(String name, String nodeUri, ECPublicKey updatingKey,
@@ -257,14 +239,13 @@ public class NamingClient {
         log.info("Registering name '{}': node uri = {}, updating key = {}, signing key = {}, valid from = {}",
                 name, nodeUri, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
         UUID operationId;
-        int generation;
+        RegisteredName registeredName = RegisteredName.parse(name);
         try {
-            RegisteredNameInfo info = namingService.getCurrentForLatest(name);
-            generation = info != null ? info.getGeneration() + 1 : 0;
+            RegisteredNameInfo info = namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
             byte[] previousDigest = info != null ? info.getDigest() : null;
             operationId = namingService.put(
-                    name,
-                    generation,
+                    registeredName.getName(),
+                    registeredName.getGeneration(),
                     updatingKeyR,
                     nodeUri,
                     signingKeyR,
@@ -275,13 +256,13 @@ public class NamingClient {
             throw new NamingNotAvailableException(e);
         }
         operationSent(operationId, options);
-        options.set("naming.operation.registered-name", name);
-        options.set("naming.operation.registered-name.generation", generation);
+        options.set("naming.operation.registered-name", registeredName.getName());
+        options.set("naming.operation.registered-name.generation", registeredName.getGeneration());
         options.set("naming.operation.signing-key", privateSigningKey);
         monitorOperation(options);
     }
 
-    public void update(String name, int generation, String nodeUri, ECPrivateKey privateUpdatingKey,
+    public void update(String name, String nodeUri, ECPrivateKey privateUpdatingKey,
                        ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
 
         NamingService namingService = getNamingService(options);
@@ -290,9 +271,10 @@ public class NamingClient {
             return;
         }
 
+        RegisteredName registeredName = RegisteredName.parse(name);
         RegisteredNameInfo info;
         try {
-            info = namingService.getCurrentForLatest(name);
+            info = namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
         } catch (Exception e) {
             throw new NamingNotAvailableException(e);
         }
@@ -300,7 +282,7 @@ public class NamingClient {
             throw new OperationFailure("name-not-registered");
         }
         // TODO possible to validate the private key by the public key
-        log.info("Updating name '{}', generation {}", name, generation);
+        log.info("Updating name '{}'", name);
 
         byte[] previousDigest = info.getDigest();
         log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
@@ -329,7 +311,7 @@ public class NamingClient {
 
         try {
             operationId = namingService.put(
-                    name,
+                    info.getName(),
                     info.getGeneration(),
                     null,
                     null,
@@ -341,8 +323,8 @@ public class NamingClient {
             throw new NamingNotAvailableException(e);
         }
         operationSent(operationId, options);
-        options.set("naming.operation.registered-name", name);
-        options.set("naming.operation.registered-name.generation", generation);
+        options.set("naming.operation.registered-name", registeredName.getName());
+        options.set("naming.operation.registered-name.generation", registeredName.getGeneration());
         if (privateSigningKey != null) {
             options.set("naming.operation.signing-key", privateSigningKey);
         }

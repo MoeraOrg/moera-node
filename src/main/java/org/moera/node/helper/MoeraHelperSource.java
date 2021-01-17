@@ -53,13 +53,9 @@ public class MoeraHelperSource {
 
             HelperUtil.safeAppend(buf, registeredName.getName());
 
-            if (!details.isLatest()) {
+            if (registeredName.getGeneration() != 0) {
                 buf.append("<sub class=\"generation\">");
-                if (registeredName.getGeneration() != null) {
-                    buf.append(registeredName.getGeneration());
-                } else {
-                    buf.append('?');
-                }
+                buf.append(registeredName.getGeneration());
                 buf.append("</sub>");
             }
 

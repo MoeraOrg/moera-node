@@ -5,23 +5,20 @@ import org.moera.naming.rpc.RegisteredNameInfo;
 public class RegisteredNameDetails implements Cloneable {
 
     private String nodeName;
-    private boolean latest;
     private String nodeUri;
     private byte[] signingKey;
 
     public RegisteredNameDetails() {
     }
 
-    public RegisteredNameDetails(String nodeName, boolean latest, String nodeUri, byte[] signingKey) {
+    public RegisteredNameDetails(String nodeName, String nodeUri, byte[] signingKey) {
         this.nodeName = nodeName;
-        this.latest = latest;
         this.nodeUri = nodeUri;
         this.signingKey = signingKey;
     }
 
     public RegisteredNameDetails(RegisteredNameInfo info) {
         nodeName = RegisteredName.toString(info.getName(), info.getGeneration());
-        latest = info.isLatest();
         nodeUri = info.getNodeUri();
         signingKey = info.getSigningKey();
     }
@@ -32,14 +29,6 @@ public class RegisteredNameDetails implements Cloneable {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
-    }
-
-    public boolean isLatest() {
-        return latest;
-    }
-
-    public void setLatest(boolean latest) {
-        this.latest = latest;
     }
 
     public String getNodeUri() {
@@ -60,7 +49,7 @@ public class RegisteredNameDetails implements Cloneable {
 
     @Override
     public RegisteredNameDetails clone() {
-        return new RegisteredNameDetails(nodeName, latest, nodeUri, signingKey);
+        return new RegisteredNameDetails(nodeName, nodeUri, signingKey);
     }
 
 }

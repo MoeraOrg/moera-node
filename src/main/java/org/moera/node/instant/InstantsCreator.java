@@ -82,7 +82,7 @@ public class InstantsCreator {
         NodeName nodeName = NodeName.parse(name);
         if (nodeName instanceof RegisteredName) {
             RegisteredName registeredName = (RegisteredName) nodeName;
-            if (registeredName.getGeneration() != null) {
+            if (registeredName.getGeneration() != 0) {
                 return String.format("<span class=\"node-name\">%s<span class=\"generation\">%d</span></span>",
                         registeredName.getName(), registeredName.getGeneration());
             }

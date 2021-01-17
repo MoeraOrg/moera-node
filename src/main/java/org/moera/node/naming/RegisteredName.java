@@ -5,14 +5,9 @@ import org.springframework.util.StringUtils;
 public class RegisteredName implements NodeName {
 
     private String name;
-    private Integer generation;
+    private int generation;
 
     public RegisteredName() {
-    }
-
-    public RegisteredName(String name, int generation) {
-        this.name = name;
-        this.generation = generation;
     }
 
     public static RegisteredName parse(String registeredName) {
@@ -33,7 +28,11 @@ public class RegisteredName implements NodeName {
     }
 
     public static String shorten(String registeredName) {
-        return parse(registeredName).getName();
+        if (StringUtils.isEmpty(registeredName)) {
+            return registeredName;
+        }
+        RegisteredName rn = parse(registeredName);
+        return rn.getGeneration() != 0 ? rn.toString() : rn.getName();
     }
 
     public String getName() {
@@ -44,11 +43,11 @@ public class RegisteredName implements NodeName {
         this.name = name;
     }
 
-    public Integer getGeneration() {
+    public int getGeneration() {
         return generation;
     }
 
-    public void setGeneration(Integer generation) {
+    public void setGeneration(int generation) {
         this.generation = generation;
     }
 
@@ -57,15 +56,8 @@ public class RegisteredName implements NodeName {
         return toString(name, generation);
     }
 
-    public static String toString(String name, Integer generation) {
-        if (name != null) {
-            if (generation != null) {
-                return String.format("%s_%d", name, generation);
-            } else {
-                return name;
-            }
-        }
-        return null;
+    public static String toString(String name, int generation) {
+        return name != null ? String.format("%s_%d", name, generation) : null;
     }
 
 }

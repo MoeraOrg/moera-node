@@ -99,7 +99,7 @@ public class NamingCache {
 
     public RegisteredNameDetails getFast(String name) {
         RegisteredNameDetails details = getOrRun(getKey(name));
-        return details != null ? details.clone() : new RegisteredNameDetails(name, false, getRedirector(name), null);
+        return details != null ? details.clone() : new RegisteredNameDetails(name, getRedirector(name), null);
     }
 
     public RegisteredNameDetails get(String name) {
@@ -170,10 +170,8 @@ public class NamingCache {
         RegisteredNameInfo info = null;
         Throwable error = null;
         try {
-            info = registeredName.getGeneration() != null
-                    ? namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(),
-                                            key.namingLocation)
-                    : namingClient.getCurrentForLatest(registeredName.getName(), key.namingLocation);
+            info = namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(),
+                                           key.namingLocation);
         } catch (Exception e) {
             error = e;
         }
@@ -183,12 +181,11 @@ public class NamingCache {
             cacheLock.writeLock().lock();
             try {
                 cache.put(key, record);
-                if (info != null) {
-                    if (registeredName.getGeneration() == null) {
-                        String fullName = RegisteredName.toString(info.getName(), info.getGeneration());
-                        cache.put(new Key(key.namingLocation, fullName), record);
-                    } else if (info.isLatest()) {
-                        cache.put(new Key(key.namingLocation, info.getName()), record);
+                if (registeredName.getGeneration() == 0) {
+                    if (key.name.equals(registeredName.getName())) {
+                        cache.put(new Key(key.namingLocation, registeredName.toString()), record);
+                    } else {
+                        cache.put(new Key(key.namingLocation, registeredName.getName()), record);
                     }
                 }
             } finally {
