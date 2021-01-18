@@ -184,15 +184,12 @@ public class NamingClient {
         options.reset("naming.operation.error-message");
         options.reset("naming.operation.completed");
         options.reset("naming.operation.registered-name");
-        options.reset("naming.operation.registered-name.generation");
         options.reset("naming.operation.signing-key");
     }
 
     private void commitOperation(Options options) {
-        String name = options.getString("naming.operation.registered-name");
-        Integer generation = options.getInt("naming.operation.registered-name.generation");
+        String newRegisteredName = options.getString("naming.operation.registered-name");
         String prevRegisteredName = options.nodeName();
-        String newRegisteredName = RegisteredName.toString(name, generation);
         options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
             eventManager.send(options.nodeId(), new NodeNameChangedEvent(newRegisteredName));
@@ -256,8 +253,7 @@ public class NamingClient {
             throw new NamingNotAvailableException(e);
         }
         operationSent(operationId, options);
-        options.set("naming.operation.registered-name", registeredName.getName());
-        options.set("naming.operation.registered-name.generation", registeredName.getGeneration());
+        options.set("naming.operation.registered-name", registeredName.toString());
         options.set("naming.operation.signing-key", privateSigningKey);
         monitorOperation(options);
     }
@@ -323,8 +319,7 @@ public class NamingClient {
             throw new NamingNotAvailableException(e);
         }
         operationSent(operationId, options);
-        options.set("naming.operation.registered-name", registeredName.getName());
-        options.set("naming.operation.registered-name.generation", registeredName.getGeneration());
+        options.set("naming.operation.registered-name", registeredName.toString());
         if (privateSigningKey != null) {
             options.set("naming.operation.signing-key", privateSigningKey);
         }
