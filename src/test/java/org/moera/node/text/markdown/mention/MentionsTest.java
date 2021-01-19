@@ -1,17 +1,15 @@
 package org.moera.node.text.markdown.mention;
 
+import java.util.List;
+
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.test.util.TestUtils;
 import com.vladsch.flexmark.util.data.DataHolder;
 import com.vladsch.flexmark.util.data.MutableDataSet;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.moera.node.text.markdown.spoiler.SpoilerExtension;
-
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 class MentionsTest {
 
@@ -23,13 +21,13 @@ class MentionsTest {
 
 
     private void assertRendering(String input, String expectedResult) {
-        assertEquals(expectedResult, RENDERER.render(PARSER.parse(input)));
+        Assertions.assertEquals(expectedResult, RENDERER.render(PARSER.parse(input)));
     }
 
     @Test
     void onlyMention() {
         String expectedResult = "<p>" +
-                "<a href=\"/moera/gotoname?name=simple-username\" data-nodename=\"simple-username\">" +
+                "<a href=\"/moera/gotoname?name=simple-username_0\" data-nodename=\"simple-username_0\">" +
                 "@simple-username" +
                 "</a>" +
                 "</p>\n";
@@ -42,9 +40,14 @@ class MentionsTest {
     }
 
     @Test
+    void escapedMention() {
+        assertRendering("not so \\@simple-username", "<p>not so @simple-username</p>\n");
+    }
+
+    @Test
     void mentionInASentence() {
         String expectedResult = "<p>not so " +
-                "<a href=\"/moera/gotoname?name=simple-username\" data-nodename=\"simple-username\">" +
+                "<a href=\"/moera/gotoname?name=simple-username_0\" data-nodename=\"simple-username_0\">" +
                 "@simple-username" +
                 "</a>" +
                 " after all</p>\n";
@@ -55,7 +58,7 @@ class MentionsTest {
     void mentionAfterSpoiler() {
         String expectedResult = "<p>" +
                 "<mr-spoiler>not so</mr-spoiler>" +
-                "<a href=\"/moera/gotoname?name=simple-username\" data-nodename=\"simple-username\">" +
+                "<a href=\"/moera/gotoname?name=simple-username_0\" data-nodename=\"simple-username_0\">" +
                 "@simple-username" +
                 "</a>" +
                 " after all</p>\n";
@@ -66,8 +69,8 @@ class MentionsTest {
     void weirdMentionInASentence() {
         String expectedResult = "<p>very " +
                 "<a " +
-                "href=\"/moera/gotoname?name=-%3D%21%21.%3F%3Fweird**UsErNamEE%2B--\" " +
-                "data-nodename=\"-=!!.??weird**UsErNamEE+--\">" +
+                "href=\"/moera/gotoname?name=-%3D%21%21.%3F%3Fweird**UsErNamEE%2B--_0\" " +
+                "data-nodename=\"-=!!.??weird**UsErNamEE+--_0\">" +
                 "@-=!!.??weird**UsErNamEE+--" +
                 "</a>" +
                 " indeed</p>\n";
@@ -77,7 +80,7 @@ class MentionsTest {
     @Test
     void mentionWithPunctuation() {
         String expectedResult = "<p>mention just " +
-                "<a href=\"/moera/gotoname?name=username\" data-nodename=\"username\">" +
+                "<a href=\"/moera/gotoname?name=username_0\" data-nodename=\"username_0\">" +
                 "@username" +
                 "</a>" +
                 ".</p>\n";
