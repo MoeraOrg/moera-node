@@ -166,12 +166,14 @@ public class FeedController {
 
         Set<Story> instantsUpdated = new HashSet<>();
         Transaction.execute(txManager, () -> {
-            if (feedName.equals(Feed.INSTANT) && change.getViewed() != null) {
-                instantsUpdated.addAll(storyRepository.findViewed(requestContext.nodeId(), feedName, !change.getViewed(),
-                        change.getBefore()));
+            if (change.getViewed() != null) {
+                if (feedName.equals(Feed.INSTANT)) {
+                    instantsUpdated.addAll(storyRepository.findViewed(requestContext.nodeId(), feedName,
+                            !change.getViewed(), change.getBefore()));
+                }
+                storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(),
+                        change.getBefore(), !change.getViewed());
             }
-            storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(),
-                    change.getBefore(), !change.getViewed());
             if (change.getRead() != null) {
                 storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(),
                         change.getBefore(), !change.getRead());
