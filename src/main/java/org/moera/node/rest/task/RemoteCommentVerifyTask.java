@@ -47,6 +47,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
     @Override
     public void run() {
+        initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
             remoteNodeName = data.getNodeName();

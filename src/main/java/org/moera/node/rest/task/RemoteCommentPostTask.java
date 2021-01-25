@@ -57,6 +57,7 @@ public class RemoteCommentPostTask extends Task {
 
     @Override
     public void run() {
+        initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
@@ -125,12 +126,10 @@ public class RemoteCommentPostTask extends Task {
     }
 
     private void success() {
-        initLoggingDomain();
         log.info("Succeeded to post comment to posting {} at node {}", postingId, targetNodeName);
     }
 
     private void error(Throwable e) {
-        initLoggingDomain();
         if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {

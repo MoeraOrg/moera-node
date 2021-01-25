@@ -45,6 +45,7 @@ public class RemotePostingReactionPostTask extends Task {
 
     @Override
     public void run() {
+        initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
@@ -88,13 +89,11 @@ public class RemotePostingReactionPostTask extends Task {
     }
 
     private void success(ReactionCreated info) {
-        initLoggingDomain();
         log.info("Succeeded to post reaction to posting {} at node {}",
                 info.getReaction().getPostingId(), targetNodeName);
     }
 
     private void error(Throwable e) {
-        initLoggingDomain();
         if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {

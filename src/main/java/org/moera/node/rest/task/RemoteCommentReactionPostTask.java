@@ -45,6 +45,7 @@ public class RemoteCommentReactionPostTask extends Task {
 
     @Override
     public void run() {
+        initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
             commentInfo = nodeApi.getComment(targetNodeName, postingId, commentId);
@@ -75,13 +76,11 @@ public class RemoteCommentReactionPostTask extends Task {
     }
 
     private void success(ReactionCreated info) {
-        initLoggingDomain();
         log.info("Succeeded to post reaction to comment {} under posting {} at node {}",
                 info.getReaction().getCommentId(), info.getReaction().getPostingId(), targetNodeName);
     }
 
     private void error(Throwable e) {
-        initLoggingDomain();
         if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {

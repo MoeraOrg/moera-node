@@ -40,6 +40,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
 
     @Override
     public void run() {
+        initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
             String remoteNodeName = data.getNodeName();

@@ -39,6 +39,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
 
     @Override
     public void run() {
+        initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
             boolean subscribed = !subscriptionRepository.findAllByTypeAndNodeAndEntryId(nodeId,
@@ -67,12 +68,10 @@ public class RemotePostingCommentsSubscribeTask extends Task {
     }
 
     private void success() {
-        initLoggingDomain();
         log.info("Succeeded to subscribe to comments to posting {} at node {}", postingId, targetNodeName);
     }
 
     private void error(Throwable e) {
-        initLoggingDomain();
         if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
