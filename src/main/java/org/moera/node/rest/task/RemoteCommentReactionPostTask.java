@@ -12,6 +12,7 @@ import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.instant.CommentReactionInstants;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -28,6 +29,7 @@ public class RemoteCommentReactionPostTask extends Task {
     private String commentId;
     private ReactionAttributes attributes;
     private PostingInfo postingInfo;
+    private PostingRevisionInfo postingRevisionInfo;
     private CommentInfo commentInfo;
 
     @Inject
@@ -45,18 +47,23 @@ public class RemoteCommentReactionPostTask extends Task {
     public void run() {
         try {
             nodeApi.setNodeId(nodeId);
-            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             commentInfo = nodeApi.getComment(targetNodeName, postingId, commentId);
+            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            if (!commentInfo.getPostingRevisionId().equals(postingInfo.getRevisionId())) {
+                postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, postingId,
+                        commentInfo.getPostingRevisionId());
+            }
             ReactionCreated created = nodeApi.postCommentReaction(targetNodeName, postingId, commentId,
-                    buildReaction(postingInfo, commentInfo));
+                    buildReaction());
             success(created);
         } catch (Exception e) {
             error(e);
         }
     }
 
-    private ReactionDescription buildReaction(PostingInfo postingInfo, CommentInfo commentInfo) {
-        PostingFingerprint postingFingerprint = new PostingFingerprint(postingInfo);
+    private ReactionDescription buildReaction() {
+        PostingFingerprint postingFingerprint = postingRevisionInfo == null
+                ? new PostingFingerprint(postingInfo) : new PostingFingerprint(postingInfo, postingRevisionInfo);
         CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, postingFingerprint);
         ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName, attributes, commentFingerprint);
 
