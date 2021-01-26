@@ -86,6 +86,7 @@ public class InstantsCreator {
                 return String.format("<span class=\"node-name\">%s<span class=\"generation\">%d</span></span>",
                         registeredName.getName(), registeredName.getGeneration());
             }
+            return String.format("<span class=\"node-name\">%s</span>", registeredName.getName());
         }
         return String.format("<span class=\"node-name\">%s</span>", name);
     }
