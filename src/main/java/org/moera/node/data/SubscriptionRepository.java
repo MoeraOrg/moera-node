@@ -19,6 +19,9 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     List<Subscription> findAllByTypeAndNodeAndEntryId(UUID nodeId, SubscriptionType subscriptionType,
                                                       String remoteNodeName, String remoteEntryId);
 
+    @Query("select s from Subscription s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.remoteEntryId = ?3")
+    List<Subscription> findAllByNodeAndEntryId(UUID nodeId, String remoteNodeName, String remoteEntryId);
+
     @Query("select count(*) from Subscription s where s.nodeId = ?1 and s.subscriptionType = ?2")
     int countByType(UUID nodeId, SubscriptionType subscriptionType);
 

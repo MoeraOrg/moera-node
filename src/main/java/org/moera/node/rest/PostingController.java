@@ -22,6 +22,10 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
+import org.moera.node.data.Subscriber;
+import org.moera.node.data.SubscriberRepository;
+import org.moera.node.data.Subscription;
+import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
@@ -31,6 +35,7 @@ import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.StoryAttributes;
@@ -77,6 +82,12 @@ public class PostingController {
 
     @Inject
     private OwnReactionRepository ownReactionRepository;
+
+    @Inject
+    private SubscriberRepository subscriberRepository;
+
+    @Inject
+    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private EntityManager entityManager;
@@ -160,7 +171,7 @@ public class PostingController {
                 Directions.postingSubscribers(posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
 
-        return withStories(withClientReaction(new PostingInfo(posting, true)));
+        return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
     }
 
     @GetMapping("/{id}")
@@ -172,8 +183,8 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
-        return withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
-                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()))));
+        return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
+                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())))));
     }
 
     @DeleteMapping("/{id}")
@@ -214,6 +225,23 @@ public class PostingController {
                 UUID.fromString(postingInfo.getId()));
         if (stories != null && !stories.isEmpty()) {
             postingInfo.setFeedReferences(stories.stream().map(FeedReference::new).collect(Collectors.toList()));
+        }
+        return postingInfo;
+    }
+
+    private PostingInfo withSubscribers(PostingInfo postingInfo) {
+        String clientName = requestContext.getClientName();
+        if (StringUtils.isEmpty(clientName)) {
+            return postingInfo;
+        }
+        if (postingInfo.isOriginal()) {
+            Set<Subscriber> subscribers = subscriberRepository.findByEntryId(requestContext.nodeId(), clientName,
+                    UUID.fromString(postingInfo.getId()));
+            postingInfo.setSubscriptions(PostingSubscriptionsInfo.fromSubscribers(subscribers));
+        } else if (requestContext.isAdmin()) {
+            List<Subscription> subscriptions = subscriptionRepository.findAllByNodeAndEntryId(
+                    requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId());
+            postingInfo.setSubscriptions(PostingSubscriptionsInfo.fromSubscriptions(subscriptions));
         }
         return postingInfo;
     }

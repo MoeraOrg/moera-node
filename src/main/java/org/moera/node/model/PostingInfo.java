@@ -142,7 +142,7 @@ public class PostingInfo implements ReactionsInfo {
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
         totalComments = posting.getTotalChildren();
-        subscriptions = new PostingSubscriptionsInfo(posting.getSubscribers());
+        subscriptions = PostingSubscriptionsInfo.fromSubscribers(posting.getSubscribers());
     }
 
     public static PostingInfo forUi(Posting posting) {

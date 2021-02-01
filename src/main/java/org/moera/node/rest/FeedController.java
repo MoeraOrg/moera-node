@@ -1,7 +1,9 @@
 package org.moera.node.rest;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,7 @@ import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
@@ -278,6 +281,7 @@ public class FeedController {
                     .map(ClientReactionInfo::new)
                     .filter(r -> postingMap.containsKey(r.getEntryId()))
                     .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
+            fillRemoteInfo(stories, postingMap);
             if (requestContext.isAdmin()) {
                 fillOwnInfo(stories, postingMap);
             }
@@ -288,57 +292,86 @@ public class FeedController {
         sliceInfo.setStories(stories);
     }
 
+    private void fillRemoteInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
+        List<PostingInfo> postings = stories.stream()
+                .map(StoryInfo::getPosting)
+                .filter(Objects::nonNull)
+                .filter(PostingInfo::isOriginal)
+                .collect(Collectors.toList());
+        List<UUID> postingIds = postingMap.values().stream()
+                .filter(PostingInfo::isOriginal)
+                .map(PostingInfo::getId)
+                .map(UUID::fromString)
+                .collect(Collectors.toList());
+        if (!postingIds.isEmpty()) {
+            fillSubscribers(postings, postingIds);
+        }
+    }
+
+    private void fillSubscribers(List<PostingInfo> postings, List<UUID> postingIds) {
+        List<Subscriber> allSubscribers = subscriberRepository.findAllByPostingIds(requestContext.nodeId(), postingIds);
+        Map<String, List<Subscriber>> subscriberMap = new HashMap<>();
+        for (Subscriber subscriber : allSubscribers) {
+            subscriberMap
+                    .computeIfAbsent(subscriber.getEntry().getId().toString(), key -> new ArrayList<>())
+                    .add(subscriber);
+        }
+        postings.forEach(posting -> {
+            posting.setSubscriptions(PostingSubscriptionsInfo.fromSubscribers(subscriberMap.get(posting.getId())));
+        });
+    }
+
     private void fillOwnInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
+        List<PostingInfo> postings = stories.stream()
+                .map(StoryInfo::getPosting)
+                .filter(Objects::nonNull)
+                .filter(p -> !p.isOriginal())
+                .collect(Collectors.toList());
         List<String> remotePostingIds = postingMap.values().stream()
                 .filter(p -> !p.isOriginal())
                 .map(PostingInfo::getReceiverPostingId)
                 .collect(Collectors.toList());
         if (!remotePostingIds.isEmpty()) {
-            fillOwnReactions(stories, remotePostingIds);
-            fillSubscriptions(stories, remotePostingIds);
+            fillOwnReactions(postings, remotePostingIds);
+            fillSubscriptions(postings, remotePostingIds);
         }
     }
 
-    private void fillOwnReactions(List<StoryInfo> stories, List<String> remotePostingIds) {
+    private void fillOwnReactions(List<PostingInfo> postings, List<String> remotePostingIds) {
         Map<String, OwnReaction> ownReactions = ownReactionRepository
                 .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
                 .stream()
                 .collect(Collectors.toMap(
                         OwnReaction::getRemotePostingId, Function.identity(), (p1, p2) -> p1));
-        stories.stream()
-                .map(StoryInfo::getPosting)
-                .filter(Objects::nonNull)
-                .filter(p -> !p.isOriginal())
-                .forEach(posting -> {
-                    OwnReaction ownReaction = ownReactions.get(posting.getReceiverPostingId());
-                    if (ownReaction != null
-                            && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
-                            && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
-                        posting.setClientReaction(new ClientReactionInfo(ownReaction));
-                    }
-                });
+        postings.forEach(posting -> {
+            OwnReaction ownReaction = ownReactions.get(posting.getReceiverPostingId());
+            if (ownReaction != null
+                    && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
+                    && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
+                posting.setClientReaction(new ClientReactionInfo(ownReaction));
+            }
+        });
     }
 
-    private void fillSubscriptions(List<StoryInfo> stories, List<String> remotePostingIds) {
-        Map<String, Subscription> subscriptionMap = subscriptionRepository
-                .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
-                .stream()
-                .filter(sr -> sr.getSubscriptionType() == SubscriptionType.POSTING_COMMENTS)
-                .collect(Collectors.toMap(
-                        Subscription::getRemoteEntryId, Function.identity(), (p1, p2) -> p1));
-        stories.stream()
-                .map(StoryInfo::getPosting)
-                .filter(Objects::nonNull)
-                .filter(p -> !p.isOriginal())
-                .forEach(posting -> {
-                    Subscription subscription = subscriptionMap.get(posting.getReceiverPostingId());
-                    if (subscription != null
-                            && subscription.getRemoteNodeName().equals(posting.getReceiverName())
-                            && subscription.getRemoteEntryId().equals(posting.getReceiverPostingId())) {
-                        posting.getSubscriptions().setSubscriberId(SubscriptionType.POSTING_COMMENTS,
-                                subscription.getRemoteSubscriberId());
-                    }
-                });
+    private void fillSubscriptions(List<PostingInfo> postings, List<String> remotePostingIds) {
+        List<Subscription> allSubscriptions = subscriptionRepository
+                .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds);
+        Map<String, List<Subscription>> subscriptionMap = new HashMap<>();
+        for (Subscription subscription : allSubscriptions) {
+            subscriptionMap
+                    .computeIfAbsent(subscription.getRemoteEntryId(), key -> new ArrayList<>())
+                    .add(subscription);
+        }
+        postings.forEach(posting -> {
+            List<Subscription> subscriptions = subscriptionMap.get(posting.getReceiverPostingId());
+            if (subscriptions != null) {
+                subscriptions = subscriptions
+                        .stream()
+                        .filter(sb -> sb.getRemoteNodeName().equals(posting.getReceiverName()))
+                        .collect(Collectors.toList());
+            }
+            posting.setSubscriptions(PostingSubscriptionsInfo.fromSubscriptions(subscriptions));
+        });
     }
 
     private StoryInfo buildStoryInfo(Story story) {
