@@ -293,6 +293,9 @@ public class FeedController {
     }
 
     private void fillRemoteInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
+        if (StringUtils.isEmpty(requestContext.getClientName())) {
+            return;
+        }
         List<PostingInfo> postings = stories.stream()
                 .map(StoryInfo::getPosting)
                 .filter(Objects::nonNull)
@@ -309,7 +312,8 @@ public class FeedController {
     }
 
     private void fillSubscribers(List<PostingInfo> postings, List<UUID> postingIds) {
-        List<Subscriber> allSubscribers = subscriberRepository.findAllByPostingIds(requestContext.nodeId(), postingIds);
+        List<Subscriber> allSubscribers = subscriberRepository.findAllByPostingIds(
+                requestContext.nodeId(), requestContext.getClientName(), postingIds);
         Map<String, List<Subscriber>> subscriberMap = new HashMap<>();
         for (Subscriber subscriber : allSubscribers) {
             subscriberMap

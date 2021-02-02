@@ -40,7 +40,7 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, UUID>, Q
     @Query("select s from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.subscriptionType = ?3")
     List<Subscriber> findByType(UUID nodeId, String remoteNodeName, SubscriptionType subscriptionType);
 
-    @Query("select s from Subscriber s where s.nodeId = ?1 and s.entry.id in (?2)")
-    List<Subscriber> findAllByPostingIds(UUID nodeId, List<UUID> postingIds);
+    @Query("select s from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.entry.id in (?3)")
+    List<Subscriber> findAllByPostingIds(UUID nodeId, String remoteNodeName, List<UUID> postingIds);
 
 }
