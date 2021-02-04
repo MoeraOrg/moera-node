@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.4
--- Dumped by pg_dump version 12.4
+-- Dumped from database version 12.5 (Ubuntu 12.5-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.5 (Ubuntu 12.5-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -297,16 +297,18 @@ CREATE TABLE public.reactions (
 ALTER TABLE public.reactions OWNER TO moera;
 
 --
--- Name: remote_comment_verifications; Type: TABLE; Schema: public; Owner: moera
+-- Name: remote_verifications; Type: TABLE; Schema: public; Owner: moera
 --
 
-CREATE TABLE public.remote_comment_verifications (
+CREATE TABLE public.remote_verifications (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
+    verification_type smallint NOT NULL,
     node_name character varying(63) NOT NULL,
     posting_id character varying(40) NOT NULL,
-    comment_id character varying(40) NOT NULL,
+    comment_id character varying(40),
     revision_id character varying(40),
+    owner_name character varying(63),
     status smallint NOT NULL,
     error_code character varying(63),
     error_message character varying(255),
@@ -314,47 +316,7 @@ CREATE TABLE public.remote_comment_verifications (
 );
 
 
-ALTER TABLE public.remote_comment_verifications OWNER TO moera;
-
---
--- Name: remote_posting_verifications; Type: TABLE; Schema: public; Owner: moera
---
-
-CREATE TABLE public.remote_posting_verifications (
-    id uuid NOT NULL,
-    node_id uuid NOT NULL,
-    node_name character varying(63) NOT NULL,
-    posting_id character varying(40) NOT NULL,
-    revision_id character varying(40),
-    status smallint NOT NULL,
-    error_code character varying(63),
-    error_message character varying(255),
-    deadline timestamp without time zone NOT NULL,
-    receiver_name character varying(63)
-);
-
-
-ALTER TABLE public.remote_posting_verifications OWNER TO moera;
-
---
--- Name: remote_reaction_verifications; Type: TABLE; Schema: public; Owner: moera
---
-
-CREATE TABLE public.remote_reaction_verifications (
-    id uuid NOT NULL,
-    node_id uuid NOT NULL,
-    node_name character varying(63) NOT NULL,
-    posting_id character varying(40) NOT NULL,
-    reaction_owner_name character varying(63) NOT NULL,
-    status smallint NOT NULL,
-    error_code character varying(63),
-    error_message character varying(255),
-    deadline timestamp without time zone NOT NULL,
-    comment_id character varying(40)
-);
-
-
-ALTER TABLE public.remote_reaction_verifications OWNER TO moera;
+ALTER TABLE public.remote_verifications OWNER TO moera;
 
 --
 -- Name: schema_history; Type: TABLE; Schema: public; Owner: moera
@@ -589,27 +551,11 @@ ALTER TABLE ONLY public.reactions
 
 
 --
--- Name: remote_comment_verifications remote_comment_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+-- Name: remote_verifications remote_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
-ALTER TABLE ONLY public.remote_comment_verifications
-    ADD CONSTRAINT remote_comment_verifications_pkey PRIMARY KEY (id);
-
-
---
--- Name: remote_posting_verifications remote_posting_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.remote_posting_verifications
-    ADD CONSTRAINT remote_posting_verifications_pkey PRIMARY KEY (id);
-
-
---
--- Name: remote_reaction_verifications remote_reaction_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.remote_reaction_verifications
-    ADD CONSTRAINT remote_reaction_verifications_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.remote_verifications
+    ADD CONSTRAINT remote_verifications_pkey PRIMARY KEY (id);
 
 
 --
@@ -906,31 +852,24 @@ CREATE INDEX reactions_moment_entry_revision_id_idx ON public.reactions USING bt
 
 
 --
--- Name: remote_posting_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: remote_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX remote_posting_verifications_deadline_idx ON public.remote_posting_verifications USING btree (deadline);
-
-
---
--- Name: remote_posting_verifications_node_id_node_name_posting_id_r_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX remote_posting_verifications_node_id_node_name_posting_id_r_idx ON public.remote_posting_verifications USING btree (node_id, node_name, posting_id, revision_id);
+CREATE INDEX remote_verifications_deadline_idx ON public.remote_verifications USING btree (deadline);
 
 
 --
--- Name: remote_reaction_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: remote_verifications_node_id_verification_type_node_name_p_idx1; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX remote_reaction_verifications_deadline_idx ON public.remote_reaction_verifications USING btree (deadline);
+CREATE INDEX remote_verifications_node_id_verification_type_node_name_p_idx1 ON public.remote_verifications USING btree (node_id, verification_type, node_name, posting_id, owner_name);
 
 
 --
--- Name: remote_reaction_verifications_node_id_node_name_posting_id__idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: remote_verifications_node_id_verification_type_node_name_po_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX remote_reaction_verifications_node_id_node_name_posting_id__idx ON public.remote_reaction_verifications USING btree (node_id, node_name, posting_id, reaction_owner_name);
+CREATE INDEX remote_verifications_node_id_verification_type_node_name_po_idx ON public.remote_verifications USING btree (node_id, verification_type, node_name, posting_id, revision_id);
 
 
 --
