@@ -21,7 +21,7 @@ public abstract class RemoteReactionVerificationEvent extends Event {
         nodeName = data.getNodeName();
         postingId = data.getPostingId();
         commentId = data.getCommentId();
-        reactionOwnerName = data.getReactionOwnerName();
+        reactionOwnerName = data.getOwnerName();
     }
 
     public String getId() {

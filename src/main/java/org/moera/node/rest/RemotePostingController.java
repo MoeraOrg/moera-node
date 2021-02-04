@@ -14,12 +14,10 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.rest.task.RemotePostingVerifyTask;
 import org.moera.node.task.TaskAutowire;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -76,12 +74,6 @@ public class RemotePostingController {
         taskExecutor.execute(task);
 
         return new AsyncOperationCreated(data.getId());
-    }
-
-    @Scheduled(fixedDelayString = "PT30M")
-    @Transactional
-    public void purgeExpiredVerifications() {
-        remotePostingVerificationRepository.deleteExpired(Util.now());
     }
 
 }

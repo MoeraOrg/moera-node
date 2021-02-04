@@ -97,9 +97,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        updateData(data -> {
-            data.setRevisionId(commentInfo.getRevisionId());
-        });
+        updateData(data -> data.setRevisionId(commentInfo.getRevisionId()));
 
         String repliedToId = null;
         String repliedToRevisionId = null;
@@ -172,9 +170,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         log.info("Verified comment {} to posting {} at node {}: {}",
                 data.getCommentId(), data.getPostingId(), data.getNodeName(),
                 correct ? "correct" : "incorrect");
-        updateData(data -> {
-            data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
-        });
+        updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
         send(new RemoteCommentVerifiedEvent(data));
     }
 

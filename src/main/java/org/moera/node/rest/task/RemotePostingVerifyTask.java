@@ -40,9 +40,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         try {
             nodeApi.setNodeId(nodeId);
             PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), data.getPostingId());
-            updateData(data -> {
-                data.setReceiverName(postingInfo.getReceiverName());
-            });
+            updateData(data -> data.setOwnerName(postingInfo.getReceiverName()));
 
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo);
@@ -98,9 +96,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
     protected void reportSuccess(boolean correct) {
         log.info("Verified posting {}/{} at node {}: {}",
                 data.getPostingId(), data.getRevisionId(), data.getNodeName(), correct ? "correct" : "incorrect");
-        updateData(data -> {
-            data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
-        });
+        updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
         send(new RemotePostingVerifiedEvent(data));
     }
 

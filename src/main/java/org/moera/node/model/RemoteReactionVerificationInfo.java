@@ -21,7 +21,7 @@ public class RemoteReactionVerificationInfo {
         id = data.getId().toString();
         nodeName = data.getNodeName();
         postingId = data.getPostingId();
-        reactionOwnerName = data.getReactionOwnerName();
+        reactionOwnerName = data.getOwnerName();
         status = data.getStatus().getValue();
         errorCode = data.getErrorCode();
         errorMessage = data.getErrorMessage();

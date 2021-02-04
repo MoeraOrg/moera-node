@@ -19,7 +19,7 @@ public abstract class RemotePostingVerificationEvent extends Event {
         super(type);
         id = data.getId().toString();
         nodeName = data.getNodeName();
-        receiverName = data.getReceiverName();
+        receiverName = data.getOwnerName();
         postingId = data.getPostingId();
         revisionId = data.getRevisionId();
     }

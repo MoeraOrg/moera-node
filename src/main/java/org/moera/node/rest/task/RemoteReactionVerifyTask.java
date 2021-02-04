@@ -53,7 +53,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             }
             if (data.getCommentId() == null) {
                 ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
-                        data.getReactionOwnerName());
+                        data.getOwnerName());
                 try {
                     PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
                             remotePostingId, reactionInfo.getPostingRevisionId());
@@ -63,7 +63,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 }
             } else {
                 ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, remotePostingId,
-                        data.getCommentId(), data.getReactionOwnerName());
+                        data.getCommentId(), data.getOwnerName());
                 CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
                 try {
                     CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName,
@@ -138,14 +138,12 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         String status = correct ? "correct" : "incorrect";
         if (data.getCommentId() == null) {
             log.info("Verified reaction of {} to posting {} at node {}: {}",
-                    data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(), status);
+                    data.getOwnerName(), data.getPostingId(), data.getNodeName(), status);
         } else {
             log.info("Verified reaction of {} to comment {} to posting {} at node {}: {}",
-                    data.getReactionOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(), status);
+                    data.getOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(), status);
         }
-        updateData(data -> {
-            data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT);
-        });
+        updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
         send(new RemoteReactionVerifiedEvent(data));
     }
 
@@ -153,10 +151,10 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     protected void reportFailure(String errorCode, String errorMessage) {
         if (data.getCommentId() == null) {
             log.info("Verification of reaction of {} to posting {} at node {} failed: {} ({})",
-                    data.getReactionOwnerName(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode);
+                    data.getOwnerName(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode);
         } else {
             log.info("Verification of reaction of {} to comment {} to posting {} at node {} failed: {} ({})",
-                    data.getReactionOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(),
+                    data.getOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(),
                     errorMessage, errorCode);
         }
         updateData(data -> {

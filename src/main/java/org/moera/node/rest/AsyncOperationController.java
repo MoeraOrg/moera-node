@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -9,13 +10,16 @@ import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
+import org.moera.node.data.RemoteVerificationRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.RemotePostingVerificationInfo;
 import org.moera.node.model.RemoteReactionVerificationInfo;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +32,9 @@ public class AsyncOperationController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private RemoteVerificationRepository remoteVerificationRepository;
 
     @Inject
     private RemotePostingVerificationRepository remotePostingVerificationRepository;
@@ -57,6 +64,12 @@ public class AsyncOperationController {
                         .orElseThrow(() -> new ObjectNotFoundFailure("async-operation.not-found"));
 
         return new RemoteReactionVerificationInfo(data);
+    }
+
+    @Scheduled(fixedDelayString = "PT30M")
+    @Transactional
+    public void purgeExpiredVerifications() {
+        remoteVerificationRepository.deleteExpired(Util.now());
     }
 
 }
