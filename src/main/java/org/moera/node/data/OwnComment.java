@@ -24,6 +24,9 @@ public class OwnComment {
     @Size(max = 63)
     private String remoteNodeName = "";
 
+    @Size(max = 96)
+    private String remoteFullName;
+
     @NotNull
     @Size(max = 40)
     private String remotePostingId = "";
@@ -61,6 +64,14 @@ public class OwnComment {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public String getRemotePostingId() {

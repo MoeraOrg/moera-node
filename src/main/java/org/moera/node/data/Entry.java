@@ -43,12 +43,18 @@ public class Entry {
     @Size(max = 63)
     private String receiverName;
 
+    @Size(max = 96)
+    private String receiverFullName;
+
     @Size(max = 40)
     private String receiverEntryId;
 
     @NotNull
     @Size(max = 63)
     private String ownerName = "";
+
+    @Size(max = 96)
+    private String ownerFullName;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -107,8 +113,13 @@ public class Entry {
     @ManyToOne
     private EntryRevision repliedToRevision;
 
+    @Size(max = 63)
     private String repliedToName;
 
+    @Size(max = 96)
+    private String repliedToFullName;
+
+    @Size(max = 255)
     private String repliedToHeading;
 
     private byte[] repliedToDigest;
@@ -169,6 +180,14 @@ public class Entry {
         this.receiverName = receiverName;
     }
 
+    public String getReceiverFullName() {
+        return receiverFullName;
+    }
+
+    public void setReceiverFullName(String receiverFullName) {
+        this.receiverFullName = receiverFullName;
+    }
+
     @Transient
     public boolean isOriginal() {
         return getReceiverName() == null;
@@ -188,6 +207,14 @@ public class Entry {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public Timestamp getCreatedAt() {
@@ -397,6 +424,14 @@ public class Entry {
 
     public void setRepliedToName(String repliedToName) {
         this.repliedToName = repliedToName;
+    }
+
+    public String getRepliedToFullName() {
+        return repliedToFullName;
+    }
+
+    public void setRepliedToFullName(String repliedToFullName) {
+        this.repliedToFullName = repliedToFullName;
     }
 
     public String getRepliedToHeading() {

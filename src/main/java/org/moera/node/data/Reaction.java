@@ -22,6 +22,9 @@ public class Reaction {
     @Size(max = 63)
     private String ownerName = "";
 
+    @Size(max = 96)
+    private String ownerFullName;
+
     @ManyToOne
     @NotNull
     private EntryRevision entryRevision;
@@ -60,6 +63,14 @@ public class Reaction {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public EntryRevision getEntryRevision() {

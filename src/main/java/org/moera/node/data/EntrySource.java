@@ -26,6 +26,9 @@ public class EntrySource {
     @Size(max = 63)
     private String remoteNodeName = "";
 
+    @Size(max = 96)
+    private String remoteFullName;
+
     @NotNull
     @Size(max = 63)
     private String remoteFeedName = "";
@@ -59,6 +62,14 @@ public class EntrySource {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public String getRemoteFeedName() {

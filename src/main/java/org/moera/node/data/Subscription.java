@@ -38,6 +38,9 @@ public class Subscription {
     @Size(max = 63)
     private String remoteNodeName;
 
+    @Size(max = 96)
+    private String remoteFullName;
+
     @Size(max = 63)
     private String remoteFeedName;
 
@@ -97,6 +100,14 @@ public class Subscription {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public String getRemoteFeedName() {

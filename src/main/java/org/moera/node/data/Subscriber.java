@@ -36,6 +36,9 @@ public class Subscriber {
     @Size(max = 63)
     private String remoteNodeName;
 
+    @Size(max = 96)
+    private String remoteFullName;
+
     @NotNull
     private Timestamp createdAt = Util.now();
 
@@ -85,6 +88,14 @@ public class Subscriber {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public Timestamp getCreatedAt() {
