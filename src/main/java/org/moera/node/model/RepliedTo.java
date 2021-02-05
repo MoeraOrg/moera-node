@@ -9,6 +9,7 @@ public class RepliedTo {
     private String id;
     private String revisionId;
     private String name;
+    private String fullName;
     private String heading;
     private byte[] digest;
 
@@ -22,6 +23,7 @@ public class RepliedTo {
                 revisionId = comment.getRepliedToRevision().getId().toString();
             }
             name = comment.getRepliedToName();
+            fullName = comment.getRepliedToFullName();
             heading = comment.getRepliedToHeading();
             digest = comment.getRepliedToDigest();
         }
@@ -49,6 +51,14 @@ public class RepliedTo {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getHeading() {
