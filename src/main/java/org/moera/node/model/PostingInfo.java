@@ -27,6 +27,7 @@ public class PostingInfo implements ReactionsInfo {
     private String receiverRevisionId;
     private Integer totalRevisions;
     private String receiverName;
+    private String receiverFullName;
     private String receiverPostingId;
     private String ownerName;
     private String ownerFullName;
@@ -93,6 +94,7 @@ public class PostingInfo implements ReactionsInfo {
         receiverRevisionId = revision.getReceiverRevisionId();
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
+        receiverFullName = posting.getReceiverFullName();
         receiverPostingId = posting.getReceiverEntryId();
         ownerName = posting.getOwnerName();
         ownerFullName = posting.getOwnerFullName();
@@ -203,6 +205,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setReceiverName(String receiverName) {
         this.receiverName = receiverName;
+    }
+
+    public String getReceiverFullName() {
+        return receiverFullName;
+    }
+
+    public void setReceiverFullName(String receiverFullName) {
+        this.receiverFullName = receiverFullName;
     }
 
     @JsonIgnore

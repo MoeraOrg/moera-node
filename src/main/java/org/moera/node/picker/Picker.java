@@ -155,6 +155,8 @@ public class Picker extends Task {
                                     List<DirectedNotification> notifications) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
+        String receiverFullName = postingInfo.isOriginal()
+                ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
         String receiverPostingId = postingInfo.isOriginal() ? remotePostingId : postingInfo.getReceiverPostingId();
         Posting posting = postingRepository.findByReceiverId(nodeId, receiverName, receiverPostingId).orElse(null);
         if (posting == null) {
@@ -162,6 +164,7 @@ public class Picker extends Task {
             posting.setId(UUID.randomUUID());
             posting.setNodeId(nodeId);
             posting.setReceiverName(receiverName);
+            posting.setReceiverFullName(receiverFullName);
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
