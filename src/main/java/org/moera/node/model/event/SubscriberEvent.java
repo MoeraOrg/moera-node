@@ -13,6 +13,7 @@ public class SubscriberEvent extends Event {
     private String feedName;
     private String postingId;
     private String nodeName;
+    private String fullName;
     private Long createdAt;
 
     public SubscriberEvent(EventType type) {
@@ -29,6 +30,7 @@ public class SubscriberEvent extends Event {
             postingId = subscriber.getEntry().getId().toString();
         }
         nodeName = subscriber.getRemoteNodeName();
+        fullName = subscriber.getRemoteFullName();
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
     }
 
@@ -70,6 +72,14 @@ public class SubscriberEvent extends Event {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public Long getCreatedAt() {

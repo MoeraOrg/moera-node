@@ -126,6 +126,7 @@ public class SubscriberController {
         subscriber.setNodeId(requestContext.nodeId());
         subscriber.setSubscriptionType(subscriberDescription.getType());
         subscriber.setRemoteNodeName(ownerName);
+        subscriber.setRemoteFullName(subscriberDescription.getOwnerFullName());
         if (!StringUtils.isEmpty(subscriberDescription.getFeedName())) {
             if (!Feed.isStandard(subscriberDescription.getFeedName())) {
                 throw new ValidationFailure("subscriberDescription.feedName.not-found");

@@ -13,6 +13,7 @@ public class SubscriberInfo {
     private String feedName;
     private String postingId;
     private String nodeName;
+    private String fullName;
     private Long createdAt;
 
     public SubscriberInfo() {
@@ -24,6 +25,7 @@ public class SubscriberInfo {
         feedName = subscriber.getFeedName();
         postingId = subscriber.getEntry() != null ? subscriber.getEntry().getId().toString() : null;
         nodeName = subscriber.getRemoteNodeName();
+        fullName = subscriber.getRemoteFullName();
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
     }
 
@@ -65,6 +67,14 @@ public class SubscriberInfo {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public Long getCreatedAt() {
