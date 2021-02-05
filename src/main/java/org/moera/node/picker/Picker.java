@@ -265,6 +265,7 @@ public class Picker extends Task {
         EntrySource entrySource = new EntrySource();
         entrySource.setId(UUID.randomUUID());
         entrySource.setEntry(posting);
+        entrySource.setRemoteFullName(posting.getReceiverFullName());
         pick.toEntrySource(entrySource);
         entrySourceRepository.save(entrySource);
     }

@@ -8,6 +8,7 @@ import org.moera.node.data.EntrySource;
 public class PostingSourceInfo {
 
     private String nodeName;
+    private String fullName;
     private String feedName;
     private String postingId;
     private Long createdAt;
@@ -17,6 +18,7 @@ public class PostingSourceInfo {
 
     public PostingSourceInfo(EntrySource entrySource) {
         nodeName = entrySource.getRemoteNodeName();
+        fullName = entrySource.getRemoteFullName();
         feedName = entrySource.getRemoteFeedName();
         postingId = entrySource.getRemotePostingId();
         createdAt = Util.toEpochSecond(entrySource.getCreatedAt());
@@ -28,6 +30,14 @@ public class PostingSourceInfo {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getFeedName() {
