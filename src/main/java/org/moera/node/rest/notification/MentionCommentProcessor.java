@@ -21,7 +21,7 @@ public class MentionCommentProcessor {
     public void added(MentionCommentAddedNotification notification) {
         mentionCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
                 notification.getPostingId(), notification.getPostingHeading(), notification.getCommentOwnerName(),
-                notification.getCommentId(), notification.getCommentHeading());
+                notification.getCommentOwnerFullName(), notification.getCommentId(), notification.getCommentHeading());
     }
 
     @NotificationMapping(NotificationType.MENTION_COMMENT_DELETED)

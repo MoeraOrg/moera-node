@@ -177,6 +177,7 @@ public class CommentReactionInstants extends InstantsCreator {
         story.setRemoteFullName(postingOwnerFullName);
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
+        story.setRemoteOwnerFullName(commentOwnerFullName);
         story.setRemoteCommentId(commentId);
         story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading,
                 commentOwnerName, commentOwnerFullName, commentHeading));

@@ -23,7 +23,8 @@ public class MentionCommentInstants extends InstantsCreator {
     private StoryOperations storyOperations;
 
     public void added(String remoteNodeName, String remoteFullName, String remotePostingId, String remotePostingHeading,
-                      String remoteOwnerName, String remoteCommentId, String remoteCommentHeading) {
+                      String remoteOwnerName, String remoteOwnerFullName, String remoteCommentId,
+                      String remoteCommentHeading) {
         Story story = findStory(remoteNodeName, remotePostingId, remoteCommentId);
         if (story != null) {
             return;
@@ -34,6 +35,7 @@ public class MentionCommentInstants extends InstantsCreator {
         story.setRemoteFullName(remoteFullName);
         story.setRemotePostingId(remotePostingId);
         story.setRemoteOwnerName(remoteOwnerName);
+        story.setRemoteOwnerFullName(remoteOwnerFullName);
         story.setRemoteCommentId(remoteCommentId);
         story.setSummary(buildSummary(story, remotePostingHeading, remoteCommentHeading));
         storyOperations.updateMoment(story);

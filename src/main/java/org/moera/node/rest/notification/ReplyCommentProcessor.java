@@ -21,8 +21,8 @@ public class ReplyCommentProcessor {
     public void added(ReplyCommentAddedNotification notification) {
         replyCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
                 notification.getPostingId(), notification.getCommentId(), notification.getRepliedToId(),
-                notification.getCommentOwnerName(), notification.getPostingHeading(),
-                notification.getRepliedToHeading());
+                notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                notification.getPostingHeading(), notification.getRepliedToHeading());
     }
 
     @NotificationMapping(NotificationType.REPLY_COMMENT_DELETED)

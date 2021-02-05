@@ -33,7 +33,8 @@ public class ReplyCommentInstants extends InstantsCreator {
     private StoryOperations storyOperations;
 
     public void added(String nodeName, String fullName, String postingId, String commentId, String repliedToId,
-                      String commentOwnerName, String postingHeading, String repliedToHeading) {
+                      String commentOwnerName, String commentOwnerFullName, String postingHeading,
+                      String repliedToHeading) {
         if (commentOwnerName.equals(nodeName())) {
             return;
         }
@@ -67,6 +68,7 @@ public class ReplyCommentInstants extends InstantsCreator {
         substory.setRemotePostingId(postingId);
         substory.setRemoteCommentId(commentId);
         substory.setRemoteOwnerName(commentOwnerName);
+        substory.setRemoteOwnerFullName(commentOwnerFullName);
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);

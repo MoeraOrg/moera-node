@@ -34,8 +34,8 @@ public class RemoteCommentInstants extends InstantsCreator {
     private StoryOperations storyOperations;
 
     public void added(String remoteNodeName, String remoteFullName, String remotePostingId, String remotePostingHeading,
-                      String remoteOwnerName, String remoteCommentId, String remoteCommentHeading,
-                      SubscriptionReason reason) {
+                      String remoteOwnerName, String remoteOwnerFullName, String remoteCommentId,
+                      String remoteCommentHeading, SubscriptionReason reason) {
         if (remoteOwnerName.equals(nodeName())) {
             return;
         }
@@ -67,6 +67,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         substory.setRemoteFullName(remoteFullName);
         substory.setRemotePostingId(remotePostingId);
         substory.setRemoteOwnerName(remoteOwnerName);
+        substory.setRemoteOwnerFullName(remoteOwnerFullName);
         substory.setRemoteCommentId(remoteCommentId);
         substory.setRemoteHeading(remoteCommentHeading);
         substory.setMoment(0L);
@@ -109,6 +110,7 @@ public class RemoteCommentInstants extends InstantsCreator {
 
         story.setSummary(buildAddedSummary(story, stories, reason));
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
+        story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
         story.setRemoteCommentId(stories.get(0).getRemoteCommentId());
         story.setPublishedAt(Util.now());
         if (isAdded) {

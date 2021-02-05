@@ -53,10 +53,10 @@ public class RemotePostingProcessor {
                 return; // We should receive another notification about somebody replied to our comment
             }
         }
-        remoteCommentInstants.added(
-                notification.getSenderNodeName(), notification.getSenderFullName(), notification.getPostingId(),
-                notification.getPostingHeading(), notification.getCommentOwnerName(), notification.getCommentId(),
-                notification.getCommentHeading(), subscription.getReason());
+        remoteCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                notification.getPostingId(), notification.getPostingHeading(), notification.getCommentOwnerName(),
+                notification.getCommentOwnerFullName(), notification.getCommentId(), notification.getCommentHeading(),
+                subscription.getReason());
     }
 
     @NotificationMapping(NotificationType.POSTING_COMMENT_DELETED)
