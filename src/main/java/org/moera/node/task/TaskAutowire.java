@@ -36,6 +36,7 @@ public class TaskAutowire {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(requestContext.nodeId());
         task.setNodeName(requestContext.nodeName());
+        task.setFullName(requestContext.fullName());
         task.setSigningKey(requestContext.getOptions().getPrivateKey("profile.signing-key"));
         task.setLocalAddr(requestContext.getLocalAddr());
     }
@@ -46,6 +47,7 @@ public class TaskAutowire {
         Options options = domains.getDomainOptions(nodeId);
         if (options != null) {
             task.setNodeName(options.nodeName());
+            task.setFullName(options.getString("profile.full-name"));
             task.setSigningKey(options.getPrivateKey("profile.signing-key"));
         } else {
             log.warn("Domain with id = {} not found", nodeId);

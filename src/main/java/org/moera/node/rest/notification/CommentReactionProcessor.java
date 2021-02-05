@@ -21,8 +21,8 @@ public class CommentReactionProcessor {
     @Transactional
     public void added(CommentReactionAddedNotification notification) {
         commentReactionInstants.added(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getCommentId(), notification.getOwnerName(), notification.getCommentHeading(),
-                notification.isNegative(), notification.getEmoji());
+                notification.getCommentId(), notification.getOwnerName(), notification.getOwnerFullName(),
+                notification.getCommentHeading(), notification.isNegative(), notification.getEmoji());
     }
 
     @NotificationMapping(NotificationType.COMMENT_REACTION_DELETED)

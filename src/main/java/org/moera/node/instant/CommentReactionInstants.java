@@ -34,8 +34,8 @@ public class CommentReactionInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String postingId, String commentId, String ownerName, String commentHeading,
-                      boolean negative, int emoji) {
+    public void added(String nodeName, String postingId, String commentId, String ownerName, String ownerFullName,
+                      String commentHeading, boolean negative, int emoji) {
         if (ownerName.equals(nodeName())) {
             return;
         }
@@ -64,7 +64,8 @@ public class CommentReactionInstants extends InstantsCreator {
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
         substory.setRemoteOwnerName(ownerName);
-        substory.setSummary(buildSummary(ownerName, emoji));
+        substory.setRemoteOwnerFullName(ownerFullName);
+        substory.setSummary(buildSummary(ownerName, ownerFullName, emoji));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
@@ -150,20 +151,22 @@ public class CommentReactionInstants extends InstantsCreator {
         } else if (stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)) {
             buf.append("their");
         } else {
-            buf.append(formatNodeName(story.getRemoteNodeName()));
+            buf.append(formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()));
         }
         buf.append(" post");
         return buf.toString();
     }
 
-    private static String buildSummary(String ownerName, int emoji) {
-        return String.valueOf(Character.toChars(emoji)) + ' ' + formatNodeName(ownerName);
+    private static String buildSummary(String ownerName, String ownerFullName, int emoji) {
+        return String.valueOf(Character.toChars(emoji)) + ' ' + formatNodeName(ownerName, ownerFullName);
     }
 
     public void addingFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
+        String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
         String commentOwnerName = commentInfo != null ? commentInfo.getOwnerName() : "";
+        String commentOwnerFullName = commentInfo != null ? commentInfo.getOwnerFullName() : null;
         String commentHeading = commentInfo != null ? commentInfo.getHeading() : "";
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
@@ -172,7 +175,8 @@ public class CommentReactionInstants extends InstantsCreator {
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
         story.setRemoteCommentId(commentId);
-        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingHeading, commentOwnerName, commentHeading));
+        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading,
+                commentOwnerName, commentOwnerFullName, commentHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
@@ -181,11 +185,13 @@ public class CommentReactionInstants extends InstantsCreator {
         feedStatusUpdated();
     }
 
-    private static String buildAddingFailedSummary(String postingOwnerName, String postingHeading,
-                                                   String commentOwnerName, String commentHeading) {
+    private static String buildAddingFailedSummary(String postingOwnerName, String postingOwnerFullName,
+                                                   String postingHeading,
+                                                   String commentOwnerName, String commentOwnerFullName,
+                                                   String commentHeading) {
         return String.format("Failed to sign a reaction to %s comment \"%s\" to %s post \"%s\"",
-                formatNodeName(commentOwnerName), Util.he(commentHeading),
-                formatNodeName(postingOwnerName), Util.he(postingHeading));
+                formatNodeName(commentOwnerName, commentOwnerFullName), Util.he(commentHeading),
+                formatNodeName(postingOwnerName, postingOwnerFullName), Util.he(postingHeading));
     }
 
 }

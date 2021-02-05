@@ -78,17 +78,25 @@ public class InstantsCreator {
         webPushService.send(WebPushPacket.storyDeleted(nodeId(), id));
     }
 
-    protected static String formatNodeName(String name) {
+    protected static String formatNodeName(String name, String fullName) {
+        if (fullName != null) {
+            return spanNodeName(fullName);
+        }
+
         NodeName nodeName = NodeName.parse(name);
         if (nodeName instanceof RegisteredName) {
             RegisteredName registeredName = (RegisteredName) nodeName;
-            if (registeredName.getGeneration() != 0) {
-                return String.format("<span class=\"node-name\">%s<span class=\"generation\">%d</span></span>",
-                        registeredName.getName(), registeredName.getGeneration());
-            }
-            return String.format("<span class=\"node-name\">%s</span>", registeredName.getName());
+            return spanNodeName(registeredName.getName() + spanGeneration(registeredName.getGeneration()));
         }
+        return spanNodeName(name);
+    }
+
+    private static String spanNodeName(String name) {
         return String.format("<span class=\"node-name\">%s</span>", name);
+    }
+
+    private static String spanGeneration(int generation) {
+        return generation != 0 ? String.format("<span class=\"generation\">%d</span>", generation) : "";
     }
 
 }

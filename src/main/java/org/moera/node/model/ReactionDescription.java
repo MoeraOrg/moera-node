@@ -5,6 +5,7 @@ import org.moera.node.data.Reaction;
 public class ReactionDescription {
 
     private String ownerName;
+    private String ownerFullName;
     private boolean negative;
     private int emoji;
     private byte[] signature;
@@ -13,8 +14,9 @@ public class ReactionDescription {
     public ReactionDescription() {
     }
 
-    public ReactionDescription(String ownerName, ReactionAttributes attributes) {
+    public ReactionDescription(String ownerName, String ownerFullName, ReactionAttributes attributes) {
         this.ownerName = ownerName;
+        this.ownerFullName = ownerFullName;
         negative = attributes.isNegative();
         emoji = attributes.getEmoji();
     }
@@ -25,6 +27,14 @@ public class ReactionDescription {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public boolean isNegative() {
@@ -61,6 +71,7 @@ public class ReactionDescription {
 
     public void toReaction(Reaction reaction) {
         reaction.setOwnerName(ownerName);
+        reaction.setOwnerFullName(ownerFullName);
         reaction.setNegative(negative);
         reaction.setEmoji(emoji);
         reaction.setSignature(signature);

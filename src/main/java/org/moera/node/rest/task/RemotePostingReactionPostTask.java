@@ -61,7 +61,7 @@ public class RemotePostingReactionPostTask extends Task {
     private ReactionDescription buildReaction(PostingInfo postingInfo) {
         ReactionFingerprint fingerprint
                 = new ReactionFingerprint(nodeName, attributes, new PostingFingerprint(postingInfo));
-        ReactionDescription description = new ReactionDescription(nodeName, attributes);
+        ReactionDescription description = new ReactionDescription(nodeName, fullName, attributes);
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
         description.setSignatureVersion(ReactionFingerprint.VERSION);
         return description;

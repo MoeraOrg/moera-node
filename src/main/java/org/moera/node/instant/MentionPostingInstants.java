@@ -57,7 +57,7 @@ public class MentionPostingInstants extends InstantsCreator {
 
     private static String buildSummary(Story story, String remotePostingHeading) {
         return String.format("%s mentioned you in a post \"%s\"",
-                formatNodeName(story.getRemoteNodeName()), Util.he(remotePostingHeading));
+                formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()), Util.he(remotePostingHeading));
     }
 
 }

@@ -24,6 +24,7 @@ public abstract class Task implements Runnable {
 
     protected UUID nodeId;
     protected String nodeName;
+    protected String fullName;
     protected PrivateKey signingKey;
     protected InetAddress localAddr;
 
@@ -56,6 +57,10 @@ public abstract class Task implements Runnable {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public void setSigningKey(PrivateKey signingKey) {

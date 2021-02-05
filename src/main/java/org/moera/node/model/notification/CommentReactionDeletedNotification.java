@@ -8,8 +8,9 @@ public class CommentReactionDeletedNotification extends CommentReactionNotificat
         super(NotificationType.COMMENT_REACTION_DELETED);
     }
 
-    public CommentReactionDeletedNotification(UUID postingId, UUID commentId, String ownerName, boolean negative) {
-        super(NotificationType.COMMENT_REACTION_DELETED, postingId, commentId, ownerName, negative);
+    public CommentReactionDeletedNotification(UUID postingId, UUID commentId, String ownerName, String ownerFullName,
+                                              boolean negative) {
+        super(NotificationType.COMMENT_REACTION_DELETED, postingId, commentId, ownerName, ownerFullName, negative);
     }
 
 }

@@ -47,7 +47,8 @@ public class SubscriberInstants extends InstantsCreator {
 
     private static String buildAddedSummary(Subscriber subscriber) {
         return String.format("%s subscribed to your %s",
-                formatNodeName(subscriber.getRemoteNodeName()), Feed.getStandard(subscriber.getFeedName()).getTitle());
+                formatNodeName(subscriber.getRemoteNodeName(), subscriber.getRemoteFullName()),
+                Feed.getStandard(subscriber.getFeedName()).getTitle());
     }
 
     public void deleted(Subscriber subscriber) {
@@ -74,7 +75,8 @@ public class SubscriberInstants extends InstantsCreator {
 
     private static String buildDeletedSummary(Subscriber subscriber) {
         return String.format("%s unsubscribed from your %s",
-                formatNodeName(subscriber.getRemoteNodeName()), Feed.getStandard(subscriber.getFeedName()).getTitle());
+                formatNodeName(subscriber.getRemoteNodeName(), subscriber.getRemoteFullName()),
+                Feed.getStandard(subscriber.getFeedName()).getTitle());
     }
 
     private Story findAddedStory(String remoteNodeName) {

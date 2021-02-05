@@ -109,14 +109,14 @@ public class CommentReactionController {
         requestContext.send(Directions.single(comment.getOwnerName()),
                 new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
                         comment.getPosting().getCurrentRevision().getHeading(),
-                        comment.getCurrentRevision().getHeading(), reaction.getOwnerName(), reaction.isNegative(),
-                        reaction.getEmoji()));
+                        comment.getCurrentRevision().getHeading(), reaction.getOwnerName(), reaction.getOwnerFullName(),
+                        reaction.isNegative(), reaction.getEmoji()));
     }
 
     private void notifyDeleted(Comment comment, Reaction reaction) {
         requestContext.send(Directions.single(comment.getOwnerName()),
                 new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
-                        reaction.getOwnerName(), reaction.isNegative()));
+                        reaction.getOwnerName(), reaction.getOwnerFullName(), reaction.isNegative()));
     }
 
     @GetMapping

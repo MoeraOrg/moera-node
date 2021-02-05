@@ -116,15 +116,19 @@ public class ReplyCommentInstants extends InstantsCreator {
 
     private String buildAddedSummary(Story story, List<Story> stories) {
         StringBuilder buf = new StringBuilder();
-        String firstName = stories.get(0).getRemoteOwnerName();
-        buf.append(formatNodeName(firstName));
+        Story firstStory = stories.get(0);
+        buf.append(formatNodeName(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName()));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
                 buf.append(names.size() == 2 ? " and " : ", ");
-                String secondName = stories.stream().map(Story::getRemoteOwnerName).filter(nm -> !nm.equals(firstName))
-                        .findFirst().orElse("");
-                buf.append(formatNodeName(secondName));
+                Story secondStory = stories.stream()
+                        .filter(t -> !t.getRemoteOwnerName().equals(firstStory.getRemoteOwnerName()))
+                        .findFirst()
+                        .orElse(null);
+                if (secondStory != null) {
+                    buf.append(formatNodeName(secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName()));
+                }
             }
             if (names.size() > 2) {
                 buf.append(" and ");
@@ -138,8 +142,8 @@ public class ReplyCommentInstants extends InstantsCreator {
         if (Objects.equals(story.getRemoteNodeName(), nodeName())) {
             buf.append("your");
         } else {
-            buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)
-                    ? "their" : formatNodeName(story.getRemoteNodeName()));
+            buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstStory.getRemoteOwnerName())
+                    ? "their" : formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()));
         }
         buf.append(" post \"");
         buf.append(Util.he(story.getRemoteHeading()));

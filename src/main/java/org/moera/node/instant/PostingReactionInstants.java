@@ -58,6 +58,7 @@ public class PostingReactionInstants extends InstantsCreator {
         Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         substory.setEntry(posting);
         substory.setRemoteOwnerName(reaction.getOwnerName());
+        substory.setRemoteOwnerFullName(reaction.getOwnerFullName());
         substory.setSummary(buildSummary(reaction));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
@@ -142,18 +143,20 @@ public class PostingReactionInstants extends InstantsCreator {
     }
 
     private static String buildSummary(Reaction reaction) {
-        return String.valueOf(Character.toChars(reaction.getEmoji())) + ' ' + formatNodeName(reaction.getOwnerName());
+        return String.valueOf(Character.toChars(reaction.getEmoji())) + ' '
+                + formatNodeName(reaction.getOwnerName(), reaction.getOwnerFullName());
     }
 
     public void addingFailed(String postingId, PostingInfo postingInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
+        String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
         story.setRemotePostingId(postingId);
-        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingHeading));
+        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
@@ -162,9 +165,9 @@ public class PostingReactionInstants extends InstantsCreator {
         feedStatusUpdated();
     }
 
-    private static String buildAddingFailedSummary(String nodeName, String postingHeading) {
+    private static String buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
         return String.format("Failed to sign a reaction to %s post \"%s\"",
-                formatNodeName(nodeName), Util.he(postingHeading));
+                formatNodeName(nodeName, fullName), Util.he(postingHeading));
     }
 
 }

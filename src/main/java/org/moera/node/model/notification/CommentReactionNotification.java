@@ -7,6 +7,7 @@ public abstract class CommentReactionNotification extends Notification {
     private String postingId;
     private String commentId;
     private String ownerName;
+    private String ownerFullName;
     private boolean negative;
 
     protected CommentReactionNotification(NotificationType type) {
@@ -14,11 +15,12 @@ public abstract class CommentReactionNotification extends Notification {
     }
 
     public CommentReactionNotification(NotificationType type, UUID postingId, UUID commentId, String ownerName,
-                                       boolean negative) {
+                                       String ownerFullName, boolean negative) {
         super(type);
         this.postingId = postingId.toString();
         this.commentId = commentId.toString();
         this.ownerName = ownerName;
+        this.ownerFullName = ownerFullName;
         this.negative = negative;
     }
 
@@ -44,6 +46,14 @@ public abstract class CommentReactionNotification extends Notification {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public boolean isNegative() {

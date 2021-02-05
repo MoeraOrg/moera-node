@@ -16,6 +16,7 @@ import org.moera.node.util.Util;
 public class ReactionInfo {
 
     private String ownerName;
+    private String ownerFullName;
     private String postingId;
     private String postingRevisionId;
     private String commentId;
@@ -34,6 +35,7 @@ public class ReactionInfo {
 
     public ReactionInfo(Reaction reaction) {
         ownerName = reaction.getOwnerName();
+        ownerFullName = reaction.getOwnerFullName();
         EntryRevision entryRevision = reaction.getEntryRevision();
         Entry entry = entryRevision.getEntry();
         if (entry.getEntryType() == EntryType.POSTING) {
@@ -73,6 +75,14 @@ public class ReactionInfo {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public String getPostingId() {

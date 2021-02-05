@@ -13,8 +13,9 @@ public class CommentReactionAddedNotification extends CommentReactionNotificatio
     }
 
     public CommentReactionAddedNotification(UUID postingId, UUID commentId, String postingHeading,
-                                            String commentHeading, String ownerName, boolean negative, int emoji) {
-        super(NotificationType.COMMENT_REACTION_ADDED, postingId, commentId, ownerName, negative);
+                                            String commentHeading, String ownerName, String ownerFullName,
+                                            boolean negative, int emoji) {
+        super(NotificationType.COMMENT_REACTION_ADDED, postingId, commentId, ownerName, ownerFullName, negative);
         this.postingHeading = postingHeading;
         this.commentHeading = commentHeading;
         this.emoji = emoji;
