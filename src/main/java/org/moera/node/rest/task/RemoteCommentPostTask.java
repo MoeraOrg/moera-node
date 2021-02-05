@@ -17,7 +17,6 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.WhoAmI;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.task.Task;
@@ -62,8 +61,7 @@ public class RemoteCommentPostTask extends Task {
         initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
-            WhoAmI whoAmI = nodeApi.whoAmI(targetNodeName);
-            targetFullName = whoAmI != null ? whoAmI.getFullName() : null;
+            targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             prevCommentInfo = commentId != null ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
             String repliedToId = null;

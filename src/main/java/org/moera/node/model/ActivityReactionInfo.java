@@ -8,6 +8,7 @@ import org.moera.node.util.Util;
 public class ActivityReactionInfo {
 
     private String remoteNodeName;
+    private String remoteFullName;
     private String remotePostingId;
     private boolean negative;
     private int emoji;
@@ -18,6 +19,7 @@ public class ActivityReactionInfo {
 
     public ActivityReactionInfo(OwnReaction reaction) {
         remoteNodeName = reaction.getRemoteNodeName();
+        remoteFullName = reaction.getRemoteFullName();
         remotePostingId = reaction.getRemotePostingId();
         negative = reaction.isNegative();
         emoji = reaction.getEmoji();
@@ -30,6 +32,14 @@ public class ActivityReactionInfo {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public String getRemotePostingId() {

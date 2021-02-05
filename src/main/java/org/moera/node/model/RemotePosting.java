@@ -5,6 +5,7 @@ import java.util.Objects;
 public class RemotePosting {
 
     private String nodeName;
+    private String fullName;
     private String postingId;
 
     public String getNodeName() {
@@ -13,6 +14,14 @@ public class RemotePosting {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getPostingId() {
@@ -32,12 +41,14 @@ public class RemotePosting {
             return false;
         }
         RemotePosting that = (RemotePosting) peer;
-        return Objects.equals(nodeName, that.nodeName) && Objects.equals(postingId, that.postingId);
+        return Objects.equals(nodeName, that.nodeName)
+                && Objects.equals(fullName, that.fullName)
+                && Objects.equals(postingId, that.postingId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nodeName, postingId);
+        return Objects.hash(nodeName, fullName, postingId);
     }
 
 }

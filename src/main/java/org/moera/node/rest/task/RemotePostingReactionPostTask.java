@@ -2,7 +2,6 @@ package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
 import java.util.UUID;
-
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -27,6 +26,7 @@ public class RemotePostingReactionPostTask extends Task {
     private static Logger log = LoggerFactory.getLogger(RemotePostingReactionPostTask.class);
 
     private String targetNodeName;
+    private String targetFullName;
     private String postingId;
     private ReactionAttributes attributes;
     private PostingInfo postingInfo;
@@ -48,6 +48,7 @@ public class RemotePostingReactionPostTask extends Task {
         initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
+            targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             ReactionCreated created = nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo));
             saveReaction(created.getReaction());
@@ -77,6 +78,7 @@ public class RemotePostingReactionPostTask extends Task {
                     ownReaction.setId(UUID.randomUUID());
                     ownReaction.setNodeId(nodeId);
                     ownReaction.setRemoteNodeName(targetNodeName);
+                    ownReaction.setRemoteFullName(targetFullName);
                     ownReaction = ownReactionRepository.save(ownReaction);
                 }
                 info.toOwnReaction(ownReaction);
