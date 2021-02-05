@@ -71,7 +71,7 @@ public class PostingOperations {
         posting.setOwnerName(requestContext.nodeName());
         posting.setOwnerFullName(postingText.getOwnerFullName() != null
                 ? postingText.getOwnerFullName()
-                : requestContext.nodeFullName());
+                : requestContext.fullName());
         if (initializer != null) {
             initializer.accept(posting);
         }

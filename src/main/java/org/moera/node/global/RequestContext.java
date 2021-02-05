@@ -70,7 +70,7 @@ public interface RequestContext {
 
     String nodeName();
 
-    String nodeFullName();
+    String fullName();
 
     void send(Event event);
 

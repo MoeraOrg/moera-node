@@ -185,7 +185,7 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public String nodeFullName() {
+    public String fullName() {
         return options != null ? options.getString("profile.full-name") : null;
     }
 
