@@ -13,6 +13,7 @@ public class SubscriptionEvent extends Event {
     private String feedName;
     private String remoteSubscriberId;
     private String remoteNodeName;
+    private String remoteFullName;
     private String remoteFeedName;
     private String remotePostingId;
     private Long createdAt;
@@ -28,6 +29,7 @@ public class SubscriptionEvent extends Event {
         feedName = subscription.getFeedName();
         remoteSubscriberId = subscription.getRemoteSubscriberId();
         remoteNodeName = subscription.getRemoteNodeName();
+        remoteFullName = subscription.getRemoteFullName();
         remoteFeedName = subscription.getRemoteFeedName();
         remotePostingId = subscription.getRemoteEntryId();
         createdAt = Util.toEpochSecond(subscription.getCreatedAt());
@@ -71,6 +73,14 @@ public class SubscriptionEvent extends Event {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public String getRemoteFeedName() {

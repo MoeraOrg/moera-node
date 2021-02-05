@@ -22,6 +22,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
     private static Logger log = LoggerFactory.getLogger(RemotePostingCommentsSubscribeTask.class);
 
     private String targetNodeName;
+    private String targetFullName;
     private String postingId;
     private SubscriptionReason reason;
 
@@ -47,6 +48,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             if (subscribed) {
                 return;
             }
+            targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING_COMMENTS,
                     null, postingId);
             SubscriberInfo subscriberInfo =
@@ -57,6 +59,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             subscription.setSubscriptionType(SubscriptionType.POSTING_COMMENTS);
             subscription.setRemoteSubscriberId(subscriberInfo.getId());
             subscription.setRemoteNodeName(targetNodeName);
+            subscription.setRemoteFullName(targetFullName);
             subscription.setRemoteEntryId(postingId);
             subscription.setReason(reason);
             subscription = subscriptionRepository.save(subscription);
