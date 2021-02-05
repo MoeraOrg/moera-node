@@ -9,6 +9,7 @@ public class WhoAmI {
 
     private String nodeName;
     private boolean nodeNameChanging;
+    private String fullName;
 
     public WhoAmI() {
     }
@@ -19,6 +20,7 @@ public class WhoAmI {
         nodeNameChanging = status == OperationStatus.WAITING
                 || status == OperationStatus.ADDED
                 || status == OperationStatus.STARTED;
+        fullName = options.getString("profile.full-name");
     }
 
     public String getNodeName() {
@@ -35,6 +37,14 @@ public class WhoAmI {
 
     public void setNodeNameChanging(boolean nodeNameChanging) {
         this.nodeNameChanging = nodeNameChanging;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
 }

@@ -26,6 +26,7 @@ import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.WhoAmI;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.notification.NotificationPacket;
@@ -137,6 +138,10 @@ public class NodeApi {
         } catch (IOException e) {
             throw new BodyMappingException(e);
         }
+    }
+
+    public WhoAmI whoAmI(String nodeName) throws NodeApiException {
+        return call("GET", nodeName, "/whoami", WhoAmI.class);
     }
 
     public PostingInfo getPosting(String nodeName, String postingId) throws NodeApiException {
