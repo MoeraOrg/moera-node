@@ -12,6 +12,9 @@ public abstract class Notification implements Cloneable {
     private String senderNodeName;
 
     @JsonIgnore
+    private String senderFullName;
+
+    @JsonIgnore
     private NotificationType type;
 
     @JsonIgnore
@@ -30,6 +33,14 @@ public abstract class Notification implements Cloneable {
 
     public void setSenderNodeName(String senderNodeName) {
         this.senderNodeName = senderNodeName;
+    }
+
+    public String getSenderFullName() {
+        return senderFullName;
+    }
+
+    public void setSenderFullName(String senderFullName) {
+        this.senderFullName = senderFullName;
     }
 
     public NotificationType getType() {

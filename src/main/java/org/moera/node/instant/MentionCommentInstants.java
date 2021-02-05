@@ -22,7 +22,7 @@ public class MentionCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String remoteNodeName, String remotePostingId, String remotePostingHeading,
+    public void added(String remoteNodeName, String remoteFullName, String remotePostingId, String remotePostingHeading,
                       String remoteOwnerName, String remoteCommentId, String remoteCommentHeading) {
         Story story = findStory(remoteNodeName, remotePostingId, remoteCommentId);
         if (story != null) {
@@ -31,6 +31,7 @@ public class MentionCommentInstants extends InstantsCreator {
         story = new Story(UUID.randomUUID(), nodeId(), StoryType.MENTION_COMMENT);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
+        story.setRemoteFullName(remoteFullName);
         story.setRemotePostingId(remotePostingId);
         story.setRemoteOwnerName(remoteOwnerName);
         story.setRemoteCommentId(remoteCommentId);

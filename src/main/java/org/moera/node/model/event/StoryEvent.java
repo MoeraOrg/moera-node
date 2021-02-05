@@ -25,6 +25,7 @@ public class StoryEvent extends Event {
     private String summary;
     private String trackingId;
     private String remoteNodeName;
+    private String remoteFullName;
     private String remotePostingId;
     private String remoteCommentId;
     private Map<String, String[]> operations;
@@ -50,6 +51,7 @@ public class StoryEvent extends Event {
             trackingId = story.getTrackingId().toString();
         }
         remoteNodeName = story.getRemoteNodeName();
+        remoteFullName = story.getRemoteFullName();
         remotePostingId = story.getRemotePostingId();
         remoteCommentId = story.getRemoteCommentId();
         summary = story.getSummary();
@@ -153,6 +155,14 @@ public class StoryEvent extends Event {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public String getRemotePostingId() {

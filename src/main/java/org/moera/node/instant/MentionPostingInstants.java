@@ -22,7 +22,8 @@ public class MentionPostingInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String remoteNodeName, String remotePostingId, String remotePostingHeading) {
+    public void added(String remoteNodeName, String remoteFullName, String remotePostingId,
+                      String remotePostingHeading) {
         Story story = findStory(remoteNodeName, remotePostingId);
         if (story != null) {
             return;
@@ -30,6 +31,7 @@ public class MentionPostingInstants extends InstantsCreator {
         story = new Story(UUID.randomUUID(), nodeId(), StoryType.MENTION_POSTING);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
+        story.setRemoteFullName(remoteFullName);
         story.setRemotePostingId(remotePostingId);
         story.setSummary(buildSummary(story, remotePostingHeading));
         storyOperations.updateMoment(story);

@@ -144,6 +144,7 @@ public class CommentInstants extends InstantsCreator {
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
+        story.setRemoteFullName(postingOwnerFullName);
         story.setRemotePostingId(postingId);
         story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
         story.setPublishedAt(Util.now());
@@ -163,6 +164,7 @@ public class CommentInstants extends InstantsCreator {
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
+        story.setRemoteFullName(postingOwnerFullName);
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
         story.setSummary(

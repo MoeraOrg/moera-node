@@ -33,7 +33,7 @@ public class RemoteCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String remoteNodeName, String remotePostingId, String remotePostingHeading,
+    public void added(String remoteNodeName, String remoteFullName, String remotePostingId, String remotePostingHeading,
                       String remoteOwnerName, String remoteCommentId, String remoteCommentHeading,
                       SubscriptionReason reason) {
         if (remoteOwnerName.equals(nodeName())) {
@@ -55,6 +55,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             story = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(remoteNodeName);
+            story.setRemoteFullName(remoteFullName);
             story.setRemotePostingId(remotePostingId);
             story.setRemoteHeading(remotePostingHeading);
             story.setMoment(0L);
@@ -63,6 +64,7 @@ public class RemoteCommentInstants extends InstantsCreator {
 
         Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
         substory.setRemoteNodeName(remoteNodeName);
+        substory.setRemoteFullName(remoteFullName);
         substory.setRemotePostingId(remotePostingId);
         substory.setRemoteOwnerName(remoteOwnerName);
         substory.setRemoteCommentId(remoteCommentId);

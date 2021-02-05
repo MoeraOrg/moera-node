@@ -26,6 +26,7 @@ public class StoryInfo {
     private PostingInfo posting;
     private CommentInfo comment;
     private String remoteNodeName;
+    private String remoteFullName;
     private String remotePostingId;
     private String remoteCommentId;
     private Map<String, String[]> operations;
@@ -67,12 +68,14 @@ public class StoryInfo {
 
             case MENTION_POSTING:
                 info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
                 info.setRemotePostingId(story.getRemotePostingId());
                 break;
 
             case SUBSCRIBER_ADDED:
             case SUBSCRIBER_DELETED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
                 break;
 
             case COMMENT_ADDED:
@@ -86,6 +89,7 @@ public class StoryInfo {
             case COMMENT_REACTION_ADDED_NEGATIVE:
             case REMOTE_COMMENT_ADDED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 break;
@@ -203,6 +207,14 @@ public class StoryInfo {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
     }
 
     public String getRemotePostingId() {

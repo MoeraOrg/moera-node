@@ -9,6 +9,8 @@ public class NotificationPacket {
     @NotBlank
     private String nodeName;
 
+    private String fullName;
+
     private Long createdAt;
 
     @NotBlank
@@ -34,6 +36,14 @@ public class NotificationPacket {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public Long getCreatedAt() {

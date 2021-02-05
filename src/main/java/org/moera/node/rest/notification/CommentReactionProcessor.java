@@ -20,9 +20,10 @@ public class CommentReactionProcessor {
     @NotificationMapping(NotificationType.COMMENT_REACTION_ADDED)
     @Transactional
     public void added(CommentReactionAddedNotification notification) {
-        commentReactionInstants.added(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getCommentId(), notification.getOwnerName(), notification.getOwnerFullName(),
-                notification.getCommentHeading(), notification.isNegative(), notification.getEmoji());
+        commentReactionInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                notification.getPostingId(), notification.getCommentId(), notification.getOwnerName(),
+                notification.getOwnerFullName(), notification.getCommentHeading(), notification.isNegative(),
+                notification.getEmoji());
     }
 
     @NotificationMapping(NotificationType.COMMENT_REACTION_DELETED)

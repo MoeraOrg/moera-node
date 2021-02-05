@@ -19,9 +19,10 @@ public class ReplyCommentProcessor {
     @NotificationMapping(NotificationType.REPLY_COMMENT_ADDED)
     @Transactional
     public void added(ReplyCommentAddedNotification notification) {
-        replyCommentInstants.added(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getCommentId(), notification.getRepliedToId(), notification.getCommentOwnerName(),
-                notification.getPostingHeading(), notification.getRepliedToHeading());
+        replyCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                notification.getPostingId(), notification.getCommentId(), notification.getRepliedToId(),
+                notification.getCommentOwnerName(), notification.getPostingHeading(),
+                notification.getRepliedToHeading());
     }
 
     @NotificationMapping(NotificationType.REPLY_COMMENT_DELETED)

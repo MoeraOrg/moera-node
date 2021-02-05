@@ -37,6 +37,7 @@ public class SubscriberInstants extends InstantsCreator {
         story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_ADDED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
+        story.setRemoteFullName(subscriber.getRemoteFullName());
         story.setSummary(buildAddedSummary(subscriber));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
@@ -65,6 +66,7 @@ public class SubscriberInstants extends InstantsCreator {
         story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_DELETED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
+        story.setRemoteFullName(subscriber.getRemoteFullName());
         story.setSummary(buildDeletedSummary(subscriber));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);

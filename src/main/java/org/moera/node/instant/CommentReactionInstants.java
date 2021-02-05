@@ -34,8 +34,8 @@ public class CommentReactionInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String postingId, String commentId, String ownerName, String ownerFullName,
-                      String commentHeading, boolean negative, int emoji) {
+    public void added(String nodeName, String fullName, String postingId, String commentId, String ownerName,
+                      String ownerFullName, String commentHeading, boolean negative, int emoji) {
         if (ownerName.equals(nodeName())) {
             return;
         }
@@ -52,6 +52,7 @@ public class CommentReactionInstants extends InstantsCreator {
             story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
+            story.setRemoteFullName(fullName);
             story.setRemotePostingId(postingId);
             story.setRemoteCommentId(commentId);
             story.setRemoteHeading(commentHeading);
@@ -61,6 +62,7 @@ public class CommentReactionInstants extends InstantsCreator {
 
         Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setRemoteNodeName(nodeName);
+        story.setRemoteFullName(fullName);
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
         substory.setRemoteOwnerName(ownerName);
@@ -172,6 +174,7 @@ public class CommentReactionInstants extends InstantsCreator {
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
+        story.setRemoteFullName(postingOwnerFullName);
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
         story.setRemoteCommentId(commentId);

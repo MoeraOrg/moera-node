@@ -31,8 +31,8 @@ public class MentionPostingProcessor {
     @NotificationMapping(NotificationType.MENTION_POSTING_ADDED)
     @Transactional
     public void added(MentionPostingAddedNotification notification) {
-        mentionPostingInstants.added(
-                notification.getSenderNodeName(), notification.getPostingId(), notification.getHeading());
+        mentionPostingInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                notification.getPostingId(), notification.getHeading());
         var task = new RemotePostingCommentsSubscribeTask(
                 notification.getSenderNodeName(), notification.getPostingId(), SubscriptionReason.MENTION);
         taskAutowire.autowire(task);

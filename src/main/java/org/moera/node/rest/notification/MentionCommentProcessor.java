@@ -19,9 +19,9 @@ public class MentionCommentProcessor {
     @NotificationMapping(NotificationType.MENTION_COMMENT_ADDED)
     @Transactional
     public void added(MentionCommentAddedNotification notification) {
-        mentionCommentInstants.added(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getPostingHeading(), notification.getCommentOwnerName(), notification.getCommentId(),
-                notification.getCommentHeading());
+        mentionCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                notification.getPostingId(), notification.getPostingHeading(), notification.getCommentOwnerName(),
+                notification.getCommentId(), notification.getCommentHeading());
     }
 
     @NotificationMapping(NotificationType.MENTION_COMMENT_DELETED)

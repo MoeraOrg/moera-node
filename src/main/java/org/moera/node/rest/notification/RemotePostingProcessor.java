@@ -54,9 +54,9 @@ public class RemotePostingProcessor {
             }
         }
         remoteCommentInstants.added(
-                notification.getSenderNodeName(), notification.getPostingId(), notification.getPostingHeading(),
-                notification.getCommentOwnerName(), notification.getCommentId(), notification.getCommentHeading(),
-                subscription.getReason());
+                notification.getSenderNodeName(), notification.getSenderFullName(), notification.getPostingId(),
+                notification.getPostingHeading(), notification.getCommentOwnerName(), notification.getCommentId(),
+                notification.getCommentHeading(), subscription.getReason());
     }
 
     @NotificationMapping(NotificationType.POSTING_COMMENT_DELETED)
