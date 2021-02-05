@@ -29,6 +29,7 @@ public class PostingInfo implements ReactionsInfo {
     private String receiverName;
     private String receiverPostingId;
     private String ownerName;
+    private String ownerFullName;
     private Body bodyPreview;
     private String saneBodyPreview;
     private Body bodySrc;
@@ -94,6 +95,7 @@ public class PostingInfo implements ReactionsInfo {
         receiverName = posting.getReceiverName();
         receiverPostingId = posting.getReceiverEntryId();
         ownerName = posting.getOwnerName();
+        ownerFullName = posting.getOwnerFullName();
         bodyPreview = new Body(revision.getBodyPreview());
         if (includeSource) {
             bodySrc = new Body(revision.getBodySrc());
@@ -222,6 +224,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public Body getBodyPreview() {
@@ -515,6 +525,7 @@ public class PostingInfo implements ReactionsInfo {
         posting.setEditedAt(Util.toTimestamp(editedAt));
         posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
         posting.setOwnerName(ownerName);
+        posting.setOwnerFullName(ownerFullName);
         posting.setReceiverCreatedAt(Util.toTimestamp(isOriginal() ? createdAt : receiverCreatedAt));
         posting.setReceiverEditedAt(Util.toTimestamp(isOriginal() ? editedAt : receiverEditedAt));
         posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());

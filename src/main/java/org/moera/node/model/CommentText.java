@@ -19,6 +19,8 @@ public class CommentText {
 
     private String ownerName;
 
+    private String ownerFullName;
+
     private String bodyPreview;
 
     @Size(max = 65535)
@@ -73,6 +75,14 @@ public class CommentText {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public String getBodyPreview() {

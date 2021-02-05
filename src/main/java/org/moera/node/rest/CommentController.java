@@ -171,8 +171,8 @@ public class CommentController {
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
             requestContext.send(Directions.postingCommentsSubscribers(posting.getId()),
                     new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
-                            comment.getId(), comment.getOwnerName(), comment.getCurrentRevision().getHeading(),
-                            repliedToId));
+                            comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                            comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
         requestContext.send(new CommentAddedEvent(comment));
@@ -222,7 +222,8 @@ public class CommentController {
             requestContext.send(Directions.postingCommentsSubscribers(postingId),
                     new PostingCommentAddedNotification(postingId,
                             comment.getPosting().getCurrentRevision().getHeading(), comment.getId(),
-                            comment.getOwnerName(), comment.getCurrentRevision().getHeading(), repliedToId));
+                            comment.getOwnerName(), comment.getOwnerFullName(),
+                            comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
         requestContext.send(new CommentUpdatedEvent(comment));
@@ -426,7 +427,8 @@ public class CommentController {
         commentOperations.deleteComment(comment);
         commentInstants.deleted(comment);
         requestContext.send(Directions.postingCommentsSubscribers(postingId),
-                new PostingCommentDeletedNotification(postingId, comment.getId(), comment.getOwnerName()));
+                new PostingCommentDeletedNotification(
+                        postingId, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName()));
         requestContext.send(new CommentDeletedEvent(comment));
 
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());

@@ -14,8 +14,9 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
     }
 
     public PostingCommentAddedNotification(UUID postingId, String postingHeading, UUID commentId,
-                                           String commentOwnerName, String commentHeading, UUID commentRepliedTo) {
-        super(NotificationType.POSTING_COMMENT_ADDED, postingId, commentId, commentOwnerName);
+                                           String commentOwnerName, String commentOwnerFullName, String commentHeading,
+                                           UUID commentRepliedTo) {
+        super(NotificationType.POSTING_COMMENT_ADDED, postingId, commentId, commentOwnerName, commentOwnerFullName);
         this.postingHeading = postingHeading;
         this.commentHeading = commentHeading;
         this.commentRepliedTo = Objects.toString(commentRepliedTo, null);

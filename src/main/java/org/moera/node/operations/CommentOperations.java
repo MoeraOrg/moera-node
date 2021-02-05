@@ -74,11 +74,13 @@ public class CommentOperations {
         comment.setId(UUID.randomUUID());
         comment.setNodeId(requestContext.nodeId());
         comment.setOwnerName(commentText.getOwnerName());
+        comment.setOwnerFullName(commentText.getOwnerFullName());
         comment.setPosting(posting);
         if (repliedTo != null) {
             comment.setRepliedTo(repliedTo);
             comment.setRepliedToRevision(repliedTo.getCurrentRevision());
             comment.setRepliedToName(repliedTo.getOwnerName());
+            comment.setRepliedToFullName(repliedTo.getOwnerFullName());
             comment.setRepliedToHeading(repliedTo.getCurrentRevision().getHeading());
             comment.setRepliedToDigest(repliedTo.getCurrentRevision().getDigest());
         }
@@ -125,7 +127,7 @@ public class CommentOperations {
         comment = commentRepository.saveAndFlush(comment);
         commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
         notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), current, latest);
+        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(), current, latest);
 
         return comment;
     }
@@ -175,7 +177,7 @@ public class CommentOperations {
         }
         requestContext.send(Directions.single(comment.getRepliedToName()),
                 new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        posting.getCurrentRevision().getHeading(), comment.getOwnerName(),
+                        posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
                         comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
     }
 
@@ -185,27 +187,28 @@ public class CommentOperations {
         }
         requestContext.send(Directions.single(comment.getRepliedToName()),
                 new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        comment.getOwnerName()));
+                        comment.getOwnerName(), comment.getOwnerFullName()));
     }
 
-    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, EntryRevision current,
-                                 EntryRevision latest) {
+    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
+                                 EntryRevision current, EntryRevision latest) {
         Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
         Set<String> latestMentions = latest != null
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
-        notifyMentioned(posting, commentId, ownerName, current.getHeading(), currentMentions, latestMentions);
+        notifyMentioned(posting, commentId, ownerName, ownerFullName, current.getHeading(), currentMentions,
+                latestMentions);
     }
 
-    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String currentHeading,
-                                 Set<String> currentMentions, Set<String> latestMentions) {
+    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
+                                 String currentHeading, Set<String> currentMentions, Set<String> latestMentions) {
         currentMentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !latestMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
                         new MentionCommentAddedNotification(posting.getId(), commentId,
-                                posting.getCurrentRevision().getHeading(), ownerName, currentHeading)));
+                                posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
                 .filter(m -> !currentMentions.contains(m))
@@ -233,8 +236,8 @@ public class CommentOperations {
 
         Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
         notifyReplyDeleted(comment.getPosting(), comment);
-        notifyMentioned(comment.getPosting(), comment.getId(), requestContext.getClientName(), null,
-                Collections.emptySet(), latestMentions);
+        notifyMentioned(comment.getPosting(), comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                null, Collections.emptySet(), latestMentions);
 
         requestContext.send(new CommentDeletedEvent(comment));
         requestContext.send(new PostingCommentsChangedEvent(comment.getPosting()));

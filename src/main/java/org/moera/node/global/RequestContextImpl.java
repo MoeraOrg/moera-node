@@ -185,6 +185,11 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public String nodeFullName() {
+        return options != null ? options.getString("profile.full-name") : null;
+    }
+
+    @Override
     public void send(Event event) {
         afterCommitEvents.add(event);
     }

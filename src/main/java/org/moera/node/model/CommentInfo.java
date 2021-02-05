@@ -19,6 +19,7 @@ public class CommentInfo implements ReactionsInfo {
 
     private String id;
     private String ownerName;
+    private String ownerFullName;
     private String postingId;
     private String postingRevisionId;
     private String revisionId;
@@ -65,6 +66,7 @@ public class CommentInfo implements ReactionsInfo {
     public CommentInfo(Comment comment, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
         id = comment.getId().toString();
         ownerName = comment.getOwnerName();
+        ownerFullName = comment.getOwnerFullName();
         postingId = comment.getPosting().getId().toString();
         postingRevisionId = revision.getParent().getId().toString();
         revisionId = revision.getId().toString();
@@ -126,6 +128,14 @@ public class CommentInfo implements ReactionsInfo {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public String getPostingId() {

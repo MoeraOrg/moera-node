@@ -17,6 +17,9 @@ import org.springframework.util.StringUtils;
 
 public class PostingText {
 
+    @Size(max = 96)
+    private String ownerFullName;
+
     @Size(max = 256 * 1024 * 1024)
     private String bodySrc;
 
@@ -32,6 +35,14 @@ public class PostingText {
     private List<StoryAttributes> publications;
 
     public PostingText() {
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public String getBodySrc() {

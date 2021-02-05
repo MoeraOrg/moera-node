@@ -58,6 +58,7 @@ public class CommentInstants extends InstantsCreator {
         Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_ADDED);
         substory.setEntry(comment);
         substory.setRemoteOwnerName(comment.getOwnerName());
+        substory.setRemoteOwnerFullName(comment.getOwnerFullName());
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);

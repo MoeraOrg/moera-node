@@ -6,6 +6,7 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
 
     private String postingHeading;
     private String commentOwnerName;
+    private String commentOwnerFullName;
     private String commentHeading;
 
     public MentionCommentAddedNotification() {
@@ -13,10 +14,12 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     }
 
     public MentionCommentAddedNotification(UUID postingId, UUID commentId, String postingHeading,
-                                           String commentOwnerName, String commentHeading) {
+                                           String commentOwnerName, String commentOwnerFullName,
+                                           String commentHeading) {
         super(NotificationType.MENTION_COMMENT_ADDED, postingId, commentId);
         this.postingHeading = postingHeading;
         this.commentOwnerName = commentOwnerName;
+        this.commentOwnerFullName = commentOwnerFullName;
         this.commentHeading = commentHeading;
     }
 
@@ -34,6 +37,14 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
 
     public void setCommentOwnerName(String commentOwnerName) {
         this.commentOwnerName = commentOwnerName;
+    }
+
+    public String getCommentOwnerFullName() {
+        return commentOwnerFullName;
+    }
+
+    public void setCommentOwnerFullName(String commentOwnerFullName) {
+        this.commentOwnerFullName = commentOwnerFullName;
     }
 
     public String getCommentHeading() {

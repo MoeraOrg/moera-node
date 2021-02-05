@@ -70,6 +70,8 @@ public interface RequestContext {
 
     String nodeName();
 
+    String nodeFullName();
+
     void send(Event event);
 
     List<Event> getAfterCommitEvents();
