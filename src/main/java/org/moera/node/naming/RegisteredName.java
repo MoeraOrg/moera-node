@@ -31,8 +31,7 @@ public class RegisteredName implements NodeName {
         if (StringUtils.isEmpty(registeredName)) {
             return registeredName;
         }
-        RegisteredName rn = parse(registeredName);
-        return rn.getGeneration() != 0 ? rn.toString() : rn.getName();
+        return parse(registeredName).toShortString();
     }
 
     public String getName() {
@@ -54,6 +53,10 @@ public class RegisteredName implements NodeName {
     @Override
     public String toString() {
         return toString(name, generation);
+    }
+
+    public String toShortString() {
+        return generation != 0 ? toString() : name;
     }
 
     public static String toString(String name, int generation) {

@@ -19,10 +19,10 @@
         {{/if}}
         <div class="owner-line">
             <span class="owner">
-                {{nodename posting.ownerName}}
+                {{nodename posting.ownerName posting.ownerFullName}}
                 {{#if posting.receiverName}}
                     {{#ifne posting.receiverName posting.ownerName}}
-                        &#x25b8; {{nodename posting.receiverName}}
+                        &#x25b8; {{nodename posting.receiverName posting.receiverFullName}}
                     {{/ifne}}
                 {{/if}}
             </span>

@@ -39,10 +39,10 @@
             <a class="posting-source" href="{{originalHref}}"><i class="fas fa-retweet"></i></a>
         {{/if}}
         <span class="owner">
-            {{nodename posting.ownerName}}
+            {{nodename posting.ownerName posting.ownerFullName}}
             {{#if posting.receiverName}}
                 {{#ifne posting.receiverName posting.ownerName}}
-                    &#x25b8; {{nodename posting.receiverName}}
+                    &#x25b8; {{nodename posting.receiverName posting.receiverFullName}}
                 {{/ifne}}
             {{/if}}
         </span>
@@ -98,7 +98,7 @@
                 {{/ifeq}}
                 <div class="comment entry {{focusedClass}} {{tsClass}}">
                     <div class="owner-line">
-                        <span class="owner">{{nodename ownerName}}</span>
+                        <span class="owner">{{nodename ownerName ownerFullName}}</span>
                         <span class="date">
                             <a href="/post/{{posting.id}}?comment={{id}}">{{cal "dd-MM-yyyy HH:mm" es=createdAt
                                                                                 fromNow="true"}}</a>
@@ -112,7 +112,7 @@
                             <div class="replied-to">
                                 <a href="/post/{{posting.id}}?comment={{repliedTo.id}}">
                                     <i class="icon fas fa-reply"></i>&nbsp;
-                                    {{nodename repliedTo.name linked=false}}
+                                    {{nodename repliedTo.name repliedTo.fullName linked=false}}
                                     <span class="heading">{{repliedTo.heading}}</span>
                                 </a>
                             </div>

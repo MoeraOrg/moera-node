@@ -31,7 +31,7 @@ public class MoeraHelperSource {
     @Inject
     private NamingCache namingCache;
 
-    public CharSequence nodename(String nodeName, Options options) {
+    public CharSequence nodename(String nodeName, String fullName, Options options) {
         boolean linked = HelperUtil.boolArg(options.hash("linked", "true"));
 
         StringBuilder buf = new StringBuilder();
@@ -49,14 +49,21 @@ public class MoeraHelperSource {
                 HelperUtil.appendAttr(buf, "href", details.getNodeUri());
             }
             HelperUtil.appendAttr(buf, "class", "node-name");
+            if (!StringUtils.isEmpty(fullName)) {
+                HelperUtil.appendAttr(buf, "title", "@" + Util.he(registeredName.toShortString()));
+            }
             buf.append('>');
 
-            HelperUtil.safeAppend(buf, registeredName.getName());
+            if (!StringUtils.isEmpty(fullName)) {
+                HelperUtil.safeAppend(buf, fullName);
+            } else {
+                HelperUtil.safeAppend(buf, registeredName.getName());
 
-            if (registeredName.getGeneration() != 0) {
-                buf.append("<sub class=\"generation\">");
-                buf.append(registeredName.getGeneration());
-                buf.append("</sub>");
+                if (registeredName.getGeneration() != 0) {
+                    buf.append("<sub class=\"generation\">");
+                    buf.append(registeredName.getGeneration());
+                    buf.append("</sub>");
+                }
             }
 
             buf.append(String.format("</%s>", tag));
