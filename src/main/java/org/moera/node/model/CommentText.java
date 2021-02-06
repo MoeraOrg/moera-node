@@ -47,8 +47,10 @@ public class CommentText {
     public CommentText() {
     }
 
-    public CommentText(String ownerName, CommentSourceText sourceText, TextConverter textConverter) {
+    public CommentText(String ownerName, String ownerFullName, CommentSourceText sourceText,
+                       TextConverter textConverter) {
         this.ownerName = ownerName;
+        this.ownerFullName = ownerFullName;
         bodySrc = sourceText.getBodySrc();
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
         createdAt = Util.toEpochSecond(Util.now());

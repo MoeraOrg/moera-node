@@ -233,7 +233,7 @@ public class Picker extends Task {
     private void subscribe(String receiverName, String receiverFullName, String receiverPostingId,
                            Timestamp lastUpdatedAt, List<Event> events) throws NodeApiException {
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
-                receiverPostingId, Util.toEpochSecond(lastUpdatedAt));
+                receiverPostingId, fullName, Util.toEpochSecond(lastUpdatedAt));
         try {
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(receiverName, generateCarte(receiverName), description);

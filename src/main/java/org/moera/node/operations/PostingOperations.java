@@ -69,9 +69,7 @@ public class PostingOperations {
         posting.setId(UUID.randomUUID());
         posting.setNodeId(requestContext.nodeId());
         posting.setOwnerName(requestContext.nodeName());
-        posting.setOwnerFullName(postingText.getOwnerFullName() != null
-                ? postingText.getOwnerFullName()
-                : requestContext.fullName());
+        posting.setOwnerFullName(requestContext.fullName());
         if (initializer != null) {
             initializer.accept(posting);
         }

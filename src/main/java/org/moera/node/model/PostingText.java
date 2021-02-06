@@ -113,6 +113,9 @@ public class PostingText {
         if (reactionTotalsVisible != null) {
             entry.setReactionTotalsVisible(reactionTotalsVisible);
         }
+        if (ownerFullName != null) {
+            entry.setOwnerFullName(ownerFullName);
+        }
     }
 
     public boolean sameAsEntry(Entry entry) {
@@ -122,7 +125,8 @@ public class PostingText {
                     && (acceptedReactions.getNegative() == null
                         || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
                 && (reactionsVisible == null || reactionsVisible.equals(entry.isReactionsVisible()))
-                && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()));
+                && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()))
+                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()));
     }
 
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {

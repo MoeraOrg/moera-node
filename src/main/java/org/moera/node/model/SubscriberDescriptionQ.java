@@ -9,16 +9,18 @@ public class SubscriberDescriptionQ {
     private SubscriptionType type;
     private String feedName;
     private String postingId;
+    private String ownerFullName;
     private Long lastUpdatedAt;
 
     public SubscriberDescriptionQ() {
     }
 
-    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId) {
-        this(type, feedName, postingId, Instant.now().getEpochSecond());
+    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName) {
+        this(type, feedName, postingId, ownerFullName, Instant.now().getEpochSecond());
     }
 
-    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, Long lastUpdatedAt) {
+    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName,
+                                  Long lastUpdatedAt) {
         this.type = type;
         this.feedName = feedName;
         this.postingId = postingId;
@@ -47,6 +49,14 @@ public class SubscriberDescriptionQ {
 
     public void setPostingId(String postingId) {
         this.postingId = postingId;
+    }
+
+    public String getOwnerFullName() {
+        return ownerFullName;
+    }
+
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
     public Long getLastUpdatedAt() {

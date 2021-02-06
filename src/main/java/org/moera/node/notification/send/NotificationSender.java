@@ -155,6 +155,7 @@ public class NotificationSender extends Task {
         NotificationPacket packet = new NotificationPacket();
         packet.setId(UUID.randomUUID().toString());
         packet.setNodeName(nodeName);
+        packet.setFullName(fullName);
         packet.setCreatedAt(Util.toEpochSecond(Util.now()));
         packet.setType(notification.getType().getValue());
         packet.setNotification(objectMapper.writeValueAsString(notification));
