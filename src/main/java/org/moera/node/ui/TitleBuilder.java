@@ -20,7 +20,8 @@ public class TitleBuilder {
             buf.append(' ');
             String name = "";
             try {
-                name = requestContext.getPublic().nodeName();
+                RequestContext rcp = requestContext.getPublic();
+                name = rcp.fullName() != null ? rcp.fullName() : rcp.nodeName();
             } catch (Exception e) {
             }
             if (!StringUtils.isEmpty(name)) {
