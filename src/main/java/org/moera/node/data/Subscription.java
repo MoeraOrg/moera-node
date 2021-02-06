@@ -146,7 +146,6 @@ public class Subscription {
     public RemotePosting getRemotePosting() {
         RemotePosting remotePosting = new RemotePosting();
         remotePosting.setNodeName(remoteNodeName);
-        remotePosting.setFullName(remoteFullName);
         remotePosting.setPostingId(remoteEntryId);
         return remotePosting;
     }

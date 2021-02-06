@@ -110,7 +110,6 @@ public class OwnReaction {
     public RemotePosting getRemotePosting() {
         RemotePosting remotePosting = new RemotePosting();
         remotePosting.setNodeName(remoteNodeName);
-        remotePosting.setFullName(remoteFullName);
         remotePosting.setPostingId(remotePostingId);
         return remotePosting;
     }
