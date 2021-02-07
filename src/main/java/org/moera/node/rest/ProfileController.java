@@ -5,6 +5,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
+import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.model.event.ProfileUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
@@ -41,6 +42,7 @@ public class ProfileController {
 
         profile.toOptions(requestContext.getOptions());
         requestContext.send(new ProfileUpdatedEvent());
+        requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.fullName()));
         return new ProfileInfo(requestContext);
     }
 
