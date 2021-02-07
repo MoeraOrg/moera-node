@@ -35,13 +35,17 @@ public class MentionsNodeRenderer implements NodeRenderer {
         if (context.isDoNotRenderLinks()) {
             html.text(node.getChars());
         } else {
-            String name = NodeName.parse(node.getText().toString()).toString();
+            String name = NodeName.parse(node.getName().toString()).toString();
             html.srcPos(node.getChars())
                     .attr("href", NamingCache.getRedirector(name))
                     .attr("data-nodename", name)
                     .withAttr()
                     .tag("a");
-            html.text(node.getChars());
+            if (node.getText().isNull()) {
+                html.text(node.getChars());
+            } else {
+                html.text(node.getText());
+            }
             html.tag("/a");
         }
     }

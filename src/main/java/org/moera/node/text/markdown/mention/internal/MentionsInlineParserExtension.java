@@ -40,12 +40,14 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
 
         BasedSequence inputText = inlineParser.getInput();
         final int nameStartingSequence = startingIndex + 1;
+        BasedSequence openMarker = inputText.subSequence(startingIndex, nameStartingSequence);
+
         int i = nameStartingSequence;
         // the name itself
         while (i < inputText.length() && Rules.isNameCharacterValid(inputText.charAt(i))) {
             i++;
         }
-        // generation prefix
+        // generation suffix
         if (i + 1 < inputText.length() && inputText.charAt(i) == '_' && Character.isDigit(inputText.charAt(i + 1))) {
             i++;
             while (i < inputText.length() && Character.isDigit(inputText.charAt(i))) {
@@ -66,10 +68,28 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
             return false; // Short latin names are reserved
         }
 
-        inlineParser.setIndex(i);
+        MentionNode mentionNode;
+        if (i + 1 < inputText.length() && inputText.charAt(i) == '[') {
+            int j = i;
+            while (j < inputText.length() && inputText.charAt(j) != ']') {
+                j++;
+            }
+            if (j < inputText.length()) {
+                BasedSequence textOpen = inputText.subSequence(i, i + 1);
+                BasedSequence text = inputText.subSequence(i + 1, j);
+                BasedSequence textClose = inputText.subSequence(j, j + 1);
+                mentionNode = new MentionNode(openMarker, foundName, textOpen, text, textClose);
+                inlineParser.setIndex(j + 1);
+            } else {
+                mentionNode = new MentionNode(openMarker, foundName);
+                inlineParser.setIndex(i);
+            }
+        } else {
+            mentionNode = new MentionNode(openMarker, foundName);
+            inlineParser.setIndex(i);
+        }
+
         inlineParser.flushTextNode();
-        BasedSequence openMarker = inputText.subSequence(startingIndex, nameStartingSequence);
-        MentionNode mentionNode = new MentionNode(openMarker, foundName);
         inlineParser.getBlock().appendChild(mentionNode);
         return true;
     }
