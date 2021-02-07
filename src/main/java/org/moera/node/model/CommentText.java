@@ -181,14 +181,18 @@ public class CommentText {
                 entry.setAcceptedReactionsNegative(acceptedReactions.getNegative());
             }
         }
+        if (ownerFullName != null) {
+            entry.setOwnerFullName(ownerFullName);
+        }
     }
 
     public boolean sameAsEntry(Entry entry) {
-        return acceptedReactions == null
+        return (acceptedReactions == null
                 || (acceptedReactions.getPositive() == null
                         || acceptedReactions.getPositive().equals(entry.getAcceptedReactionsPositive()))
                     && (acceptedReactions.getNegative() == null
-                        || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative()));
+                        || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
+               && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()));
     }
 
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter) {

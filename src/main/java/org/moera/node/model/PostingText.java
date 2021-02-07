@@ -124,9 +124,9 @@ public class PostingText {
                         || acceptedReactions.getPositive().equals(entry.getAcceptedReactionsPositive()))
                     && (acceptedReactions.getNegative() == null
                         || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
-                && (reactionsVisible == null || reactionsVisible.equals(entry.isReactionsVisible()))
-                && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()))
-                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()));
+               && (reactionsVisible == null || reactionsVisible.equals(entry.isReactionsVisible()))
+               && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()))
+               && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()));
     }
 
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {
