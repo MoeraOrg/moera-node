@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.util.Locale;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
@@ -17,6 +18,7 @@ import org.moera.node.option.exception.OptionValueException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.validation.ObjectError;
@@ -123,7 +125,8 @@ public class ExceptionsControllerAdvice {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public Result authenticationRequired(AuthenticationException e) {
+    public Result authenticationRequired(AuthenticationException e, HttpServletResponse response) {
+        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Node\"");
         String errorCode = "authentication.required";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message);
@@ -131,7 +134,8 @@ public class ExceptionsControllerAdvice {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Result authenticationInvalid(InvalidTokenException e) {
+    public Result authenticationInvalid(InvalidTokenException e, HttpServletResponse response) {
+        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Node\" error=\"invalid_token\"");
         String errorCode = "authentication.invalid";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message);
@@ -139,7 +143,8 @@ public class ExceptionsControllerAdvice {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Result incorrectSignature(IncorrectSignatureException e) {
+    public Result incorrectSignature(IncorrectSignatureException e, HttpServletResponse response) {
+        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Node\"");
         String errorCode = "authentication.incorrect-signature";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message);

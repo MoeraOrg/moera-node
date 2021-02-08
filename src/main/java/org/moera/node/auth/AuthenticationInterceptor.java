@@ -15,6 +15,7 @@ import org.moera.node.global.UserAgentOs;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -22,6 +23,12 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 @Component
 public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
+
+    private static class Secrets {
+        public String rootSecret;
+        public String token;
+        public String carte;
+    }
 
     private static Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
 
@@ -61,20 +68,44 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
         return true;
     }
 
+    private Secrets extractSecrets(HttpServletRequest request) {
+        Secrets secrets = new Secrets();
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (!StringUtils.isEmpty(authHeader)) {
+            String[] parts = StringUtils.split(authHeader, " ");
+            if (parts != null && parts[0].trim().equalsIgnoreCase("bearer")) {
+                String auth = parts[1].trim();
+                if (auth.startsWith("secret:")) {
+                    secrets.rootSecret = auth.substring(7);
+                } else if (auth.startsWith("token:")) {
+                    secrets.token = auth.substring(6);
+                } else if (auth.startsWith("carte:")) {
+                    secrets.carte = auth.substring(6);
+                } else {
+                    secrets.token = auth;
+                }
+                return secrets;
+            }
+        }
+        secrets.rootSecret = request.getParameter("secret");
+        secrets.token = request.getParameter("token");
+        secrets.carte = request.getParameter("carte");
+        return secrets;
+    }
+
     private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException, UnknownHostException {
         requestContext.setLocalAddr(InetAddress.getByName(request.getLocalAddr()));
         requestContext.setBrowserExtension(request.getHeader("X-Accept-Moera") != null);
-        String secret = request.getParameter("secret");
-        if (Objects.equals(config.getRootSecret(), secret)) {
+        Secrets secrets = extractSecrets(request);
+        if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {
             requestContext.setRootAdmin(true);
             log.info("Authorized as root admin");
         }
-        requestContext.setAdmin(
-                authenticationManager.isAdminToken(request.getParameter("token"), requestContext.nodeId()));
+        requestContext.setAdmin(authenticationManager.isAdminToken(secrets.token, requestContext.nodeId()));
         log.info("Authorized as {}", requestContext.isAdmin() ? "admin" : "non-admin");
         try {
             requestContext.setClientName(
-                    authenticationManager.getClientName(request.getParameter("carte"), UriUtil.remoteAddress(request)));
+                    authenticationManager.getClientName(secrets.carte, UriUtil.remoteAddress(request)));
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");
         }
