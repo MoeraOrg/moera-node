@@ -74,10 +74,10 @@ public class AuthenticationManager {
         if (!clientAddress.equals(fp.getAddress())) {
             throw new InvalidCarteException("carte.invalid");
         }
-        if (Instant.now().isBefore(Instant.ofEpochSecond(fp.getBeginning()).minusSeconds(60))) {
+        if (Instant.now().isBefore(Instant.ofEpochSecond(fp.getBeginning()).minusSeconds(120))) {
             throw new InvalidCarteException("carte.not-begun");
         }
-        if (Instant.now().isAfter(Instant.ofEpochSecond(fp.getDeadline()).plusSeconds(60))) {
+        if (Instant.now().isAfter(Instant.ofEpochSecond(fp.getDeadline()).plusSeconds(120))) {
             throw new InvalidCarteException("carte.expired");
         }
         if (fp instanceof CarteFingerprint) {
