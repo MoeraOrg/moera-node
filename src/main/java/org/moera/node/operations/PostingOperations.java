@@ -184,12 +184,14 @@ public class PostingOperations {
                                  Set<String> latestMentions) {
         currentMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
                         new MentionPostingAddedNotification(postingId, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !m.equals(":"))
                 .filter(m -> !currentMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d, new MentionPostingDeletedNotification(postingId)));

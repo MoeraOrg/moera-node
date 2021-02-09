@@ -204,6 +204,7 @@ public class CommentOperations {
                                  String currentHeading, Set<String> currentMentions, Set<String> latestMentions) {
         currentMentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
+                .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
@@ -211,6 +212,7 @@ public class CommentOperations {
                                 posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !m.equals(":"))
                 .filter(m -> !currentMentions.contains(m))
                 .map(Directions::single)
                 .forEach(d -> requestContext.send(d,
