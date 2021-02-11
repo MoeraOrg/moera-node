@@ -80,7 +80,10 @@ CREATE TABLE public.entries (
     replied_to_name character varying(63),
     replied_to_heading character varying(255),
     replied_to_digest bytea,
-    replied_to_revision_id uuid
+    replied_to_revision_id uuid,
+    owner_full_name character varying(96),
+    receiver_full_name character varying(96),
+    replied_to_full_name character varying(96)
 );
 
 
@@ -140,7 +143,8 @@ CREATE TABLE public.entry_sources (
     remote_node_name character varying(63) NOT NULL,
     remote_feed_name character varying(63) NOT NULL,
     remote_posting_id character varying(40) NOT NULL,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    remote_full_name character varying(96)
 );
 
 
@@ -185,7 +189,8 @@ CREATE TABLE public.own_comments (
     remote_posting_id character varying(40) NOT NULL,
     remote_comment_id character varying(40) NOT NULL,
     heading character varying(255) NOT NULL,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    remote_full_name character varying(96)
 );
 
 
@@ -202,7 +207,8 @@ CREATE TABLE public.own_reactions (
     remote_posting_id character varying(40) NOT NULL,
     negative boolean NOT NULL,
     emoji integer NOT NULL,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    remote_full_name character varying(96)
 );
 
 
@@ -290,7 +296,8 @@ CREATE TABLE public.reactions (
     signature_version smallint NOT NULL,
     signature bytea,
     deleted_at timestamp without time zone,
-    moment bigint NOT NULL
+    moment bigint NOT NULL,
+    owner_full_name character varying(96)
 );
 
 
@@ -363,7 +370,9 @@ CREATE TABLE public.stories (
     remote_owner_name character varying(63),
     remote_heading character varying(255),
     remote_replied_to_id character varying(40),
-    remote_replied_to_heading character varying(255)
+    remote_replied_to_heading character varying(255),
+    remote_full_name character varying(96),
+    remote_owner_full_name character varying(96)
 );
 
 
@@ -380,7 +389,8 @@ CREATE TABLE public.subscribers (
     feed_name character varying(63),
     entry_id uuid,
     remote_node_name character varying(63) NOT NULL,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    remote_full_name character varying(96)
 );
 
 
@@ -400,7 +410,8 @@ CREATE TABLE public.subscriptions (
     remote_feed_name character varying(63),
     remote_entry_id character varying(40),
     created_at timestamp without time zone NOT NULL,
-    reason smallint DEFAULT 0 NOT NULL
+    reason smallint DEFAULT 0 NOT NULL,
+    remote_full_name character varying(96)
 );
 
 
