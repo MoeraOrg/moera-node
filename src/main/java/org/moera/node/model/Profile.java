@@ -8,7 +8,7 @@ import org.moera.node.option.Options;
 
 public class Profile {
 
-    @Size(max = 255)
+    @Size(max = 96)
     private String fullName;
 
     @Size(max = 31)
