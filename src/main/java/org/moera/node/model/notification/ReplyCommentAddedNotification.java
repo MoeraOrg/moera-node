@@ -1,13 +1,20 @@
 package org.moera.node.model.notification;
 
 import java.util.UUID;
+import javax.validation.constraints.Size;
 
 public class ReplyCommentAddedNotification extends ReplyCommentNotification {
 
     private String postingHeading;
+
+    @Size(max = 63)
     private String commentOwnerName;
+
+    @Size(max = 96)
     private String commentOwnerFullName;
+
     private String commentHeading;
+
     private String repliedToHeading;
 
     public ReplyCommentAddedNotification() {

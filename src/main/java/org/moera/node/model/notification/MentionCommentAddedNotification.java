@@ -1,12 +1,18 @@
 package org.moera.node.model.notification;
 
 import java.util.UUID;
+import javax.validation.constraints.Size;
 
 public class MentionCommentAddedNotification extends MentionCommentNotification {
 
     private String postingHeading;
+
+    @Size(max = 63)
     private String commentOwnerName;
+
+    @Size(max = 96)
     private String commentOwnerFullName;
+
     private String commentHeading;
 
     public MentionCommentAddedNotification() {

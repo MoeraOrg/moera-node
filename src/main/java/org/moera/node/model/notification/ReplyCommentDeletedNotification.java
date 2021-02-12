@@ -1,10 +1,14 @@
 package org.moera.node.model.notification;
 
 import java.util.UUID;
+import javax.validation.constraints.Size;
 
 public class ReplyCommentDeletedNotification extends ReplyCommentNotification {
 
+    @Size(max = 63)
     private String commentOwnerName;
+
+    @Size(max = 96)
     private String commentOwnerFullName;
 
     public ReplyCommentDeletedNotification() {

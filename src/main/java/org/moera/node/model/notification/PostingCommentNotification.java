@@ -1,12 +1,18 @@
 package org.moera.node.model.notification;
 
 import java.util.UUID;
+import javax.validation.constraints.Size;
 
 public abstract class PostingCommentNotification extends SubscriberNotification {
 
     private String postingId;
+
     private String commentId;
+
+    @Size(max = 63)
     private String commentOwnerName;
+
+    @Size(max = 96)
     private String commentOwnerFullName;
 
     public PostingCommentNotification(NotificationType type) {

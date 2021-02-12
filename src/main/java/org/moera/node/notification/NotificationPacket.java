@@ -1,14 +1,17 @@
 package org.moera.node.notification;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 public class NotificationPacket {
 
     private String id;
 
     @NotBlank
+    @Size(max = 63)
     private String nodeName;
 
+    @Size(max = 96)
     private String fullName;
 
     private Long createdAt;
