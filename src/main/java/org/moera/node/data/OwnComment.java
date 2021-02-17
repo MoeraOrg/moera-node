@@ -35,6 +35,12 @@ public class OwnComment {
     @Size(max = 40)
     private String remoteCommentId = "";
 
+    @Size(max = 63)
+    private String remoteRepliedToName = "";
+
+    @Size(max = 96)
+    private String remoteRepliedToFullName;
+
     @NotNull
     @Size(max = 255)
     private String heading = "";
@@ -88,6 +94,22 @@ public class OwnComment {
 
     public void setRemoteCommentId(String remoteCommentId) {
         this.remoteCommentId = remoteCommentId;
+    }
+
+    public String getRemoteRepliedToName() {
+        return remoteRepliedToName;
+    }
+
+    public void setRemoteRepliedToName(String remoteRepliedToName) {
+        this.remoteRepliedToName = remoteRepliedToName;
+    }
+
+    public String getRemoteRepliedToFullName() {
+        return remoteRepliedToFullName;
+    }
+
+    public void setRemoteRepliedToFullName(String remoteRepliedToFullName) {
+        this.remoteRepliedToFullName = remoteRepliedToFullName;
     }
 
     public String getHeading() {

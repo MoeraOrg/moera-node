@@ -87,7 +87,7 @@ public class NodeApi {
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .method(method, jsonPublisher(body));
         if (auth != null) {
-            requestBuilder = requestBuilder.header(HttpHeaders.AUTHORIZATION, auth);
+            requestBuilder = requestBuilder.header(HttpHeaders.AUTHORIZATION, "bearer " + auth);
         }
         HttpRequest request = requestBuilder.build();
         HttpClient client = HttpClient.newBuilder()

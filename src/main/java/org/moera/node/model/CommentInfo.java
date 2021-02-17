@@ -379,6 +379,8 @@ public class CommentInfo implements ReactionsInfo {
     public void toOwnComment(OwnComment ownComment) {
         ownComment.setRemotePostingId(postingId);
         ownComment.setRemoteCommentId(id);
+        ownComment.setRemoteRepliedToName(getRepliedToName());
+        ownComment.setRemoteRepliedToFullName(getRepliedToFullName());
         ownComment.setHeading(heading);
         ownComment.setCreatedAt(Util.now());
     }

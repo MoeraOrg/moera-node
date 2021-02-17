@@ -122,7 +122,8 @@ public class RemoteCommentController {
                 postingId, commentId).orElse(null);
         if (ownComment != null) {
             contactOperations.updateCloseness(nodeName, ownComment.getRemoteFullName(), -1);
-            // TODO contactOperations.updateCloseness(info.getRepliedToName(), -1);
+            contactOperations.updateCloseness(ownComment.getRemoteRepliedToName(),
+                    ownComment.getRemoteRepliedToFullName(), -1);
             requestContext.send(new RemoteCommentUpdatedEvent(nodeName, postingId, commentId));
         }
 
