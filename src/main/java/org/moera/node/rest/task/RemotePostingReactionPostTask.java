@@ -17,6 +17,7 @@ import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.event.RemoteReactionAddedEvent;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,9 @@ public class RemotePostingReactionPostTask extends Task {
 
     @Inject
     private OwnReactionRepository ownReactionRepository;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     @Inject
     private PostingReactionInstants postingReactionInstants;
@@ -80,6 +84,7 @@ public class RemotePostingReactionPostTask extends Task {
                     ownReaction.setRemoteNodeName(targetNodeName);
                     ownReaction.setRemoteFullName(targetFullName);
                     ownReaction = ownReactionRepository.save(ownReaction);
+                    contactOperations.updateCloseness(nodeId, targetNodeName, targetFullName, 0.25f);
                 }
                 info.toOwnReaction(ownReaction);
                 return null;

@@ -260,6 +260,16 @@ public class CommentInfo implements ReactionsInfo {
         return getRepliedTo() != null ? getRepliedTo().getRevisionId() : null;
     }
 
+    @Transient
+    public String getRepliedToName() {
+        return getRepliedTo() != null ? getRepliedTo().getName() : null;
+    }
+
+    @Transient
+    public String getRepliedToFullName() {
+        return getRepliedTo() != null ? getRepliedTo().getFullName() : null;
+    }
+
     public long getMoment() {
         return moment;
     }

@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
@@ -20,6 +21,7 @@ import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemoteCommentPostTask;
 import org.moera.node.rest.task.RemoteCommentVerifyTask;
 import org.moera.node.rest.task.RemotePostingCommentsSubscribeTask;
@@ -56,6 +58,9 @@ public class RemoteCommentController {
 
     @Inject
     private OwnCommentRepository ownCommentRepository;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     @PostMapping
     @Admin
@@ -113,8 +118,13 @@ public class RemoteCommentController {
                 LogUtil.format(postingId),
                 LogUtil.format(commentId));
 
-        ownCommentRepository.deleteByRemoteCommentId(requestContext.nodeId(), nodeName, postingId, commentId);
-        requestContext.send(new RemoteCommentUpdatedEvent(nodeName, postingId, commentId));
+        OwnComment ownComment = ownCommentRepository.findByRemoteCommentId(requestContext.nodeId(), nodeName,
+                postingId, commentId).orElse(null);
+        if (ownComment != null) {
+            contactOperations.updateCloseness(nodeName, ownComment.getRemoteFullName(), -1);
+            // TODO contactOperations.updateCloseness(info.getRepliedToName(), -1);
+            requestContext.send(new RemoteCommentUpdatedEvent(nodeName, postingId, commentId));
+        }
 
         return Result.OK;
     }

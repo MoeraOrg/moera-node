@@ -8,6 +8,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
@@ -18,6 +19,7 @@ import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.model.event.RemoteReactionDeletedEvent;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingReactionPostTask;
 import org.moera.node.rest.task.RemoteReactionVerifyTask;
 import org.moera.node.task.TaskAutowire;
@@ -53,6 +55,9 @@ public class RemotePostingReactionController {
     @Inject
     private OwnReactionRepository ownReactionRepository;
 
+    @Inject
+    private ContactOperations contactOperations;
+
     @PostMapping
     @Admin
     @Entitled
@@ -80,8 +85,13 @@ public class RemotePostingReactionController {
                 LogUtil.format(nodeName),
                 LogUtil.format(postingId));
 
-        ownReactionRepository.deleteByRemotePostingId(requestContext.nodeId(), nodeName, postingId);
-        requestContext.send(new RemoteReactionDeletedEvent(nodeName, postingId));
+        OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(), nodeName,
+                postingId).orElse(null);
+        if (ownReaction != null) {
+            ownReactionRepository.delete(ownReaction);
+            contactOperations.updateCloseness(nodeName, ownReaction.getRemoteFullName(), -0.25f);
+            requestContext.send(new RemoteReactionDeletedEvent(nodeName, postingId));
+        }
 
         return Result.OK;
     }

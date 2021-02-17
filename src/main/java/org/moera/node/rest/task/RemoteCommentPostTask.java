@@ -19,6 +19,7 @@ import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.moera.node.text.TextConverter;
 import org.slf4j.Logger;
@@ -44,6 +45,9 @@ public class RemoteCommentPostTask extends Task {
 
     @Inject
     private OwnCommentRepository ownCommentRepository;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     @Inject
     private CommentInstants commentInstants;
@@ -119,6 +123,8 @@ public class RemoteCommentPostTask extends Task {
                     ownComment.setRemoteNodeName(targetNodeName);
                     ownComment.setRemoteFullName(targetFullName);
                     ownComment = ownCommentRepository.save(ownComment);
+                    contactOperations.updateCloseness(nodeId, targetNodeName, targetFullName, 1);
+                    contactOperations.updateCloseness(nodeId, info.getRepliedToName(), info.getRepliedToFullName(), 1);
                 }
                 info.toOwnComment(ownComment);
                 return null;

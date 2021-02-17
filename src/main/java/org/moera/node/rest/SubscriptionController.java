@@ -30,6 +30,7 @@ import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.model.event.SubscriptionDeletedEvent;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
@@ -55,6 +56,9 @@ public class SubscriptionController {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -125,6 +129,12 @@ public class SubscriptionController {
         subscription.setNodeId(requestContext.nodeId());
         subscriptionDescription.toSubscription(subscription);
         subscription = subscriptionRepository.save(subscription);
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            contactOperations.createOrUpdateCloseness(subscription.getRemoteNodeName(),
+                    subscription.getRemoteFullName(), 1);
+        } else {
+            contactOperations.updateCloseness(subscription.getRemoteNodeName(), subscription.getRemoteFullName(), 1);
+        }
         requestContext.send(new SubscriptionAddedEvent(subscription));
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
@@ -151,8 +161,12 @@ public class SubscriptionController {
         Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
                 remoteSubscriberId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
-
+        int totalSubscriptions = subscriptionRepository.countByTypeAndRemoteNode(requestContext.nodeId(),
+                SubscriptionType.FEED, remoteNodeName);
         subscriptionRepository.delete(subscription);
+        if (totalSubscriptions == 1) {
+            contactOperations.delete(remoteNodeName);
+        }
         requestContext.send(new SubscriptionDeletedEvent(subscription));
 
         return Result.OK;

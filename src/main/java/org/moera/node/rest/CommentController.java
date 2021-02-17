@@ -62,6 +62,7 @@ import org.moera.node.naming.NamingCache;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.CommentOperations;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
@@ -117,6 +118,9 @@ public class CommentController {
     private CommentOperations commentOperations;
 
     @Inject
+    private ContactOperations contactOperations;
+
+    @Inject
     private TextConverter textConverter;
 
     @Inject
@@ -167,6 +171,11 @@ public class CommentController {
         }
 
         if (comment.getCurrentRevision().getSignature() != null) {
+            if (comment.getOwnerName().equals(requestContext.nodeName())) {
+                contactOperations.updateCloseness(comment.getRepliedToName(), comment.getRepliedToFullName(), 1);
+            } else {
+                contactOperations.updateCloseness(comment.getOwnerName(), comment.getOwnerFullName(), 1);
+            }
             commentInstants.added(comment);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
             requestContext.send(Directions.postingCommentsSubscribers(posting.getId()),
@@ -425,6 +434,11 @@ public class CommentController {
         }
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
+        if (comment.getOwnerName().equals(requestContext.nodeName())) {
+            contactOperations.updateCloseness(comment.getRepliedToName(), comment.getRepliedToFullName(), -1);
+        } else {
+            contactOperations.updateCloseness(comment.getOwnerName(), comment.getOwnerFullName(), -1);
+        }
         commentInstants.deleted(comment);
         requestContext.send(Directions.postingCommentsSubscribers(postingId),
                 new PostingCommentDeletedNotification(
