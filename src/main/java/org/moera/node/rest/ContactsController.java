@@ -22,6 +22,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ContactInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.util.Util;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -64,14 +65,14 @@ public class ContactsController {
         where.and(contact.nodeId.eq(requestContext.nodeId()));
         if (!StringUtils.isEmpty(query)) {
             for (String word : words) {
-                String pattern = "%" + word + "%";
+                String pattern = "%" + Util.le(word) + "%";
                 where.andAnyOf(contact.remoteFullName.likeIgnoreCase(pattern),
                         contact.remoteNodeName.likeIgnoreCase(pattern));
             }
         }
 
         List<Pattern> regexes = Arrays.stream(words)
-                .map(word -> Pattern.compile("(?:^|\\s)" + word, Pattern.CASE_INSENSITIVE))
+                .map(word -> Pattern.compile("(?:^|\\s)" + Util.re(word), Pattern.CASE_INSENSITIVE))
                 .collect(Collectors.toList());
 
         Pageable pageable = PageRequest.of(0, limit, Sort.Direction.DESC, "closeness");
