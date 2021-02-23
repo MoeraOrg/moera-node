@@ -3,23 +3,31 @@ package org.moera.node.global;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.DomainUpgrade;
+import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionUpgrade;
 import org.moera.node.data.EntryRevisionUpgradeRepository;
 import org.moera.node.data.Posting;
+import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.model.Body;
 import org.moera.node.option.Options;
+import org.moera.node.rest.task.AllRemoteProfilesSubscriptionTask;
+import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -39,9 +47,33 @@ public class Updater {
     @Inject
     private EntryRevisionUpgradeRepository entryRevisionUpgradeRepository;
 
+    @Inject
+    private DomainUpgradeRepository domainUpgradeRepository;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
+
     @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void execute() {
+        executeDomainUpgrades();
+        executeEntryRevisionUpgrades();
+    }
+
+    private void executeDomainUpgrades() {
+        Set<DomainUpgrade> upgrades = domainUpgradeRepository.findPending(UpgradeType.PROFILE_SUBSCRIBE);
+        for (DomainUpgrade upgrade : upgrades) {
+            var task = new AllRemoteProfilesSubscriptionTask();
+            taskAutowire.autowireWithoutRequest(task, upgrade.getNodeId());
+            taskExecutor.execute(task);
+        }
+    }
+
+    private void executeEntryRevisionUpgrades() {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "id"));
         List<EntryRevisionUpgrade> upgrades;
         do {

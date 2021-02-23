@@ -4,6 +4,7 @@ public enum UpgradeType {
 
     UPDATE_SIGNATURE,
     JSON_BODY,
-    UPDATE_DIGEST
+    UPDATE_DIGEST,
+    PROFILE_SUBSCRIBE
 
 }
