@@ -22,4 +22,8 @@ public class Directions {
         return new SubscribersDirection(SubscriptionType.POSTING_COMMENTS, postingId);
     }
 
+    public static Direction profileSubscribers() {
+        return new SubscribersDirection(SubscriptionType.PROFILE);
+    }
+
 }

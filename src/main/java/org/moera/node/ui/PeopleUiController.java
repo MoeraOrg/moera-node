@@ -37,7 +37,7 @@ public class PeopleUiController {
     @GetMapping("/people/subscribers")
     @VirtualPage
     public String subscribers(Model model) {
-        int subscribersTotal = subscriberRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
         List<Subscriber> subscribers = subscriberRepository.findAllByType(requestContext.nodeId(),
                 SubscriptionType.FEED);
@@ -54,7 +54,7 @@ public class PeopleUiController {
     @GetMapping("/people/subscriptions")
     @VirtualPage
     public String subscriptions(Model model) {
-        int subscribersTotal = subscriberRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
         List<Subscription> subscriptions = subscriptionRepository.findAllByType(requestContext.nodeId(),
                 SubscriptionType.FEED);

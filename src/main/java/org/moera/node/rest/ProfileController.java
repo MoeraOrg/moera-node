@@ -5,12 +5,14 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
-import org.moera.node.model.event.NodeNameChangedEvent;
-import org.moera.node.model.event.ProfileUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Profile;
 import org.moera.node.model.ProfileInfo;
+import org.moera.node.model.event.NodeNameChangedEvent;
+import org.moera.node.model.event.ProfileUpdatedEvent;
+import org.moera.node.model.notification.ProfileUpdatedNotification;
+import org.moera.node.notification.send.Directions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +45,7 @@ public class ProfileController {
         profile.toOptions(requestContext.getOptions());
         requestContext.send(new ProfileUpdatedEvent());
         requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.fullName()));
+        requestContext.send(Directions.profileSubscribers(), new ProfileUpdatedNotification());
         return new ProfileInfo(requestContext);
     }
 

@@ -10,6 +10,10 @@ class SubscribersDirection extends Direction {
     private String feedName;
     private UUID postingId;
 
+    SubscribersDirection(SubscriptionType subscriptionType) {
+        this.subscriptionType = subscriptionType;
+    }
+
     SubscribersDirection(SubscriptionType subscriptionType, String feedName) {
         this.subscriptionType = subscriptionType;
         this.feedName = feedName;

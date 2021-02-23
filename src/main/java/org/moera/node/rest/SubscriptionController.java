@@ -32,6 +32,7 @@ import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.model.event.SubscriptionDeletedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
+import org.moera.node.rest.task.RemoteProfileSubscribeTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,10 +139,14 @@ public class SubscriptionController {
         requestContext.send(new SubscriptionAddedEvent(subscription));
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            var task = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
+            var fetchTask = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
                     subscription.getRemoteFeedName());
-            taskAutowire.autowire(task);
-            taskExecutor.execute(task);
+            taskAutowire.autowire(fetchTask);
+            taskExecutor.execute(fetchTask);
+
+            var profileTask = new RemoteProfileSubscribeTask(subscription.getRemoteNodeName());
+            taskAutowire.autowire(profileTask);
+            taskExecutor.execute(profileTask);
         }
 
         return new SubscriptionInfo(subscription);

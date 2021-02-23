@@ -24,6 +24,7 @@ public class SubscriberDescriptionQ {
         this.type = type;
         this.feedName = feedName;
         this.postingId = postingId;
+        this.ownerFullName = ownerFullName;
         this.lastUpdatedAt = lastUpdatedAt;
     }
 

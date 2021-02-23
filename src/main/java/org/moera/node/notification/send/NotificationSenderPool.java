@@ -114,6 +114,10 @@ public class NotificationSenderPool {
                     subscribers = subscriberRepository.findAllByEntryId(
                             sd.getNodeId(), sd.getSubscriptionType(), sd.getPostingId());
                     break;
+                case PROFILE:
+                    subscribers = subscriberRepository.findAllByType(
+                            sd.getNodeId(), sd.getSubscriptionType());
+                    break;
             }
             for (Subscriber subscriber : subscribers) {
                 SingleDirection dir = new SingleDirection(subscriber.getNodeId(), subscriber.getRemoteNodeName());

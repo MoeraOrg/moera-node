@@ -32,7 +32,7 @@ public class PeopleController {
     public PeopleGeneralInfo get() {
         log.info("GET /people");
 
-        int subscribersTotal = subscriberRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
 
         return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal);

@@ -59,6 +59,7 @@ public class ContactOperations {
         }
         contact = new Contact();
         contact.setId(UUID.randomUUID());
+        contact.setNodeId(nodeId);
         contact.setRemoteNodeName(remoteNodeName);
         contact.setRemoteFullName(remoteFullName);
         float closeness = 0;

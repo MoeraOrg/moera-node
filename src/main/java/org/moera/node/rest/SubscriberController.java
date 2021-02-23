@@ -167,6 +167,9 @@ public class SubscriberController {
             case POSTING_COMMENTS:
                 return subscriberRepository.countByEntryId(requestContext.nodeId(), requestContext.getClientName(),
                         description.getType(), description.getPostingId()) > 0;
+            case PROFILE:
+                return subscriberRepository.countByType(requestContext.nodeId(), requestContext.getClientName(),
+                        description.getType()) > 0;
         }
         return false; // Should never be reached
     }
@@ -183,6 +186,8 @@ public class SubscriberController {
                 if (description.getPostingId() == null) {
                     throw new ValidationFailure("subscriberDescription.postingId.blank");
                 }
+                break;
+            case PROFILE:
                 break;
         }
     }
