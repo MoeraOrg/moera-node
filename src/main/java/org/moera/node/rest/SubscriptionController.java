@@ -32,7 +32,7 @@ import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.model.event.SubscriptionDeletedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
-import org.moera.node.rest.task.RemoteProfileSubscribeTask;
+import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +144,7 @@ public class SubscriptionController {
             taskAutowire.autowire(fetchTask);
             taskExecutor.execute(fetchTask);
 
-            var profileTask = new RemoteProfileSubscribeTask(subscription.getRemoteNodeName());
+            var profileTask = new RemoteProfileSubscriptionTask(subscription.getRemoteNodeName());
             taskAutowire.autowire(profileTask);
             taskExecutor.execute(profileTask);
         }
@@ -166,11 +166,17 @@ public class SubscriptionController {
         Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
                 remoteSubscriberId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
-        int totalSubscriptions = subscriptionRepository.countByTypeAndRemoteNode(requestContext.nodeId(),
-                SubscriptionType.FEED, remoteNodeName);
-        subscriptionRepository.delete(subscription);
-        if (totalSubscriptions == 1) {
-            contactOperations.delete(remoteNodeName);
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            int totalSubscriptions = subscriptionRepository.countByTypeAndRemoteNode(requestContext.nodeId(),
+                    SubscriptionType.FEED, remoteNodeName);
+            subscriptionRepository.delete(subscription);
+            if (totalSubscriptions == 1) {
+                contactOperations.delete(remoteNodeName);
+
+                var profileTask = new RemoteProfileSubscriptionTask(remoteNodeName);
+                taskAutowire.autowire(profileTask);
+                taskExecutor.execute(profileTask);
+            }
         }
         requestContext.send(new SubscriptionDeletedEvent(subscription));
 

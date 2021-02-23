@@ -204,6 +204,11 @@ public class NodeApi {
                 SubscriberInfo.class);
     }
 
+    public Result deleteSubscriber(String nodeName, String carte, String subscriberId) throws NodeApiException {
+        return call("DELETE", nodeName, String.format("/people/subscribers/%s", Util.ue(subscriberId)),
+                auth("carte", carte), Result.class);
+    }
+
     public FeedSliceInfo getFeedStories(String nodeName, String feedName, int limit) throws NodeApiException {
         return call("GET", nodeName,
                 String.format("/feeds/%s/stories?limit=%d", Util.ue(feedName), limit), null,

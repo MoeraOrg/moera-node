@@ -32,9 +32,13 @@ import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
+import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,6 +65,13 @@ public class SubscriberController {
 
     @Inject
     private SubscriberInstants subscriberInstants;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
 
     @GetMapping
     public List<SubscriberInfo> getAll(@RequestParam(required = false) String nodeName,
@@ -152,6 +163,13 @@ public class SubscriberController {
             }
         }
         subscriber = subscriberRepository.save(subscriber);
+
+        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
+            var profileTask = new RemoteProfileSubscriptionTask(ownerName);
+            taskAutowire.autowire(profileTask);
+            taskExecutor.execute(profileTask);
+        }
+
         subscriberInstants.added(subscriber);
         requestContext.send(new SubscriberAddedEvent(subscriber));
 
@@ -206,6 +224,13 @@ public class SubscriberController {
         }
 
         subscriberRepository.delete(subscriber);
+
+        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
+            var profileTask = new RemoteProfileSubscriptionTask(ownerName);
+            taskAutowire.autowire(profileTask);
+            taskExecutor.execute(profileTask);
+        }
+
         subscriberInstants.deleted(subscriber);
         requestContext.send(new SubscriberDeletedEvent(subscriber));
 

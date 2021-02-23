@@ -44,6 +44,11 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
             + " and s.remoteNodeName = ?3")
     int countByTypeAndRemoteNode(UUID nodeId, SubscriptionType subscriptionType, String remoteNodeName);
 
+    @Query("select s from Subscription s where s.nodeId = ?1 and s.subscriptionType = ?2"
+            + " and s.remoteNodeName = ?3")
+    Optional<Subscription> findByTypeAndRemoteNode(UUID nodeId, SubscriptionType subscriptionType,
+                                                   String remoteNodeName);
+
     @Query("update Subscription s set s.remoteFullName = ?3 where s.nodeId = ?1 and s.remoteNodeName = ?2")
     @Modifying
     void updateRemoteFullName(UUID nodeId, String remoteNodeName, String remoteFullName);
