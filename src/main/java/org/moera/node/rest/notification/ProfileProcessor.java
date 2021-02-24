@@ -10,6 +10,7 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.UnsubscribeFailure;
+import org.moera.node.model.event.RemoteNodeFullNameChangedEvent;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
@@ -48,6 +49,8 @@ public class ProfileProcessor {
                 notification.getSenderFullName());
         contactRepository.updateRemoteFullName(requestContext.nodeId(), notification.getSenderNodeName(),
                 notification.getSenderFullName());
+        requestContext.send(new RemoteNodeFullNameChangedEvent(notification.getSenderNodeName(),
+                notification.getSenderFullName()));
     }
 
 }
