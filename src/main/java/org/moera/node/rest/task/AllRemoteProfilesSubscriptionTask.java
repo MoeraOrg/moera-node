@@ -98,7 +98,7 @@ public class AllRemoteProfilesSubscriptionTask extends Task {
         });
 
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.PROFILE,
-                null, null, fullName);
+                null, null, fullName());
         SubscriberInfo subscriberInfo =
                 nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
         Subscription subscription = new Subscription();

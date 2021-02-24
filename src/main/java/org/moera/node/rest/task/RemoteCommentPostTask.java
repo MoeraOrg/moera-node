@@ -102,10 +102,10 @@ public class RemoteCommentPostTask extends Task {
     }
 
     private CommentText buildComment(PostingInfo postingInfo, byte[] repliedToDigest) {
-        CommentText commentText = new CommentText(nodeName, fullName, sourceText, textConverter);
+        CommentText commentText = new CommentText(nodeName(), fullName(), sourceText, textConverter);
         CommentFingerprint fingerprint =
                 new CommentFingerprint(commentText, new PostingFingerprint(postingInfo), repliedToDigest);
-        commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
+        commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         commentText.setSignatureVersion(CommentFingerprint.VERSION);
         return commentText;
     }

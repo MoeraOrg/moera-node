@@ -154,14 +154,14 @@ public class NotificationSender extends Task {
     private NotificationPacket createPacket(Notification notification) throws JsonProcessingException {
         NotificationPacket packet = new NotificationPacket();
         packet.setId(UUID.randomUUID().toString());
-        packet.setNodeName(nodeName);
-        packet.setFullName(fullName);
+        packet.setNodeName(nodeName());
+        packet.setFullName(fullName());
         packet.setCreatedAt(Util.toEpochSecond(Util.now()));
         packet.setType(notification.getType().getValue());
         packet.setNotification(objectMapper.writeValueAsString(notification));
 
         NotificationPacketFingerprint fingerprint = new NotificationPacketFingerprint(packet);
-        packet.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
+        packet.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         packet.setSignatureVersion(NotificationPacketFingerprint.VERSION);
 
         return packet;

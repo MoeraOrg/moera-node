@@ -35,9 +35,7 @@ public class TaskAutowire {
     public void autowire(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(requestContext.nodeId());
-        task.setNodeName(requestContext.nodeName());
-        task.setFullName(requestContext.fullName());
-        task.setSigningKey(requestContext.getOptions().getPrivateKey("profile.signing-key"));
+        task.setOptions(requestContext.getOptions());
         task.setLocalAddr(requestContext.getLocalAddr());
     }
 
@@ -46,9 +44,7 @@ public class TaskAutowire {
         task.setNodeId(nodeId);
         Options options = domains.getDomainOptions(nodeId);
         if (options != null) {
-            task.setNodeName(options.nodeName());
-            task.setFullName(options.getString("profile.full-name"));
-            task.setSigningKey(options.getPrivateKey("profile.signing-key"));
+            task.setOptions(options);
         } else {
             log.warn("Domain with id = {} not found", nodeId);
         }

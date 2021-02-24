@@ -51,7 +51,7 @@ public class InstantsCreator {
 
     public void associate(Task task) {
         setNodeId(task.getNodeId());
-        setNodeName(task.getNodeName());
+        setNodeName(task.nodeName());
     }
 
     protected void updateMoment(Story story) {

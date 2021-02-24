@@ -15,6 +15,7 @@ import org.moera.node.model.event.Event;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
+import org.moera.node.option.Options;
 import org.moera.node.util.Carte;
 import org.moera.node.util.Transaction;
 import org.slf4j.MDC;
@@ -23,9 +24,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 public abstract class Task implements Runnable {
 
     protected UUID nodeId;
-    protected String nodeName;
-    protected String fullName;
-    protected PrivateKey signingKey;
+    protected Options options;
     protected InetAddress localAddr;
 
     @Inject
@@ -51,20 +50,24 @@ public abstract class Task implements Runnable {
         this.nodeId = nodeId;
     }
 
-    public String getNodeName() {
-        return nodeName;
+    public Options getOptions() {
+        return options;
     }
 
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
+    public void setOptions(Options options) {
+        this.options = options;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public String nodeName() {
+        return options != null ? options.nodeName() : null;
     }
 
-    public void setSigningKey(PrivateKey signingKey) {
-        this.signingKey = signingKey;
+    public String fullName() {
+        return options != null ? options.getString("profile.full-name") : null;
+    }
+
+    public PrivateKey signingKey() {
+        return options != null ? options.getPrivateKey("profile.signing-key") : null;
     }
 
     public void setLocalAddr(InetAddress localAddr) {
@@ -84,7 +87,7 @@ public abstract class Task implements Runnable {
     }
 
     protected String generateCarte(String targetNodeName) {
-        return Carte.generate(nodeName, localAddr, Instant.now(), signingKey, targetNodeName);
+        return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName);
     }
 
     protected void send(Event event) {

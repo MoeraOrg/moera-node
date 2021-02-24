@@ -66,10 +66,10 @@ public class RemoteCommentReactionPostTask extends Task {
         PostingFingerprint postingFingerprint = postingRevisionInfo == null
                 ? new PostingFingerprint(postingInfo) : new PostingFingerprint(postingInfo, postingRevisionInfo);
         CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, postingFingerprint);
-        ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName, attributes, commentFingerprint);
+        ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName(), attributes, commentFingerprint);
 
-        ReactionDescription description = new ReactionDescription(nodeName, fullName, attributes);
-        description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
+        ReactionDescription description = new ReactionDescription(nodeName(), fullName(), attributes);
+        description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprint.VERSION);
 
         return description;
