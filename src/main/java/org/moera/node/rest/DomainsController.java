@@ -10,6 +10,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.github.slugify.Slugify;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.config.Config;
@@ -18,6 +19,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.DomainAttributes;
 import org.moera.node.model.DomainAvailable;
 import org.moera.node.model.DomainInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -59,7 +61,7 @@ public class DomainsController {
         log.info("GET /domains");
 
         return domains.getAllDomainNames().stream()
-                .map(name -> new DomainInfo(name, domains.getDomainNodeId(name)))
+                .map(domains::getDomain)
                 .sorted(Comparator.comparing(DomainInfo::getName))
                 .collect(Collectors.toList());
     }
@@ -73,28 +75,30 @@ public class DomainsController {
             throw new AuthenticationException();
         }
         name = name.toLowerCase();
-        UUID nodeId = domains.getDomainNodeId(name);
-        if (nodeId == null) {
+        DomainInfo info = domains.getDomain(name);
+        if (info == null) {
             throw new ObjectNotFoundFailure("domain.not-found");
         }
-        return new DomainInfo(name, nodeId.toString());
+        return info;
     }
 
     @ProviderApi
     @PostMapping
     @Transactional
-    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainInfo domainInfo) throws AuthenticationException {
-        log.info("POST /domains");
+    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainAttributes domainAttributes)
+            throws AuthenticationException {
+
+        log.info("POST /domains (name = {}, nodeId = {})",
+                LogUtil.format(domainAttributes.getName()), LogUtil.format(domainAttributes.getNodeId()));
 
         if (!config.isRegistrationPublic() && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
         }
-        if (StringUtils.isEmpty(domainInfo.getName())) {
-            throw new ValidationFailure("domainInfo.name.blank");
+        if (StringUtils.isEmpty(domainAttributes.getName())) {
+            throw new ValidationFailure("domainAttributes.name.blank");
         }
-        String name = domainInfo.getName().toLowerCase();
-        UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
-                ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
+        String name = domainAttributes.getName().toLowerCase();
+        UUID nodeId = domainAttributes.getNodeId() == null ? UUID.randomUUID() : domainAttributes.getNodeId();
 
         domains.lockWrite();
         Domain domain;
@@ -102,25 +106,27 @@ public class DomainsController {
             if (domains.getDomainNodeId(name) != null) {
                 throw new OperationFailure("domain.already-exists");
             }
+            if (domains.getDomainName(nodeId) != null) {
+                throw new OperationFailure("domain.node-id-used");
+            }
             domain = domains.createDomain(name, nodeId);
         } finally {
             domains.unlockWrite();
         }
-        return ResponseEntity.created(URI.create("/domains/" + domain.getName()))
-                .body(new DomainInfo(domain.getName(), domain.getNodeId()));
+        return ResponseEntity.created(URI.create("/domains/" + domain.getName())).body(new DomainInfo(domain));
     }
 
     @ProviderApi
     @RootAdmin
     @PutMapping("/{name}")
     @Transactional
-    public DomainInfo put(@PathVariable String name, @RequestBody @Valid DomainInfo domainInfo) {
+    public DomainInfo put(@PathVariable String name, @RequestBody @Valid DomainAttributes domainAttributes) {
         log.info("PUT /domains/{}", name);
 
         name = name.toLowerCase();
-        String newName = !StringUtils.isEmpty(domainInfo.getName()) ? domainInfo.getName().toLowerCase() : name;
-        UUID nodeId = StringUtils.isEmpty(domainInfo.getNodeId())
-                ? UUID.randomUUID() : UUID.fromString(domainInfo.getNodeId());
+        String newName = !StringUtils.isEmpty(domainAttributes.getName())
+                ? domainAttributes.getName().toLowerCase() : name;
+        UUID nodeId = domainAttributes.getNodeId() == null ? UUID.randomUUID() : domainAttributes.getNodeId();
 
         domains.lockWrite();
         Domain domain;
@@ -136,12 +142,15 @@ public class DomainsController {
                     throw new OperationFailure("domain.already-exists");
                 }
             }
+            if (!domains.getDomainName(nodeId).equals(name)) {
+                throw new OperationFailure("domain.node-id-used");
+            }
             domains.deleteDomain(name);
             domain = domains.createDomain(newName, nodeId);
         } finally {
             domains.unlockWrite();
         }
-        return new DomainInfo(domain.getName(), domain.getNodeId());
+        return new DomainInfo(domain);
     }
 
     @ProviderApi

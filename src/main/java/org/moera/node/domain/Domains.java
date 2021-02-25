@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
 import org.moera.node.data.OptionRepository;
+import org.moera.node.model.DomainInfo;
 import org.moera.node.option.Options;
 import org.moera.node.option.OptionsMetadata;
 import org.slf4j.Logger;
@@ -28,7 +29,7 @@ public class Domains {
     private static Logger log = LoggerFactory.getLogger(Domains.class);
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
-    private Map<UUID, String> domainNames = new HashMap<>();
+    private Map<UUID, DomainInfo> domains = new HashMap<>();
     private Map<String, Options> domainOptions = new HashMap<>();
 
     @Inject
@@ -73,7 +74,7 @@ public class Domains {
     }
 
     private void configureDomain(Domain domain) {
-        domainNames.put(domain.getNodeId(), domain.getName());
+        domains.put(domain.getNodeId(), new DomainInfo(domain));
         Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository);
         domainOptions.put(domain.getName(), options);
     }
@@ -125,13 +126,23 @@ public class Domains {
         }
     }
 
-    public String getDomainName(UUID nodeId) {
+    public DomainInfo getDomain(UUID nodeId) {
         lockRead();
         try {
-            return domainNames.get(nodeId);
+            return domains.get(nodeId);
         } finally {
             unlockRead();
         }
+    }
+
+    public DomainInfo getDomain(String name) {
+        UUID nodeId = getDomainNodeId(name);
+        return nodeId != null ? getDomain(nodeId) : null;
+    }
+
+    public String getDomainName(UUID nodeId) {
+        DomainInfo domainInfo = getDomain(nodeId);
+        return domainInfo != null ? domainInfo.getName() : null;
     }
 
     public Domain createDomain(String name, UUID nodeId) {
@@ -150,7 +161,7 @@ public class Domains {
         domainRepository.delete(domain);
         domainRepository.flush();
         log.info("Deleted domain {}", domain.getName());
-        domainNames.remove(domain.getNodeId());
+        domains.remove(domain.getNodeId());
         domainOptions.remove(name);
     }
 

@@ -1,28 +1,21 @@
 package org.moera.node.model;
 
-import java.util.UUID;
-
-import org.moera.node.model.constraint.Hostname;
-import org.moera.node.model.constraint.Uuid;
+import org.moera.node.data.Domain;
+import org.moera.node.util.Util;
 
 public class DomainInfo {
 
-    @Hostname
     private String name;
-
-    @Uuid
     private String nodeId;
+    private long createdAt;
 
     public DomainInfo() {
     }
 
-    public DomainInfo(String name, String nodeId) {
-        this.name = name;
-        this.nodeId = nodeId;
-    }
-
-    public DomainInfo(String name, UUID nodeId) {
-        this(name, nodeId.toString());
+    public DomainInfo(Domain domain) {
+        this.name = domain.getName();
+        this.nodeId = domain.getNodeId().toString();
+        this.createdAt = Util.toEpochSecond(domain.getCreatedAt());
     }
 
     public String getName() {
@@ -39,6 +32,14 @@ public class DomainInfo {
 
     public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
     }
 
 }
