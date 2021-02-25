@@ -7,7 +7,7 @@ import javax.validation.Valid;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.Profile;
+import org.moera.node.model.ProfileAttributes;
 import org.moera.node.model.ProfileInfo;
 import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.model.event.ProfileUpdatedEvent;
@@ -39,10 +39,10 @@ public class ProfileController {
     @PutMapping
     @Admin
     @Transactional
-    public ProfileInfo put(@Valid @RequestBody Profile profile) {
+    public ProfileInfo put(@Valid @RequestBody ProfileAttributes profileAttributes) {
         log.info("PUT /profile");
 
-        profile.toOptions(requestContext.getOptions());
+        profileAttributes.toOptions(requestContext.getOptions());
         requestContext.send(new ProfileUpdatedEvent());
         requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.fullName()));
         requestContext.send(Directions.profileSubscribers(), new ProfileUpdatedNotification());

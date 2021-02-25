@@ -6,7 +6,7 @@ import javax.validation.constraints.Size;
 
 import org.moera.node.option.Options;
 
-public class Profile {
+public class ProfileAttributes {
 
     @Size(max = 96)
     private String fullName;
@@ -18,7 +18,7 @@ public class Profile {
     @Size(max = 63)
     private String email;
 
-    public Profile() {
+    public ProfileAttributes() {
     }
 
     public String getFullName() {
