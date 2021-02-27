@@ -71,6 +71,23 @@
   type: string
   internal: true
 
+- name: profile.title
+  type: string
+  internal: true
+
+- name: profile.bio.src
+  type: string
+  internal: true
+
+- name: profile.bio.src.format
+  type: string
+  defaultValue: markdown
+  internal: true
+
+- name: profile.bio.html
+  type: string
+  internal: true
+
 - name: profile.signing-key
   type: PrivateKey
   internal: true

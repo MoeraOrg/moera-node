@@ -13,7 +13,7 @@ public class TextConverter {
     @Inject
     private MarkdownConverter markdownConverter;
 
-    private String toHtml(SourceFormat format, String source) {
+    public String toHtml(SourceFormat format, String source) {
         switch (format) {
             case PLAIN_TEXT:
                 return PlainTextConverter.toHtml(source);
