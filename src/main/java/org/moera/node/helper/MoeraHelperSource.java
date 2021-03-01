@@ -50,7 +50,7 @@ public class MoeraHelperSource {
             }
             HelperUtil.appendAttr(buf, "class", "node-name");
             if (!StringUtils.isEmpty(fullName)) {
-                HelperUtil.appendAttr(buf, "title", "@" + Util.he(registeredName.toShortString()));
+                HelperUtil.appendAttr(buf, "title", "@" + registeredName.toShortString());
             }
             buf.append('>');
 
@@ -69,6 +69,24 @@ public class MoeraHelperSource {
             buf.append(String.format("</%s>", tag));
         }
         return new SafeString(buf);
+    }
+
+    public CharSequence shortName(String nodeName) {
+        return StringUtils.isEmpty(nodeName) ? "" : NodeName.shorten(nodeName);
+    }
+
+    public CharSequence shortGender(String gender) {
+        if (StringUtils.isEmpty(gender)) {
+            return "";
+        }
+        switch (gender.toLowerCase()) {
+            case "male":
+                return "m.";
+            case "female":
+                return "f.";
+            default:
+                return gender;
+        }
     }
 
     public CharSequence reactions(ReactionsInfo reactionsInfo) {

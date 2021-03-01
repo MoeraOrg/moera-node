@@ -2,30 +2,25 @@
 
 <h2>Profile</h2>
 <div class="profile-view">
-    <dl class="row">
-        <dt class="col-sm-3">Node name</dt>
-        <dd class="col-sm-9">
-            {{nodename nodeName.name "" linked=false}}
-        </dd>
+    <div class="full-name">
         {{#if profile.fullName}}
-            <dt class="col-sm-3">Full name</dt>
-            <dd class="col-sm-9">
-                {{profile.fullName}}
-            </dd>
+            {{profile.fullName}}
+        {{else}}
+            {{shortName nodeName.name}}
         {{/if}}
         {{#if profile.gender}}
-            <dt class="col-sm-3">Gender</dt>
-            <dd class="col-sm-9">
-                {{profile.gender}}
-            </dd>
+            <span class="gender">{{shortGender profile.gender}}</span>
         {{/if}}
-        {{#if profile.email}}
-            <dt class="col-sm-3">E-mail</dt>
-            <dd class="col-sm-9">
-                {{profile.email}}
-            </dd>
-        {{/if}}
-    </dl>
+    </div>
+    {{#if nodeName.name}}
+        <div class="name">@{{shortName nodeName.name}}</div>
+    {{/if}}
+    {{#if profile.title}}
+        <div class="title">{{profile.title}}</div>
+    {{/if}}
+    {{#if profile.bioHtml}}
+        <div class="bio">{{{profile.bioHtml}}}</div>
+    {{/if}}
 </div>
 
 {{> part/bottom}}

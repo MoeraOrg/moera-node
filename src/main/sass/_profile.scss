@@ -1,0 +1,39 @@
+.profile-view {
+    background-color: white;
+    border: var(--gray-light) 1px solid;
+    border-radius: 5px;
+    padding: 1rem;
+    margin-top: 1rem;
+
+    .full-name {
+        font-size: x-large;
+        font-weight: bold;
+
+        .gender {
+            font-size: medium;
+            font-weight: normal;
+            font-style: italic;
+        }
+    }
+
+    .name {
+        color: var(--gray);
+    }
+
+    & > .title {
+        font-size: larger;
+        margin-top: .2em;
+    }
+
+    .bio {
+        margin-top: 1em;
+    }
+}
+
+@media only screen and (max-width: 575px) {
+    .profile-view {
+        border-left-width: 0;
+        border-right-width: 0;
+        border-radius: 0;
+    }
+}
