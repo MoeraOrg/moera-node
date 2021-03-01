@@ -10,6 +10,8 @@ public class WhoAmI {
     private String nodeName;
     private boolean nodeNameChanging;
     private String fullName;
+    private String gender;
+    private String title;
 
     public WhoAmI() {
     }
@@ -21,6 +23,8 @@ public class WhoAmI {
                 || status == OperationStatus.ADDED
                 || status == OperationStatus.STARTED;
         fullName = options.getString("profile.full-name");
+        gender = options.getString("profile.gender");
+        title = options.getString("profile.title");
     }
 
     public String getNodeName() {
@@ -47,4 +51,19 @@ public class WhoAmI {
         this.fullName = fullName;
     }
 
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 }

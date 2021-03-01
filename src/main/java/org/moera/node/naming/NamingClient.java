@@ -192,8 +192,7 @@ public class NamingClient {
         String prevRegisteredName = options.nodeName();
         options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
-            eventManager.send(options.nodeId(),
-                    new NodeNameChangedEvent(newRegisteredName, options.getString("profile.full-name")));
+            eventManager.send(options.nodeId(), new NodeNameChangedEvent(newRegisteredName, options));
         }
 
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");

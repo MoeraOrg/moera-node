@@ -54,7 +54,7 @@ public class ProfileController {
 
         profileAttributes.toOptions(requestContext.getOptions(), textConverter);
         requestContext.send(new ProfileUpdatedEvent());
-        requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.fullName()));
+        requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.getOptions()));
         requestContext.send(Directions.profileSubscribers(), new ProfileUpdatedNotification());
         return new ProfileInfo(requestContext, true);
     }

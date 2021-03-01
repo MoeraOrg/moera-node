@@ -200,7 +200,7 @@ public class NodeNameController {
             options.reset("profile.node-name");
             options.reset("profile.signing-key");
         });
-        requestContext.send(new NodeNameChangedEvent("", requestContext.fullName()));
+        requestContext.send(new NodeNameChangedEvent("", requestContext.getOptions()));
 
         return Result.OK;
     }
