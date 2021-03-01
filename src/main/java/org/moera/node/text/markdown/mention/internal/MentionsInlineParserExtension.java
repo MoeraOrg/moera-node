@@ -33,7 +33,7 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
         final int startingIndex = inlineParser.getIndex();
         if (startingIndex != 0) {
             char c = inlineParser.getInput().charAt(startingIndex - 1);
-            if (Character.isUnicodeIdentifierPart(c) || c == '-' || c == '.') {
+            if (Character.isUnicodeIdentifierPart(c) || c == '-' || c == '.' || c == '/') {
                 return false; // Mention can't be in the middle of a word
             }
         }
