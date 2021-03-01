@@ -1,5 +1,21 @@
 @import 'colors';
 
+@function css-function($function, $values...) {
+	@return $function + unquote("(") + $values + unquote(")");
+}
+
+@function css-min($values...) {
+	@return css-function(min, $values);
+}
+
+@function css-max($values...) {
+	@return css-function(max, $values);
+}
+
+@function css-clamp($values...) {
+	@return css-function(clamp, $values);
+}
+
 HTML {
     font-size: 90%;
 }
@@ -7,6 +23,10 @@ HTML {
 BODY {
     background-color: var(--body-background);
     padding-bottom: 2rem;
+}
+
+.container {
+    max-width: var(--feed-width);
 }
 
 .emoji {
@@ -80,13 +100,6 @@ SUB.generation {
     background-color: white;
     border: var(--gray-light) 1px solid;
     border-radius: 5px;
-}
-
-.profile-view {
-    @include pane;
-    padding-left: 1rem;
-    padding-top: 1rem;
-    margin-top: 1rem;
 }
 
 .registration-form {

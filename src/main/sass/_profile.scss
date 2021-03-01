@@ -1,9 +1,13 @@
 .profile-view {
-    background-color: white;
-    border: var(--gray-light) 1px solid;
-    border-radius: 5px;
+    @include pane;
     padding: 1rem;
     margin-top: 1rem;
+
+    @media only screen and (max-width: 575px) {
+        border-left-width: 0;
+        border-right-width: 0;
+        border-radius: 0;
+    }
 
     .full-name {
         font-size: x-large;
@@ -27,13 +31,5 @@
 
     .bio {
         margin-top: 1em;
-    }
-}
-
-@media only screen and (max-width: 575px) {
-    .profile-view {
-        border-left-width: 0;
-        border-right-width: 0;
-        border-radius: 0;
     }
 }

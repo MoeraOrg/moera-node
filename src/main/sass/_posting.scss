@@ -18,6 +18,10 @@
 
     & > .content {
         overflow-wrap: break-word;
+
+        IMG, IFRAME {
+            max-width: css-min(unquote("var(--feed-name) - 3.5rem"), unquote("100vw - 4rem"));
+        }
     }
 
     &.preview > .content {
@@ -25,13 +29,13 @@
             max-height: 35rem;
         }
 
-        @media only screen and (min-width: 901px) {
-            max-height: 100vh;
+        @media only screen and (max-width: 575px) {
+            max-height: 150vh;
             overflow-y: auto;
         }
 
-        @media only screen and (max-width: 900px) {
-            max-height: 150vh;
+        @media only screen and (min-width: 576px) {
+            max-height: 100vh;
             overflow-y: auto;
         }
     }

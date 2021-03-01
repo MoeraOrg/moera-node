@@ -39,27 +39,10 @@
                 })
             </script>
         {{/if}}
-        <style>
-            {{assignOption "maxWidth" "feed.width"}}
-            .container {
-                max-width: {{maxWidth}}px;
-            }
-
-            @media only screen and (min-width: {{maxWidth}}px) {
-                .posting > .content IMG, .posting > .content IFRAME {
-                    max-width: calc({{maxWidth}}px - 3.5rem);
-                }
-            }
-
-            @media only screen and (max-width: {{maxWidth}}px) {
-                .posting > .content IMG, .posting > .content IFRAME {
-                    max-width: calc(100vw - 4rem);
-                }
-            }
-        </style>
         <title>{{pageTitle}}</title>
     </head>
-    <body>
+    {{assignOption "maxWidth" "feed.width"}}
+    <body style="--feed-width: {{maxWidth}}px">
         <div class="alert alert-warning moera-addon" role="alert">
             {{invitation}}
         </div>
