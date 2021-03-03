@@ -10,7 +10,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.HtmlSanitizer;
-import org.moera.node.text.Shortener;
+import org.moera.node.text.shorten.Shortener;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
