@@ -10,37 +10,31 @@ class Measurer implements NodeFilter {
     private static final String SENTENCE_END = ".?!";
     private static final String PHRASE_END = ":,;)";
 
-    private int textMin;
-    private int textAvg;
-    private int textMax;
+    private static final TextPosition TEXT_MIN = new TextPosition(4, 0);
+    private static final TextPosition TEXT_AVG = new TextPosition(8, 0);
+    private static final TextPosition TEXT_MAX = new TextPosition(10, 0);
 
-    private int offset;
-    private int paragraphCut = -1;
-    private int sentenceCut = -1;
-    private int phraseCut = -1;
-    private int wordCut = -1;
+    private TextPosition offset = new TextPosition();
+    private TextPosition paragraphCut = null;
+    private TextPosition sentenceCut = null;
+    private TextPosition phraseCut = null;
+    private TextPosition wordCut = null;
     private boolean textShort = true;
 
-    Measurer(int textMin, int textAvg, int textMax) {
-        this.textMin = textMin;
-        this.textAvg = textAvg;
-        this.textMax = textMax;
-    }
-
-    public int getCut() {
-        if (paragraphCut > 0) {
+    public TextPosition getCut() {
+        if (paragraphCut != null) {
             return paragraphCut;
         }
-        if (sentenceCut > 0) {
+        if (sentenceCut != null) {
             return sentenceCut;
         }
-        if (phraseCut > 0) {
+        if (phraseCut != null) {
             return phraseCut;
         }
-        if (wordCut > 0) {
+        if (wordCut != null) {
             return wordCut;
         }
-        return textMin;
+        return TEXT_MIN;
     }
 
     public boolean isTextShort() {
@@ -48,14 +42,14 @@ class Measurer implements NodeFilter {
     }
 
     public boolean needsEllipsis() {
-        return paragraphCut <= 0 && sentenceCut <= 0;
+        return paragraphCut == null && sentenceCut == null;
     }
 
-    private int closest(int incumbent, int challenger) {
-        if (challenger < textMin || challenger > textMax) {
+    private TextPosition closest(TextPosition incumbent, TextPosition challenger) {
+        if (challenger.less(TEXT_MIN) || challenger.greater(TEXT_MAX)) {
             return incumbent;
         }
-        return incumbent < 0 || Math.abs(challenger - textAvg) < Math.abs(incumbent - textAvg)
+        return incumbent == null || challenger.distance(TEXT_AVG) < incumbent.distance(TEXT_AVG)
                 ? challenger : incumbent;
     }
 
@@ -81,16 +75,16 @@ class Measurer implements NodeFilter {
         for (int i = 0; i < text.length() - 1; i++) {
             if (i == text.length() - 1 || isSpace(text.charAt(i + 1))) {
                 if (SENTENCE_END.indexOf(text.charAt(i)) >= 0) {
-                    sentenceCut = closest(sentenceCut, offset + i + 1);
+                    sentenceCut = closest(sentenceCut, offset.plus(i + 1));
                     continue;
                 }
                 if (PHRASE_END.indexOf(text.charAt(i)) >= 0) {
-                    phraseCut = closest(phraseCut, offset + i + 1);
+                    phraseCut = closest(phraseCut, offset.plus(i + 1));
                     continue;
                 }
             }
             if (isSpace(text.charAt(i))) {
-                wordCut = closest(wordCut, offset + i);
+                wordCut = closest(wordCut, offset.plus(i));
             }
         }
     }
@@ -100,9 +94,9 @@ class Measurer implements NodeFilter {
         if (node instanceof TextNode) {
             String text = ((TextNode) node).getWholeText();
             scanText(text);
-            offset += text.length();
+            offset = offset.plus(text.length());
         }
-        if (offset <= textMax) {
+        if (offset.lessOrEquals(TEXT_MAX)) {
             return FilterResult.CONTINUE;
         } else {
             textShort = false;
@@ -112,8 +106,12 @@ class Measurer implements NodeFilter {
 
     @Override
     public FilterResult tail(Node node, int depth) {
-        if (node instanceof Element && ((Element) node).tag().isBlock()) {
-            paragraphCut = closest(paragraphCut, offset);
+        if (node instanceof Element) {
+            Element element = (Element) node;
+            if (element.normalName().equals("br") || element.tag().isBlock()) {
+                offset = offset.newLine();
+                paragraphCut = closest(paragraphCut, offset);
+            }
         }
         return FilterResult.CONTINUE;
     }
