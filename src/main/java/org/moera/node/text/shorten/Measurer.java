@@ -19,7 +19,7 @@ class Measurer implements NodeFilter {
     private TextPosition sentenceCut = null;
     private TextPosition phraseCut = null;
     private TextPosition wordCut = null;
-    private boolean textShort = true;
+    private Element ignoreContent = null;
 
     public TextPosition getCut() {
         if (paragraphCut != null) {
@@ -38,7 +38,7 @@ class Measurer implements NodeFilter {
     }
 
     public boolean isTextShort() {
-        return textShort;
+        return offset.lessOrEquals(TEXT_MAX) || getCut().greaterOrEquals(TEXT_MAX);
     }
 
     public boolean needsEllipsis() {
@@ -91,15 +91,21 @@ class Measurer implements NodeFilter {
 
     @Override
     public FilterResult head(Node node, int depth) {
-        if (node instanceof TextNode) {
-            String text = ((TextNode) node).getWholeText();
-            scanText(text);
-            offset = offset.plus(text.length());
+        if (ignoreContent == null) {
+            if (node instanceof TextNode) {
+                String text = ((TextNode) node).getWholeText();
+                scanText(text);
+                offset = offset.plus(text.length());
+            } else if (node instanceof Element) {
+                Element element = (Element) node;
+                if (Elements.isDetails(element) || Elements.isObject(element)) {
+                    ignoreContent = element;
+                }
+            }
         }
         if (offset.lessOrEquals(TEXT_MAX)) {
             return FilterResult.CONTINUE;
         } else {
-            textShort = false;
             return FilterResult.STOP;
         }
     }
@@ -108,9 +114,19 @@ class Measurer implements NodeFilter {
     public FilterResult tail(Node node, int depth) {
         if (node instanceof Element) {
             Element element = (Element) node;
-            if (element.normalName().equals("br") || element.tag().isBlock()) {
-                offset = offset.newLine();
-                paragraphCut = closest(paragraphCut, offset);
+            if (ignoreContent == null) {
+                if (Elements.isBreaking(element)) {
+                    offset = offset.newLine();
+                    paragraphCut = closest(paragraphCut, offset);
+                }
+            } else if (ignoreContent == node) {
+                ignoreContent = null;
+                boolean firstObject = false;
+                if (Elements.isObject(element)) {
+                    firstObject = offset.less(TEXT_MIN);
+                    offset = offset.space(Elements.getHeight(element));
+                }
+                paragraphCut = firstObject ? offset : closest(paragraphCut, offset);
             }
         }
         return FilterResult.CONTINUE;

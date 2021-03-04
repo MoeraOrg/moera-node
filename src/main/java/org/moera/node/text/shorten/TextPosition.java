@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 public class TextPosition implements Cloneable, Comparable<TextPosition> {
 
     private static final int LINE_LENGTH = 212;
+    private static final float LINE_HEIGHT = 21.5f;
 
     private int line;
     private int chr;
@@ -32,6 +33,10 @@ public class TextPosition implements Cloneable, Comparable<TextPosition> {
         return line * LINE_LENGTH + chr;
     }
 
+    public boolean isZero() {
+        return line == 0 && chr == 0;
+    }
+
     public TextPosition plus(int amount) {
         int total = chr + amount;
         return new TextPosition(line + total / LINE_LENGTH, total % LINE_LENGTH);
@@ -39,6 +44,11 @@ public class TextPosition implements Cloneable, Comparable<TextPosition> {
 
     public TextPosition newLine() {
         return chr == 0 ? clone() : new TextPosition(line + 1, 0);
+    }
+
+    public TextPosition space(int amount) { // in pixels
+        int start = chr == 0 ? line : line + 1;
+        return new TextPosition(start + Math.round(amount / LINE_HEIGHT), 0);
     }
 
     public int distance(TextPosition peer) {

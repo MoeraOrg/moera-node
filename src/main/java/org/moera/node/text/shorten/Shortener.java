@@ -25,7 +25,7 @@ public class Shortener {
     }
 
     private static String shorten(String html) {
-        Document document = Jsoup.parseBodyFragment(html);
+        Document document = Jsoup.parseBodyFragment(html.trim());
         Measurer measurer = new Measurer();
         document.body().filter(measurer);
 
