@@ -55,7 +55,7 @@ public class MentionsInlineParserExtension implements InlineParserExtension {
             }
         }
         // final punctuation
-        if (i > nameStartingSequence && END_PUNCTUATION.indexOf(inputText.charAt(i - 1)) >= 0) {
+        while (i > nameStartingSequence && END_PUNCTUATION.indexOf(inputText.charAt(i - 1)) >= 0) {
             i--;
         }
 
