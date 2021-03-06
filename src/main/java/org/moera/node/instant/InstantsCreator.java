@@ -10,9 +10,9 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.naming.NodeName;
-import org.moera.node.naming.RegisteredName;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
+import org.moera.node.util.Util;
 import org.moera.node.webpush.WebPushPacket;
 import org.moera.node.webpush.WebPushService;
 
@@ -79,24 +79,11 @@ public class InstantsCreator {
     }
 
     protected static String formatNodeName(String name, String fullName) {
-        if (fullName != null) {
-            return spanNodeName(fullName);
-        }
-
-        NodeName nodeName = NodeName.parse(name);
-        if (nodeName instanceof RegisteredName) {
-            RegisteredName registeredName = (RegisteredName) nodeName;
-            return spanNodeName(registeredName.getName() + spanGeneration(registeredName.getGeneration()));
-        }
-        return spanNodeName(name);
+        return spanNodeName(name, fullName != null ? fullName : NodeName.shorten(name));
     }
 
-    private static String spanNodeName(String name) {
-        return String.format("<span class=\"node-name\">%s</span>", name);
-    }
-
-    private static String spanGeneration(int generation) {
-        return generation != 0 ? String.format("<span class=\"generation\">%d</span>", generation) : "";
+    private static String spanNodeName(String nodeName, String text) {
+        return String.format("<span class=\"node-name\" data-nodename=\"%s\">%s</span>", Util.he(nodeName), text);
     }
 
 }
