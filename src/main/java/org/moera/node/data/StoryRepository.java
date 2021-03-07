@@ -31,7 +31,7 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
             + " order by s.moment desc")
     List<Story> findSubsByTypeAndEntryId(UUID nodeId, StoryType storyType, UUID entryId);
 
-    @Query("select s from Story s where s.nodeId = ?1 and s.entry.id = ?2 order by s.moment desc")
+    @Query("select s from Story s where s.nodeId = ?1 and s.entry.id = ?2 and s.parent is null order by s.moment desc")
     List<Story> findByEntryId(UUID nodeId, UUID entryId);
 
     @Modifying
