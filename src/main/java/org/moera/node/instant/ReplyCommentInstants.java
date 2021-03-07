@@ -149,9 +149,7 @@ public class ReplyCommentInstants extends InstantsCreator {
             buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstStory.getRemoteOwnerName())
                     ? "their" : formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()));
         }
-        buf.append(" post \"");
-        buf.append(Util.he(story.getRemoteHeading()));
-        buf.append('"');
+        buf.append(" post");
         return buf.toString();
     }
 
