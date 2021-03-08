@@ -130,11 +130,13 @@ public class PostingController {
         }
         requestContext.send(new PostingAddedEvent(posting));
 
-        final UUID postingId = posting.getId();
-        postingText.getPublications().stream()
-                .map(StoryAttributes::getFeedName)
-                .forEach(fn -> requestContext.send(Directions.feedSubscribers(fn),
-                        new FeedPostingAddedNotification(fn, postingId)));
+        if (postingText.getPublications() != null) {
+            final UUID postingId = posting.getId();
+            postingText.getPublications().stream()
+                    .map(StoryAttributes::getFeedName)
+                    .forEach(fn -> requestContext.send(Directions.feedSubscribers(fn),
+                            new FeedPostingAddedNotification(fn, postingId)));
+        }
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
                 .body(withStories(new PostingInfo(posting, true)));

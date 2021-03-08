@@ -38,7 +38,6 @@ public class MarkdownConverter {
             .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
             .set(GitLabExtension.INS_PARSER, false)
             .set(GitLabExtension.DEL_PARSER, false)
-            .set(GitLabExtension.RENDER_BLOCK_MATH, false)
             .set(GitLabExtension.RENDER_BLOCK_MERMAID, false)
             .set(Parser.EXTENSIONS, List.of(
                     AutolinkExtension.create(),
