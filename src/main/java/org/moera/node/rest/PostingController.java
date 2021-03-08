@@ -101,6 +101,10 @@ public class PostingController {
     @Inject
     private TextConverter textConverter;
 
+    private int getMaxPostingSize() {
+        return requestContext.getOptions().getInt("posting.max-size");
+    }
+
     @GetMapping("/features")
     public PostingFeatures getFeatures() {
         log.info("GET /postings/features");
@@ -120,11 +124,14 @@ public class PostingController {
         if (StringUtils.isEmpty(postingText.getBodySrc())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
         }
+        if (postingText.getBodySrc().length() > getMaxPostingSize()) {
+            throw new ValidationFailure("postingText.bodySrc.wrong-size");
+        }
 
         Posting posting = postingOperations.newPosting(postingText, null);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, null, postingText.getPublications(), null,
-                    revision -> postingText.toEntryRevision(revision, textConverter));
+            posting = postingOperations.createOrUpdatePosting(posting, null, postingText.getPublications(),
+                    null, revision -> postingText.toEntryRevision(revision, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -152,6 +159,9 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
+        if (postingText.getBodySrc() != null && postingText.getBodySrc().length() > getMaxPostingSize()) {
+            throw new ValidationFailure("postingText.bodySrc.wrong-size");
+        }
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }

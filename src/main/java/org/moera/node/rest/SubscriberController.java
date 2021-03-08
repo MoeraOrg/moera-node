@@ -95,7 +95,7 @@ public class SubscriberController {
     }
 
     @GetMapping("/{id}")
-    public SubscriberInfo get(@PathVariable UUID id) throws AuthenticationException {
+    public SubscriberInfo get(@PathVariable UUID id) {
         log.info("GET /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
@@ -112,9 +112,7 @@ public class SubscriberController {
     @PostMapping
     @Entitled
     @Transactional
-    public SubscriberInfo post(@Valid @RequestBody SubscriberDescription subscriberDescription)
-            throws AuthenticationException {
-
+    public SubscriberInfo post(@Valid @RequestBody SubscriberDescription subscriberDescription) {
         log.info("POST /people/subscribers (type = {}, feedName = {}, postingId = {})",
                 LogUtil.format(SubscriptionType.toValue(subscriberDescription.getType())),
                 LogUtil.format(subscriberDescription.getFeedName()),
@@ -212,7 +210,7 @@ public class SubscriberController {
 
     @DeleteMapping("/{id}")
     @Transactional
-    public Result delete(@PathVariable UUID id) throws AuthenticationException {
+    public Result delete(@PathVariable UUID id) {
         log.info("DELETE /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)

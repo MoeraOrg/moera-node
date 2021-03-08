@@ -9,6 +9,7 @@ public class SettingMetaInfo {
     private String name;
     private String type;
     private String defaultValue;
+    private boolean privileged;
     private String title;
     private SettingTypeModifiers modifiers;
 
@@ -19,6 +20,7 @@ public class SettingMetaInfo {
         name = descriptor.getName();
         type = descriptor.getType();
         defaultValue = descriptor.getDefaultValue();
+        privileged = descriptor.isPrivileged();
         title = descriptor.getTitle();
         modifiers = new SettingTypeModifiers(descriptor.getModifiers());
     }
@@ -45,6 +47,14 @@ public class SettingMetaInfo {
 
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    public boolean isPrivileged() {
+        return privileged;
+    }
+
+    public void setPrivileged(boolean privileged) {
+        this.privileged = privileged;
     }
 
     public String getTitle() {

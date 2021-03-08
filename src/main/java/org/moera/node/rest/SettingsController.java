@@ -11,14 +11,15 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
-import org.moera.node.model.event.ClientSettingsChangedEvent;
-import org.moera.node.model.event.NodeSettingsChangedEvent;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SettingInfo;
 import org.moera.node.model.SettingMetaInfo;
+import org.moera.node.model.event.ClientSettingsChangedEvent;
+import org.moera.node.model.event.NodeSettingsChangedEvent;
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.slf4j.Logger;
@@ -87,7 +88,6 @@ public class SettingsController {
 
     @PutMapping
     @Transactional
-    @Admin
     public Result put(@RequestBody @Valid List<SettingInfo> settings) {
         log.info("PUT /settings");
 
@@ -101,6 +101,10 @@ public class SettingsController {
                 }
                 if (descriptor.isInternal()) {
                     throw new OperationFailure("setting.internal");
+                }
+                if (!descriptor.isPrivileged() && !requestContext.isAdmin()
+                        || descriptor.isPrivileged() && !requestContext.isRootAdmin()) {
+                    throw new AuthenticationException();
                 }
                 if (setting.getValue() != null) {
                     options.set(setting.getName(), setting.getValue());

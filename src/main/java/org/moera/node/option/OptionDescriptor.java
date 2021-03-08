@@ -6,6 +6,7 @@ public class OptionDescriptor {
     private String type;
     private String defaultValue;
     private boolean internal;
+    private boolean privileged;
     private String title;
     private OptionTypeModifiers modifiers = new OptionTypeModifiers();
 
@@ -39,6 +40,14 @@ public class OptionDescriptor {
 
     public void setInternal(boolean internal) {
         this.internal = internal;
+    }
+
+    public boolean isPrivileged() {
+        return privileged;
+    }
+
+    public void setPrivileged(boolean privileged) {
+        this.privileged = privileged;
     }
 
     public String getTitle() {

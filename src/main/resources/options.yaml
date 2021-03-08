@@ -118,6 +118,15 @@
     min: 1h
     max: 2000d
 
+- name: posting.max-size
+  type: int
+  privileged: true
+  defaultValue: 655360
+  title: Maximal size of postings
+  modifiers:
+    min: 1024
+    max: 4194304
+
 - name: posting.subject.present
   type: bool
   defaultValue: false
@@ -198,6 +207,23 @@
   modifiers:
     min: 1d
     max: 2000d
+
+- name: comment.max-size
+  type: int
+  privileged: true
+  defaultValue: 65536
+  title: Maximal size of comments
+  modifiers:
+    min: 1024
+    max: 4194304
+
+- name: comment.max-size.soft
+  type: int
+  defaultValue: 65536
+  title: Maximal size of comments
+  modifiers:
+    min: 1024
+    max: 4194304
 
 - name: comment.deleted.lifetime
   type: Duration

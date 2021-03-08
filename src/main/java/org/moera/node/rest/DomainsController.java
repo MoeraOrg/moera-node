@@ -68,7 +68,7 @@ public class DomainsController {
 
     @ProviderApi
     @GetMapping("/{name}")
-    public DomainInfo get(@PathVariable String name) throws AuthenticationException {
+    public DomainInfo get(@PathVariable String name) {
         log.info("GET /domains/{}", name);
 
         if (!config.isRegistrationPublic() && !requestContext.isRootAdmin()) {
@@ -85,9 +85,7 @@ public class DomainsController {
     @ProviderApi
     @PostMapping
     @Transactional
-    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainAttributes domainAttributes)
-            throws AuthenticationException {
-
+    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainAttributes domainAttributes) {
         log.info("POST /domains (name = {}, nodeId = {})",
                 LogUtil.format(domainAttributes.getName()), LogUtil.format(domainAttributes.getNodeId()));
 

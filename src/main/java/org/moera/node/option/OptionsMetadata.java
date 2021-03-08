@@ -43,7 +43,7 @@ public class OptionsMetadata {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         List<OptionDescriptor> data = mapper.readValue(
                 applicationContext.getResource("classpath:options.yaml").getInputStream(),
-                new TypeReference<List<OptionDescriptor>>() {
+                new TypeReference<>() {
                 });
         descriptors = data.stream().collect(Collectors.toMap(OptionDescriptor::getName, Function.identity()));
         typeModifiers = data.stream()
@@ -87,6 +87,10 @@ public class OptionsMetadata {
 
     public boolean isInternal(String name) {
         return getDescriptor(name).isInternal();
+    }
+
+    public boolean isPrivileged(String name) {
+        return getDescriptor(name).isPrivileged();
     }
 
     public Map<String, OptionDescriptor> getDescriptors() {

@@ -138,10 +138,15 @@ public class CommentController {
     @Inject
     private CommentInstants commentInstants;
 
+    private int getMaxCommentSize() {
+        return Math.min(requestContext.getOptions().getInt("comment.max-size"),
+                requestContext.getOptions().getInt("comment.max-size.soft"));
+    }
+
     @PostMapping
     @Transactional
     public ResponseEntity<CommentCreated> post(@PathVariable UUID postingId,
-            @Valid @RequestBody CommentText commentText) throws AuthenticationException {
+            @Valid @RequestBody CommentText commentText) {
 
         log.info("POST /postings/{postingId}/comments (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
                 LogUtil.format(postingId),
@@ -196,7 +201,7 @@ public class CommentController {
     @PutMapping("/{commentId}")
     @Transactional
     public CommentInfo put(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                           @Valid @RequestBody CommentText commentText) throws AuthenticationException {
+                           @Valid @RequestBody CommentText commentText) {
 
         log.info("PUT /postings/{postingId}/comments/{commentId}"
                         + " (postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
@@ -241,7 +246,7 @@ public class CommentController {
     }
 
     private byte[] validateCommentText(Posting posting, CommentText commentText, String ownerName,
-                                       byte[] repliedToDigest) throws AuthenticationException {
+                                       byte[] repliedToDigest) {
 
         byte[] digest = null;
         if (commentText.getSignature() == null) {
@@ -256,6 +261,9 @@ public class CommentController {
 
             if (StringUtils.isEmpty(commentText.getBodySrc())) {
                 throw new ValidationFailure("commentText.bodySrc.blank");
+            }
+            if (commentText.getBodySrc().length() > getMaxCommentSize()) {
+                throw new ValidationFailure("commentText.bodySrc.wrong-size");
             }
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
@@ -274,8 +282,11 @@ public class CommentController {
             digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest(),
                     repliedToDigest);
 
-            if (commentText.getBody() == null || StringUtils.isEmpty(commentText.getBody())) {
+            if (StringUtils.isEmpty(commentText.getBody())) {
                 throw new ValidationFailure("commentText.body.blank");
+            }
+            if (commentText.getBody().length() > getMaxCommentSize()) {
+                throw new ValidationFailure("commentText.body.wrong-size");
             }
             if (StringUtils.isEmpty(commentText.getBodyFormat())) {
                 throw new ValidationFailure("commentText.bodyFormat.blank");
@@ -416,9 +427,7 @@ public class CommentController {
 
     @DeleteMapping("/{commentId}")
     @Transactional
-    public CommentTotalInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId)
-            throws AuthenticationException {
-
+    public CommentTotalInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId) {
         log.info("DELETE /postings/{postingId}/comments/{commentId} (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));
 

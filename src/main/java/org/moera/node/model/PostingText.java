@@ -20,7 +20,6 @@ public class PostingText {
     @Size(max = 96)
     private String ownerFullName;
 
-    @Size(max = 256 * 1024 * 1024)
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;

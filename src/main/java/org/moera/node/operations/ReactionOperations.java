@@ -87,7 +87,7 @@ public class ReactionOperations {
 
     private final MomentFinder momentFinder = new MomentFinder();
 
-    public void validate(ReactionDescription reactionDescription, Entry entry) throws AuthenticationException {
+    public void validate(ReactionDescription reactionDescription, Entry entry) {
         if (reactionDescription.getSignature() == null) {
             String ownerName = requestContext.getClientName();
             if (StringUtils.isEmpty(ownerName)) {

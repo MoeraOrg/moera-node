@@ -23,7 +23,6 @@ public class CommentText {
 
     private String bodyPreview;
 
-    @Size(max = 65535)
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;
