@@ -55,26 +55,34 @@ public class RedirectController {
     @GetMapping("/gotoname")
     @Transactional
     public String goToName(@RequestParam(required = false) String client,
-                           @RequestParam String name,
+                           @RequestParam(required = false) String name,
                            @RequestParam(required = false) String location,
                            @RequestParam(required = false) UUID trackingId) {
-        RegisteredNameDetails details = namingCache.get(name);
-        if (details == null || details.getNodeUri() == null) {
-            throw new PageNotFoundException();
+        String href = "";
+        if (!StringUtils.isEmpty(name)) {
+            RegisteredNameDetails details = namingCache.get(name);
+            if (details == null || details.getNodeUri() == null) {
+                throw new PageNotFoundException();
+            }
+            href = details.getNodeUri();
         }
         if (trackingId != null) {
             markAsRead(trackingId);
         }
-        String href = details.getNodeUri() + (location != null ? location : "");
-        href = StringUtils.isEmpty(client) ? href : client + "/?href=" + Util.ue(href);
-        return "redirect:" + href;
+        if (!StringUtils.isEmpty(location)) {
+            href += location;
+        }
+        if (!StringUtils.isEmpty(client)) {
+            href = client + "/?href=" + Util.ue(href);
+        }
+        return "redirect:" + (!StringUtils.isEmpty(href) ? href : "/");
     }
 
     @GetMapping("/track")
     @Transactional
+    @Deprecated
     public String track(@RequestParam UUID trackingId, @RequestParam String href) {
-        markAsRead(trackingId);
-        return "redirect:" + href;
+        return goToName(null, null, href, trackingId);
     }
 
 }
