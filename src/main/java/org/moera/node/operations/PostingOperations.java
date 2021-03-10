@@ -2,7 +2,6 @@ package org.moera.node.operations;
 
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +30,7 @@ import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
+import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -199,8 +199,10 @@ public class PostingOperations {
 
     public void deletePosting(Posting posting) {
         posting.setDeletedAt(Util.now());
-        Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
-        posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
+        ExtendedDuration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
+        if (!postingTtl.isNever()) {
+            posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl.getDuration())));
+        }
         posting.getCurrentRevision().setDeletedAt(Util.now());
 
         Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));

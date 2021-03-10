@@ -38,7 +38,8 @@ public class InstantOperations {
     public void purgeExpired() throws Throwable {
         for (String domainName : domains.getAllDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
-            Duration lifetime = domains.getDomainOptions(domainName).getDuration("instants.lifetime");
+            Duration lifetime = domains.getDomainOptions(domainName)
+                    .getDuration("instants.lifetime").getDuration();
             Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
             List<Event> events = new ArrayList<>();
             Transaction.execute(txManager, () -> {

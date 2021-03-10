@@ -31,6 +31,7 @@ import org.moera.node.model.notification.ReplyCommentAddedNotification;
 import org.moera.node.model.notification.ReplyCommentDeletedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
+import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -221,8 +222,10 @@ public class CommentOperations {
 
     public void deleteComment(Comment comment) {
         comment.setDeletedAt(Util.now());
-        Duration postingTtl = requestContext.getOptions().getDuration("comment.deleted.lifetime");
-        comment.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
+        ExtendedDuration postingTtl = requestContext.getOptions().getDuration("comment.deleted.lifetime");
+        if (!postingTtl.isNever()) {
+            comment.setDeadline(Timestamp.from(Instant.now().plus(postingTtl.getDuration())));
+        }
         comment.getCurrentRevision().setDeletedAt(Util.now());
         if (comment.getPosting().getTotalChildren() > 0) {
             log.debug("Total comments for posting {} = {} - 1: deleted comment {}",

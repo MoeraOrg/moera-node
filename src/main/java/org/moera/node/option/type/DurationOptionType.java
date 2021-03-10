@@ -1,12 +1,11 @@
 package org.moera.node.option.type;
 
-import java.time.Duration;
-
 import org.moera.commons.util.DurationFormatException;
-import org.moera.commons.util.Util;
 import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
+import org.moera.node.util.ExtendedDuration;
+import org.moera.node.util.Util;
 
 @OptionType("Duration")
 public class DurationOptionType extends OptionTypeBase {
@@ -21,16 +20,34 @@ public class DurationOptionType extends OptionTypeBase {
 
     @Override
     public DurationOptionTypeModifiers parseTypeModifiers(OptionTypeModifiers modifiers) {
+        if (modifiers == null) {
+            return new DurationOptionTypeModifiers();
+        }
+
         DurationOptionTypeModifiers durMods = new DurationOptionTypeModifiers();
-        if (modifiers != null && modifiers.getMin() != null) {
+        if (modifiers.getMin() != null) {
             durMods.setMinSeconds(parseSeconds(modifiers.getMin()));
         } else {
             durMods.setMinSeconds(0);
         }
-        if (modifiers != null && modifiers.getMax() != null) {
+        if (modifiers.getMax() != null) {
             durMods.setMaxSeconds(parseSeconds(modifiers.getMax()));
         } else {
             durMods.setMaxSeconds(Long.MAX_VALUE);
+        }
+        if (modifiers.getNever() != null) {
+            Boolean never = Util.toBoolean(modifiers.getNever());
+            if (never == null) {
+                throw new DeserializeOptionValueException("bool", modifiers.getNever());
+            }
+            durMods.setNever(never);
+        }
+        if (modifiers.getAlways() != null) {
+            Boolean always = Util.toBoolean(modifiers.getAlways());
+            if (always == null) {
+                throw new DeserializeOptionValueException("bool", modifiers.getAlways());
+            }
+            durMods.setAlways(always);
         }
         return durMods;
     }
@@ -41,8 +58,8 @@ public class DurationOptionType extends OptionTypeBase {
     }
 
     @Override
-    public Duration getDuration(Object value) {
-        return Util.toDuration((String) value);
+    public ExtendedDuration getDuration(Object value) {
+        return ExtendedDuration.parse((String) value);
     }
 
     @Override
@@ -54,15 +71,31 @@ public class DurationOptionType extends OptionTypeBase {
     }
 
     private String acceptString(String value, DurationOptionTypeModifiers typeModifiers) {
-        long seconds;
+        ExtendedDuration duration;
         try {
-            seconds = Util.toDuration(value).getSeconds();
+            duration = ExtendedDuration.parse(value);
         } catch (DurationFormatException e) {
             throw new UnsuitableOptionValueException(value);
         }
         if (typeModifiers != null) {
-            if (seconds < typeModifiers.getMinSeconds() || seconds > typeModifiers.getMaxSeconds()) {
-                throw new UnsuitableOptionValueException(value);
+            switch (duration.getZone()) {
+                case NEVER:
+                    if (!typeModifiers.isNever()) {
+                        throw new UnsuitableOptionValueException(value);
+                    }
+                    break;
+                case ALWAYS:
+                    if (!typeModifiers.isAlways()) {
+                        throw new UnsuitableOptionValueException(value);
+                    }
+                    break;
+                case FIXED:
+                default:
+                    long seconds = duration.getSeconds();
+                    if (seconds < typeModifiers.getMinSeconds() || seconds > typeModifiers.getMaxSeconds()) {
+                        throw new UnsuitableOptionValueException(value);
+                    }
+                    break;
             }
         }
         return value;

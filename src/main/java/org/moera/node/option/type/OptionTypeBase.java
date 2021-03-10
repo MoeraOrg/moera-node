@@ -3,12 +3,12 @@ package org.moera.node.option.type;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.util.UUID;
 
 import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.InvalidOptionTypeConversionException;
 import org.moera.node.option.exception.UnsuitableOptionTypeException;
+import org.moera.node.util.ExtendedDuration;
 
 public abstract class OptionTypeBase {
 
@@ -56,8 +56,8 @@ public abstract class OptionTypeBase {
         throw new InvalidOptionTypeConversionException(getTypeName(), PublicKey.class);
     }
 
-    public Duration getDuration(Object value) {
-        throw new InvalidOptionTypeConversionException(getTypeName(), Duration.class);
+    public ExtendedDuration getDuration(Object value) {
+        throw new InvalidOptionTypeConversionException(getTypeName(), ExtendedDuration.class);
     }
 
     public UUID getUuid(Object value) {

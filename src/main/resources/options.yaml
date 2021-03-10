@@ -144,6 +144,7 @@
   modifiers:
     min: 7d
     max: 2000d
+    never: true
 
 - name: posting.draft.lifetime
   type: Duration
@@ -152,6 +153,7 @@
   modifiers:
     min: 1d
     max: 2000d
+    never: true
 
 - name: feed.width
   type: int
@@ -168,6 +170,7 @@
   modifiers:
     min: 7d
     max: 2000d
+    never: true
 
 - name: webui.head.top.html
   type: string
@@ -182,7 +185,7 @@
   title: Posting verification information lifetime
   modifiers:
     min: 30m
-    max: 2000d
+    max: 7d
 
 - name: remote-comment-verification.lifetime
   type: Duration
@@ -190,7 +193,7 @@
   title: Comment verification information lifetime
   modifiers:
     min: 30m
-    max: 2000d
+    max: 7d
 
 - name: remote-reaction-verification.lifetime
   type: Duration
@@ -198,7 +201,7 @@
   title: Reaction verification information lifetime
   modifiers:
     min: 30m
-    max: 2000d
+    max: 7d
 
 - name: instants.lifetime
   type: Duration
@@ -232,6 +235,7 @@
   modifiers:
     min: 7d
     max: 2000d
+    never: true
 
 - name: web-push.private-key
   type: PrivateKeyWebPush

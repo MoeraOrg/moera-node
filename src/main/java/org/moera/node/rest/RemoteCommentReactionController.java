@@ -95,7 +95,7 @@ public class RemoteCommentReactionController {
         RemoteReactionVerification data = new RemoteReactionVerification(
                 requestContext.nodeId(), nodeName, postingId, commentId, ownerName);
         data.setDeadline(Timestamp.from(Instant.now().plus(
-                requestContext.getOptions().getDuration("remote-reaction-verification.lifetime"))));
+                requestContext.getOptions().getDuration("remote-reaction-verification.lifetime").getDuration())));
         remoteReactionVerificationRepository.saveAndFlush(data);
 
         RemoteReactionVerifyTask task = new RemoteReactionVerifyTask(data);

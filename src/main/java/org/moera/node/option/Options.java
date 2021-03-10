@@ -3,7 +3,6 @@ package org.moera.node.option;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -15,6 +14,7 @@ import org.moera.node.data.OptionRepository;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.TransactionAbsentException;
 import org.moera.node.option.type.OptionTypeBase;
+import org.moera.node.util.ExtendedDuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,7 +203,7 @@ public class Options {
         return forName(name, (value, optionType) -> optionType.getPublicKey(value));
     }
 
-    public Duration getDuration(String name) {
+    public ExtendedDuration getDuration(String name) {
         return forName(name, (value, optionType) -> optionType.getDuration(value));
     }
 

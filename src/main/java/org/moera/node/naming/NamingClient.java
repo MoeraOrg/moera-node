@@ -231,7 +231,7 @@ public class NamingClient {
         byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
         byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
         long validFrom = Instant.now()
-                                .plus(options.getDuration("profile.signing-key.valid-from.layover"))
+                                .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
                                 .getEpochSecond();
         log.info("Registering name '{}': node uri = {}, updating key = {}, signing key = {}, valid from = {}",
                 name, nodeUri, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
@@ -286,7 +286,7 @@ public class NamingClient {
         byte[] signingKeyR = signingKey != null ? CryptoUtil.toRawPublicKey(signingKey) : info.getSigningKey();
         long validFrom = signingKey != null
                 ? Instant.now()
-                    .plus(options.getDuration("profile.signing-key.valid-from.layover"))
+                    .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
                     .getEpochSecond()
                 : info.getValidFrom();
         Object putCall = new PutCallFingerprint(

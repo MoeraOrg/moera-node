@@ -6,6 +6,8 @@ public class OptionTypeModifiers {
     private String min;
     private String max;
     private String multiline;
+    private String never;
+    private String always;
 
     public String getFormat() {
         return format;
@@ -37,6 +39,22 @@ public class OptionTypeModifiers {
 
     public void setMultiline(String multiline) {
         this.multiline = multiline;
+    }
+
+    public String getNever() {
+        return never;
+    }
+
+    public void setNever(String never) {
+        this.never = never;
+    }
+
+    public String getAlways() {
+        return always;
+    }
+
+    public void setAlways(String always) {
+        this.always = always;
     }
 
 }

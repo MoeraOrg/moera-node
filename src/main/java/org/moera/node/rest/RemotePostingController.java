@@ -66,7 +66,7 @@ public class RemotePostingController {
         RemotePostingVerification data = new RemotePostingVerification(
                 requestContext.nodeId(), nodeName, id, revisionId);
         data.setDeadline(Timestamp.from(Instant.now().plus(
-                requestContext.getOptions().getDuration("remote-posting-verification.lifetime"))));
+                requestContext.getOptions().getDuration("remote-posting-verification.lifetime").getDuration())));
         remotePostingVerificationRepository.saveAndFlush(data);
 
         RemotePostingVerifyTask task = new RemotePostingVerifyTask(data);

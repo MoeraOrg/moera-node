@@ -38,6 +38,7 @@ import org.moera.node.naming.NamingCache;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.util.EmojiList;
+import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
@@ -139,8 +140,11 @@ public class ReactionOperations {
                 log.debug("Deleting reaction {}", LogUtil.format(reaction.getId()));
                 reactionTotalOperations.changeTotals(entry, reaction, -1);
                 reaction.setDeletedAt(Util.now());
-                Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
-                reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
+                ExtendedDuration reactionTtl =
+                        requestContext.getOptions().getDuration("reaction.deleted.lifetime");
+                if (!reactionTtl.isNever()) {
+                    reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl.getDuration())));
+                }
                 if (reactionDeleted != null) {
                     reactionDeleted.accept(reaction);
                 }
@@ -196,8 +200,10 @@ public class ReactionOperations {
             log.debug("Deleting reaction {}", LogUtil.format(reaction.getId()));
             reactionTotalOperations.changeTotals(entry, reaction, -1);
             reaction.setDeletedAt(Util.now());
-            Duration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
-            reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl)));
+            ExtendedDuration reactionTtl = requestContext.getOptions().getDuration("reaction.deleted.lifetime");
+            if (!reactionTtl.isNever()) {
+                reaction.setDeadline(Timestamp.from(Instant.now().plus(reactionTtl.getDuration())));
+            }
             if (reactionDeleted != null) {
                 reactionDeleted.accept(reaction);
             }

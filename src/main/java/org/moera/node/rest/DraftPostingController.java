@@ -2,7 +2,6 @@ package org.moera.node.rest;
 
 import java.net.URI;
 import java.sql.Timestamp;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -17,9 +16,6 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.SourceFormat;
-import org.moera.node.model.event.DraftPostingAddedEvent;
-import org.moera.node.model.event.DraftPostingDeletedEvent;
-import org.moera.node.model.event.DraftPostingUpdatedEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
@@ -29,8 +25,12 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.DraftPostingAddedEvent;
+import org.moera.node.model.event.DraftPostingDeletedEvent;
+import org.moera.node.model.event.DraftPostingUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.TextConverter;
+import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,8 +103,10 @@ public class DraftPostingController {
 
         Posting posting = postingOperations.newPosting(postingText, p -> {
             p.setDraft(true);
-            Duration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
-            p.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
+            ExtendedDuration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
+            if (!draftTtl.isNever()) {
+                p.setDeadline(Timestamp.from(Instant.now().plus(draftTtl.getDuration())));
+            }
         });
         try {
             posting = postingOperations.createOrUpdatePostingDraft(posting, null, null,
@@ -132,8 +134,10 @@ public class DraftPostingController {
         Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         postingText.toEntry(posting);
-        Duration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
-        posting.setDeadline(Timestamp.from(Instant.now().plus(draftTtl)));
+        ExtendedDuration draftTtl = requestContext.getOptions().getDuration("posting.draft.lifetime");
+        if (!draftTtl.isNever()) {
+            posting.setDeadline(Timestamp.from(Instant.now().plus(draftTtl.getDuration())));
+        }
         try {
             posting = postingOperations.createOrUpdatePostingDraft(posting, posting.getDraftRevision(), null,
                     revision -> postingText.toEntryRevision(revision, textConverter));
@@ -166,8 +170,10 @@ public class DraftPostingController {
         Posting posting = postingRepository.findDraftById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         posting.setDeletedAt(Util.now());
-        Duration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
-        posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl)));
+        ExtendedDuration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
+        if (!postingTtl.isNever()) {
+            posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl.getDuration())));
+        }
         posting.getDraftRevision().setDeletedAt(Util.now());
         entryRevisionRepository.save(posting.getDraftRevision());
 

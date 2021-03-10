@@ -142,7 +142,7 @@ public class RemoteCommentController {
         RemoteCommentVerification data = new RemoteCommentVerification(
                 requestContext.nodeId(), nodeName, postingId, commentId, null);
         data.setDeadline(Timestamp.from(Instant.now().plus(
-                requestContext.getOptions().getDuration("remote-comment-verification.lifetime"))));
+                requestContext.getOptions().getDuration("remote-comment-verification.lifetime").getDuration())));
         remoteCommentVerificationRepository.saveAndFlush(data);
 
         RemoteCommentVerifyTask task = new RemoteCommentVerifyTask(data);

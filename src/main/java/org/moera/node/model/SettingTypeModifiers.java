@@ -11,6 +11,8 @@ public class SettingTypeModifiers {
     private String min;
     private String max;
     private Boolean multiline;
+    private Boolean never;
+    private Boolean always;
 
     public SettingTypeModifiers() {
     }
@@ -20,6 +22,8 @@ public class SettingTypeModifiers {
         min = modifiers.getMin();
         max = modifiers.getMax();
         multiline = Util.toBoolean(modifiers.getMultiline());
+        never = Util.toBoolean(modifiers.getNever());
+        always = Util.toBoolean(modifiers.getAlways());
     }
 
     public String getFormat() {
@@ -52,6 +56,22 @@ public class SettingTypeModifiers {
 
     public void setMultiline(Boolean multiline) {
         this.multiline = multiline;
+    }
+
+    public Boolean getNever() {
+        return never;
+    }
+
+    public void setNever(Boolean never) {
+        this.never = never;
+    }
+
+    public Boolean getAlways() {
+        return always;
+    }
+
+    public void setAlways(Boolean always) {
+        this.always = always;
     }
 
 }

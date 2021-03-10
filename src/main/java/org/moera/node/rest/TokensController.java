@@ -60,7 +60,8 @@ public class TokensController {
         token.setNodeId(options.nodeId());
         token.setToken(CryptoUtil.token());
         token.setAdmin(true);
-        token.setDeadline(Timestamp.from(Instant.now().plus(options.getDuration("token.lifetime"))));
+        token.setDeadline(Timestamp.from(Instant.now().plus(
+                options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
 
         return ResponseEntity.created(URI.create("/tokens/" + token.getToken()))
