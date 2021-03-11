@@ -158,7 +158,16 @@
 - name: posting.revision.lifetime
   type: Duration
   defaultValue: 60d
-  title: Purge old posting revisions after
+  title: Purge old post revisions after
+  modifiers:
+    min: 7d
+    max: 2000d
+    never: true
+
+- name: posting.picked.revision.lifetime
+  type: Duration
+  defaultValue: 7d
+  title: Purge old picked post revisions after
   modifiers:
     min: 7d
     max: 2000d

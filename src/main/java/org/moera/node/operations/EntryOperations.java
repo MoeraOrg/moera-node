@@ -36,12 +36,13 @@ public class EntryOperations {
     public void purgeOutdatedRevisions() throws Throwable {
         for (String domainName : domains.getAllDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
-            purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, "posting.revision.lifetime");
-            purgeOutdatedRevisions(nodeId, domainName, EntryType.COMMENT, "comment.revision.lifetime");
+            purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, true, "posting.revision.lifetime");
+            purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, false, "posting.picked.revision.lifetime");
+            purgeOutdatedRevisions(nodeId, domainName, EntryType.COMMENT, true, "comment.revision.lifetime");
         }
     }
 
-    private void purgeOutdatedRevisions(UUID nodeId, String domainName, EntryType entryType,
+    private void purgeOutdatedRevisions(UUID nodeId, String domainName, EntryType entryType, boolean original,
                                         String optionName) throws Throwable {
         MDC.put("domain", domainName);
 
@@ -50,7 +51,9 @@ public class EntryOperations {
             return;
         }
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime.getDuration()));
-        Set<UUID> entryIds = entryRevisionRepository.findEntriesWithOutdated(nodeId, entryType, createdBefore);
+        Set<UUID> entryIds = original
+                ? entryRevisionRepository.findOriginalEntriesWithOutdated(nodeId, entryType, createdBefore)
+                : entryRevisionRepository.findNotOriginalEntriesWithOutdated(nodeId, entryType, createdBefore);
         for (UUID entryId : entryIds) {
             log.info("Purging revisions of entry {}", entryId);
             Transaction.execute(txManager, () -> {

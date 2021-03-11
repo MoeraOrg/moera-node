@@ -13,6 +13,12 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UUID> {
 
+    String CONDITION_UNUSED = "r.deletedAt is not null"
+            + " and not exists(select rp from EntryRevision rp where rp.parent.id = r.id)"
+            + " and not exists(select rl from Entry rl where rl.repliedToRevision.id = r.id)"
+            + " and not exists(select ra from Reaction ra where ra.entryRevision.id = r.id)"
+            + " and not exists(select rt from ReactionTotal rt where rt.entryRevision.id = r.id)";
+
     @Query("select r from EntryRevision r where r.entry.nodeId = ?1 and r.entry.id = ?2"
             + " and r.entry.deletedAt is null"
             + " and (r.entry.draftRevision.id is null or r.entry.draftRevision.id != r.id) and r.id = ?3")
@@ -28,19 +34,15 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
     Page<EntryRevision> findAllByEntryId(UUID nodeId, UUID entryId, Pageable pageable);
 
     @Query("select r.entry.id from EntryRevision r where r.entry.nodeId = ?1 and r.entry.entryType = ?2"
-            + " and r.createdAt < ?3 and r.deletedAt is not null"
-            + " and not exists(select rp from EntryRevision rp where rp.parent.id = r.id)"
-            + " and not exists(select rl from Entry rl where rl.repliedToRevision.id = r.id)"
-            + " and not exists(select ra from Reaction ra where ra.entryRevision.id = r.id)"
-            + " and not exists(select rt from ReactionTotal rt where rt.entryRevision.id = r.id)")
-    Set<UUID> findEntriesWithOutdated(UUID nodeId, EntryType entryType, Timestamp createdBefore);
+            + " and r.entry.receiverName is null and r.createdAt < ?3 and " + CONDITION_UNUSED)
+    Set<UUID> findOriginalEntriesWithOutdated(UUID nodeId, EntryType entryType, Timestamp createdBefore);
+
+    @Query("select r.entry.id from EntryRevision r where r.entry.nodeId = ?1 and r.entry.entryType = ?2"
+            + " and r.entry.receiverName is not null and r.createdAt < ?3 and " + CONDITION_UNUSED)
+    Set<UUID> findNotOriginalEntriesWithOutdated(UUID nodeId, EntryType entryType, Timestamp createdBefore);
 
     @Modifying
-    @Query("delete EntryRevision r where r.entry.id = ?1 and r.createdAt < ?2 and r.deletedAt is not null"
-            + " and not exists(select rp from EntryRevision rp where rp.parent.id = r.id)"
-            + " and not exists(select rl from Entry rl where rl.repliedToRevision.id = r.id)"
-            + " and not exists(select ra from Reaction ra where ra.entryRevision.id = r.id)"
-            + " and not exists(select rt from ReactionTotal rt where rt.entryRevision.id = r.id)")
+    @Query("delete EntryRevision r where r.entry.id = ?1 and r.createdAt < ?2 and " + CONDITION_UNUSED)
     void deleteOutdated(UUID entryId, Timestamp createdBefore);
 
     @Modifying
