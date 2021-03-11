@@ -224,7 +224,23 @@
 - name: instants.lifetime
   type: Duration
   defaultValue: 30d
+  title: Purge notifications after
+  modifiers:
+    min: 1d
+    max: 2000d
+
+- name: instants.viewed.lifetime
+  type: Duration
+  defaultValue: 7d
   title: Purge viewed notifications after
+  modifiers:
+    min: 1d
+    max: 2000d
+
+- name: news.lifetime
+  type: Duration
+  defaultValue: 60d
+  title: Purge news after
   modifiers:
     min: 1d
     max: 2000d
