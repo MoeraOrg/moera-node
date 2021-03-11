@@ -155,6 +155,15 @@
     max: 2000d
     never: true
 
+- name: posting.revision.lifetime
+  type: Duration
+  defaultValue: 60d
+  title: Purge old posting revisions after
+  modifiers:
+    min: 7d
+    max: 2000d
+    never: true
+
 - name: feed.width
   type: int
   defaultValue: 900
@@ -234,6 +243,15 @@
   title: Purge deleted comments after
   modifiers:
     min: 7d
+    max: 2000d
+    never: true
+
+- name: comment.revision.lifetime
+  type: Duration
+  defaultValue: 7d
+  title: Purge old comment revisions after
+  modifiers:
+    min: 1d
     max: 2000d
     never: true
 
