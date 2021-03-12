@@ -208,7 +208,7 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
-        postingOperations.deletePosting(posting);
+        postingOperations.deletePosting(posting, true);
         storyOperations.unpublish(posting.getId());
 
         return Result.OK;

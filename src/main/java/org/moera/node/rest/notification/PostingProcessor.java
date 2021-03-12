@@ -114,7 +114,7 @@ public class PostingProcessor {
     @Transactional
     public void deleted(PostingDeletedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) -> {
-            postingOperations.deletePosting(posting);
+            postingOperations.deletePosting(posting, false);
             storyOperations.unpublish(posting.getId());
         });
     }

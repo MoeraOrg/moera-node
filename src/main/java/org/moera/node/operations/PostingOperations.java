@@ -20,6 +20,8 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
+import org.moera.node.data.SubscriptionRepository;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.PostingFingerprint;
@@ -67,6 +69,9 @@ public class PostingOperations {
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
+    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private StoryOperations storyOperations;
@@ -228,11 +233,11 @@ public class PostingOperations {
                 .forEach(d -> notificationSender.accept(d, new MentionPostingDeletedNotification(postingId)));
     }
 
-    public void deletePosting(Posting posting) {
-        deletePosting(posting, requestContext.getOptions(), requestContext::send, requestContext::send);
+    public void deletePosting(Posting posting, boolean unsubscribe) {
+        deletePosting(posting, unsubscribe, requestContext.getOptions(), requestContext::send, requestContext::send);
     }
 
-    private void deletePosting(Posting posting, Options options, Consumer<Event> eventSender,
+    private void deletePosting(Posting posting, boolean unsubscribe, Options options, Consumer<Event> eventSender,
                                BiConsumer<Direction, Notification> notificationSender) {
         posting.setDeletedAt(Util.now());
         ExtendedDuration postingTtl = options.getDuration("posting.deleted.lifetime");
@@ -249,6 +254,10 @@ public class PostingOperations {
                         options.nodeName(), notificationSender);
             }
         }
+        if (!posting.isOriginal() && unsubscribe) {
+            subscriptionRepository.deleteByTypeAndNodeAndEntryId(options.nodeId(), SubscriptionType.POSTING,
+                    posting.getReceiverName(), posting.getReceiverEntryId());
+        }
 
         eventSender.accept(new PostingDeletedEvent(posting));
         notificationSender.accept(Directions.postingSubscribers(posting.getId()),
@@ -264,7 +273,7 @@ public class PostingOperations {
             Transaction.execute(txManager, () -> {
                 postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
                     log.info("Deleting unlinked posting {}", posting.getId());
-                    deletePosting(posting, options, eventList::add,
+                    deletePosting(posting, true, options, eventList::add,
                             (direction, notification) -> notificationList.add(Pair.of(direction, notification)));
                 });
                 return null;
