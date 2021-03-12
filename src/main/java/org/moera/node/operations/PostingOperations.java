@@ -3,10 +3,12 @@ package org.moera.node.operations;
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.inject.Inject;
@@ -18,29 +20,47 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
+import org.moera.node.domain.Domains;
+import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.Body;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
+import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.PostingDeletedNotification;
+import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationSenderPool;
+import org.moera.node.option.Options;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.ExtendedDuration;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class PostingOperations {
 
     public static final int MAX_POSTINGS_PER_REQUEST = 200;
 
+    private static Logger log = LoggerFactory.getLogger(PostingOperations.class);
+
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private Domains domains;
 
     @Inject
     private PostingRepository postingRepository;
@@ -53,6 +73,15 @@ public class PostingOperations {
 
     @Inject
     private TimelinePublicPageOperations timelinePublicPageOperations;
+
+    @Inject
+    private EventManager eventManager;
+
+    @Inject
+    private NotificationSenderPool notificationSenderPool;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     public Posting newPosting(PostingText postingText, Consumer<Posting> initializer) {
         if (postingText.getAcceptedReactions() == null) {
@@ -177,40 +206,75 @@ public class PostingOperations {
         Set<String> latestMentions = latest != null
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
-        notifyMentioned(postingId, current.getHeading(), currentMentions, latestMentions);
+        notifyMentioned(postingId, current.getHeading(), currentMentions, latestMentions, requestContext.nodeName(),
+                requestContext::send);
     }
 
     private void notifyMentioned(UUID postingId, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions) {
+                                 Set<String> latestMentions, String nodeName,
+                                 BiConsumer<Direction, Notification> notificationSender) {
         currentMentions.stream()
-                .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !m.equals(nodeName))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
                 .map(Directions::single)
-                .forEach(d -> requestContext.send(d,
+                .forEach(d -> notificationSender.accept(d,
                         new MentionPostingAddedNotification(postingId, currentHeading)));
         latestMentions.stream()
-                .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !m.equals(nodeName))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !currentMentions.contains(m))
                 .map(Directions::single)
-                .forEach(d -> requestContext.send(d, new MentionPostingDeletedNotification(postingId)));
+                .forEach(d -> notificationSender.accept(d, new MentionPostingDeletedNotification(postingId)));
     }
 
     public void deletePosting(Posting posting) {
+        deletePosting(posting, requestContext.getOptions(), requestContext::send, requestContext::send);
+    }
+
+    private void deletePosting(Posting posting, Options options, Consumer<Event> eventSender,
+                               BiConsumer<Direction, Notification> notificationSender) {
         posting.setDeletedAt(Util.now());
-        ExtendedDuration postingTtl = requestContext.getOptions().getDuration("posting.deleted.lifetime");
+        ExtendedDuration postingTtl = options.getDuration("posting.deleted.lifetime");
         if (!postingTtl.isNever()) {
             posting.setDeadline(Timestamp.from(Instant.now().plus(postingTtl.getDuration())));
         }
-        posting.getCurrentRevision().setDeletedAt(Util.now());
 
-        Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));
-        notifyMentioned(posting.getId(), null, Collections.emptySet(), latestMentions);
+        if (posting.getCurrentRevision() != null) {
+            posting.getCurrentRevision().setDeletedAt(Util.now());
 
-        requestContext.send(new PostingDeletedEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
+            if (posting.isOriginal()) {
+                Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));
+                notifyMentioned(posting.getId(), null, Collections.emptySet(), latestMentions,
+                        options.nodeName(), notificationSender);
+            }
+        }
+
+        eventSender.accept(new PostingDeletedEvent(posting));
+        notificationSender.accept(Directions.postingSubscribers(posting.getId()),
                 new PostingDeletedNotification(posting.getId()));
+    }
+
+    @Scheduled(fixedDelayString = "PT1M")
+    public void deleteUnlinked() throws Throwable {
+        for (String domainName : domains.getAllDomainNames()) {
+            Options options = domains.getDomainOptions(domainName);
+            List<Event> eventList = new ArrayList<>();
+            List<Pair<Direction, Notification>> notificationList = new ArrayList<>();
+            Transaction.execute(txManager, () -> {
+                postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
+                    log.info("Deleting unlinked posting {}", posting.getId());
+                    deletePosting(posting, options, eventList::add,
+                            (direction, notification) -> notificationList.add(Pair.of(direction, notification)));
+                });
+                return null;
+            });
+            eventList.forEach(event -> eventManager.send(options.nodeId(), event));
+            notificationList.forEach(nt -> {
+                nt.getFirst().setNodeId(options.nodeId());
+                notificationSenderPool.send(nt.getFirst(), nt.getSecond());
+            });
+        }
     }
 
 }
