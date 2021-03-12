@@ -30,13 +30,13 @@ public class HtmlSanitizer {
             .allowAttributes("title").onElements("mr-spoiler")
             .allowAttributes("src").matching(HtmlSanitizer::validateIframeSrc).onElements("iframe")
             .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen", "sandbox", "scrolling",
-                    "allowtransparency").onElements("iframe")
+                    "allowtransparency", "style").onElements("iframe")
             .allowAttributes("dir").globally()
-            .allowStyling(CssSchema.withProperties(Set.of("text-align")))
+            .allowStyling(CssSchema.withProperties(Set.of("text-align", "width", "height")))
             .toFactory();
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(
             "www.youtube.com", "www.youtube-nocookie.com", "player.vimeo.com", "www.facebook.com", "peer.tube",
-            "rumble.com", "open.spotify.com"
+            "rumble.com", "open.spotify.com", "c.simmer.io", "itch.io"
     );
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
