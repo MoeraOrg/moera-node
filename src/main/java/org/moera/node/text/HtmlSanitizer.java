@@ -24,6 +24,9 @@ public class HtmlSanitizer {
             .allowAttributes("class")
                 .matching(false, "emoji")
                 .onElements("img")
+            .allowAttributes("class")
+                .matching(false, "katex")
+                .onElements("div", "span")
             .allowAttributes("title").onElements("mr-spoiler")
             .allowAttributes("src").matching(HtmlSanitizer::validateIframeSrc).onElements("iframe")
             .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen", "sandbox", "scrolling",

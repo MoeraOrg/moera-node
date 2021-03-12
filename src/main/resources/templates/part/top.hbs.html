@@ -23,11 +23,17 @@
         <link href="/css/bootstrap.min.css" rel="stylesheet">
         <link href="/css/fontawesome-all.min.css" rel="stylesheet">
         <link href="/css/main.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/katex@0.13.0/dist/katex.min.css" rel="stylesheet"
+              integrity="sha384-t5CR+zwDAROtph0PXGte6ia8heboACF9R5l/DiY+WZ3P2lxNgvJkQk5n7GPvLMYw"
+              crossorigin="anonymous">
 
         <script src="/js/jquery-3.3.1.min.js"></script>
         <script src="/js/bootstrap.bundle.min.js"></script>
         <script src="/js/moera-spoiler-element.js"></script>
         <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.0/dist/katex.min.js"
+                integrity="sha384-FaFLTlohFghEIZkw6VGwmf9ISTubWAVYW8tG8+w2LAIftJEULZABrF9PPFv+tVkH"
+                crossorigin="anonymous"></script>
         {{#if anchor}}
             <script>
                 $(function() {
@@ -39,6 +45,16 @@
                 })
             </script>
         {{/if}}
+        <script>
+            $(function() {
+                $("span.katex").each(function() {
+                    katex.render(this.innerText, this, {displayMode: false});
+                });
+                $("div.katex").each(function() {
+                    katex.render(this.innerText, this, {displayMode: true});
+                });
+            })
+        </script>
         <title>{{pageTitle}}</title>
     </head>
     {{assignOption "maxWidth" "feed.width"}}
