@@ -62,10 +62,12 @@ public class MentionCommentInstants extends InstantsCreator {
                 .stream().findFirst().orElse(null);
     }
 
-    private static String buildSummary(Story story, String remotePostingHeading, String remoteCommentHeading) {
+    private String buildSummary(Story story, String remotePostingHeading, String remoteCommentHeading) {
         String postingOwner = story.getRemoteNodeName().equals(story.getRemoteOwnerName())
                 ? "their"
-                : formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName());
+                : (story.getRemoteNodeName().equals(nodeName())
+                    ? "your"
+                    : formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()));
         return String.format("%s mentioned you in a comment \"%s\" on %s post \"%s\"",
                 formatNodeName(story.getRemoteOwnerName(), story.getRemoteOwnerFullName()),
                 Util.he(remoteCommentHeading), postingOwner, Util.he(remotePostingHeading));
