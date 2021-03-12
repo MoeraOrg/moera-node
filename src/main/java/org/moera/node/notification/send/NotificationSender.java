@@ -189,9 +189,7 @@ public class NotificationSender extends Task {
     private boolean error(Throwable e, Notification notification) {
         boolean fatal = false;
 
-        if (e instanceof NodeApiValidationException
-                && ((NodeApiValidationException) e).getErrorCode().equals("subscription.unsubscribe")
-                && notification instanceof SubscriberNotification) {
+        if (isUnsubscribeError(e) && notification instanceof SubscriberNotification) {
             SubscriberNotification sn = (SubscriberNotification) notification;
             if (sn.getSubscriptionCreatedAt() != null
                     && sn.getSubscriptionCreatedAt().toInstant().plus(SUBSCRIPTION_DELAY).isAfter(Instant.now())) {
@@ -206,6 +204,14 @@ public class NotificationSender extends Task {
         failed(e.getMessage());
 
         return fatal;
+    }
+
+    private boolean isUnsubscribeError(Throwable e) {
+        if (e instanceof NodeApiValidationException) {
+            String errorCode = ((NodeApiValidationException) e).getErrorCode();
+            return errorCode.equals("subscription.unsubscribe") || errorCode.equals("notificationPacket.type.unknown");
+        }
+        return false;
     }
 
     private void failed(String message) {
