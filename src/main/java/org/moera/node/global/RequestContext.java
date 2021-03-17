@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.UUID;
 
+import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.notification.send.DirectedNotification;
@@ -79,5 +80,9 @@ public interface RequestContext {
     void send(Direction direction, Notification notification);
 
     List<DirectedNotification> getAfterCommitNotifications();
+
+    void send(Mail mail);
+
+    List<Mail> getAfterCommitMails();
 
 }

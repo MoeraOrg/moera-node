@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Objects;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -9,6 +10,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.mail.EmailConfirmMail;
 import org.moera.node.model.ProfileAttributes;
 import org.moera.node.model.ProfileInfo;
 import org.moera.node.model.event.NodeNameChangedEvent;
@@ -52,10 +54,14 @@ public class ProfileController {
     public ProfileInfo put(@Valid @RequestBody ProfileAttributes profileAttributes) {
         log.info("PUT /profile");
 
+        String oldEmail = requestContext.getOptions().getString("profile.email");
         profileAttributes.toOptions(requestContext.getOptions(), textConverter);
         requestContext.send(new ProfileUpdatedEvent());
         requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.getOptions()));
         requestContext.send(Directions.profileSubscribers(), new ProfileUpdatedNotification());
+        if (!Objects.equals(requestContext.getOptions().getString("profile.email"), oldEmail)) {
+            requestContext.send(new EmailConfirmMail());
+        }
         return new ProfileInfo(requestContext, true);
     }
 

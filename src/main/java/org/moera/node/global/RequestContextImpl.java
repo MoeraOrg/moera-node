@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.notification.send.DirectedNotification;
@@ -33,6 +34,7 @@ public class RequestContextImpl implements RequestContext {
     private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
     private List<Event> afterCommitEvents = new ArrayList<>();
     private List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
+    private List<Mail> afterCommitMails = new ArrayList<>();
 
     @Override
     public boolean isRegistrar() {
@@ -207,6 +209,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public List<DirectedNotification> getAfterCommitNotifications() {
         return afterCommitNotifications;
+    }
+
+    @Override
+    public void send(Mail mail) {
+        afterCommitMails.add(mail);
+    }
+
+    @Override
+    public List<Mail> getAfterCommitMails() {
+        return afterCommitMails;
     }
 
 }

@@ -14,6 +14,7 @@ public class Config {
     private PoolsConfig pools = new PoolsConfig();
     private MultiHost multi = MultiHost.NONE;
     private RegistrarConfig registrar;
+    private MailConfig mail = new MailConfig();
 
     public String getRootSecret() {
         return rootSecret;
@@ -74,6 +75,14 @@ public class Config {
         return getMulti() == MultiHost.PUBLIC
                 && getRegistrar() != null
                 && !StringUtils.isEmpty(getRegistrar().getDomain());
+    }
+
+    public MailConfig getMail() {
+        return mail;
+    }
+
+    public void setMail(MailConfig mail) {
+        this.mail = mail;
     }
 
 }

@@ -27,6 +27,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQL82Dialect  # The SQL dialect makes Hibernate generate better SQL for the chosen database
 
+  mail:
+    host: localhost
+#    host: smtp.gmail.com
+#    port: 587
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
+
   servlet:
     multipart:
       max-file-size: 5MB

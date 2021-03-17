@@ -52,7 +52,6 @@ public class Domains {
             domainRepository.findAll().forEach(this::configureDomain);
         }
         applicationEventPublisher.publishEvent(new DomainsConfiguredEvent(this));
-
     }
 
     public AutoCloseable lockRead() {
