@@ -287,3 +287,11 @@
 - name: web-push.public-key
   type: PublicKeyWebPush
   internal: true
+
+- name: credentials-reset.token.lifetime
+  type: Duration
+  defaultValue: 6h
+  title: Invalidate code for resetting password after
+  modifiers:
+    min: 15m
+    max: 30d
