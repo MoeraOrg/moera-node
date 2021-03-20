@@ -18,6 +18,7 @@ import org.moera.node.mail.PasswordResetMail;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.CredentialsChange;
 import org.moera.node.model.CredentialsCreated;
+import org.moera.node.model.EmailHint;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -120,10 +121,11 @@ public class CredentialsController {
     }
 
     @PostMapping("/reset")
-    public Result reset() {
+    public EmailHint reset() {
         log.info("POST /credentials/reset");
 
-        if (StringUtils.isEmpty(requestContext.getOptions().getString("profile.email"))) {
+        String email = requestContext.getOptions().getString("profile.email");
+        if (StringUtils.isEmpty(email)) {
             throw new OperationFailure("credentials.email-not-set");
         }
 
@@ -137,7 +139,7 @@ public class CredentialsController {
 
         requestContext.send(new PasswordResetMail(token.getToken()));
 
-        return Result.OK;
+        return new EmailHint(email);
     }
 
     @Scheduled(fixedDelayString = "PT1H")
