@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.5 (Ubuntu 12.5-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.5 (Ubuntu 12.5-0ubuntu0.20.04.1)
+-- Dumped from database version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -33,6 +33,37 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: contacts; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.contacts (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_full_name character varying(96),
+    closeness_base real DEFAULT 0 NOT NULL,
+    closeness real DEFAULT 1 NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.contacts OWNER TO moera;
+
+--
+-- Name: domain_upgrades; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.domain_upgrades (
+    id bigint NOT NULL,
+    upgrade_type smallint NOT NULL,
+    node_id uuid NOT NULL
+);
+
+
+ALTER TABLE public.domain_upgrades OWNER TO moera;
 
 --
 -- Name: domains; Type: TABLE; Schema: public; Owner: moera
@@ -190,7 +221,9 @@ CREATE TABLE public.own_comments (
     remote_comment_id character varying(40) NOT NULL,
     heading character varying(255) NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    remote_full_name character varying(96)
+    remote_full_name character varying(96),
+    remote_replied_to_name character varying(63),
+    remote_replied_to_full_name character varying(96)
 );
 
 
@@ -213,6 +246,20 @@ CREATE TABLE public.own_reactions (
 
 
 ALTER TABLE public.own_reactions OWNER TO moera;
+
+--
+-- Name: password_reset_tokens; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.password_reset_tokens (
+    token character varying(10) NOT NULL,
+    node_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.password_reset_tokens OWNER TO moera;
 
 --
 -- Name: pending_notifications; Type: TABLE; Schema: public; Owner: moera
@@ -450,6 +497,22 @@ CREATE TABLE public.web_push_subscriptions (
 ALTER TABLE public.web_push_subscriptions OWNER TO moera;
 
 --
+-- Name: contacts contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.contacts
+    ADD CONSTRAINT contacts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: domain_upgrades domain_upgrades_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.domain_upgrades
+    ADD CONSTRAINT domain_upgrades_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: domains domains_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -519,6 +582,14 @@ ALTER TABLE ONLY public.own_comments
 
 ALTER TABLE ONLY public.own_reactions
     ADD CONSTRAINT own_reactions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: password_reset_tokens password_reset_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.password_reset_tokens
+    ADD CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (token);
 
 
 --
@@ -618,6 +689,34 @@ ALTER TABLE ONLY public.web_push_subscriptions
 
 
 --
+-- Name: contacts_node_id_closeness_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX contacts_node_id_closeness_idx ON public.contacts USING btree (node_id, closeness);
+
+
+--
+-- Name: contacts_node_id_remote_node_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX contacts_node_id_remote_node_name_idx ON public.contacts USING btree (node_id, remote_node_name);
+
+
+--
+-- Name: contacts_updated_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX contacts_updated_at_idx ON public.contacts USING btree (updated_at);
+
+
+--
+-- Name: domain_upgrades_upgrade_type_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX domain_upgrades_upgrade_type_idx ON public.domain_upgrades USING btree (upgrade_type);
+
+
+--
 -- Name: entries_current_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -664,6 +763,13 @@ CREATE INDEX entries_node_id_draft_idx ON public.entries USING btree (node_id, d
 --
 
 CREATE INDEX entries_node_id_idx ON public.entries USING btree (node_id);
+
+
+--
+-- Name: entries_node_id_owner_name_replied_to_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_node_id_owner_name_replied_to_name_idx ON public.entries USING btree (node_id, owner_name, replied_to_name);
 
 
 --
@@ -769,6 +875,20 @@ CREATE UNIQUE INDEX own_comments_node_id_remote_node_name_remote_posting_id_rem_
 --
 
 CREATE UNIQUE INDEX own_reactions_node_id_remote_node_name_remote_posting_id_idx ON public.own_reactions USING btree (node_id, remote_node_name, remote_posting_id);
+
+
+--
+-- Name: password_reset_tokens_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX password_reset_tokens_deadline_idx ON public.password_reset_tokens USING btree (deadline);
+
+
+--
+-- Name: password_reset_tokens_node_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX password_reset_tokens_node_id_idx ON public.password_reset_tokens USING btree (node_id);
 
 
 --
