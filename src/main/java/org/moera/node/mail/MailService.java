@@ -151,8 +151,8 @@ public class MailService {
                 log.info("Delivering an e-mail");
                 mailSender.send(mailQueue.take());
                 sent.offerLast(Instant.now());
-            } catch (InterruptedException e) {
-                // ignore
+            } catch (Exception e) {
+                log.error("Error delivering e-mail:", e);
             }
         }
     }

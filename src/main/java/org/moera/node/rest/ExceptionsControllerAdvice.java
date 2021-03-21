@@ -9,6 +9,7 @@ import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
 import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.PageNotFoundException;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -91,6 +92,12 @@ public class ExceptionsControllerAdvice {
     public Result objectNotFound(ObjectNotFoundFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result pageNotFound(PageNotFoundException e) {
+        return new Result("not-found", "Page not found");
     }
 
     @ExceptionHandler
