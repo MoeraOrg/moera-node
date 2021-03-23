@@ -75,11 +75,50 @@
         margin-bottom: .5em;
     }
 
-    .buttons-invitation {
-        padding-top: 0.5rem;
-        margin-top: 0.7rem;
+    .buttons-line {
+        display: flex;
+        padding-top: .5rem;
+        margin-top: .7rem;
         border-top: 1px solid var(--gray-light);
-        text-align: right;
+
+        .posting-button {
+            flex: auto;
+            max-width: 225px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--gray-dark);
+            padding: .3rem;
+            margin-right: .3rem;
+            cursor: pointer;
+            font-size: 1.3rem;
+            background-color: transparent;
+            border: none;
+
+            &:hover, A.posting-button:hover {
+                background-color: var(--highlight);
+            }
+
+            .caption {
+                margin-left: .4rem;
+                font-weight: 600;
+                font-size: 1rem;
+                user-select: none;
+            }
+        }
+
+        .buttons-invitation {
+            flex: auto;
+            text-align: right;
+            padding-top: .3em;
+        }
+
+        .share-popup {
+            pointer-events: none;
+        }
+
+        .share-popup.show {
+            pointer-events: auto;
+        }
     }
 
     .posting-comments {
