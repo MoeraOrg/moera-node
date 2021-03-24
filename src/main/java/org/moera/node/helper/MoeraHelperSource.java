@@ -175,7 +175,7 @@ public class MoeraHelperSource {
 
     public CharSequence commentInvitation() {
         StringBuilder buf = new StringBuilder();
-        buf.append("<div class=\"alert alert-info\">To react or comment&nbsp; ");
+        buf.append("<div class=\"alert alert-info mt-3\">To react or comment&nbsp; ");
         buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
         buf.append(Util.ue(requestContext.getUrl()));
         buf.append("\">View in Web Client</a></div>");
