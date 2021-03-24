@@ -27,6 +27,11 @@ BODY {
 
 .container {
     max-width: var(--feed-width);
+
+    @media only screen and (max-width: 575px) {
+        padding-left: 0;
+        padding-right: 0;
+    }
 }
 
 .emoji {
@@ -99,6 +104,12 @@ SUB.generation {
     background-color: white;
     border: var(--gray-light) 1px solid;
     border-radius: 5px;
+
+    @media only screen and (max-width: 575px) {
+        border-left-width: 0;
+        border-right-width: 0;
+        border-radius: 0;
+    }
 }
 
 .registration-form {
