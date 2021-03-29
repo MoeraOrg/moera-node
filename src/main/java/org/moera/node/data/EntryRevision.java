@@ -57,6 +57,12 @@ public class EntryRevision {
     private String heading = "";
 
     @NotNull
+    private boolean updateImportant;
+
+    @NotNull
+    private String updateDescription = "";
+
+    @NotNull
     private Timestamp createdAt = Util.now();
 
     private Timestamp deletedAt;
@@ -183,6 +189,22 @@ public class EntryRevision {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public boolean isUpdateImportant() {
+        return updateImportant;
+    }
+
+    public void setUpdateImportant(boolean updateImportant) {
+        this.updateImportant = updateImportant;
+    }
+
+    public String getUpdateDescription() {
+        return updateDescription;
+    }
+
+    public void setUpdateDescription(String updateDescription) {
+        this.updateDescription = updateDescription;
     }
 
     public Timestamp getCreatedAt() {

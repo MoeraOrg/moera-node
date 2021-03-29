@@ -43,6 +43,7 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
+import org.moera.node.model.notification.PostingImportantUpdateNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
@@ -182,6 +183,12 @@ public class PostingController {
         requestContext.send(
                 Directions.postingSubscribers(posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
+        if (posting.getCurrentRevision().isUpdateImportant()) {
+            requestContext.send(
+                    Directions.postingCommentsSubscribers(posting.getId()),
+                    new PostingImportantUpdateNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
+                            posting.getCurrentRevision().getUpdateDescription()));
+        }
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
     }

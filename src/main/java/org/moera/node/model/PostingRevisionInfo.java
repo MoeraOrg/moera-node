@@ -17,6 +17,7 @@ public class PostingRevisionInfo implements RevisionInfo {
     private Body body;
     private String bodyFormat;
     private String heading;
+    private UpdateInfo updateInfo;
     private Long createdAt;
     private Long deletedAt;
     private Long receiverCreatedAt;
@@ -40,6 +41,9 @@ public class PostingRevisionInfo implements RevisionInfo {
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
+        if (!UpdateInfo.isEmpty(revision)) {
+            updateInfo = new UpdateInfo(revision);
+        }
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(revision.getDeletedAt());
         receiverCreatedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
@@ -111,6 +115,14 @@ public class PostingRevisionInfo implements RevisionInfo {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public UpdateInfo getUpdateInfo() {
+        return updateInfo;
+    }
+
+    public void setUpdateInfo(UpdateInfo updateInfo) {
+        this.updateInfo = updateInfo;
     }
 
     @Override

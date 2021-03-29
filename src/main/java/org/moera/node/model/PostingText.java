@@ -33,6 +33,9 @@ public class PostingText {
 
     private List<StoryAttributes> publications;
 
+    @Valid
+    private UpdateInfo updateInfo;
+
     public PostingText() {
     }
 
@@ -90,6 +93,14 @@ public class PostingText {
 
     public void setPublications(List<StoryAttributes> publications) {
         this.publications = publications;
+    }
+
+    public UpdateInfo getUpdateInfo() {
+        return updateInfo;
+    }
+
+    public void setUpdateInfo(UpdateInfo updateInfo) {
+        this.updateInfo = updateInfo;
     }
 
     public void toEntry(Entry entry) {
@@ -153,6 +164,15 @@ public class PostingText {
                 revision.setBodySrc(Body.EMPTY);
                 revision.setBody(bodySrc);
                 revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
+            }
+        }
+
+        if (updateInfo != null) {
+            if (updateInfo.getImportant() != null) {
+                revision.setUpdateImportant(updateInfo.getImportant());
+            }
+            if (updateInfo.getDescription() != null) {
+                revision.setUpdateDescription(updateInfo.getDescription());
             }
         }
     }

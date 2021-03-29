@@ -3,7 +3,7 @@ package org.moera.node.model.notification;
 import java.util.UUID;
 import javax.validation.constraints.Size;
 
-public abstract class PostingCommentNotification extends SubscriberNotification {
+public abstract class PostingCommentNotification extends PostingSubscriberNotification {
 
     private String postingId;
 
@@ -21,19 +21,10 @@ public abstract class PostingCommentNotification extends SubscriberNotification 
 
     public PostingCommentNotification(NotificationType type, UUID postingId, UUID commentId,
                                       String commentOwnerName, String commentOwnerFullName) {
-        super(type);
-        this.postingId = postingId.toString();
+        super(type, postingId.toString());
         this.commentId = commentId.toString();
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
-    }
-
-    public String getPostingId() {
-        return postingId;
-    }
-
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
     }
 
     public String getCommentId() {

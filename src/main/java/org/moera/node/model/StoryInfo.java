@@ -67,6 +67,7 @@ public class StoryInfo {
                 break;
 
             case MENTION_POSTING:
+            case POSTING_UPDATED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 info.setRemotePostingId(story.getRemotePostingId());

@@ -18,7 +18,8 @@ public enum NotificationType {
     COMMENT_REACTION_DELETED_ALL(CommentReactionDeletedAllNotification.class),
     POSTING_COMMENT_ADDED(PostingCommentAddedNotification.class),
     POSTING_COMMENT_DELETED(PostingCommentDeletedNotification.class),
-    PROFILE_UPDATED(ProfileUpdatedNotification.class);
+    PROFILE_UPDATED(ProfileUpdatedNotification.class),
+    POSTING_IMPORTANT_UPDATE(PostingImportantUpdateNotification.class);
 
     private Class<? extends Notification> structure;
 

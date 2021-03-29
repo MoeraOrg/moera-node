@@ -40,6 +40,7 @@ public class PostingInfo implements ReactionsInfo {
     private String saneBody;
     private String bodyFormat;
     private String heading;
+    private UpdateInfo updateInfo;
     private Long createdAt;
     private Long editedAt;
     private Long deletedAt;
@@ -109,6 +110,9 @@ public class PostingInfo implements ReactionsInfo {
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
         heading = revision.getHeading();
+        if (!UpdateInfo.isEmpty(revision)) {
+            updateInfo = new UpdateInfo(revision);
+        }
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
         editedAt = Util.toEpochSecond(posting.getEditedAt());
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
@@ -314,6 +318,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public UpdateInfo getUpdateInfo() {
+        return updateInfo;
+    }
+
+    public void setUpdateInfo(UpdateInfo updateInfo) {
+        this.updateInfo = updateInfo;
     }
 
     public Long getCreatedAt() {

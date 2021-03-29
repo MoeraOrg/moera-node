@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum StoryType {
 
     POSTING_ADDED,
+    POSTING_UPDATED,
     REACTION_ADDED_POSITIVE,
     REACTION_ADDED_NEGATIVE,
     MENTION_POSTING,
