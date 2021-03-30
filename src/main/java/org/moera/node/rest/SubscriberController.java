@@ -17,6 +17,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.QSubscriber;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
+import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -28,6 +29,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.PeopleChangedEvent;
 import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.notification.PostingUpdatedNotification;
@@ -59,6 +61,9 @@ public class SubscriberController {
 
     @Inject
     private SubscriberRepository subscriberRepository;
+
+    @Inject
+    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -170,6 +175,7 @@ public class SubscriberController {
 
         subscriberInstants.added(subscriber);
         requestContext.send(new SubscriberAddedEvent(subscriber));
+        sendPeopleChangedEvent();
 
         return new SubscriberInfo(subscriber);
     }
@@ -231,8 +237,15 @@ public class SubscriberController {
 
         subscriberInstants.deleted(subscriber);
         requestContext.send(new SubscriberDeletedEvent(subscriber));
+        sendPeopleChangedEvent();
 
         return Result.OK;
+    }
+
+    private void sendPeopleChangedEvent() {
+        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        requestContext.send(new PeopleChangedEvent(subscribersTotal, subscriptionsTotal));
     }
 
 }

@@ -14,6 +14,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QSubscription;
+import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
@@ -28,6 +29,7 @@ import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.PeopleChangedEvent;
 import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.model.event.SubscriptionDeletedEvent;
 import org.moera.node.operations.ContactOperations;
@@ -54,6 +56,9 @@ public class SubscriptionController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private SubscriberRepository subscriberRepository;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
@@ -137,6 +142,7 @@ public class SubscriptionController {
             contactOperations.updateCloseness(subscription.getRemoteNodeName(), subscription.getRemoteFullName(), 1);
         }
         requestContext.send(new SubscriptionAddedEvent(subscription));
+        sendPeopleChangedEvent();
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             var fetchTask = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
@@ -179,6 +185,7 @@ public class SubscriptionController {
             }
         }
         requestContext.send(new SubscriptionDeletedEvent(subscription));
+        sendPeopleChangedEvent();
 
         return Result.OK;
     }
@@ -202,6 +209,12 @@ public class SubscriptionController {
                 .filter(r -> filter.getPostings().contains(r.getRemotePosting()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
+    }
+
+    private void sendPeopleChangedEvent() {
+        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        requestContext.send(new PeopleChangedEvent(subscribersTotal, subscriptionsTotal));
     }
 
 }
