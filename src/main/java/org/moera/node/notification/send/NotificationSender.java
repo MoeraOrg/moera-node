@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiNotFoundException;
+import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.api.NodeApiValidationException;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
@@ -32,6 +33,7 @@ public class NotificationSender extends Task {
     private static final Duration RETRY_MIN_DELAY = Duration.of(30, ChronoUnit.SECONDS);
     private static final Duration RETRY_MAX_DELAY = Duration.of(6, ChronoUnit.HOURS);
     private static final Duration RETRY_PERIOD = Duration.of(7, ChronoUnit.DAYS);
+    private static final Duration RETRY_NAME_PERIOD = Duration.of(3, ChronoUnit.HOURS);
     private static final Duration SUBSCRIPTION_DELAY = Duration.of(7, ChronoUnit.MINUTES);
 
     private static Logger log = LoggerFactory.getLogger(NotificationSender.class);
@@ -129,21 +131,22 @@ public class NotificationSender extends Task {
             pausedTill = null;
 
             log.info("Delivering notification {} to node '{}'", notification.getType().name(), receiverNodeName);
+            var errorType = NotificationSenderError.REGULAR;
 
             try {
                 Result result = nodeApi.postNotification(receiverNodeName, createPacket(notification));
                 succeeded(result);
                 break;
             } catch (Throwable e) {
-                boolean fatal = error(e, notification);
-                if (fatal) {
+                errorType = error(e, notification);
+                if (errorType == NotificationSenderError.FATAL) {
                     log.info("Notification delivery failed fatally");
                     break;
                 }
             }
 
             Duration totalPeriod = Duration.between(notification.getCreatedAt().toInstant(), Instant.now());
-            if (totalPeriod.compareTo(RETRY_PERIOD) < 0) {
+            if (totalPeriod.compareTo(getRetryPeriod(errorType)) < 0) {
                 delay = delay == null ? RETRY_MIN_DELAY : delay.multipliedBy(2);
                 delay = delay.compareTo(RETRY_MAX_DELAY) < 0 ? delay : RETRY_MAX_DELAY;
                 log.info("Notification delivery failed, retry in {}s", delay.toSeconds());
@@ -190,24 +193,30 @@ public class NotificationSender extends Task {
         }
     }
 
-    private boolean error(Throwable e, Notification notification) {
-        boolean fatal = false;
+    private Duration getRetryPeriod(NotificationSenderError errorType) {
+        return errorType == NotificationSenderError.NAMING ? RETRY_NAME_PERIOD : RETRY_PERIOD;
+    }
+
+    private NotificationSenderError error(Throwable e, Notification notification) {
+        var errorType = NotificationSenderError.REGULAR;
 
         if (isUnsubscribeError(e) && notification instanceof SubscriberNotification) {
             SubscriberNotification sn = (SubscriberNotification) notification;
             if (sn.getSubscriptionCreatedAt() != null
                     && sn.getSubscriptionCreatedAt().toInstant().plus(SUBSCRIPTION_DELAY).isAfter(Instant.now())) {
-                fatal = false;
+                errorType = NotificationSenderError.REGULAR;
             } else {
                 pool.unsubscribe(UUID.fromString(sn.getSubscriberId()));
-                fatal = true;
+                errorType = NotificationSenderError.FATAL;
             }
+        } else if (e instanceof NodeApiUnknownNameException) {
+            errorType = NotificationSenderError.NAMING;
         } else if (e instanceof NodeApiNotFoundException || e instanceof JsonProcessingException) {
-            fatal = true;
+            errorType = NotificationSenderError.FATAL;
         }
         failed(e.getMessage());
 
-        return fatal;
+        return errorType;
     }
 
     private boolean isUnsubscribeError(Throwable e) {
