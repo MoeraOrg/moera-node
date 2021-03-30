@@ -48,6 +48,7 @@ public class RemoteFeedFetchTask extends Task {
                     remoteNodeName);
             List<PostingInfo> list = sliceInfo.getStories().stream()
                     .filter(t -> t.getStoryType() == StoryType.POSTING_ADDED)
+                    .filter(t -> !t.isPinned())
                     .map(StoryInfo::getPosting)
                     .collect(Collectors.toList());
             for (int i = list.size() - 1; i >= 0; i--) {
