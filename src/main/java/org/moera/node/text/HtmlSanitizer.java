@@ -19,6 +19,7 @@ public class HtmlSanitizer {
                     "ins", "details", "summary", "mr-spoiler", "iframe", "video", "audio")
             .allowUrlProtocols("http", "https", "ftp", "mailto")
             .allowAttributes("style").onElements("p")
+            .allowAttributes("start").onElements("ol")
             .allowAttributes("href", "data-nodename").onElements("a")
             .allowAttributes("src", "srcset", "width", "height", "alt").onElements("img")
             .allowAttributes("class")
