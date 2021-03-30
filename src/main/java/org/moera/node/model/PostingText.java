@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import java.util.List;
+import java.util.Objects;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
@@ -10,8 +11,8 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.HtmlSanitizer;
-import org.moera.node.text.shorten.Shortener;
 import org.moera.node.text.TextConverter;
+import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 
@@ -181,7 +182,11 @@ public class PostingText {
         return (StringUtils.isEmpty(bodySrcFormat) || bodySrcFormat == revision.getBodySrcFormat())
                 && (StringUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
-                        ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())));
+                        ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
+                && (updateInfo != null ? updateInfo.getImportant() : false) == revision.isUpdateImportant()
+                && Objects.equals(
+                        updateInfo != null && updateInfo.getDescription() != null ? updateInfo.getDescription() : "",
+                        revision.getUpdateDescription());
     }
 
 }
