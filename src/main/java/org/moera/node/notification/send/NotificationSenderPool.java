@@ -1,13 +1,16 @@
 package org.moera.node.notification.send;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -36,6 +39,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
 public class NotificationSenderPool {
+
+    private static final Duration EXECUTION_REJECTED_DELAY = Duration.of(5, ChronoUnit.MINUTES);
 
     private static Logger log = LoggerFactory.getLogger(NotificationSenderPool.class);
 
@@ -159,7 +164,13 @@ public class NotificationSenderPool {
         } else {
             taskAutowire.autowireWithoutRequest(sender, nodeId);
         }
-        taskExecutor.execute(sender);
+        try {
+            taskExecutor.execute(sender);
+        } catch (RejectedExecutionException e) {
+            log.warn("Sender was rejected by task executor, pausing");
+            sender.setPausedTill(Instant.now().plus(EXECUTION_REJECTED_DELAY));
+            pauseSender(sender);
+        }
         return sender;
     }
 

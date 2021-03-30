@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.RejectedExecutionException;
 import javax.inject.Inject;
 
 import org.moera.node.data.Pick;
@@ -71,20 +72,25 @@ public class PickerPool {
             }
         }
 
-        while (true) {
-            Picker picker;
-            do {
-                UUID nodeId = pick.getNodeId();
-                picker = pickers.computeIfAbsent(
-                        new PickingDirection(nodeId, pick.getRemoteNodeName()),
-                        d -> createPicker(d.getNodeName(), nodeId));
-            } while (picker.isStopped());
-            try {
-                picker.put(pick);
-            } catch (InterruptedException e) {
-                continue;
+        try {
+            while (true) {
+                Picker picker;
+                do {
+                    UUID nodeId = pick.getNodeId();
+                    picker = pickers.computeIfAbsent(
+                            new PickingDirection(nodeId, pick.getRemoteNodeName()),
+                            d -> createPicker(d.getNodeName(), nodeId));
+                } while (picker.isStopped());
+                try {
+                    picker.put(pick);
+                } catch (InterruptedException e) {
+                    continue;
+                }
+                break;
             }
-            break;
+        } catch (RejectedExecutionException e) {
+            log.warn("Picker was rejected by task executor");
+            pickFailed(pick, false);
         }
     }
 
