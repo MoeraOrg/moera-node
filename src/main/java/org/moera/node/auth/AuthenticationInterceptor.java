@@ -15,6 +15,7 @@ import org.moera.node.global.UserAgentOs;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -99,10 +100,10 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
         Secrets secrets = extractSecrets(request);
         if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {
             requestContext.setRootAdmin(true);
-            log.info("Authorized as root admin");
+            MDC.put("auth", "!");
         }
         requestContext.setAdmin(authenticationManager.isAdminToken(secrets.token, requestContext.nodeId()));
-        log.info("Authorized as {}", requestContext.isAdmin() ? "admin" : "non-admin");
+        MDC.put("auth", requestContext.isAdmin() ? "#" : "$");
         try {
             requestContext.setClientName(
                     authenticationManager.getClientName(secrets.carte, UriUtil.remoteAddress(request)));
