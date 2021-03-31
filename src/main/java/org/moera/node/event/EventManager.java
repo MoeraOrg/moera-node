@@ -176,7 +176,7 @@ public class EventManager {
 
     public void send(UUID nodeId, String clientId, Event event) {
         MDC.put("domain", domains.getDomainName(nodeId));
-        log.info("Event arrived: {}", event.getType());
+        log.info("Event arrived: {}", event.toLogMessage());
 
         eventsLock.writeLock().lock();
         try {

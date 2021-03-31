@@ -1,6 +1,10 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
+import org.springframework.data.util.Pair;
 
 public class PostingEvent extends Event {
 
@@ -21,6 +25,12 @@ public class PostingEvent extends Event {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("id", LogUtil.format(id)));
     }
 
 }

@@ -1,14 +1,17 @@
 package org.moera.node.model.event;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.util.Util;
+import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StoryEvent extends Event {
@@ -192,6 +195,23 @@ public class StoryEvent extends Event {
     @Override
     public boolean isPermitted(EventSubscriber subscriber) {
         return subscriber.isAdmin() == isAdmin;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("storyType", LogUtil.format(storyType.toString())));
+        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
+        parameters.add(Pair.of("pinned", LogUtil.format(pinned)));
+        parameters.add(Pair.of("moment", LogUtil.format(moment)));
+        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
+        parameters.add(Pair.of("viewed", LogUtil.format(viewed)));
+        parameters.add(Pair.of("read", LogUtil.format(read)));
+        parameters.add(Pair.of("summary", LogUtil.format(summary)));
+        parameters.add(Pair.of("trackingId", LogUtil.format(trackingId)));
+        parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));
+        parameters.add(Pair.of("remotePostingId", LogUtil.format(remotePostingId)));
+        parameters.add(Pair.of("remoteCommentId", LogUtil.format(remoteCommentId)));
     }
 
 }

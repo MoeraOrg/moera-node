@@ -1,6 +1,10 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Comment;
+import org.springframework.data.util.Pair;
 
 public class CommentEvent extends Event {
 
@@ -41,6 +45,14 @@ public class CommentEvent extends Event {
 
     public void setMoment(Long moment) {
         this.moment = moment;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("id", LogUtil.format(id)));
+        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
+        parameters.add(Pair.of("moment", LogUtil.format(moment)));
     }
 
 }

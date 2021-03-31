@@ -1,6 +1,10 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
+import org.springframework.data.util.Pair;
 
 public class RemoteReactionEvent extends Event {
 
@@ -36,6 +40,13 @@ public class RemoteReactionEvent extends Event {
     @Override
     public boolean isPermitted(EventSubscriber subscriber) {
         return subscriber.isAdmin();
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));
+        parameters.add(Pair.of("remotePostingId", LogUtil.format(remotePostingId)));
     }
 
 }

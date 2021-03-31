@@ -1,7 +1,11 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.event.EventSubscriber;
+import org.springframework.data.util.Pair;
 
 public abstract class RemoteCommentVerificationEvent extends Event {
 
@@ -57,6 +61,14 @@ public abstract class RemoteCommentVerificationEvent extends Event {
     @Override
     public boolean isPermitted(EventSubscriber subscriber) {
         return subscriber.isAdmin();
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("nodeName", LogUtil.format(nodeName)));
+        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
+        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
     }
 
 }

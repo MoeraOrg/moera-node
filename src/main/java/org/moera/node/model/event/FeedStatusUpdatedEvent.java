@@ -1,7 +1,11 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.FeedStatus;
+import org.springframework.data.util.Pair;
 
 public class FeedStatusUpdatedEvent extends Event {
 
@@ -48,6 +52,14 @@ public class FeedStatusUpdatedEvent extends Event {
     @Override
     public boolean isPermitted(EventSubscriber subscriber) {
         return subscriber.isAdmin();
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
+        parameters.add(Pair.of("notViewed", LogUtil.format(notViewed)));
+        parameters.add(Pair.of("notRead", LogUtil.format(notRead)));
     }
 
 }

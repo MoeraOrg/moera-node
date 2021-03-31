@@ -1,6 +1,10 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.option.Options;
+import org.springframework.data.util.Pair;
 
 public class NodeNameChangedEvent extends Event {
 
@@ -51,6 +55,15 @@ public class NodeNameChangedEvent extends Event {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("name", LogUtil.format(name)));
+        parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
+        parameters.add(Pair.of("gender", LogUtil.format(gender)));
+        parameters.add(Pair.of("title", LogUtil.format(title)));
     }
 
 }

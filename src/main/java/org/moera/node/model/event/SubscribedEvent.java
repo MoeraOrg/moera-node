@@ -1,6 +1,10 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
+import org.springframework.data.util.Pair;
 
 public class SubscribedEvent extends Event {
 
@@ -36,6 +40,13 @@ public class SubscribedEvent extends Event {
     @Override
     public boolean isPermitted(EventSubscriber subscriber) {
         return subscriber.getSessionId().equals(sessionId);
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("sessionId", LogUtil.format(sessionId)));
+        parameters.add(Pair.of("clientIp", LogUtil.format(clientIp)));
     }
 
 }

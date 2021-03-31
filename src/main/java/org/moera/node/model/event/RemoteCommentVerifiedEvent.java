@@ -1,7 +1,11 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.VerificationStatus;
+import org.springframework.data.util.Pair;
 
 public class RemoteCommentVerifiedEvent extends RemoteCommentVerificationEvent {
 
@@ -22,6 +26,12 @@ public class RemoteCommentVerifiedEvent extends RemoteCommentVerificationEvent {
 
     public void setCorrect(boolean correct) {
         this.correct = correct;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("correct", LogUtil.format(correct)));
     }
 
 }

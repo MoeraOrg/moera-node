@@ -1,5 +1,10 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
+
 public class RemoteNodeFullNameChangedEvent extends Event {
 
     private String name;
@@ -29,6 +34,13 @@ public class RemoteNodeFullNameChangedEvent extends Event {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("name", LogUtil.format(name)));
+        parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
     }
 
 }

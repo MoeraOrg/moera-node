@@ -1,9 +1,13 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.util.Util;
+import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SubscriptionEvent extends Event {
@@ -105,6 +109,17 @@ public class SubscriptionEvent extends Event {
 
     public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("subscriptionType", LogUtil.format(subscriptionType.toString())));
+        parameters.add(Pair.of("feedName", LogUtil.format(feedName)));
+        parameters.add(Pair.of("remoteSubscriberId", LogUtil.format(remoteSubscriberId)));
+        parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));
+        parameters.add(Pair.of("remoteFeedName", LogUtil.format(remoteFeedName)));
+        parameters.add(Pair.of("remotePostingId", LogUtil.format(remotePostingId)));
     }
 
 }

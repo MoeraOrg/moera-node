@@ -1,6 +1,10 @@
 package org.moera.node.model.event;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
 import org.moera.node.model.ReactionInfo;
+import org.springframework.data.util.Pair;
 
 public class RemoteReactionAddedEvent extends RemoteReactionEvent {
 
@@ -41,6 +45,13 @@ public class RemoteReactionAddedEvent extends RemoteReactionEvent {
 
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("negative", LogUtil.format(negative)));
+        parameters.add(Pair.of("emoji", LogUtil.format(emoji)));
     }
 
 }
