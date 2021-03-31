@@ -66,6 +66,7 @@ public class CarteController {
             CarteSet carteSet = new CarteSet();
             carteSet.setCartesIp(remoteAddress.getHostAddress());
             carteSet.setCartes(cartes);
+            carteSet.setCreatedAt(Instant.now().getEpochSecond());
             return carteSet;
         } catch (UnknownHostException e) {
             throw new OperationFailure("carte.client-address-unknown");
