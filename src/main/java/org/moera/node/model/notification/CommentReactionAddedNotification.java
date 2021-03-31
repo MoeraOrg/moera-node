@@ -1,6 +1,10 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.UUID;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public class CommentReactionAddedNotification extends CommentReactionNotification {
 
@@ -43,6 +47,12 @@ public class CommentReactionAddedNotification extends CommentReactionNotificatio
 
     public void setEmoji(int emoji) {
         this.emoji = emoji;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("emoji", LogUtil.format(emoji)));
     }
 
 }

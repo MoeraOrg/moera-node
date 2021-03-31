@@ -1,7 +1,11 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.UUID;
 import javax.validation.constraints.Size;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public class ReplyCommentAddedNotification extends ReplyCommentNotification {
 
@@ -70,6 +74,13 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
 
     public void setRepliedToHeading(String repliedToHeading) {
         this.repliedToHeading = repliedToHeading;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("commentOwnerName", LogUtil.format(commentOwnerName)));
+        parameters.add(Pair.of("commentHeading", LogUtil.format(commentHeading)));
     }
 
 }

@@ -1,6 +1,10 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.UUID;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public class CommentReactionDeletedAllNotification extends Notification {
 
@@ -31,6 +35,13 @@ public class CommentReactionDeletedAllNotification extends Notification {
 
     public void setCommentId(String commentId) {
         this.commentId = commentId;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
+        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
     }
 
 }

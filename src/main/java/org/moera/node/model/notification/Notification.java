@@ -1,10 +1,14 @@
 package org.moera.node.model.notification;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.util.Util;
+import org.springframework.data.util.Pair;
 
 public abstract class Notification implements Cloneable {
 
@@ -74,6 +78,21 @@ public abstract class Notification implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new IllegalArgumentException("Must implement Cloneable", e);
         }
+    }
+
+    public final String toLogMessage() {
+        List<Pair<String, String>> parameters = new ArrayList<>();
+        logParameters(parameters);
+        if (parameters.size() == 0) {
+            return getType().toString();
+        }
+        String params = parameters.stream()
+                .map(p -> p.getFirst() + " = " + p.getSecond())
+                .collect(Collectors.joining(", "));
+        return String.format("%s (%s)", getType(), params);
+    }
+
+    public void logParameters(List<Pair<String, String>> parameters) {
     }
 
 }

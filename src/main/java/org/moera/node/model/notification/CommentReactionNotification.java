@@ -1,7 +1,11 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.UUID;
 import javax.validation.constraints.Size;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public abstract class CommentReactionNotification extends Notification {
 
@@ -69,6 +73,15 @@ public abstract class CommentReactionNotification extends Notification {
 
     public void setNegative(boolean negative) {
         this.negative = negative;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
+        parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
+        parameters.add(Pair.of("ownerName", LogUtil.format(ownerName)));
+        parameters.add(Pair.of("negative", LogUtil.format(negative)));
     }
 
 }

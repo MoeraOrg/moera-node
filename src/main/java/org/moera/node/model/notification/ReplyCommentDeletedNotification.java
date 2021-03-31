@@ -1,7 +1,11 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.UUID;
 import javax.validation.constraints.Size;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public class ReplyCommentDeletedNotification extends ReplyCommentNotification {
 
@@ -36,6 +40,12 @@ public class ReplyCommentDeletedNotification extends ReplyCommentNotification {
 
     public void setCommentOwnerFullName(String commentOwnerFullName) {
         this.commentOwnerFullName = commentOwnerFullName;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("commentOwnerName", LogUtil.format(commentOwnerName)));
     }
 
 }

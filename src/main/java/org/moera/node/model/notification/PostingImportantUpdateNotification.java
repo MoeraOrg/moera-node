@@ -1,6 +1,10 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.UUID;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public class PostingImportantUpdateNotification extends PostingSubscriberNotification {
 
@@ -31,6 +35,13 @@ public class PostingImportantUpdateNotification extends PostingSubscriberNotific
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("postingHeading", LogUtil.format(postingHeading)));
+        parameters.add(Pair.of("description", LogUtil.format(description)));
     }
 
 }

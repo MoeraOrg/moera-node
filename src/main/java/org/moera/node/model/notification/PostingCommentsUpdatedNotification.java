@@ -1,6 +1,10 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.UUID;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public class PostingCommentsUpdatedNotification extends PostingSubscriberNotification {
 
@@ -21,6 +25,12 @@ public class PostingCommentsUpdatedNotification extends PostingSubscriberNotific
 
     public void setTotal(int total) {
         this.total = total;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("total", LogUtil.format(total)));
     }
 
 }

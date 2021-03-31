@@ -1,7 +1,11 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public class PostingCommentAddedNotification extends PostingCommentNotification {
 
@@ -44,6 +48,12 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
 
     public void setCommentRepliedTo(String commentRepliedTo) {
         this.commentRepliedTo = commentRepliedTo;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("commentHeading", LogUtil.format(commentHeading)));
     }
 
 }

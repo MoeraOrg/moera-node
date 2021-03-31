@@ -94,7 +94,7 @@ public class NotificationSenderPool {
     }
 
     public void send(Direction direction, Notification notification) {
-        log.info("Sending notification of type '{}'", notification.getType().getValue());
+        log.info("Sending notification {}", notification.toLogMessage());
         if (direction instanceof SingleDirection) {
             log.info("Sending to node '{}' only", ((SingleDirection) direction).getNodeName());
             sendSingle((SingleDirection) direction, notification);

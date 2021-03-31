@@ -1,8 +1,11 @@
 package org.moera.node.model.notification;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
 
 public abstract class SubscriberNotification extends Notification {
 
@@ -29,6 +32,12 @@ public abstract class SubscriberNotification extends Notification {
 
     public void setSubscriptionCreatedAt(Timestamp subscriptionCreatedAt) {
         this.subscriptionCreatedAt = subscriptionCreatedAt;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("subscriberId", LogUtil.format(subscriberId)));
     }
 
 }

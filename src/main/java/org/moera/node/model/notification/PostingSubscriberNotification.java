@@ -1,5 +1,10 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
+
+import org.moera.commons.util.LogUtil;
+import org.springframework.data.util.Pair;
+
 public abstract class PostingSubscriberNotification extends SubscriberNotification {
 
     private String postingId;
@@ -19,6 +24,12 @@ public abstract class PostingSubscriberNotification extends SubscriberNotificati
 
     public void setPostingId(String postingId) {
         this.postingId = postingId;
+    }
+
+    @Override
+    public void logParameters(List<Pair<String, String>> parameters) {
+        super.logParameters(parameters);
+        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
     }
 
 }
