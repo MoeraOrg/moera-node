@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TextPosition implements Cloneable, Comparable<TextPosition> {
 
-    private static final int LINE_LENGTH = 212;
+    private static final int LINE_LENGTH = 112;
     private static final float LINE_HEIGHT = 21.5f;
 
     private int line;
