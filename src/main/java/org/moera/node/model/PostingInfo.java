@@ -100,7 +100,7 @@ public class PostingInfo implements ReactionsInfo {
         ownerName = posting.getOwnerName();
         ownerFullName = posting.getOwnerFullName();
         bodyPreview = new Body(revision.getBodyPreview());
-        if (includeSource) {
+        if (includeSource && !StringUtils.isEmpty(revision.getBodySrc())) {
             bodySrc = new Body(revision.getBodySrc());
         }
         bodySrcHash = revision.getReceiverBodySrcHash() != null
