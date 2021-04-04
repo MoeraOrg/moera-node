@@ -38,7 +38,7 @@ class Measurer implements NodeFilter {
     }
 
     public boolean isTextShort() {
-        return offset.lessOrEquals(TEXT_MAX) || getCut().greaterOrEquals(TEXT_MAX);
+        return offset.lessOrEquals(TEXT_MAX) || getCut().greater(TEXT_MAX);
     }
 
     public boolean needsEllipsis() {
