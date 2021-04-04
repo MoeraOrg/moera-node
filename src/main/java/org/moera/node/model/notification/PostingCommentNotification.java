@@ -9,8 +9,6 @@ import org.springframework.data.util.Pair;
 
 public abstract class PostingCommentNotification extends PostingSubscriberNotification {
 
-    private String postingId;
-
     private String commentId;
 
     @Size(max = 63)
@@ -29,16 +27,6 @@ public abstract class PostingCommentNotification extends PostingSubscriberNotifi
         this.commentId = commentId.toString();
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
-    }
-
-    @Override
-    public String getPostingId() {
-        return postingId;
-    }
-
-    @Override
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
     }
 
     public String getCommentId() {
@@ -68,7 +56,6 @@ public abstract class PostingCommentNotification extends PostingSubscriberNotifi
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
         parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
         parameters.add(Pair.of("commentOwnerName", LogUtil.format(commentOwnerName)));
     }
