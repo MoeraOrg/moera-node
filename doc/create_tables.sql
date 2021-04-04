@@ -158,7 +158,9 @@ CREATE TABLE public.entry_revisions (
     parent_id uuid,
     deadline timestamp without time zone,
     sane_body text,
-    sane_body_preview text
+    sane_body_preview text,
+    update_important boolean DEFAULT false NOT NULL,
+    update_description character varying(128) DEFAULT ''::character varying NOT NULL
 );
 
 
