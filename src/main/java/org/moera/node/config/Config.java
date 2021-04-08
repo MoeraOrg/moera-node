@@ -15,6 +15,7 @@ public class Config {
     private MultiHost multi = MultiHost.NONE;
     private RegistrarConfig registrar;
     private MailConfig mail = new MailConfig();
+    private MediaConfig media = new MediaConfig();
 
     public String getRootSecret() {
         return rootSecret;
@@ -83,6 +84,14 @@ public class Config {
 
     public void setMail(MailConfig mail) {
         this.mail = mail;
+    }
+
+    public MediaConfig getMedia() {
+        return media;
+    }
+
+    public void setMedia(MediaConfig media) {
+        this.media = media;
     }
 
 }
