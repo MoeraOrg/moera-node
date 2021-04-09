@@ -127,6 +127,15 @@
     min: 1024
     max: 4194304
 
+- name: posting.media.max-size
+  type: int
+  privileged: true
+  defaultValue: 5242880
+  title: Maximal size of a media attachment in postings
+  modifiers:
+    min: 65536
+    max: 104857600
+
 - name: posting.subject.present
   type: bool
   defaultValue: false

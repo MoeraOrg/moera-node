@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -25,8 +26,10 @@ public class MediaFile {
     @Size(max = 80)
     private String mimeType;
 
+    @Column(name="size_x")
     private Short sizeX;
 
+    @Column(name="size_y")
     private Short sizeY;
 
     private long fileSize;
