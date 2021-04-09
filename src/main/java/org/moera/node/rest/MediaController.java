@@ -32,6 +32,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.BoundedOutputStream;
 import org.moera.node.media.MediaPathNotSetException;
+import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.OperationFailure;
@@ -159,7 +160,8 @@ public class MediaController {
 
                 MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
                 if (mediaFile == null) {
-                    Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), id);
+                    String fileName = id + "." + MimeUtils.extension(contentType);
+                    Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
                     Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
 
                     mediaFile = new MediaFile();
