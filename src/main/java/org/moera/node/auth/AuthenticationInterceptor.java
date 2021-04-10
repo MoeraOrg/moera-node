@@ -1,22 +1,28 @@
 package org.moera.node.auth;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Locale;
 import java.util.Objects;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
+import org.moera.node.model.Result;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -42,6 +48,12 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
     @Inject
     private RequestContext requestContext;
 
+    @Inject
+    private MessageSource messageSource;
+
+    @Inject
+    private ObjectMapper objectMapper;
+
     @PostConstruct
     public void init() throws RootSecretNotSetException {
         if (StringUtils.isEmpty(config.getRootSecret())) {
@@ -50,23 +62,42 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
     }
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        processAuthParameters(request);
-        processUserAgent(request);
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws IOException {
+        try {
+            processAuthParameters(request);
+            processUserAgent(request);
 
-        if (!(handler instanceof HandlerMethod)) {
+            if (!(handler instanceof HandlerMethod)) {
+                return true;
+            }
+            if (((HandlerMethod) handler).hasMethodAnnotation(RootAdmin.class) && !requestContext.isRootAdmin()) {
+                throw new AuthenticationException();
+            }
+            if ((((HandlerMethod) handler).hasMethodAnnotation(Admin.class)
+                    || ((HandlerMethod) handler).getBeanType().isAnnotationPresent(Admin.class))
+                    && !requestContext.isAdmin()) {
+                throw new AuthenticationException();
+            }
+
             return true;
+        } catch (InvalidTokenException e) {
+            handleError(response, HttpStatus.UNAUTHORIZED, "authentication.invalid",
+                    "Bearer realm=\"Node\" error=\"invalid_token\"");
+            return false;
+        } catch (AuthenticationException e) {
+            handleError(response, HttpStatus.FORBIDDEN, "authentication.required",
+                    "Bearer realm=\"Node\"");
+            return false;
         }
-        if (((HandlerMethod) handler).hasMethodAnnotation(RootAdmin.class) && !requestContext.isRootAdmin()) {
-            throw new AuthenticationException();
-        }
-        if ((((HandlerMethod) handler).hasMethodAnnotation(Admin.class)
-                || ((HandlerMethod) handler).getBeanType().isAnnotationPresent(Admin.class))
-                && !requestContext.isAdmin()) {
-            throw new AuthenticationException();
-        }
+    }
 
-        return true;
+    private void handleError(HttpServletResponse response, HttpStatus status, String errorCode, String wwwAuthHeader)
+            throws IOException {
+        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, wwwAuthHeader);
+        response.setStatus(status.value());
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        objectMapper.writeValue(response.getWriter(), new Result(errorCode, message));
     }
 
     private Secrets extractSecrets(HttpServletRequest request) {

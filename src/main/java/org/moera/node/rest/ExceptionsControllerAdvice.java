@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
-import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -144,15 +143,6 @@ public class ExceptionsControllerAdvice {
     public Result authenticationRequired(AuthenticationException e, HttpServletResponse response) {
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Node\"");
         String errorCode = "authentication.required";
-        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
-        return new Result(errorCode, message);
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Result authenticationInvalid(InvalidTokenException e, HttpServletResponse response) {
-        response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Node\" error=\"invalid_token\"");
-        String errorCode = "authentication.invalid";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message);
     }
