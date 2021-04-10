@@ -112,76 +112,112 @@ public class MediaController {
         }
     }
 
-    @PostMapping
+    private String upload(InputStream in, OutputStream out, Long contentLength) throws IOException {
+        DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
+        out = new TeeOutputStream(out, digestStream);
+
+        int maxSize = requestContext.getOptions().getInt("posting.media.max-size");
+        if (contentLength != null) {
+            if (contentLength > maxSize) {
+                throw new ValidationFailure("media.wrong-size");
+            }
+            in = new BoundedInputStream(in, contentLength);
+        } else {
+            out = new BoundedOutputStream(out, maxSize);
+        }
+
+        try {
+            in.transferTo(out);
+        } catch (ThresholdReachedException e) {
+            throw new ValidationFailure("media.wrong-size");
+        } catch (IOException e) {
+            throw new OperationFailure("media.storage-error");
+        } finally {
+            out.close();
+        }
+
+        return Util.base64encode(digestStream.getDigest());
+    }
+
+    private MediaFile putInPlace(String id, String contentType, Path tmpPath) throws IOException {
+        MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
+        if (mediaFile == null) {
+            String fileName = id + "." + MimeUtils.extension(contentType);
+            Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+            Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
+
+            mediaFile = new MediaFile();
+            mediaFile.setId(id);
+            mediaFile.setMimeType(contentType);
+            mediaFile.setFileSize(Files.size(mediaPath));
+            mediaFile = mediaFileRepository.save(mediaFile);
+        }
+        return mediaFile;
+    }
+
+    @PostMapping("/public")
     @Transactional
-    public MediaFileInfo post(@RequestHeader("Content-Type") String contentType,
-                              @RequestHeader(value = "Content-Length", required = false) Long contentLength,
-                              InputStream in) throws IOException {
-        log.info("POST /media (Content-Type: {}, Content-Length: {})",
+    public MediaFileInfo postPublic(@RequestHeader("Content-Type") String contentType,
+                                    @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+                                    InputStream in) throws IOException {
+        log.info("POST /media/public (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(contentType), LogUtil.format(contentLength));
 
         if (requestContext.getClientName() == null) {
             throw new AuthenticationException();
         }
 
-        int maxSize = requestContext.getOptions().getInt("posting.media.max-size");
         var tmp = tmpFile();
         Path tmpPath = tmp.getFirst();
         try {
-            DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
-            OutputStream out = new TeeOutputStream(tmp.getSecond(), digestStream);
-            if (contentLength != null) {
-                if (contentLength > maxSize) {
-                    throw new ValidationFailure("media.wrong-size");
-                }
-                in = new BoundedInputStream(in, contentLength);
-            } else {
-                out = new BoundedOutputStream(out, maxSize);
-            }
-            try {
-                try {
-                    in.transferTo(out);
-                } catch (ThresholdReachedException e) {
-                    throw new ValidationFailure("media.wrong-size");
-                } catch (IOException e) {
-                    throw new OperationFailure("media.storage-error");
-                } finally {
-                    out.close();
-                }
+            String id = upload(in, tmp.getSecond(), contentLength);
+            MediaFile mediaFile = putInPlace(id, contentType, tmpPath);
+            mediaFile.setExposed(true);
 
-                String id = Util.base64encode(digestStream.getDigest());
-                MediaFileOwner mediaFileOwner = requestContext.isAdmin()
-                        ? mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), id).orElse(null)
-                        : mediaFileOwnerRepository.findByFile(
-                                requestContext.nodeId(), requestContext.getClientName(), id).orElse(null);
-                if (mediaFileOwner != null) {
-                    return new MediaFileInfo(mediaFileOwner);
-                }
+            return new MediaFileInfo(mediaFile);
+        } catch (IOException e) {
+            throw new OperationFailure("media.storage-error");
+        } finally {
+            Files.deleteIfExists(tmpPath);
+        }
+    }
 
-                MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
-                if (mediaFile == null) {
-                    String fileName = id + "." + MimeUtils.extension(contentType);
-                    Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
-                    Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
+    @PostMapping("/private")
+    @Transactional
+    public MediaFileInfo postPrivate(@RequestHeader("Content-Type") String contentType,
+                                     @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+                                     InputStream in) throws IOException {
+        log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
+                LogUtil.format(contentType), LogUtil.format(contentLength));
 
-                    mediaFile = new MediaFile();
-                    mediaFile.setId(id);
-                    mediaFile.setMimeType(contentType);
-                    mediaFile.setFileSize(Files.size(mediaPath));
-                    mediaFile = mediaFileRepository.save(mediaFile);
-                }
+        if (requestContext.getClientName() == null) {
+            throw new AuthenticationException();
+        }
 
-                mediaFileOwner = new MediaFileOwner();
-                mediaFileOwner.setId(UUID.randomUUID());
-                mediaFileOwner.setNodeId(requestContext.nodeId());
-                mediaFileOwner.setOwnerName(requestContext.isAdmin() ? null : requestContext.getClientName());
-                mediaFileOwner.setMediaFile(mediaFile);
-                mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
-
+        var tmp = tmpFile();
+        Path tmpPath = tmp.getFirst();
+        try {
+            String id = upload(in, tmp.getSecond(), contentLength);
+            MediaFileOwner mediaFileOwner = requestContext.isAdmin()
+                    ? mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), id).orElse(null)
+                    : mediaFileOwnerRepository.findByFile(
+                            requestContext.nodeId(), requestContext.getClientName(), id).orElse(null);
+            if (mediaFileOwner != null) {
                 return new MediaFileInfo(mediaFileOwner);
-            } catch (IOException e) {
-                throw new OperationFailure("media.storage-error");
             }
+
+            MediaFile mediaFile = putInPlace(id, contentType, tmpPath);
+
+            mediaFileOwner = new MediaFileOwner();
+            mediaFileOwner.setId(UUID.randomUUID());
+            mediaFileOwner.setNodeId(requestContext.nodeId());
+            mediaFileOwner.setOwnerName(requestContext.isAdmin() ? null : requestContext.getClientName());
+            mediaFileOwner.setMediaFile(mediaFile);
+            mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
+
+            return new MediaFileInfo(mediaFileOwner);
+        } catch (IOException e) {
+            throw new OperationFailure("media.storage-error");
         } finally {
             Files.deleteIfExists(tmpPath);
         }

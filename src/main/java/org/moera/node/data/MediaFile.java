@@ -35,6 +35,9 @@ public class MediaFile {
     private long fileSize;
 
     @NotNull
+    private boolean exposed;
+
+    @NotNull
     private Timestamp createdAt = Util.now();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediaFile")
@@ -78,6 +81,14 @@ public class MediaFile {
 
     public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
+    }
+
+    public boolean isExposed() {
+        return exposed;
+    }
+
+    public void setExposed(boolean exposed) {
+        this.exposed = exposed;
     }
 
     public Timestamp getCreatedAt() {

@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 
 public class MediaFileInfo {
@@ -13,6 +14,11 @@ public class MediaFileInfo {
     public MediaFileInfo(MediaFileOwner mediaFileOwner) {
         id = mediaFileOwner.getId().toString();
         size = mediaFileOwner.getMediaFile().getFileSize();
+    }
+
+    public MediaFileInfo(MediaFile mediaFile) {
+        id = mediaFile.getId();
+        size = mediaFile.getFileSize();
     }
 
     public String getId() {
