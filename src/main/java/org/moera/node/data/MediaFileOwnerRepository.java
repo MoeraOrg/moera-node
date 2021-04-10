@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, UUID> {
 
+    @Query("select mo from MediaFileOwner mo left join fetch mo.mediaFile where mo.nodeId = ?1 and mo.id = ?2")
+    Optional<MediaFileOwner> findFullById(UUID nodeId, UUID id);
+
     @Query("select mo from MediaFileOwner mo where mo.nodeId = ?1 and mo.ownerName is null and mo.mediaFile.id = ?2")
     Optional<MediaFileOwner> findByAdminFile(UUID nodeId, String mediaFileId);
 

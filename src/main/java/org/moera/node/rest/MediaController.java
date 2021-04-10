@@ -11,6 +11,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -35,6 +36,7 @@ import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.MediaFileInfo;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
@@ -42,6 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -155,6 +159,12 @@ public class MediaController {
         return mediaFile;
     }
 
+    private Optional<MediaFileOwner> findMediaFileOwnerByFile(String id) {
+        return requestContext.isAdmin()
+                ? mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), id)
+                : mediaFileOwnerRepository.findByFile(requestContext.nodeId(), requestContext.getClientName(), id);
+    }
+
     @PostMapping("/public")
     @Transactional
     public MediaFileInfo postPublic(@RequestHeader("Content-Type") String contentType,
@@ -198,10 +208,7 @@ public class MediaController {
         Path tmpPath = tmp.getFirst();
         try {
             String id = upload(in, tmp.getSecond(), contentLength);
-            MediaFileOwner mediaFileOwner = requestContext.isAdmin()
-                    ? mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), id).orElse(null)
-                    : mediaFileOwnerRepository.findByFile(
-                            requestContext.nodeId(), requestContext.getClientName(), id).orElse(null);
+            MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
                 return new MediaFileInfo(mediaFileOwner);
             }
@@ -220,6 +227,37 @@ public class MediaController {
             throw new OperationFailure("media.storage-error");
         } finally {
             Files.deleteIfExists(tmpPath);
+        }
+    }
+
+    @GetMapping("/public/{id}/info")
+    public MediaFileInfo getInfoPublic(@PathVariable String id) {
+        log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
+
+        MediaFile mediaFile = mediaFileRepository.findById(id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        if (mediaFile.isExposed()) {
+            return new MediaFileInfo(mediaFile);
+        } else {
+            throw new ObjectNotFoundFailure("media.not-found");
+        }
+    }
+
+    @GetMapping("/private/{id}/info")
+    public MediaFileInfo getInfoPrivate(@PathVariable UUID id) {
+        log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
+
+        if (requestContext.getClientName() == null) {
+            throw new AuthenticationException();
+        }
+
+        MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        if (mediaFileOwner.getOwnerName() == null && requestContext.isAdmin()
+                || mediaFileOwner.getOwnerName().equals(requestContext.getClientName())) {
+            return new MediaFileInfo(mediaFileOwner);
+        } else {
+            throw new ObjectNotFoundFailure("media.not-found");
         }
     }
 
