@@ -35,6 +35,22 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: avatars; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.avatars (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    media_file_id character varying(40) NOT NULL,
+    current boolean NOT NULL,
+    shape character varying(8) NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.avatars OWNER TO moera;
+
+--
 -- Name: contacts; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -196,6 +212,38 @@ CREATE SEQUENCE public.hibernate_sequence
 
 
 ALTER TABLE public.hibernate_sequence OWNER TO moera;
+
+--
+-- Name: media_file_owners; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.media_file_owners (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    owner_name character varying(63),
+    media_file_id character varying(40) NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.media_file_owners OWNER TO moera;
+
+--
+-- Name: media_files; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.media_files (
+    id character varying(40) NOT NULL,
+    mime_type character varying(80) NOT NULL,
+    size_x integer,
+    size_y integer,
+    file_size bigint NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    exposed boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.media_files OWNER TO moera;
 
 --
 -- Name: options; Type: TABLE; Schema: public; Owner: moera
@@ -499,6 +547,14 @@ CREATE TABLE public.web_push_subscriptions (
 ALTER TABLE public.web_push_subscriptions OWNER TO moera;
 
 --
+-- Name: avatars avatars_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.avatars
+    ADD CONSTRAINT avatars_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: contacts contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -552,6 +608,22 @@ ALTER TABLE ONLY public.entry_revisions
 
 ALTER TABLE ONLY public.entry_sources
     ADD CONSTRAINT entry_sources_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: media_file_owners media_file_owners_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_owners
+    ADD CONSTRAINT media_file_owners_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: media_files media_files_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_files
+    ADD CONSTRAINT media_files_pkey PRIMARY KEY (id);
 
 
 --
@@ -688,6 +760,13 @@ ALTER TABLE ONLY public.tokens
 
 ALTER TABLE ONLY public.web_push_subscriptions
     ADD CONSTRAINT web_push_subscriptions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: avatars_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX avatars_media_file_id_idx ON public.avatars USING btree (media_file_id);
 
 
 --
@@ -849,6 +928,27 @@ CREATE INDEX entry_revisions_parent_id_idx ON public.entry_revisions USING btree
 --
 
 CREATE INDEX entry_sources_entry_id_idx ON public.entry_sources USING btree (entry_id);
+
+
+--
+-- Name: media_file_owners_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_owners_media_file_id_idx ON public.media_file_owners USING btree (media_file_id);
+
+
+--
+-- Name: media_file_owners_node_id_owner_name_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX media_file_owners_node_id_owner_name_media_file_id_idx ON public.media_file_owners USING btree (node_id, owner_name, media_file_id);
+
+
+--
+-- Name: media_files_created_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_files_created_at_idx ON public.media_files USING btree (created_at);
 
 
 --
@@ -1097,6 +1197,14 @@ CREATE UNIQUE INDEX web_push_subscriptions_node_id_public_key_auth_key_idx ON pu
 
 
 --
+-- Name: avatars avatars_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.avatars
+    ADD CONSTRAINT avatars_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: entries entries_current_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1166,6 +1274,14 @@ ALTER TABLE ONLY public.entry_revisions
 
 ALTER TABLE ONLY public.entry_sources
     ADD CONSTRAINT entry_sources_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: media_file_owners media_file_owners_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_owners
+    ADD CONSTRAINT media_file_owners_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
