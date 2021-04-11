@@ -288,19 +288,19 @@ public class MediaController {
         return new MediaFileInfo(getMediaFile(id));
     }
 
+    @GetMapping("/private/{id}/info")
+    public MediaFileInfo getInfoPrivate(@PathVariable UUID id) {
+        log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
+
+        return new MediaFileInfo(getMediaFileOwner(id));
+    }
+
     @GetMapping("/public/{id}/data")
     @ResponseBody
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
         return serve(getMediaFile(id));
-    }
-
-    @GetMapping("/private/{id}/info")
-    public MediaFileInfo getInfoPrivate(@PathVariable UUID id) {
-        log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
-
-        return new MediaFileInfo(getMediaFileOwner(id));
     }
 
     @GetMapping("/private/{id}/data")
