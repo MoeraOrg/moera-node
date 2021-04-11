@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -122,6 +123,14 @@ public class Util extends org.moera.commons.util.Util {
                 .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > timestamp)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public static String base64urlencode(byte[] bytes) {
+        return Base64.getUrlEncoder().encodeToString(bytes);
+    }
+
+    public static byte[] base64urldecode(String s) {
+        return Base64.getUrlDecoder().decode(s);
     }
 
 }

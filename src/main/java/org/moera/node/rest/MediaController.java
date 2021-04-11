@@ -108,6 +108,10 @@ public class MediaController {
         }
     }
 
+    private String toContentType(MediaType mediaType) {
+        return mediaType.getType() + "/" + mediaType.getSubtype();
+    }
+
     private Pair<Path, OutputStream> tmpFile() {
         while (true) {
             Path path;
@@ -147,7 +151,7 @@ public class MediaController {
             out.close();
         }
 
-        return Util.base64encode(digestStream.getDigest());
+        return Util.base64urlencode(digestStream.getDigest());
     }
 
     private MediaFile putInPlace(String id, String contentType, Path tmpPath) throws IOException {
@@ -174,11 +178,11 @@ public class MediaController {
 
     @PostMapping("/public")
     @Transactional
-    public MediaFileInfo postPublic(@RequestHeader("Content-Type") String contentType,
+    public MediaFileInfo postPublic(@RequestHeader("Content-Type") MediaType mediaType,
                                     @RequestHeader(value = "Content-Length", required = false) Long contentLength,
                                     InputStream in) throws IOException {
         log.info("POST /media/public (Content-Type: {}, Content-Length: {})",
-                LogUtil.format(contentType), LogUtil.format(contentLength));
+                LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
         if (requestContext.getClientName() == null) {
             throw new AuthenticationException();
@@ -188,7 +192,7 @@ public class MediaController {
         Path tmpPath = tmp.getFirst();
         try {
             String id = upload(in, tmp.getSecond(), contentLength);
-            MediaFile mediaFile = putInPlace(id, contentType, tmpPath);
+            MediaFile mediaFile = putInPlace(id, toContentType(mediaType), tmpPath);
             mediaFile.setExposed(true);
 
             return new MediaFileInfo(mediaFile);
@@ -201,11 +205,11 @@ public class MediaController {
 
     @PostMapping("/private")
     @Transactional
-    public MediaFileInfo postPrivate(@RequestHeader("Content-Type") String contentType,
+    public MediaFileInfo postPrivate(@RequestHeader("Content-Type") MediaType mediaType,
                                      @RequestHeader(value = "Content-Length", required = false) Long contentLength,
                                      InputStream in) throws IOException {
         log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
-                LogUtil.format(contentType), LogUtil.format(contentLength));
+                LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
         if (requestContext.getClientName() == null) {
             throw new AuthenticationException();
@@ -220,7 +224,7 @@ public class MediaController {
                 return new MediaFileInfo(mediaFileOwner);
             }
 
-            MediaFile mediaFile = putInPlace(id, contentType, tmpPath);
+            MediaFile mediaFile = putInPlace(id, toContentType(mediaType), tmpPath);
 
             mediaFileOwner = new MediaFileOwner();
             mediaFileOwner.setId(UUID.randomUUID());
