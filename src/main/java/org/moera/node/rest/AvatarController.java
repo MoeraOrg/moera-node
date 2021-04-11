@@ -5,7 +5,9 @@ import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -27,11 +29,14 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.model.AvatarAttributes;
 import org.moera.node.model.AvatarInfo;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -117,6 +122,50 @@ public class AvatarController {
         } finally {
             Files.deleteIfExists(tmpPath);
         }
+    }
+
+    @GetMapping
+    public List<AvatarInfo> getAll() {
+        log.info("GET /avatars");
+
+        return avatarRepository.findAllByNodeId(requestContext.nodeId()).stream()
+                .map(AvatarInfo::new)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}")
+    public AvatarInfo get(@PathVariable UUID id) {
+        log.info("GET /avatars/{id} (id = {})", LogUtil.format(id));
+
+        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        return new AvatarInfo(avatar);
+    }
+
+    @PostMapping("/{id}/current")
+    @Transactional
+    public AvatarInfo postCurrent(@PathVariable UUID id) {
+        log.info("POST /avatars/{id}/current (id = {})", LogUtil.format(id));
+
+        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        if (avatar.isCurrent()) {
+            return new AvatarInfo(avatar);
+        }
+
+        avatarRepository.resetCurrent(requestContext.nodeId());
+        avatar.setCurrent(true);
+
+        return new AvatarInfo(avatar);
+    }
+
+    @GetMapping("/current")
+    public AvatarInfo getCurrent() {
+        log.info("GET /avatars/current");
+
+        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        return new AvatarInfo(avatar);
     }
 
 }
