@@ -15,6 +15,8 @@ public class SmartMessageCodeFormatter implements MessageCodeFormatter {
         StringBuilder buf = new StringBuilder();
         if (errorCode.startsWith("Not")) {
             errorCode = errorCode.substring(3);
+        } else if (errorCode.equals("Min") || errorCode.equals("Max")) {
+            errorCode = "out-of-range";
         } else {
             buf.append("wrong-");
         }

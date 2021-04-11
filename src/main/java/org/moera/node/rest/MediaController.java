@@ -1,9 +1,5 @@
 package org.moera.node.rest;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.nio.file.StandardOpenOption.CREATE;
-
-import java.awt.Dimension;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,14 +8,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -27,7 +18,6 @@ import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.bouncycastle.crypto.io.DigestOutputStream;
 import org.bouncycastle.jcajce.provider.util.DigestFactory;
-import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
@@ -38,6 +28,7 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.BoundedOutputStream;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThresholdReachedException;
@@ -50,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -67,8 +57,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("/moera/api/media")
 public class MediaController {
 
-    private static final String TMP_DIR = "tmp";
-
     private static Logger log = LoggerFactory.getLogger(MediaController.class);
 
     @Inject
@@ -82,6 +70,9 @@ public class MediaController {
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @PostConstruct
     public void init() throws Exception {
@@ -99,7 +90,7 @@ public class MediaController {
             if (!Files.isWritable(path)) {
                 throw new MediaPathNotSetException("Not writable");
             }
-            path = path.resolve(TMP_DIR);
+            path = path.resolve(MediaOperations.TMP_DIR);
             if (!Files.exists(path)) {
                 try {
                     Files.createDirectory(path);
@@ -116,21 +107,6 @@ public class MediaController {
 
     private String toContentType(MediaType mediaType) {
         return mediaType.getType() + "/" + mediaType.getSubtype();
-    }
-
-    private Pair<Path, OutputStream> tmpFile() {
-        while (true) {
-            Path path;
-            do {
-                path = FileSystems.getDefault().getPath(config.getMedia().getPath(), TMP_DIR,
-                        CryptoUtil.token().substring(0, 16));
-            } while (Files.exists(path));
-            try {
-                return Pair.of(path, Files.newOutputStream(path, CREATE));
-            } catch (IOException e) {
-                // next try
-            }
-        }
     }
 
     private String upload(InputStream in, OutputStream out, Long contentLength) throws IOException {
@@ -160,44 +136,6 @@ public class MediaController {
         return Util.base64urlencode(digestStream.getDigest());
     }
 
-    private Dimension getImageDimension(String contentType, Path path) {
-        Iterator<ImageReader> it = ImageIO.getImageReadersByMIMEType(contentType);
-        while (it.hasNext()) {
-            ImageReader reader = it.next();
-            try {
-                ImageInputStream stream = new FileImageInputStream(path.toFile());
-                reader.setInput(stream);
-                int width = reader.getWidth(reader.getMinIndex());
-                int height = reader.getHeight(reader.getMinIndex());
-                return new Dimension(width, height);
-            } catch (IOException e) {
-                log.warn("Error reading image file {} (Content-Type: {}): {}",
-                        LogUtil.format(path.toString()), LogUtil.format(contentType), e.getMessage());
-            } finally {
-                reader.dispose();
-            }
-        }
-
-        return null;
-    }
-
-    private MediaFile putInPlace(String id, String contentType, Path tmpPath) throws IOException {
-        MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
-        if (mediaFile == null) {
-            String fileName = id + "." + MimeUtils.extension(contentType);
-            Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
-            Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
-
-            mediaFile = new MediaFile();
-            mediaFile.setId(id);
-            mediaFile.setMimeType(contentType);
-            mediaFile.setDimension(getImageDimension(contentType, mediaPath));
-            mediaFile.setFileSize(Files.size(mediaPath));
-            mediaFile = mediaFileRepository.save(mediaFile);
-        }
-        return mediaFile;
-    }
-
     private Optional<MediaFileOwner> findMediaFileOwnerByFile(String id) {
         return requestContext.isAdmin()
                 ? mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), id)
@@ -216,11 +154,11 @@ public class MediaController {
             throw new AuthenticationException();
         }
 
-        var tmp = tmpFile();
+        var tmp = mediaOperations.tmpFile();
         Path tmpPath = tmp.getFirst();
         try {
             String id = upload(in, tmp.getSecond(), contentLength);
-            MediaFile mediaFile = putInPlace(id, toContentType(mediaType), tmpPath);
+            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmpPath);
             mediaFile.setExposed(true);
 
             return new MediaFileInfo(mediaFile);
@@ -243,7 +181,7 @@ public class MediaController {
             throw new AuthenticationException();
         }
 
-        var tmp = tmpFile();
+        var tmp = mediaOperations.tmpFile();
         Path tmpPath = tmp.getFirst();
         try {
             String id = upload(in, tmp.getSecond(), contentLength);
@@ -252,7 +190,7 @@ public class MediaController {
                 return new MediaFileInfo(mediaFileOwner);
             }
 
-            MediaFile mediaFile = putInPlace(id, toContentType(mediaType), tmpPath);
+            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmpPath);
 
             mediaFileOwner = new MediaFileOwner();
             mediaFileOwner.setId(UUID.randomUUID());

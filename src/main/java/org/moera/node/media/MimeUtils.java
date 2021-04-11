@@ -5,7 +5,20 @@ import java.util.Map;
 
 public class MimeUtils {
 
+    public static class ThumbnailFormat {
+
+        public String mimeType;
+        public String format;
+
+        public ThumbnailFormat(String mimeType, String format) {
+            this.mimeType = mimeType;
+            this.format = format;
+        }
+
+    }
+
     private static final Map<String, String> MIME_EXTENSIONS = new HashMap<>();
+    private static final Map<String, ThumbnailFormat> THUMBNAIL_FORMATS = new HashMap<>();
 
     static {
         MIME_EXTENSIONS.put("image/avif", "avif");
@@ -30,10 +43,37 @@ public class MimeUtils {
         MIME_EXTENSIONS.put("image/x-xbitmap", "xbm");
         MIME_EXTENSIONS.put("image/x-xpixmap", "xpm");
         MIME_EXTENSIONS.put("application/zip", "zip");
+
+        var loss = new ThumbnailFormat("image/jpeg", "JPEG");
+        var lossless = new ThumbnailFormat("image/png", "PNG");
+        THUMBNAIL_FORMATS.put("image/avif", loss);
+        THUMBNAIL_FORMATS.put("image/gif", lossless);
+        THUMBNAIL_FORMATS.put("image/jp2", loss);
+        THUMBNAIL_FORMATS.put("image/jpeg", loss);
+        THUMBNAIL_FORMATS.put("image/pcx", lossless);
+        THUMBNAIL_FORMATS.put("image/pjpeg", loss);
+        THUMBNAIL_FORMATS.put("image/png", lossless);
+        THUMBNAIL_FORMATS.put("image/x-png", lossless);
+        THUMBNAIL_FORMATS.put("image/svg+xml", lossless);
+        THUMBNAIL_FORMATS.put("image/tiff", lossless);
+        THUMBNAIL_FORMATS.put("image/vnd.microsoft.icon", lossless);
+        THUMBNAIL_FORMATS.put("image/vnd.wap.wbmp", lossless);
+        THUMBNAIL_FORMATS.put("image/webp", loss);
+        THUMBNAIL_FORMATS.put("image/x-ms-bmp", lossless);
+        THUMBNAIL_FORMATS.put("image/x-portable-anymap", lossless);
+        THUMBNAIL_FORMATS.put("image/x-portable-bitmap", lossless);
+        THUMBNAIL_FORMATS.put("image/x-portable-graymap", lossless);
+        THUMBNAIL_FORMATS.put("image/x-portable-pixmap", lossless);
+        THUMBNAIL_FORMATS.put("image/x-xbitmap", lossless);
+        THUMBNAIL_FORMATS.put("image/x-xpixmap", lossless);
     }
 
     public static String extension(String mimeType) {
         return MIME_EXTENSIONS.getOrDefault(mimeType, "");
+    }
+
+    public static ThumbnailFormat thumbnail(String mimeType) {
+        return THUMBNAIL_FORMATS.getOrDefault(mimeType, null);
     }
 
 }
