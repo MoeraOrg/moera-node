@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -11,9 +12,14 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.FileImageInputStream;
+import javax.imageio.stream.ImageInputStream;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -154,6 +160,27 @@ public class MediaController {
         return Util.base64urlencode(digestStream.getDigest());
     }
 
+    private Dimension getImageDimension(String contentType, Path path) {
+        Iterator<ImageReader> it = ImageIO.getImageReadersByMIMEType(contentType);
+        while (it.hasNext()) {
+            ImageReader reader = it.next();
+            try {
+                ImageInputStream stream = new FileImageInputStream(path.toFile());
+                reader.setInput(stream);
+                int width = reader.getWidth(reader.getMinIndex());
+                int height = reader.getHeight(reader.getMinIndex());
+                return new Dimension(width, height);
+            } catch (IOException e) {
+                log.warn("Error reading image file {} (Content-Type: {}): {}",
+                        LogUtil.format(path.toString()), LogUtil.format(contentType), e.getMessage());
+            } finally {
+                reader.dispose();
+            }
+        }
+
+        return null;
+    }
+
     private MediaFile putInPlace(String id, String contentType, Path tmpPath) throws IOException {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null) {
@@ -164,6 +191,7 @@ public class MediaController {
             mediaFile = new MediaFile();
             mediaFile.setId(id);
             mediaFile.setMimeType(contentType);
+            mediaFile.setDimension(getImageDimension(contentType, mediaPath));
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile = mediaFileRepository.save(mediaFile);
         }

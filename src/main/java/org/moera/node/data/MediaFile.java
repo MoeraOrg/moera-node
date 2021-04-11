@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.awt.Dimension;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,10 +28,10 @@ public class MediaFile {
     private String mimeType;
 
     @Column(name="size_x")
-    private Short sizeX;
+    private Integer sizeX;
 
     @Column(name="size_y")
-    private Short sizeY;
+    private Integer sizeY;
 
     private long fileSize;
 
@@ -59,20 +60,30 @@ public class MediaFile {
         this.mimeType = mimeType;
     }
 
-    public Short getSizeX() {
+    public Integer getSizeX() {
         return sizeX;
     }
 
-    public void setSizeX(Short sizeX) {
+    public void setSizeX(Integer sizeX) {
         this.sizeX = sizeX;
     }
 
-    public Short getSizeY() {
+    public Integer getSizeY() {
         return sizeY;
     }
 
-    public void setSizeY(Short sizeY) {
+    public void setSizeY(Integer sizeY) {
         this.sizeY = sizeY;
+    }
+
+    public void setDimension(Dimension dimension) {
+        if (dimension != null) {
+            setSizeX(dimension.width);
+            setSizeY(dimension.height);
+        } else {
+            setSizeX(null);
+            setSizeY(null);
+        }
     }
 
     public long getFileSize() {
