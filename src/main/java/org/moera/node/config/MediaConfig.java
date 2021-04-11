@@ -3,6 +3,8 @@ package org.moera.node.config;
 public class MediaConfig {
 
     private String path;
+    private String serve = "stream"; // stream, sendfile, accel
+    private String accelPrefix = "/";
 
     public String getPath() {
         return path;
@@ -10,6 +12,22 @@ public class MediaConfig {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getServe() {
+        return serve;
+    }
+
+    public void setServe(String serve) {
+        this.serve = serve;
+    }
+
+    public String getAccelPrefix() {
+        return accelPrefix;
+    }
+
+    public void setAccelPrefix(String accelPrefix) {
+        this.accelPrefix = accelPrefix;
     }
 
 }

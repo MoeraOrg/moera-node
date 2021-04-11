@@ -42,13 +42,20 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/media")
@@ -230,35 +237,73 @@ public class MediaController {
         }
     }
 
+    private MediaFile getMediaFile(String id) {
+        MediaFile mediaFile = mediaFileRepository.findById(id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        if (mediaFile.isExposed()) {
+            return mediaFile;
+        } else {
+            throw new ObjectNotFoundFailure("media.not-found");
+        }
+    }
+
+    private MediaFileOwner getMediaFileOwner(UUID id) {
+        return mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+    }
+
+    private ResponseEntity<Resource> serve(MediaFile mediaFile) {
+        String fileName = mediaFile.getId() + "." + MimeUtils.extension(mediaFile.getMimeType());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
+
+        switch (config.getMedia().getServe().toLowerCase()) {
+            default:
+            case "stream": {
+                headers.setContentLength(mediaFile.getFileSize());
+                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+                return new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
+            }
+
+            case "accel":
+                headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + fileName);
+                return new ResponseEntity<>(headers, HttpStatus.OK);
+
+            case "sendfile": {
+                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+                headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
+                return new ResponseEntity<>(headers, HttpStatus.OK);
+            }
+        }
+    }
+
     @GetMapping("/public/{id}/info")
     public MediaFileInfo getInfoPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
 
-        MediaFile mediaFile = mediaFileRepository.findById(id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        if (mediaFile.isExposed()) {
-            return new MediaFileInfo(mediaFile);
-        } else {
-            throw new ObjectNotFoundFailure("media.not-found");
-        }
+        return new MediaFileInfo(getMediaFile(id));
+    }
+
+    @GetMapping("/public/{id}/data")
+    @ResponseBody
+    public ResponseEntity<Resource> getDataPublic(@PathVariable String id) {
+        log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
+
+        return serve(getMediaFile(id));
     }
 
     @GetMapping("/private/{id}/info")
     public MediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
-        if (requestContext.getClientName() == null) {
-            throw new AuthenticationException();
-        }
+        return new MediaFileInfo(getMediaFileOwner(id));
+    }
 
-        MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        if (mediaFileOwner.getOwnerName() == null && requestContext.isAdmin()
-                || mediaFileOwner.getOwnerName().equals(requestContext.getClientName())) {
-            return new MediaFileInfo(mediaFileOwner);
-        } else {
-            throw new ObjectNotFoundFailure("media.not-found");
-        }
+    @GetMapping("/private/{id}/data")
+    public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id) {
+        log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
+
+        return serve(getMediaFileOwner(id).getMediaFile());
     }
 
 }
