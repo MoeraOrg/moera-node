@@ -78,8 +78,8 @@ public class MediaOperations {
     public MediaFile putInPlace(String id, String contentType, Path tmpPath) throws IOException {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null) {
-            String fileName = id + "." + MimeUtils.extension(contentType);
-            Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+            Path mediaPath = FileSystems.getDefault().getPath(
+                    config.getMedia().getPath(), MimeUtils.fileName(id, contentType));
             Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
 
             mediaFile = new MediaFile();

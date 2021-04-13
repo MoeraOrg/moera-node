@@ -30,7 +30,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.media.BoundedOutputStream;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MediaPathNotSetException;
-import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -223,7 +222,6 @@ public class MediaController {
     }
 
     private ResponseEntity<Resource> serve(MediaFile mediaFile) {
-        String fileName = mediaFile.getId() + "." + MimeUtils.extension(mediaFile.getMimeType());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
 
@@ -231,16 +229,16 @@ public class MediaController {
             default:
             case "stream": {
                 headers.setContentLength(mediaFile.getFileSize());
-                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
                 return new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
             }
 
             case "accel":
-                headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + fileName);
+                headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + mediaFile.getFileName());
                 return new ResponseEntity<>(headers, HttpStatus.OK);
 
             case "sendfile": {
-                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
                 headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
                 return new ResponseEntity<>(headers, HttpStatus.OK);
             }

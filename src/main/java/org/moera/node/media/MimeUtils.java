@@ -72,6 +72,10 @@ public class MimeUtils {
         return MIME_EXTENSIONS.getOrDefault(mimeType, "");
     }
 
+    public static String fileName(String name, String mimeType) {
+        return name + "." + extension(mimeType);
+    }
+
     public static ThumbnailFormat thumbnail(String mimeType) {
         return THUMBNAIL_FORMATS.getOrDefault(mimeType, null);
     }

@@ -92,8 +92,7 @@ public class AvatarController {
         var tmp = mediaOperations.tmpFile();
         Path tmpPath = tmp.getFirst();
         try {
-            String fileName = mediaFile.getId() + "." + MimeUtils.extension(mediaFile.getMimeType());
-            Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), fileName);
+            Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
 
             DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
             OutputStream out = new TeeOutputStream(tmp.getSecond(), digestStream);

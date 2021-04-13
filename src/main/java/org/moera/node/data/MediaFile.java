@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.Util;
+import org.moera.node.media.MimeUtils;
 
 @Entity
 @Table(name = "media_files")
@@ -58,6 +59,10 @@ public class MediaFile {
 
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
+    }
+
+    public String getFileName() {
+        return MimeUtils.fileName(id, mimeType);
     }
 
     public Integer getSizeX() {
