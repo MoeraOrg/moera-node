@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.Avatar;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
@@ -18,12 +19,13 @@ public class ProfileInfo {
     private String bioSrc;
     private SourceFormat bioSrcFormat;
     private String bioHtml;
+    private AvatarImage avatar;
     private Map<String, String[]> operations;
 
     public ProfileInfo() {
     }
 
-    public ProfileInfo(RequestContext requestContext, boolean includeSource) {
+    public ProfileInfo(RequestContext requestContext, Avatar avatar, boolean includeSource) {
         Options options = requestContext.getOptions();
         fullName = options.getString("profile.full-name");
         gender = options.getString("profile.gender");
@@ -36,6 +38,9 @@ public class ProfileInfo {
             bioSrcFormat = SourceFormat.forValue(options.getString("profile.bio.src.format"));
         }
         bioHtml = options.getString("profile.bio.html");
+        if (avatar != null) {
+            this.avatar = new AvatarImage(avatar);
+        }
         operations = Collections.singletonMap("edit", new String[]{"admin"});
     }
 
@@ -93,6 +98,14 @@ public class ProfileInfo {
 
     public void setBioHtml(String bioHtml) {
         this.bioHtml = bioHtml;
+    }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
     }
 
     public Map<String, String[]> getOperations() {

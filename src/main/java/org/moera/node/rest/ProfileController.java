@@ -8,6 +8,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.Avatar;
+import org.moera.node.data.AvatarRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.mail.EmailConfirmMail;
@@ -37,6 +39,9 @@ public class ProfileController {
     private RequestContext requestContext;
 
     @Inject
+    private AvatarRepository avatarRepository;
+
+    @Inject
     private TextConverter textConverter;
 
     @GetMapping
@@ -44,8 +49,8 @@ public class ProfileController {
         log.info("GET /profile (include = {})", LogUtil.format(include));
 
         Set<String> includeSet = Util.setParam(include);
-
-        return new ProfileInfo(requestContext, includeSet.contains("source"));
+        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId()).orElse(null);
+        return new ProfileInfo(requestContext, avatar, includeSet.contains("source"));
     }
 
     @PutMapping
@@ -62,7 +67,9 @@ public class ProfileController {
         if (!Objects.equals(requestContext.getOptions().getString("profile.email"), oldEmail)) {
             requestContext.send(new EmailConfirmMail());
         }
-        return new ProfileInfo(requestContext, true);
+
+        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId()).orElse(null);
+        return new ProfileInfo(requestContext, avatar, true);
     }
 
 }

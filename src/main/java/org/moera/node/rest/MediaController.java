@@ -38,10 +38,7 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -221,30 +218,6 @@ public class MediaController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
     }
 
-    private ResponseEntity<Resource> serve(MediaFile mediaFile) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
-
-        switch (config.getMedia().getServe().toLowerCase()) {
-            default:
-            case "stream": {
-                headers.setContentLength(mediaFile.getFileSize());
-                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
-                return new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
-            }
-
-            case "accel":
-                headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + mediaFile.getFileName());
-                return new ResponseEntity<>(headers, HttpStatus.OK);
-
-            case "sendfile": {
-                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
-                headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
-                return new ResponseEntity<>(headers, HttpStatus.OK);
-            }
-        }
-    }
-
     @GetMapping("/public/{id}/info")
     public MediaFileInfo getInfoPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
@@ -264,14 +237,14 @@ public class MediaController {
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
-        return serve(getMediaFile(id));
+        return mediaOperations.serve(getMediaFile(id));
     }
 
     @GetMapping("/private/{id}/data")
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
-        return serve(getMediaFileOwner(id).getMediaFile());
+        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile());
     }
 
 }

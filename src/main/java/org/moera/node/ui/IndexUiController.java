@@ -3,6 +3,8 @@ package org.moera.node.ui;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.data.Avatar;
+import org.moera.node.data.AvatarRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
@@ -17,6 +19,9 @@ public class IndexUiController {
     private RequestContext requestContext;
 
     @Inject
+    private AvatarRepository avatarRepository;
+
+    @Inject
     private TitleBuilder titleBuilder;
 
     @GetMapping("/")
@@ -28,9 +33,11 @@ public class IndexUiController {
     @GetMapping("/profile")
     @VirtualPage
     public String profile(Model model, HttpServletResponse response) {
+        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId()).orElse(null);
+
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
-        model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), false));
+        model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), avatar, false));
 
         return "profile";
     }

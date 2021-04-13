@@ -23,7 +23,13 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -90,6 +96,30 @@ public class MediaOperations {
             mediaFile = mediaFileRepository.save(mediaFile);
         }
         return mediaFile;
+    }
+
+    public ResponseEntity<Resource> serve(MediaFile mediaFile) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
+
+        switch (config.getMedia().getServe().toLowerCase()) {
+            default:
+            case "stream": {
+                headers.setContentLength(mediaFile.getFileSize());
+                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
+                return new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
+            }
+
+            case "accel":
+                headers.add("X-Accel-Redirect", config.getMedia().getAccelPrefix() + mediaFile.getFileName());
+                return new ResponseEntity<>(headers, HttpStatus.OK);
+
+            case "sendfile": {
+                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
+                headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
+                return new ResponseEntity<>(headers, HttpStatus.OK);
+            }
+        }
     }
 
 }
