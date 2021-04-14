@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.Util;
+import org.moera.node.media.MimeUtils;
 
 @Entity
 @Table(name = "media_file_owners")
@@ -37,6 +38,10 @@ public class MediaFileOwner {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getFileName() {
+        return MimeUtils.fileName(id.toString(), getMediaFile().getMimeType());
     }
 
     public UUID getNodeId() {

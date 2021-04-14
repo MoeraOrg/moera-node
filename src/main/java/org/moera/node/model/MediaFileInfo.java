@@ -8,6 +8,7 @@ import org.moera.node.data.MediaFileOwner;
 public class MediaFileInfo {
 
     private String id;
+    private String path;
     private Integer width;
     private Integer height;
     private long size;
@@ -16,12 +17,16 @@ public class MediaFileInfo {
     }
 
     public MediaFileInfo(MediaFileOwner mediaFileOwner) {
-        this(mediaFileOwner.getMediaFile());
         id = mediaFileOwner.getId().toString();
+        path = "private/" + mediaFileOwner.getFileName();
+        width = mediaFileOwner.getMediaFile().getSizeX();
+        height = mediaFileOwner.getMediaFile().getSizeY();
+        size = mediaFileOwner.getMediaFile().getFileSize();
     }
 
     public MediaFileInfo(MediaFile mediaFile) {
         id = mediaFile.getId();
+        path = "public/" + mediaFile.getFileName();
         width = mediaFile.getSizeX();
         height = mediaFile.getSizeY();
         size = mediaFile.getFileSize();
@@ -33,6 +38,14 @@ public class MediaFileInfo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public Integer getWidth() {
