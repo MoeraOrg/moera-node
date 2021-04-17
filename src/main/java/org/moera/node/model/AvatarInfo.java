@@ -8,7 +8,6 @@ public class AvatarInfo {
     private String path;
     private int width;
     private int height;
-    private boolean current;
     private String shape;
 
     public AvatarInfo() {
@@ -19,7 +18,6 @@ public class AvatarInfo {
         path = "public/" + avatar.getMediaFile().getFileName();
         width = avatar.getMediaFile().getSizeX();
         height = avatar.getMediaFile().getSizeY();
-        current = avatar.isCurrent();
         shape = avatar.getShape();
     }
 
@@ -53,14 +51,6 @@ public class AvatarInfo {
 
     public void setHeight(int height) {
         this.height = height;
-    }
-
-    public boolean isCurrent() {
-        return current;
-    }
-
-    public void setCurrent(boolean current) {
-        this.current = current;
     }
 
     public String getShape() {

@@ -26,9 +26,6 @@ public class Avatar {
     private MediaFile mediaFile;
 
     @NotNull
-    private boolean current;
-
-    @NotNull
     @Size(max = 8)
     private String shape;
 
@@ -57,14 +54,6 @@ public class Avatar {
 
     public void setMediaFile(MediaFile mediaFile) {
         this.mediaFile = mediaFile;
-    }
-
-    public boolean isCurrent() {
-        return current;
-    }
-
-    public void setCurrent(boolean current) {
-        this.current = current;
     }
 
     public String getShape() {

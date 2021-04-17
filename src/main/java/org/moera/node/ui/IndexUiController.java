@@ -1,5 +1,6 @@
 package org.moera.node.ui;
 
+import java.util.UUID;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
@@ -30,14 +31,20 @@ public class IndexUiController {
         return !requestContext.isRegistrar() ? "redirect:/timeline" : "redirect:/registrar";
     }
 
+    private Avatar getAvatar() {
+        UUID id = requestContext.getOptions().getUuid("profile.avatar.id");
+        if (id == null) {
+            return null;
+        }
+        return avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+    }
+
     @GetMapping("/profile")
     @VirtualPage
     public String profile(Model model, HttpServletResponse response) {
-        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId()).orElse(null);
-
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
-        model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), avatar, false));
+        model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), getAvatar(), false));
 
         return "profile";
     }

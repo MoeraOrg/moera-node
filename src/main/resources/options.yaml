@@ -100,6 +100,10 @@
     min: 1m
     max: 7d
 
+- name: profile.avatar.id
+  type: UUID
+  internal: true
+
 - name: webmaster.name
   type: string
   defaultValue:

@@ -142,30 +142,4 @@ public class AvatarController {
         return new AvatarInfo(avatar);
     }
 
-    @PostMapping("/{id}/current")
-    @Transactional
-    public AvatarInfo postCurrent(@PathVariable UUID id) {
-        log.info("POST /avatars/{id}/current (id = {})", LogUtil.format(id));
-
-        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
-        if (avatar.isCurrent()) {
-            return new AvatarInfo(avatar);
-        }
-
-        avatarRepository.resetCurrent(requestContext.nodeId());
-        avatar.setCurrent(true);
-
-        return new AvatarInfo(avatar);
-    }
-
-    @GetMapping("/current")
-    public AvatarInfo getCurrent() {
-        log.info("GET /avatars/current");
-
-        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId())
-                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
-        return new AvatarInfo(avatar);
-    }
-
 }

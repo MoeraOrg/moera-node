@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -44,13 +45,21 @@ public class ProfileController {
     @Inject
     private TextConverter textConverter;
 
+    private Avatar getAvatar() {
+        UUID id = requestContext.getOptions().getUuid("profile.avatar.id");
+        if (id == null) {
+            return null;
+        }
+        return avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+    }
+
     @GetMapping
     public ProfileInfo get(@RequestParam(required = false) String include) {
         log.info("GET /profile (include = {})", LogUtil.format(include));
 
         Set<String> includeSet = Util.setParam(include);
-        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId()).orElse(null);
-        return new ProfileInfo(requestContext, avatar, includeSet.contains("source"));
+
+        return new ProfileInfo(requestContext, getAvatar(), includeSet.contains("source"));
     }
 
     @PutMapping
@@ -68,8 +77,7 @@ public class ProfileController {
             requestContext.send(new EmailConfirmMail());
         }
 
-        Avatar avatar = avatarRepository.findByNodeIdAndCurrent(requestContext.nodeId()).orElse(null);
-        return new ProfileInfo(requestContext, avatar, true);
+        return new ProfileInfo(requestContext, getAvatar(), true);
     }
 
 }

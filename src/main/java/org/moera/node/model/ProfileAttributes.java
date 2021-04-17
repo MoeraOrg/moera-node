@@ -5,6 +5,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
 import org.moera.node.data.SourceFormat;
+import org.moera.node.model.constraint.Uuid;
 import org.moera.node.option.Options;
 import org.moera.node.text.TextConverter;
 import org.springframework.util.StringUtils;
@@ -28,6 +29,9 @@ public class ProfileAttributes {
     private String bioSrc;
 
     private SourceFormat bioSrcFormat = SourceFormat.MARKDOWN;
+
+    @Uuid
+    private String avatarId; // not UUID type, because empty string is allowed
 
     public ProfileAttributes() {
     }
@@ -80,6 +84,14 @@ public class ProfileAttributes {
         this.bioSrcFormat = bioSrcFormat;
     }
 
+    public String getAvatarId() {
+        return avatarId;
+    }
+
+    public void setAvatarId(String avatarId) {
+        this.avatarId = avatarId;
+    }
+
     @Transactional
     public void toOptions(Options options, TextConverter textConverter) {
         String bioHtml;
@@ -96,6 +108,7 @@ public class ProfileAttributes {
             toOption("profile.bio.src", getBioSrc(), opt);
             toOption("profile.bio.src.format", getBioSrcFormat().getValue(), opt);
             toOption("profile.bio.html", bioHtml, opt);
+            toOption("profile.avatar.id", getAvatarId(), opt);
         });
     }
 
