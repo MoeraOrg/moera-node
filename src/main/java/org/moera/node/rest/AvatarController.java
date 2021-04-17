@@ -98,6 +98,7 @@ public class AvatarController {
             OutputStream out = new TeeOutputStream(tmp.getSecond(), digestStream);
 
             Thumbnails.of(mediaPath.toFile())
+                    .rotate(avatarAttributes.getRotate())
                     .sourceRegion(
                             avatarAttributes.getClipX(), avatarAttributes.getClipY(),
                             avatarAttributes.getClipSize(), avatarAttributes.getClipSize())

@@ -20,6 +20,8 @@ public class AvatarAttributes {
     @Min(value = 200)
     private int avatarSize;
 
+    private double rotate;
+
     private String shape = "circle";
 
     public String getMediaId() {
@@ -60,6 +62,14 @@ public class AvatarAttributes {
 
     public void setAvatarSize(int avatarSize) {
         this.avatarSize = avatarSize;
+    }
+
+    public double getRotate() {
+        return rotate;
+    }
+
+    public void setRotate(double rotate) {
+        this.rotate = rotate;
     }
 
     public String getShape() {
