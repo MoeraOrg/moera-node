@@ -19,7 +19,7 @@ public class ProfileInfo {
     private String bioSrc;
     private SourceFormat bioSrcFormat;
     private String bioHtml;
-    private AvatarImage avatar;
+    private AvatarInfo avatar;
     private Map<String, String[]> operations;
 
     public ProfileInfo() {
@@ -39,7 +39,7 @@ public class ProfileInfo {
         }
         bioHtml = options.getString("profile.bio.html");
         if (avatar != null) {
-            this.avatar = new AvatarImage(avatar);
+            this.avatar = new AvatarInfo(avatar);
         }
         operations = Collections.singletonMap("edit", new String[]{"admin"});
     }
@@ -100,11 +100,11 @@ public class ProfileInfo {
         this.bioHtml = bioHtml;
     }
 
-    public AvatarImage getAvatar() {
+    public AvatarInfo getAvatar() {
         return avatar;
     }
 
-    public void setAvatar(AvatarImage avatar) {
+    public void setAvatar(AvatarInfo avatar) {
         this.avatar = avatar;
     }
 
