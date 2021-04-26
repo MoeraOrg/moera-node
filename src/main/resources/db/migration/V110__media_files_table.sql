@@ -15,5 +15,5 @@ CREATE TABLE media_file_owners (
     media_file_id varchar(40) NOT NULL,
     created_at timestamp without time zone NOT NULL
 );
-CREATE INDEX ON media_file_owners(node_id, owner_name);
+CREATE INDEX media_file_owners_node_id_owner_name_idx ON media_file_owners(node_id, owner_name);
 ALTER TABLE media_file_owners ADD FOREIGN KEY (media_file_id) REFERENCES media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
