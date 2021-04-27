@@ -30,6 +30,77 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
 
+--
+-- Name: update_entity_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entity_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.media_file_id, NEW.media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_media_file_id() OWNER TO moera;
+
+--
+-- Name: update_media_file_deadline(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_media_file_deadline() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF NEW.usage_count < 0 THEN
+            NEW.usage_count := 0;
+        END IF;
+        IF NEW.usage_count = 0 AND NEW.deadline IS NULL THEN
+            NEW.deadline := NOW() + interval '1 day';
+        ELSIF NEW.usage_count > 0 AND NEW.deadline IS NOT NULL THEN
+            NEW.deadline := NULL;
+        END IF;
+        RETURN NEW;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_media_file_deadline() OWNER TO moera;
+
+--
+-- Name: update_media_file_reference(character varying, character varying); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_media_file_reference(old_id character varying, new_id character varying) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF old_id = new_id THEN
+            RETURN;
+        END IF;
+        IF old_id IS NOT NULL THEN
+            UPDATE media_files SET usage_count = usage_count - 1 WHERE id = old_id;
+        END IF;
+        IF new_id IS NOT NULL THEN
+            UPDATE media_files SET usage_count = usage_count + 1 WHERE id = new_id;
+        END IF;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_media_file_reference(old_id character varying, new_id character varying) OWNER TO moera;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -42,7 +113,6 @@ CREATE TABLE public.avatars (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     media_file_id character varying(40) NOT NULL,
-    current boolean NOT NULL,
     shape character varying(8) NOT NULL,
     created_at timestamp without time zone NOT NULL
 );
@@ -239,7 +309,9 @@ CREATE TABLE public.media_files (
     size_y integer,
     file_size bigint NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    exposed boolean DEFAULT false NOT NULL
+    exposed boolean DEFAULT false NOT NULL,
+    usage_count integer DEFAULT 0 NOT NULL,
+    deadline timestamp without time zone
 );
 
 
@@ -1194,6 +1266,27 @@ CREATE UNIQUE INDEX subscriptions_node_id_subscription_type_remote_node_name_re_
 --
 
 CREATE UNIQUE INDEX web_push_subscriptions_node_id_public_key_auth_key_idx ON public.web_push_subscriptions USING btree (node_id, public_key, auth_key);
+
+
+--
+-- Name: media_files update_deadline; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_deadline BEFORE INSERT OR UPDATE OF usage_count, deadline ON public.media_files FOR EACH ROW EXECUTE FUNCTION public.update_media_file_deadline();
+
+
+--
+-- Name: avatars update_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_file_id ON public.avatars FOR EACH ROW EXECUTE FUNCTION public.update_entity_media_file_id();
+
+
+--
+-- Name: media_file_owners update_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_file_id ON public.media_file_owners FOR EACH ROW EXECUTE FUNCTION public.update_entity_media_file_id();
 
 
 --

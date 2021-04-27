@@ -42,6 +42,13 @@ public class MediaFile {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    @NotNull
+    @Column(insertable = false, updatable = false)
+    private int usageCount;
+
+    @Column(insertable = false, updatable = false)
+    private Timestamp deadline;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediaFile")
     private Set<MediaFileOwner> owners = new HashSet<>();
 
@@ -113,6 +120,22 @@ public class MediaFile {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getUsageCount() {
+        return usageCount;
+    }
+
+    public void setUsageCount(int usageCount) {
+        this.usageCount = usageCount;
+    }
+
+    public Timestamp getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Timestamp deadline) {
+        this.deadline = deadline;
     }
 
     public Set<MediaFileOwner> getOwners() {
