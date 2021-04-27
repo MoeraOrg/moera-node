@@ -1024,6 +1024,13 @@ CREATE INDEX media_files_created_at_idx ON public.media_files USING btree (creat
 
 
 --
+-- Name: media_files_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_files_deadline_idx ON public.media_files USING btree (deadline);
+
+
+--
 -- Name: options_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 

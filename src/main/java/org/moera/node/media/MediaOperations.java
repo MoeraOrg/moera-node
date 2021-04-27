@@ -9,7 +9,10 @@ import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.FileImageInputStream;
@@ -21,6 +24,8 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
@@ -30,7 +35,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class MediaOperations {
@@ -44,6 +51,9 @@ public class MediaOperations {
 
     @Inject
     private MediaFileRepository mediaFileRepository;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     public Pair<Path, OutputStream> tmpFile() {
         while (true) {
@@ -118,6 +128,27 @@ public class MediaOperations {
                 Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
                 headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
                 return new ResponseEntity<>(headers, HttpStatus.OK);
+            }
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT6H")
+    public void purgeUnused() throws Throwable {
+        Timestamp now = Util.now();
+        List<Path> fileNames = mediaFileRepository.findUnused(now).stream()
+                .map(MediaFile::getFileName)
+                .map(fn -> FileSystems.getDefault().getPath(config.getMedia().getPath(), fn))
+                .collect(Collectors.toList());
+        Transaction.execute(txManager, () -> {
+            mediaFileRepository.deleteUnused(now);
+            return null;
+        });
+        for (Path path : fileNames) {
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException e) {
+                log.warn("Error deleting {}: {}", path, e.getMessage());
+                // ignore
             }
         }
     }
