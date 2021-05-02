@@ -30,6 +30,9 @@ public class Avatar {
     private String shape;
 
     @NotNull
+    private int ordinal;
+
+    @NotNull
     private Timestamp createdAt = Util.now();
 
     public UUID getId() {
@@ -62,6 +65,14 @@ public class Avatar {
 
     public void setShape(String shape) {
         this.shape = shape;
+    }
+
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    public void setOrdinal(int ordinal) {
+        this.ordinal = ordinal;
     }
 
     public Timestamp getCreatedAt() {

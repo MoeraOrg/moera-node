@@ -9,6 +9,7 @@ public class AvatarInfo {
     private int width;
     private int height;
     private String shape;
+    private int ordinal;
 
     public AvatarInfo() {
     }
@@ -19,6 +20,7 @@ public class AvatarInfo {
         width = avatar.getMediaFile().getSizeX();
         height = avatar.getMediaFile().getSizeY();
         shape = avatar.getShape();
+        ordinal = avatar.getOrdinal();
     }
 
     public String getId() {
@@ -59,6 +61,14 @@ public class AvatarInfo {
 
     public void setShape(String shape) {
         this.shape = shape;
+    }
+
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    public void setOrdinal(int ordinal) {
+        this.ordinal = ordinal;
     }
 
 }

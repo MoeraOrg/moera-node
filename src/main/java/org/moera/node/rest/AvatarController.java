@@ -29,6 +29,8 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.model.AvatarAttributes;
 import org.moera.node.model.AvatarInfo;
+import org.moera.node.model.AvatarOrdinal;
+import org.moera.node.model.AvatarsOrdered;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -116,6 +118,12 @@ public class AvatarController {
             avatar.setNodeId(requestContext.nodeId());
             avatar.setMediaFile(avatarFile);
             avatar.setShape(avatarAttributes.getShape());
+            if (avatarAttributes.getOrdinal() != null) {
+                avatar.setOrdinal(avatarAttributes.getOrdinal());
+            } else {
+                Integer ordinal = avatarRepository.maxOrdinal(requestContext.nodeId());
+                avatar.setOrdinal(ordinal != null ? ordinal + 1 : 0);
+            }
             avatar = avatarRepository.save(avatar);
 
             return new AvatarInfo(avatar);
@@ -124,6 +132,31 @@ public class AvatarController {
         } finally {
             Files.deleteIfExists(tmpPath);
         }
+    }
+
+    @PostMapping("/reorder")
+    @Admin
+    @Transactional
+    public AvatarOrdinal[] reorder(@Valid @RequestBody AvatarsOrdered avatarsOrdered) {
+        int size = avatarsOrdered.getIds() != null ? avatarsOrdered.getIds().length : 0;
+
+        log.info("POST /avatars/reorder ({} items)", size);
+
+        AvatarOrdinal[] result = new AvatarOrdinal[size];
+        if (size == 0) {
+            return result;
+        }
+
+        int ordinal = 0;
+        for (UUID id : avatarsOrdered.getIds()) {
+            Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+            avatar.setOrdinal(ordinal);
+            result[ordinal] = new AvatarOrdinal(avatar.getId().toString(), ordinal);
+            ordinal++;
+        }
+
+        return result;
     }
 
     @GetMapping
@@ -145,6 +178,8 @@ public class AvatarController {
     }
 
     @DeleteMapping("/{id}")
+    @Admin
+    @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /avatars/{id} (id = {})", LogUtil.format(id));
 

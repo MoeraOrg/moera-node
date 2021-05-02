@@ -24,6 +24,8 @@ public class AvatarAttributes {
 
     private String shape = "circle";
 
+    private Integer ordinal;
+
     public String getMediaId() {
         return mediaId;
     }
@@ -78,6 +80,14 @@ public class AvatarAttributes {
 
     public void setShape(String shape) {
         this.shape = shape;
+    }
+
+    public Integer getOrdinal() {
+        return ordinal;
+    }
+
+    public void setOrdinal(Integer ordinal) {
+        this.ordinal = ordinal;
     }
 
 }
