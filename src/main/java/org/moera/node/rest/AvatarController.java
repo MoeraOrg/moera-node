@@ -31,10 +31,12 @@ import org.moera.node.model.AvatarAttributes;
 import org.moera.node.model.AvatarInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -140,6 +142,17 @@ public class AvatarController {
         Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         return new AvatarInfo(avatar);
+    }
+
+    @DeleteMapping("/{id}")
+    public Result delete(@PathVariable UUID id) {
+        log.info("DELETE /avatars/{id} (id = {})", LogUtil.format(id));
+
+        Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        avatarRepository.delete(avatar);
+
+        return Result.OK;
     }
 
 }
