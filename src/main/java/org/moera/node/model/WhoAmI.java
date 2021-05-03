@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.naming.rpc.OperationStatus;
+import org.moera.node.data.Avatar;
 import org.moera.node.option.Options;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,11 +13,12 @@ public class WhoAmI {
     private String fullName;
     private String gender;
     private String title;
+    private AvatarImage avatar;
 
     public WhoAmI() {
     }
 
-    public WhoAmI(Options options) {
+    public WhoAmI(Options options, Avatar avatar) {
         nodeName = options.nodeName();
         OperationStatus status = OperationStatus.forValue(options.getString("naming.operation.status"));
         nodeNameChanging = status == OperationStatus.WAITING
@@ -25,6 +27,9 @@ public class WhoAmI {
         fullName = options.getString("profile.full-name");
         gender = options.getString("profile.gender");
         title = options.getString("profile.title");
+        if (avatar != null) {
+            this.avatar = new AvatarImage(avatar);
+        }
     }
 
     public String getNodeName() {
@@ -66,4 +71,13 @@ public class WhoAmI {
     public void setTitle(String title) {
         this.title = title;
     }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
+    }
+
 }
