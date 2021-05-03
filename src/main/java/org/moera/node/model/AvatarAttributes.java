@@ -14,7 +14,7 @@ public class AvatarAttributes {
     @Min(value = 0)
     private int clipY;
 
-    @Min(value = 200)
+    @Min(value = 100)
     private int clipSize;
 
     @Min(value = 200)
