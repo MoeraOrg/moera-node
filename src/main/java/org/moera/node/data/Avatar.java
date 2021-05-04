@@ -15,6 +15,8 @@ import org.moera.commons.util.Util;
 @Table(name = "avatars")
 public class Avatar {
 
+    public static final String DEFAULT_SHAPE = "circle";
+
     @Id
     private UUID id;
 

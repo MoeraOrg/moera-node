@@ -3,6 +3,8 @@ package org.moera.node.model;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 
+import org.moera.node.data.Avatar;
+
 public class AvatarAttributes {
 
     @NotBlank
@@ -22,7 +24,7 @@ public class AvatarAttributes {
 
     private double rotate;
 
-    private String shape = "circle";
+    private String shape = Avatar.DEFAULT_SHAPE;
 
     private Integer ordinal;
 
