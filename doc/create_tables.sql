@@ -114,7 +114,8 @@ CREATE TABLE public.avatars (
     node_id uuid NOT NULL,
     media_file_id character varying(40) NOT NULL,
     shape character varying(8) NOT NULL,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    ordinal integer DEFAULT 0 NOT NULL
 );
 
 
@@ -839,6 +840,13 @@ ALTER TABLE ONLY public.web_push_subscriptions
 --
 
 CREATE INDEX avatars_media_file_id_idx ON public.avatars USING btree (media_file_id);
+
+
+--
+-- Name: avatars_node_id_ordinal_created_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX avatars_node_id_ordinal_created_at_idx ON public.avatars USING btree (node_id, ordinal, created_at);
 
 
 --
