@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -27,6 +28,12 @@ public class OwnComment {
     @Size(max = 96)
     private String remoteFullName;
 
+    @ManyToOne
+    private MediaFile remoteAvatarMediaFile;
+
+    @Size(max = 8)
+    private String remoteAvatarShape;
+
     @NotNull
     @Size(max = 40)
     private String remotePostingId = "";
@@ -40,6 +47,12 @@ public class OwnComment {
 
     @Size(max = 96)
     private String remoteRepliedToFullName;
+
+    @ManyToOne
+    private MediaFile remoteRepliedToAvatarMediaFile;
+
+    @Size(max = 8)
+    private String remoteRepliedToAvatarShape;
 
     @NotNull
     @Size(max = 255)
@@ -80,6 +93,22 @@ public class OwnComment {
         this.remoteFullName = remoteFullName;
     }
 
+    public MediaFile getRemoteAvatarMediaFile() {
+        return remoteAvatarMediaFile;
+    }
+
+    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
+        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
+    }
+
+    public String getRemoteAvatarShape() {
+        return remoteAvatarShape;
+    }
+
+    public void setRemoteAvatarShape(String remoteAvatarShape) {
+        this.remoteAvatarShape = remoteAvatarShape;
+    }
+
     public String getRemotePostingId() {
         return remotePostingId;
     }
@@ -110,6 +139,22 @@ public class OwnComment {
 
     public void setRemoteRepliedToFullName(String remoteRepliedToFullName) {
         this.remoteRepliedToFullName = remoteRepliedToFullName;
+    }
+
+    public MediaFile getRemoteRepliedToAvatarMediaFile() {
+        return remoteRepliedToAvatarMediaFile;
+    }
+
+    public void setRemoteRepliedToAvatarMediaFile(MediaFile remoteRepliedToAvatarMediaFile) {
+        this.remoteRepliedToAvatarMediaFile = remoteRepliedToAvatarMediaFile;
+    }
+
+    public String getRemoteRepliedToAvatarShape() {
+        return remoteRepliedToAvatarShape;
+    }
+
+    public void setRemoteRepliedToAvatarShape(String remoteRepliedToAvatarShape) {
+        this.remoteRepliedToAvatarShape = remoteRepliedToAvatarShape;
     }
 
     public String getHeading() {

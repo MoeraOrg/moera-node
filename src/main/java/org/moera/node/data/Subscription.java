@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -40,6 +41,12 @@ public class Subscription {
 
     @Size(max = 96)
     private String remoteFullName;
+
+    @ManyToOne
+    private MediaFile remoteAvatarMediaFile;
+
+    @Size(max = 8)
+    private String remoteAvatarShape;
 
     @Size(max = 63)
     private String remoteFeedName;
@@ -108,6 +115,22 @@ public class Subscription {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public MediaFile getRemoteAvatarMediaFile() {
+        return remoteAvatarMediaFile;
+    }
+
+    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
+        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
+    }
+
+    public String getRemoteAvatarShape() {
+        return remoteAvatarShape;
+    }
+
+    public void setRemoteAvatarShape(String remoteAvatarShape) {
+        this.remoteAvatarShape = remoteAvatarShape;
     }
 
     public String getRemoteFeedName() {

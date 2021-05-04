@@ -56,6 +56,156 @@ $$;
 ALTER FUNCTION public.update_entity_media_file_id() OWNER TO moera;
 
 --
+-- Name: update_entity_owner_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entity_owner_avatar_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.owner_avatar_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.owner_avatar_media_file_id, NEW.owner_avatar_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.owner_avatar_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_owner_avatar_media_file_id() OWNER TO moera;
+
+--
+-- Name: update_entity_receiver_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entity_receiver_avatar_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.receiver_avatar_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.receiver_avatar_media_file_id, NEW.receiver_avatar_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.receiver_avatar_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_receiver_avatar_media_file_id() OWNER TO moera;
+
+--
+-- Name: update_entity_remote_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entity_remote_avatar_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.remote_avatar_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.remote_avatar_media_file_id, NEW.remote_avatar_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.remote_avatar_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_remote_avatar_media_file_id() OWNER TO moera;
+
+--
+-- Name: update_entity_remote_owner_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entity_remote_owner_avatar_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.remote_owner_avatar_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.remote_owner_avatar_media_file_id, NEW.remote_owner_avatar_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.remote_owner_avatar_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_remote_owner_avatar_media_file_id() OWNER TO moera;
+
+--
+-- Name: update_entity_remote_replied_to_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entity_remote_replied_to_avatar_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.remote_replied_to_avatar_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.remote_replied_to_avatar_media_file_id, NEW.remote_replied_to_avatar_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.remote_replied_to_avatar_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_remote_replied_to_avatar_media_file_id() OWNER TO moera;
+
+--
+-- Name: update_entity_replied_to_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entity_replied_to_avatar_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.replied_to_avatar_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.replied_to_avatar_media_file_id, NEW.replied_to_avatar_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.replied_to_avatar_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_replied_to_avatar_media_file_id() OWNER TO moera;
+
+--
 -- Name: update_media_file_deadline(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -133,7 +283,9 @@ CREATE TABLE public.contacts (
     closeness_base real DEFAULT 0 NOT NULL,
     closeness real DEFAULT 1 NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL
+    updated_at timestamp without time zone NOT NULL,
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8)
 );
 
 
@@ -201,7 +353,13 @@ CREATE TABLE public.entries (
     replied_to_revision_id uuid,
     owner_full_name character varying(96),
     receiver_full_name character varying(96),
-    replied_to_full_name character varying(96)
+    replied_to_full_name character varying(96),
+    owner_avatar_media_file_id character varying(40),
+    owner_avatar_shape character varying(8),
+    receiver_avatar_media_file_id character varying(40),
+    receiver_avatar_shape character varying(8),
+    replied_to_avatar_media_file_id character varying(40),
+    replied_to_avatar_shape character varying(8)
 );
 
 
@@ -264,7 +422,9 @@ CREATE TABLE public.entry_sources (
     remote_feed_name character varying(63) NOT NULL,
     remote_posting_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    remote_full_name character varying(96)
+    remote_full_name character varying(96),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8)
 );
 
 
@@ -346,7 +506,11 @@ CREATE TABLE public.own_comments (
     created_at timestamp without time zone NOT NULL,
     remote_full_name character varying(96),
     remote_replied_to_name character varying(63),
-    remote_replied_to_full_name character varying(96)
+    remote_replied_to_full_name character varying(96),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8),
+    remote_replied_to_avatar_media_file_id character varying(40),
+    remote_replied_to_avatar_shape character varying(8)
 );
 
 
@@ -364,7 +528,9 @@ CREATE TABLE public.own_reactions (
     negative boolean NOT NULL,
     emoji integer NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    remote_full_name character varying(96)
+    remote_full_name character varying(96),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8)
 );
 
 
@@ -467,7 +633,9 @@ CREATE TABLE public.reactions (
     signature bytea,
     deleted_at timestamp without time zone,
     moment bigint NOT NULL,
-    owner_full_name character varying(96)
+    owner_full_name character varying(96),
+    owner_avatar_media_file_id character varying(40),
+    owner_avatar_shape character varying(8)
 );
 
 
@@ -542,7 +710,11 @@ CREATE TABLE public.stories (
     remote_replied_to_id character varying(40),
     remote_replied_to_heading character varying(255),
     remote_full_name character varying(96),
-    remote_owner_full_name character varying(96)
+    remote_owner_full_name character varying(96),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8),
+    remote_owner_avatar_media_file_id character varying(40),
+    remote_owner_avatar_shape character varying(8)
 );
 
 
@@ -560,7 +732,9 @@ CREATE TABLE public.subscribers (
     entry_id uuid,
     remote_node_name character varying(63) NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    remote_full_name character varying(96)
+    remote_full_name character varying(96),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8)
 );
 
 
@@ -581,7 +755,9 @@ CREATE TABLE public.subscriptions (
     remote_entry_id character varying(40),
     created_at timestamp without time zone NOT NULL,
     reason smallint DEFAULT 0 NOT NULL,
-    remote_full_name character varying(96)
+    remote_full_name character varying(96),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8)
 );
 
 
@@ -864,6 +1040,13 @@ CREATE UNIQUE INDEX contacts_node_id_remote_node_name_idx ON public.contacts USI
 
 
 --
+-- Name: contacts_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX contacts_remote_avatar_media_file_id_idx ON public.contacts USING btree (remote_avatar_media_file_id);
+
+
+--
 -- Name: contacts_updated_at_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -941,6 +1124,13 @@ CREATE UNIQUE INDEX entries_node_id_receiver_name_receiver_entry_id_idx ON publi
 
 
 --
+-- Name: entries_owner_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_owner_avatar_media_file_id_idx ON public.entries USING btree (owner_avatar_media_file_id);
+
+
+--
 -- Name: entries_parent_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -952,6 +1142,20 @@ CREATE INDEX entries_parent_id_idx ON public.entries USING btree (parent_id);
 --
 
 CREATE INDEX entries_parent_id_moment_idx ON public.entries USING btree (parent_id, moment);
+
+
+--
+-- Name: entries_receiver_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_receiver_avatar_media_file_id_idx ON public.entries USING btree (receiver_avatar_media_file_id);
+
+
+--
+-- Name: entries_replied_to_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_replied_to_avatar_media_file_id_idx ON public.entries USING btree (replied_to_avatar_media_file_id);
 
 
 --
@@ -1011,6 +1215,13 @@ CREATE INDEX entry_sources_entry_id_idx ON public.entry_sources USING btree (ent
 
 
 --
+-- Name: entry_sources_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_sources_remote_avatar_media_file_id_idx ON public.entry_sources USING btree (remote_avatar_media_file_id);
+
+
+--
 -- Name: media_file_owners_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1060,10 +1271,31 @@ CREATE UNIQUE INDEX own_comments_node_id_remote_node_name_remote_posting_id_rem_
 
 
 --
+-- Name: own_comments_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX own_comments_remote_avatar_media_file_id_idx ON public.own_comments USING btree (remote_avatar_media_file_id);
+
+
+--
+-- Name: own_comments_remote_replied_to_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX own_comments_remote_replied_to_avatar_media_file_id_idx ON public.own_comments USING btree (remote_replied_to_avatar_media_file_id);
+
+
+--
 -- Name: own_reactions_node_id_remote_node_name_remote_posting_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE UNIQUE INDEX own_reactions_node_id_remote_node_name_remote_posting_id_idx ON public.own_reactions USING btree (node_id, remote_node_name, remote_posting_id);
+
+
+--
+-- Name: own_reactions_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX own_reactions_remote_avatar_media_file_id_idx ON public.own_reactions USING btree (remote_avatar_media_file_id);
 
 
 --
@@ -1172,6 +1404,13 @@ CREATE INDEX reactions_moment_entry_revision_id_idx ON public.reactions USING bt
 
 
 --
+-- Name: reactions_owner_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX reactions_owner_avatar_media_file_id_idx ON public.reactions USING btree (owner_avatar_media_file_id);
+
+
+--
 -- Name: remote_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1249,6 +1488,20 @@ CREATE INDEX stories_parent_id_idx ON public.stories USING btree (parent_id);
 
 
 --
+-- Name: stories_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX stories_remote_avatar_media_file_id_idx ON public.stories USING btree (remote_avatar_media_file_id);
+
+
+--
+-- Name: stories_remote_owner_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX stories_remote_owner_avatar_media_file_id_idx ON public.stories USING btree (remote_owner_avatar_media_file_id);
+
+
+--
 -- Name: stories_tracking_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1270,10 +1523,24 @@ CREATE INDEX subscribers_node_id_feed_name_idx ON public.subscribers USING btree
 
 
 --
+-- Name: subscribers_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX subscribers_remote_avatar_media_file_id_idx ON public.subscribers USING btree (remote_avatar_media_file_id);
+
+
+--
 -- Name: subscriptions_node_id_subscription_type_remote_node_name_re_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE UNIQUE INDEX subscriptions_node_id_subscription_type_remote_node_name_re_idx ON public.subscriptions USING btree (node_id, subscription_type, remote_node_name, remote_subscriber_id);
+
+
+--
+-- Name: subscriptions_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX subscriptions_remote_avatar_media_file_id_idx ON public.subscriptions USING btree (remote_avatar_media_file_id);
 
 
 --
@@ -1305,11 +1572,110 @@ CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_fi
 
 
 --
+-- Name: entries update_owner_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_owner_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF owner_avatar_media_file_id ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entity_owner_avatar_media_file_id();
+
+
+--
+-- Name: reactions update_owner_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_owner_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF owner_avatar_media_file_id ON public.reactions FOR EACH ROW EXECUTE FUNCTION public.update_entity_owner_avatar_media_file_id();
+
+
+--
+-- Name: entries update_receiver_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_receiver_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF receiver_avatar_media_file_id ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entity_receiver_avatar_media_file_id();
+
+
+--
+-- Name: contacts update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.contacts FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: entry_sources update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.entry_sources FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: own_comments update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.own_comments FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: own_reactions update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.own_reactions FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: stories update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.stories FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: subscribers update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.subscribers FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: subscriptions update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.subscriptions FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: stories update_remote_owner_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_owner_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_owner_avatar_media_file_id ON public.stories FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_owner_avatar_media_file_id();
+
+
+--
+-- Name: own_comments update_remote_replied_to_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_replied_to_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_replied_to_avatar_media_file_id ON public.own_comments FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_replied_to_avatar_media_file_id();
+
+
+--
+-- Name: entries update_replied_to_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_replied_to_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF replied_to_avatar_media_file_id ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entity_replied_to_avatar_media_file_id();
+
+
+--
 -- Name: avatars avatars_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.avatars
     ADD CONSTRAINT avatars_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: contacts contacts_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.contacts
+    ADD CONSTRAINT contacts_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -1329,11 +1695,35 @@ ALTER TABLE ONLY public.entries
 
 
 --
+-- Name: entries entries_owner_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_owner_avatar_media_file_id_fkey FOREIGN KEY (owner_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: entries entries_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entries_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entries entries_receiver_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_receiver_avatar_media_file_id_fkey FOREIGN KEY (receiver_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: entries entries_replied_to_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_replied_to_avatar_media_file_id_fkey FOREIGN KEY (replied_to_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -1385,11 +1775,43 @@ ALTER TABLE ONLY public.entry_sources
 
 
 --
+-- Name: entry_sources entry_sources_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_sources
+    ADD CONSTRAINT entry_sources_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: media_file_owners media_file_owners_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.media_file_owners
     ADD CONSTRAINT media_file_owners_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: own_comments own_comments_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.own_comments
+    ADD CONSTRAINT own_comments_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: own_comments own_comments_remote_replied_to_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.own_comments
+    ADD CONSTRAINT own_comments_remote_replied_to_avatar_media_file_id_fkey FOREIGN KEY (remote_replied_to_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: own_reactions own_reactions_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.own_reactions
+    ADD CONSTRAINT own_reactions_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -1425,6 +1847,14 @@ ALTER TABLE ONLY public.reactions
 
 
 --
+-- Name: reactions reactions_owner_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.reactions
+    ADD CONSTRAINT reactions_owner_avatar_media_file_id_fkey FOREIGN KEY (owner_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: stories stories_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1441,11 +1871,43 @@ ALTER TABLE ONLY public.stories
 
 
 --
+-- Name: stories stories_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.stories
+    ADD CONSTRAINT stories_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: stories stories_remote_owner_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.stories
+    ADD CONSTRAINT stories_remote_owner_avatar_media_file_id_fkey FOREIGN KEY (remote_owner_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: subscribers subscribers_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.subscribers
     ADD CONSTRAINT subscribers_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: subscribers subscribers_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.subscribers
+    ADD CONSTRAINT subscribers_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: subscriptions subscriptions_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.subscriptions
+    ADD CONSTRAINT subscriptions_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --

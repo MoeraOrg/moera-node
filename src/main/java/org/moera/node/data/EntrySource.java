@@ -29,6 +29,12 @@ public class EntrySource {
     @Size(max = 96)
     private String remoteFullName;
 
+    @ManyToOne
+    private MediaFile remoteAvatarMediaFile;
+
+    @Size(max = 8)
+    private String remoteAvatarShape;
+
     @NotNull
     @Size(max = 63)
     private String remoteFeedName = "";
@@ -70,6 +76,22 @@ public class EntrySource {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public MediaFile getRemoteAvatarMediaFile() {
+        return remoteAvatarMediaFile;
+    }
+
+    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
+        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
+    }
+
+    public String getRemoteAvatarShape() {
+        return remoteAvatarShape;
+    }
+
+    public void setRemoteAvatarShape(String remoteAvatarShape) {
+        this.remoteAvatarShape = remoteAvatarShape;
     }
 
     public String getRemoteFeedName() {

@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -26,6 +27,12 @@ public class Contact {
 
     @Size(max = 96)
     private String remoteFullName;
+
+    @ManyToOne
+    private MediaFile remoteAvatarMediaFile;
+
+    @Size(max = 8)
+    private String remoteAvatarShape;
 
     @NotNull
     private float closenessBase;
@@ -69,6 +76,22 @@ public class Contact {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public MediaFile getRemoteAvatarMediaFile() {
+        return remoteAvatarMediaFile;
+    }
+
+    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
+        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
+    }
+
+    public String getRemoteAvatarShape() {
+        return remoteAvatarShape;
+    }
+
+    public void setRemoteAvatarShape(String remoteAvatarShape) {
+        this.remoteAvatarShape = remoteAvatarShape;
     }
 
     public float getClosenessBase() {

@@ -26,6 +26,12 @@ public class Reaction {
     private String ownerFullName;
 
     @ManyToOne
+    private MediaFile ownerAvatarMediaFile;
+
+    @Size(max = 8)
+    private String ownerAvatarShape;
+
+    @ManyToOne
     @NotNull
     private EntryRevision entryRevision;
 
@@ -71,6 +77,22 @@ public class Reaction {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public MediaFile getOwnerAvatarMediaFile() {
+        return ownerAvatarMediaFile;
+    }
+
+    public void setOwnerAvatarMediaFile(MediaFile ownerAvatarMediaFile) {
+        this.ownerAvatarMediaFile = ownerAvatarMediaFile;
+    }
+
+    public String getOwnerAvatarShape() {
+        return ownerAvatarShape;
+    }
+
+    public void setOwnerAvatarShape(String ownerAvatarShape) {
+        this.ownerAvatarShape = ownerAvatarShape;
     }
 
     public EntryRevision getEntryRevision() {

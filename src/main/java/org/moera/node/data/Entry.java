@@ -46,6 +46,12 @@ public class Entry {
     @Size(max = 96)
     private String receiverFullName;
 
+    @ManyToOne
+    private MediaFile receiverAvatarMediaFile;
+
+    @Size(max = 8)
+    private String receiverAvatarShape;
+
     @Size(max = 40)
     private String receiverEntryId;
 
@@ -55,6 +61,12 @@ public class Entry {
 
     @Size(max = 96)
     private String ownerFullName;
+
+    @ManyToOne
+    private MediaFile ownerAvatarMediaFile;
+
+    @Size(max = 8)
+    private String ownerAvatarShape;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -118,6 +130,12 @@ public class Entry {
 
     @Size(max = 96)
     private String repliedToFullName;
+
+    @ManyToOne
+    private MediaFile repliedToAvatarMediaFile;
+
+    @Size(max = 8)
+    private String repliedToAvatarShape;
 
     @Size(max = 255)
     private String repliedToHeading;
@@ -193,6 +211,22 @@ public class Entry {
         return getReceiverName() == null;
     }
 
+    public MediaFile getReceiverAvatarMediaFile() {
+        return receiverAvatarMediaFile;
+    }
+
+    public void setReceiverAvatarMediaFile(MediaFile receiverAvatarMediaFile) {
+        this.receiverAvatarMediaFile = receiverAvatarMediaFile;
+    }
+
+    public String getReceiverAvatarShape() {
+        return receiverAvatarShape;
+    }
+
+    public void setReceiverAvatarShape(String receiverAvatarShape) {
+        this.receiverAvatarShape = receiverAvatarShape;
+    }
+
     public String getReceiverEntryId() {
         return receiverEntryId;
     }
@@ -215,6 +249,22 @@ public class Entry {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public MediaFile getOwnerAvatarMediaFile() {
+        return ownerAvatarMediaFile;
+    }
+
+    public void setOwnerAvatarMediaFile(MediaFile ownerAvatarMediaFile) {
+        this.ownerAvatarMediaFile = ownerAvatarMediaFile;
+    }
+
+    public String getOwnerAvatarShape() {
+        return ownerAvatarShape;
+    }
+
+    public void setOwnerAvatarShape(String ownerAvatarShape) {
+        this.ownerAvatarShape = ownerAvatarShape;
     }
 
     public Timestamp getCreatedAt() {
@@ -432,6 +482,22 @@ public class Entry {
 
     public void setRepliedToFullName(String repliedToFullName) {
         this.repliedToFullName = repliedToFullName;
+    }
+
+    public MediaFile getRepliedToAvatarMediaFile() {
+        return repliedToAvatarMediaFile;
+    }
+
+    public void setRepliedToAvatarMediaFile(MediaFile repliedToAvatarMediaFile) {
+        this.repliedToAvatarMediaFile = repliedToAvatarMediaFile;
+    }
+
+    public String getRepliedToAvatarShape() {
+        return repliedToAvatarShape;
+    }
+
+    public void setRepliedToAvatarShape(String repliedToAvatarShape) {
+        this.repliedToAvatarShape = repliedToAvatarShape;
     }
 
     public String getRepliedToHeading() {
