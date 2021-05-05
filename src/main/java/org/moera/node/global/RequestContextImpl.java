@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import javax.inject.Inject;
+
+import org.moera.node.data.Avatar;
+import org.moera.node.data.AvatarRepository;
 import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
@@ -25,6 +29,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean rootAdmin;
     private boolean admin;
     private Options options;
+    private Avatar avatar;
     private String url;
     private String siteUrl;
     private String clientId;
@@ -35,6 +40,9 @@ public class RequestContextImpl implements RequestContext {
     private List<Event> afterCommitEvents = new ArrayList<>();
     private List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
     private List<Mail> afterCommitMails = new ArrayList<>();
+
+    @Inject
+    private AvatarRepository avatarRepository;
 
     @Override
     public boolean isRegistrar() {
@@ -168,11 +176,12 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public RequestContext getPublic() {
-        RequestContext context = new RequestContextImpl();
-        context.setBrowserExtension(false);
-        context.setAdmin(false);
-        context.setOptions(options);
-        context.setSiteUrl(siteUrl);
+        RequestContextImpl context = new RequestContextImpl();
+        context.browserExtension = false;
+        context.admin = false;
+        context.options = options;
+        context.siteUrl = siteUrl;
+        context.avatarRepository = avatarRepository;
         return context;
     }
 
@@ -189,6 +198,22 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public String fullName() {
         return options != null ? options.getString("profile.full-name") : null;
+    }
+
+    @Override
+    public UUID avatarId() {
+        return options != null ? options.getUuid("profile.avatar.id") : null;
+    }
+
+    @Override
+    public Avatar getAvatar() {
+        if (nodeId() == null || avatarId() == null) {
+            return null;
+        }
+        if (avatar == null || !avatar.getId().equals(avatarId())) {
+            avatar = avatarRepository.findByNodeIdAndId(nodeId(), avatarId()).orElse(null);
+        }
+        return avatar;
     }
 
     @Override

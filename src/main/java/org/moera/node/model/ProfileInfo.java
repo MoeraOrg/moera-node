@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.data.Avatar;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
@@ -25,9 +24,9 @@ public class ProfileInfo {
     public ProfileInfo() {
     }
 
-    public ProfileInfo(RequestContext requestContext, Avatar avatar, boolean includeSource) {
+    public ProfileInfo(RequestContext requestContext, boolean includeSource) {
         Options options = requestContext.getOptions();
-        fullName = options.getString("profile.full-name");
+        fullName = requestContext.fullName();
         gender = options.getString("profile.gender");
         if (requestContext.isAdmin()) {
             email = options.getString("profile.email");
@@ -38,8 +37,8 @@ public class ProfileInfo {
             bioSrcFormat = SourceFormat.forValue(options.getString("profile.bio.src.format"));
         }
         bioHtml = options.getString("profile.bio.html");
-        if (avatar != null) {
-            this.avatar = new AvatarInfo(avatar);
+        if (requestContext.getAvatar() != null) {
+            this.avatar = new AvatarInfo(requestContext.getAvatar());
         }
         operations = Collections.singletonMap("edit", new String[]{"admin"});
     }

@@ -44,7 +44,7 @@ public class IndexUiController {
     public String profile(Model model, HttpServletResponse response) {
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
-        model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), getAvatar(), false));
+        model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), false));
 
         return "profile";
     }

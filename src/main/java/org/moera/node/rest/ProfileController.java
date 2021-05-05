@@ -59,7 +59,7 @@ public class ProfileController {
 
         Set<String> includeSet = Util.setParam(include);
 
-        return new ProfileInfo(requestContext, getAvatar(), includeSet.contains("source"));
+        return new ProfileInfo(requestContext, includeSet.contains("source"));
     }
 
     @PutMapping
@@ -77,7 +77,7 @@ public class ProfileController {
             requestContext.send(new EmailConfirmMail());
         }
 
-        return new ProfileInfo(requestContext, getAvatar(), true);
+        return new ProfileInfo(requestContext, true);
     }
 
 }

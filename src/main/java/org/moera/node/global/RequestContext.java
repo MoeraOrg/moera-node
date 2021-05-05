@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.UUID;
 
+import org.moera.node.data.Avatar;
 import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
@@ -72,6 +73,10 @@ public interface RequestContext {
     String nodeName();
 
     String fullName();
+
+    UUID avatarId();
+
+    Avatar getAvatar();
 
     void send(Event event);
 
