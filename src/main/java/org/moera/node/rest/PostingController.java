@@ -13,6 +13,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -91,6 +93,9 @@ public class PostingController {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private MediaFileRepository mediaFileRepository;
+
+    @Inject
     private EntityManager entityManager;
 
     @Inject
@@ -122,6 +127,13 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
+        if (postingText.getOwnerAvatar() != null && postingText.getOwnerAvatar().getMediaId() != null) {
+            MediaFile mediaFile = mediaFileRepository.findById(postingText.getOwnerAvatar().getMediaId()).orElse(null);
+            if (mediaFile == null || !mediaFile.isExposed()) {
+                throw new ValidationFailure("postingText.ownerAvatar.mediaId.not-found");
+            }
+            postingText.setOwnerAvatarMediaFile(mediaFile);
+        }
         if (StringUtils.isEmpty(postingText.getBodySrc())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
         }
@@ -160,6 +172,13 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
+        if (postingText.getOwnerAvatar() != null && postingText.getOwnerAvatar().getMediaId() != null) {
+            MediaFile mediaFile = mediaFileRepository.findById(postingText.getOwnerAvatar().getMediaId()).orElse(null);
+            if (mediaFile == null || !mediaFile.isExposed()) {
+                throw new ValidationFailure("postingText.ownerAvatar.mediaId.not-found");
+            }
+            postingText.setOwnerAvatarMediaFile(mediaFile);
+        }
         if (postingText.getBodySrc() != null && postingText.getBodySrc().length() > getMaxPostingSize()) {
             throw new ValidationFailure("postingText.bodySrc.wrong-size");
         }
