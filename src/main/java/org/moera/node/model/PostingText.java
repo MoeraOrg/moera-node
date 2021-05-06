@@ -5,9 +5,11 @@ import java.util.Objects;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.HtmlSanitizer;
@@ -20,6 +22,12 @@ public class PostingText {
 
     @Size(max = 96)
     private String ownerFullName;
+
+    @Valid
+    private AvatarDescription ownerAvatar;
+
+    @JsonIgnore
+    private MediaFile ownerAvatarMediaFile;
 
     private String bodySrc;
 
@@ -46,6 +54,22 @@ public class PostingText {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public AvatarDescription getOwnerAvatar() {
+        return ownerAvatar;
+    }
+
+    public void setOwnerAvatar(AvatarDescription ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
+    }
+
+    public MediaFile getOwnerAvatarMediaFile() {
+        return ownerAvatarMediaFile;
+    }
+
+    public void setOwnerAvatarMediaFile(MediaFile ownerAvatarMediaFile) {
+        this.ownerAvatarMediaFile = ownerAvatarMediaFile;
     }
 
     public String getBodySrc() {
@@ -127,6 +151,14 @@ public class PostingText {
         if (ownerFullName != null) {
             entry.setOwnerFullName(ownerFullName);
         }
+        if (ownerAvatar != null) {
+            if (ownerAvatarMediaFile != null) {
+                entry.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
+            }
+            if (ownerAvatar.getShape() != null) {
+                entry.setOwnerAvatarShape(ownerAvatar.getShape());
+            }
+        }
     }
 
     public boolean sameAsEntry(Entry entry) {
@@ -137,7 +169,9 @@ public class PostingText {
                         || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
                && (reactionsVisible == null || reactionsVisible.equals(entry.isReactionsVisible()))
                && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()))
-               && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()));
+               && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()))
+               && (ownerAvatarMediaFile == null
+                    || ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {

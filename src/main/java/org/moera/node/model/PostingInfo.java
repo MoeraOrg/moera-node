@@ -31,6 +31,7 @@ public class PostingInfo implements ReactionsInfo {
     private String receiverPostingId;
     private String ownerName;
     private String ownerFullName;
+    private AvatarImage ownerAvatar;
     private Body bodyPreview;
     private String saneBodyPreview;
     private Body bodySrc;
@@ -99,6 +100,9 @@ public class PostingInfo implements ReactionsInfo {
         receiverPostingId = posting.getReceiverEntryId();
         ownerName = posting.getOwnerName();
         ownerFullName = posting.getOwnerFullName();
+        if (posting.getOwnerAvatarMediaFile() != null) {
+            ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
+        }
         bodyPreview = new Body(revision.getBodyPreview());
         if (includeSource && !StringUtils.isEmpty(revision.getBodySrc())) {
             bodySrc = new Body(revision.getBodySrc());
@@ -246,6 +250,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public AvatarImage getOwnerAvatar() {
+        return ownerAvatar;
+    }
+
+    public void setOwnerAvatar(AvatarImage ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
     }
 
     public Body getBodyPreview() {

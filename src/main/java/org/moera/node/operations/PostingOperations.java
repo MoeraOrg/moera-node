@@ -104,6 +104,10 @@ public class PostingOperations {
         posting.setNodeId(requestContext.nodeId());
         posting.setOwnerName(requestContext.nodeName());
         posting.setOwnerFullName(requestContext.fullName());
+        if (requestContext.getAvatar() != null) {
+            posting.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
+            posting.setOwnerAvatarShape(requestContext.getAvatar().getShape());
+        }
         if (initializer != null) {
             initializer.accept(posting);
         }

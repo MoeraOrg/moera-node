@@ -51,6 +51,7 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
 
     @Query("select s from Story s left join fetch s.entry e"
             + " left join fetch e.currentRevision left join fetch e.reactionTotals left join fetch e.sources"
+            + " left join fetch e.ownerAvatarMediaFile"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
     Set<Story> findInRange(UUID nodeId, String feedName, long afterMoment, long beforeMoment);
 

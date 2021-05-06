@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import org.moera.node.data.Avatar;
+import org.moera.node.data.MediaFile;
 
 public class AvatarImage {
 
@@ -13,10 +14,14 @@ public class AvatarImage {
     }
 
     public AvatarImage(Avatar avatar) {
-        path = "public/" + avatar.getMediaFile().getFileName();
-        width = avatar.getMediaFile().getSizeX();
-        height = avatar.getMediaFile().getSizeY();
-        shape = avatar.getShape();
+        this(avatar.getMediaFile(), avatar.getShape());
+    }
+
+    public AvatarImage(MediaFile mediaFile, String shape) {
+        path = "public/" + mediaFile.getFileName();
+        width = mediaFile.getSizeX();
+        height = mediaFile.getSizeY();
+        this.shape = shape;
     }
 
     public String getPath() {
