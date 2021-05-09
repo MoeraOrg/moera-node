@@ -5,6 +5,7 @@ import org.moera.node.data.Avatar;
 public class AvatarInfo {
 
     private String id;
+    private String mediaId;
     private String path;
     private int width;
     private int height;
@@ -16,6 +17,7 @@ public class AvatarInfo {
 
     public AvatarInfo(Avatar avatar) {
         id = avatar.getId().toString();
+        mediaId = avatar.getMediaFile().getId();
         path = "public/" + avatar.getMediaFile().getFileName();
         width = avatar.getMediaFile().getSizeX();
         height = avatar.getMediaFile().getSizeY();
@@ -29,6 +31,14 @@ public class AvatarInfo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getMediaId() {
+        return mediaId;
+    }
+
+    public void setMediaId(String mediaId) {
+        this.mediaId = mediaId;
     }
 
     public String getPath() {
