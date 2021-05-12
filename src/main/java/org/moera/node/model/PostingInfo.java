@@ -560,6 +560,9 @@ public class PostingInfo implements ReactionsInfo {
         posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
         posting.setOwnerName(ownerName);
         posting.setOwnerFullName(ownerFullName);
+        if (ownerAvatar != null && ownerAvatar.getShape() != null) {
+            posting.setOwnerAvatarShape(ownerAvatar.getShape());
+        }
         posting.setReceiverCreatedAt(Util.toTimestamp(isOriginal() ? createdAt : receiverCreatedAt));
         posting.setReceiverEditedAt(Util.toTimestamp(isOriginal() ? editedAt : receiverEditedAt));
         posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());

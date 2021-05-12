@@ -19,6 +19,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntrySource;
 import org.moera.node.data.EntrySourceRepository;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -29,6 +30,7 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.media.MediaDownloader;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.SubscriberDescriptionQ;
@@ -83,6 +85,9 @@ public class Picker extends Task {
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
+
+    @Inject
+    private MediaDownloader mediaDownloader;
 
     @Inject
     private NotificationSenderPool notificationSenderPool;
@@ -154,6 +159,11 @@ public class Picker extends Task {
     private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
                                     List<DirectedNotification> notifications) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+        MediaFile ownerAvatar = null;
+        if (postingInfo.getOwnerAvatar() != null && postingInfo.getOwnerAvatar().getMediaId() != null) {
+            ownerAvatar = mediaDownloader.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar().getMediaId(),
+                    getOptions().getInt("posting.media.max-size"));
+        }
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
         String receiverFullName = postingInfo.isOriginal()
                 ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
@@ -165,6 +175,7 @@ public class Picker extends Task {
             posting.setNodeId(nodeId);
             posting.setReceiverName(receiverName);
             posting.setReceiverFullName(receiverFullName);
+            posting.setOwnerAvatarMediaFile(ownerAvatar);
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
@@ -175,6 +186,7 @@ public class Picker extends Task {
                     new FeedPostingAddedNotification(feedName, posting.getId())));
             publish(feedName, posting, events);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
+            posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
             if (posting.getDeletedAt() == null) {
