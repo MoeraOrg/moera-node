@@ -1,17 +1,28 @@
 package org.moera.node.api;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.OptionalLong;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
+import org.moera.node.media.TemporaryFile;
+import org.moera.node.media.TemporaryMediaFile;
+import org.moera.node.media.ThresholdReachedException;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
@@ -54,6 +65,12 @@ public class NodeApi {
     @Inject
     private NamingCache namingCache;
 
+    @Inject
+    private MediaFileRepository mediaFileRepository;
+
+    @Inject
+    private MediaOperations mediaOperations;
+
     public void setNodeId(UUID nodeId) {
         this.nodeId.set(nodeId);
     }
@@ -77,10 +94,64 @@ public class NodeApi {
     private <T> T call(String method, String remoteNodeName, String location, String auth, Object body, Class<T> result)
             throws NodeApiException {
 
+        HttpRequest request = buildRequest(method, remoteNodeName, location, auth, body);
+        HttpResponse<String> response;
+        try {
+            response = buildClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new NodeApiException(e);
+        }
+        validateResponseStatus(response.statusCode(), response.uri(), response.body());
+
+        return jsonParse(response.body(), result);
+    }
+
+    private TemporaryMediaFile call(String method, String remoteNodeName, String location, String auth,
+                                    TemporaryFile tmpFile, int maxSize) throws NodeApiException {
+        HttpRequest request = buildRequest(method, remoteNodeName, location, auth, null);
+        HttpResponse<InputStream> response;
+        try {
+            response = buildClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
+        } catch (IOException | InterruptedException e) {
+            throw new NodeApiException(e);
+        }
+        validateResponseStatus(response.statusCode(), response.uri(), streamToString(response.body()));
+
+        String contentType = response.headers().firstValue("Content-Type").orElse(null);
+        if (contentType == null) {
+            throw new NodeApiException("Response has no Content-Type");
+        }
+        OptionalLong len = response.headers().firstValueAsLong("Content-Length");
+        Long contentLength = len.isPresent() ? len.getAsLong() : null;
+        try {
+            String mediaFileId = mediaOperations.upload(
+                    response.body(), tmpFile.getOutputStream(), contentLength, maxSize);
+            return new TemporaryMediaFile(mediaFileId, contentType);
+        } catch (ThresholdReachedException e) {
+            throw new NodeApiException(
+                    String.format("Public media %s at %s reports a wrong size or larger than %d bytes",
+                            location, remoteNodeName, maxSize));
+        } catch (IOException e) {
+            throw new NodeApiException(
+                    String.format("Error downloading public media %s: %s", location, e.getMessage()));
+        }
+    }
+
+    private HttpClient buildClient() {
+        return HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(CALL_API_CONNECTION_TIMEOUT)
+                .build();
+    }
+
+    private HttpRequest buildRequest(String method, String remoteNodeName, String location, String auth, Object body)
+            throws NodeApiException {
+
         String nodeUri = fetchNodeUri(remoteNodeName);
         if (nodeUri == null) {
             throw new NodeApiUnknownNameException(remoteNodeName);
         }
+
         var requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(nodeUri + "/api" + location))
                 .timeout(CALL_API_REQUEST_TIMEOUT)
@@ -89,20 +160,14 @@ public class NodeApi {
         if (auth != null) {
             requestBuilder = requestBuilder.header(HttpHeaders.AUTHORIZATION, "bearer " + auth);
         }
-        HttpRequest request = requestBuilder.build();
-        HttpClient client = HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NORMAL)
-                .connectTimeout(CALL_API_CONNECTION_TIMEOUT)
-                .build();
-        HttpResponse<String> response;
-        try {
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            throw new NodeApiException(e);
-        }
-        switch (HttpStatus.valueOf(response.statusCode())) {
+
+        return requestBuilder.build();
+    }
+
+    private void validateResponseStatus(int status, URI uri, String body) throws NodeApiErrorStatusException {
+        switch (HttpStatus.valueOf(status)) {
             case NOT_FOUND:
-                throw new NodeApiNotFoundException(response.uri());
+                throw new NodeApiNotFoundException(uri);
 
             case OK:
             case CREATED:
@@ -111,7 +176,7 @@ public class NodeApi {
 
             case BAD_REQUEST:
                 try {
-                    Result answer = jsonParse(response.body(), Result.class);
+                    Result answer = jsonParse(body, Result.class);
                     throw new NodeApiValidationException(answer.getErrorCode());
                 } catch (BodyMappingException e) {
                     // fallthru
@@ -119,9 +184,8 @@ public class NodeApi {
                 // fallthru
 
             default:
-                throw new NodeApiErrorStatusException(response.statusCode(), response.body());
+                throw new NodeApiErrorStatusException(status, body);
         }
-        return jsonParse(response.body(), result);
     }
 
     private String auth(String type, String token) {
@@ -129,6 +193,12 @@ public class NodeApi {
             return null;
         }
         return type + ":" + token;
+    }
+
+    private String streamToString(InputStream in) {
+        return new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
+                .lines()
+                .collect(Collectors.joining("\n"));
     }
 
     private HttpRequest.BodyPublisher jsonPublisher(Object body) throws NodeApiException {
@@ -250,6 +320,13 @@ public class NodeApi {
                 String.format("/postings/%s/comments/%s/reactions/%s",
                         Util.ue(postingId), Util.ue(commentId), Util.ue(reactionOwnerName)), null,
                 ReactionInfo.class);
+    }
+
+    public TemporaryMediaFile getPublicMedia(String nodeName, String id, TemporaryFile tmpFile, int maxSize)
+            throws NodeApiException {
+
+        return call("GET", nodeName, String.format("/media/public/%s/data", Util.ue(id)), null,
+                tmpFile, maxSize);
     }
 
 }

@@ -14,10 +14,6 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.apache.commons.io.input.BoundedInputStream;
-import org.apache.commons.io.output.TeeOutputStream;
-import org.bouncycastle.crypto.io.DigestOutputStream;
-import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
@@ -27,7 +23,6 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
-import org.moera.node.media.BoundedOutputStream;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.ThresholdReachedException;
@@ -35,7 +30,6 @@ import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -106,30 +100,8 @@ public class MediaController {
     }
 
     private String upload(InputStream in, OutputStream out, Long contentLength) throws IOException {
-        DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
-        out = new TeeOutputStream(out, digestStream);
-
         int maxSize = requestContext.getOptions().getInt("posting.media.max-size");
-        if (contentLength != null) {
-            if (contentLength > maxSize) {
-                throw new ValidationFailure("media.wrong-size");
-            }
-            in = new BoundedInputStream(in, contentLength);
-        } else {
-            out = new BoundedOutputStream(out, maxSize);
-        }
-
-        try {
-            in.transferTo(out);
-        } catch (ThresholdReachedException e) {
-            throw new ValidationFailure("media.wrong-size");
-        } catch (IOException e) {
-            throw new OperationFailure("media.storage-error");
-        } finally {
-            out.close();
-        }
-
-        return Util.base64urlencode(digestStream.getDigest());
+        return mediaOperations.upload(in, out, contentLength, maxSize);
     }
 
     private Optional<MediaFileOwner> findMediaFileOwnerByFile(String id) {
@@ -151,17 +123,18 @@ public class MediaController {
         }
 
         var tmp = mediaOperations.tmpFile();
-        Path tmpPath = tmp.getFirst();
         try {
-            String id = upload(in, tmp.getSecond(), contentLength);
-            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmpPath);
+            String id = upload(in, tmp.getOutputStream(), contentLength);
+            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
             mediaFile.setExposed(true);
 
             return new MediaFileInfo(mediaFile);
+        } catch (ThresholdReachedException e) {
+            throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
             throw new OperationFailure("media.storage-error");
         } finally {
-            Files.deleteIfExists(tmpPath);
+            Files.deleteIfExists(tmp.getPath());
         }
     }
 
@@ -178,15 +151,14 @@ public class MediaController {
         }
 
         var tmp = mediaOperations.tmpFile();
-        Path tmpPath = tmp.getFirst();
         try {
-            String id = upload(in, tmp.getSecond(), contentLength);
+            String id = upload(in, tmp.getOutputStream(), contentLength);
             MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
                 return new MediaFileInfo(mediaFileOwner);
             }
 
-            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmpPath);
+            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
 
             mediaFileOwner = new MediaFileOwner();
             mediaFileOwner.setId(UUID.randomUUID());
@@ -196,10 +168,12 @@ public class MediaController {
             mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
 
             return new MediaFileInfo(mediaFileOwner);
+        } catch (ThresholdReachedException e) {
+            throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
             throw new OperationFailure("media.storage-error");
         } finally {
-            Files.deleteIfExists(tmpPath);
+            Files.deleteIfExists(tmp.getPath());
         }
     }
 

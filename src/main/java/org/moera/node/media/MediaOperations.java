@@ -5,6 +5,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 
 import java.awt.Dimension;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -19,6 +20,10 @@ import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
 import javax.inject.Inject;
 
+import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.commons.io.output.TeeOutputStream;
+import org.bouncycastle.crypto.io.DigestOutputStream;
+import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
@@ -30,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -55,7 +59,7 @@ public class MediaOperations {
     @Inject
     private PlatformTransactionManager txManager;
 
-    public Pair<Path, OutputStream> tmpFile() {
+    public TemporaryFile tmpFile() {
         while (true) {
             Path path;
             do {
@@ -63,11 +67,33 @@ public class MediaOperations {
                         CryptoUtil.token().substring(0, 16));
             } while (Files.exists(path));
             try {
-                return Pair.of(path, Files.newOutputStream(path, CREATE));
+                return new TemporaryFile(path, Files.newOutputStream(path, CREATE));
             } catch (IOException e) {
                 // next try
             }
         }
+    }
+
+    public String upload(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
+        DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
+        out = new TeeOutputStream(out, digestStream);
+
+        if (contentLength != null) {
+            if (contentLength > maxSize) {
+                throw new ThresholdReachedException();
+            }
+            in = new BoundedInputStream(in, contentLength);
+        } else {
+            out = new BoundedOutputStream(out, maxSize);
+        }
+
+        try {
+            in.transferTo(out);
+        } finally {
+            out.close();
+        }
+
+        return Util.base64urlencode(digestStream.getDigest());
     }
 
     private Dimension getImageDimension(String contentType, Path path) {
