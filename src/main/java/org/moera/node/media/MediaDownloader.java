@@ -28,8 +28,7 @@ public class MediaDownloader {
 
     public MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws NodeApiException {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
-        if (mediaFile != null) {
-            mediaFile.setExposed(true);
+        if (mediaFile != null && mediaFile.isExposed()) {
             return mediaFile;
         }
 
