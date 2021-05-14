@@ -2,6 +2,7 @@ package org.moera.node.media;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
+import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.io.output.TeeOutputStream;
@@ -117,6 +119,7 @@ public class MediaOperations {
         return null;
     }
 
+    @Transactional(REQUIRES_NEW)
     public MediaFile putInPlace(String id, String contentType, Path tmpPath) throws IOException {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null) {
