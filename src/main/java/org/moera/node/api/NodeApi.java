@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.OptionalLong;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -101,7 +102,7 @@ public class NodeApi {
         } catch (IOException | InterruptedException e) {
             throw new NodeApiException(e);
         }
-        validateResponseStatus(response.statusCode(), response.uri(), response.body());
+        validateResponseStatus(response.statusCode(), response.uri(), response::body);
 
         return jsonParse(response.body(), result);
     }
@@ -115,7 +116,7 @@ public class NodeApi {
         } catch (IOException | InterruptedException e) {
             throw new NodeApiException(e);
         }
-        validateResponseStatus(response.statusCode(), response.uri(), streamToString(response.body()));
+        validateResponseStatus(response.statusCode(), response.uri(), () -> streamToString(response.body()));
 
         String contentType = response.headers().firstValue("Content-Type").orElse(null);
         if (contentType == null) {
@@ -164,7 +165,10 @@ public class NodeApi {
         return requestBuilder.build();
     }
 
-    private void validateResponseStatus(int status, URI uri, String body) throws NodeApiErrorStatusException {
+    private void validateResponseStatus(int status, URI uri, Supplier<String> bodySupplier)
+            throws NodeApiErrorStatusException {
+
+        String body = null;
         switch (HttpStatus.valueOf(status)) {
             case NOT_FOUND:
                 throw new NodeApiNotFoundException(uri);
@@ -175,6 +179,7 @@ public class NodeApi {
                 break;
 
             case BAD_REQUEST:
+                body = bodySupplier.get();
                 try {
                     Result answer = jsonParse(body, Result.class);
                     throw new NodeApiValidationException(answer.getErrorCode());
