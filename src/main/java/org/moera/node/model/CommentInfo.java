@@ -20,6 +20,7 @@ public class CommentInfo implements ReactionsInfo {
     private String id;
     private String ownerName;
     private String ownerFullName;
+    private AvatarImage ownerAvatar;
     private String postingId;
     private String postingRevisionId;
     private String revisionId;
@@ -67,6 +68,9 @@ public class CommentInfo implements ReactionsInfo {
         id = comment.getId().toString();
         ownerName = comment.getOwnerName();
         ownerFullName = comment.getOwnerFullName();
+        if (comment.getOwnerAvatarMediaFile() != null) {
+            ownerAvatar = new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape());
+        }
         postingId = comment.getPosting().getId().toString();
         postingRevisionId = revision.getParent().getId().toString();
         revisionId = revision.getId().toString();
@@ -136,6 +140,14 @@ public class CommentInfo implements ReactionsInfo {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public AvatarImage getOwnerAvatar() {
+        return ownerAvatar;
+    }
+
+    public void setOwnerAvatar(AvatarImage ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
     }
 
     public String getPostingId() {

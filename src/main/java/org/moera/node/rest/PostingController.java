@@ -129,7 +129,10 @@ public class PostingController {
 
         if (postingText.getOwnerAvatar() != null && postingText.getOwnerAvatar().getMediaId() != null) {
             MediaFile mediaFile = mediaFileRepository.findById(postingText.getOwnerAvatar().getMediaId()).orElse(null);
-            if (mediaFile == null || !mediaFile.isExposed()) {
+            if (mediaFile != null && !mediaFile.isExposed()) {
+                mediaFile = null;
+            }
+            if (mediaFile == null && !postingText.getOwnerAvatar().isOptional()) {
                 throw new ValidationFailure("postingText.ownerAvatar.mediaId.not-found");
             }
             postingText.setOwnerAvatarMediaFile(mediaFile);
@@ -174,7 +177,10 @@ public class PostingController {
 
         if (postingText.getOwnerAvatar() != null && postingText.getOwnerAvatar().getMediaId() != null) {
             MediaFile mediaFile = mediaFileRepository.findById(postingText.getOwnerAvatar().getMediaId()).orElse(null);
-            if (mediaFile == null || !mediaFile.isExposed()) {
+            if (mediaFile != null && !mediaFile.isExposed()) {
+                mediaFile = null;
+            }
+            if (mediaFile == null && !postingText.getOwnerAvatar().isOptional()) {
                 throw new ValidationFailure("postingText.ownerAvatar.mediaId.not-found");
             }
             postingText.setOwnerAvatarMediaFile(mediaFile);
