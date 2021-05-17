@@ -76,6 +76,14 @@ public class CommentOperations {
         comment.setNodeId(requestContext.nodeId());
         comment.setOwnerName(commentText.getOwnerName());
         comment.setOwnerFullName(commentText.getOwnerFullName());
+        if (commentText.getOwnerAvatar() != null) {
+            if (commentText.getOwnerAvatarMediaFile() != null) {
+                comment.setOwnerAvatarMediaFile(commentText.getOwnerAvatarMediaFile());
+            }
+            if (commentText.getOwnerAvatar().getShape() != null) {
+                comment.setOwnerAvatarShape(commentText.getOwnerAvatar().getShape());
+            }
+        }
         comment.setPosting(posting);
         if (repliedTo != null) {
             comment.setRepliedTo(repliedTo);

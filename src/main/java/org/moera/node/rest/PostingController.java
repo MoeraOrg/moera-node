@@ -13,8 +13,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -31,6 +29,7 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedReference;
@@ -93,13 +92,13 @@ public class PostingController {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
-    private MediaFileRepository mediaFileRepository;
-
-    @Inject
     private EntityManager entityManager;
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @Inject
     private StoryOperations storyOperations;
@@ -127,16 +126,10 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
-        if (postingText.getOwnerAvatar() != null && postingText.getOwnerAvatar().getMediaId() != null) {
-            MediaFile mediaFile = mediaFileRepository.findById(postingText.getOwnerAvatar().getMediaId()).orElse(null);
-            if (mediaFile != null && !mediaFile.isExposed()) {
-                mediaFile = null;
-            }
-            if (mediaFile == null && !postingText.getOwnerAvatar().isOptional()) {
-                throw new ValidationFailure("postingText.ownerAvatar.mediaId.not-found");
-            }
-            postingText.setOwnerAvatarMediaFile(mediaFile);
-        }
+        mediaOperations.validateAvatar(
+                postingText.getOwnerAvatar(),
+                postingText::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
         if (StringUtils.isEmpty(postingText.getBodySrc())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
         }
@@ -175,16 +168,10 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
-        if (postingText.getOwnerAvatar() != null && postingText.getOwnerAvatar().getMediaId() != null) {
-            MediaFile mediaFile = mediaFileRepository.findById(postingText.getOwnerAvatar().getMediaId()).orElse(null);
-            if (mediaFile != null && !mediaFile.isExposed()) {
-                mediaFile = null;
-            }
-            if (mediaFile == null && !postingText.getOwnerAvatar().isOptional()) {
-                throw new ValidationFailure("postingText.ownerAvatar.mediaId.not-found");
-            }
-            postingText.setOwnerAvatarMediaFile(mediaFile);
-        }
+        mediaOperations.validateAvatar(
+                postingText.getOwnerAvatar(),
+                postingText::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
         if (postingText.getBodySrc() != null && postingText.getBodySrc().length() > getMaxPostingSize()) {
             throw new ValidationFailure("postingText.bodySrc.wrong-size");
         }

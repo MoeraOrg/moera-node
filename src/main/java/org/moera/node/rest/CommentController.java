@@ -40,6 +40,7 @@ import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.CommentInstants;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
@@ -121,6 +122,9 @@ public class CommentController {
     private ContactOperations contactOperations;
 
     @Inject
+    private MediaOperations mediaOperations;
+
+    @Inject
     private TextConverter textConverter;
 
     @Inject
@@ -165,6 +169,10 @@ public class CommentController {
         }
         byte[] repliedToDigest = repliedTo != null ? repliedTo.getCurrentRevision().getDigest() : null;
         byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName(), repliedToDigest);
+        mediaOperations.validateAvatar(
+                commentText.getOwnerAvatar(),
+                commentText::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
@@ -218,6 +226,10 @@ public class CommentController {
         byte[] repliedToDigest = comment.getRepliedTo() != null
                 ? comment.getRepliedTo().getCurrentRevision().getDigest() : null;
         byte[] digest = validateCommentText(comment.getPosting(), commentText, comment.getOwnerName(), repliedToDigest);
+        mediaOperations.validateAvatar(
+                commentText.getOwnerAvatar(),
+                commentText::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentText.toEntry(comment);

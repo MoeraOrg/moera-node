@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -31,6 +33,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.model.AvatarDescription;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -158,6 +161,23 @@ public class MediaOperations {
                 headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
                 return new ResponseEntity<>(headers, HttpStatus.OK);
             }
+        }
+    }
+
+    public void validateAvatar(AvatarDescription avatar, Consumer<MediaFile> found,
+                               Supplier<RuntimeException> notFound) {
+        if (avatar == null || avatar.getMediaId() == null) {
+            return;
+        }
+
+        MediaFile mediaFile = mediaFileRepository.findById(avatar.getMediaId()).orElse(null);
+        if (mediaFile != null && !mediaFile.isExposed()) {
+            mediaFile = null;
+        }
+        if (mediaFile == null && !avatar.isOptional()) {
+            throw notFound.get();
+        } else {
+            found.accept(mediaFile);
         }
     }
 
