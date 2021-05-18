@@ -9,6 +9,8 @@ import javax.inject.Inject;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.api.NodeApi;
+import org.moera.node.data.Avatar;
+import org.moera.node.data.AvatarRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.model.event.Event;
@@ -33,6 +35,8 @@ public abstract class Task implements Runnable {
     @Inject
     protected EventManager eventManager;
 
+    private Avatar avatar;
+
     @Inject
     private Domains domains;
 
@@ -41,6 +45,9 @@ public abstract class Task implements Runnable {
 
     @Inject
     private PlatformTransactionManager txManager;
+
+    @Inject
+    private AvatarRepository avatarRepository;
 
     public UUID getNodeId() {
         return nodeId;
@@ -64,6 +71,20 @@ public abstract class Task implements Runnable {
 
     public String fullName() {
         return options != null ? options.getString("profile.full-name") : null;
+    }
+
+    public UUID avatarId() {
+        return options != null ? options.getUuid("profile.avatar.id") : null;
+    }
+
+    public Avatar getAvatar() {
+        if (nodeId == null || avatarId() == null) {
+            return null;
+        }
+        if (avatar == null || !avatar.getId().equals(avatarId())) {
+            avatar = avatarRepository.findByNodeIdAndId(nodeId, avatarId()).orElse(null);
+        }
+        return avatar;
     }
 
     public PrivateKey signingKey() {

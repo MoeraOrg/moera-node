@@ -5,12 +5,14 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.instant.PostingReactionInstants;
+import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
@@ -53,6 +55,7 @@ public class RemotePostingReactionPostTask extends Task {
         try {
             nodeApi.setNodeId(nodeId);
             targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
+            uploadAvatar();
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             ReactionCreated created = nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo));
             saveReaction(created.getReaction());
@@ -62,10 +65,21 @@ public class RemotePostingReactionPostTask extends Task {
         }
     }
 
+    private void uploadAvatar() throws NodeApiException {
+        if (getAvatar() == null) {
+            return;
+        }
+        MediaFileInfo info = nodeApi.getPublicMediaInfo(targetNodeName, getAvatar().getMediaFile().getId());
+        if (info != null) {
+            return;
+        }
+        nodeApi.postPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar().getMediaFile());
+    }
+
     private ReactionDescription buildReaction(PostingInfo postingInfo) {
         ReactionFingerprint fingerprint
                 = new ReactionFingerprint(nodeName(), attributes, new PostingFingerprint(postingInfo));
-        ReactionDescription description = new ReactionDescription(nodeName(), fullName(), attributes);
+        ReactionDescription description = new ReactionDescription(nodeName(), fullName(), getAvatar(), attributes);
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprint.VERSION);
         return description;

@@ -20,6 +20,7 @@ import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.PostingReactionInstants;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -74,6 +75,9 @@ public class PostingReactionController {
     private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
+    private MediaOperations mediaOperations;
+
+    @Inject
     private PostingReactionInstants postingReactionInstants;
 
     @PostMapping
@@ -88,6 +92,11 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+
+        mediaOperations.validateAvatar(
+                reactionDescription.getOwnerAvatar(),
+                reactionDescription::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("reactionDescription.ownerAvatar.mediaId.not-found"));
 
         reactionOperations.validate(reactionDescription, posting);
 

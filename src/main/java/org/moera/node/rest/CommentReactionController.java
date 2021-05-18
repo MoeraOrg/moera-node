@@ -16,6 +16,7 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -68,6 +69,9 @@ public class CommentReactionController {
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
 
+    @Inject
+    private MediaOperations mediaOperations;
+
     @PostMapping
     @Transactional
     public ResponseEntity<ReactionCreated> post(
@@ -89,6 +93,11 @@ public class CommentReactionController {
         if (comment.getCurrentRevision().getSignature() == null) {
             throw new ValidationFailure("comment.not-signed");
         }
+
+        mediaOperations.validateAvatar(
+                reactionDescription.getOwnerAvatar(),
+                reactionDescription::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("reactionDescription.ownerAvatar.mediaId.not-found"));
 
         reactionOperations.validate(reactionDescription, comment);
         Reaction reaction = reactionOperations.post(reactionDescription, comment, r -> notifyDeleted(comment, r),

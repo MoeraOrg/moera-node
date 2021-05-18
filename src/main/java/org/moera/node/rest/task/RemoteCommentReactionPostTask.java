@@ -1,16 +1,17 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
-
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.instant.CommentReactionInstants;
 import org.moera.node.model.CommentInfo;
+import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionAttributes;
@@ -48,6 +49,7 @@ public class RemoteCommentReactionPostTask extends Task {
         initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
+            uploadAvatar();
             commentInfo = nodeApi.getComment(targetNodeName, postingId, commentId);
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             if (!commentInfo.getPostingRevisionId().equals(postingInfo.getRevisionId())) {
@@ -62,13 +64,24 @@ public class RemoteCommentReactionPostTask extends Task {
         }
     }
 
+    private void uploadAvatar() throws NodeApiException {
+        if (getAvatar() == null) {
+            return;
+        }
+        MediaFileInfo info = nodeApi.getPublicMediaInfo(targetNodeName, getAvatar().getMediaFile().getId());
+        if (info != null) {
+            return;
+        }
+        nodeApi.postPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar().getMediaFile());
+    }
+
     private ReactionDescription buildReaction() {
         PostingFingerprint postingFingerprint = postingRevisionInfo == null
                 ? new PostingFingerprint(postingInfo) : new PostingFingerprint(postingInfo, postingRevisionInfo);
         CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, postingFingerprint);
         ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName(), attributes, commentFingerprint);
 
-        ReactionDescription description = new ReactionDescription(nodeName(), fullName(), attributes);
+        ReactionDescription description = new ReactionDescription(nodeName(), fullName(), getAvatar(), attributes);
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprint.VERSION);
 
