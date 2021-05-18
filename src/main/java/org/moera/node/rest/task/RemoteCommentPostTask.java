@@ -6,6 +6,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
@@ -16,6 +17,7 @@ import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
+import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
@@ -67,6 +69,7 @@ public class RemoteCommentPostTask extends Task {
             nodeApi.setNodeId(nodeId);
             targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            uploadAvatar();
             prevCommentInfo = commentId != null ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
             String repliedToId = null;
             String repliedToRevisionId = null;
@@ -99,6 +102,17 @@ public class RemoteCommentPostTask extends Task {
         } catch (Exception e) {
             error(e);
         }
+    }
+
+    private void uploadAvatar() throws NodeApiException {
+        if (sourceText.getOwnerAvatarMediaFile() == null) {
+            return;
+        }
+        MediaFileInfo info = nodeApi.getPublicMediaInfo(targetNodeName, sourceText.getOwnerAvatar().getMediaId());
+        if (info != null) {
+            return;
+        }
+        nodeApi.postPublicMedia(targetNodeName, generateCarte(targetNodeName), sourceText.getOwnerAvatarMediaFile());
     }
 
     private CommentText buildComment(PostingInfo postingInfo, byte[] repliedToDigest) {

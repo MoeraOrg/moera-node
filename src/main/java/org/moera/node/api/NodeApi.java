@@ -1,6 +1,7 @@
 package org.moera.node.api;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,7 +10,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -18,6 +22,8 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.config.Config;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
@@ -30,6 +36,7 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.FeedSliceInfo;
+import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ReactionCreated;
@@ -56,6 +63,9 @@ public class NodeApi {
     private static final Duration CALL_API_REQUEST_TIMEOUT = Duration.ofMinutes(1);
 
     private ThreadLocal<UUID> nodeId = new ThreadLocal<>();
+
+    @Inject
+    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -95,7 +105,21 @@ public class NodeApi {
     private <T> T call(String method, String remoteNodeName, String location, String auth, Object body, Class<T> result)
             throws NodeApiException {
 
-        HttpRequest request = buildRequest(method, remoteNodeName, location, auth, body);
+        HttpRequest request = buildRequest(method, remoteNodeName, location, auth, body, null);
+        HttpResponse<String> response;
+        try {
+            response = buildClient().send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new NodeApiException(e);
+        }
+        validateResponseStatus(response.statusCode(), response.uri(), response::body);
+
+        return jsonParse(response.body(), result);
+    }
+
+    private <T> T call(String method, String remoteNodeName, String location, String auth, String mimeType, Path body,
+                       Class<T> result) throws NodeApiException {
+        HttpRequest request = buildRequest(method, remoteNodeName, location, auth, body, mimeType);
         HttpResponse<String> response;
         try {
             response = buildClient().send(request, HttpResponse.BodyHandlers.ofString());
@@ -109,7 +133,7 @@ public class NodeApi {
 
     private TemporaryMediaFile call(String method, String remoteNodeName, String location, String auth,
                                     TemporaryFile tmpFile, int maxSize) throws NodeApiException {
-        HttpRequest request = buildRequest(method, remoteNodeName, location, auth, null);
+        HttpRequest request = buildRequest(method, remoteNodeName, location, auth, null, null);
         HttpResponse<InputStream> response;
         try {
             response = buildClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
@@ -145,9 +169,8 @@ public class NodeApi {
                 .build();
     }
 
-    private HttpRequest buildRequest(String method, String remoteNodeName, String location, String auth, Object body)
-            throws NodeApiException {
-
+    private HttpRequest buildRequest(String method, String remoteNodeName, String location, String auth,
+                                     Object body, String mimeType) throws NodeApiException {
         String nodeUri = fetchNodeUri(remoteNodeName);
         if (nodeUri == null) {
             throw new NodeApiUnknownNameException(remoteNodeName);
@@ -155,9 +178,21 @@ public class NodeApi {
 
         var requestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(nodeUri + "/api" + location))
-                .timeout(CALL_API_REQUEST_TIMEOUT)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .method(method, jsonPublisher(body));
+                .timeout(CALL_API_REQUEST_TIMEOUT);
+        if (body instanceof Path) {
+            try {
+                requestBuilder = requestBuilder
+                        .header(HttpHeaders.CONTENT_TYPE, mimeType)
+                        .method(method, HttpRequest.BodyPublishers.ofFile((Path) body));
+            } catch (FileNotFoundException e) {
+                throw new NodeApiException(
+                        String.format("Cannot send a file %s", Objects.toString(body, "null")), e);
+            }
+        } else {
+            requestBuilder = requestBuilder
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .method(method, jsonPublisher(body));
+        }
         if (auth != null) {
             requestBuilder = requestBuilder.header(HttpHeaders.AUTHORIZATION, "bearer " + auth);
         }
@@ -189,6 +224,9 @@ public class NodeApi {
                 // fallthru
 
             default:
+                if (body == null) {
+                    body = bodySupplier.get();
+                }
                 throw new NodeApiErrorStatusException(status, body);
         }
     }
@@ -332,6 +370,21 @@ public class NodeApi {
 
         return call("GET", nodeName, String.format("/media/public/%s/data", Util.ue(id)), null,
                 tmpFile, maxSize);
+    }
+
+    public MediaFileInfo getPublicMediaInfo(String nodeName, String id) throws NodeApiException {
+        try {
+            return call("GET", nodeName, String.format("/media/public/%s/info", Util.ue(id)), null,
+                    MediaFileInfo.class);
+        } catch (NodeApiNotFoundException e) {
+            return null;
+        }
+    }
+
+    public MediaFileInfo postPublicMedia(String nodeName, String carte, MediaFile mediaFile) throws NodeApiException {
+        Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
+        return call("POST", nodeName, "/media/public", auth("carte", carte),
+                mediaFile.getMimeType(), mediaPath, MediaFileInfo.class);
     }
 
 }

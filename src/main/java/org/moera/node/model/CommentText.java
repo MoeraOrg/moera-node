@@ -58,6 +58,7 @@ public class CommentText {
                        TextConverter textConverter) {
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        ownerAvatar = sourceText.getOwnerAvatar();
         bodySrc = sourceText.getBodySrc();
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
         createdAt = Util.toEpochSecond(Util.now());

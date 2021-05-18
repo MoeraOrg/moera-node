@@ -17,9 +17,11 @@ import org.moera.node.data.SubscriptionReason;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.Result;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemoteCommentPostTask;
@@ -62,6 +64,9 @@ public class RemoteCommentController {
     @Inject
     private ContactOperations contactOperations;
 
+    @Inject
+    private MediaOperations mediaOperations;
+
     @PostMapping
     @Admin
     @Entitled
@@ -98,6 +103,10 @@ public class RemoteCommentController {
     }
 
     private void update(String nodeName, String postingId, String commentId, CommentSourceText commentText) {
+        mediaOperations.validateAvatar(
+                commentText.getOwnerAvatar(),
+                commentText::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
         var postTask = new RemoteCommentPostTask(nodeName, postingId, commentId, commentText);
         taskAutowire.autowire(postTask);
         taskExecutor.execute(postTask);
