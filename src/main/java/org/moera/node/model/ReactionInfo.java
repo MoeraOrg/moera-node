@@ -17,6 +17,7 @@ public class ReactionInfo {
 
     private String ownerName;
     private String ownerFullName;
+    private AvatarImage ownerAvatar;
     private String postingId;
     private String postingRevisionId;
     private String commentId;
@@ -36,6 +37,9 @@ public class ReactionInfo {
     public ReactionInfo(Reaction reaction) {
         ownerName = reaction.getOwnerName();
         ownerFullName = reaction.getOwnerFullName();
+        if (reaction.getOwnerAvatarMediaFile() != null) {
+            ownerAvatar = new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape());
+        }
         EntryRevision entryRevision = reaction.getEntryRevision();
         Entry entry = entryRevision.getEntry();
         if (entry.getEntryType() == EntryType.POSTING) {
@@ -83,6 +87,14 @@ public class ReactionInfo {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public AvatarImage getOwnerAvatar() {
+        return ownerAvatar;
+    }
+
+    public void setOwnerAvatar(AvatarImage ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
     }
 
     public String getPostingId() {
