@@ -69,8 +69,8 @@ public class AllRemoteProfilesSubscriptionTask extends Task {
         }
         try {
             inTransaction(() -> {
-                    domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.PROFILE_SUBSCRIBE, nodeId);
-                    return null;
+                domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.PROFILE_SUBSCRIBE, nodeId);
+                return null;
             });
         } catch (Throwable t) {
             log.error("Error deleting domain upgrade record: {}", t.getMessage());
