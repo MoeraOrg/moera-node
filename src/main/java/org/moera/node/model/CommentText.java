@@ -225,7 +225,8 @@ public class CommentText {
                         || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()))
                && (ownerAvatarMediaFile == null
-                    || ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
+                    || entry.getOwnerAvatarMediaFile() != null
+                        && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter) {

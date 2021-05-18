@@ -171,7 +171,8 @@ public class PostingText {
                && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()))
                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()))
                && (ownerAvatarMediaFile == null
-                    || ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
+                    || entry.getOwnerAvatarMediaFile() != null
+                        && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {
