@@ -27,6 +27,7 @@ import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionsSliceInfo;
@@ -84,11 +85,19 @@ public class ReactionOperations {
     private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
+    private MediaOperations mediaOperations;
+
+    @Inject
     private PlatformTransactionManager txManager;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
     public void validate(ReactionDescription reactionDescription, Entry entry) {
+        mediaOperations.validateAvatar(
+                reactionDescription.getOwnerAvatar(),
+                reactionDescription::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("reactionDescription.ownerAvatar.mediaId.not-found"));
+
         if (reactionDescription.getSignature() == null) {
             String ownerName = requestContext.getClientName();
             if (StringUtils.isEmpty(ownerName)) {
