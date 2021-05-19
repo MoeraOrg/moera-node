@@ -14,6 +14,7 @@ public class SubscriberInfo {
     private String postingId;
     private String nodeName;
     private String fullName;
+    private AvatarImage avatar;
     private Long createdAt;
 
     public SubscriberInfo() {
@@ -26,6 +27,9 @@ public class SubscriberInfo {
         postingId = subscriber.getEntry() != null ? subscriber.getEntry().getId().toString() : null;
         nodeName = subscriber.getRemoteNodeName();
         fullName = subscriber.getRemoteFullName();
+        if (subscriber.getRemoteAvatarMediaFile() != null) {
+            avatar = new AvatarImage(subscriber.getRemoteAvatarMediaFile(), subscriber.getRemoteAvatarShape());
+        }
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
     }
 
@@ -75,6 +79,14 @@ public class SubscriberInfo {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
     }
 
     public Long getCreatedAt() {

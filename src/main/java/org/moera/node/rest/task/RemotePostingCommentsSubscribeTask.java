@@ -4,14 +4,17 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.instant.PostingInstants;
+import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.WhoAmI;
 import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
@@ -22,7 +25,6 @@ public class RemotePostingCommentsSubscribeTask extends Task {
     private static Logger log = LoggerFactory.getLogger(RemotePostingCommentsSubscribeTask.class);
 
     private String targetNodeName;
-    private String targetFullName;
     private String postingId;
     private SubscriptionReason reason;
 
@@ -31,6 +33,9 @@ public class RemotePostingCommentsSubscribeTask extends Task {
 
     @Inject
     private PostingInstants postingInstants;
+
+    @Inject
+    private MediaManager mediaManager;
 
     public RemotePostingCommentsSubscribeTask(String targetNodeName, String postingId, SubscriptionReason reason) {
         this.targetNodeName = targetNodeName;
@@ -48,18 +53,27 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             if (subscribed) {
                 return;
             }
-            targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
+
+            WhoAmI target = nodeApi.whoAmI(targetNodeName);
+            MediaFile targetAvatar = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
+                    getOptions().getInt("posting.media.max-size"));
+
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING_COMMENTS,
                     null, postingId, fullName(), getAvatar());
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
+
             Subscription subscription = new Subscription();
             subscription.setId(UUID.randomUUID());
             subscription.setNodeId(nodeId);
             subscription.setSubscriptionType(SubscriptionType.POSTING_COMMENTS);
             subscription.setRemoteSubscriberId(subscriberInfo.getId());
             subscription.setRemoteNodeName(targetNodeName);
-            subscription.setRemoteFullName(targetFullName);
+            subscription.setRemoteFullName(target.getFullName());
+            if (targetAvatar != null) {
+                subscription.setRemoteAvatarMediaFile(targetAvatar);
+                subscription.setRemoteAvatarShape(target.getAvatar().getShape());
+            }
             subscription.setRemoteEntryId(postingId);
             subscription.setReason(reason);
             subscription = subscriptionRepository.save(subscription);

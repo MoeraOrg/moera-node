@@ -35,6 +35,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.WhoAmI;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
@@ -58,6 +59,9 @@ public class Picker extends Task {
     private static Logger log = LoggerFactory.getLogger(Picker.class);
 
     private String remoteNodeName;
+    private String remoteFullName;
+    private MediaFile remoteAvatarMediaFile;
+    private String remoteAvatarShape;
     private BlockingQueue<Pick> queue = new LinkedBlockingQueue<>();
     private boolean stopped = false;
     private PickerPool pool;
@@ -108,6 +112,7 @@ public class Picker extends Task {
     @Override
     public void run() {
         try {
+            fetchNodeDetails();
             while (!stopped) {
                 Pick pick;
                 try {
@@ -136,6 +141,14 @@ public class Picker extends Task {
         }
     }
 
+    private void fetchNodeDetails() throws NodeApiException {
+        WhoAmI remote = nodeApi.whoAmI(remoteNodeName);
+        remoteFullName = remote.getFullName();
+        remoteAvatarMediaFile = mediaManager.downloadPublicMedia(remoteNodeName, remote.getAvatar(),
+                getOptions().getInt("posting.media.max-size"));
+        remoteAvatarShape = remote.getAvatar() != null ? remote.getAvatar().getShape() : null;
+    }
+
     private void download(Pick pick) throws Throwable {
         initLoggingDomain();
         log.info("Downloading from node '{}', postingId = {}", remoteNodeName, pick.getRemotePostingId());
@@ -159,14 +172,23 @@ public class Picker extends Task {
     private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
                                     List<DirectedNotification> notifications) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
-        MediaFile ownerAvatar = null;
-        if (postingInfo.getOwnerAvatar() != null && postingInfo.getOwnerAvatar().getMediaId() != null) {
-            ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar().getMediaId(),
-                    getOptions().getInt("posting.media.max-size"));
-        }
+        MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar(),
+                getOptions().getInt("posting.media.max-size"));
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
         String receiverFullName = postingInfo.isOriginal()
                 ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
+        MediaFile receiverAvatar = postingInfo.isOriginal()
+                ? ownerAvatar
+                : mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getReceiverAvatar(),
+                                                    getOptions().getInt("posting.media.max-size"));
+        String receiverAvatarShape;
+        if (postingInfo.isOriginal()) {
+            receiverAvatarShape = postingInfo.getOwnerAvatar() != null
+                    ? postingInfo.getOwnerAvatar().getShape() : null;
+        } else {
+            receiverAvatarShape = postingInfo.getReceiverAvatar() != null
+                    ? postingInfo.getReceiverAvatar().getShape() : null;
+        }
         String receiverPostingId = postingInfo.isOriginal() ? remotePostingId : postingInfo.getReceiverPostingId();
         Posting posting = postingRepository.findByReceiverId(nodeId, receiverName, receiverPostingId).orElse(null);
         if (posting == null) {
@@ -179,7 +201,8 @@ public class Picker extends Task {
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
-            subscribe(receiverName, receiverFullName, receiverPostingId, posting.getReceiverEditedAt(), events);
+            subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
+                    posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
             notifications.add(new DirectedNotification(
                     Directions.feedSubscribers(feedName),
@@ -242,8 +265,9 @@ public class Picker extends Task {
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, events::add);
     }
 
-    private void subscribe(String receiverName, String receiverFullName, String receiverPostingId,
-                           Timestamp lastUpdatedAt, List<Event> events) throws NodeApiException {
+    private void subscribe(String receiverName, String receiverFullName, MediaFile receiverAvatar,
+                           String receiverAvatarShape, String receiverPostingId, Timestamp lastUpdatedAt,
+                           List<Event> events) throws NodeApiException {
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
                 receiverPostingId, fullName(), getAvatar(), Util.toEpochSecond(lastUpdatedAt));
         try {
@@ -256,6 +280,10 @@ public class Picker extends Task {
             subscription.setRemoteSubscriberId(subscriberInfo.getId());
             subscription.setRemoteNodeName(receiverName);
             subscription.setRemoteFullName(receiverFullName);
+            if (receiverAvatar != null) {
+                subscription.setRemoteAvatarMediaFile(receiverAvatar);
+                subscription.setRemoteAvatarShape(receiverAvatarShape);
+            }
             subscription.setRemoteEntryId(receiverPostingId);
             subscription = subscriptionRepository.save(subscription);
             events.add(new SubscriptionAddedEvent(subscription));
@@ -277,7 +305,9 @@ public class Picker extends Task {
         EntrySource entrySource = new EntrySource();
         entrySource.setId(UUID.randomUUID());
         entrySource.setEntry(posting);
-        entrySource.setRemoteFullName(posting.getReceiverFullName());
+        entrySource.setRemoteFullName(remoteFullName);
+        entrySource.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
+        entrySource.setRemoteAvatarShape(remoteAvatarShape);
         pick.toEntrySource(entrySource);
         entrySourceRepository.save(entrySource);
     }

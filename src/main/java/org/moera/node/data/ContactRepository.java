@@ -26,4 +26,9 @@ public interface ContactRepository extends JpaRepository<Contact, UUID>, Queryds
     @Modifying
     void updateRemoteFullName(UUID nodeId, String remoteNodeName, String remoteFullName);
 
+    @Query("update Contact c set c.remoteAvatarMediaFile = ?3, c.remoteAvatarShape = ?4"
+            + " where c.nodeId = ?1 and c.remoteNodeName = ?2")
+    @Modifying
+    void updateRemoteAvatar(UUID nodeId, String remoteNodeName, MediaFile mediaFile, String shape);
+
 }

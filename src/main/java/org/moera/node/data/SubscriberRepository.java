@@ -52,4 +52,9 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, UUID>, Q
     @Modifying
     void updateRemoteFullName(UUID nodeId, String remoteNodeName, String remoteFullName);
 
+    @Query("update Subscriber s set s.remoteAvatarMediaFile = ?3, s.remoteAvatarShape = ?4"
+            + " where s.nodeId = ?1 and s.remoteNodeName = ?2")
+    @Modifying
+    void updateRemoteAvatar(UUID nodeId, String remoteNodeName, MediaFile mediaFile, String shape);
+
 }

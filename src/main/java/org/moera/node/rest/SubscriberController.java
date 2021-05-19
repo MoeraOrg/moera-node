@@ -35,6 +35,7 @@ import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.rest.task.RemoteAvatarDownloadTask;
 import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Util;
@@ -165,6 +166,12 @@ public class SubscriberController {
             var profileTask = new RemoteProfileSubscriptionTask(ownerName);
             taskAutowire.autowire(profileTask);
             taskExecutor.execute(profileTask);
+        }
+
+        if (subscriber.getRemoteAvatarMediaFile() == null) {
+            var avatarTask = new RemoteAvatarDownloadTask(subscriber.getRemoteNodeName());
+            taskAutowire.autowire(avatarTask);
+            taskExecutor.execute(avatarTask);
         }
 
         subscriberInstants.added(subscriber);

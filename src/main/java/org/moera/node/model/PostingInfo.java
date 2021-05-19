@@ -28,6 +28,7 @@ public class PostingInfo implements ReactionsInfo {
     private Integer totalRevisions;
     private String receiverName;
     private String receiverFullName;
+    private AvatarImage receiverAvatar;
     private String receiverPostingId;
     private String ownerName;
     private String ownerFullName;
@@ -97,6 +98,9 @@ public class PostingInfo implements ReactionsInfo {
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
         receiverFullName = posting.getReceiverFullName();
+        if (posting.getReceiverAvatarMediaFile() != null) {
+            receiverAvatar = new AvatarImage(posting.getReceiverAvatarMediaFile(), posting.getReceiverAvatarShape());
+        }
         receiverPostingId = posting.getReceiverEntryId();
         ownerName = posting.getOwnerName();
         ownerFullName = posting.getOwnerFullName();
@@ -221,6 +225,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setReceiverFullName(String receiverFullName) {
         this.receiverFullName = receiverFullName;
+    }
+
+    public AvatarImage getReceiverAvatar() {
+        return receiverAvatar;
+    }
+
+    public void setReceiverAvatar(AvatarImage receiverAvatar) {
+        this.receiverAvatar = receiverAvatar;
     }
 
     @JsonIgnore
