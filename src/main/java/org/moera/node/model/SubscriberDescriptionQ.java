@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import java.time.Instant;
 
+import org.moera.node.data.Avatar;
 import org.moera.node.data.SubscriptionType;
 
 public class SubscriberDescriptionQ {
@@ -10,21 +11,26 @@ public class SubscriberDescriptionQ {
     private String feedName;
     private String postingId;
     private String ownerFullName;
+    private AvatarDescription ownerAvatar;
     private Long lastUpdatedAt;
 
     public SubscriberDescriptionQ() {
     }
 
-    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName) {
-        this(type, feedName, postingId, ownerFullName, Instant.now().getEpochSecond());
+    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName,
+                                  Avatar ownerAvatar) {
+        this(type, feedName, postingId, ownerFullName, ownerAvatar, Instant.now().getEpochSecond());
     }
 
     public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName,
-                                  Long lastUpdatedAt) {
+                                  Avatar ownerAvatar, Long lastUpdatedAt) {
         this.type = type;
         this.feedName = feedName;
         this.postingId = postingId;
         this.ownerFullName = ownerFullName;
+        if (ownerAvatar != null) {
+            this.ownerAvatar = new AvatarDescription(ownerAvatar);
+        }
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
@@ -58,6 +64,14 @@ public class SubscriberDescriptionQ {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public AvatarDescription getOwnerAvatar() {
+        return ownerAvatar;
+    }
+
+    public void setOwnerAvatar(AvatarDescription ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
     }
 
     public Long getLastUpdatedAt() {

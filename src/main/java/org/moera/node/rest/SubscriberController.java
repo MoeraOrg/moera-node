@@ -23,6 +23,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.SubscriberInstants;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -67,6 +68,9 @@ public class SubscriberController {
 
     @Inject
     private PostingRepository postingRepository;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @Inject
     private SubscriberInstants subscriberInstants;
@@ -138,18 +142,8 @@ public class SubscriberController {
         Subscriber subscriber = new Subscriber();
         subscriber.setId(UUID.randomUUID());
         subscriber.setNodeId(requestContext.nodeId());
-        subscriber.setSubscriptionType(subscriberDescription.getType());
         subscriber.setRemoteNodeName(ownerName);
-        subscriber.setRemoteFullName(subscriberDescription.getOwnerFullName());
-        if (!StringUtils.isEmpty(subscriberDescription.getFeedName())) {
-            if (!Feed.isStandard(subscriberDescription.getFeedName())) {
-                throw new ValidationFailure("subscriberDescription.feedName.not-found");
-            }
-            if (Feed.isAdmin(subscriberDescription.getFeedName())) {
-                throw new ValidationFailure("subscriberDescription.feedName.not-found");
-            }
-            subscriber.setFeedName(subscriberDescription.getFeedName());
-        }
+        subscriberDescription.toSubscriber(subscriber);
         if (subscriberDescription.getPostingId() != null) {
             Posting posting = postingRepository.findByNodeIdAndId(
                     requestContext.nodeId(), subscriberDescription.getPostingId())
@@ -197,10 +191,21 @@ public class SubscriberController {
     }
 
     private void validate(SubscriberDescription description) {
+        mediaOperations.validateAvatar(
+                description.getOwnerAvatar(),
+                description::setOwnerAvatarMediaFile,
+                () -> new ValidationFailure("subscriberDescription.ownerAvatar.mediaId.not-found"));
+
         switch (description.getType()) {
             case FEED:
                 if (StringUtils.isEmpty(description.getFeedName())) {
                     throw new ValidationFailure("subscriberDescription.feedName.blank");
+                }
+                if (!Feed.isStandard(description.getFeedName())) {
+                    throw new ValidationFailure("subscriberDescription.feedName.not-found");
+                }
+                if (Feed.isAdmin(description.getFeedName())) {
+                    throw new ValidationFailure("subscriberDescription.feedName.not-found");
                 }
                 break;
             case POSTING:

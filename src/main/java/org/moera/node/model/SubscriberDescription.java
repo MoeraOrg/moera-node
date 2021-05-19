@@ -1,15 +1,29 @@
 package org.moera.node.model;
 
 import java.util.UUID;
+import javax.validation.Valid;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.data.MediaFile;
+import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
 
 public class SubscriberDescription {
 
     private SubscriptionType type;
+
     private String feedName;
+
     private UUID postingId;
+
     private String ownerFullName;
+
+    @Valid
+    private AvatarDescription ownerAvatar;
+
+    @JsonIgnore
+    private MediaFile ownerAvatarMediaFile;
+
     private Long lastUpdatedAt;
 
     public SubscriptionType getType() {
@@ -44,12 +58,42 @@ public class SubscriberDescription {
         this.ownerFullName = ownerFullName;
     }
 
+    public AvatarDescription getOwnerAvatar() {
+        return ownerAvatar;
+    }
+
+    public void setOwnerAvatar(AvatarDescription ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
+    }
+
+    public MediaFile getOwnerAvatarMediaFile() {
+        return ownerAvatarMediaFile;
+    }
+
+    public void setOwnerAvatarMediaFile(MediaFile ownerAvatarMediaFile) {
+        this.ownerAvatarMediaFile = ownerAvatarMediaFile;
+    }
+
     public Long getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
     public void setLastUpdatedAt(Long lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    public void toSubscriber(Subscriber subscriber) {
+        subscriber.setSubscriptionType(type);
+        subscriber.setRemoteFullName(ownerFullName);
+        if (ownerAvatar != null) {
+            if (ownerAvatarMediaFile != null) {
+                subscriber.setRemoteAvatarMediaFile(ownerAvatarMediaFile);
+            }
+            if (ownerAvatar.getShape() != null) {
+                subscriber.setRemoteAvatarShape(ownerAvatar.getShape());
+            }
+        }
+        subscriber.setFeedName(feedName);
     }
 
 }

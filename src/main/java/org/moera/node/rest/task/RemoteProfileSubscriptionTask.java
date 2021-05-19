@@ -5,12 +5,15 @@ import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.media.MediaManager;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.WhoAmI;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,13 +23,15 @@ public class RemoteProfileSubscriptionTask extends Task {
     private static Logger log = LoggerFactory.getLogger(RemoteProfileSubscriptionTask.class);
 
     private String targetNodeName;
-    private String targetFullName;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private SubscriberRepository subscriberRepository;
+
+    @Inject
+    private MediaManager mediaManager;
 
     public RemoteProfileSubscriptionTask(String targetNodeName) {
         this.targetNodeName = targetNodeName;
@@ -63,18 +68,27 @@ public class RemoteProfileSubscriptionTask extends Task {
     }
 
     private void subscribe() throws NodeApiException {
-        targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
+        mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.PROFILE,
-                null, null, fullName());
+                null, null, fullName(), getAvatar());
         SubscriberInfo subscriberInfo =
                 nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
+
+        WhoAmI target = nodeApi.whoAmI(targetNodeName);
+        MediaFile targetAvatar = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
+                getOptions().getInt("posting.media.max-size"));
+
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());
         subscription.setNodeId(nodeId);
         subscription.setSubscriptionType(SubscriptionType.PROFILE);
         subscription.setRemoteSubscriberId(subscriberInfo.getId());
         subscription.setRemoteNodeName(targetNodeName);
-        subscription.setRemoteFullName(targetFullName);
+        subscription.setRemoteFullName(target.getFullName());
+        if (targetAvatar != null) {
+            subscription.setRemoteAvatarMediaFile(targetAvatar);
+            subscription.setRemoteAvatarShape(target.getAvatar().getShape());
+        }
         subscriptionRepository.save(subscription);
     }
 

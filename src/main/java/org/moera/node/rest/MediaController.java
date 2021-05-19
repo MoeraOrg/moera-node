@@ -99,9 +99,9 @@ public class MediaController {
         return mediaType.getType() + "/" + mediaType.getSubtype();
     }
 
-    private String upload(InputStream in, OutputStream out, Long contentLength) throws IOException {
+    private String transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
         int maxSize = requestContext.getOptions().getInt("posting.media.max-size");
-        return mediaOperations.upload(in, out, contentLength, maxSize);
+        return mediaOperations.transfer(in, out, contentLength, maxSize);
     }
 
     private Optional<MediaFileOwner> findMediaFileOwnerByFile(String id) {
@@ -124,9 +124,10 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            String id = upload(in, tmp.getOutputStream(), contentLength);
+            String id = transfer(in, tmp.getOutputStream(), contentLength);
             MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
             mediaFile.setExposed(true);
+            mediaFile = mediaFileRepository.save(mediaFile);
 
             return new MediaFileInfo(mediaFile);
         } catch (ThresholdReachedException e) {
@@ -152,7 +153,7 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            String id = upload(in, tmp.getOutputStream(), contentLength);
+            String id = transfer(in, tmp.getOutputStream(), contentLength);
             MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
                 return new MediaFileInfo(mediaFileOwner);

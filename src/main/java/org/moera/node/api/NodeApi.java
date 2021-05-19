@@ -149,7 +149,7 @@ public class NodeApi {
         OptionalLong len = response.headers().firstValueAsLong("Content-Length");
         Long contentLength = len.isPresent() ? len.getAsLong() : null;
         try {
-            String mediaFileId = mediaOperations.upload(
+            String mediaFileId = mediaOperations.transfer(
                     response.body(), tmpFile.getOutputStream(), contentLength, maxSize);
             return new TemporaryMediaFile(mediaFileId, contentType);
         } catch (ThresholdReachedException e) {

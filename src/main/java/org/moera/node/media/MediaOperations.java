@@ -79,7 +79,7 @@ public class MediaOperations {
         }
     }
 
-    public String upload(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
+    public String transfer(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
         DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
         out = new TeeOutputStream(out, digestStream);
 

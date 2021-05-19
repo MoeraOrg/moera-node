@@ -111,6 +111,7 @@ public class AvatarController {
             String avatarId = Util.base64urlencode(digestStream.getDigest());
             MediaFile avatarFile = mediaOperations.putInPlace(avatarId, thumbnailFormat.mimeType, tmp.getPath());
             avatarFile.setExposed(true);
+            avatarFile = mediaFileRepository.save(avatarFile);
 
             Avatar avatar = new Avatar();
             avatar.setId(UUID.randomUUID());

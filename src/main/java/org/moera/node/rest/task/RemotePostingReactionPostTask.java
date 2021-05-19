@@ -5,14 +5,13 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.instant.PostingReactionInstants;
-import org.moera.node.model.MediaFileInfo;
+import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
@@ -43,6 +42,9 @@ public class RemotePostingReactionPostTask extends Task {
     @Inject
     private PostingReactionInstants postingReactionInstants;
 
+    @Inject
+    private MediaManager mediaManager;
+
     public RemotePostingReactionPostTask(String targetNodeName, String postingId, ReactionAttributes attributes) {
         this.targetNodeName = targetNodeName;
         this.postingId = postingId;
@@ -55,7 +57,7 @@ public class RemotePostingReactionPostTask extends Task {
         try {
             nodeApi.setNodeId(nodeId);
             targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
-            uploadAvatar();
+            mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             ReactionCreated created = nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo));
             saveReaction(created.getReaction());
@@ -63,17 +65,6 @@ public class RemotePostingReactionPostTask extends Task {
         } catch (Exception e) {
             error(e);
         }
-    }
-
-    private void uploadAvatar() throws NodeApiException {
-        if (getAvatar() == null) {
-            return;
-        }
-        MediaFileInfo info = nodeApi.getPublicMediaInfo(targetNodeName, getAvatar().getMediaFile().getId());
-        if (info != null) {
-            return;
-        }
-        nodeApi.postPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar().getMediaFile());
     }
 
     private ReactionDescription buildReaction(PostingInfo postingInfo) {

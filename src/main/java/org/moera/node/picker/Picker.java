@@ -30,7 +30,7 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.PostingFingerprint;
-import org.moera.node.media.MediaDownloader;
+import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.SubscriberDescriptionQ;
@@ -87,7 +87,7 @@ public class Picker extends Task {
     private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
-    private MediaDownloader mediaDownloader;
+    private MediaManager mediaManager;
 
     @Inject
     private NotificationSenderPool notificationSenderPool;
@@ -161,7 +161,7 @@ public class Picker extends Task {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
         MediaFile ownerAvatar = null;
         if (postingInfo.getOwnerAvatar() != null && postingInfo.getOwnerAvatar().getMediaId() != null) {
-            ownerAvatar = mediaDownloader.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar().getMediaId(),
+            ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar().getMediaId(),
                     getOptions().getInt("posting.media.max-size"));
         }
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
@@ -245,7 +245,7 @@ public class Picker extends Task {
     private void subscribe(String receiverName, String receiverFullName, String receiverPostingId,
                            Timestamp lastUpdatedAt, List<Event> events) throws NodeApiException {
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
-                receiverPostingId, fullName(), Util.toEpochSecond(lastUpdatedAt));
+                receiverPostingId, fullName(), getAvatar(), Util.toEpochSecond(lastUpdatedAt));
         try {
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(receiverName, generateCarte(receiverName), description);
