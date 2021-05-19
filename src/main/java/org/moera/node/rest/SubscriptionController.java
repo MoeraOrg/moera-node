@@ -21,6 +21,7 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RemotePosting;
@@ -65,6 +66,9 @@ public class SubscriptionController {
 
     @Inject
     private ContactOperations contactOperations;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -121,6 +125,12 @@ public class SubscriptionController {
                 throw new ValidationFailure("subscriptionDescription.feedName.not-found");
             }
         }
+
+        mediaOperations.validateAvatar(
+                subscriptionDescription.getRemoteAvatar(),
+                subscriptionDescription::setRemoteAvatarMediaFile,
+                () -> new ValidationFailure("subscriptionDescription.remoteAvatar.mediaId.not-found"));
+
         boolean exists = subscriptionRepository.countBySubscriber(
                 requestContext.nodeId(),
                 subscriptionDescription.getType(),

@@ -1,8 +1,11 @@
 package org.moera.node.model;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
@@ -23,6 +26,12 @@ public class SubscriptionDescription {
 
     @Size(max = 96)
     private String remoteFullName;
+
+    @Valid
+    private AvatarDescription remoteAvatar;
+
+    @JsonIgnore
+    private MediaFile remoteAvatarMediaFile;
 
     @Size(max = 63)
     private String remoteFeedName;
@@ -72,6 +81,22 @@ public class SubscriptionDescription {
         this.remoteFullName = remoteFullName;
     }
 
+    public AvatarDescription getRemoteAvatar() {
+        return remoteAvatar;
+    }
+
+    public void setRemoteAvatar(AvatarDescription remoteAvatar) {
+        this.remoteAvatar = remoteAvatar;
+    }
+
+    public MediaFile getRemoteAvatarMediaFile() {
+        return remoteAvatarMediaFile;
+    }
+
+    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
+        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
+    }
+
     public String getRemoteFeedName() {
         return remoteFeedName;
     }
@@ -102,6 +127,14 @@ public class SubscriptionDescription {
         subscription.setRemoteSubscriberId(remoteSubscriberId);
         subscription.setRemoteNodeName(remoteNodeName);
         subscription.setRemoteFullName(remoteFullName);
+        if (remoteAvatar != null) {
+            if (remoteAvatarMediaFile != null) {
+                subscription.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
+            }
+            if (remoteAvatar.getShape() != null) {
+                subscription.setRemoteAvatarShape(remoteAvatar.getShape());
+            }
+        }
         subscription.setRemoteFeedName(remoteFeedName);
         subscription.setRemoteEntryId(remotePostingId);
         subscription.setReason(reason);
