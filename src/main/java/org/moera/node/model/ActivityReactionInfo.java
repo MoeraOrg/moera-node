@@ -9,6 +9,7 @@ public class ActivityReactionInfo {
 
     private String remoteNodeName;
     private String remoteFullName;
+    private AvatarImage remoteAvatar;
     private String remotePostingId;
     private boolean negative;
     private int emoji;
@@ -20,6 +21,9 @@ public class ActivityReactionInfo {
     public ActivityReactionInfo(OwnReaction reaction) {
         remoteNodeName = reaction.getRemoteNodeName();
         remoteFullName = reaction.getRemoteFullName();
+        if (reaction.getRemoteAvatarMediaFile() != null) {
+            remoteAvatar = new AvatarImage(reaction.getRemoteAvatarMediaFile(), reaction.getRemoteAvatarShape());
+        }
         remotePostingId = reaction.getRemotePostingId();
         negative = reaction.isNegative();
         emoji = reaction.getEmoji();
@@ -40,6 +44,14 @@ public class ActivityReactionInfo {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public AvatarImage getRemoteAvatar() {
+        return remoteAvatar;
+    }
+
+    public void setRemoteAvatar(AvatarImage remoteAvatar) {
+        this.remoteAvatar = remoteAvatar;
     }
 
     public String getRemotePostingId() {

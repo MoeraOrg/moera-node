@@ -10,6 +10,7 @@ public class RepliedTo {
     private String revisionId;
     private String name;
     private String fullName;
+    private AvatarImage avatar;
     private String heading;
     private byte[] digest;
 
@@ -24,6 +25,9 @@ public class RepliedTo {
             }
             name = comment.getRepliedToName();
             fullName = comment.getRepliedToFullName();
+            if (comment.getRepliedToAvatarMediaFile() != null) {
+                avatar = new AvatarImage(comment.getRepliedToAvatarMediaFile(), comment.getRepliedToAvatarShape());
+            }
             heading = comment.getRepliedToHeading();
             digest = comment.getRepliedToDigest();
         }
@@ -59,6 +63,14 @@ public class RepliedTo {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
     }
 
     public String getHeading() {

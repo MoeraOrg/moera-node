@@ -9,6 +9,7 @@ public class PostingSourceInfo {
 
     private String nodeName;
     private String fullName;
+    private AvatarImage avatar;
     private String feedName;
     private String postingId;
     private Long createdAt;
@@ -19,6 +20,9 @@ public class PostingSourceInfo {
     public PostingSourceInfo(EntrySource entrySource) {
         nodeName = entrySource.getRemoteNodeName();
         fullName = entrySource.getRemoteFullName();
+        if (entrySource.getRemoteAvatarMediaFile() != null) {
+            avatar = new AvatarImage(entrySource.getRemoteAvatarMediaFile(), entrySource.getRemoteAvatarShape());
+        }
         feedName = entrySource.getRemoteFeedName();
         postingId = entrySource.getRemotePostingId();
         createdAt = Util.toEpochSecond(entrySource.getCreatedAt());
@@ -38,6 +42,14 @@ public class PostingSourceInfo {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
     }
 
     public String getFeedName() {

@@ -27,6 +27,7 @@ public class StoryInfo {
     private CommentInfo comment;
     private String remoteNodeName;
     private String remoteFullName;
+    private AvatarImage remoteAvatar;
     private String remotePostingId;
     private String remoteCommentId;
     private Map<String, String[]> operations;
@@ -70,6 +71,10 @@ public class StoryInfo {
             case POSTING_UPDATED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteAvatarMediaFile() != null) {
+                    info.setRemoteAvatar(
+                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                }
                 info.setRemotePostingId(story.getRemotePostingId());
                 break;
 
@@ -77,6 +82,10 @@ public class StoryInfo {
             case SUBSCRIBER_DELETED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteAvatarMediaFile() != null) {
+                    info.setRemoteAvatar(
+                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                }
                 break;
 
             case COMMENT_ADDED:
@@ -91,6 +100,10 @@ public class StoryInfo {
             case REMOTE_COMMENT_ADDED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteAvatarMediaFile() != null) {
+                    info.setRemoteAvatar(
+                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                }
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 break;
@@ -216,6 +229,14 @@ public class StoryInfo {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public AvatarImage getRemoteAvatar() {
+        return remoteAvatar;
+    }
+
+    public void setRemoteAvatar(AvatarImage remoteAvatar) {
+        this.remoteAvatar = remoteAvatar;
     }
 
     public String getRemotePostingId() {
