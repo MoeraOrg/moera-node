@@ -51,8 +51,8 @@ public class RemoteAvatarDownloadTask extends Task {
                     contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
                     return null;
                 });
-                success();
             }
+            success();
         } catch (Throwable e) {
             error(e);
         }
