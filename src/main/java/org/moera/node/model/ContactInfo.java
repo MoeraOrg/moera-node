@@ -6,6 +6,7 @@ public class ContactInfo {
 
     private String nodeName;
     private String fullName;
+    private AvatarImage avatar;
     private float closeness;
 
     public ContactInfo() {
@@ -14,6 +15,9 @@ public class ContactInfo {
     public ContactInfo(Contact contact) {
         nodeName = contact.getRemoteNodeName();
         fullName = contact.getRemoteFullName();
+        if (contact.getRemoteAvatarMediaFile() != null) {
+            avatar = new AvatarImage(contact.getRemoteAvatarMediaFile(), contact.getRemoteAvatarShape());
+        }
         closeness = contact.getCloseness();
     }
 
@@ -31,6 +35,14 @@ public class ContactInfo {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
     }
 
     public float getCloseness() {
