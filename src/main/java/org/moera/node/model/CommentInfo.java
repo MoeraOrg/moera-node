@@ -282,6 +282,11 @@ public class CommentInfo implements ReactionsInfo {
         return getRepliedTo() != null ? getRepliedTo().getFullName() : null;
     }
 
+    @Transient
+    public AvatarImage getRepliedToAvatar() {
+        return getRepliedTo() != null ? getRepliedTo().getAvatar() : null;
+    }
+
     public long getMoment() {
         return moment;
     }

@@ -7,6 +7,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.fingerprint.CommentFingerprint;
@@ -18,6 +19,7 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.WhoAmI;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
 import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
@@ -31,7 +33,8 @@ public class RemoteCommentPostTask extends Task {
     private static Logger log = LoggerFactory.getLogger(RemoteCommentPostTask.class);
 
     private String targetNodeName;
-    private String targetFullName;
+    private WhoAmI target;
+    private MediaFile targetAvatarMediaFile;
     private String postingId;
     private String commentId;
     private CommentSourceText sourceText;
@@ -69,10 +72,15 @@ public class RemoteCommentPostTask extends Task {
         initLoggingDomain();
         try {
             nodeApi.setNodeId(nodeId);
-            targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
+
+            target = nodeApi.whoAmI(targetNodeName);
+            targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
+                    getOptions().getInt("posting.media.max-size"));
+
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName),
                     sourceText.getOwnerAvatarMediaFile());
+
             prevCommentInfo = commentId != null ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
             String repliedToId = null;
             String repliedToRevisionId = null;
@@ -100,7 +108,16 @@ public class RemoteCommentPostTask extends Task {
                 commentInfo = nodeApi.putComment(targetNodeName, postingId, commentId, commentText);
                 send(new RemoteCommentUpdatedEvent(targetNodeName, postingId, commentId));
             }
-            saveComment(commentInfo);
+
+            MediaFile repliedToAvatarMediaFile = null;
+            if (commentInfo.getRepliedToAvatar() != null) {
+                repliedToAvatarMediaFile = mediaManager.downloadPublicMedia(
+                        targetNodeName,
+                        commentInfo.getRepliedToAvatar(),
+                        getOptions().getInt("posting.media.max-size"));
+            }
+
+            saveComment(commentInfo, repliedToAvatarMediaFile);
             success();
         } catch (Exception e) {
             error(e);
@@ -116,7 +133,7 @@ public class RemoteCommentPostTask extends Task {
         return commentText;
     }
 
-    private void saveComment(CommentInfo info) {
+    private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) {
         try {
             inTransaction(() -> {
                 OwnComment ownComment = ownCommentRepository
@@ -127,9 +144,17 @@ public class RemoteCommentPostTask extends Task {
                     ownComment.setId(UUID.randomUUID());
                     ownComment.setNodeId(nodeId);
                     ownComment.setRemoteNodeName(targetNodeName);
-                    ownComment.setRemoteFullName(targetFullName);
+                    ownComment.setRemoteFullName(target.getFullName());
+                    if (targetAvatarMediaFile != null) {
+                        ownComment.setRemoteAvatarMediaFile(targetAvatarMediaFile);
+                        ownComment.setRemoteAvatarShape(target.getAvatar().getShape());
+                    }
+                    if (repliedToAvatarMediaFile != null) {
+                        ownComment.setRemoteRepliedToAvatarMediaFile(repliedToAvatarMediaFile);
+                        ownComment.setRemoteRepliedToAvatarShape(info.getRepliedToAvatar().getShape());
+                    }
                     ownComment = ownCommentRepository.save(ownComment);
-                    contactOperations.updateCloseness(nodeId, targetNodeName, targetFullName, 1);
+                    contactOperations.updateCloseness(nodeId, targetNodeName, target.getFullName(), 1);
                     contactOperations.updateCloseness(nodeId, info.getRepliedToName(), info.getRepliedToFullName(), 1);
                 }
                 info.toOwnComment(ownComment);
