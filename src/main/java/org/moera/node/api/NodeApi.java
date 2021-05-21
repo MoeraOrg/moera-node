@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
@@ -75,9 +74,6 @@ public class NodeApi {
 
     @Inject
     private NamingCache namingCache;
-
-    @Inject
-    private MediaFileRepository mediaFileRepository;
 
     @Inject
     private MediaOperations mediaOperations;
