@@ -185,9 +185,9 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             if (comment.getOwnerName().equals(requestContext.nodeName())) {
-                contactOperations.updateCloseness(comment.getRepliedToName(), comment.getRepliedToFullName(), 1);
+                contactOperations.updateCloseness(comment.getRepliedToName(), 1);
             } else {
-                contactOperations.updateCloseness(comment.getOwnerName(), comment.getOwnerFullName(), 1);
+                contactOperations.updateCloseness(comment.getOwnerName(), 1);
             }
             commentInstants.added(comment);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
@@ -456,9 +456,9 @@ public class CommentController {
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
         if (comment.getOwnerName().equals(requestContext.nodeName())) {
-            contactOperations.updateCloseness(comment.getRepliedToName(), comment.getRepliedToFullName(), -1);
+            contactOperations.updateCloseness(comment.getRepliedToName(), -1);
         } else {
-            contactOperations.updateCloseness(comment.getOwnerName(), comment.getOwnerFullName(), -1);
+            contactOperations.updateCloseness(comment.getOwnerName(), -1);
         }
         commentInstants.deleted(comment);
         requestContext.send(Directions.postingCommentsSubscribers(postingId),

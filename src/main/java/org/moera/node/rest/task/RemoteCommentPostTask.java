@@ -154,8 +154,8 @@ public class RemoteCommentPostTask extends Task {
                         ownComment.setRemoteRepliedToAvatarShape(info.getRepliedToAvatar().getShape());
                     }
                     ownComment = ownCommentRepository.save(ownComment);
-                    contactOperations.updateCloseness(nodeId, targetNodeName, target.getFullName(), 1);
-                    contactOperations.updateCloseness(nodeId, info.getRepliedToName(), info.getRepliedToFullName(), 1);
+                    contactOperations.updateCloseness(nodeId, targetNodeName, 1);
+                    contactOperations.updateCloseness(nodeId, info.getRepliedToName(), 1);
                 }
                 info.toOwnComment(ownComment);
                 return null;

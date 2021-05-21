@@ -89,7 +89,7 @@ public class RemotePostingReactionPostTask extends Task {
                     ownReaction.setRemoteNodeName(targetNodeName);
                     ownReaction.setRemoteFullName(targetFullName);
                     ownReaction = ownReactionRepository.save(ownReaction);
-                    contactOperations.updateCloseness(nodeId, targetNodeName, targetFullName, 0.25f);
+                    contactOperations.updateCloseness(nodeId, targetNodeName, 0.25f);
                 }
                 info.toOwnReaction(ownReaction);
                 return null;

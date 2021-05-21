@@ -150,7 +150,7 @@ public class SubscriptionController {
             contactOperations.createOrUpdateCloseness(subscription.getRemoteNodeName(),
                     subscription.getRemoteFullName(), 1);
         } else {
-            contactOperations.updateCloseness(subscription.getRemoteNodeName(), subscription.getRemoteFullName(), 1);
+            contactOperations.updateCloseness(subscription.getRemoteNodeName(), 1);
         }
         requestContext.send(new SubscriptionAddedEvent(subscription));
         sendPeopleChangedEvent();

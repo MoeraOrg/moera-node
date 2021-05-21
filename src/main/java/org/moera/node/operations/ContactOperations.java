@@ -72,20 +72,16 @@ public class ContactOperations {
         contactRepository.save(contact);
     }
 
-    public void updateCloseness(String remoteNodeName, String remoteFullName, float delta) {
-        updateCloseness(requestContext.nodeId(), remoteNodeName, remoteFullName, delta);
+    public void updateCloseness(String remoteNodeName, float delta) {
+        updateCloseness(requestContext.nodeId(), remoteNodeName, delta);
     }
 
-    public void updateCloseness(UUID nodeId, String remoteNodeName, String remoteFullName, float delta) {
+    public void updateCloseness(UUID nodeId, String remoteNodeName, float delta) {
         if (remoteNodeName == null) {
             return;
         }
-        contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(contact -> {
-            if (delta > 0) {
-                contact.setRemoteFullName(remoteFullName);
-            }
-            contact.updateCloseness(delta);
-        });
+        contactRepository.findByRemoteNode(nodeId, remoteNodeName)
+                .ifPresent(contact -> contact.updateCloseness(delta));
     }
 
     public void delete(String remoteNodeName) {
