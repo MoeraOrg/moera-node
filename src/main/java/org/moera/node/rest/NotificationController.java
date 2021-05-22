@@ -95,6 +95,7 @@ public class NotificationController {
 
         notification.setSenderNodeName(packet.getNodeName());
         notification.setSenderFullName(packet.getFullName());
+        notification.setSenderAvatar(packet.getAvatar());
         try {
             handler.getMethod().invoke(handler.getBean(), notification);
         } catch (InvocationTargetException e) {

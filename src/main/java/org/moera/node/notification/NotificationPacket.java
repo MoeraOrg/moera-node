@@ -1,7 +1,10 @@
 package org.moera.node.notification;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+
+import org.moera.node.model.AvatarImage;
 
 public class NotificationPacket {
 
@@ -13,6 +16,9 @@ public class NotificationPacket {
 
     @Size(max = 96)
     private String fullName;
+
+    @Valid
+    private AvatarImage avatar;
 
     private Long createdAt;
 
@@ -47,6 +53,14 @@ public class NotificationPacket {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
     }
 
     public Long getCreatedAt() {

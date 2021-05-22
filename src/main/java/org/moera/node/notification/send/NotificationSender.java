@@ -19,6 +19,7 @@ import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.api.NodeApiValidationException;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.Result;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
@@ -161,6 +162,7 @@ public class NotificationSender extends Task {
         packet.setId(UUID.randomUUID().toString());
         packet.setNodeName(nodeName());
         packet.setFullName(fullName());
+        packet.setAvatar(new AvatarImage(getAvatar()));
         packet.setCreatedAt(Util.toEpochSecond(Util.now()));
         packet.setType(notification.getType().getValue());
         packet.setNotification(objectMapper.writeValueAsString(notification));

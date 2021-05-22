@@ -2,6 +2,7 @@ package org.moera.node.media;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 
 import org.moera.node.api.NodeApi;
@@ -11,8 +12,11 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.MediaFileInfo;
+import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,6 +32,13 @@ public class MediaManager {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
 
     public MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws NodeApiException {
         if (id == null) {
@@ -65,6 +76,32 @@ public class MediaManager {
             return null;
         }
         return downloadPublicMedia(nodeName, avatarImage.getMediaId(), maxSize);
+    }
+
+    public void asyncDownloadPublicMedia(String nodeName, String id, int maxSize, Consumer<MediaFile> callback) {
+        if (id == null) {
+            callback.accept(null);
+            return;
+        }
+
+        /*MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
+        if (mediaFile != null && mediaFile.isExposed()) {
+            callback.accept(mediaFile);
+            return;
+        }*/
+
+        var downloadTask = new PublicMediaDownloadTask(nodeName, id, maxSize, callback);
+        taskAutowire.autowire(downloadTask);
+        taskExecutor.execute(downloadTask);
+    }
+
+    public void asyncDownloadPublicMedia(String nodeName, AvatarImage avatarImage, int maxSize,
+                                         Consumer<MediaFile> callback) {
+        if (avatarImage == null) {
+            callback.accept(null);
+            return;
+        }
+        asyncDownloadPublicMedia(nodeName, avatarImage.getMediaId(), maxSize, callback);
     }
 
     public void uploadPublicMedia(String nodeName, String carte, MediaFile mediaFile) throws NodeApiException {

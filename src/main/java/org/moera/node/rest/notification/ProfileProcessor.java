@@ -4,23 +4,31 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.ContactRepository;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
+import org.moera.node.media.MediaManager;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.event.RemoteNodeFullNameChangedEvent;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.util.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @NotificationProcessor
 public class ProfileProcessor {
 
+    private static Logger log = LoggerFactory.getLogger(ProfileProcessor.class);
+
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
@@ -31,9 +39,15 @@ public class ProfileProcessor {
     @Inject
     private ContactRepository contactRepository;
 
+    @Inject
+    private MediaManager mediaManager;
+
+    @Inject
+    private PlatformTransactionManager txManager;
+
     private void validateSubscription(ProfileUpdatedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+                universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
         if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.PROFILE) {
             throw new UnsubscribeFailure();
         }
@@ -43,14 +57,35 @@ public class ProfileProcessor {
     @Transactional
     public void profileUpdated(ProfileUpdatedNotification notification) {
         validateSubscription(notification);
-        subscriberRepository.updateRemoteFullName(requestContext.nodeId(), notification.getSenderNodeName(),
+        subscriberRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
                 notification.getSenderFullName());
-        subscriptionRepository.updateRemoteFullName(requestContext.nodeId(), notification.getSenderNodeName(),
+        subscriptionRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
                 notification.getSenderFullName());
-        contactRepository.updateRemoteFullName(requestContext.nodeId(), notification.getSenderNodeName(),
+        contactRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
                 notification.getSenderFullName());
-        requestContext.send(new RemoteNodeFullNameChangedEvent(notification.getSenderNodeName(),
+        universalContext.send(new RemoteNodeFullNameChangedEvent(notification.getSenderNodeName(),
                 notification.getSenderFullName()));
+
+        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(), notification.getSenderAvatar(),
+                universalContext.getOptions().getInt("posting.media.max-size"),
+                mediaFile -> this.saveAvatar(notification.getSenderNodeName(), mediaFile,
+                        notification.getSenderAvatar().getShape()));
+    }
+
+    private void saveAvatar(String nodeName, MediaFile mediaFile, String shape) {
+        if (mediaFile == null) {
+            return;
+        }
+        try {
+            Transaction.execute(txManager, () -> {
+                subscriberRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
+                subscriptionRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
+                contactRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
+                return null;
+            });
+        } catch (Throwable e) {
+            log.error("Error saving the downloaded avatar: {}", e.getMessage());
+        }
     }
 
 }

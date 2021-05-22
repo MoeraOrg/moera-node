@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 
@@ -17,6 +18,9 @@ public abstract class Notification implements Cloneable {
 
     @JsonIgnore
     private String senderFullName;
+
+    @JsonIgnore
+    private AvatarImage senderAvatar;
 
     @JsonIgnore
     private NotificationType type;
@@ -45,6 +49,14 @@ public abstract class Notification implements Cloneable {
 
     public void setSenderFullName(String senderFullName) {
         this.senderFullName = senderFullName;
+    }
+
+    public AvatarImage getSenderAvatar() {
+        return senderAvatar;
+    }
+
+    public void setSenderAvatar(AvatarImage senderAvatar) {
+        this.senderAvatar = senderAvatar;
     }
 
     public NotificationType getType() {
