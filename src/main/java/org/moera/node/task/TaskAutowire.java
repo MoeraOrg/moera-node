@@ -9,7 +9,6 @@ import javax.inject.Inject;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
-import org.moera.node.option.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -35,19 +34,12 @@ public class TaskAutowire {
     public void autowire(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(requestContext.nodeId());
-        task.setOptions(requestContext.getOptions());
         task.setLocalAddr(requestContext.getLocalAddr());
     }
 
     public void autowireWithoutRequest(Task task, UUID nodeId) {
         autowireCapableBeanFactory.autowireBean(task);
         task.setNodeId(nodeId);
-        Options options = domains.getDomainOptions(nodeId);
-        if (options != null) {
-            task.setOptions(options);
-        } else {
-            log.warn("Domain with id = {} not found", nodeId);
-        }
         task.setLocalAddr(getLocalAddr(domains.getDomainName(nodeId)));
     }
 

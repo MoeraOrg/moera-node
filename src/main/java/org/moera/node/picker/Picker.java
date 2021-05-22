@@ -110,7 +110,7 @@ public class Picker extends Task {
     }
 
     @Override
-    public void run() {
+    protected void execute() {
         try {
             fetchNodeDetails();
             while (!stopped) {
@@ -150,10 +150,7 @@ public class Picker extends Task {
     }
 
     private void download(Pick pick) throws Throwable {
-        initLoggingDomain();
         log.info("Downloading from node '{}', postingId = {}", remoteNodeName, pick.getRemotePostingId());
-
-        nodeApi.setNodeId(nodeId);
 
         List<Event> events = new ArrayList<>();
         List<DirectedNotification> notifications = new ArrayList<>();
@@ -313,13 +310,11 @@ public class Picker extends Task {
     }
 
     private void succeeded(Posting posting, Pick pick) {
-        initLoggingDomain();
         log.info("Posting downloaded successfully, id = {}", posting.getId());
         pool.pickSucceeded(pick);
     }
 
     private void error(Throwable e) {
-        initLoggingDomain();
         log.error(e.getMessage());
     }
 

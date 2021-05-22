@@ -38,11 +38,9 @@ public class RemoteProfileSubscriptionTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         boolean subscribe = shouldSubscribe();
         try {
-            nodeApi.setNodeId(nodeId);
             Subscription subscription = subscriptionRepository.findByTypeAndRemoteNode(nodeId, SubscriptionType.PROFILE,
                     targetNodeName).orElse(null);
             if (subscribe) {

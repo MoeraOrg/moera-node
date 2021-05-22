@@ -7,16 +7,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
-import org.moera.node.domain.Domains;
-import org.moera.node.global.RequestContext;
-import org.moera.node.option.Options;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.util.Util;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
@@ -72,8 +69,6 @@ public class NamingCache {
     private Map<Key, Record> cache = new HashMap<>();
     private final Object queryDone = new Object();
 
-    private ThreadLocal<UUID> nodeId = new ThreadLocal<>();
-
     @Inject
     @Qualifier("namingTaskExecutor")
     private TaskExecutor taskExecutor;
@@ -83,18 +78,10 @@ public class NamingCache {
     private NamingClient namingClient;
 
     @Inject
-    private RequestContext requestContext;
-
-    @Inject
-    private Domains domains;
-
-    public void setNodeId(UUID nodeId) {
-        this.nodeId.set(nodeId);
-    }
+    private UniversalContext universalContext;
 
     private Key getKey(String name) {
-        Options options = nodeId.get() == null ? requestContext.getOptions() : domains.getDomainOptions(nodeId.get());
-        return new Key(options.getString("naming.location"), name);
+        return new Key(universalContext.getOptions().getString("naming.location"), name);
     }
 
     public RegisteredNameDetails getFast(String name) {

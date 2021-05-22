@@ -36,9 +36,7 @@ public class RemoteAvatarDownloadTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
-        nodeApi.setNodeId(nodeId);
+    protected void execute() {
         try {
             AvatarImage targetAvatar = nodeApi.whoAmI(targetNodeName).getAvatar();
             MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar,

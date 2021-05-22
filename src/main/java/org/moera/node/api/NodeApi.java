@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.OptionalLong;
-import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -24,7 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
-import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
 import org.moera.node.media.TemporaryMediaFile;
@@ -61,13 +59,8 @@ public class NodeApi {
     private static final Duration CALL_API_CONNECTION_TIMEOUT = Duration.ofSeconds(20);
     private static final Duration CALL_API_REQUEST_TIMEOUT = Duration.ofMinutes(1);
 
-    private ThreadLocal<UUID> nodeId = new ThreadLocal<>();
-
     @Inject
     private Config config;
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private ObjectMapper objectMapper;
@@ -78,16 +71,7 @@ public class NodeApi {
     @Inject
     private MediaOperations mediaOperations;
 
-    public void setNodeId(UUID nodeId) {
-        this.nodeId.set(nodeId);
-    }
-
-    private UUID getNodeId() {
-        return nodeId.get() != null ? nodeId.get() : requestContext.nodeId();
-    }
-
     private String fetchNodeUri(String remoteNodeName) {
-        namingCache.setNodeId(getNodeId());
         RegisteredNameDetails details = namingCache.get(remoteNodeName);
         return details != null ? UriUtil.normalize(details.getNodeUri()) : null;
     }

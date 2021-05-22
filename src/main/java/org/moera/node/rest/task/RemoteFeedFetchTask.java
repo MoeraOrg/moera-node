@@ -39,10 +39,8 @@ public class RemoteFeedFetchTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         try {
-            nodeApi.setNodeId(nodeId);
             FeedSliceInfo sliceInfo = nodeApi.getFeedStories(remoteNodeName, remoteFeedName, FETCH_LIMIT);
             log.info("Got {} stories from feed {} at node {}", sliceInfo.getStories().size(), remoteFeedName,
                     remoteNodeName);

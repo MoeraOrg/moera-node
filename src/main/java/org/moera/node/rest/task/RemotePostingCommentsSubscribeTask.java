@@ -44,10 +44,8 @@ public class RemotePostingCommentsSubscribeTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         try {
-            nodeApi.setNodeId(nodeId);
             boolean subscribed = !subscriptionRepository.findAllByTypeAndNodeAndEntryId(nodeId,
                     SubscriptionType.POSTING_COMMENTS, targetNodeName, postingId).isEmpty();
             if (subscribed) {
@@ -102,7 +100,6 @@ public class RemotePostingCommentsSubscribeTask extends Task {
         } catch (Exception ex) {
             // ignore
         }
-        postingInstants.associate(this);
         postingInstants.subscribingToCommentsFailed(postingId, postingInfo);
     }
 

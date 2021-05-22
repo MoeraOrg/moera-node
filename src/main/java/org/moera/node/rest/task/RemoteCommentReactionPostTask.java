@@ -47,10 +47,8 @@ public class RemoteCommentReactionPostTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         try {
-            nodeApi.setNodeId(nodeId);
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             commentInfo = nodeApi.getComment(targetNodeName, postingId, commentId);
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
@@ -92,7 +90,6 @@ public class RemoteCommentReactionPostTask extends Task {
                     commentId, postingId, targetNodeName, e.getMessage());
         }
 
-        commentReactionInstants.associate(this);
         commentReactionInstants.addingFailed(postingId, postingInfo, commentId, commentInfo);
     }
 

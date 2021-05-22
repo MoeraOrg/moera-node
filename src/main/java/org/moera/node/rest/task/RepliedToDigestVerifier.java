@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -34,14 +33,13 @@ public class RepliedToDigestVerifier {
     @Inject
     private FingerprintManager fingerprintManager;
 
-    public byte[] getRepliedToDigest(UUID nodeId, String targetNodeName, PostingInfo postingInfo,
+    public byte[] getRepliedToDigest(String targetNodeName, PostingInfo postingInfo,
                                      Map<String, PostingRevisionInfo> revisions, String repliedToId,
                                      String repliedToRevisionId) throws NodeApiException {
         if (repliedToId == null) {
             return null;
         }
 
-        nodeApi.setNodeId(nodeId);
         return getRepliedToDigest(targetNodeName, postingInfo, revisions, 0, new HashSet<>(), repliedToId,
                 new HashMap<>(), repliedToRevisionId);
     }

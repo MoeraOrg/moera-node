@@ -44,9 +44,7 @@ public class AllRemoteAvatarsDownloadTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
-        nodeApi.setNodeId(nodeId);
+    protected void execute() {
         Set<String> targetNodeNames = getTargetNodeNames();
         for (String targetNodeName : targetNodeNames) {
             Duration delay = Duration.ofSeconds(30);

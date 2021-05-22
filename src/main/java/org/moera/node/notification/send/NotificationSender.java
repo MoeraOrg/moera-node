@@ -78,8 +78,7 @@ public class NotificationSender extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         if (notification == null) {
             log.debug("Sender from node ID = {} to '{}' started", nodeId, receiverNodeName);
         } else {
@@ -115,7 +114,6 @@ public class NotificationSender extends Task {
     }
 
     private void deliver(Notification notification) {
-        nodeApi.setNodeId(nodeId);
         do {
             if (delay != null && pausedTill == null) {
                 if (delay.compareTo(Duration.ofMinutes(2)) <= 0) {
@@ -185,7 +183,6 @@ public class NotificationSender extends Task {
     }
 
     private void succeeded(Result result) {
-        initLoggingDomain();
         if (result.isOk()) {
             log.info("Notification delivered successfully");
         } else {
@@ -228,7 +225,6 @@ public class NotificationSender extends Task {
     }
 
     private void failed(String message) {
-        initLoggingDomain();
         log.error(message);
     }
 

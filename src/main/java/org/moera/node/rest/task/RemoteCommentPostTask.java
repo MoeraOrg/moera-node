@@ -68,11 +68,8 @@ public class RemoteCommentPostTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         try {
-            nodeApi.setNodeId(nodeId);
-
             target = nodeApi.whoAmI(targetNodeName);
             targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
                     getOptions().getInt("posting.media.max-size"));
@@ -95,7 +92,7 @@ public class RemoteCommentPostTask extends Task {
                     repliedToRevisionId = repliedToCommentInfo.getRevisionId();
                 }
             }
-            byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, targetNodeName, postingInfo,
+            byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(targetNodeName, postingInfo,
                     new HashMap<>(), repliedToId, repliedToRevisionId);
             CommentText commentText = buildComment(postingInfo, repliedToDigest);
             CommentInfo commentInfo;
@@ -176,7 +173,6 @@ public class RemoteCommentPostTask extends Task {
             log.error("Error adding comment to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
         }
 
-        commentInstants.associate(this);
         if (prevCommentInfo == null) {
             commentInstants.addingFailed(postingId, postingInfo);
         } else {

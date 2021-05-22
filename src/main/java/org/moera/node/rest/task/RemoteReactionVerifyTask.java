@@ -39,10 +39,8 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         try {
-            nodeApi.setNodeId(nodeId);
             String remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
             PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);

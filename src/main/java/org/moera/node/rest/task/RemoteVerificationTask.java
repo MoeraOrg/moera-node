@@ -32,14 +32,12 @@ public abstract class RemoteVerificationTask extends Task {
     }
 
     protected final void succeeded(boolean correct) {
-        initLoggingDomain();
         reportSuccess(correct);
     }
 
     protected abstract void reportSuccess(boolean correct);
 
     protected final void failed(String errorCode, String message) {
-        initLoggingDomain();
         String errorMessage = messageSource.getMessage(errorCode, null, Locale.getDefault());
         if (message != null) {
             errorMessage += ": " + message;

@@ -52,10 +52,8 @@ public class RemotePostingReactionPostTask extends Task {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         try {
-            nodeApi.setNodeId(nodeId);
             targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
@@ -112,7 +110,6 @@ public class RemotePostingReactionPostTask extends Task {
             log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
         }
 
-        postingReactionInstants.associate(this);
         postingReactionInstants.addingFailed(postingId, postingInfo);
     }
 

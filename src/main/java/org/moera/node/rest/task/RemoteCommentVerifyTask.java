@@ -46,10 +46,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
     }
 
     @Override
-    public void run() {
-        initLoggingDomain();
+    protected void execute() {
         try {
-            nodeApi.setNodeId(nodeId);
             remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
             PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
@@ -105,8 +103,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             repliedToId = commentInfo.getRepliedTo().getId();
             repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
         }
-        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, remoteNodeName, postingInfo,
-                revisions, repliedToId, repliedToRevisionId);
+        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, postingInfo, revisions,
+                repliedToId, repliedToRevisionId);
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, PostingInfo.class, PostingRevisionInfo.class,
                 byte[].class);
@@ -145,8 +143,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             repliedToId = commentInfo.getRepliedTo().getId();
             repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
         }
-        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(nodeId, remoteNodeName, postingInfo,
-                revisions, repliedToId, repliedToRevisionId);
+        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, postingInfo, revisions,
+                repliedToId, repliedToRevisionId);
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
                 PostingInfo.class, PostingRevisionInfo.class, byte[].class);
