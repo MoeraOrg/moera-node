@@ -189,6 +189,7 @@ public class CommentOperations {
         requestContext.send(Directions.single(comment.getRepliedToName()),
                 new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
                         posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
+                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                         comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
     }
 
@@ -198,7 +199,8 @@ public class CommentOperations {
         }
         requestContext.send(Directions.single(comment.getRepliedToName()),
                 new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        comment.getOwnerName(), comment.getOwnerFullName()));
+                        comment.getOwnerName(), comment.getOwnerFullName(),
+                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
     }
 
     private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,

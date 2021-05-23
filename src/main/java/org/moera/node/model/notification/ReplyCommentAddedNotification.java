@@ -2,20 +2,14 @@ package org.moera.node.model.notification;
 
 import java.util.List;
 import java.util.UUID;
-import javax.validation.constraints.Size;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public class ReplyCommentAddedNotification extends ReplyCommentNotification {
 
     private String postingHeading;
-
-    @Size(max = 63)
-    private String commentOwnerName;
-
-    @Size(max = 96)
-    private String commentOwnerFullName;
 
     private String commentHeading;
 
@@ -26,12 +20,12 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
     }
 
     public ReplyCommentAddedNotification(UUID postingId, UUID commentId, UUID repliedToId, String postingHeading,
-                                         String commentOwnerName, String commentOwnerFullName, String commentHeading,
+                                         String commentOwnerName, String commentOwnerFullName,
+                                         AvatarImage commentOwnerAvatar, String commentHeading,
                                          String repliedToHeading) {
-        super(NotificationType.REPLY_COMMENT_ADDED, postingId, commentId, repliedToId);
+        super(NotificationType.REPLY_COMMENT_ADDED, postingId, commentId, repliedToId, commentOwnerName,
+                commentOwnerFullName, commentOwnerAvatar);
         this.postingHeading = postingHeading;
-        this.commentOwnerName = commentOwnerName;
-        this.commentOwnerFullName = commentOwnerFullName;
         this.commentHeading = commentHeading;
         this.repliedToHeading = repliedToHeading;
     }
@@ -42,22 +36,6 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
 
     public void setPostingHeading(String postingHeading) {
         this.postingHeading = postingHeading;
-    }
-
-    public String getCommentOwnerName() {
-        return commentOwnerName;
-    }
-
-    public void setCommentOwnerName(String commentOwnerName) {
-        this.commentOwnerName = commentOwnerName;
-    }
-
-    public String getCommentOwnerFullName() {
-        return commentOwnerFullName;
-    }
-
-    public void setCommentOwnerFullName(String commentOwnerFullName) {
-        this.commentOwnerFullName = commentOwnerFullName;
     }
 
     public String getCommentHeading() {
@@ -79,7 +57,6 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("commentOwnerName", LogUtil.format(commentOwnerName)));
         parameters.add(Pair.of("commentHeading", LogUtil.format(commentHeading)));
     }
 

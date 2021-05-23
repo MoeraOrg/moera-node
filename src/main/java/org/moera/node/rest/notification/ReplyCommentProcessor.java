@@ -3,7 +3,10 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.global.RequestContext;
 import org.moera.node.instant.ReplyCommentInstants;
+import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.ReplyCommentAddedNotification;
 import org.moera.node.model.notification.ReplyCommentDeletedNotification;
@@ -14,15 +17,29 @@ import org.moera.node.notification.receive.NotificationProcessor;
 public class ReplyCommentProcessor {
 
     @Inject
+    private RequestContext requestContext;
+
+    @Inject
     private ReplyCommentInstants replyCommentInstants;
+
+    @Inject
+    private MediaManager mediaManager;
 
     @NotificationMapping(NotificationType.REPLY_COMMENT_ADDED)
     @Transactional
     public void added(ReplyCommentAddedNotification notification) {
-        replyCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                notification.getPostingId(), notification.getCommentId(), notification.getRepliedToId(),
-                notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
-                notification.getPostingHeading(), notification.getRepliedToHeading());
+        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
+                new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
+                requestContext.getOptions().getInt("posting.media.max-size"),
+                mediaFiles -> {
+                    notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
+                    replyCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                            notification.getSenderAvatar(), notification.getPostingId(), notification.getCommentId(),
+                            notification.getRepliedToId(),  notification.getCommentOwnerName(),
+                            notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                            notification.getPostingHeading(), notification.getRepliedToHeading());
+                });
     }
 
     @NotificationMapping(NotificationType.REPLY_COMMENT_DELETED)

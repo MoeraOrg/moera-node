@@ -14,6 +14,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -32,9 +33,9 @@ public class ReplyCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String fullName, String postingId, String commentId, String repliedToId,
-                      String commentOwnerName, String commentOwnerFullName, String postingHeading,
-                      String repliedToHeading) {
+    public void added(String nodeName, String fullName, AvatarImage avatar, String postingId, String commentId,
+                      String repliedToId, String commentOwnerName, String commentOwnerFullName,
+                      AvatarImage commentOwnerAvatar, String postingHeading, String repliedToHeading) {
         if (commentOwnerName.equals(nodeName())) {
             return;
         }
@@ -54,6 +55,10 @@ public class ReplyCommentInstants extends InstantsCreator {
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
             story.setRemoteFullName(fullName);
+            if (avatar != null) {
+                story.setRemoteAvatarMediaFile(avatar.getMediaFile());
+                story.setRemoteAvatarShape(avatar.getShape());
+            }
             story.setRemotePostingId(postingId);
             story.setRemoteHeading(postingHeading);
             story.setRemoteRepliedToId(repliedToId);
@@ -65,10 +70,18 @@ public class ReplyCommentInstants extends InstantsCreator {
         Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.REPLY_COMMENT);
         substory.setRemoteNodeName(nodeName);
         substory.setRemoteFullName(fullName);
+        if (avatar != null) {
+            substory.setRemoteAvatarMediaFile(avatar.getMediaFile());
+            substory.setRemoteAvatarShape(avatar.getShape());
+        }
         substory.setRemotePostingId(postingId);
         substory.setRemoteCommentId(commentId);
         substory.setRemoteOwnerName(commentOwnerName);
         substory.setRemoteOwnerFullName(commentOwnerFullName);
+        if (avatar != null) {
+            substory.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
+            substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
+        }
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);

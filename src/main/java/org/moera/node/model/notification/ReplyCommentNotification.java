@@ -3,24 +3,44 @@ package org.moera.node.model.notification;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
+import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public abstract class ReplyCommentNotification extends Notification {
 
     private String postingId;
+
     private String commentId;
+
     private String repliedToId;
+
+    @Size(max = 63)
+    private String commentOwnerName;
+
+    @Size(max = 96)
+    private String commentOwnerFullName;
+
+    @Valid
+    private AvatarImage commentOwnerAvatar;
 
     protected ReplyCommentNotification(NotificationType type) {
         super(type);
     }
 
-    public ReplyCommentNotification(NotificationType type, UUID postingId, UUID commentId, UUID repliedToId) {
+    public ReplyCommentNotification(NotificationType type, UUID postingId, UUID commentId, UUID repliedToId,
+                                    String commentOwnerName, String commentOwnerFullName,
+                                    AvatarImage commentOwnerAvatar) {
         super(type);
         this.postingId = postingId.toString();
         this.commentId = commentId.toString();
         this.repliedToId = repliedToId.toString();
+        this.commentOwnerName = commentOwnerName;
+        this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerAvatar = commentOwnerAvatar;
     }
 
     public String getPostingId() {
@@ -47,12 +67,37 @@ public abstract class ReplyCommentNotification extends Notification {
         this.repliedToId = repliedToId;
     }
 
+    public String getCommentOwnerName() {
+        return commentOwnerName;
+    }
+
+    public void setCommentOwnerName(String commentOwnerName) {
+        this.commentOwnerName = commentOwnerName;
+    }
+
+    public String getCommentOwnerFullName() {
+        return commentOwnerFullName;
+    }
+
+    public void setCommentOwnerFullName(String commentOwnerFullName) {
+        this.commentOwnerFullName = commentOwnerFullName;
+    }
+
+    public AvatarImage getCommentOwnerAvatar() {
+        return commentOwnerAvatar;
+    }
+
+    public void setCommentOwnerAvatar(AvatarImage commentOwnerAvatar) {
+        this.commentOwnerAvatar = commentOwnerAvatar;
+    }
+
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
         parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
         parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
         parameters.add(Pair.of("repliedToId", LogUtil.format(repliedToId)));
+        parameters.add(Pair.of("commentOwnerName", LogUtil.format(commentOwnerName)));
     }
 
 }
