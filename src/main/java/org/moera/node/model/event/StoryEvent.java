@@ -10,6 +10,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.moera.node.event.EventSubscriber;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 
@@ -29,6 +30,7 @@ public class StoryEvent extends Event {
     private String trackingId;
     private String remoteNodeName;
     private String remoteFullName;
+    private AvatarImage remoteAvatar;
     private String remotePostingId;
     private String remoteCommentId;
     private Map<String, String[]> operations;
@@ -55,6 +57,9 @@ public class StoryEvent extends Event {
         }
         remoteNodeName = story.getRemoteNodeName();
         remoteFullName = story.getRemoteFullName();
+        if (story.getRemoteAvatarMediaFile() != null) {
+            remoteAvatar = new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape());
+        }
         remotePostingId = story.getRemotePostingId();
         remoteCommentId = story.getRemoteCommentId();
         summary = story.getSummary();
@@ -166,6 +171,14 @@ public class StoryEvent extends Event {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public AvatarImage getRemoteAvatar() {
+        return remoteAvatar;
+    }
+
+    public void setRemoteAvatar(AvatarImage remoteAvatar) {
+        this.remoteAvatar = remoteAvatar;
     }
 
     public String getRemotePostingId() {
