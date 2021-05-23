@@ -91,6 +91,10 @@ public class CommentOperations {
             comment.setRepliedToRevision(repliedTo.getCurrentRevision());
             comment.setRepliedToName(repliedTo.getOwnerName());
             comment.setRepliedToFullName(repliedTo.getOwnerFullName());
+            if (repliedTo.getOwnerAvatarMediaFile() != null) {
+                comment.setRepliedToAvatarMediaFile(repliedTo.getOwnerAvatarMediaFile());
+                comment.setRepliedToAvatarShape(repliedTo.getOwnerAvatarShape());
+            }
             comment.setRepliedToHeading(repliedTo.getCurrentRevision().getHeading());
             comment.setRepliedToDigest(repliedTo.getCurrentRevision().getDigest());
         }
