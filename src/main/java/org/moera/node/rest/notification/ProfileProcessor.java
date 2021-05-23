@@ -1,7 +1,6 @@
 package org.moera.node.rest.notification;
 
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
@@ -56,15 +55,21 @@ public class ProfileProcessor {
     }
 
     @NotificationMapping(NotificationType.PROFILE_UPDATED)
-    @Transactional
     public void profileUpdated(ProfileUpdatedNotification notification) {
         validateSubscription(notification);
-        subscriberRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
-                notification.getSenderFullName());
-        subscriptionRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
-                notification.getSenderFullName());
-        contactRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
-                notification.getSenderFullName());
+        try {
+            Transaction.execute(txManager, () -> {
+                subscriberRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
+                        notification.getSenderFullName());
+                subscriptionRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
+                        notification.getSenderFullName());
+                contactRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
+                        notification.getSenderFullName());
+                return null;
+            });
+        } catch (Throwable e) {
+            log.error("Error saving the full name: {}", e.getMessage());
+        }
         universalContext.send(new RemoteNodeFullNameChangedEvent(notification.getSenderNodeName(),
                 notification.getSenderFullName()));
 
