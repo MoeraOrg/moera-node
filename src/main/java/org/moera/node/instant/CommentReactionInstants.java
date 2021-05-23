@@ -55,8 +55,10 @@ public class CommentReactionInstants extends InstantsCreator {
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
             story.setRemoteFullName(fullName);
-            story.setRemoteAvatarMediaFile(avatar.getMediaFile());
-            story.setRemoteAvatarShape(avatar.getShape());
+            if (avatar != null) {
+                story.setRemoteAvatarMediaFile(avatar.getMediaFile());
+                story.setRemoteAvatarShape(avatar.getShape());
+            }
             story.setRemotePostingId(postingId);
             story.setRemoteCommentId(commentId);
             story.setRemoteHeading(commentHeading);
@@ -67,14 +69,18 @@ public class CommentReactionInstants extends InstantsCreator {
         Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setRemoteNodeName(nodeName);
         story.setRemoteFullName(fullName);
-        story.setRemoteAvatarMediaFile(avatar.getMediaFile());
-        story.setRemoteAvatarShape(avatar.getShape());
+        if (avatar != null) {
+            story.setRemoteAvatarMediaFile(avatar.getMediaFile());
+            story.setRemoteAvatarShape(avatar.getShape());
+        }
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
         substory.setRemoteOwnerName(ownerName);
         substory.setRemoteOwnerFullName(ownerFullName);
-        substory.setRemoteOwnerAvatarMediaFile(ownerAvatar.getMediaFile());
-        substory.setRemoteOwnerName(ownerAvatar.getShape());
+        if (ownerAvatar != null) {
+            substory.setRemoteOwnerAvatarMediaFile(ownerAvatar.getMediaFile());
+            substory.setRemoteOwnerName(ownerAvatar.getShape());
+        }
         substory.setSummary(buildSummary(ownerName, ownerFullName, emoji));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);

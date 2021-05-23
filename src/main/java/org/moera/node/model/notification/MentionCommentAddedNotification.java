@@ -2,9 +2,11 @@ package org.moera.node.model.notification;
 
 import java.util.List;
 import java.util.UUID;
+import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public class MentionCommentAddedNotification extends MentionCommentNotification {
@@ -17,6 +19,9 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     @Size(max = 96)
     private String commentOwnerFullName;
 
+    @Valid
+    private AvatarImage commentOwnerAvatar;
+
     private String commentHeading;
 
     public MentionCommentAddedNotification() {
@@ -25,11 +30,12 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
 
     public MentionCommentAddedNotification(UUID postingId, UUID commentId, String postingHeading,
                                            String commentOwnerName, String commentOwnerFullName,
-                                           String commentHeading) {
+                                           AvatarImage commentOwnerAvatar, String commentHeading) {
         super(NotificationType.MENTION_COMMENT_ADDED, postingId, commentId);
         this.postingHeading = postingHeading;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentHeading = commentHeading;
     }
 
@@ -55,6 +61,14 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
 
     public void setCommentOwnerFullName(String commentOwnerFullName) {
         this.commentOwnerFullName = commentOwnerFullName;
+    }
+
+    public AvatarImage getCommentOwnerAvatar() {
+        return commentOwnerAvatar;
+    }
+
+    public void setCommentOwnerAvatar(AvatarImage commentOwnerAvatar) {
+        this.commentOwnerAvatar = commentOwnerAvatar;
     }
 
     public String getCommentHeading() {

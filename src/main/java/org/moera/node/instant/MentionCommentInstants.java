@@ -7,6 +7,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.operations.StoryOperations;
@@ -22,9 +23,9 @@ public class MentionCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String remoteNodeName, String remoteFullName, String remotePostingId, String remotePostingHeading,
-                      String remoteOwnerName, String remoteOwnerFullName, String remoteCommentId,
-                      String remoteCommentHeading) {
+    public void added(String remoteNodeName, String remoteFullName, AvatarImage remoteAvatar, String remotePostingId,
+                      String remotePostingHeading, String remoteOwnerName, String remoteOwnerFullName,
+                      AvatarImage remoteOwnerAvatar, String remoteCommentId, String remoteCommentHeading) {
         Story story = findStory(remoteNodeName, remotePostingId, remoteCommentId);
         if (story != null) {
             return;
@@ -33,9 +34,17 @@ public class MentionCommentInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(remoteFullName);
+        if (remoteAvatar != null) {
+            story.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
+            story.setRemoteAvatarShape(remoteAvatar.getShape());
+        }
         story.setRemotePostingId(remotePostingId);
         story.setRemoteOwnerName(remoteOwnerName);
         story.setRemoteOwnerFullName(remoteOwnerFullName);
+        if (remoteOwnerAvatar != null) {
+            story.setRemoteOwnerAvatarMediaFile(remoteOwnerAvatar.getMediaFile());
+            story.setRemoteOwnerAvatarShape(remoteOwnerAvatar.getShape());
+        }
         story.setRemoteCommentId(remoteCommentId);
         story.setSummary(buildSummary(story, remotePostingHeading, remoteCommentHeading));
         storyOperations.updateMoment(story);
