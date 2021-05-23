@@ -3,6 +3,8 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.Avatar;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.option.Options;
 import org.springframework.data.util.Pair;
 
@@ -12,17 +14,21 @@ public class NodeNameChangedEvent extends Event {
     private String fullName;
     private String gender;
     private String title;
+    private AvatarImage avatar;
 
     public NodeNameChangedEvent() {
         super(EventType.NODE_NAME_CHANGED);
     }
 
-    public NodeNameChangedEvent(String name, Options options) {
+    public NodeNameChangedEvent(String name, Options options, Avatar avatar) {
         this();
         this.name = name;
         fullName = options.getString("profile.full-name");
         gender = options.getString("profile.gender");
         title = options.getString("profile.title");
+        if (avatar != null) {
+            this.avatar = new AvatarImage(avatar);
+        }
     }
 
     public String getName() {
@@ -57,6 +63,14 @@ public class NodeNameChangedEvent extends Event {
         this.title = title;
     }
 
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
+    }
+
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
@@ -64,6 +78,7 @@ public class NodeNameChangedEvent extends Event {
         parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
         parameters.add(Pair.of("gender", LogUtil.format(gender)));
         parameters.add(Pair.of("title", LogUtil.format(title)));
+        parameters.add(Pair.of("avatar", avatar != null ? avatar.toLogString() : "null"));
     }
 
 }

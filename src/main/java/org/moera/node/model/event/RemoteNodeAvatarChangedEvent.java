@@ -41,7 +41,7 @@ public class RemoteNodeAvatarChangedEvent extends Event {
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
         parameters.add(Pair.of("name", LogUtil.format(name)));
-        parameters.add(Pair.of("avatar", avatar.toLogString()));
+        parameters.add(Pair.of("avatar", avatar != null ? avatar.toLogString() : "null"));
     }
 
 }
