@@ -10,6 +10,8 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.PostingInstants;
 import org.moera.node.instant.RemoteCommentInstants;
+import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.PostingCommentAddedNotification;
@@ -37,6 +39,9 @@ public class RemotePostingProcessor {
     @Inject
     private PostingInstants postingInstants;
 
+    @Inject
+    private MediaManager mediaManager;
+
     private Subscription getSubscription(PostingSubscriberNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
                 requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
@@ -58,10 +63,18 @@ public class RemotePostingProcessor {
                 return; // We should receive another notification about somebody replied to our comment
             }
         }
-        remoteCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                notification.getPostingId(), notification.getPostingHeading(), notification.getCommentOwnerName(),
-                notification.getCommentOwnerFullName(), notification.getCommentId(), notification.getCommentHeading(),
-                subscription.getReason());
+        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
+                new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
+                requestContext.getOptions().getInt("posting.media.max-size"),
+                mediaFiles -> {
+                    notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
+                    remoteCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                            notification.getSenderAvatar(), notification.getPostingId(),
+                            notification.getPostingHeading(), notification.getCommentOwnerName(),
+                            notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                            notification.getCommentId(), notification.getCommentHeading(), subscription.getReason());
+                });
     }
 
     @NotificationMapping(NotificationType.POSTING_COMMENT_DELETED)

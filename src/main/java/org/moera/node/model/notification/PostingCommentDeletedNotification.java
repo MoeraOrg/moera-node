@@ -2,6 +2,8 @@ package org.moera.node.model.notification;
 
 import java.util.UUID;
 
+import org.moera.node.model.AvatarImage;
+
 public class PostingCommentDeletedNotification extends PostingCommentNotification {
 
     public PostingCommentDeletedNotification() {
@@ -9,8 +11,9 @@ public class PostingCommentDeletedNotification extends PostingCommentNotificatio
     }
 
     public PostingCommentDeletedNotification(UUID postingId, UUID commentId, String commentOwnerName,
-                                             String commentOwnerFullName) {
-        super(NotificationType.POSTING_COMMENT_DELETED, postingId, commentId, commentOwnerName, commentOwnerFullName);
+                                             String commentOwnerFullName, AvatarImage commentOwnerAvatar) {
+        super(NotificationType.POSTING_COMMENT_DELETED, postingId, commentId, commentOwnerName, commentOwnerFullName,
+                commentOwnerAvatar);
     }
 
 }

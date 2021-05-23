@@ -15,6 +15,7 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.SubscriptionReason;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
@@ -33,9 +34,10 @@ public class RemoteCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String remoteNodeName, String remoteFullName, String remotePostingId, String remotePostingHeading,
-                      String remoteOwnerName, String remoteOwnerFullName, String remoteCommentId,
-                      String remoteCommentHeading, SubscriptionReason reason) {
+    public void added(String remoteNodeName, String remoteFullName, AvatarImage remoteAvatar, String remotePostingId,
+                      String remotePostingHeading, String remoteOwnerName, String remoteOwnerFullName,
+                      AvatarImage remoteOwnerAvatar, String remoteCommentId, String remoteCommentHeading,
+                      SubscriptionReason reason) {
         if (remoteOwnerName.equals(nodeName())) {
             return;
         }
@@ -56,6 +58,10 @@ public class RemoteCommentInstants extends InstantsCreator {
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(remoteNodeName);
             story.setRemoteFullName(remoteFullName);
+            if (remoteAvatar != null) {
+                story.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
+                story.setRemoteAvatarShape(remoteAvatar.getShape());
+            }
             story.setRemotePostingId(remotePostingId);
             story.setRemoteHeading(remotePostingHeading);
             story.setMoment(0L);
@@ -65,9 +71,17 @@ public class RemoteCommentInstants extends InstantsCreator {
         Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
         substory.setRemoteNodeName(remoteNodeName);
         substory.setRemoteFullName(remoteFullName);
+        if (remoteAvatar != null) {
+            substory.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
+            substory.setRemoteAvatarShape(remoteAvatar.getShape());
+        }
         substory.setRemotePostingId(remotePostingId);
         substory.setRemoteOwnerName(remoteOwnerName);
         substory.setRemoteOwnerFullName(remoteOwnerFullName);
+        if (remoteOwnerAvatar != null) {
+            substory.setRemoteOwnerAvatarMediaFile(remoteOwnerAvatar.getMediaFile());
+            substory.setRemoteOwnerAvatarShape(remoteOwnerAvatar.getShape());
+        }
         substory.setRemoteCommentId(remoteCommentId);
         substory.setRemoteHeading(remoteCommentHeading);
         substory.setMoment(0L);
@@ -111,6 +125,8 @@ public class RemoteCommentInstants extends InstantsCreator {
         story.setSummary(buildAddedSummary(story, stories, reason));
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
+        story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
+        story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
         story.setRemoteCommentId(stories.get(0).getRemoteCommentId());
         story.setPublishedAt(Util.now());
         if (isAdded) {

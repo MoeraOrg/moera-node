@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public class PostingCommentAddedNotification extends PostingCommentNotification {
@@ -18,9 +19,11 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
     }
 
     public PostingCommentAddedNotification(UUID postingId, String postingHeading, UUID commentId,
-                                           String commentOwnerName, String commentOwnerFullName, String commentHeading,
+                                           String commentOwnerName, String commentOwnerFullName,
+                                           AvatarImage commentOwnerAvatar, String commentHeading,
                                            UUID commentRepliedTo) {
-        super(NotificationType.POSTING_COMMENT_ADDED, postingId, commentId, commentOwnerName, commentOwnerFullName);
+        super(NotificationType.POSTING_COMMENT_ADDED, postingId, commentId, commentOwnerName, commentOwnerFullName,
+                commentOwnerAvatar);
         this.postingHeading = postingHeading;
         this.commentHeading = commentHeading;
         this.commentRepliedTo = Objects.toString(commentRepliedTo, null);

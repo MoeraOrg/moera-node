@@ -41,6 +41,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
@@ -194,6 +195,7 @@ public class CommentController {
             requestContext.send(Directions.postingCommentsSubscribers(posting.getId()),
                     new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
                             comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                             comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
@@ -249,6 +251,7 @@ public class CommentController {
                     new PostingCommentAddedNotification(postingId,
                             comment.getPosting().getCurrentRevision().getHeading(), comment.getId(),
                             comment.getOwnerName(), comment.getOwnerFullName(),
+                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                             comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
@@ -462,8 +465,9 @@ public class CommentController {
         }
         commentInstants.deleted(comment);
         requestContext.send(Directions.postingCommentsSubscribers(postingId),
-                new PostingCommentDeletedNotification(
-                        postingId, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName()));
+                new PostingCommentDeletedNotification(postingId, comment.getId(), comment.getOwnerName(),
+                        comment.getOwnerFullName(),
+                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
         requestContext.send(new CommentDeletedEvent(comment));
 
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());
