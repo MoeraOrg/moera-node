@@ -9,6 +9,7 @@ import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.event.RemoteNodeAvatarChangedEvent;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,8 @@ public class RemoteAvatarDownloadTask extends Task {
                     contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
                     return null;
                 });
+                send(new RemoteNodeAvatarChangedEvent(
+                        targetNodeName, new AvatarImage(mediaFile, targetAvatar.getShape())));
             }
             success();
         } catch (Throwable e) {

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 
@@ -18,6 +19,7 @@ public class SubscriptionEvent extends Event {
     private String remoteSubscriberId;
     private String remoteNodeName;
     private String remoteFullName;
+    private AvatarImage remoteAvatar;
     private String remoteFeedName;
     private String remotePostingId;
     private Long createdAt;
@@ -34,6 +36,9 @@ public class SubscriptionEvent extends Event {
         remoteSubscriberId = subscription.getRemoteSubscriberId();
         remoteNodeName = subscription.getRemoteNodeName();
         remoteFullName = subscription.getRemoteFullName();
+        if (subscription.getRemoteAvatarMediaFile() != null) {
+            remoteAvatar = new AvatarImage(subscription.getRemoteAvatarMediaFile(), subscription.getRemoteAvatarShape());
+        }
         remoteFeedName = subscription.getRemoteFeedName();
         remotePostingId = subscription.getRemoteEntryId();
         createdAt = Util.toEpochSecond(subscription.getCreatedAt());
@@ -85,6 +90,14 @@ public class SubscriptionEvent extends Event {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public AvatarImage getRemoteAvatar() {
+        return remoteAvatar;
+    }
+
+    public void setRemoteAvatar(AvatarImage remoteAvatar) {
+        this.remoteAvatar = remoteAvatar;
     }
 
     public String getRemoteFeedName() {

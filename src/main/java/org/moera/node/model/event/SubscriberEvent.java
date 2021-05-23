@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 
@@ -18,6 +19,7 @@ public class SubscriberEvent extends Event {
     private String postingId;
     private String nodeName;
     private String fullName;
+    private AvatarImage avatar;
     private Long createdAt;
 
     public SubscriberEvent(EventType type) {
@@ -35,6 +37,9 @@ public class SubscriberEvent extends Event {
         }
         nodeName = subscriber.getRemoteNodeName();
         fullName = subscriber.getRemoteFullName();
+        if (subscriber.getRemoteAvatarMediaFile() != null) {
+            avatar = new AvatarImage(subscriber.getRemoteAvatarMediaFile(), subscriber.getRemoteAvatarShape());
+        }
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
     }
 
@@ -84,6 +89,14 @@ public class SubscriberEvent extends Event {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public AvatarImage getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarImage avatar) {
+        this.avatar = avatar;
     }
 
     public Long getCreatedAt() {
