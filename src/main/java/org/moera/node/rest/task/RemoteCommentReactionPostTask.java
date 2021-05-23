@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.data.MediaFile;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.fingerprint.ReactionFingerprint;
@@ -51,7 +52,19 @@ public class RemoteCommentReactionPostTask extends Task {
         try {
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             commentInfo = nodeApi.getComment(targetNodeName, postingId, commentId);
+            if (commentInfo.getOwnerAvatar() != null) {
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, commentInfo.getOwnerAvatar(),
+                        getOptions().getInt("posting.media.max-size"));
+                commentInfo.getOwnerAvatar().setMediaFile(mediaFile);
+            }
+
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            if (postingInfo.getOwnerAvatar() != null) {
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
+                        getOptions().getInt("posting.media.max-size"));
+                postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
+            }
+
             if (!commentInfo.getPostingRevisionId().equals(postingInfo.getRevisionId())) {
                 postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, postingId,
                         commentInfo.getPostingRevisionId());

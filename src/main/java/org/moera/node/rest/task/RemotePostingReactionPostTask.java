@@ -62,6 +62,11 @@ public class RemotePostingReactionPostTask extends Task {
                     getOptions().getInt("posting.media.max-size"));
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            if (postingInfo.getOwnerAvatar() != null) {
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
+                        getOptions().getInt("posting.media.max-size"));
+                postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
+            }
             ReactionCreated created = nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo));
             saveReaction(created.getReaction());
             success(created);

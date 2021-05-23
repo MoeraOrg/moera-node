@@ -75,6 +75,12 @@ public class RemoteCommentPostTask extends Task {
                     getOptions().getInt("posting.media.max-size"));
 
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            if (postingInfo.getOwnerAvatar() != null) {
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
+                        getOptions().getInt("posting.media.max-size"));
+                postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
+            }
+
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName),
                     sourceText.getOwnerAvatarMediaFile());
 

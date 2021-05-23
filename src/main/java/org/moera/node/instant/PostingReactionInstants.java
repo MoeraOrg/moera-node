@@ -16,6 +16,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
@@ -59,6 +60,8 @@ public class PostingReactionInstants extends InstantsCreator {
         substory.setEntry(posting);
         substory.setRemoteOwnerName(reaction.getOwnerName());
         substory.setRemoteOwnerFullName(reaction.getOwnerFullName());
+        substory.setRemoteOwnerAvatarMediaFile(reaction.getOwnerAvatarMediaFile());
+        substory.setRemoteOwnerAvatarShape(reaction.getOwnerAvatarShape());
         substory.setSummary(buildSummary(reaction));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
@@ -150,12 +153,17 @@ public class PostingReactionInstants extends InstantsCreator {
     public void addingFailed(String postingId, PostingInfo postingInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
         story.setRemoteFullName(postingOwnerFullName);
+        if (postingOwnerAvatar != null) {
+            story.setRemoteOwnerAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemoteOwnerAvatarShape(postingOwnerAvatar.getShape());
+        }
         story.setRemotePostingId(postingId);
         story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
         story.setPublishedAt(Util.now());

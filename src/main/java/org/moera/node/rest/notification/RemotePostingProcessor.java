@@ -88,9 +88,16 @@ public class RemotePostingProcessor {
     @NotificationMapping(NotificationType.POSTING_IMPORTANT_UPDATE)
     @Transactional
     public void postingUpdated(PostingImportantUpdateNotification notification) {
-        Subscription subscription = getSubscription(notification);
-        postingInstants.updated(notification.getSenderNodeName(), notification.getSenderFullName(),
-                notification.getPostingId(), notification.getPostingHeading(), notification.getDescription());
+        getSubscription(notification);
+        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
+                new AvatarImage[] {notification.getSenderAvatar()},
+                requestContext.getOptions().getInt("posting.media.max-size"),
+                mediaFiles -> {
+                    notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    postingInstants.updated(notification.getSenderNodeName(), notification.getSenderFullName(),
+                            notification.getSenderAvatar(), notification.getPostingId(),
+                            notification.getPostingHeading(), notification.getDescription());
+                });
     }
 
 }

@@ -180,18 +180,28 @@ public class CommentReactionInstants extends InstantsCreator {
     public void addingFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
         String commentOwnerName = commentInfo != null ? commentInfo.getOwnerName() : "";
         String commentOwnerFullName = commentInfo != null ? commentInfo.getOwnerFullName() : null;
+        AvatarImage commentOwnerAvatar = commentInfo != null ? commentInfo.getOwnerAvatar() : null;
         String commentHeading = commentInfo != null ? commentInfo.getHeading() : "";
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
         story.setRemoteFullName(postingOwnerFullName);
+        if (postingOwnerAvatar != null) {
+            story.setRemoteAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemoteAvatarShape(postingOwnerAvatar.getShape());
+        }
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
         story.setRemoteOwnerFullName(commentOwnerFullName);
+        if (commentOwnerAvatar != null) {
+            story.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
+            story.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
+        }
         story.setRemoteCommentId(commentId);
         story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading,
                 commentOwnerName, commentOwnerFullName, commentHeading));

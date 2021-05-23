@@ -97,6 +97,11 @@ public class RemotePostingCommentsSubscribeTask extends Task {
         PostingInfo postingInfo = null;
         try {
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            if (postingInfo.getOwnerAvatar() != null) {
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
+                        getOptions().getInt("posting.media.max-size"));
+                postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
+            }
         } catch (Exception ex) {
             // ignore
         }

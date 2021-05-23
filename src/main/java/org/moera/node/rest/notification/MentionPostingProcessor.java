@@ -4,7 +4,10 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.SubscriptionReason;
+import org.moera.node.global.RequestContext;
 import org.moera.node.instant.MentionPostingInstants;
+import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.NotificationType;
@@ -19,6 +22,9 @@ import org.springframework.core.task.TaskExecutor;
 public class MentionPostingProcessor {
 
     @Inject
+    private RequestContext requestContext;
+
+    @Inject
     private MentionPostingInstants mentionPostingInstants;
 
     @Inject
@@ -28,11 +34,20 @@ public class MentionPostingProcessor {
     @Qualifier("remoteTaskExecutor")
     private TaskExecutor taskExecutor;
 
+    @Inject
+    private MediaManager mediaManager;
+
     @NotificationMapping(NotificationType.MENTION_POSTING_ADDED)
     @Transactional
     public void added(MentionPostingAddedNotification notification) {
-        mentionPostingInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                notification.getPostingId(), notification.getHeading());
+        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
+                new AvatarImage[] {notification.getSenderAvatar()},
+                requestContext.getOptions().getInt("posting.media.max-size"),
+                mediaFiles -> {
+                    notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    mentionPostingInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
+                            notification.getSenderAvatar(), notification.getPostingId(), notification.getHeading());
+                });
         var task = new RemotePostingCommentsSubscribeTask(
                 notification.getSenderNodeName(), notification.getPostingId(), SubscriptionReason.MENTION);
         taskAutowire.autowire(task);
