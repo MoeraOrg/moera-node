@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
@@ -17,6 +18,7 @@ import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.WhoAmI;
 import org.moera.node.model.event.RemoteReactionAddedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
@@ -28,7 +30,8 @@ public class RemotePostingReactionPostTask extends Task {
     private static Logger log = LoggerFactory.getLogger(RemotePostingReactionPostTask.class);
 
     private String targetNodeName;
-    private String targetFullName;
+    private WhoAmI target;
+    private MediaFile targetAvatarMediaFile;
     private String postingId;
     private ReactionAttributes attributes;
     private PostingInfo postingInfo;
@@ -54,7 +57,9 @@ public class RemotePostingReactionPostTask extends Task {
     @Override
     protected void execute() {
         try {
-            targetFullName = nodeApi.whoAmI(targetNodeName).getFullName();
+            target = nodeApi.whoAmI(targetNodeName);
+            targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
+                    getOptions().getInt("posting.media.max-size"));
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             ReactionCreated created = nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo));
@@ -85,7 +90,11 @@ public class RemotePostingReactionPostTask extends Task {
                     ownReaction.setId(UUID.randomUUID());
                     ownReaction.setNodeId(nodeId);
                     ownReaction.setRemoteNodeName(targetNodeName);
-                    ownReaction.setRemoteFullName(targetFullName);
+                    ownReaction.setRemoteFullName(target.getFullName());
+                    if (targetAvatarMediaFile != null) {
+                        ownReaction.setRemoteAvatarMediaFile(targetAvatarMediaFile);
+                        ownReaction.setRemoteAvatarShape(target.getAvatar().getShape());
+                    }
                     ownReaction = ownReactionRepository.save(ownReaction);
                     contactOperations.updateCloseness(nodeId, targetNodeName, 0.25f);
                 }
