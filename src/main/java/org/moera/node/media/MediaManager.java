@@ -78,30 +78,39 @@ public class MediaManager {
         return downloadPublicMedia(nodeName, avatarImage.getMediaId(), maxSize);
     }
 
-    public void asyncDownloadPublicMedia(String nodeName, String id, int maxSize, Consumer<MediaFile> callback) {
-        if (id == null) {
+    public void asyncDownloadPublicMedia(String nodeName, AvatarImage[] avatarImages, int maxSize,
+                                         Consumer<MediaFile[]> callback) {
+        if (avatarImages == null) {
             callback.accept(null);
             return;
         }
 
-        /*MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
-        if (mediaFile != null && mediaFile.isExposed()) {
-            callback.accept(mediaFile);
-            return;
-        }*/
+        String[] ids = new String[avatarImages.length];
+        MediaFile[] mediaFiles = new MediaFile[avatarImages.length];
 
-        var downloadTask = new PublicMediaDownloadTask(nodeName, id, maxSize, callback);
+        boolean all = true;
+        for (int i = 0; i < avatarImages.length; i++) {
+            ids[i] = avatarImages[i] != null ? avatarImages[i].getMediaId() : null;
+            if (ids[i] == null) {
+                mediaFiles[i] = null;
+                continue;
+            }
+            MediaFile mediaFile = mediaFileRepository.findById(ids[i]).orElse(null);
+            if (mediaFile != null && mediaFile.isExposed()) {
+                mediaFiles[i] = mediaFile;
+                continue;
+            }
+            all = false;
+        }
+
+        if (all) {
+            callback.accept(mediaFiles);
+            return;
+        }
+
+        var downloadTask = new PublicMediaDownloadTask(nodeName, ids, mediaFiles, maxSize, callback);
         taskAutowire.autowire(downloadTask);
         taskExecutor.execute(downloadTask);
-    }
-
-    public void asyncDownloadPublicMedia(String nodeName, AvatarImage avatarImage, int maxSize,
-                                         Consumer<MediaFile> callback) {
-        if (avatarImage == null) {
-            callback.accept(null);
-            return;
-        }
-        asyncDownloadPublicMedia(nodeName, avatarImage.getMediaId(), maxSize, callback);
     }
 
     public void uploadPublicMedia(String nodeName, String carte, MediaFile mediaFile) throws NodeApiException {

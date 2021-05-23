@@ -14,36 +14,46 @@ public class PublicMediaDownloadTask extends Task {
     private static Logger log = LoggerFactory.getLogger(PublicMediaDownloadTask.class);
 
     private String targetNodeName;
-    private String mediaId;
+    private String[] mediaIds;
+    private MediaFile[] mediaFiles;
     private int maxSize;
-    private Consumer<MediaFile> callback;
+    private Consumer<MediaFile[]> callback;
 
     @Inject
     private MediaManager mediaManager;
 
-    public PublicMediaDownloadTask(String targetNodeName, String mediaId, int maxSize, Consumer<MediaFile> callback) {
+    public PublicMediaDownloadTask(String targetNodeName, String[] mediaIds, MediaFile[] mediaFiles, int maxSize,
+                                   Consumer<MediaFile[]> callback) {
         this.targetNodeName = targetNodeName;
-        this.mediaId = mediaId;
+        this.mediaIds = mediaIds;
+        this.mediaFiles = mediaFiles;
         this.maxSize = maxSize;
         this.callback = callback;
     }
 
     @Override
     protected void execute() {
+        String mediaId = null;
         try {
-            MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, mediaId, maxSize);
-            callback.accept(mediaFile);
-            success();
+            for (int i = 0; i < mediaIds.length; i++) {
+                if (mediaIds[i] == null || mediaFiles[i] != null) {
+                    continue;
+                }
+                mediaId = mediaIds[i];
+                mediaFiles[i] = mediaManager.downloadPublicMedia(targetNodeName, mediaId, maxSize);
+                success(mediaId);
+            }
+            callback.accept(mediaFiles);
         } catch (Throwable e) {
-            error(e);
+            error(mediaId, e);
         }
     }
 
-    private void success() {
+    private void success(String mediaId) {
         log.info("Succeeded to download public media {} from node {}", mediaId, targetNodeName);
     }
 
-    private void error(Throwable e) {
+    private void error(String mediaId, Throwable e) {
         if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {

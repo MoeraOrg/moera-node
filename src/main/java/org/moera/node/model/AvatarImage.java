@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
@@ -12,6 +13,9 @@ public class AvatarImage {
     private int height;
     private String shape;
 
+    @JsonIgnore
+    private MediaFile mediaFile;
+
     public AvatarImage() {
     }
 
@@ -20,6 +24,7 @@ public class AvatarImage {
     }
 
     public AvatarImage(MediaFile mediaFile, String shape) {
+        this.mediaFile = mediaFile;
         mediaId = mediaFile.getId();
         path = "public/" + mediaFile.getFileName();
         width = mediaFile.getSizeX();
@@ -65,6 +70,14 @@ public class AvatarImage {
 
     public void setShape(String shape) {
         this.shape = shape;
+    }
+
+    public MediaFile getMediaFile() {
+        return mediaFile;
+    }
+
+    public void setMediaFile(MediaFile mediaFile) {
+        this.mediaFile = mediaFile;
     }
 
     public String toLogString() {

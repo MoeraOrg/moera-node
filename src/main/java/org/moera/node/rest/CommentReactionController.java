@@ -16,6 +16,7 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -110,13 +111,16 @@ public class CommentReactionController {
                 new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
                         comment.getPosting().getCurrentRevision().getHeading(),
                         comment.getCurrentRevision().getHeading(), reaction.getOwnerName(), reaction.getOwnerFullName(),
+                        new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
                         reaction.isNegative(), reaction.getEmoji()));
     }
 
     private void notifyDeleted(Comment comment, Reaction reaction) {
         requestContext.send(Directions.single(comment.getOwnerName()),
                 new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
-                        reaction.getOwnerName(), reaction.getOwnerFullName(), reaction.isNegative()));
+                        reaction.getOwnerName(), reaction.getOwnerFullName(),
+                        new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
+                        reaction.isNegative()));
     }
 
     @GetMapping

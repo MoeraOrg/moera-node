@@ -14,6 +14,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.StoryAddedEvent;
@@ -34,8 +35,9 @@ public class CommentReactionInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String fullName, String postingId, String commentId, String ownerName,
-                      String ownerFullName, String commentHeading, boolean negative, int emoji) {
+    public void added(String nodeName, String fullName, AvatarImage avatar, String postingId, String commentId,
+                      String ownerName, String ownerFullName, AvatarImage ownerAvatar, String commentHeading,
+                      boolean negative, int emoji) {
         if (ownerName.equals(nodeName())) {
             return;
         }
@@ -53,6 +55,8 @@ public class CommentReactionInstants extends InstantsCreator {
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
             story.setRemoteFullName(fullName);
+            story.setRemoteAvatarMediaFile(avatar.getMediaFile());
+            story.setRemoteAvatarShape(avatar.getShape());
             story.setRemotePostingId(postingId);
             story.setRemoteCommentId(commentId);
             story.setRemoteHeading(commentHeading);
@@ -63,10 +67,14 @@ public class CommentReactionInstants extends InstantsCreator {
         Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setRemoteNodeName(nodeName);
         story.setRemoteFullName(fullName);
+        story.setRemoteAvatarMediaFile(avatar.getMediaFile());
+        story.setRemoteAvatarShape(avatar.getShape());
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
         substory.setRemoteOwnerName(ownerName);
         substory.setRemoteOwnerFullName(ownerFullName);
+        substory.setRemoteOwnerAvatarMediaFile(ownerAvatar.getMediaFile());
+        substory.setRemoteOwnerName(ownerAvatar.getShape());
         substory.setSummary(buildSummary(ownerName, ownerFullName, emoji));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);

@@ -68,9 +68,10 @@ public class ProfileProcessor {
         universalContext.send(new RemoteNodeFullNameChangedEvent(notification.getSenderNodeName(),
                 notification.getSenderFullName()));
 
-        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(), notification.getSenderAvatar(),
+        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
+                new AvatarImage[] {notification.getSenderAvatar()},
                 universalContext.getOptions().getInt("posting.media.max-size"),
-                mediaFile -> this.saveAvatar(notification.getSenderNodeName(), mediaFile,
+                mediaFiles -> this.saveAvatar(notification.getSenderNodeName(), mediaFiles[0],
                         notification.getSenderAvatar().getShape()));
     }
 

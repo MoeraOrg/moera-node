@@ -2,9 +2,11 @@ package org.moera.node.model.notification;
 
 import java.util.List;
 import java.util.UUID;
+import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public abstract class CommentReactionNotification extends Notification {
@@ -19,6 +21,9 @@ public abstract class CommentReactionNotification extends Notification {
     @Size(max = 96)
     private String ownerFullName;
 
+    @Valid
+    private AvatarImage ownerAvatar;
+
     private boolean negative;
 
     protected CommentReactionNotification(NotificationType type) {
@@ -26,12 +31,13 @@ public abstract class CommentReactionNotification extends Notification {
     }
 
     public CommentReactionNotification(NotificationType type, UUID postingId, UUID commentId, String ownerName,
-                                       String ownerFullName, boolean negative) {
+                                       String ownerFullName, AvatarImage ownerAvatar, boolean negative) {
         super(type);
         this.postingId = postingId.toString();
         this.commentId = commentId.toString();
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerAvatar = ownerAvatar;
         this.negative = negative;
     }
 
@@ -65,6 +71,14 @@ public abstract class CommentReactionNotification extends Notification {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public AvatarImage getOwnerAvatar() {
+        return ownerAvatar;
+    }
+
+    public void setOwnerAvatar(AvatarImage ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
     }
 
     public boolean isNegative() {
