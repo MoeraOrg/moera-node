@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
 
@@ -64,6 +65,10 @@ public class AvatarImage {
 
     public void setShape(String shape) {
         this.shape = shape;
+    }
+
+    public String toLogString() {
+        return String.format("AvatarImage(path=%s, shape=%s)", LogUtil.format(path), LogUtil.format(shape));
     }
 
 }
