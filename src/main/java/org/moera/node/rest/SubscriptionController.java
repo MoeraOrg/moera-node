@@ -148,7 +148,8 @@ public class SubscriptionController {
         subscription = subscriptionRepository.save(subscription);
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             contactOperations.createOrUpdateCloseness(subscription.getRemoteNodeName(),
-                    subscription.getRemoteFullName(), 1);
+                    subscription.getRemoteFullName(), subscription.getRemoteAvatarMediaFile(),
+                    subscription.getRemoteAvatarShape(), 1);
         } else {
             contactOperations.updateCloseness(subscription.getRemoteNodeName(), 1);
         }

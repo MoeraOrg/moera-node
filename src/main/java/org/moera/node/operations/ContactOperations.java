@@ -12,6 +12,7 @@ import javax.transaction.Transactional;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.SubscriptionRepository;
@@ -41,19 +42,24 @@ public class ContactOperations {
     @Inject
     private CommentRepository commentRepository;
 
-    public void createOrUpdateCloseness(String remoteNodeName, String remoteFullName, float delta) {
+    public void createOrUpdateCloseness(String remoteNodeName, String remoteFullName, MediaFile remoteAvatar,
+                                        String remoteAvatarShape, float delta) {
         createOrUpdateCloseness(requestContext.nodeId(), requestContext.nodeName(), remoteNodeName, remoteFullName,
-                delta);
+                remoteAvatar, remoteAvatarShape, delta);
     }
 
     public void createOrUpdateCloseness(UUID nodeId, String nodeName, String remoteNodeName, String remoteFullName,
-                                        float delta) {
+                                        MediaFile remoteAvatar, String remoteAvatarShape, float delta) {
         if (remoteNodeName == null) {
             return;
         }
         Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
         if (contact != null) {
             contact.setRemoteFullName(remoteFullName);
+            if (remoteAvatar != null) {
+                contact.setRemoteAvatarMediaFile(remoteAvatar);
+                contact.setRemoteAvatarShape(remoteAvatarShape);
+            }
             contact.updateCloseness(delta);
             return;
         }
@@ -62,6 +68,10 @@ public class ContactOperations {
         contact.setNodeId(nodeId);
         contact.setRemoteNodeName(remoteNodeName);
         contact.setRemoteFullName(remoteFullName);
+        if (remoteAvatar != null) {
+            contact.setRemoteAvatarMediaFile(remoteAvatar);
+            contact.setRemoteAvatarShape(remoteAvatarShape);
+        }
         float closeness = 0;
         closeness += subscriptionRepository.countByRemoteNode(nodeId, remoteNodeName);
         closeness += ownCommentRepository.countByRemoteNode(nodeId, remoteNodeName);
