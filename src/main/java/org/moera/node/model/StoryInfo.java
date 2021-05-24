@@ -21,13 +21,13 @@ public class StoryInfo {
     private Long moment;
     private Boolean viewed;
     private Boolean read;
+    private AvatarImage summaryAvatar;
     private String summary;
     private String trackingId;
     private PostingInfo posting;
     private CommentInfo comment;
     private String remoteNodeName;
     private String remoteFullName;
-    private AvatarImage remoteAvatar;
     private String remotePostingId;
     private String remoteCommentId;
     private Map<String, String[]> operations;
@@ -65,6 +65,10 @@ public class StoryInfo {
             case REACTION_ADDED_POSITIVE:
             case REACTION_ADDED_NEGATIVE:
                 info.setPosting(new PostingInfo(story.getEntry().getId()));
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                }
                 break;
 
             case MENTION_POSTING:
@@ -72,7 +76,7 @@ public class StoryInfo {
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 if (story.getRemoteAvatarMediaFile() != null) {
-                    info.setRemoteAvatar(
+                    info.setSummaryAvatar(
                             new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
@@ -83,7 +87,7 @@ public class StoryInfo {
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 if (story.getRemoteAvatarMediaFile() != null) {
-                    info.setRemoteAvatar(
+                    info.setSummaryAvatar(
                             new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
                 }
                 break;
@@ -91,6 +95,10 @@ public class StoryInfo {
             case COMMENT_ADDED:
                 info.setPosting(new PostingInfo(story.getEntry().getId()));
                 info.setRemoteCommentId(story.getRemoteCommentId());
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                }
                 break;
 
             case MENTION_COMMENT:
@@ -100,9 +108,9 @@ public class StoryInfo {
             case REMOTE_COMMENT_ADDED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
-                if (story.getRemoteAvatarMediaFile() != null) {
-                    info.setRemoteAvatar(
-                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
@@ -183,6 +191,14 @@ public class StoryInfo {
         this.read = read;
     }
 
+    public AvatarImage getSummaryAvatar() {
+        return summaryAvatar;
+    }
+
+    public void setSummaryAvatar(AvatarImage summaryAvatar) {
+        this.summaryAvatar = summaryAvatar;
+    }
+
     public String getSummary() {
         return summary;
     }
@@ -229,14 +245,6 @@ public class StoryInfo {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
-    }
-
-    public AvatarImage getRemoteAvatar() {
-        return remoteAvatar;
-    }
-
-    public void setRemoteAvatar(AvatarImage remoteAvatar) {
-        this.remoteAvatar = remoteAvatar;
     }
 
     public String getRemotePostingId() {
