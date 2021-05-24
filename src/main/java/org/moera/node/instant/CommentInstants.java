@@ -101,6 +101,8 @@ public class CommentInstants extends InstantsCreator {
 
         story.setSummary(buildAddedSummary(story, stories));
         story.setRemoteCommentId(stories.get(0).getEntry().getId().toString());
+        story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
+        story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
