@@ -14,7 +14,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface StoryRepository extends JpaRepository<Story, UUID> {
 
-    @Query("select s from Story s where s.nodeId = ?1 and s.id = ?2")
+    @Query("select s from Story s left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
+            + " where s.nodeId = ?1 and s.id = ?2")
     Optional<Story> findByNodeIdAndId(UUID nodeId, UUID id);
 
     @Query("select count(*) from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
@@ -26,7 +27,8 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
             + " order by s.moment desc")
     List<Story> findFullByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
-    @Query("select s from Story s left join fetch s.parent"
+    @Query("select s from Story s left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
+            + " left join fetch s.parent"
             + " where s.nodeId = ?1 and s.parent is not null and s.storyType = ?2 and s.entry.id = ?3"
             + " order by s.moment desc")
     List<Story> findSubsByTypeAndEntryId(UUID nodeId, StoryType storyType, UUID entryId);
@@ -49,7 +51,8 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     void deleteByRemotePostingAndCommentId(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName,
                                            String remotePostingId, String remoteCommentId);
 
-    @Query("select s from Story s left join fetch s.entry e"
+    @Query("select s from Story s left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
+            + " left join fetch s.entry e"
             + " left join fetch e.currentRevision left join fetch e.reactionTotals left join fetch e.sources"
             + " left join fetch e.ownerAvatarMediaFile"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")

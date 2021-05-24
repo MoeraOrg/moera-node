@@ -13,7 +13,9 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
 
-    @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.ownerName = ?2 and r.deletedAt is null")
+    @Query("select r from Reaction r"
+            + " left join fetch r.ownerAvatarMediaFile"
+            + " where r.entryRevision.entry.id = ?1 and r.ownerName = ?2 and r.deletedAt is null")
     Reaction findByEntryIdAndOwner(UUID entryId, String ownerName);
 
     @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.ownerName = ?2"
@@ -24,6 +26,7 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
     List<Reaction> findExpired(Timestamp deadline);
 
     @Query("select r from Reaction r"
+            + " left join fetch r.ownerAvatarMediaFile"
             + " left join fetch r.entryRevision er left join fetch er.entry p left join p.stories s"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4"
             + " and r.ownerName = ?5 and r.deletedAt is null")
@@ -31,6 +34,7 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
                                                String ownerName);
 
     @Query("select r from Reaction r"
+            + " left join fetch r.ownerAvatarMediaFile"
             + " left join fetch r.entryRevision er left join fetch er.entry c"
             + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4"
             + " and r.ownerName = ?5 and r.deletedAt is null")
@@ -40,11 +44,21 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
     @Query("select count(*) from Reaction r where r.entryRevision.entry.id = ?1 and r.moment = ?2")
     int countMoments(UUID entryId, long moment);
 
-    @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.negative = ?2"
+    @Query(value = "select r from Reaction r"
+            + " left join fetch r.ownerAvatarMediaFile"
+            + " where r.entryRevision.entry.id = ?1 and r.negative = ?2"
+            + " and r.moment > ?3 and r.moment <= ?4 and r.deletedAt is null",
+           countQuery = "select count(*) from Reaction r"
+            + " where r.entryRevision.entry.id = ?1 and r.negative = ?2"
             + " and r.moment > ?3 and r.moment <= ?4 and r.deletedAt is null")
     Page<Reaction> findSlice(UUID postingId, boolean negative, long afterMoment, long beforeMoment, Pageable pageable);
 
-    @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.negative = ?2 and r.emoji = ?3"
+    @Query(value = "select r from Reaction r"
+            + " left join fetch r.ownerAvatarMediaFile"
+            + " where r.entryRevision.entry.id = ?1 and r.negative = ?2 and r.emoji = ?3"
+            + " and r.moment > ?4 and r.moment <= ?5 and r.deletedAt is null",
+           countQuery = "select count(*) from Reaction r"
+            + " where r.entryRevision.entry.id = ?1 and r.negative = ?2 and r.emoji = ?3"
             + " and r.moment > ?4 and r.moment <= ?5 and r.deletedAt is null")
     Page<Reaction> findSliceWithEmoji(UUID postingId, boolean negative, int emoji, long afterMoment, long beforeMoment,
                                       Pageable pageable);

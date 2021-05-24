@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface EntrySourceRepository extends JpaRepository<EntrySource, UUID> {
 
-    @Query("select sr from EntrySource sr where sr.entry.id = ?1")
+    @Query("select sr from EntrySource sr left join fetch sr.remoteAvatarMediaFile where sr.entry.id = ?1")
     List<EntrySource> findAllByEntryId(UUID entryId);
 
 }

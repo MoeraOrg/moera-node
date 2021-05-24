@@ -10,23 +10,20 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Contact;
-import org.moera.node.data.ContactRepository;
 import org.moera.node.data.QContact;
+import org.moera.node.data.QMediaFile;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ContactInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +40,7 @@ public class ContactsController {
     private RequestContext requestContext;
 
     @Inject
-    private ContactRepository contactRepository;
+    private EntityManager entityManager;
 
     @GetMapping
     @Admin
@@ -61,6 +58,7 @@ public class ContactsController {
         String[] words = query.split("\\s+");
 
         QContact contact = QContact.contact;
+        QMediaFile mediaFile = QMediaFile.mediaFile;
         BooleanBuilder where = new BooleanBuilder();
         where.and(contact.nodeId.eq(requestContext.nodeId()));
         if (!StringUtils.isEmpty(query)) {
@@ -71,26 +69,34 @@ public class ContactsController {
             }
         }
 
+        var request = new JPAQueryFactory(entityManager)
+                .selectFrom(contact)
+                .leftJoin(contact.remoteAvatarMediaFile, mediaFile)
+                .fetchJoin()
+                .where(where)
+                .orderBy(contact.closeness.desc())
+                .limit(limit);
+
         List<Pattern> regexes = Arrays.stream(words)
                 .map(word -> Pattern.compile("(?:^|\\s)" + Util.re(word), Pattern.CASE_INSENSITIVE))
                 .collect(Collectors.toList());
 
-        Pageable pageable = PageRequest.of(0, limit, Sort.Direction.DESC, "closeness");
+        int offset = 0;
         List<ContactInfo> result = new ArrayList<>();
         while (true) {
-            Page<Contact> page = contactRepository.findAll(where, pageable);
+            List<Contact> page = request.offset(offset).fetch();
             if (page.isEmpty()) {
                 return result;
             }
-            StreamSupport.stream(page.spliterator(), false)
+            page.stream()
                     .filter(ct -> contactMatch(ct, regexes))
                     .limit(limit - result.size())
                     .map(ContactInfo::new)
                     .forEach(result::add);
-            if (page.isLast() || result.size() >= limit) {
+            if (result.size() >= limit) {
                 return result;
             }
-            pageable = pageable.next();
+            offset += page.size();
         }
     }
 

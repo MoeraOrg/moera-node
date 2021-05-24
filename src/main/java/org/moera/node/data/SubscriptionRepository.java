@@ -12,7 +12,8 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 public interface SubscriptionRepository extends JpaRepository<Subscription, UUID>,
         QuerydslPredicateExecutor<Subscription> {
 
-    @Query("select s from Subscription s where s.nodeId = ?1 and s.subscriptionType = ?2")
+    @Query("select s from Subscription s left join fetch s.remoteAvatarMediaFile"
+            + " where s.nodeId = ?1 and s.subscriptionType = ?2")
     List<Subscription> findAllByType(UUID nodeId, SubscriptionType subscriptionType);
 
     @Query("select s from Subscription s where s.nodeId = ?1 and s.subscriptionType = ?2 and s.remoteNodeName = ?3"
@@ -26,7 +27,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     void deleteByTypeAndNodeAndEntryId(UUID nodeId, SubscriptionType subscriptionType,
                                        String remoteNodeName, String remoteEntryId);
 
-    @Query("select s from Subscription s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.remoteEntryId = ?3")
+    @Query("select s from Subscription s left join fetch s.remoteAvatarMediaFile"
+            + " where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.remoteEntryId = ?3")
     List<Subscription> findAllByNodeAndEntryId(UUID nodeId, String remoteNodeName, String remoteEntryId);
 
     @Query("select count(*) from Subscription s where s.nodeId = ?1 and s.subscriptionType = ?2")
@@ -40,7 +42,8 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     int countBySubscriber(UUID nodeId, SubscriptionType subscriptionType, String remoteNodeName,
                           String remoteSubscriberId);
 
-    @Query("select s from Subscription s where s.nodeId = ?1 and s.remoteEntryId in (?2)")
+    @Query("select s from Subscription s left join fetch s.remoteAvatarMediaFile"
+            + " where s.nodeId = ?1 and s.remoteEntryId in (?2)")
     List<Subscription> findAllByRemotePostingIds(UUID nodeId, List<String> remotePostingIds);
 
     @Query("select count(*) from Subscription s where s.nodeId = ?1 and s.remoteNodeName = ?2")

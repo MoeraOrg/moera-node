@@ -12,7 +12,8 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
 public interface SubscriberRepository extends JpaRepository<Subscriber, UUID>, QuerydslPredicateExecutor<Subscriber> {
 
-    @Query("select s from Subscriber s where s.nodeId = ?1 and s.subscriptionType = ?2")
+    @Query("select s from Subscriber s left join fetch s.remoteAvatarMediaFile"
+            + " where s.nodeId = ?1 and s.subscriptionType = ?2")
     List<Subscriber> findAllByType(UUID nodeId, SubscriptionType subscriptionType);
 
     @Query("select count(*) from Subscriber s where s.nodeId = ?1 and s.subscriptionType = ?2")
@@ -22,7 +23,7 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, UUID>, Q
             + " and s.subscriptionType = ?3")
     int countByType(UUID nodeId, String remoteNodeName, SubscriptionType subscriptionType);
 
-    @Query("select s from Subscriber s where s.nodeId = ?1 and s.id = ?2")
+    @Query("select s from Subscriber s left join fetch s.remoteAvatarMediaFile where s.nodeId = ?1 and s.id = ?2")
     Optional<Subscriber> findByNodeIdAndId(UUID nodeId, UUID id);
 
     @Query("select count(*) from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.subscriptionType = ?3"
@@ -39,13 +40,15 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, UUID>, Q
     @Query("select s from Subscriber s where s.nodeId = ?1 and s.subscriptionType = ?2 and s.entry.id = ?3")
     List<Subscriber> findAllByEntryId(UUID nodeId, SubscriptionType subscriptionType, UUID entryId);
 
-    @Query("select s from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.entry.id = ?3")
+    @Query("select s from Subscriber s left join fetch s.remoteAvatarMediaFile"
+            + " where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.entry.id = ?3")
     Set<Subscriber> findByEntryId(UUID nodeId, String remoteNodeName, UUID entryId);
 
     @Query("select s from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.subscriptionType = ?3")
     List<Subscriber> findByType(UUID nodeId, String remoteNodeName, SubscriptionType subscriptionType);
 
-    @Query("select s from Subscriber s where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.entry.id in (?3)")
+    @Query("select s from Subscriber s left join fetch s.remoteAvatarMediaFile"
+            + " where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.entry.id in (?3)")
     List<Subscriber> findAllByPostingIds(UUID nodeId, String remoteNodeName, List<UUID> postingIds);
 
     @Query("update Subscriber s set s.remoteFullName = ?3 where s.nodeId = ?1 and s.remoteNodeName = ?2")
