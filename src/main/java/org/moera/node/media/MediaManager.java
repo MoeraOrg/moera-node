@@ -13,6 +13,7 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.MediaFileInfo;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.ParametrizedLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -40,6 +41,8 @@ public class MediaManager {
     @Inject
     private TaskAutowire taskAutowire;
 
+    private ParametrizedLock<String> mediaFileLocks = new ParametrizedLock<>();
+
     public MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws NodeApiException {
         if (id == null) {
             return null;
@@ -50,22 +53,33 @@ public class MediaManager {
             return mediaFile;
         }
 
-        var tmp = mediaOperations.tmpFile();
+        mediaFileLocks.lock(id);
         try {
-            var tmpMedia = nodeApi.getPublicMedia(nodeName, id, tmp, maxSize);
-            mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath());
-            mediaFile.setExposed(true);
-            mediaFile = mediaFileRepository.save(mediaFile);
-
-            return mediaFile;
-        } catch (IOException e) {
-            throw new NodeApiException(String.format("Error storing public media %s: %s", id, e.getMessage()));
-        } finally {
-            try {
-                Files.deleteIfExists(tmp.getPath());
-            } catch (IOException e) {
-                log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+            // Could appear in meantime
+            mediaFile = mediaFileRepository.findById(id).orElse(null);
+            if (mediaFile != null && mediaFile.isExposed()) {
+                return mediaFile;
             }
+
+            var tmp = mediaOperations.tmpFile();
+            try {
+                var tmpMedia = nodeApi.getPublicMedia(nodeName, id, tmp, maxSize);
+                mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath());
+                mediaFile.setExposed(true);
+                mediaFile = mediaFileRepository.save(mediaFile);
+
+                return mediaFile;
+            } catch (IOException e) {
+                throw new NodeApiException(String.format("Error storing public media %s: %s", id, e.getMessage()));
+            } finally {
+                try {
+                    Files.deleteIfExists(tmp.getPath());
+                } catch (IOException e) {
+                    log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+                }
+            }
+        } finally {
+            mediaFileLocks.unlock(id);
         }
     }
 
