@@ -7,10 +7,10 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
@@ -44,7 +44,7 @@ public class NamingClient {
 
     private static Logger log = LoggerFactory.getLogger(NamingClient.class);
 
-    private Map<String, NamingService> namingServices = new HashMap<>();
+    private Map<String, NamingService> namingServices = new ConcurrentHashMap<>();
 
     @Inject
     private Domains domains;
