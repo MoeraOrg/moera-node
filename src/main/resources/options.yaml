@@ -122,6 +122,15 @@
     min: 1h
     max: 2000d
 
+- name: avatar.max-size
+  type: int
+  privileged: true
+  defaultValue: 51200
+  title: Maximal size of avatars
+  modifiers:
+    min: 10240
+    max: 1048576
+
 - name: posting.max-size
   type: int
   privileged: true

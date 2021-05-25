@@ -75,7 +75,6 @@ public class ProfileProcessor {
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
-                universalContext.getOptions().getInt("posting.media.max-size"),
                 mediaFiles -> this.saveAvatar(notification.getSenderNodeName(), mediaFiles[0],
                         notification.getSenderAvatar().getShape()));
     }

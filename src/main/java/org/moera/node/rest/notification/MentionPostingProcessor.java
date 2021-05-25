@@ -4,7 +4,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.SubscriptionReason;
-import org.moera.node.global.RequestContext;
 import org.moera.node.instant.MentionPostingInstants;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
@@ -20,9 +19,6 @@ import org.springframework.core.task.TaskExecutor;
 
 @NotificationProcessor
 public class MentionPostingProcessor {
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private MentionPostingInstants mentionPostingInstants;
@@ -42,7 +38,6 @@ public class MentionPostingProcessor {
     public void added(MentionPostingAddedNotification notification) {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
-                requestContext.getOptions().getInt("posting.media.max-size"),
                 mediaFiles -> {
                     notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
                     mentionPostingInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),

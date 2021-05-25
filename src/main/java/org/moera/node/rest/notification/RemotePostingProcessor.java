@@ -65,7 +65,6 @@ public class RemotePostingProcessor {
         }
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
-                requestContext.getOptions().getInt("posting.media.max-size"),
                 mediaFiles -> {
                     notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
                     notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
@@ -91,7 +90,6 @@ public class RemotePostingProcessor {
         getSubscription(notification);
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
-                requestContext.getOptions().getInt("posting.media.max-size"),
                 mediaFiles -> {
                     notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
                     postingInstants.updated(notification.getSenderNodeName(), notification.getSenderFullName(),

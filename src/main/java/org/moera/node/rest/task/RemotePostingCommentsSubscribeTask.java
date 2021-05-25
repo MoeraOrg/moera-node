@@ -53,8 +53,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             }
 
             WhoAmI target = nodeApi.whoAmI(targetNodeName);
-            MediaFile targetAvatar = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
-                    getOptions().getInt("posting.media.max-size"));
+            MediaFile targetAvatar = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar());
 
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING_COMMENTS,
                     null, postingId, fullName(), getAvatar());
@@ -98,8 +97,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
         try {
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             if (postingInfo.getOwnerAvatar() != null) {
-                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
-                        getOptions().getInt("posting.media.max-size"));
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar());
                 postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
             }
         } catch (Exception ex) {

@@ -3,7 +3,6 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.node.global.RequestContext;
 import org.moera.node.instant.ReplyCommentInstants;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
@@ -17,9 +16,6 @@ import org.moera.node.notification.receive.NotificationProcessor;
 public class ReplyCommentProcessor {
 
     @Inject
-    private RequestContext requestContext;
-
-    @Inject
     private ReplyCommentInstants replyCommentInstants;
 
     @Inject
@@ -30,7 +26,6 @@ public class ReplyCommentProcessor {
     public void added(ReplyCommentAddedNotification notification) {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
-                requestContext.getOptions().getInt("posting.media.max-size"),
                 mediaFiles -> {
                     notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
                     notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);

@@ -71,13 +71,11 @@ public class RemoteCommentPostTask extends Task {
     protected void execute() {
         try {
             target = nodeApi.whoAmI(targetNodeName);
-            targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
-                    getOptions().getInt("posting.media.max-size"));
+            targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar());
 
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             if (postingInfo.getOwnerAvatar() != null) {
-                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
-                        getOptions().getInt("posting.media.max-size"));
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar());
                 postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
             }
 
@@ -114,10 +112,8 @@ public class RemoteCommentPostTask extends Task {
 
             MediaFile repliedToAvatarMediaFile = null;
             if (commentInfo.getRepliedToAvatar() != null) {
-                repliedToAvatarMediaFile = mediaManager.downloadPublicMedia(
-                        targetNodeName,
-                        commentInfo.getRepliedToAvatar(),
-                        getOptions().getInt("posting.media.max-size"));
+                repliedToAvatarMediaFile =
+                        mediaManager.downloadPublicMedia(targetNodeName, commentInfo.getRepliedToAvatar());
             }
 
             saveComment(commentInfo, repliedToAvatarMediaFile);

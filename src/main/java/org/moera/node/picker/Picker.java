@@ -144,8 +144,7 @@ public class Picker extends Task {
     private void fetchNodeDetails() throws NodeApiException {
         WhoAmI remote = nodeApi.whoAmI(remoteNodeName);
         remoteFullName = remote.getFullName();
-        remoteAvatarMediaFile = mediaManager.downloadPublicMedia(remoteNodeName, remote.getAvatar(),
-                getOptions().getInt("posting.media.max-size"));
+        remoteAvatarMediaFile = mediaManager.downloadPublicMedia(remoteNodeName, remote.getAvatar());
         remoteAvatarShape = remote.getAvatar() != null ? remote.getAvatar().getShape() : null;
     }
 
@@ -169,15 +168,13 @@ public class Picker extends Task {
     private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
                                     List<DirectedNotification> notifications) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
-        MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar(),
-                getOptions().getInt("posting.media.max-size"));
+        MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
         String receiverFullName = postingInfo.isOriginal()
                 ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
         MediaFile receiverAvatar = postingInfo.isOriginal()
                 ? ownerAvatar
-                : mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getReceiverAvatar(),
-                                                    getOptions().getInt("posting.media.max-size"));
+                : mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getReceiverAvatar());
         String receiverAvatarShape;
         if (postingInfo.isOriginal()) {
             receiverAvatarShape = postingInfo.getOwnerAvatar() != null

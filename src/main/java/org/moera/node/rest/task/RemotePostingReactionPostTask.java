@@ -58,13 +58,11 @@ public class RemotePostingReactionPostTask extends Task {
     protected void execute() {
         try {
             target = nodeApi.whoAmI(targetNodeName);
-            targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
-                    getOptions().getInt("posting.media.max-size"));
+            targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar());
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             if (postingInfo.getOwnerAvatar() != null) {
-                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
-                        getOptions().getInt("posting.media.max-size"));
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar());
                 postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
             }
             ReactionCreated created = nodeApi.postPostingReaction(targetNodeName, postingId, buildReaction(postingInfo));

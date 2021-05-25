@@ -73,8 +73,7 @@ public class RemoteProfileSubscriptionTask extends Task {
                 nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
 
         WhoAmI target = nodeApi.whoAmI(targetNodeName);
-        MediaFile targetAvatar = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar(),
-                getOptions().getInt("posting.media.max-size"));
+        MediaFile targetAvatar = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar());
 
         Subscription subscription = new Subscription();
         subscription.setId(UUID.randomUUID());

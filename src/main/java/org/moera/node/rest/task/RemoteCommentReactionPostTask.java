@@ -53,15 +53,13 @@ public class RemoteCommentReactionPostTask extends Task {
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             commentInfo = nodeApi.getComment(targetNodeName, postingId, commentId);
             if (commentInfo.getOwnerAvatar() != null) {
-                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, commentInfo.getOwnerAvatar(),
-                        getOptions().getInt("posting.media.max-size"));
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, commentInfo.getOwnerAvatar());
                 commentInfo.getOwnerAvatar().setMediaFile(mediaFile);
             }
 
             postingInfo = nodeApi.getPosting(targetNodeName, postingId);
             if (postingInfo.getOwnerAvatar() != null) {
-                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar(),
-                        getOptions().getInt("posting.media.max-size"));
+                MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar());
                 postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
             }
 

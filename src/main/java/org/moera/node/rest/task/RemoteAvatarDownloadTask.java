@@ -40,8 +40,7 @@ public class RemoteAvatarDownloadTask extends Task {
     protected void execute() {
         try {
             AvatarImage targetAvatar = nodeApi.whoAmI(targetNodeName).getAvatar();
-            MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar,
-                    getOptions().getInt("posting.media.max-size"));
+            MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar);
             if (mediaFile != null) {
                 inTransaction(() -> {
                     subscriberRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());

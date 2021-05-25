@@ -10,6 +10,7 @@ import org.moera.node.api.NodeApiException;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.MediaFileInfo;
 import org.moera.node.task.TaskAutowire;
@@ -24,6 +25,9 @@ import org.springframework.stereotype.Component;
 public class MediaManager {
 
     private static Logger log = LoggerFactory.getLogger(MediaManager.class);
+
+    @Inject
+    private UniversalContext universalContext;
 
     @Inject
     private NodeApi nodeApi;
@@ -83,17 +87,17 @@ public class MediaManager {
         }
     }
 
-    public MediaFile downloadPublicMedia(String nodeName, AvatarImage avatarImage, int maxSize)
+    public MediaFile downloadPublicMedia(String nodeName, AvatarImage avatarImage)
             throws NodeApiException {
 
         if (avatarImage == null) {
             return null;
         }
-        return downloadPublicMedia(nodeName, avatarImage.getMediaId(), maxSize);
+        return downloadPublicMedia(nodeName, avatarImage.getMediaId(),
+                universalContext.getOptions().getInt("avatar.max-size"));
     }
 
-    public void asyncDownloadPublicMedia(String nodeName, AvatarImage[] avatarImages, int maxSize,
-                                         Consumer<MediaFile[]> callback) {
+    public void asyncDownloadPublicMedia(String nodeName, AvatarImage[] avatarImages, Consumer<MediaFile[]> callback) {
         if (avatarImages == null) {
             callback.accept(null);
             return;
@@ -122,7 +126,8 @@ public class MediaManager {
             return;
         }
 
-        var downloadTask = new PublicMediaDownloadTask(nodeName, ids, mediaFiles, maxSize, callback);
+        var downloadTask = new PublicMediaDownloadTask(nodeName, ids, mediaFiles,
+                universalContext.getOptions().getInt("avatar.max-size"), callback);
         taskAutowire.autowire(downloadTask);
         taskExecutor.execute(downloadTask);
     }
