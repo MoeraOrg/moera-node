@@ -23,6 +23,14 @@ public class AvatarImage {
         this(avatar.getMediaFile(), avatar.getShape());
     }
 
+    public AvatarImage(AvatarInfo avatarInfo) {
+        mediaId = avatarInfo.getMediaId();
+        path = avatarInfo.getPath();
+        width = avatarInfo.getWidth();
+        height = avatarInfo.getHeight();
+        shape = avatarInfo.getShape();
+    }
+
     public AvatarImage(MediaFile mediaFile, String shape) {
         this.mediaFile = mediaFile;
         mediaId = mediaFile.getId();

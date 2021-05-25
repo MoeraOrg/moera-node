@@ -11,6 +11,8 @@ import com.github.jknack.handlebars.Options;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
+import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarInfo;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsInfo;
@@ -87,6 +89,29 @@ public class MoeraHelperSource {
             default:
                 return gender;
         }
+    }
+
+    public CharSequence avatar(Object avatar, Object size) {
+        long sz = HelperUtil.intArg(1, size);
+
+        StringBuilder buf = new StringBuilder();
+        buf.append("<img");
+        if (avatar == null) {
+            HelperUtil.appendAttr(buf, "src", "/pics/avatar.png");
+            HelperUtil.appendAttr(buf, "alt", "Avatar placeholder");
+            HelperUtil.appendAttr(buf, "class", "avatar avatar-circle");
+        } else {
+            AvatarImage avatarImage = avatar instanceof AvatarInfo
+                    ? new AvatarImage((AvatarInfo) avatar) : (AvatarImage) avatar;
+
+            HelperUtil.appendAttr(buf, "src", "/moera/media/" + avatarImage.getPath());
+            HelperUtil.appendAttr(buf, "alt", "Avatar");
+            HelperUtil.appendAttr(buf, "class", "avatar avatar-" + avatarImage.getShape());
+        }
+        HelperUtil.appendAttr(buf, "width", sz);
+        HelperUtil.appendAttr(buf, "height", sz);
+        buf.append('>');
+        return new SafeString(buf);
     }
 
     public CharSequence reactions(ReactionsInfo reactionsInfo) {
