@@ -12,6 +12,8 @@ import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndEntryImpl;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.feed.synd.SyndFeedImpl;
+import com.rometools.rome.feed.synd.SyndImage;
+import com.rometools.rome.feed.synd.SyndImageImpl;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
@@ -20,6 +22,7 @@ import org.moera.node.data.PublicPageRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,6 +61,13 @@ public class RssController {
         String title = !StringUtils.isEmpty(name) ? name + " - Moera" : "Moera";
         feed.setTitle(title);
         feed.setLink(rcp.getSiteUrl() + "/");
+        if (rcp.avatarId() != null) {
+            SyndImage image = new SyndImageImpl();
+            image.setTitle(title);
+            image.setUrl(rcp.getSiteUrl() + "/moera/media/" + new AvatarImage(rcp.getAvatar()).getPath());
+            image.setLink(rcp.getSiteUrl() + "/");
+            feed.setImage(image);
+        }
         feed.setDescription(title);
         feed.setLanguage("en-us");
         feed.setPublishedDate(!stories.isEmpty() ? stories.get(0).getCreatedAt() : Util.now());
