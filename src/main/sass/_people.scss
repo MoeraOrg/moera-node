@@ -23,7 +23,6 @@
 
             &:hover {
                 color: var(--gray-dark);
-                border-bottom: solid .25rem var(--gray-dark);
             }
         }
 
@@ -35,6 +34,16 @@
 
         .rest {
             flex: auto;
+        }
+    }
+
+    .person {
+        margin-bottom: .3rem;
+        margin-right: .5rem;
+
+        .avatar {
+            display: inline-block;
+            margin-right: .5rem;
         }
     }
 

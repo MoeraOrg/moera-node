@@ -18,7 +18,8 @@
 
     <div class="row">
         {{#each subscriptions}}
-            <div class="col-md-3 col-sm-4">
+            <div class="person col-sm-4">
+                <a href="/profile" title="Profile">{{avatar remoteAvatar 48}}</a>
                 {{nodename remoteNodeName remoteFullName}}
             </div>
         {{/each}}
