@@ -4,6 +4,7 @@ import javax.inject.Inject;
 
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.NodeNameInfo;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -19,6 +20,7 @@ public class GlobalsControllerAdvice {
     public void session(Model model) {
         if (!requestContext.isRegistrar()) {
             model.addAttribute("nodeName", new NodeNameInfo(requestContext.getPublic()));
+            model.addAttribute("nodeAvatar", new AvatarImage(requestContext.getPublic().getAvatar()));
             model.addAttribute("siteUrl", requestContext.getSiteUrl());
         }
     }
