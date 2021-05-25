@@ -21,9 +21,16 @@
 
 .comment {
     position: relative;
-    margin: 0 1rem .6rem 1rem;
+    margin-bottom: .6rem;
     width: max-content;
-    max-width: calc(100% - 2rem);
+    max-width: 100%;
+    display: flex;
+
+    .details {
+        flex: auto;
+        margin-left: .25rem;
+        max-width: calc(100% - .25rem - 36px);
+    }
 
     .owner {
         margin-left: .3em;
@@ -55,8 +62,9 @@
         padding: .5rem;
         width: max-content;
         min-width: 16rem;
-        max-width: 100%;
+        max-width: calc(100% - 1rem);
         overflow-wrap: break-word;
+        text-align: start;
 
         P:last-child {
             margin-bottom: 0;

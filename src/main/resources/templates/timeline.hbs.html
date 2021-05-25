@@ -21,21 +21,25 @@
             </div>
         {{/if}}
         <div class="owner-line">
-            <span class="owner">
-                {{nodename posting.ownerName posting.ownerFullName}}
-                {{#if posting.receiverName}}
-                    {{#ifne posting.receiverName posting.ownerName}}
-                        &#x25b8; {{nodename posting.receiverName posting.receiverFullName}}
-                    {{/ifne}}
-                {{/if}}
-            </span>
-            <span class="date">
-                <a href="/post/{{posting.id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt
-                                                     fromNow="posting.time.relative"}}</a>
-                {{#ifgt posting.totalRevisions 1}}
-                    (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
-                {{/ifgt}}
-            </span>
+            {{avatar posting.ownerAvatar 48}}
+            <div class="owner-info">
+                <span class="owner">
+                    {{nodename posting.ownerName posting.ownerFullName}}
+                    {{#if posting.receiverName}}
+                        {{#ifne posting.receiverName posting.ownerName}}
+                            &#x25b8; {{nodename posting.receiverName posting.receiverFullName}}
+                        {{/ifne}}
+                    {{/if}}
+                </span>
+                <br/>
+                <span class="date">
+                    <a href="/post/{{posting.id}}">{{cal "dd-MM-yyyy HH:mm" es=publishedAt
+                                                         fromNow="posting.time.relative"}}</a>
+                    {{#ifgt posting.totalRevisions 1}}
+                        (updated {{cal "dd-MM-yyyy HH:mm" es=posting.editedAt fromNow="posting.time.relative"}})
+                    {{/ifgt}}
+                </span>
+            </div>
         </div>
         {{#if posting.bodyPreview.subject}}
             <div class="subject"><a href="/post/{{posting.id}}">{{posting.bodyPreview.subject}}</a></div>
