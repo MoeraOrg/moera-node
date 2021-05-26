@@ -20,7 +20,8 @@ public class GlobalsControllerAdvice {
     public void session(Model model) {
         if (!requestContext.isRegistrar()) {
             model.addAttribute("nodeName", new NodeNameInfo(requestContext.getPublic()));
-            model.addAttribute("nodeAvatar", new AvatarImage(requestContext.getPublic().getAvatar()));
+            model.addAttribute("nodeAvatar", requestContext.getPublic().getAvatar() != null
+                    ? new AvatarImage(requestContext.getPublic().getAvatar()) : null);
             model.addAttribute("siteUrl", requestContext.getSiteUrl());
         }
     }

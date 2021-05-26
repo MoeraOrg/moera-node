@@ -33,10 +33,12 @@ public class AvatarImage {
 
     public AvatarImage(MediaFile mediaFile, String shape) {
         this.mediaFile = mediaFile;
-        mediaId = mediaFile.getId();
-        path = "public/" + mediaFile.getFileName();
-        width = mediaFile.getSizeX();
-        height = mediaFile.getSizeY();
+        if (mediaFile != null) {
+            mediaId = mediaFile.getId();
+            path = "public/" + mediaFile.getFileName();
+            width = mediaFile.getSizeX();
+            height = mediaFile.getSizeY();
+        }
         this.shape = shape;
     }
 
