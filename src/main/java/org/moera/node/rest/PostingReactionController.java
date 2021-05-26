@@ -18,6 +18,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.PostingReactionInstants;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -138,6 +139,7 @@ public class PostingReactionController {
     }
 
     @GetMapping
+    @NoCache
     public ReactionsSliceInfo getAll(
             @PathVariable UUID postingId,
             @RequestParam(defaultValue = "false") boolean negative,

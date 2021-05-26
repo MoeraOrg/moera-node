@@ -15,6 +15,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/revisions/draft")
+@NoCache
 public class PostingDraftRevisionController {
 
     private static Logger log = LoggerFactory.getLogger(PostingDraftRevisionController.class);

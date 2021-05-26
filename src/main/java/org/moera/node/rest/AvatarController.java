@@ -24,6 +24,7 @@ import org.moera.node.data.AvatarRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtils;
@@ -160,6 +161,7 @@ public class AvatarController {
     }
 
     @GetMapping
+    @NoCache
     public List<AvatarInfo> getAll() {
         log.info("GET /avatars");
 

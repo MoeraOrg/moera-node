@@ -12,6 +12,7 @@ import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.RemoteVerificationRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.RemotePostingVerificationInfo;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/async-operations")
+@NoCache
 public class AsyncOperationController {
 
     private static Logger log = LoggerFactory.getLogger(AsyncOperationController.class);

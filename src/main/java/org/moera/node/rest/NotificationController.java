@@ -17,6 +17,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -38,6 +39,7 @@ import org.springframework.web.method.HandlerMethod;
 
 @ApiController
 @RequestMapping("/moera/api/notifications")
+@NoCache
 public class NotificationController {
 
     private static Logger log = LoggerFactory.getLogger(NotificationController.class);

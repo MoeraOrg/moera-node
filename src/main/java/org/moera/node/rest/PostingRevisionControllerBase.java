@@ -13,6 +13,7 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.Entitled;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
@@ -60,6 +61,7 @@ public abstract class PostingRevisionControllerBase {
     protected abstract Event getRestorationEvent(Posting posting);
 
     @GetMapping
+    @NoCache
     public List<PostingRevisionInfo> getAll(@PathVariable UUID postingId,
                                             @RequestParam(required = false) Integer limit) {
         getLog().info("GET {}/{postingId}/revisions (postingId = {}, limit = {})",

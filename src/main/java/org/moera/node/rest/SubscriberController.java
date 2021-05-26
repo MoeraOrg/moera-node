@@ -21,6 +21,7 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.SubscriberInstants;
 import org.moera.node.media.MediaOperations;
@@ -54,6 +55,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/people/subscribers")
+@NoCache
 public class SubscriberController {
 
     private static Logger log = LoggerFactory.getLogger(SubscriberController.class);

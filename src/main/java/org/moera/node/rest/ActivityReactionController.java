@@ -10,6 +10,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ActivityReactionFilter;
 import org.moera.node.model.ActivityReactionInfo;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/activity/reactions")
+@NoCache
 public class ActivityReactionController {
 
     private static Logger log = LoggerFactory.getLogger(ActivityReactionController.class);

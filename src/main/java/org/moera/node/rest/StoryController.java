@@ -10,6 +10,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/stories")
+@NoCache
 public class StoryController {
 
     private static Logger log = LoggerFactory.getLogger(StoryController.class);

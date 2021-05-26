@@ -38,6 +38,7 @@ import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.media.MediaOperations;
@@ -89,6 +90,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/comments")
+@NoCache
 public class CommentController {
 
     private static Logger log = LoggerFactory.getLogger(CommentController.class);

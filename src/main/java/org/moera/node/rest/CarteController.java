@@ -13,6 +13,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CarteInfo;
 import org.moera.node.model.CarteSet;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/cartes")
+@NoCache
 public class CarteController {
 
     private static Logger log = LoggerFactory.getLogger(CarteController.class);

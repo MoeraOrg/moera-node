@@ -16,6 +16,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreated;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/nodes/{nodeName}/postings/{postingId}/comments")
+@NoCache
 public class RemoteCommentController {
 
     private static Logger log = LoggerFactory.getLogger(RemoteCommentController.class);

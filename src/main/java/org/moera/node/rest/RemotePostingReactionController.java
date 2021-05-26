@@ -14,6 +14,7 @@ import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/nodes/{nodeName}/postings/{postingId}/reactions")
+@NoCache
 public class RemotePostingReactionController {
 
     private static Logger log = LoggerFactory.getLogger(RemotePostingReactionController.class);

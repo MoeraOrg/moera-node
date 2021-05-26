@@ -15,6 +15,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -47,6 +48,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/comments/{commentId}/reactions")
+@NoCache
 public class CommentReactionController {
 
     private static Logger log = LoggerFactory.getLogger(CommentReactionController.class);

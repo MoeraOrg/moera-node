@@ -10,6 +10,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.rest.task.RemotePostingVerifyTask;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/nodes/{nodeName}/postings")
+@NoCache
 public class RemotePostingController {
 
     private static Logger log = LoggerFactory.getLogger(RemotePostingController.class);

@@ -17,6 +17,7 @@ import org.moera.node.config.Config;
 import org.moera.node.data.Domain;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.DomainAttributes;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/domains")
+@NoCache
 public class DomainsController {
 
     private static Logger log = LoggerFactory.getLogger(DomainsController.class);

@@ -12,6 +12,7 @@ import org.moera.commons.crypto.Password;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.OperationFailure;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/tokens")
+@NoCache
 public class TokensController {
 
     private static Logger log = LoggerFactory.getLogger(TokensController.class);

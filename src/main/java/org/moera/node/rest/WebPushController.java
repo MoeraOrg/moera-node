@@ -13,6 +13,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.WebPushSubscription;
 import org.moera.node.data.WebPushSubscriptionRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/web-push")
+@NoCache
 public class WebPushController {
 
     private static Logger log = LoggerFactory.getLogger(WebPushController.class);

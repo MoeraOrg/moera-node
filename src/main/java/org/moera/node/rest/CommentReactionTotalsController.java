@@ -7,6 +7,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionTotalsInfo;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/postings/{postingId}/comments/{commentId}/reaction-totals")
+@NoCache
 public class CommentReactionTotalsController {
 
     private static Logger log = LoggerFactory.getLogger(CommentReactionTotalsController.class);

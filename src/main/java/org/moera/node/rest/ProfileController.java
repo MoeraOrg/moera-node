@@ -12,6 +12,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.mail.EmailConfirmMail;
 import org.moera.node.model.ProfileAttributes;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/profile")
+@NoCache
 public class ProfileController {
 
     private static Logger log = LoggerFactory.getLogger(ProfileController.class);

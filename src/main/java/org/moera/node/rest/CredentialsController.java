@@ -13,6 +13,7 @@ import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.PasswordResetToken;
 import org.moera.node.data.PasswordResetTokenRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.mail.PasswordResetMail;
 import org.moera.node.model.Credentials;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/credentials")
+@NoCache
 public class CredentialsController {
 
     private static Logger log = LoggerFactory.getLogger(CredentialsController.class);

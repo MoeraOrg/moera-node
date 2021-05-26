@@ -30,6 +30,7 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedInfo;
@@ -65,6 +66,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/feeds")
+@NoCache
 public class FeedController {
 
     private static Logger log = LoggerFactory.getLogger(FeedController.class);

@@ -12,6 +12,7 @@ import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -41,6 +42,7 @@ public class CommentRevisionController {
     private ReactionTotalOperations reactionTotalOperations;
 
     @GetMapping
+    @NoCache
     public List<CommentRevisionInfo> getAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
         log.info("GET /postings/{postingId}/comments/{commentId}/revisions (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));

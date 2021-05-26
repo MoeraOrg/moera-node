@@ -28,6 +28,7 @@ import org.moera.commons.util.Util;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.NodeNameInfo;
@@ -51,6 +52,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/node-name")
+@NoCache
 public class NodeNameController {
 
     private static Logger log = LoggerFactory.getLogger(NodeNameController.class);

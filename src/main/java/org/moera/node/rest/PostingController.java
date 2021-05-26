@@ -28,6 +28,7 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.BodyMappingException;
@@ -66,6 +67,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/postings")
+@NoCache
 public class PostingController {
 
     private static Logger log = LoggerFactory.getLogger(PostingController.class);

@@ -13,6 +13,7 @@ import javax.validation.Valid;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/settings")
+@NoCache
 public class SettingsController {
 
     private static Logger log = LoggerFactory.getLogger(SettingsController.class);

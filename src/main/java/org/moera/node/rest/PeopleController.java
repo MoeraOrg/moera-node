@@ -6,6 +6,7 @@ import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.PeopleGeneralInfo;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/people")
+@NoCache
 public class PeopleController {
 
     private static Logger log = LoggerFactory.getLogger(PeopleController.class);

@@ -13,6 +13,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.global.NoCache;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -38,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/deleted-postings")
+@NoCache
 public class DeletedPostingController {
 
     private static Logger log = LoggerFactory.getLogger(DeletedPostingController.class);

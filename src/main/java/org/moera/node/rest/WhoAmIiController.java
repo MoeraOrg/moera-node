@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import javax.inject.Inject;
 
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.WhoAmI;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/whoami")
+@NoCache
 public class WhoAmIiController {
 
     private static Logger log = LoggerFactory.getLogger(WhoAmIiController.class);

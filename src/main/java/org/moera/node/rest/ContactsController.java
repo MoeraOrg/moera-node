@@ -20,6 +20,7 @@ import org.moera.node.data.Contact;
 import org.moera.node.data.QContact;
 import org.moera.node.data.QMediaFile;
 import org.moera.node.global.ApiController;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ContactInfo;
 import org.moera.node.model.ValidationFailure;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/people/contacts")
+@NoCache
 public class ContactsController {
 
     public static final int MAX_CONTACTS_PER_REQUEST = 100;
