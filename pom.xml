@@ -5,7 +5,7 @@
 
     <groupId>org.moera</groupId>
     <artifactId>moera-node</artifactId>
-    <version>0.12.0-beta0</version>
+    <version>0.12.0-SNAPSHOT</version>
     <name>moera-node</name>
     <description>Moera node</description>
     <packaging>war</packaging>

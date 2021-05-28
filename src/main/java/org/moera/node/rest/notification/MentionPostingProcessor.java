@@ -39,7 +39,9 @@ public class MentionPostingProcessor {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
                 mediaFiles -> {
-                    notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getSenderAvatar() != null) {
+                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    }
                     mentionPostingInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
                             notification.getSenderAvatar(), notification.getPostingId(), notification.getHeading());
                 });

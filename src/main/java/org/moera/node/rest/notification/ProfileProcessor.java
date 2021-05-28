@@ -76,7 +76,7 @@ public class ProfileProcessor {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
                 mediaFiles -> this.saveAvatar(notification.getSenderNodeName(), mediaFiles[0],
-                        notification.getSenderAvatar().getShape()));
+                        notification.getSenderAvatar() != null ? notification.getSenderAvatar().getShape() : null));
     }
 
     private void saveAvatar(String nodeName, MediaFile mediaFile, String shape) {

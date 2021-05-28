@@ -27,8 +27,12 @@ public class ReplyCommentProcessor {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
                 mediaFiles -> {
-                    notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
-                    notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
+                    if (notification.getSenderAvatar() != null) {
+                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    }
+                    if (notification.getCommentOwnerAvatar() != null) {
+                        notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
+                    }
                     replyCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
                             notification.getSenderAvatar(), notification.getPostingId(), notification.getCommentId(),
                             notification.getRepliedToId(),  notification.getCommentOwnerName(),

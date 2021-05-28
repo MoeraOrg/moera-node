@@ -28,8 +28,12 @@ public class CommentReactionProcessor {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar(), notification.getOwnerAvatar()},
                 mediaFiles -> {
-                    notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
-                    notification.getOwnerAvatar().setMediaFile(mediaFiles[1]);
+                    if (notification.getSenderAvatar() != null) {
+                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    }
+                    if (notification.getOwnerAvatar() != null) {
+                        notification.getOwnerAvatar().setMediaFile(mediaFiles[1]);
+                    }
                     commentReactionInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
                             notification.getSenderAvatar(), notification.getPostingId(), notification.getCommentId(),
                             notification.getOwnerName(), notification.getOwnerFullName(), notification.getOwnerAvatar(),
