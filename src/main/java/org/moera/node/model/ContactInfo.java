@@ -1,7 +1,9 @@
 package org.moera.node.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Contact;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ContactInfo {
 
     private String nodeName;

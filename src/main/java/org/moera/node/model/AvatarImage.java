@@ -1,10 +1,12 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AvatarImage {
 
     private String mediaId;
