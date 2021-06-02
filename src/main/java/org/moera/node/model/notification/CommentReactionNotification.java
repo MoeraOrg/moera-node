@@ -95,6 +95,7 @@ public abstract class CommentReactionNotification extends Notification {
         parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
         parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
         parameters.add(Pair.of("ownerName", LogUtil.format(ownerName)));
+        parameters.add(Pair.of("ownerAvatar", ownerAvatar != null ? ownerAvatar.toLogString() : "null"));
         parameters.add(Pair.of("negative", LogUtil.format(negative)));
     }
 
