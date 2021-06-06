@@ -1,31 +1,29 @@
 package org.moera.node.push;
 
-import java.util.UUID;
-
 public class PushPacket {
 
-    private UUID id;
-    private String text;
+    private long moment;
+    private String content;
 
-    public PushPacket(String text) {
-        id = UUID.randomUUID();
-        this.text = text;
+    public PushPacket(long moment, String content) {
+        this.moment = moment;
+        this.content = content;
     }
 
-    public UUID getId() {
-        return id;
+    public long getMoment() {
+        return moment;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public void setMoment(long moment) {
+        this.moment = moment;
     }
 
-    public String getText() {
-        return text;
+    public String getContent() {
+        return content;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setContent(String content) {
+        this.content = content;
     }
 
 }

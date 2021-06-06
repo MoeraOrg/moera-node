@@ -6,6 +6,7 @@ public class PoolsConfig {
     private int remoteTask = 16;
     private int notificationSender = 64;
     private int picker = 12;
+    private int push = 64;
 
     public int getNaming() {
         return naming;
@@ -37,6 +38,14 @@ public class PoolsConfig {
 
     public void setPicker(int picker) {
         this.picker = picker;
+    }
+
+    public int getPush() {
+        return push;
+    }
+
+    public void setPush(int push) {
+        this.push = push;
     }
 
 }

@@ -1,8 +1,5 @@
 package org.moera.node.rest;
 
-import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
@@ -11,7 +8,6 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.push.PushPacket;
 import org.moera.node.push.PushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,30 +38,15 @@ public class PushController {
     public SseEmitter get(@PathVariable String clientId) {
         log.info("GET /push/{clientId} (clientId = {})", LogUtil.format(clientId));
 
-        UUID nodeId = requestContext.nodeId();
         SseEmitter sseEmitter = new SseEmitter(Long.MAX_VALUE);
-        new Thread(() -> {
-            BlockingQueue<PushPacket> queue = pushService.acquireQueue(nodeId, clientId);
-            try {
-                while (true) {
-                    PushPacket packet = queue.take();
-                    sseEmitter.send(SseEmitter.event().id(packet.getId().toString()).data(packet.getText()));
-                }
-            } catch (InterruptedException e) {
-                sseEmitter.complete();
-            } catch (IOException e) {
-                // just exit
-            } finally {
-                pushService.releaseQueue(nodeId, clientId);
-            }
-        }).start();
+        pushService.register(requestContext.nodeId(), clientId, sseEmitter);
         return sseEmitter;
     }
 
     @Scheduled(fixedDelayString = "PT2S")
     public void ping() {
         for (String domainName : domains.getAllDomainNames()) {
-            pushService.send(domains.getDomainNodeId(domainName), new PushPacket("PING " + domainName));
+            pushService.send(domains.getDomainNodeId(domainName), "PING " + domainName);
         }
     }
 

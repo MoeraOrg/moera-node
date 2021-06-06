@@ -2,32 +2,36 @@ package org.moera.node.push;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.inject.Inject;
 
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Service
 public class PushService {
 
     private final Map<UUID, PushClients> nodeClients = new ConcurrentHashMap<>();
 
-    public BlockingQueue<PushPacket> acquireQueue(UUID nodeId, String clientId) {
-        PushClients clients = nodeClients.computeIfAbsent(nodeId, PushClients::new);
-        return clients.acquireQueue(clientId);
+    @Inject
+    private AutowireCapableBeanFactory autowireCapableBeanFactory;
+
+    public void register(UUID nodeId, String clientId, SseEmitter emitter) {
+        PushClients clients = nodeClients.computeIfAbsent(nodeId, this::createClients);
+        clients.register(clientId, emitter);
     }
 
-    public void releaseQueue(UUID nodeId, String clientId) {
-        PushClients clients = nodeClients.get(nodeId);
-        if (clients != null) {
-            clients.releaseQueue(clientId);
-        }
+    private PushClients createClients(UUID nodeId) {
+        PushClients clients = new PushClients(nodeId);
+        autowireCapableBeanFactory.autowireBean(clients);
+        return clients;
     }
 
-    public void send(UUID nodeId, PushPacket packet) {
+    public void send(UUID nodeId, String content) {
         PushClients clients = nodeClients.get(nodeId);
         if (clients != null) {
-            clients.send(packet);
+            clients.send(content);
         }
     }
 

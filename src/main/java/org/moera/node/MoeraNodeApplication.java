@@ -123,6 +123,11 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         return buildTaskExecutor(config.getPools().getPicker());
     }
 
+    @Bean
+    public TaskExecutor pushTaskExecutor() {
+        return buildTaskExecutor(config.getPools().getPush());
+    }
+
     private TaskExecutor buildTaskExecutor(int size) {
         return new TaskExecutorBuilder().corePoolSize(size).maxPoolSize(size).build();
     }

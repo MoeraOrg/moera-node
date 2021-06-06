@@ -1,86 +1,101 @@
 package org.moera.node.push;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.stream.Collectors;
+import javax.inject.Inject;
 
+import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class PushClients {
 
     private static Logger log = LoggerFactory.getLogger(PushClients.class);
 
     private final UUID nodeId;
-    private final Map<String, PushSource> sources = new HashMap<>();
+    private final Map<String, Pusher> pushers = new HashMap<>();
     private final Object mapLock = new Object();
+    private long lastMoment;
+    private final Object lastMomentLock = new Object();
+
+    @Inject
+    private TaskAutowire taskAutowire;
+
+    @Inject
+    @Qualifier("pushTaskExecutor")
+    private TaskExecutor taskExecutor;
 
     public PushClients(UUID nodeId) {
         this.nodeId = nodeId;
     }
 
-    public BlockingQueue<PushPacket> acquireQueue(String clientId) {
-        log.info("Acquire queue for node {}, client {}", nodeId, clientId);
+    public void register(String clientId, SseEmitter emitter) {
+        log.info("Registering emitter for node {}, client {}", nodeId, clientId);
 
-        PushSource source;
+        Pusher pusher;
         synchronized (mapLock) {
-            source = sources.get(clientId);
-            if (source == null) {
-                source = new PushSource();
-                sources.put(clientId, source);
-            }
-        }
-        if (source.getThread().getId() != Thread.currentThread().getId()) {
-            Thread thread = source.getThread();
-            source.setThread(Thread.currentThread());
-            thread.interrupt();
-        }
-        return source.getQueue();
-    }
-
-    public void releaseQueue(String clientId) {
-        log.info("Release queue for node {}, client {}", nodeId, clientId);
-
-        synchronized (mapLock) {
-            PushSource source = sources.get(clientId);
-            if (source != null && source.getThread().getId() == Thread.currentThread().getId()) {
-                sources.remove(clientId);
+            pusher = pushers.get(clientId);
+            if (pusher == null) {
+                pusher = new Pusher(this, clientId, emitter);
+                taskAutowire.autowireWithoutRequest(pusher, nodeId);
+                pushers.put(clientId, pusher);
+            } else {
+                pusher.replaceEmitter(emitter);
             }
         }
     }
 
-    private void dropQueue(String clientId) {
-        log.info("Drop queue for node {}, client {}", nodeId, clientId);
+    void unregister(String clientId) {
+        log.info("Unregistering emitter for node {}, client {}", nodeId, clientId);
 
-        PushSource source;
         synchronized (mapLock) {
-            source = sources.get(clientId);
-            if (source != null) {
-                sources.remove(clientId);
+            Pusher pusher = pushers.get(clientId);
+            if (pusher != null) {
+                pushers.remove(clientId);
             }
-        }
-        if (source != null) {
-            source.getThread().interrupt();
         }
     }
 
-    public void send(PushPacket packet) {
-        log.info("Send packet {} for node {}", packet.getId(), nodeId);
-
-        List<Pair<String, BlockingQueue<PushPacket>>> clients;
-        synchronized (mapLock) {
-            clients = sources.entrySet().stream()
-                    .map(e -> Pair.of(e.getKey(), e.getValue().getQueue()))
-                    .collect(Collectors.toList());
+    private PushPacket buildPacket(String content) {
+        long moment = Instant.now().getEpochSecond() * 1000;
+        synchronized (lastMomentLock) {
+            if (lastMoment < moment) {
+                lastMoment = moment;
+            } else {
+                lastMoment++;
+                moment = lastMoment;
+            }
         }
-        for (var client : clients) {
-            log.info("Sending to client {}", client.getFirst());
-            if (!client.getSecond().offer(packet)) {
-                dropQueue(client.getFirst());
+
+        log.info("Assigned moment {}", moment);
+
+        return new PushPacket(moment, content);
+    }
+
+    public void send(String content) {
+        log.info("Sending packet for node {}", nodeId);
+
+        PushPacket packet = buildPacket(content);
+        List<Pusher> clients;
+        synchronized (mapLock) {
+            clients = new ArrayList<>(pushers.values());
+        }
+        for (Pusher client : clients) {
+            log.info("Sending to client {}", client.getClientId());
+            if (!client.getQueue().offer(packet)) {
+                unregister(client.getClientId());
+                continue;
+            }
+            if (client.isStopped()) {
+                client.setStopped(false);
+                taskExecutor.execute(client);
             }
         }
     }
