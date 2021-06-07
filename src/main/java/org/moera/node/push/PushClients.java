@@ -6,13 +6,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.data.PushClient;
+import org.moera.node.data.PushClientRepository;
+import org.moera.node.data.PushNotification;
+import org.moera.node.data.PushNotificationRepository;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class PushClients {
@@ -20,10 +29,17 @@ public class PushClients {
     private static Logger log = LoggerFactory.getLogger(PushClients.class);
 
     private final UUID nodeId;
+    private Map<String, PushClient> clients;
     private final Map<String, Pusher> pushers = new HashMap<>();
     private final Object mapLock = new Object();
     private long lastMoment;
     private final Object lastMomentLock = new Object();
+
+    @Inject
+    private PushClientRepository pushClientRepository;
+
+    @Inject
+    private PushNotificationRepository pushNotificationRepository;
 
     @Inject
     private TaskAutowire taskAutowire;
@@ -32,20 +48,29 @@ public class PushClients {
     @Qualifier("pushTaskExecutor")
     private TaskExecutor taskExecutor;
 
+    @Inject
+    private PlatformTransactionManager txManager;
+
     public PushClients(UUID nodeId) {
         this.nodeId = nodeId;
     }
 
-    public void register(String clientId, SseEmitter emitter) {
-        log.info("Registering emitter for node {}, client {}", nodeId, clientId);
+    public void init() {
+        clients = pushClientRepository.findAllByNodeId(nodeId).stream()
+                .collect(Collectors.toMap(PushClient::getClientId, Function.identity()));
+    }
+
+    public void register(PushClient client, SseEmitter emitter) {
+        log.info("Registering emitter for node {}, client {}", nodeId, client.getClientId());
 
         Pusher pusher;
         synchronized (mapLock) {
-            pusher = pushers.get(clientId);
+            clients.putIfAbsent(client.getClientId(), client);
+            pusher = pushers.get(client.getClientId());
             if (pusher == null) {
-                pusher = new Pusher(this, clientId, emitter);
+                pusher = new Pusher(this, client.getClientId(), emitter);
                 taskAutowire.autowireWithoutRequest(pusher, nodeId);
-                pushers.put(clientId, pusher);
+                pushers.put(client.getClientId(), pusher);
             } else {
                 pusher.replaceEmitter(emitter);
             }
@@ -79,10 +104,26 @@ public class PushClients {
         return new PushPacket(moment, content);
     }
 
+    private void storePacket(PushPacket packet) {
+        Transaction.executeQuietly(txManager, () -> {
+            for (PushClient client : clients.values()) {
+                PushNotification pn = new PushNotification();
+                pn.setId(UUID.randomUUID());
+                pn.setPushClient(client);
+                pn.setMoment(packet.getMoment());
+                pn.setContent(packet.getContent());
+                pushNotificationRepository.save(pn);
+            }
+            return null;
+        });
+    }
+
     public void send(String content) {
         log.info("Sending packet for node {}", nodeId);
 
         PushPacket packet = buildPacket(content);
+        storePacket(packet);
+
         List<Pusher> clients;
         synchronized (mapLock) {
             clients = new ArrayList<>(pushers.values());
@@ -98,6 +139,14 @@ public class PushClients {
                 taskExecutor.execute(client);
             }
         }
+    }
+
+    void updateLastSeenAt() {
+        pushers.values().stream()
+                .map(Pusher::getClientId)
+                .map(clients::get)
+                .map(PushClient::getId)
+                .forEach(id -> pushClientRepository.updateLastSeenAt(id, Util.now()));
     }
 
 }
