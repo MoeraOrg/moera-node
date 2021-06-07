@@ -16,7 +16,9 @@ public class Transaction {
             result = inside.call();
             commitTransaction(txManager, status);
         } catch (Throwable e) {
-            rollbackTransaction(txManager, status);
+            if (!status.isCompleted()) {
+                rollbackTransaction(txManager, status);
+            }
             throw e;
         }
         return result;
