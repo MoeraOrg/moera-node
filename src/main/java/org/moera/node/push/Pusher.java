@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class Pusher extends Task {
@@ -21,6 +24,10 @@ public class Pusher extends Task {
     private final String clientId;
     private SseEmitter emitter;
     private boolean stopped;
+
+    @Inject
+    @Qualifier("pushTaskExecutor")
+    private TaskExecutor taskExecutor;
 
     public Pusher(PushClients clients, String clientId, SseEmitter emitter) {
         this.clients = clients;
@@ -42,12 +49,11 @@ public class Pusher extends Task {
         emitter = newEmitter;
     }
 
-    public boolean isStopped() {
-        return stopped;
-    }
-
-    public void setStopped(boolean stopped) {
-        this.stopped = stopped;
+    public synchronized void activate() {
+        if (stopped) {
+            stopped = false;
+            taskExecutor.execute(this);
+        }
     }
 
     @Override

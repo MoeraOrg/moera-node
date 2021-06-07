@@ -19,8 +19,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -43,10 +41,6 @@ public class PushClients {
 
     @Inject
     private TaskAutowire taskAutowire;
-
-    @Inject
-    @Qualifier("pushTaskExecutor")
-    private TaskExecutor taskExecutor;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -124,19 +118,16 @@ public class PushClients {
         PushPacket packet = buildPacket(content);
         storePacket(packet);
 
-        List<Pusher> clients;
+        List<Pusher> pusherList;
         synchronized (mapLock) {
-            clients = new ArrayList<>(pushers.values());
+            pusherList = new ArrayList<>(pushers.values());
         }
-        for (Pusher client : clients) {
-            log.info("Sending to client {}", client.getClientId());
-            if (!client.getQueue().offer(packet)) {
-                unregister(client.getClientId());
-                continue;
-            }
-            if (client.isStopped()) {
-                client.setStopped(false);
-                taskExecutor.execute(client);
+        for (Pusher pusher : pusherList) {
+            log.info("Sending to client {}", pusher.getClientId());
+            if (pusher.getQueue().offer(packet)) {
+                pusher.activate();
+            } else {
+                unregister(pusher.getClientId());
             }
         }
     }
