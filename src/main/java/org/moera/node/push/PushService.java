@@ -20,8 +20,8 @@ public class PushService {
     @Inject
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
 
-    public void register(UUID nodeId, PushClient client, SseEmitter emitter) {
-        getClients(nodeId).register(client, emitter);
+    public void register(UUID nodeId, PushClient client, SseEmitter emitter, long lastSeenMoment) {
+        getClients(nodeId).register(client, emitter, lastSeenMoment);
     }
 
     public void send(UUID nodeId, String content) {

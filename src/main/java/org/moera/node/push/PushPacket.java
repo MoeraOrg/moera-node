@@ -1,5 +1,7 @@
 package org.moera.node.push;
 
+import org.moera.node.data.PushNotification;
+
 public class PushPacket {
 
     private long moment;
@@ -8,6 +10,10 @@ public class PushPacket {
     public PushPacket(long moment, String content) {
         this.moment = moment;
         this.content = content;
+    }
+
+    public PushPacket(PushNotification pushNotification) {
+        this(pushNotification.getMoment(), pushNotification.getContent());
     }
 
     public long getMoment() {

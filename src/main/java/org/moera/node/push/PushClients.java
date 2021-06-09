@@ -54,20 +54,21 @@ public class PushClients {
                 .collect(Collectors.toMap(PushClient::getClientId, Function.identity()));
     }
 
-    public void register(PushClient client, SseEmitter emitter) {
+    public void register(PushClient client, SseEmitter emitter, long lastSeenMoment) {
         log.info("Registering emitter for node {}, client {}", nodeId, client.getClientId());
 
         Pusher pusher;
         synchronized (mapLock) {
             clients.putIfAbsent(client.getClientId(), client);
             pusher = pushers.get(client.getClientId());
-            if (pusher == null) {
-                pusher = new Pusher(this, client.getClientId(), emitter);
-                taskAutowire.autowireWithoutRequest(pusher, nodeId);
-                pushers.put(client.getClientId(), pusher);
-            } else {
-                pusher.replaceEmitter(emitter);
+            if (pusher != null) {
+                pusher.complete();
             }
+            pusher = new Pusher(this, client, emitter);
+            taskAutowire.autowireWithoutRequest(pusher, nodeId);
+            pushers.put(client.getClientId(), pusher);
+            pusher.setLastSentMoment(lastSeenMoment);
+            pusher.activate();
         }
     }
 
@@ -99,17 +100,21 @@ public class PushClients {
     }
 
     private void storePacket(PushPacket packet) {
-        Transaction.executeQuietly(txManager, () -> {
-            for (PushClient client : clients.values()) {
-                PushNotification pn = new PushNotification();
-                pn.setId(UUID.randomUUID());
-                pn.setPushClient(client);
-                pn.setMoment(packet.getMoment());
-                pn.setContent(packet.getContent());
-                pushNotificationRepository.save(pn);
-            }
-            return null;
-        });
+        try {
+            Transaction.execute(txManager, () -> {
+                for (PushClient client : clients.values()) {
+                    PushNotification pn = new PushNotification();
+                    pn.setId(UUID.randomUUID());
+                    pn.setPushClient(client);
+                    pn.setMoment(packet.getMoment());
+                    pn.setContent(packet.getContent());
+                    pushNotificationRepository.save(pn);
+                }
+                return null;
+            });
+        } catch (Throwable e) {
+            log.error("Error storing a push packet", e);
+        }
     }
 
     public void send(String content) {
@@ -124,11 +129,7 @@ public class PushClients {
         }
         for (Pusher pusher : pusherList) {
             log.info("Sending to client {}", pusher.getClientId());
-            if (pusher.getQueue().offer(packet)) {
-                pusher.activate();
-            } else {
-                unregister(pusher.getClientId());
-            }
+            pusher.offer(packet);
         }
     }
 

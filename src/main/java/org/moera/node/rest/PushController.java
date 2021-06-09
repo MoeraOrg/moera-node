@@ -23,7 +23,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @ApiController
@@ -50,8 +52,15 @@ public class PushController {
 
     @GetMapping("/{clientId}")
     @Admin
-    public SseEmitter get(@PathVariable String clientId) throws Throwable {
-        log.info("GET /push/{clientId} (clientId = {})", LogUtil.format(clientId));
+    public SseEmitter get(@PathVariable String clientId,
+                          @RequestParam(name = "after", required = false) Long after,
+                          @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
+            throws Throwable {
+
+        long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
+
+        log.info("GET /push/{clientId} (clientId = {}, lastSeenMoment = {})",
+                LogUtil.format(clientId), LogUtil.format(lastSeenMoment));
 
         if (StringUtils.isEmpty(clientId)) {
             throw new ValidationFailure("push.clientId.blank");
@@ -61,7 +70,7 @@ public class PushController {
         updateLastSeenAt(client);
 
         SseEmitter sseEmitter = new SseEmitter(Long.MAX_VALUE);
-        pushService.register(requestContext.nodeId(), client, sseEmitter);
+        pushService.register(requestContext.nodeId(), client, sseEmitter, lastSeenMoment);
         return sseEmitter;
     }
 
@@ -94,7 +103,7 @@ public class PushController {
         });
     }
 
-    @Scheduled(fixedDelayString = "PT2S")
+    @Scheduled(fixedDelayString = "PT5S")
     public void ping() {
         for (String domainName : domains.getAllDomainNames()) {
             pushService.send(domains.getDomainNodeId(domainName), "PING " + domainName);
