@@ -24,6 +24,10 @@ public class PushService {
         getClients(nodeId).register(client, emitter, lastSeenMoment);
     }
 
+    public void delete(UUID nodeId, String clientId) {
+        getClients(nodeId).delete(clientId);
+    }
+
     public void send(UUID nodeId, String content) {
         getClients(nodeId).send(content);
     }

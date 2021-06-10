@@ -83,6 +83,19 @@ public class PushClients {
         }
     }
 
+    public void delete(String clientId) {
+        log.info("Deleting emitter for node {}, client {}", nodeId, clientId);
+
+        synchronized (mapLock) {
+            clients.remove(clientId);
+            Pusher pusher = pushers.get(clientId);
+            if (pusher != null) {
+                pusher.complete();
+                pushers.remove(clientId);
+            }
+        }
+    }
+
     private PushPacket buildPacket(String content) {
         long moment = Instant.now().getEpochSecond() * 1000;
         synchronized (lastMomentLock) {

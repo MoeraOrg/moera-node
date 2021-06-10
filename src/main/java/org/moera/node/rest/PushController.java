@@ -11,6 +11,8 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.push.PushService;
 import org.moera.node.util.Transaction;
@@ -21,6 +23,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -101,6 +104,19 @@ public class PushController {
             pushClientRepository.save(client);
             return null;
         });
+    }
+
+    @DeleteMapping("/{clientId}")
+    @Admin
+    public Result delete(@PathVariable String clientId) {
+        log.info("DELETE /push/{clientId} (clientId = {})", LogUtil.format(clientId));
+
+        PushClient client = pushClientRepository.findByClientId(requestContext.nodeId(), clientId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("push.not-found"));
+        pushService.delete(requestContext.nodeId(), client.getClientId());
+        pushClientRepository.delete(client);
+
+        return Result.OK;
     }
 
     @Scheduled(fixedDelayString = "PT5S")
