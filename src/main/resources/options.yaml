@@ -317,3 +317,27 @@
   modifiers:
     min: 15m
     max: 30d
+
+- name: push.notification.lifetime
+  type: Duration
+  defaultValue: 10d
+  title: Delete not received push notifications after
+  modifiers:
+    min: 1d
+    max: 30d
+
+- name: push.client.max-number
+  type: int
+  defaultValue: 16
+  title: Maximal number of clients receiving push notifications
+  modifiers:
+    min: 2
+    max: 100
+
+- name: push.client.lifetime
+  type: Duration
+  defaultValue: 30d
+  title: Stop sending push notifications to inactive clients after
+  modifiers:
+    min: 10d
+    max: 180d

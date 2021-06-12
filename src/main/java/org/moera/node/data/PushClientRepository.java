@@ -14,6 +14,9 @@ public interface PushClientRepository extends JpaRepository<PushClient, UUID> {
     @Query("select pc from PushClient pc where pc.nodeId = ?1")
     Collection<PushClient> findAllByNodeId(UUID nodeId);
 
+    @Query("select count(*) from PushClient pc where pc.nodeId = ?1")
+    int countAllByNodeId(UUID nodeId);
+
     @Query("select pc from PushClient pc where pc.nodeId = ?1 and pc.clientId = ?2")
     Optional<PushClient> findByClientId(UUID nodeId, String clientId);
 

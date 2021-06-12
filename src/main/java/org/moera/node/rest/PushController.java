@@ -12,6 +12,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.push.PushService;
@@ -81,6 +82,11 @@ public class PushController {
         PushClient client = pushClientRepository.findByClientId(requestContext.nodeId(), clientId).orElse(null);
         if (client != null) {
             return client;
+        }
+
+        int count = pushClientRepository.countAllByNodeId(requestContext.nodeId());
+        if (count >= requestContext.getOptions().getInt("push.client.max-number")) {
+            throw new OperationFailure("push.too-many-clients");
         }
 
         try {
