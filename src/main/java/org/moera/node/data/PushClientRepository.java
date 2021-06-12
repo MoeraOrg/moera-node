@@ -24,4 +24,7 @@ public interface PushClientRepository extends JpaRepository<PushClient, UUID> {
     @Modifying
     void updateLastSeenAt(UUID id, Timestamp lastSeenAt);
 
+    @Query("select pc from PushClient pc where pc.nodeId = ?1 and pc.lastSeenAt <= ?2")
+    Collection<PushClient> findInactive(UUID nodeId, Timestamp lastSeenAt);
+
 }

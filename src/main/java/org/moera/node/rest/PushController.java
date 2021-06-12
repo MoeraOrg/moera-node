@@ -1,7 +1,12 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collection;
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -123,6 +128,21 @@ public class PushController {
         pushClientRepository.delete(client);
 
         return Result.OK;
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @Transactional
+    public void purgeInactive() {
+        for (String domainName : domains.getAllDomainNames()) {
+            UUID nodeId = domains.getDomainNodeId(domainName);
+            Duration ttl = domains.getDomainOptions(domainName).getDuration("push.client.lifetime").getDuration();
+            Timestamp lastSeenAt = Timestamp.from(Instant.now().minus(ttl));
+            Collection<PushClient> clients = pushClientRepository.findInactive(nodeId, lastSeenAt);
+            for (PushClient client : clients) {
+                pushService.delete(nodeId, client.getClientId());
+                pushClientRepository.delete(client);
+            }
+        }
     }
 
     @Scheduled(fixedDelayString = "PT5S")
