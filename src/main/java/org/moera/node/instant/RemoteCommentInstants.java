@@ -118,7 +118,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             if (!isNew) {
                 send(new StoryDeletedEvent(story, true));
             }
-            webPushDeleted(story.getId());
+            deletePush(story.getId());
             return;
         }
 
@@ -135,7 +135,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         }
         storyOperations.updateMoment(story);
         send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        webPush(story);
+        sendPush(story);
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories, SubscriptionReason reason) {

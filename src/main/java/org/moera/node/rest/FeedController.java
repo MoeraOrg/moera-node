@@ -46,9 +46,10 @@ import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.push.PushContent;
+import org.moera.node.push.PushService;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
-import org.moera.node.webpush.WebPushPacket;
 import org.moera.node.webpush.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,6 +98,9 @@ public class FeedController {
 
     @Inject
     private WebPushService webPushService;
+
+    @Inject
+    private PushService pushService;
 
     @GetMapping
     public Collection<FeedInfo> getAll() {
@@ -190,12 +194,18 @@ public class FeedController {
             if (change.getViewed()) {
                 instantsUpdated.stream()
                         .map(Story::getId)
-                        .map(id -> WebPushPacket.storyDeleted(requestContext.nodeId(), id))
-                        .forEach(webPushService::send);
+                        .map(id -> PushContent.storyDeleted(requestContext.nodeId(), id))
+                        .forEach(content -> {
+                            webPushService.send(content);
+                            pushService.send(requestContext.nodeId(), content);
+                        });
             } else {
                 instantsUpdated.stream()
-                        .map(WebPushPacket::storyAdded)
-                        .forEach(webPushService::send);
+                        .map(PushContent::storyAdded)
+                        .forEach(content -> {
+                            webPushService.send(content);
+                            pushService.send(requestContext.nodeId(), content);
+                        });
             }
         }
 

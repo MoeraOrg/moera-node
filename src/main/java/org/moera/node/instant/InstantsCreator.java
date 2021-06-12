@@ -10,8 +10,9 @@ import org.moera.node.model.event.Event;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.naming.NodeName;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.push.PushContent;
+import org.moera.node.push.PushService;
 import org.moera.node.util.Util;
-import org.moera.node.webpush.WebPushPacket;
 import org.moera.node.webpush.WebPushService;
 
 public class InstantsCreator {
@@ -24,6 +25,9 @@ public class InstantsCreator {
 
     @Inject
     private WebPushService webPushService;
+
+    @Inject
+    private PushService pushService;
 
     protected UUID nodeId() {
         return universalContext.nodeId();
@@ -45,12 +49,16 @@ public class InstantsCreator {
         send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT, nodeId())));
     }
 
-    protected void webPush(Story story) {
-        webPushService.send(WebPushPacket.storyAdded(story));
+    protected void sendPush(Story story) {
+        PushContent content = PushContent.storyAdded(story);
+        webPushService.send(content);
+        pushService.send(nodeId(), content);
     }
 
-    protected void webPushDeleted(UUID id) {
-        webPushService.send(WebPushPacket.storyDeleted(nodeId(), id));
+    protected void deletePush(UUID id) {
+        PushContent content = PushContent.storyDeleted(nodeId(), id);
+        webPushService.send(content);
+        pushService.send(nodeId(), content);
     }
 
     protected static String formatNodeName(String name, String fullName) {

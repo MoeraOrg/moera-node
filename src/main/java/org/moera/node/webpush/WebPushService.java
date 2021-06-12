@@ -30,6 +30,7 @@ import org.moera.node.data.WebPushSubscription;
 import org.moera.node.data.WebPushSubscriptionRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.option.Options;
+import org.moera.node.push.PushContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -50,7 +51,7 @@ public class WebPushService {
     @Inject
     private ObjectMapper objectMapper;
 
-    private final BlockingQueue<WebPushPacket> queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<PushContent> queue = new LinkedBlockingQueue<>();
 
     @PostConstruct
     public void init() {
@@ -77,7 +78,7 @@ public class WebPushService {
 
     private void run() {
         while (true) {
-            WebPushPacket packet;
+            PushContent packet;
             try {
                 packet = queue.take();
             } catch (InterruptedException e) {
@@ -87,7 +88,7 @@ public class WebPushService {
         }
     }
 
-    public void send(WebPushPacket packet) {
+    public void send(PushContent packet) {
         try {
             queue.put(packet);
         } catch (InterruptedException e) {
@@ -95,7 +96,7 @@ public class WebPushService {
         }
     }
 
-    private void deliver(WebPushPacket packet) {
+    private void deliver(PushContent packet) {
         var subscriptions = webPushSubscriptionRepository.findAllByNodeId(packet.getNodeId());
         if (subscriptions.isEmpty()) {
             return;

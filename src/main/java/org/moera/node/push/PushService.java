@@ -8,9 +8,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.data.PushClient;
 import org.moera.node.data.PushNotificationRepository;
 import org.moera.node.domain.Domains;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -18,6 +22,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Service
 public class PushService {
+
+    private static Logger log = LoggerFactory.getLogger(PushService.class);
 
     private final Map<UUID, PushClients> nodeClients = new ConcurrentHashMap<>();
 
@@ -30,6 +36,9 @@ public class PushService {
     @Inject
     private PushNotificationRepository pushNotificationRepository;
 
+    @Inject
+    private ObjectMapper objectMapper;
+
     public void register(UUID nodeId, PushClient client, SseEmitter emitter, long lastSeenMoment) {
         getClients(nodeId).register(client, emitter, lastSeenMoment);
     }
@@ -40,6 +49,17 @@ public class PushService {
 
     public void send(UUID nodeId, String content) {
         getClients(nodeId).send(content);
+    }
+
+    public void send(UUID nodeId, PushContent pushContent) {
+        String content;
+        try {
+            content = objectMapper.writeValueAsString(pushContent);
+        } catch (JsonProcessingException e) {
+            log.error("Error encoding a story for Push notification", e);
+            return;
+        }
+        send(nodeId, content);
     }
 
     private PushClients getClients(UUID nodeId) {

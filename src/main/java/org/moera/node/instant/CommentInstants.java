@@ -95,7 +95,7 @@ public class CommentInstants extends InstantsCreator {
             if (!isNew) {
                 send(new StoryDeletedEvent(story, true));
             }
-            webPushDeleted(story.getId());
+            deletePush(story.getId());
             return;
         }
 
@@ -110,7 +110,7 @@ public class CommentInstants extends InstantsCreator {
         }
         updateMoment(story);
         send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        webPush(story);
+        sendPush(story);
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories) {
@@ -161,7 +161,7 @@ public class CommentInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 
@@ -188,7 +188,7 @@ public class CommentInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 

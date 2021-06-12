@@ -1,4 +1,4 @@
-package org.moera.node.webpush;
+package org.moera.node.push;
 
 import java.util.UUID;
 
@@ -10,20 +10,20 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class WebPushPacket {
+public class PushContent {
 
     @JsonIgnore
     private UUID nodeId;
 
-    private WebPushPacketType type;
+    private PushContentType type;
     private String originUrl;
     private String id;
     private StoryInfo story;
 
-    public WebPushPacket() {
+    public PushContent() {
     }
 
-    public WebPushPacket(WebPushPacketType type) {
+    public PushContent(PushContentType type) {
         this.type = type;
     }
 
@@ -35,11 +35,11 @@ public class WebPushPacket {
         this.nodeId = nodeId;
     }
 
-    public WebPushPacketType getType() {
+    public PushContentType getType() {
         return type;
     }
 
-    public void setType(WebPushPacketType type) {
+    public void setType(PushContentType type) {
         this.type = type;
     }
 
@@ -67,16 +67,16 @@ public class WebPushPacket {
         this.story = story;
     }
 
-    public static WebPushPacket storyAdded(Story story) {
-        WebPushPacket packet = new WebPushPacket(WebPushPacketType.STORY_ADDED);
+    public static PushContent storyAdded(Story story) {
+        PushContent packet = new PushContent(PushContentType.STORY_ADDED);
         packet.setNodeId(story.getNodeId());
         packet.setStory(StoryInfo.build(story, true,
                 t -> new PostingInfo((Posting) t.getEntry(), true)));
         return packet;
     }
 
-    public static WebPushPacket storyDeleted(UUID nodeId, UUID id) {
-        WebPushPacket packet = new WebPushPacket(WebPushPacketType.STORY_DELETED);
+    public static PushContent storyDeleted(UUID nodeId, UUID id) {
+        PushContent packet = new PushContent(PushContentType.STORY_DELETED);
         packet.setNodeId(nodeId);
         packet.setId(id.toString());
         return packet;

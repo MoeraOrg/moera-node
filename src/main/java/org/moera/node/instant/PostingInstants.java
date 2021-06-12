@@ -41,7 +41,7 @@ public class PostingInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 
@@ -69,7 +69,7 @@ public class PostingInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 

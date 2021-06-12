@@ -42,7 +42,7 @@ public class MentionPostingInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 
@@ -53,7 +53,7 @@ public class MentionPostingInstants extends InstantsCreator {
         }
         storyRepository.delete(story);
         send(new StoryDeletedEvent(story, true));
-        webPushDeleted(story.getId());
+        deletePush(story.getId());
         feedStatusUpdated();
     }
 

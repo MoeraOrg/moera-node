@@ -130,7 +130,7 @@ public class CommentReactionInstants extends InstantsCreator {
             if (!isNew) {
                 send(new StoryDeletedEvent(story, true));
             }
-            webPushDeleted(story.getId());
+            deletePush(story.getId());
             return;
         }
 
@@ -144,7 +144,7 @@ public class CommentReactionInstants extends InstantsCreator {
         }
         storyOperations.updateMoment(story);
         send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        webPush(story);
+        sendPush(story);
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {
@@ -211,7 +211,7 @@ public class CommentReactionInstants extends InstantsCreator {
         updateMoment(story);
         story = storyRepository.save(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 

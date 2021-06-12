@@ -44,7 +44,7 @@ public class SubscriberInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 
@@ -75,7 +75,7 @@ public class SubscriberInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         send(new StoryAddedEvent(story, true));
-        webPush(story);
+        sendPush(story);
         feedStatusUpdated();
     }
 

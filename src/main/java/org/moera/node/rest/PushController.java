@@ -145,11 +145,4 @@ public class PushController {
         }
     }
 
-    @Scheduled(fixedDelayString = "PT5S")
-    public void ping() {
-        for (String domainName : domains.getAllDomainNames()) {
-            pushService.send(domains.getDomainNodeId(domainName), "PING " + domainName);
-        }
-    }
-
 }
