@@ -107,7 +107,7 @@ public class PushClients {
             }
         }
 
-        log.info("Assigned moment {}", moment);
+        log.debug("Assigned moment {}", moment);
 
         return new PushPacket(moment, content);
     }
@@ -131,7 +131,7 @@ public class PushClients {
     }
 
     public void send(String content) {
-        log.info("Sending packet for node {}", nodeId);
+        log.debug("Sending packet for node {}", nodeId);
 
         PushPacket packet = buildPacket(content);
         storePacket(packet);
@@ -141,7 +141,7 @@ public class PushClients {
             pusherList = new ArrayList<>(pushers.values());
         }
         for (Pusher pusher : pusherList) {
-            log.info("Sending to client {}", pusher.getClientId());
+            log.debug("Sending to client {}", pusher.getClientId());
             pusher.offer(packet);
         }
     }
