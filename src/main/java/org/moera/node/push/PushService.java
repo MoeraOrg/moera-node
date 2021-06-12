@@ -1,5 +1,7 @@
 package org.moera.node.push;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,6 +9,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.PushClient;
+import org.moera.node.data.PushNotificationRepository;
+import org.moera.node.domain.Domains;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,12 @@ public class PushService {
 
     @Inject
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
+
+    @Inject
+    private Domains domains;
+
+    @Inject
+    private PushNotificationRepository pushNotificationRepository;
 
     public void register(UUID nodeId, PushClient client, SseEmitter emitter, long lastSeenMoment) {
         getClients(nodeId).register(client, emitter, lastSeenMoment);
@@ -47,6 +57,18 @@ public class PushService {
     @Transactional
     public void updateLastSeenAt() {
         nodeClients.values().forEach(PushClients::updateLastSeenAt);
+    }
+
+    @Scheduled(fixedDelayString = "PT1H")
+    @Transactional
+    public void purgeUnsent() {
+        for (String domainName : domains.getAllDomainNames()) {
+            UUID nodeId = domains.getDomainNodeId(domainName);
+            Duration ttl = domains.getDomainOptions(domainName)
+                    .getDuration("push.notification.lifetime").getDuration();
+            long lastMoment = Instant.now().minus(ttl).getEpochSecond() * 1000;
+            pushNotificationRepository.deleteAllTill(nodeId, lastMoment);
+        }
     }
 
 }

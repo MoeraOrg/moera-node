@@ -20,4 +20,8 @@ public interface PushNotificationRepository extends JpaRepository<PushNotificati
     @Modifying
     void deleteTill(UUID pushClientId, long moment);
 
+    @Query("delete from PushNotification pn where pn.pushClient.nodeId = ?1 and pn.moment <= ?2")
+    @Modifying
+    void deleteAllTill(UUID nodeId, long moment);
+
 }
