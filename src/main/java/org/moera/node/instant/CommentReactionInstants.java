@@ -79,7 +79,7 @@ public class CommentReactionInstants extends InstantsCreator {
         substory.setRemoteOwnerFullName(ownerFullName);
         if (ownerAvatar != null) {
             substory.setRemoteOwnerAvatarMediaFile(ownerAvatar.getMediaFile());
-            substory.setRemoteOwnerName(ownerAvatar.getShape());
+            substory.setRemoteOwnerAvatarShape(ownerAvatar.getShape());
         }
         substory.setSummary(buildSummary(ownerName, ownerFullName, emoji));
         substory.setMoment(0L);
