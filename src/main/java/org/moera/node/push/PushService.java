@@ -11,6 +11,7 @@ import javax.transaction.Transactional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.data.PushClient;
+import org.moera.node.data.PushClientRepository;
 import org.moera.node.data.PushNotificationRepository;
 import org.moera.node.domain.Domains;
 import org.slf4j.Logger;
@@ -32,6 +33,9 @@ public class PushService {
 
     @Inject
     private Domains domains;
+
+    @Inject
+    private PushClientRepository pushClientRepository;
 
     @Inject
     private PushNotificationRepository pushNotificationRepository;
@@ -87,7 +91,8 @@ public class PushService {
             Duration ttl = domains.getDomainOptions(domainName)
                     .getDuration("push.notification.lifetime").getDuration();
             long lastMoment = Instant.now().minus(ttl).getEpochSecond() * 1000;
-            pushNotificationRepository.deleteAllTill(nodeId, lastMoment);
+            pushClientRepository.findAllByNodeId(nodeId)
+                    .forEach(client -> pushNotificationRepository.deleteTill(client.getId(), lastMoment));
         }
     }
 
