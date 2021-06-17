@@ -74,6 +74,9 @@ public class PushController {
         if (StringUtils.isEmpty(clientId)) {
             throw new ValidationFailure("push.clientId.blank");
         }
+        if (clientId.length() > 40) {
+            throw new ValidationFailure("push.clientId.wrong-size");
+        }
 
         PushClient client = getClient(clientId);
         updateLastSeenAt(client);

@@ -21,7 +21,7 @@ public class PushClient {
     private UUID nodeId;
 
     @NotNull
-    @Size(max = 24)
+    @Size(max = 40)
     private String clientId = "";
 
     @NotNull
