@@ -82,6 +82,7 @@ public class PushController {
         updateLastSeenAt(client);
 
         SseEmitter sseEmitter = new SseEmitter(Long.MAX_VALUE);
+        sseEmitter.send(SseEmitter.event().comment("Beginning")); // To send HTTP headers immediately
         pushService.register(requestContext.nodeId(), client, sseEmitter, lastSeenMoment);
         return sseEmitter;
     }
