@@ -4,8 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.persistence.Transient;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Comment;
@@ -262,27 +261,27 @@ public class CommentInfo implements ReactionsInfo {
         this.repliedTo = repliedTo;
     }
 
-    @Transient
+    @JsonIgnore
     public String getRepliedToId() {
         return getRepliedTo() != null ? getRepliedTo().getId() : null;
     }
 
-    @Transient
+    @JsonIgnore
     public String getRepliedToRevisionId() {
         return getRepliedTo() != null ? getRepliedTo().getRevisionId() : null;
     }
 
-    @Transient
+    @JsonIgnore
     public String getRepliedToName() {
         return getRepliedTo() != null ? getRepliedTo().getName() : null;
     }
 
-    @Transient
+    @JsonIgnore
     public String getRepliedToFullName() {
         return getRepliedTo() != null ? getRepliedTo().getFullName() : null;
     }
 
-    @Transient
+    @JsonIgnore
     public AvatarImage getRepliedToAvatar() {
         return getRepliedTo() != null ? getRepliedTo().getAvatar() : null;
     }
