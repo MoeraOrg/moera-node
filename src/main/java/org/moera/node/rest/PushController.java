@@ -20,12 +20,14 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.push.PushEmitter;
 import org.moera.node.push.PushService;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.StringUtils;
@@ -35,7 +37,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @ApiController
 @RequestMapping("/moera/api/push")
@@ -59,11 +60,11 @@ public class PushController {
     @Inject
     private PlatformTransactionManager txManager;
 
-    @GetMapping("/{clientId}")
+    @GetMapping(value = "/{clientId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Admin
-    public SseEmitter get(@PathVariable String clientId,
-                          @RequestParam(name = "after", required = false) Long after,
-                          @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
+    public PushEmitter get(@PathVariable String clientId,
+                           @RequestParam(name = "after", required = false) Long after,
+                           @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
             throws Throwable {
 
         long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
@@ -81,10 +82,10 @@ public class PushController {
         PushClient client = getClient(clientId);
         updateLastSeenAt(client);
 
-        SseEmitter sseEmitter = new SseEmitter(Long.MAX_VALUE);
-        sseEmitter.send(SseEmitter.event().comment("Beginning")); // To send HTTP headers immediately
-        pushService.register(requestContext.nodeId(), client, sseEmitter, lastSeenMoment);
-        return sseEmitter;
+        PushEmitter emitter = new PushEmitter();
+        emitter.send(PushEmitter.event().comment("Привет")); // To send HTTP headers immediately
+        pushService.register(requestContext.nodeId(), client, emitter, lastSeenMoment);
+        return emitter;
     }
 
     private PushClient getClient(String clientId) throws Throwable {
