@@ -83,7 +83,7 @@ public class PushController {
         updateLastSeenAt(client);
 
         PushEmitter emitter = new PushEmitter();
-        emitter.send(PushEmitter.event().comment("Привет")); // To send HTTP headers immediately
+        emitter.send(PushEmitter.event().comment("ברוך הבא")); // To send HTTP headers immediately
         pushService.register(requestContext.nodeId(), client, emitter, lastSeenMoment);
         return emitter;
     }
