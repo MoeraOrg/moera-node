@@ -2,6 +2,7 @@ package org.moera.node.util;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -131,6 +132,10 @@ public class Util extends org.moera.commons.util.Util {
 
     public static byte[] base64urldecode(String s) {
         return Base64.getUrlDecoder().decode(s);
+    }
+
+    public static long currentMoment() {
+        return Instant.now().getEpochSecond() * 1000;
     }
 
 }

@@ -1,6 +1,5 @@
 package org.moera.node.push;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -97,7 +96,7 @@ public class PushClients {
     }
 
     private PushPacket buildPacket(String content) {
-        long moment = Instant.now().getEpochSecond() * 1000;
+        long moment = Util.currentMoment();
         synchronized (lastMomentLock) {
             if (lastMoment < moment) {
                 lastMoment = moment;

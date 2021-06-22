@@ -67,10 +67,8 @@ public class PushController {
                            @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
             throws Throwable {
 
-        long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
-
-        log.info("GET /push/{clientId} (clientId = {}, lastSeenMoment = {})",
-                LogUtil.format(clientId), LogUtil.format(lastSeenMoment));
+        log.info("GET /push/{clientId} (clientId = {}, after = {}, Last-Event-ID = {})",
+                LogUtil.format(clientId), LogUtil.format(after), LogUtil.format(lastEventId));
 
         if (StringUtils.isEmpty(clientId)) {
             throw new ValidationFailure("push.clientId.blank");
@@ -78,6 +76,8 @@ public class PushController {
         if (clientId.length() > 40) {
             throw new ValidationFailure("push.clientId.wrong-size");
         }
+
+        long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
 
         PushClient client = getClient(clientId);
         updateLastSeenAt(client);
