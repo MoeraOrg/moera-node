@@ -19,7 +19,10 @@ import org.moera.node.model.StoryInfo;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.push.PushContent;
+import org.moera.node.push.PushService;
 import org.moera.node.util.Transaction;
+import org.moera.node.webpush.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -47,6 +50,12 @@ public class StoryController {
 
     @Inject
     private PlatformTransactionManager txManager;
+
+    @Inject
+    private WebPushService webPushService;
+
+    @Inject
+    private PushService pushService;
 
     @GetMapping("/{id}")
     public StoryInfo get(@PathVariable UUID id) {
@@ -81,6 +90,17 @@ public class StoryController {
             }
             return currentStory;
         });
+
+        if (storyAttributes.getViewed() != null) {
+            PushContent content;
+            if (storyAttributes.getViewed()) {
+                content = PushContent.storyDeleted(requestContext.nodeId(), id);
+            } else {
+                content = PushContent.storyAdded(story);
+            }
+            webPushService.send(content);
+            pushService.send(requestContext.nodeId(), content);
+        }
 
         if (!Feed.isAdmin(story.getFeedName())) {
             requestContext.send(new StoryUpdatedEvent(story, false));
