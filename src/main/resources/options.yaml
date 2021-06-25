@@ -134,7 +134,7 @@
 - name: posting.max-size
   type: int
   privileged: true
-  defaultValue: 655360
+  defaultValue: 1048576
   title: Maximal size of postings
   modifiers:
     min: 1024
