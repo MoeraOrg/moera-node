@@ -15,7 +15,7 @@ public class StringOptionType extends OptionTypeBase {
             if (multiline == null) {
                 throw new DeserializeOptionValueException("bool", modifiers.getMultiline());
             }
-            stringMods.setMiltiline(multiline);
+            stringMods.setMultiline(multiline);
         }
         return stringMods;
     }
