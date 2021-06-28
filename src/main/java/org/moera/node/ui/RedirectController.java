@@ -9,11 +9,14 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.FeedStatus;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.push.PushContent;
+import org.moera.node.push.PushService;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
@@ -37,6 +40,9 @@ public class RedirectController {
     @Inject
     private StoryOperations storyOperations;
 
+    @Inject
+    private PushService pushService;
+
     private void markAsRead(UUID trackingId) {
         Story story = storyRepository.findByTrackingId(requestContext.nodeId(), trackingId).orElse(null);
         if (story == null || story.isViewed() && story.isRead()) {
@@ -48,8 +54,10 @@ public class RedirectController {
             requestContext.send(new StoryUpdatedEvent(story, false));
         }
         requestContext.send(new StoryUpdatedEvent(story, true));
-        requestContext.send(
-                new FeedStatusUpdatedEvent(story.getFeedName(), storyOperations.getFeedStatus(story.getFeedName())));
+        FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName());
+        requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus));
+        pushService.send(requestContext.nodeId(),
+                PushContent.feedUpdated(requestContext.nodeId(), story.getFeedName(), feedStatus));
     }
 
     @GetMapping("/gotoname")

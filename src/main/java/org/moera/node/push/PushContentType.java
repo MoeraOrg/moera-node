@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum PushContentType {
 
     STORY_ADDED,
-    STORY_DELETED;
+    STORY_DELETED,
+    FEED_UPDATED;
 
     @JsonValue
     public String getValue() {

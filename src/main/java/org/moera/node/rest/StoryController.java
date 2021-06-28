@@ -12,6 +12,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.FeedStatus;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
@@ -106,8 +107,10 @@ public class StoryController {
             requestContext.send(new StoryUpdatedEvent(story, false));
         }
         requestContext.send(new StoryUpdatedEvent(story, true));
-        requestContext.send(
-                new FeedStatusUpdatedEvent(story.getFeedName(), storyOperations.getFeedStatus(story.getFeedName())));
+        FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName());
+        requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus));
+        pushService.send(requestContext.nodeId(),
+                PushContent.feedUpdated(requestContext.nodeId(), story.getFeedName(), feedStatus));
 
         return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }

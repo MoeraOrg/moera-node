@@ -212,6 +212,8 @@ public class FeedController {
         FeedStatus feedStatus = storyOperations.getFeedStatus(feedName);
         requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus));
         requestContext.send(new StoriesStatusUpdatedEvent(feedName, change));
+        pushService.send(requestContext.nodeId(),
+                PushContent.feedUpdated(requestContext.nodeId(), feedName, feedStatus));
 
         return feedStatus;
     }

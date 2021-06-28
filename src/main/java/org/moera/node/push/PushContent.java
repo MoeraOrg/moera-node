@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
+import org.moera.node.model.FeedStatus;
+import org.moera.node.model.FeedWithStatus;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 
@@ -19,6 +21,7 @@ public class PushContent {
     private String originUrl;
     private String id;
     private StoryInfo story;
+    private FeedWithStatus feedStatus;
 
     public PushContent() {
     }
@@ -67,6 +70,14 @@ public class PushContent {
         this.story = story;
     }
 
+    public FeedWithStatus getFeedStatus() {
+        return feedStatus;
+    }
+
+    public void setFeedStatus(FeedWithStatus feedStatus) {
+        this.feedStatus = feedStatus;
+    }
+
     public static PushContent storyAdded(Story story) {
         PushContent packet = new PushContent(PushContentType.STORY_ADDED);
         packet.setNodeId(story.getNodeId());
@@ -79,6 +90,13 @@ public class PushContent {
         PushContent packet = new PushContent(PushContentType.STORY_DELETED);
         packet.setNodeId(nodeId);
         packet.setId(id.toString());
+        return packet;
+    }
+
+    public static PushContent feedUpdated(UUID nodeId, String feedName, FeedStatus feedStatus) {
+        PushContent packet = new PushContent(PushContentType.FEED_UPDATED);
+        packet.setNodeId(nodeId);
+        packet.setFeedStatus(new FeedWithStatus(feedName, feedStatus));
         return packet;
     }
 

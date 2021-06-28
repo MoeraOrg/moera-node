@@ -25,6 +25,8 @@ import org.moera.node.model.event.Event;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
+import org.moera.node.push.PushContent;
+import org.moera.node.push.PushService;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -48,6 +50,9 @@ public class StoryOperations {
 
     @Inject
     private EventManager eventManager;
+
+    @Inject
+    private PushService pushService;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -87,8 +92,11 @@ public class StoryOperations {
             eventSender.accept(new StoryAddedEvent(story, true));
             feedNames.add(story.getFeedName());
         }
-        feedNames.forEach(
-                feedName -> eventSender.accept(new FeedStatusUpdatedEvent(feedName, getFeedStatus(feedName, nodeId))));
+        for (String feedName : feedNames) {
+            FeedStatus feedStatus = getFeedStatus(feedName, nodeId);
+            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus));
+            pushService.send(nodeId, PushContent.feedUpdated(nodeId, feedName, feedStatus));
+        }
     }
 
     public FeedStatus getFeedStatus(String feedName) {
@@ -118,8 +126,11 @@ public class StoryOperations {
                     feedNames.add(story.getFeedName());
                 });
         storyRepository.deleteByEntryId(nodeId, entryId);
-        feedNames.forEach(feedName ->
-                eventSender.accept(new FeedStatusUpdatedEvent(feedName, getFeedStatus(feedName))));
+        for (String feedName : feedNames) {
+            FeedStatus feedStatus = getFeedStatus(feedName);
+            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus));
+            pushService.send(nodeId, PushContent.feedUpdated(nodeId, feedName, feedStatus));
+        }
     }
 
     @Scheduled(fixedDelayString = "P1D")
