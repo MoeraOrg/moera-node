@@ -11,6 +11,7 @@ import com.github.jknack.handlebars.Options;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
+import org.moera.node.global.WebClient;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.AvatarInfo;
 import org.moera.node.model.ReactionTotalInfo;
@@ -192,7 +193,9 @@ public class MoeraHelperSource {
                     + "?id=org.moera.web.twa&pcampaignid=invitation-node\">"
                     + "get Moera app on Google Play</a> or ");
         }
-        buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
+        buf.append("<a class=\"btn btn-success btn-sm\" href=\"");
+        buf.append(WebClient.URL);
+        buf.append("?href=");
         buf.append(Util.ue(requestContext.getUrl()));
         buf.append("\">View in Web Client</a>");
         return new SafeString(buf);
@@ -201,7 +204,9 @@ public class MoeraHelperSource {
     public CharSequence commentInvitation() {
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"alert alert-info mt-3\">To react or comment&nbsp; ");
-        buf.append("<a class=\"btn btn-success btn-sm\" href=\"https://web.moera.org/?href=");
+        buf.append("<a class=\"btn btn-success btn-sm\" href=\"");
+        buf.append(WebClient.URL);
+        buf.append("?href=");
         buf.append(Util.ue(requestContext.getUrl()));
         buf.append("\">View in Web Client</a></div>");
         return new SafeString(buf);
@@ -215,7 +220,9 @@ public class MoeraHelperSource {
         }
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"buttons-invitation\">To react or comment&nbsp; ");
-        buf.append("<a class=\"btn btn-outline-success btn-sm\" href=\"https://web.moera.org/?href=");
+        buf.append("<a class=\"btn btn-outline-success btn-sm\" href=\"");
+        buf.append(WebClient.URL);
+        buf.append("?href=");
         buf.append(Util.ue(builder.toUriString()));
         buf.append("\">View in Web Client</a></div>");
         return new SafeString(buf);
