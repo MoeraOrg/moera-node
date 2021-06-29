@@ -82,8 +82,8 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(domainInterceptor).order(-1);
-        registry.addInterceptor(authenticationInterceptor);
+        registry.addInterceptor(domainInterceptor).order(-2);
+        registry.addInterceptor(authenticationInterceptor).order(-1);
         registry.addInterceptor(virtualPageInterceptor);
         registry.addInterceptor(networkLatencyInterceptor);
         registry.addInterceptor(cacheControlInterceptor);

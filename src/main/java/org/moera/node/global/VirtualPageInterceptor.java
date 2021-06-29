@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.util.Util;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
@@ -41,8 +42,24 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
             }
             return false;
         }
+        if (isAutoClient()) {
+            response.sendRedirect(WebClient.URL + "?href=" + Util.ue(requestContext.getUrl()));
+            return false;
+        }
 
         return true;
+    }
+
+    private boolean isAutoClient() {
+        switch (requestContext.getUserAgent()) {
+            case FIREFOX:
+            case CHROME:
+            case YANDEX:
+            case BRAVE:
+                return true;
+            default:
+                return false;
+        }
     }
 
 }
