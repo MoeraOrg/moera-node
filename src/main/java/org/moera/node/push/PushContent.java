@@ -2,7 +2,6 @@ package org.moera.node.push;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
@@ -14,11 +13,7 @@ import org.moera.node.model.StoryInfo;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PushContent {
 
-    @JsonIgnore
-    private UUID nodeId;
-
     private PushContentType type;
-    private String originUrl;
     private String id;
     private StoryInfo story;
     private FeedWithStatus feedStatus;
@@ -30,28 +25,12 @@ public class PushContent {
         this.type = type;
     }
 
-    public UUID getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(UUID nodeId) {
-        this.nodeId = nodeId;
-    }
-
     public PushContentType getType() {
         return type;
     }
 
     public void setType(PushContentType type) {
         this.type = type;
-    }
-
-    public String getOriginUrl() {
-        return originUrl;
-    }
-
-    public void setOriginUrl(String originUrl) {
-        this.originUrl = originUrl;
     }
 
     public String getId() {
@@ -80,22 +59,19 @@ public class PushContent {
 
     public static PushContent storyAdded(Story story) {
         PushContent packet = new PushContent(PushContentType.STORY_ADDED);
-        packet.setNodeId(story.getNodeId());
         packet.setStory(StoryInfo.build(story, true,
                 t -> new PostingInfo((Posting) t.getEntry(), true)));
         return packet;
     }
 
-    public static PushContent storyDeleted(UUID nodeId, UUID id) {
+    public static PushContent storyDeleted(UUID id) {
         PushContent packet = new PushContent(PushContentType.STORY_DELETED);
-        packet.setNodeId(nodeId);
         packet.setId(id.toString());
         return packet;
     }
 
-    public static PushContent feedUpdated(UUID nodeId, String feedName, FeedStatus feedStatus) {
+    public static PushContent feedUpdated(String feedName, FeedStatus feedStatus) {
         PushContent packet = new PushContent(PushContentType.FEED_UPDATED);
-        packet.setNodeId(nodeId);
         packet.setFeedStatus(new FeedWithStatus(feedName, feedStatus));
         return packet;
     }

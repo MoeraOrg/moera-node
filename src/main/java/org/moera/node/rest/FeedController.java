@@ -190,7 +190,7 @@ public class FeedController {
             if (change.getViewed()) {
                 instantsUpdated.stream()
                         .map(Story::getId)
-                        .map(id -> PushContent.storyDeleted(requestContext.nodeId(), id))
+                        .map(PushContent::storyDeleted)
                         .forEach(content -> {
                             pushService.send(requestContext.nodeId(), content);
                         });
@@ -206,8 +206,7 @@ public class FeedController {
         FeedStatus feedStatus = storyOperations.getFeedStatus(feedName);
         requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus));
         requestContext.send(new StoriesStatusUpdatedEvent(feedName, change));
-        pushService.send(requestContext.nodeId(),
-                PushContent.feedUpdated(requestContext.nodeId(), feedName, feedStatus));
+        pushService.send(requestContext.nodeId(), PushContent.feedUpdated(feedName, feedStatus));
 
         return feedStatus;
     }

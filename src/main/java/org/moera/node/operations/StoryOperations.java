@@ -95,7 +95,7 @@ public class StoryOperations {
         for (String feedName : feedNames) {
             FeedStatus feedStatus = getFeedStatus(feedName, nodeId);
             eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus));
-            pushService.send(nodeId, PushContent.feedUpdated(nodeId, feedName, feedStatus));
+            pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
         }
     }
 
@@ -129,7 +129,7 @@ public class StoryOperations {
         for (String feedName : feedNames) {
             FeedStatus feedStatus = getFeedStatus(feedName);
             eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus));
-            pushService.send(nodeId, PushContent.feedUpdated(nodeId, feedName, feedStatus));
+            pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
         }
     }
 

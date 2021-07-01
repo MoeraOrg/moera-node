@@ -91,7 +91,7 @@ public class StoryController {
         if (storyAttributes.getViewed() != null) {
             PushContent content;
             if (storyAttributes.getViewed()) {
-                content = PushContent.storyDeleted(requestContext.nodeId(), id);
+                content = PushContent.storyDeleted(id);
             } else {
                 content = PushContent.storyAdded(story);
             }
@@ -104,8 +104,7 @@ public class StoryController {
         requestContext.send(new StoryUpdatedEvent(story, true));
         FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName());
         requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus));
-        pushService.send(requestContext.nodeId(),
-                PushContent.feedUpdated(requestContext.nodeId(), story.getFeedName(), feedStatus));
+        pushService.send(requestContext.nodeId(), PushContent.feedUpdated(story.getFeedName(), feedStatus));
 
         return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }

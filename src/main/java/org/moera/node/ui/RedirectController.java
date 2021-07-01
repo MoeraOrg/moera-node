@@ -56,8 +56,7 @@ public class RedirectController {
         requestContext.send(new StoryUpdatedEvent(story, true));
         FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName());
         requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus));
-        pushService.send(requestContext.nodeId(),
-                PushContent.feedUpdated(requestContext.nodeId(), story.getFeedName(), feedStatus));
+        pushService.send(requestContext.nodeId(), PushContent.feedUpdated(story.getFeedName(), feedStatus));
     }
 
     @GetMapping("/gotoname")

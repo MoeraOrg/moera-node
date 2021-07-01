@@ -51,7 +51,7 @@ public class InstantsCreator {
     }
 
     protected void deletePush(UUID id) {
-        PushContent content = PushContent.storyDeleted(nodeId(), id);
+        PushContent content = PushContent.storyDeleted(id);
         pushService.send(nodeId(), content);
     }
 
