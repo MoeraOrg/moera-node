@@ -302,14 +302,6 @@
     max: 2000d
     never: true
 
-- name: web-push.private-key
-  type: PrivateKeyWebPush
-  internal: true
-
-- name: web-push.public-key
-  type: PublicKeyWebPush
-  internal: true
-
 - name: credentials-reset.token.lifetime
   type: Duration
   defaultValue: 6h

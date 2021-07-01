@@ -13,7 +13,6 @@ import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
 import org.moera.node.util.Util;
-import org.moera.node.webpush.WebPushService;
 
 public class InstantsCreator {
 
@@ -22,9 +21,6 @@ public class InstantsCreator {
 
     @Inject
     private StoryOperations storyOperations;
-
-    @Inject
-    private WebPushService webPushService;
 
     @Inject
     private PushService pushService;
@@ -51,13 +47,11 @@ public class InstantsCreator {
 
     protected void sendPush(Story story) {
         PushContent content = PushContent.storyAdded(story);
-        webPushService.send(content);
         pushService.send(nodeId(), content);
     }
 
     protected void deletePush(UUID id) {
         PushContent content = PushContent.storyDeleted(nodeId(), id);
-        webPushService.send(content);
         pushService.send(nodeId(), content);
     }
 

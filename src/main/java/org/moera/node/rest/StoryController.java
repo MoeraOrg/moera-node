@@ -23,7 +23,6 @@ import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
 import org.moera.node.util.Transaction;
-import org.moera.node.webpush.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -51,9 +50,6 @@ public class StoryController {
 
     @Inject
     private PlatformTransactionManager txManager;
-
-    @Inject
-    private WebPushService webPushService;
 
     @Inject
     private PushService pushService;
@@ -99,7 +95,6 @@ public class StoryController {
             } else {
                 content = PushContent.storyAdded(story);
             }
-            webPushService.send(content);
             pushService.send(requestContext.nodeId(), content);
         }
 

@@ -50,7 +50,6 @@ import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
-import org.moera.node.webpush.WebPushService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -95,9 +94,6 @@ public class FeedController {
 
     @Inject
     private PlatformTransactionManager txManager;
-
-    @Inject
-    private WebPushService webPushService;
 
     @Inject
     private PushService pushService;
@@ -196,14 +192,12 @@ public class FeedController {
                         .map(Story::getId)
                         .map(id -> PushContent.storyDeleted(requestContext.nodeId(), id))
                         .forEach(content -> {
-                            webPushService.send(content);
                             pushService.send(requestContext.nodeId(), content);
                         });
             } else {
                 instantsUpdated.stream()
                         .map(PushContent::storyAdded)
                         .forEach(content -> {
-                            webPushService.send(content);
                             pushService.send(requestContext.nodeId(), content);
                         });
             }
