@@ -11,6 +11,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Controller
-@CrossOrigin("*")
+@CrossOrigin(value = "*", exposedHeaders = "X-Moera")
 public @interface UiController {
 }
