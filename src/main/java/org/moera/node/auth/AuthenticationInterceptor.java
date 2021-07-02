@@ -119,9 +119,6 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
                 return secrets;
             }
         }
-        secrets.rootSecret = request.getParameter("secret");
-        secrets.token = request.getParameter("token");
-        secrets.carte = request.getParameter("carte");
         return secrets;
     }
 
