@@ -85,11 +85,4 @@ public class RedirectController {
         return "redirect:" + (!StringUtils.isEmpty(href) ? href : "/");
     }
 
-    @GetMapping("/track")
-    @Transactional
-    @Deprecated
-    public String track(@RequestParam UUID trackingId, @RequestParam String href) {
-        return goToName(null, null, href, trackingId);
-    }
-
 }
