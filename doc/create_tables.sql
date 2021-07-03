@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.6 (Ubuntu 12.6-0ubuntu0.20.04.1)
+-- Dumped from database version 12.7 (Ubuntu 12.7-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.7 (Ubuntu 12.7-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -601,6 +601,34 @@ CREATE TABLE public.public_pages (
 ALTER TABLE public.public_pages OWNER TO moera;
 
 --
+-- Name: push_clients; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.push_clients (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    client_id character varying(40) NOT NULL,
+    last_seen_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.push_clients OWNER TO moera;
+
+--
+-- Name: push_notifications; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.push_notifications (
+    id uuid NOT NULL,
+    push_client_id uuid NOT NULL,
+    moment bigint NOT NULL,
+    content text NOT NULL
+);
+
+
+ALTER TABLE public.push_notifications OWNER TO moera;
+
+--
 -- Name: reaction_totals; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -780,22 +808,6 @@ CREATE TABLE public.tokens (
 ALTER TABLE public.tokens OWNER TO moera;
 
 --
--- Name: web_push_subscriptions; Type: TABLE; Schema: public; Owner: moera
---
-
-CREATE TABLE public.web_push_subscriptions (
-    id uuid NOT NULL,
-    node_id uuid NOT NULL,
-    endpoint character varying(255) NOT NULL,
-    public_key character varying(128) NOT NULL,
-    auth_key character varying(32) NOT NULL,
-    created_at timestamp without time zone NOT NULL
-);
-
-
-ALTER TABLE public.web_push_subscriptions OWNER TO moera;
-
---
 -- Name: avatars avatars_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -940,6 +952,22 @@ ALTER TABLE ONLY public.public_pages
 
 
 --
+-- Name: push_clients push_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.push_clients
+    ADD CONSTRAINT push_clients_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: push_notifications push_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.push_notifications
+    ADD CONSTRAINT push_notifications_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: reaction_totals reaction_totals_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1001,14 +1029,6 @@ ALTER TABLE ONLY public.subscriptions
 
 ALTER TABLE ONLY public.tokens
     ADD CONSTRAINT tokens_pkey PRIMARY KEY (token);
-
-
---
--- Name: web_push_subscriptions web_push_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.web_push_subscriptions
-    ADD CONSTRAINT web_push_subscriptions_pkey PRIMARY KEY (id);
 
 
 --
@@ -1355,6 +1375,34 @@ CREATE INDEX public_pages_node_id_idx ON public.public_pages USING btree (node_i
 
 
 --
+-- Name: push_clients_node_id_client_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX push_clients_node_id_client_id_idx ON public.push_clients USING btree (node_id, client_id);
+
+
+--
+-- Name: push_clients_node_id_last_seen_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX push_clients_node_id_last_seen_at_idx ON public.push_clients USING btree (node_id, last_seen_at);
+
+
+--
+-- Name: push_notifications_moment_push_client_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX push_notifications_moment_push_client_id_idx ON public.push_notifications USING btree (moment, push_client_id);
+
+
+--
+-- Name: push_notifications_push_client_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX push_notifications_push_client_id_idx ON public.push_notifications USING btree (push_client_id);
+
+
+--
 -- Name: reaction_totals_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1541,13 +1589,6 @@ CREATE UNIQUE INDEX subscriptions_node_id_subscription_type_remote_node_name_re_
 --
 
 CREATE INDEX subscriptions_remote_avatar_media_file_id_idx ON public.subscriptions USING btree (remote_avatar_media_file_id);
-
-
---
--- Name: web_push_subscriptions_node_id_public_key_auth_key_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE UNIQUE INDEX web_push_subscriptions_node_id_public_key_auth_key_idx ON public.web_push_subscriptions USING btree (node_id, public_key, auth_key);
 
 
 --
@@ -1820,6 +1861,14 @@ ALTER TABLE ONLY public.own_reactions
 
 ALTER TABLE ONLY public.public_pages
     ADD CONSTRAINT public_pages_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: push_notifications push_notifications_push_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.push_notifications
+    ADD CONSTRAINT push_notifications_push_client_id_fkey FOREIGN KEY (push_client_id) REFERENCES public.push_clients(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
