@@ -3,6 +3,7 @@ package org.moera.node.model;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.Draft;
 import org.moera.node.data.EntryRevision;
 import org.springframework.util.StringUtils;
 
@@ -24,8 +25,19 @@ public class UpdateInfo {
         description = revision.getUpdateDescription();
     }
 
+    public UpdateInfo(Draft draft) {
+        if (draft.isUpdateImportant()) {
+            important = draft.isUpdateImportant();
+        }
+        description = draft.getUpdateDescription();
+    }
+
     public static boolean isEmpty(EntryRevision revision) {
         return !revision.isUpdateImportant() && StringUtils.isEmpty(revision.getUpdateDescription());
+    }
+
+    public static boolean isEmpty(Draft draft) {
+        return !draft.isUpdateImportant() && StringUtils.isEmpty(draft.getUpdateDescription());
     }
 
     public Boolean getImportant() {
