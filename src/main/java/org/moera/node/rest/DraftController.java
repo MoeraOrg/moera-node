@@ -110,9 +110,8 @@ public class DraftController {
                 break;
 
             case POSTING_UPDATE: {
-                Draft draft = draftRepository.findPostingUpdate(
-                        requestContext.nodeId(), requestContext.nodeName(), postingId);
-                drafts = draft != null ? List.of(draft) : Collections.emptyList();
+                drafts = draftRepository.findPostingUpdate(
+                        requestContext.nodeId(), requestContext.nodeName(), postingId, pageable);
                 break;
             }
 
@@ -122,9 +121,8 @@ public class DraftController {
                 break;
 
             case COMMENT_UPDATE: {
-                Draft draft = draftRepository.findCommentUpdate(
-                        requestContext.nodeId(), requestContext.nodeName(), postingId, commentId);
-                drafts = draft != null ? List.of(draft) : Collections.emptyList();
+                drafts = draftRepository.findCommentUpdate(
+                        requestContext.nodeId(), requestContext.nodeName(), postingId, commentId, pageable);
                 break;
             }
 

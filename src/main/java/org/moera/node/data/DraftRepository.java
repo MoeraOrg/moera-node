@@ -17,7 +17,7 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
     @Query("select d from Draft d"
             + " where d.nodeId = ?1 and d.draftType = org.moera.node.data.DraftType.POSTING_UPDATE"
             + " and d.receiverName = ?2 and d.receiverPostingId = ?3")
-    Draft findPostingUpdate(UUID nodeId, String nodeName, String postingId);
+    List<Draft> findPostingUpdate(UUID nodeId, String nodeName, String postingId, Pageable pageable);
 
     @Query("select d from Draft d"
             + " where d.nodeId = ?1 and d.draftType = org.moera.node.data.DraftType.NEW_COMMENT"
@@ -27,7 +27,7 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
     @Query("select d from Draft d"
             + " where d.nodeId = ?1 and d.draftType = org.moera.node.data.DraftType.COMMENT_UPDATE"
             + " and d.receiverName = ?2 and d.receiverPostingId = ?3 and d.receiverCommentId = ?4")
-    Draft findCommentUpdate(UUID nodeId, String nodeName, String postingId, String commentId);
+    List<Draft> findCommentUpdate(UUID nodeId, String nodeName, String postingId, String commentId, Pageable pageable);
 
     @Query("select d from Draft d where d.nodeId = ?1 and d.id = ?2")
     Optional<Draft> findById(UUID nodeId, UUID id);
