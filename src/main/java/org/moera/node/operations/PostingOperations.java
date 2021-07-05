@@ -88,7 +88,7 @@ public class PostingOperations {
     @Inject
     private PlatformTransactionManager txManager;
 
-    public Posting newPosting(PostingText postingText, Consumer<Posting> initializer) {
+    public Posting newPosting(PostingText postingText) {
         if (postingText.getAcceptedReactions() == null) {
             postingText.setAcceptedReactions(new AcceptedReactions());
         }
@@ -107,9 +107,6 @@ public class PostingOperations {
         if (requestContext.getAvatar() != null) {
             posting.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
             posting.setOwnerAvatarShape(requestContext.getAvatar().getShape());
-        }
-        if (initializer != null) {
-            initializer.accept(posting);
         }
         postingText.toEntry(posting);
 
@@ -146,26 +143,6 @@ public class PostingOperations {
         notifyMentioned(posting.getId(), current, latest);
 
         return posting;
-    }
-
-    public Posting createOrUpdatePostingDraft(Posting posting, EntryRevision template,
-                                              Predicate<EntryRevision> isNothingChanged,
-                                              Consumer<EntryRevision> updater) {
-        EntryRevision draft = posting.getDraftRevision();
-        if (draft == null) {
-            EntryRevision latest = posting.getCurrentRevision();
-            if (latest != null && isNothingChanged != null && isNothingChanged.test(latest)) {
-                return postingRepository.saveAndFlush(posting);
-            }
-
-            draft = newRevision(posting, template);
-            posting.setDraftRevision(draft);
-        }
-        if (updater != null) {
-            updater.accept(draft);
-        }
-        draft.setCreatedAt(Util.now());
-        return postingRepository.saveAndFlush(posting);
     }
 
     private ECPrivateKey getSigningKey() {

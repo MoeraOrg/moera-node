@@ -318,6 +318,39 @@ CREATE TABLE public.domains (
 ALTER TABLE public.domains OWNER TO moera;
 
 --
+-- Name: drafts; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.drafts (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    draft_type smallint NOT NULL,
+    receiver_name character varying(63) NOT NULL,
+    receiver_posting_id character varying(40),
+    receiver_comment_id character varying(40),
+    created_at timestamp without time zone NOT NULL,
+    edited_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone,
+    owner_full_name character varying(96),
+    owner_avatar_media_file_id character varying(40),
+    owner_avatar_shape character varying(8),
+    accepted_reactions_positive character varying(255) NOT NULL,
+    accepted_reactions_negative character varying(255) NOT NULL,
+    reactions_visible boolean DEFAULT true NOT NULL,
+    reaction_totals_visible boolean DEFAULT true NOT NULL,
+    body_src text NOT NULL,
+    body_src_format smallint DEFAULT 0 NOT NULL,
+    body text NOT NULL,
+    body_format character varying(75) DEFAULT 'message'::character varying,
+    heading character varying(255) DEFAULT ''::character varying NOT NULL,
+    update_important boolean DEFAULT false NOT NULL,
+    update_description character varying(128) DEFAULT ''::character varying NOT NULL
+);
+
+
+ALTER TABLE public.drafts OWNER TO moera;
+
+--
 -- Name: entries; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -336,8 +369,6 @@ CREATE TABLE public.entries (
     reactions_visible boolean DEFAULT true NOT NULL,
     reaction_totals_visible boolean DEFAULT true NOT NULL,
     deadline timestamp without time zone,
-    draft boolean DEFAULT false NOT NULL,
-    draft_revision_id uuid,
     receiver_created_at timestamp without time zone,
     current_receiver_revision_id character varying(40),
     receiver_entry_id character varying(40),
@@ -840,6 +871,14 @@ ALTER TABLE ONLY public.domains
 
 
 --
+-- Name: drafts drafts_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT drafts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: entries entries_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1081,6 +1120,27 @@ CREATE INDEX domain_upgrades_upgrade_type_idx ON public.domain_upgrades USING bt
 
 
 --
+-- Name: drafts_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX drafts_deadline_idx ON public.drafts USING btree (deadline);
+
+
+--
+-- Name: drafts_node_id_draft_type_attributes_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX drafts_node_id_draft_type_attributes_idx ON public.drafts USING btree (node_id, draft_type, receiver_name, receiver_posting_id, receiver_comment_id, edited_at);
+
+
+--
+-- Name: drafts_owner_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX drafts_owner_avatar_media_file_id_idx ON public.drafts USING btree (owner_avatar_media_file_id);
+
+
+--
 -- Name: entries_current_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1095,13 +1155,6 @@ CREATE INDEX entries_deadline_idx ON public.entries USING btree (deadline);
 
 
 --
--- Name: entries_draft_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX entries_draft_revision_id_idx ON public.entries USING btree (draft_revision_id);
-
-
---
 -- Name: entries_entry_type_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1113,13 +1166,6 @@ CREATE INDEX entries_entry_type_idx ON public.entries USING btree (entry_type);
 --
 
 CREATE INDEX entries_node_id_deleted_at_idx ON public.entries USING btree (node_id, deleted_at);
-
-
---
--- Name: entries_node_id_draft_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX entries_node_id_draft_idx ON public.entries USING btree (node_id, draft);
 
 
 --
@@ -1613,6 +1659,13 @@ CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_fi
 
 
 --
+-- Name: drafts update_owner_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_owner_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF owner_avatar_media_file_id ON public.drafts FOR EACH ROW EXECUTE FUNCTION public.update_entity_owner_avatar_media_file_id();
+
+
+--
 -- Name: entries update_owner_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -1720,19 +1773,19 @@ ALTER TABLE ONLY public.contacts
 
 
 --
+-- Name: drafts drafts_owner_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.drafts
+    ADD CONSTRAINT drafts_owner_avatar_media_file_id_fkey FOREIGN KEY (owner_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: entries entries_current_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entries_current_revision_id_fkey FOREIGN KEY (current_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
-
-
---
--- Name: entries entries_draft_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.entries
-    ADD CONSTRAINT entries_draft_revision_id_fkey FOREIGN KEY (draft_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --

@@ -139,7 +139,7 @@ public class PostingController {
             throw new ValidationFailure("postingText.bodySrc.wrong-size");
         }
 
-        Posting posting = postingOperations.newPosting(postingText, null);
+        Posting posting = postingOperations.newPosting(postingText);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, null, postingText.getPublications(),
                     null, revision -> postingText.toEntryRevision(revision, textConverter));

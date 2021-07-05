@@ -58,7 +58,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class DraftController {
 
-    private static Logger log = LoggerFactory.getLogger(DraftPostingController.class);
+    private static Logger log = LoggerFactory.getLogger(DraftController.class);
 
     @Inject
     private RequestContext requestContext;

@@ -52,8 +52,6 @@ public class PostingInfo implements ReactionsInfo {
     private Long revisionCreatedAt;
     private Long receiverRevisionCreatedAt;
     private Long deadline;
-    private Boolean draft;
-    private Boolean draftPending;
     private byte[] signature;
     private Short signatureVersion;
     private List<FeedReference> feedReferences;
@@ -130,12 +128,6 @@ public class PostingInfo implements ReactionsInfo {
         revisionCreatedAt = Util.toEpochSecond(revision.getCreatedAt());
         receiverRevisionCreatedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
-        if (posting.isDraft()) {
-            draft = true;
-        }
-        if (includeSource && isAdminOrOwner) {
-            draftPending = posting.getDraftRevision() != null;
-        }
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         if (stories != null && !stories.isEmpty()) {
@@ -422,22 +414,6 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setDeadline(Long deadline) {
         this.deadline = deadline;
-    }
-
-    public Boolean getDraft() {
-        return draft;
-    }
-
-    public void setDraft(Boolean draft) {
-        this.draft = draft;
-    }
-
-    public Boolean getDraftPending() {
-        return draftPending;
-    }
-
-    public void setDraftPending(Boolean draftPending) {
-        this.draftPending = draftPending;
     }
 
     public byte[] getSignature() {

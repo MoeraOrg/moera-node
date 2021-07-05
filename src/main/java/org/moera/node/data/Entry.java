@@ -83,9 +83,6 @@ public class Entry {
     private Timestamp deadline;
 
     @NotNull
-    private boolean draft;
-
-    @NotNull
     private int totalRevisions;
 
     @OneToOne
@@ -93,9 +90,6 @@ public class Entry {
 
     @Size(max = 40)
     private String currentReceiverRevisionId;
-
-    @OneToOne
-    private EntryRevision draftRevision;
 
     @NotNull
     @Size(max = 255)
@@ -315,14 +309,6 @@ public class Entry {
         this.deadline = deadline;
     }
 
-    public boolean isDraft() {
-        return draft;
-    }
-
-    public void setDraft(boolean draft) {
-        this.draft = draft;
-    }
-
     public int getTotalRevisions() {
         return totalRevisions;
     }
@@ -350,14 +336,6 @@ public class Entry {
 
     public void setCurrentReceiverRevisionId(String currentReceiverRevisionId) {
         this.currentReceiverRevisionId = currentReceiverRevisionId;
-    }
-
-    public EntryRevision getDraftRevision() {
-        return draftRevision;
-    }
-
-    public void setDraftRevision(EntryRevision draftRevision) {
-        this.draftRevision = draftRevision;
     }
 
     public String getAcceptedReactionsPositive() {
