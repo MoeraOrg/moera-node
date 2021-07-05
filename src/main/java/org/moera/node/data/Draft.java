@@ -33,7 +33,6 @@ public class Draft {
     @Size(max = 40)
     private String receiverPostingId;
 
-    @NotNull
     @Size(max = 40)
     private String receiverCommentId;
 

@@ -5,9 +5,15 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.data.BodyFormat;
+import org.moera.node.data.Draft;
 import org.moera.node.data.DraftType;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.text.HeadingExtractor;
+import org.moera.node.text.TextConverter;
+import org.moera.node.util.Util;
+import org.springframework.util.StringUtils;
 
 public class DraftText {
 
@@ -148,6 +154,64 @@ public class DraftText {
 
     public void setUpdateInfo(UpdateInfo updateInfo) {
         this.updateInfo = updateInfo;
+    }
+
+    public void toDraft(Draft draft, TextConverter textConverter) {
+        draft.setDraftType(draftType);
+        draft.setEditedAt(Util.now());
+        if (ownerFullName != null) {
+            draft.setOwnerFullName(ownerFullName);
+        }
+        if (ownerAvatar != null) {
+            if (ownerAvatarMediaFile != null) {
+                draft.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
+            }
+            if (ownerAvatar.getShape() != null) {
+                draft.setOwnerAvatarShape(ownerAvatar.getShape());
+            }
+        }
+
+        if (acceptedReactions != null) {
+            if (acceptedReactions.getPositive() != null) {
+                draft.setAcceptedReactionsPositive(acceptedReactions.getPositive());
+            }
+            if (acceptedReactions.getNegative() != null) {
+                draft.setAcceptedReactionsNegative(acceptedReactions.getNegative());
+            }
+        }
+        if (reactionsVisible != null) {
+            draft.setReactionsVisible(reactionsVisible);
+        }
+        if (reactionTotalsVisible != null) {
+            draft.setReactionTotalsVisible(reactionTotalsVisible);
+        }
+
+        if (bodySrcFormat != null) {
+            draft.setBodySrcFormat(bodySrcFormat);
+        }
+
+        if (!StringUtils.isEmpty(bodySrc)) {
+            if (draft.getBodySrcFormat() != SourceFormat.APPLICATION) {
+                draft.setBodySrc(bodySrc);
+                Body body = textConverter.toHtml(draft.getBodySrcFormat(), new Body(bodySrc));
+                draft.setBody(body.getEncoded());
+                draft.setBodyFormat(BodyFormat.MESSAGE.getValue());
+                draft.setHeading(HeadingExtractor.extract(body));
+            } else {
+                draft.setBodySrc(Body.EMPTY);
+                draft.setBody(bodySrc);
+                draft.setBodyFormat(BodyFormat.APPLICATION.getValue());
+            }
+        }
+
+        if (updateInfo != null) {
+            if (updateInfo.getImportant() != null) {
+                draft.setUpdateImportant(updateInfo.getImportant());
+            }
+            if (updateInfo.getDescription() != null) {
+                draft.setUpdateDescription(updateInfo.getDescription());
+            }
+        }
     }
 
 }

@@ -135,7 +135,7 @@
   type: int
   privileged: true
   defaultValue: 1048576
-  title: Maximal size of postings
+  title: Maximal size of posts
   modifiers:
     min: 1024
     max: 4194304
@@ -144,7 +144,7 @@
   type: int
   privileged: true
   defaultValue: 5242880
-  title: Maximal size of a media attachment in postings
+  title: Maximal size of a media attachment in posts
   modifiers:
     min: 65536
     max: 104857600
@@ -152,17 +152,17 @@
 - name: posting.subject.present
   type: bool
   defaultValue: false
-  title: "Postings have titles"
+  title: "Posts have titles"
 
 - name: posting.time.relative
   type: bool
   defaultValue: false
-  title: "Web UI: Show relative time in postings"
+  title: "Web UI: Show relative time in posts"
 
 - name: posting.deleted.lifetime
   type: Duration
   defaultValue: 10d
-  title: Purge deleted posting after
+  title: Purge deleted post after
   modifiers:
     min: 7d
     max: 2000d
@@ -171,7 +171,7 @@
 - name: posting.draft.lifetime
   type: Duration
   defaultValue: 90d
-  title: Purge drafts after
+  title: Purge post drafts after
   modifiers:
     min: 1d
     max: 2000d
@@ -222,7 +222,7 @@
 - name: remote-posting-verification.lifetime
   type: Duration
   defaultValue: 1h
-  title: Posting verification information lifetime
+  title: Post verification information lifetime
   modifiers:
     min: 30m
     max: 7d
@@ -297,6 +297,15 @@
   type: Duration
   defaultValue: 7d
   title: Purge old comment revisions after
+  modifiers:
+    min: 1d
+    max: 2000d
+    never: true
+
+- name: comment.draft.lifetime
+  type: Duration
+  defaultValue: 30d
+  title: Purge comment drafts after
   modifiers:
     min: 1d
     max: 2000d

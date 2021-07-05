@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
@@ -27,5 +28,8 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
             + " where d.nodeId = ?1 and d.draftType = org.moera.node.data.DraftType.COMMENT_UPDATE"
             + " and d.receiverName = ?2 and d.receiverPostingId = ?3 and d.receiverCommentId = ?4")
     Draft findCommentUpdate(UUID nodeId, String nodeName, String postingId, String commentId);
+
+    @Query("select d from Draft d where d.nodeId = ?1 and d.id = ?2")
+    Optional<Draft> findById(UUID nodeId, UUID id);
 
 }
