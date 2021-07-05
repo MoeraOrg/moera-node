@@ -23,8 +23,6 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.PostingDraftRevisionDeletedEvent;
-import org.moera.node.model.event.PostingDraftRevisionUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.TextConverter;
 import org.slf4j.Logger;
@@ -95,7 +93,6 @@ public class PostingDraftRevisionController {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
         if (posting.getDraftRevision() != null) {
-            requestContext.send(new PostingDraftRevisionUpdatedEvent(posting));
             return new PostingInfo(posting, posting.getDraftRevision(), true, true);
         } else {
             return new PostingInfo(posting, posting.getCurrentRevision(), true, true);
@@ -115,7 +112,6 @@ public class PostingDraftRevisionController {
             return Result.OK;
         }
         entryRevisionRepository.delete(posting.getDraftRevision());
-        requestContext.send(new PostingDraftRevisionDeletedEvent(posting));
 
         return Result.OK;
     }

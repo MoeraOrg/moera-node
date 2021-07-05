@@ -29,6 +29,9 @@ import org.moera.node.model.DraftText;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.DraftAddedEvent;
+import org.moera.node.model.event.DraftDeletedEvent;
+import org.moera.node.model.event.DraftUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.ExtendedDuration;
@@ -186,6 +189,8 @@ public class DraftController {
         updateDeadline(draft);
         draft = draftRepository.save(draft);
 
+        requestContext.send(new DraftAddedEvent(draft));
+
         return ResponseEntity.created(URI.create("/drafts/" + draft.getId())).body(new DraftInfo(draft));
     }
 
@@ -216,6 +221,8 @@ public class DraftController {
             throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
         }
         updateDeadline(draft);
+
+        requestContext.send(new DraftUpdatedEvent(draft));
 
         return new DraftInfo(draft);
     }
@@ -250,6 +257,8 @@ public class DraftController {
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         draftRepository.delete(draft);
+
+        requestContext.send(new DraftDeletedEvent(draft));
 
         return Result.OK;
     }

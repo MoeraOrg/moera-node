@@ -28,9 +28,6 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.DraftPostingAddedEvent;
-import org.moera.node.model.event.DraftPostingDeletedEvent;
-import org.moera.node.model.event.DraftPostingUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.ExtendedDuration;
@@ -129,7 +126,6 @@ public class DraftPostingController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
-        requestContext.send(new DraftPostingAddedEvent(posting));
 
         return ResponseEntity.created(
                 URI.create("/draft-postings/" + posting.getId()))
@@ -167,7 +163,6 @@ public class DraftPostingController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
-        requestContext.send(new DraftPostingUpdatedEvent(posting));
 
         return new PostingInfo(posting, posting.getDraftRevision(), true, true);
     }
@@ -199,8 +194,6 @@ public class DraftPostingController {
         }
         posting.getDraftRevision().setDeletedAt(Util.now());
         entryRevisionRepository.save(posting.getDraftRevision());
-
-        requestContext.send(new DraftPostingDeletedEvent(posting));
 
         return Result.OK;
     }
