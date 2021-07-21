@@ -64,6 +64,8 @@ public class StoryInfo {
 
             case REACTION_ADDED_POSITIVE:
             case REACTION_ADDED_NEGATIVE:
+                info.setRemoteNodeName(story.getRemoteOwnerName());
+                info.setRemoteFullName(story.getRemoteOwnerFullName());
                 info.setPosting(new PostingInfo(story.getEntry().getId()));
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
@@ -93,6 +95,8 @@ public class StoryInfo {
                 break;
 
             case COMMENT_ADDED:
+                info.setRemoteNodeName(story.getRemoteOwnerName());
+                info.setRemoteFullName(story.getRemoteOwnerFullName());
                 info.setPosting(new PostingInfo(story.getEntry().getId()));
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
