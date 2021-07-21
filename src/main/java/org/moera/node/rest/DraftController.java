@@ -161,13 +161,7 @@ public class DraftController {
             throw new ValidationFailure("draftText.commentId.blank");
         }
 
-        if (draftText.getOwnerAvatar() != null && draftText.getOwnerAvatar().getMediaId() != null) {
-            MediaFile mediaFile = mediaFileRepository.findById(draftText.getOwnerAvatar().getMediaId()).orElse(null);
-            if (mediaFile == null || !mediaFile.isExposed()) {
-                throw new ValidationFailure("draftText.ownerAvatar.mediaId.not-found");
-            }
-            draftText.setOwnerAvatarMediaFile(mediaFile);
-        }
+        validate(draftText);
 
         Draft draft = new Draft();
         draft.setId(UUID.randomUUID());
@@ -204,13 +198,7 @@ public class DraftController {
                 LogUtil.format(draftText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat())));
 
-        if (draftText.getOwnerAvatar() != null && draftText.getOwnerAvatar().getMediaId() != null) {
-            MediaFile mediaFile = mediaFileRepository.findById(draftText.getOwnerAvatar().getMediaId()).orElse(null);
-            if (mediaFile == null || !mediaFile.isExposed()) {
-                throw new ValidationFailure("draftText.ownerAvatar.mediaId.not-found");
-            }
-            draftText.setOwnerAvatarMediaFile(mediaFile);
-        }
+        validate(draftText);
 
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
@@ -225,6 +213,24 @@ public class DraftController {
         requestContext.send(new DraftUpdatedEvent(draft));
 
         return new DraftInfo(draft);
+    }
+
+    private void validate(@RequestBody @Valid DraftText draftText) {
+        if (draftText.getBodySrc() != null && draftText.getBodySrc().length() > getMaxPostingSize()) {
+            throw new ValidationFailure("draftText.bodySrc.wrong-size");
+        }
+
+        if (draftText.getOwnerAvatar() != null && draftText.getOwnerAvatar().getMediaId() != null) {
+            MediaFile mediaFile = mediaFileRepository.findById(draftText.getOwnerAvatar().getMediaId()).orElse(null);
+            if (mediaFile == null || !mediaFile.isExposed()) {
+                throw new ValidationFailure("draftText.ownerAvatar.mediaId.not-found");
+            }
+            draftText.setOwnerAvatarMediaFile(mediaFile);
+        }
+    }
+
+    private int getMaxPostingSize() {
+        return requestContext.getOptions().getInt("posting.max-size");
     }
 
     private void updateDeadline(Draft draft) {
