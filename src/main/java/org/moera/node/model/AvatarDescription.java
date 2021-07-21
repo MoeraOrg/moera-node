@@ -6,7 +6,7 @@ public class AvatarDescription {
 
     private String mediaId;
     private String shape;
-    private boolean optional;
+    private Boolean optional;
 
     public AvatarDescription() {
     }
@@ -34,11 +34,11 @@ public class AvatarDescription {
         this.shape = shape;
     }
 
-    public boolean isOptional() {
+    public Boolean getOptional() {
         return optional;
     }
 
-    public void setOptional(boolean optional) {
+    public void setOptional(Boolean optional) {
         this.optional = optional;
     }
 

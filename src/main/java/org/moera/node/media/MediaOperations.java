@@ -174,7 +174,7 @@ public class MediaOperations {
         if (mediaFile != null && !mediaFile.isExposed()) {
             mediaFile = null;
         }
-        if (mediaFile == null && !avatar.isOptional()) {
+        if (mediaFile == null && (avatar.getOptional() == null || !avatar.getOptional())) {
             throw notFound.get();
         } else {
             found.accept(mediaFile);
