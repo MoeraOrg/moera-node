@@ -49,6 +49,8 @@ public class DraftText {
 
     private SourceFormat bodySrcFormat;
 
+    private Long publishAt;
+
     @Valid
     private UpdateInfo updateInfo;
 
@@ -148,6 +150,14 @@ public class DraftText {
         this.bodySrcFormat = bodySrcFormat;
     }
 
+    public Long getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(Long publishAt) {
+        this.publishAt = publishAt;
+    }
+
     public UpdateInfo getUpdateInfo() {
         return updateInfo;
     }
@@ -202,6 +212,10 @@ public class DraftText {
                 draft.setBody(bodySrc);
                 draft.setBodyFormat(BodyFormat.APPLICATION.getValue());
             }
+        }
+
+        if (publishAt != null) {
+            draft.setPublishAt(Util.toTimestamp(publishAt));
         }
 
         if (updateInfo != null) {

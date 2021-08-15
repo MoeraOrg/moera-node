@@ -84,6 +84,8 @@ public class Draft {
     @NotNull
     private String heading = "";
 
+    private Timestamp publishAt;
+
     @NotNull
     private boolean updateImportant;
 
@@ -256,6 +258,14 @@ public class Draft {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public Timestamp getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(Timestamp publishAt) {
+        this.publishAt = publishAt;
     }
 
     public boolean isUpdateImportant() {

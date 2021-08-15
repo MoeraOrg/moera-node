@@ -27,6 +27,7 @@ public class DraftInfo {
     private Body body;
     private String bodyFormat;
     private String heading;
+    private Long publishAt;
     private UpdateInfo updateInfo;
 
     public DraftInfo() {
@@ -55,6 +56,7 @@ public class DraftInfo {
         body = new Body(draft.getBody());
         bodyFormat = draft.getBodyFormat();
         heading = draft.getHeading();
+        publishAt = Util.toEpochSecond(draft.getPublishAt());
         if (!UpdateInfo.isEmpty(draft)) {
             updateInfo = new UpdateInfo(draft);
         }
@@ -203,6 +205,14 @@ public class DraftInfo {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public Long getPublishAt() {
+        return publishAt;
+    }
+
+    public void setPublishAt(Long publishAt) {
+        this.publishAt = publishAt;
     }
 
     public UpdateInfo getUpdateInfo() {
