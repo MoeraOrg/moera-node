@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.7 (Ubuntu 12.7-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.7 (Ubuntu 12.7-0ubuntu0.20.04.1)
+-- Dumped from database version 12.8 (Ubuntu 12.8-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.8 (Ubuntu 12.8-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -344,7 +344,8 @@ CREATE TABLE public.drafts (
     body_format character varying(75) DEFAULT 'message'::character varying,
     heading character varying(255) DEFAULT ''::character varying NOT NULL,
     update_important boolean DEFAULT false NOT NULL,
-    update_description character varying(128) DEFAULT ''::character varying NOT NULL
+    update_description character varying(128) DEFAULT ''::character varying NOT NULL,
+    publish_at timestamp without time zone
 );
 
 
