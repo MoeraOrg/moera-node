@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.ibm.icu.util.Calendar;
 import org.moera.commons.util.DurationFormatException;
-import org.moera.node.model.RevisionInfo;
 import org.springframework.web.util.HtmlUtils;
 
 public class Util {
@@ -121,11 +120,6 @@ public class Util {
         throw new IllegalArgumentException(String.format("\"%s\" is not a valid value for boolean", value));
     }
 
-    public static boolean toBoolean(String value, boolean defaultValue) {
-        Boolean boolValue = toBoolean(value);
-        return boolValue != null ? boolValue : defaultValue;
-    }
-
     public static Duration toDuration(String s) {
         if (s == null || s.equals("")) {
             return null;
@@ -168,14 +162,6 @@ public class Util {
             return s.substring(0, size) + '\u2026';
         }
         return s;
-    }
-
-    public static <R extends RevisionInfo> R revisionByTimestamp(R[] revisions, Long timestamp) {
-        return Arrays.stream(revisions)
-                .filter(r -> r.getCreatedAt() <= timestamp)
-                .filter(r -> r.getDeletedAt() == null || r.getDeletedAt() > timestamp)
-                .findFirst()
-                .orElse(null);
     }
 
     public static String base64encode(byte[] bytes) {
