@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
+import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,8 @@ public class CustomErrorAttributes extends DefaultErrorAttributes {
     private MessageSource messageSource;
 
     @Override
-    public Map<String, Object> getErrorAttributes(WebRequest webRequest, boolean includeStackTrace) {
-        Map<String, Object> ea = super.getErrorAttributes(webRequest, includeStackTrace);
+    public Map<String, Object> getErrorAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
+        Map<String, Object> ea = super.getErrorAttributes(webRequest, options);
         if (Objects.equals(ea.get("status"), 404) || Objects.equals(ea.get("status"), 405)) {
             Map<String, Object> errorAttributes = new HashMap<>();
             String errorCode = "not-found";

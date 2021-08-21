@@ -2,8 +2,12 @@ package org.moera.node.util;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
@@ -14,10 +18,28 @@ import java.util.regex.Pattern;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.ibm.icu.util.Calendar;
+import org.moera.commons.util.DurationFormatException;
 import org.moera.node.model.RevisionInfo;
 import org.springframework.web.util.HtmlUtils;
 
-public class Util extends org.moera.commons.util.Util {
+public class Util {
+
+    public static Timestamp now() {
+        return Timestamp.from(Instant.now());
+    }
+
+    public static Long toEpochSecond(Timestamp timestamp) {
+        return timestamp != null ? timestamp.getTime() / 1000 : null;
+    }
+
+    public static Timestamp toTimestamp(Long epochSecond) {
+        return epochSecond != null ? Timestamp.from(Instant.ofEpochSecond(epochSecond)) : null;
+    }
+
+    public static String formatTimestamp(long timestamp) {
+        return DateTimeFormatter.ISO_DATE_TIME.format(
+                LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC));
+    }
 
     public static String ue(Object s) {
         return URLEncoder.encode(s.toString(), StandardCharsets.UTF_8);
@@ -104,6 +126,36 @@ public class Util extends org.moera.commons.util.Util {
         return boolValue != null ? boolValue : defaultValue;
     }
 
+    public static Duration toDuration(String s) {
+        if (s == null || s.equals("")) {
+            return null;
+        }
+        ChronoUnit unit;
+        switch (s.charAt(s.length() - 1)) {
+            case 's':
+                unit = ChronoUnit.SECONDS;
+                break;
+            case 'm':
+                unit = ChronoUnit.MINUTES;
+                break;
+            case 'h':
+                unit = ChronoUnit.HOURS;
+                break;
+            case 'd':
+                unit = ChronoUnit.DAYS;
+                break;
+            default:
+                throw new DurationFormatException(s);
+        }
+        long amount;
+        try {
+            amount = Long.parseLong(s.substring(0, s.length() - 1));
+        } catch (NumberFormatException e) {
+            throw new DurationFormatException(s);
+        }
+        return Duration.of(amount, unit);
+    }
+
     public static void ellipsize(StringBuilder buf, int size) {
         if (buf != null && buf.length() > size) {
             buf.setLength(size);
@@ -126,6 +178,14 @@ public class Util extends org.moera.commons.util.Util {
                 .orElse(null);
     }
 
+    public static String base64encode(byte[] bytes) {
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    public static byte[] base64decode(String s) {
+        return Base64.getDecoder().decode(s);
+    }
+
     public static String base64urlencode(byte[] bytes) {
         return Base64.getUrlEncoder().encodeToString(bytes);
     }
@@ -136,6 +196,25 @@ public class Util extends org.moera.commons.util.Util {
 
     public static long currentMoment() {
         return Instant.now().getEpochSecond() * 1000;
+    }
+
+    public static int random(int min, int max) {
+        return (int) (Math.random() * (max - min)) + min;
+    }
+
+    public static String dump(byte[] bytes) {
+        StringBuilder buf = new StringBuilder();
+        for (byte b : bytes) {
+            if (buf.length() > 0) {
+                buf.append(' ');
+            }
+            buf.append(hexByte(b));
+        }
+        return buf.toString();
+    }
+
+    public static String hexByte(byte b) {
+        return String.format("%02X", b >= 0 ? b : 256 + (int) b);
     }
 
 }

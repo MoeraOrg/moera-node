@@ -4,7 +4,7 @@ import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.util.Util;
+import org.moera.node.util.Util;
 
 @OptionType("PublicKey")
 public class PublicKeyOptionType extends OptionTypeBase {

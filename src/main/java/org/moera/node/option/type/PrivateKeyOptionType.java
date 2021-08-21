@@ -4,7 +4,7 @@ import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.util.Util;
+import org.moera.node.util.Util;
 
 @OptionType("PrivateKey")
 public class PrivateKeyOptionType extends OptionTypeBase {

@@ -11,8 +11,8 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.moera.commons.util.Util;
 import org.moera.node.model.RemotePosting;
+import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "subscriptions")

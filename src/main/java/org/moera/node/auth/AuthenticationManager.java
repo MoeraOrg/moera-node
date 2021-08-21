@@ -10,7 +10,6 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.crypto.FingerprintException;
 import org.moera.commons.crypto.RestoredObject;
-import org.moera.commons.util.Util;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.fingerprint.CarteFingerprint;
@@ -19,6 +18,7 @@ import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
