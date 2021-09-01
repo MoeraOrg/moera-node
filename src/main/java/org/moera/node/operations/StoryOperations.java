@@ -104,10 +104,11 @@ public class StoryOperations {
     }
 
     public FeedStatus getFeedStatus(String feedName, UUID nodeId) {
+        int total = storyRepository.countInFeed(nodeId, feedName);
         int notViewed = storyRepository.countNotViewed(nodeId, feedName);
         int notRead = storyRepository.countNotRead(nodeId, feedName);
 
-        return new FeedStatus(notViewed, notRead);
+        return new FeedStatus(total, notViewed, notRead);
     }
 
     public void unpublish(UUID entryId) {

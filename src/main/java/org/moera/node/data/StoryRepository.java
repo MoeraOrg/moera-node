@@ -61,6 +61,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
     Page<Story> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, Pageable pageable);
 
+    @Query("select count(*) from Story s where s.nodeId = ?1 and s.feedName = ?2")
+    int countInFeed(UUID nodeId, String feedName);
+
     @Query("select count(*) from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.moment = ?3")
     int countMoments(UUID nodeId, String feedName, long moment);
 

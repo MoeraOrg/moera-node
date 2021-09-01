@@ -10,6 +10,7 @@ import org.springframework.data.util.Pair;
 public class FeedStatusUpdatedEvent extends Event {
 
     private String feedName;
+    private int total;
     private int notViewed;
     private int notRead;
 
@@ -21,6 +22,7 @@ public class FeedStatusUpdatedEvent extends Event {
         super(EventType.FEED_STATUS_UPDATED);
 
         this.feedName = feedName;
+        total = feedStatus.getTotal();
         notViewed = feedStatus.getNotViewed();
         notRead = feedStatus.getNotRead();
     }
@@ -31,6 +33,14 @@ public class FeedStatusUpdatedEvent extends Event {
 
     public void setFeedName(String feedName) {
         this.feedName = feedName;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public void setTotal(int total) {
+        this.total = total;
     }
 
     public int getNotViewed() {

@@ -191,15 +191,11 @@ public class FeedController {
                 instantsUpdated.stream()
                         .map(Story::getId)
                         .map(PushContent::storyDeleted)
-                        .forEach(content -> {
-                            pushService.send(requestContext.nodeId(), content);
-                        });
+                        .forEach(content -> pushService.send(requestContext.nodeId(), content));
             } else {
                 instantsUpdated.stream()
                         .map(PushContent::storyAdded)
-                        .forEach(content -> {
-                            pushService.send(requestContext.nodeId(), content);
-                        });
+                        .forEach(content -> pushService.send(requestContext.nodeId(), content));
             }
         }
 
@@ -233,12 +229,18 @@ public class FeedController {
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
+
+        FeedSliceInfo sliceInfo;
         if (after == null) {
             before = before != null ? before : SafeInteger.MAX_VALUE;
-            return getStoriesBefore(feedName, before, limit);
+            sliceInfo = getStoriesBefore(feedName, before, limit);
         } else {
-            return getStoriesAfter(feedName, after, limit);
+            sliceInfo = getStoriesAfter(feedName, after, limit);
         }
+        sliceInfo.setStatus(storyOperations.getFeedStatus(feedName));
+        calcSliceTotals(sliceInfo, feedName);
+
+        return sliceInfo;
     }
 
     private FeedSliceInfo getStoriesBefore(String feedName, long before, int limit) {
@@ -318,6 +320,22 @@ public class FeedController {
         }
     }
 
+    private void calcSliceTotals(FeedSliceInfo sliceInfo, String feedName) {
+        sliceInfo.setTotal(sliceInfo.getTotal());
+        if (sliceInfo.getAfter() <= SafeInteger.MIN_VALUE) {
+            sliceInfo.setTotalInPast(0);
+            sliceInfo.setTotalInFuture(sliceInfo.getTotal() - sliceInfo.getStories().size());
+        } else if (sliceInfo.getBefore() >= SafeInteger.MAX_VALUE) {
+            sliceInfo.setTotalInFuture(0);
+            sliceInfo.setTotalInPast(sliceInfo.getTotal() - sliceInfo.getStories().size());
+        } else {
+            int totalInFuture = storyRepository.countInRange(requestContext.nodeId(), feedName,
+                    sliceInfo.getBefore(), SafeInteger.MAX_VALUE);
+            sliceInfo.setTotalInFuture(totalInFuture);
+            sliceInfo.setTotalInPast(sliceInfo.getTotal() - totalInFuture - sliceInfo.getStories().size());
+        }
+    }
+
     private void fillSubscribers(List<PostingInfo> postings, List<UUID> postingIds) {
         List<Subscriber> allSubscribers = subscriberRepository.findAllByPostingIds(
                 requestContext.nodeId(), requestContext.getClientName(), postingIds);
@@ -327,9 +345,8 @@ public class FeedController {
                     .computeIfAbsent(subscriber.getEntry().getId().toString(), key -> new ArrayList<>())
                     .add(subscriber);
         }
-        postings.forEach(posting -> {
-            posting.setSubscriptions(PostingSubscriptionsInfo.fromSubscribers(subscriberMap.get(posting.getId())));
-        });
+        postings.forEach(posting ->
+                posting.setSubscriptions(PostingSubscriptionsInfo.fromSubscribers(subscriberMap.get(posting.getId()))));
     }
 
     private void fillOwnInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
