@@ -10,6 +10,7 @@ public class FeedSliceInfo {
     private int total;
     private int totalInPast;
     private int totalInFuture;
+    private int totalPinned;
     private int notViewed;
     private int notRead;
 
@@ -64,6 +65,14 @@ public class FeedSliceInfo {
         this.totalInFuture = totalInFuture;
     }
 
+    public int getTotalPinned() {
+        return totalPinned;
+    }
+
+    public void setTotalPinned(int totalPinned) {
+        this.totalPinned = totalPinned;
+    }
+
     public int getNotViewed() {
         return notViewed;
     }
@@ -82,6 +91,7 @@ public class FeedSliceInfo {
 
     public void setStatus(FeedStatus status) {
         setTotal(status.getTotal());
+        setTotalPinned(status.getTotalPinned());
         setNotViewed(status.getNotViewed());
         setNotRead(status.getNotRead());
     }

@@ -11,6 +11,7 @@ public class FeedStatusUpdatedEvent extends Event {
 
     private String feedName;
     private int total;
+    private int totalPinned;
     private int notViewed;
     private int notRead;
 
@@ -23,6 +24,7 @@ public class FeedStatusUpdatedEvent extends Event {
 
         this.feedName = feedName;
         total = feedStatus.getTotal();
+        totalPinned = feedStatus.getTotalPinned();
         notViewed = feedStatus.getNotViewed();
         notRead = feedStatus.getNotRead();
     }
@@ -41,6 +43,14 @@ public class FeedStatusUpdatedEvent extends Event {
 
     public void setTotal(int total) {
         this.total = total;
+    }
+
+    public int getTotalPinned() {
+        return totalPinned;
+    }
+
+    public void setTotalPinned(int totalPinned) {
+        this.totalPinned = totalPinned;
     }
 
     public int getNotViewed() {
