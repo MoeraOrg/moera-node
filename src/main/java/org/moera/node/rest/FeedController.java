@@ -321,18 +321,18 @@ public class FeedController {
     }
 
     private void calcSliceTotals(FeedSliceInfo sliceInfo, String feedName) {
-        sliceInfo.setTotal(sliceInfo.getTotal());
+        int total = sliceInfo.getStatus().getTotal();
         if (sliceInfo.getAfter() <= SafeInteger.MIN_VALUE) {
             sliceInfo.setTotalInPast(0);
-            sliceInfo.setTotalInFuture(sliceInfo.getTotal() - sliceInfo.getStories().size());
+            sliceInfo.setTotalInFuture(total - sliceInfo.getStories().size());
         } else if (sliceInfo.getBefore() >= SafeInteger.MAX_VALUE) {
             sliceInfo.setTotalInFuture(0);
-            sliceInfo.setTotalInPast(sliceInfo.getTotal() - sliceInfo.getStories().size());
+            sliceInfo.setTotalInPast(total - sliceInfo.getStories().size());
         } else {
             int totalInFuture = storyRepository.countInRange(requestContext.nodeId(), feedName,
                     sliceInfo.getBefore(), SafeInteger.MAX_VALUE);
             sliceInfo.setTotalInFuture(totalInFuture);
-            sliceInfo.setTotalInPast(sliceInfo.getTotal() - totalInFuture - sliceInfo.getStories().size());
+            sliceInfo.setTotalInPast(total - totalInFuture - sliceInfo.getStories().size());
         }
     }
 

@@ -108,8 +108,9 @@ public class StoryOperations {
         int totalPinned = storyRepository.countPinned(nodeId, feedName);
         int notViewed = storyRepository.countNotViewed(nodeId, feedName);
         int notRead = storyRepository.countNotRead(nodeId, feedName);
+        Long notViewedMoment = storyRepository.findNotViewedMoment(nodeId, feedName);
 
-        return new FeedStatus(total, totalPinned, notViewed, notRead);
+        return new FeedStatus(total, totalPinned, notViewed, notRead, notViewedMoment);
     }
 
     public void unpublish(UUID entryId) {

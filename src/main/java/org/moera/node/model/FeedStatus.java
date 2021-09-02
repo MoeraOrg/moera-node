@@ -6,15 +6,17 @@ public class FeedStatus {
     private int totalPinned;
     private int notViewed;
     private int notRead;
+    private Long notViewedMoment;
 
     public FeedStatus() {
     }
 
-    public FeedStatus(int total, int totalPinned, int notViewed, int notRead) {
+    public FeedStatus(int total, int totalPinned, int notViewed, int notRead, Long notViewedMoment) {
         this.total = total;
         this.totalPinned = totalPinned;
         this.notViewed = notViewed;
         this.notRead = notRead;
+        this.notViewedMoment = notViewedMoment;
     }
 
     public int getTotal() {
@@ -47,6 +49,14 @@ public class FeedStatus {
 
     public void setNotRead(int notRead) {
         this.notRead = notRead;
+    }
+
+    public Long getNotViewedMoment() {
+        return notViewedMoment;
+    }
+
+    public void setNotViewedMoment(Long notViewedMoment) {
+        this.notViewedMoment = notViewedMoment;
     }
 
 }

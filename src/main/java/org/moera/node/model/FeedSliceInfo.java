@@ -7,12 +7,9 @@ public class FeedSliceInfo {
     private long before;
     private long after;
     private List<StoryInfo> stories;
-    private int total;
     private int totalInPast;
     private int totalInFuture;
-    private int totalPinned;
-    private int notViewed;
-    private int notRead;
+    private FeedStatus status;
 
     public FeedSliceInfo() {
     }
@@ -41,14 +38,6 @@ public class FeedSliceInfo {
         this.stories = stories;
     }
 
-    public int getTotal() {
-        return total;
-    }
-
-    public void setTotal(int total) {
-        this.total = total;
-    }
-
     public int getTotalInPast() {
         return totalInPast;
     }
@@ -65,35 +54,12 @@ public class FeedSliceInfo {
         this.totalInFuture = totalInFuture;
     }
 
-    public int getTotalPinned() {
-        return totalPinned;
-    }
-
-    public void setTotalPinned(int totalPinned) {
-        this.totalPinned = totalPinned;
-    }
-
-    public int getNotViewed() {
-        return notViewed;
-    }
-
-    public void setNotViewed(int notViewed) {
-        this.notViewed = notViewed;
-    }
-
-    public int getNotRead() {
-        return notRead;
-    }
-
-    public void setNotRead(int notRead) {
-        this.notRead = notRead;
+    public FeedStatus getStatus() {
+        return status;
     }
 
     public void setStatus(FeedStatus status) {
-        setTotal(status.getTotal());
-        setTotalPinned(status.getTotalPinned());
-        setNotViewed(status.getNotViewed());
-        setNotRead(status.getNotRead());
+        this.status = status;
     }
 
 }
