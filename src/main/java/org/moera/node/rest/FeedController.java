@@ -146,7 +146,6 @@ public class FeedController {
     }
 
     @GetMapping("/{feedName}/status")
-    @Admin
     public FeedStatus getStatus(@PathVariable String feedName) {
         log.info("GET /feeds/{feedName}/status (feedName = {})", LogUtil.format(feedName));
 
@@ -154,7 +153,7 @@ public class FeedController {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
 
-        return storyOperations.getFeedStatus(feedName);
+        return storyOperations.getFeedStatus(feedName, requestContext.isAdmin());
     }
 
     @PutMapping("/{feedName}/status")
@@ -199,8 +198,8 @@ public class FeedController {
             }
         }
 
-        FeedStatus feedStatus = storyOperations.getFeedStatus(feedName);
-        requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus));
+        FeedStatus feedStatus = storyOperations.getFeedStatus(feedName, true);
+        requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
         requestContext.send(new StoriesStatusUpdatedEvent(feedName, change));
         pushService.send(requestContext.nodeId(), PushContent.feedUpdated(feedName, feedStatus));
 
@@ -237,7 +236,6 @@ public class FeedController {
         } else {
             sliceInfo = getStoriesAfter(feedName, after, limit);
         }
-        sliceInfo.setStatus(storyOperations.getFeedStatus(feedName));
         calcSliceTotals(sliceInfo, feedName);
 
         return sliceInfo;
@@ -321,7 +319,7 @@ public class FeedController {
     }
 
     private void calcSliceTotals(FeedSliceInfo sliceInfo, String feedName) {
-        int total = sliceInfo.getStatus().getTotal();
+        int total = storyRepository.countInFeed(requestContext.nodeId(), feedName);
         if (sliceInfo.getAfter() <= SafeInteger.MIN_VALUE) {
             sliceInfo.setTotalInPast(0);
             sliceInfo.setTotalInFuture(total - sliceInfo.getStories().size());

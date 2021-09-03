@@ -54,8 +54,8 @@ public class RedirectController {
             requestContext.send(new StoryUpdatedEvent(story, false));
         }
         requestContext.send(new StoryUpdatedEvent(story, true));
-        FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName());
-        requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus));
+        FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName(), true);
+        requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus, true));
         pushService.send(requestContext.nodeId(), PushContent.feedUpdated(story.getFeedName(), feedStatus));
     }
 

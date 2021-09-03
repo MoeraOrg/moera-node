@@ -42,7 +42,8 @@ public class InstantsCreator {
     }
 
     protected void feedStatusUpdated() {
-        send(new FeedStatusUpdatedEvent(Feed.INSTANT, storyOperations.getFeedStatus(Feed.INSTANT, nodeId())));
+        send(new FeedStatusUpdatedEvent(Feed.INSTANT,
+                storyOperations.getFeedStatus(Feed.INSTANT, nodeId(), true), true));
     }
 
     protected void sendPush(Story story) {

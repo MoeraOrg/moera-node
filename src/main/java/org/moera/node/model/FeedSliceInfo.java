@@ -2,6 +2,9 @@ package org.moera.node.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FeedSliceInfo {
 
     private long before;
@@ -9,7 +12,6 @@ public class FeedSliceInfo {
     private List<StoryInfo> stories;
     private int totalInPast;
     private int totalInFuture;
-    private FeedStatus status;
 
     public FeedSliceInfo() {
     }
@@ -52,14 +54,6 @@ public class FeedSliceInfo {
 
     public void setTotalInFuture(int totalInFuture) {
         this.totalInFuture = totalInFuture;
-    }
-
-    public FeedStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(FeedStatus status) {
-        this.status = status;
     }
 
 }

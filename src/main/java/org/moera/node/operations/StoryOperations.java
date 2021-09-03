@@ -93,24 +93,30 @@ public class StoryOperations {
             feedNames.add(story.getFeedName());
         }
         for (String feedName : feedNames) {
-            FeedStatus feedStatus = getFeedStatus(feedName, nodeId);
-            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus));
+            FeedStatus feedStatus = getFeedStatus(feedName, nodeId, true);
+            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
+            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
             pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
         }
     }
 
-    public FeedStatus getFeedStatus(String feedName) {
-        return getFeedStatus(feedName, requestContext.nodeId());
+    public FeedStatus getFeedStatus(String feedName, boolean isAdmin) {
+        return getFeedStatus(feedName, requestContext.nodeId(), isAdmin);
     }
 
-    public FeedStatus getFeedStatus(String feedName, UUID nodeId) {
+    public FeedStatus getFeedStatus(String feedName, UUID nodeId, boolean isAdmin) {
         int total = storyRepository.countInFeed(nodeId, feedName);
         int totalPinned = storyRepository.countPinned(nodeId, feedName);
-        int notViewed = storyRepository.countNotViewed(nodeId, feedName);
-        int notRead = storyRepository.countNotRead(nodeId, feedName);
-        Long notViewedMoment = storyRepository.findNotViewedMoment(nodeId, feedName);
 
-        return new FeedStatus(total, totalPinned, notViewed, notRead, notViewedMoment);
+        if (isAdmin) {
+            int notViewed = storyRepository.countNotViewed(nodeId, feedName);
+            int notRead = storyRepository.countNotRead(nodeId, feedName);
+            Long notViewedMoment = storyRepository.findNotViewedMoment(nodeId, feedName);
+
+            return new FeedStatus(total, totalPinned, notViewed, notRead, notViewedMoment);
+        } else {
+            return new FeedStatus(total, totalPinned);
+        }
     }
 
     public void unpublish(UUID entryId) {
@@ -130,8 +136,9 @@ public class StoryOperations {
                 });
         storyRepository.deleteByEntryId(nodeId, entryId);
         for (String feedName : feedNames) {
-            FeedStatus feedStatus = getFeedStatus(feedName);
-            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus));
+            FeedStatus feedStatus = getFeedStatus(feedName, true);
+            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
+            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
             pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
         }
     }

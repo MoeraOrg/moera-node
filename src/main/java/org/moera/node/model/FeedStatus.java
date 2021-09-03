@@ -1,11 +1,14 @@
 package org.moera.node.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FeedStatus {
 
     private int total;
     private int totalPinned;
-    private int notViewed;
-    private int notRead;
+    private Integer notViewed;
+    private Integer notRead;
     private Long notViewedMoment;
 
     public FeedStatus() {
@@ -17,6 +20,15 @@ public class FeedStatus {
         this.notViewed = notViewed;
         this.notRead = notRead;
         this.notViewedMoment = notViewedMoment;
+    }
+
+    public FeedStatus(int total, int totalPinned) {
+        this.total = total;
+        this.totalPinned = totalPinned;
+    }
+
+    public FeedStatus notAdmin() {
+        return new FeedStatus(total, totalPinned);
     }
 
     public int getTotal() {
@@ -35,19 +47,19 @@ public class FeedStatus {
         this.totalPinned = totalPinned;
     }
 
-    public int getNotViewed() {
+    public Integer getNotViewed() {
         return notViewed;
     }
 
-    public void setNotViewed(int notViewed) {
+    public void setNotViewed(Integer notViewed) {
         this.notViewed = notViewed;
     }
 
-    public int getNotRead() {
+    public Integer getNotRead() {
         return notRead;
     }
 
-    public void setNotRead(int notRead) {
+    public void setNotRead(Integer notRead) {
         this.notRead = notRead;
     }
 
