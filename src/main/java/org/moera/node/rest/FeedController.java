@@ -17,6 +17,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
@@ -151,6 +152,9 @@ public class FeedController {
 
         if (!Feed.isStandard(feedName)) {
             throw new ObjectNotFoundFailure("feed.not-found");
+        }
+        if (Feed.isAdmin(feedName) && !requestContext.isAdmin()) {
+            throw new AuthenticationException();
         }
 
         return storyOperations.getFeedStatus(feedName, requestContext.isAdmin());
