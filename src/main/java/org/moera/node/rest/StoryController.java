@@ -104,7 +104,9 @@ public class StoryController {
         requestContext.send(new StoryUpdatedEvent(story, true));
         FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName(), true);
         requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus, true));
-        requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus.notAdmin(), false));
+        if (!Feed.isAdmin(story.getFeedName())) {
+            requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus.notAdmin(), false));
+        }
         pushService.send(requestContext.nodeId(), PushContent.feedUpdated(story.getFeedName(), feedStatus));
 
         return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));

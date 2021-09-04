@@ -95,7 +95,9 @@ public class StoryOperations {
         for (String feedName : feedNames) {
             FeedStatus feedStatus = getFeedStatus(feedName, nodeId, true);
             eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
-            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
+            if (!Feed.isAdmin(feedName)) {
+                eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
+            }
             pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
         }
     }
@@ -138,7 +140,9 @@ public class StoryOperations {
         for (String feedName : feedNames) {
             FeedStatus feedStatus = getFeedStatus(feedName, true);
             eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
-            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
+            if (!Feed.isAdmin(feedName)) {
+                eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
+            }
             pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
         }
     }
