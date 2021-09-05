@@ -57,7 +57,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -105,7 +105,7 @@ public class FeedController {
 
         Collection<FeedInfo> feeds = Feed.getAllStandard(requestContext.isAdmin());
         String clientName = requestContext.getClientName();
-        if (!requestContext.isAdmin() && !StringUtils.isEmpty(clientName)) {
+        if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
             Map<String, UUID> subscriberIds =
                 subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
                         .stream()
@@ -131,7 +131,7 @@ public class FeedController {
         }
         FeedInfo feedInfo = Feed.getStandard(feedName);
         String clientName = requestContext.getClientName();
-        if (!requestContext.isAdmin() && !StringUtils.isEmpty(clientName)) {
+        if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
             Subscriber subscriber =
                     subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
                             .stream()
@@ -281,7 +281,7 @@ public class FeedController {
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .collect(Collectors.toList());
         String clientName = requestContext.getClientName();
-        if (!StringUtils.isEmpty(clientName)) {
+        if (!ObjectUtils.isEmpty(clientName)) {
             Map<String, PostingInfo> postingMap = stories.stream()
                     .map(StoryInfo::getPosting)
                     .filter(Objects::nonNull)
@@ -304,7 +304,7 @@ public class FeedController {
     }
 
     private void fillRemoteInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
-        if (StringUtils.isEmpty(requestContext.getClientName())) {
+        if (ObjectUtils.isEmpty(requestContext.getClientName())) {
             return;
         }
         List<PostingInfo> postings = stories.stream()

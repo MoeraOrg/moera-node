@@ -53,7 +53,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class ReactionOperations {
@@ -100,10 +100,10 @@ public class ReactionOperations {
 
         if (reactionDescription.getSignature() == null) {
             String ownerName = requestContext.getClientName();
-            if (StringUtils.isEmpty(ownerName)) {
+            if (ObjectUtils.isEmpty(ownerName)) {
                 throw new AuthenticationException();
             }
-            if (!StringUtils.isEmpty(reactionDescription.getOwnerName())
+            if (!ObjectUtils.isEmpty(reactionDescription.getOwnerName())
                     && !reactionDescription.getOwnerName().equals(ownerName)) {
                 throw new AuthenticationException();
             }

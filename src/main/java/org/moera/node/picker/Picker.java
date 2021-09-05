@@ -52,7 +52,7 @@ import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class Picker extends Task {
 
@@ -289,7 +289,7 @@ public class Picker extends Task {
     }
 
     private void saveSources(Posting posting, Pick pick) {
-        if (StringUtils.isEmpty(pick.getRemoteFeedName())) {
+        if (ObjectUtils.isEmpty(pick.getRemoteFeedName())) {
             return;
         }
         List<EntrySource> sources = entrySourceRepository.findAllByEntryId(posting.getId());

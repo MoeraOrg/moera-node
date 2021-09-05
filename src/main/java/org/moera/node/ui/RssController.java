@@ -24,7 +24,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,7 +58,7 @@ public class RssController {
         SyndFeed feed = new SyndFeedImpl();
         feed.setFeedType("rss_2.0");
         String name = rcp.fullName() != null ? rcp.fullName() : rcp.nodeName();
-        String title = !StringUtils.isEmpty(name) ? name + " - Moera" : "Moera";
+        String title = !ObjectUtils.isEmpty(name) ? name + " - Moera" : "Moera";
         feed.setTitle(title);
         feed.setLink(rcp.getSiteUrl() + "/");
         if (rcp.avatarId() != null) {
@@ -82,14 +82,14 @@ public class RssController {
     private String buildWebmaster() {
         String name = requestContext.getOptions().getString("webmaster.name");
         String email = requestContext.getOptions().getString("webmaster.email");
-        if (StringUtils.isEmpty(name)) {
-            if (StringUtils.isEmpty(email)) {
+        if (ObjectUtils.isEmpty(name)) {
+            if (ObjectUtils.isEmpty(email)) {
                 return null;
             } else {
                 return email;
             }
         } else {
-            if (StringUtils.isEmpty(email)) {
+            if (ObjectUtils.isEmpty(email)) {
                 return name;
             } else {
                 return String.format("%s (%s)", email, name);
@@ -109,7 +109,7 @@ public class RssController {
         entry.setPublishedDate(story.getPublishedAt());
 
         StringBuilder buf = new StringBuilder();
-        boolean hasPreview = !StringUtils.isEmpty(revision.getBodyPreview());
+        boolean hasPreview = !ObjectUtils.isEmpty(revision.getBodyPreview());
         buf.append("<div>");
         buf.append(hasPreview ? revision.getBodyPreview() : revision.getBody());
         buf.append("</div>");

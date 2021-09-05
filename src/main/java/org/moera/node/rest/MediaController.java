@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -66,7 +66,7 @@ public class MediaController {
 
     @PostConstruct
     public void init() throws Exception {
-        if (StringUtils.isEmpty(config.getMedia().getPath())) {
+        if (ObjectUtils.isEmpty(config.getMedia().getPath())) {
             throw new MediaPathNotSetException("Path not set");
         }
         try {

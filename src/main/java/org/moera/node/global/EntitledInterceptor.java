@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.model.OperationFailure;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -21,7 +21,7 @@ public class EntitledInterceptor extends HandlerInterceptorAdapter {
         if (!(handler instanceof HandlerMethod) || !((HandlerMethod) handler).hasMethodAnnotation(Entitled.class)) {
             return true;
         }
-        if (StringUtils.isEmpty(requestContext.nodeName())) {
+        if (ObjectUtils.isEmpty(requestContext.nodeName())) {
             throw new OperationFailure("node-name-not-set");
         }
         if (requestContext.getOptions().getPrivateKey("profile.signing-key") == null) {

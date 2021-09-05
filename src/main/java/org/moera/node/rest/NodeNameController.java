@@ -42,7 +42,7 @@ import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -136,16 +136,16 @@ public class NodeNameController {
             throw new OperationFailure("naming.operation-pending");
         }
         String nodeName = registeredNameSecret.getName() != null ? registeredNameSecret.getName() : options.nodeName();
-        if (StringUtils.isEmpty(nodeName)) {
+        if (ObjectUtils.isEmpty(nodeName)) {
             throw new ValidationFailure("node-name.name-absent");
         }
         if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
-                && StringUtils.isEmpty(registeredNameSecret.getSecret())) {
+                && ObjectUtils.isEmpty(registeredNameSecret.getSecret())) {
             throw new ValidationFailure("registeredNameSecret.empty");
         }
 
         String mnemonic;
-        if (!StringUtils.isEmpty(registeredNameSecret.getSecret())) {
+        if (!ObjectUtils.isEmpty(registeredNameSecret.getSecret())) {
             byte[] entropy = Util.base64decode(registeredNameSecret.getSecret());
             StringBuilder buf = new StringBuilder();
             new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, buf::append);

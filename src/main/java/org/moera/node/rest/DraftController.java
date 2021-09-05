@@ -42,7 +42,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -87,10 +87,10 @@ public class DraftController {
                 LogUtil.format(commentId), LogUtil.format(page), LogUtil.format(limit));
 
         if ((draftType == DraftType.POSTING_UPDATE || draftType == DraftType.NEW_COMMENT
-                || draftType == DraftType.COMMENT_UPDATE) && StringUtils.isEmpty(postingId)) {
+                || draftType == DraftType.COMMENT_UPDATE) && ObjectUtils.isEmpty(postingId)) {
             throw new MissingServletRequestParameterException("postingId", "string");
         }
-        if (draftType == DraftType.COMMENT_UPDATE && StringUtils.isEmpty(commentId)) {
+        if (draftType == DraftType.COMMENT_UPDATE && ObjectUtils.isEmpty(commentId)) {
             throw new MissingServletRequestParameterException("commentId", "string");
         }
 
@@ -153,11 +153,11 @@ public class DraftController {
         if ((draftText.getDraftType() == DraftType.POSTING_UPDATE
                 || draftText.getDraftType() == DraftType.NEW_COMMENT
                 || draftText.getDraftType() == DraftType.COMMENT_UPDATE)
-                && StringUtils.isEmpty(draftText.getReceiverPostingId())) {
+                && ObjectUtils.isEmpty(draftText.getReceiverPostingId())) {
             throw new ValidationFailure("draftText.postingId.blank");
         }
         if (draftText.getDraftType() == DraftType.COMMENT_UPDATE
-                && StringUtils.isEmpty(draftText.getReceiverCommentId())) {
+                && ObjectUtils.isEmpty(draftText.getReceiverCommentId())) {
             throw new ValidationFailure("draftText.commentId.blank");
         }
 

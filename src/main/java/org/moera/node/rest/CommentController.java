@@ -78,7 +78,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -268,15 +268,15 @@ public class CommentController {
         byte[] digest = null;
         if (commentText.getSignature() == null) {
             String clientName = requestContext.getClientName();
-            if (StringUtils.isEmpty(clientName)) {
+            if (ObjectUtils.isEmpty(clientName)) {
                 throw new AuthenticationException();
             }
-            if (!StringUtils.isEmpty(ownerName) && !ownerName.equals(clientName)) {
+            if (!ObjectUtils.isEmpty(ownerName) && !ownerName.equals(clientName)) {
                 throw new AuthenticationException();
             }
             commentText.setOwnerName(clientName);
 
-            if (StringUtils.isEmpty(commentText.getBodySrc())) {
+            if (ObjectUtils.isEmpty(commentText.getBodySrc())) {
                 throw new ValidationFailure("commentText.bodySrc.blank");
             }
             if (commentText.getBodySrc().length() > getMaxCommentSize()) {
@@ -299,13 +299,13 @@ public class CommentController {
             digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest(),
                     repliedToDigest);
 
-            if (StringUtils.isEmpty(commentText.getBody())) {
+            if (ObjectUtils.isEmpty(commentText.getBody())) {
                 throw new ValidationFailure("commentText.body.blank");
             }
             if (commentText.getBody().length() > getMaxCommentSize()) {
                 throw new ValidationFailure("commentText.body.wrong-size");
             }
-            if (StringUtils.isEmpty(commentText.getBodyFormat())) {
+            if (ObjectUtils.isEmpty(commentText.getBodyFormat())) {
                 throw new ValidationFailure("commentText.bodyFormat.blank");
             }
             if (commentText.getCreatedAt() == null) {
@@ -391,7 +391,7 @@ public class CommentController {
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
         String clientName = requestContext.getClientName();
-        if (!StringUtils.isEmpty(clientName)) {
+        if (!ObjectUtils.isEmpty(clientName)) {
             Map<String, CommentInfo> commentMap = comments.stream()
                     .filter(Objects::nonNull)
                     .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
@@ -477,7 +477,7 @@ public class CommentController {
 
     private CommentInfo withClientReaction(CommentInfo commentInfo) {
         String clientName = requestContext.getClientName();
-        if (StringUtils.isEmpty(clientName)) {
+        if (ObjectUtils.isEmpty(clientName)) {
             return commentInfo;
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);

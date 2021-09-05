@@ -9,7 +9,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeFilter;
 import org.moera.node.model.Body;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class MentionsExtractor {
 
@@ -36,7 +36,7 @@ public class MentionsExtractor {
         public FilterResult head(Node node, int depth) {
             if (node instanceof Element) {
                 String nodeName = ((Element) node).dataset().get("nodename");
-                if (!StringUtils.isEmpty(nodeName)) {
+                if (!ObjectUtils.isEmpty(nodeName)) {
                     result.add(nodeName);
                 }
             }

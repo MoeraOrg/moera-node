@@ -8,7 +8,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.model.constraint.Uuid;
 import org.moera.node.option.Options;
 import org.moera.node.text.TextConverter;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class ProfileAttributes {
 
@@ -95,7 +95,7 @@ public class ProfileAttributes {
     @Transactional
     public void toOptions(Options options, TextConverter textConverter) {
         String bioHtml;
-        if (!StringUtils.isEmpty(getBioSrc()) && getBioSrcFormat() != SourceFormat.APPLICATION) {
+        if (!ObjectUtils.isEmpty(getBioSrc()) && getBioSrcFormat() != SourceFormat.APPLICATION) {
             bioHtml = textConverter.toHtml(getBioSrcFormat(), getBioSrc());
         } else {
             bioHtml = getBioSrc();

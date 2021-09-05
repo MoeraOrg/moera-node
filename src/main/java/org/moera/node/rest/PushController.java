@@ -30,7 +30,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,7 +70,7 @@ public class PushController {
         log.info("GET /push/{clientId} (clientId = {}, after = {}, Last-Event-ID = {})",
                 LogUtil.format(clientId), LogUtil.format(after), LogUtil.format(lastEventId));
 
-        if (StringUtils.isEmpty(clientId)) {
+        if (ObjectUtils.isEmpty(clientId)) {
             throw new ValidationFailure("push.clientId.blank");
         }
         if (clientId.length() > 40) {

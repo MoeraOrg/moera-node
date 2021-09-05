@@ -33,7 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class Updater {
@@ -121,7 +121,7 @@ public class Updater {
             log.error("No domain exists for node {}", nodeId);
             return;
         }
-        if (StringUtils.isEmpty(options.nodeName())) {
+        if (ObjectUtils.isEmpty(options.nodeName())) {
             log.info("No name registered for node {}", nodeId);
             return;
         }

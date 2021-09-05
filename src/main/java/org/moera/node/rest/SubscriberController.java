@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -94,7 +94,7 @@ public class SubscriberController {
         QSubscriber subscriber = QSubscriber.subscriber;
         BooleanBuilder where = new BooleanBuilder();
         where.and(subscriber.nodeId.eq(requestContext.nodeId()));
-        if (!StringUtils.isEmpty(nodeName)) {
+        if (!ObjectUtils.isEmpty(nodeName)) {
             where.and(subscriber.remoteNodeName.eq(nodeName));
         }
         if (type != null) {
@@ -114,7 +114,7 @@ public class SubscriberController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         String ownerName = requestContext.getClientName();
         if (!requestContext.isAdmin()
-                && (StringUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
+                && (ObjectUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
             throw new AuthenticationException();
         }
 
@@ -134,7 +134,7 @@ public class SubscriberController {
             throw new ValidationFailure("subscriberDescription.type.blank");
         }
         String ownerName = requestContext.getClientName();
-        if (StringUtils.isEmpty(ownerName)) {
+        if (ObjectUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
         if (similarExists(subscriberDescription)) {
@@ -207,7 +207,7 @@ public class SubscriberController {
 
         switch (description.getType()) {
             case FEED:
-                if (StringUtils.isEmpty(description.getFeedName())) {
+                if (ObjectUtils.isEmpty(description.getFeedName())) {
                     throw new ValidationFailure("subscriberDescription.feedName.blank");
                 }
                 if (!Feed.isStandard(description.getFeedName())) {
@@ -237,7 +237,7 @@ public class SubscriberController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         String ownerName = requestContext.getClientName();
         if (!requestContext.isAdmin()
-                && (StringUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
+                && (ObjectUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
             throw new AuthenticationException();
         }
 

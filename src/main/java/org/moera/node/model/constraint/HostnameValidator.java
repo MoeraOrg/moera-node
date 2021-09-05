@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class HostnameValidator implements ConstraintValidator<Hostname, String> {
 
@@ -17,7 +17,7 @@ public class HostnameValidator implements ConstraintValidator<Hostname, String> 
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        return StringUtils.isEmpty(s) || HOSTNAME_PATTERN.matcher(s).matches();
+        return ObjectUtils.isEmpty(s) || HOSTNAME_PATTERN.matcher(s).matches();
     }
 
 }

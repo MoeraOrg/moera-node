@@ -13,7 +13,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class DraftText {
 
@@ -200,7 +200,7 @@ public class DraftText {
             draft.setBodySrcFormat(bodySrcFormat);
         }
 
-        if (!StringUtils.isEmpty(bodySrc)) {
+        if (!ObjectUtils.isEmpty(bodySrc)) {
             if (draft.getBodySrcFormat() != SourceFormat.APPLICATION) {
                 draft.setBodySrc(bodySrc);
                 Body body = textConverter.toHtml(draft.getBodySrcFormat(), new Body(bodySrc));

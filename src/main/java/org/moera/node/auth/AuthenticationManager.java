@@ -20,7 +20,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class AuthenticationManager {
@@ -38,7 +38,7 @@ public class AuthenticationManager {
     private NamingCache namingCache;
 
     public boolean isAdminToken(String tokenS, UUID nodeId) throws InvalidTokenException {
-        if (!StringUtils.isEmpty(tokenS)) {
+        if (!ObjectUtils.isEmpty(tokenS)) {
             Token token = tokenRepository.findById(tokenS).orElse(null);
             if (token == null
                     || !token.getNodeId().equals(nodeId)
@@ -51,7 +51,7 @@ public class AuthenticationManager {
     }
 
     public String getClientName(String carteS, InetAddress clientAddress) {
-        if (StringUtils.isEmpty(carteS)) {
+        if (ObjectUtils.isEmpty(carteS)) {
             return null;
         }
         byte[] carte = Util.base64decode(carteS);

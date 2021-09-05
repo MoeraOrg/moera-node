@@ -25,7 +25,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ContactInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,7 +63,7 @@ public class ContactsController {
         QMediaFile mediaFile = QMediaFile.mediaFile;
         BooleanBuilder where = new BooleanBuilder();
         where.and(contact.nodeId.eq(requestContext.nodeId()));
-        if (!StringUtils.isEmpty(query)) {
+        if (!ObjectUtils.isEmpty(query)) {
             for (String word : words) {
                 String pattern = "%" + Util.le(word) + "%";
                 where.andAnyOf(contact.remoteFullName.likeIgnoreCase(pattern),
@@ -103,7 +103,7 @@ public class ContactsController {
     }
 
     private boolean contactMatch(Contact contact, List<Pattern> regexes) {
-        String haystack = !StringUtils.isEmpty(contact.getRemoteFullName())
+        String haystack = !ObjectUtils.isEmpty(contact.getRemoteFullName())
                 ? contact.getRemoteFullName() + " " + contact.getRemoteNodeName()
                 : contact.getRemoteNodeName();
         List<Matcher> matchers = regexes.stream().map(regex -> regex.matcher(haystack)).collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package org.moera.node.model;
 
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class EmailHint {
 
@@ -11,7 +11,7 @@ public class EmailHint {
     }
 
     private String buildHint(String email) {
-        if (StringUtils.isEmpty(email)) {
+        if (ObjectUtils.isEmpty(email)) {
             return email;
         }
         String[] parts = email.split("@");

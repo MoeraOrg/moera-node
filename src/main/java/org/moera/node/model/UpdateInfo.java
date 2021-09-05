@@ -5,7 +5,7 @@ import javax.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Draft;
 import org.moera.node.data.EntryRevision;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UpdateInfo {
@@ -33,11 +33,11 @@ public class UpdateInfo {
     }
 
     public static boolean isEmpty(EntryRevision revision) {
-        return !revision.isUpdateImportant() && StringUtils.isEmpty(revision.getUpdateDescription());
+        return !revision.isUpdateImportant() && ObjectUtils.isEmpty(revision.getUpdateDescription());
     }
 
     public static boolean isEmpty(Draft draft) {
-        return !draft.isUpdateImportant() && StringUtils.isEmpty(draft.getUpdateDescription());
+        return !draft.isUpdateImportant() && ObjectUtils.isEmpty(draft.getUpdateDescription());
     }
 
     public Boolean getImportant() {

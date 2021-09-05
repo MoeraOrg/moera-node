@@ -1,6 +1,6 @@
 package org.moera.node.naming;
 
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class RegisteredName implements NodeName {
 
@@ -12,7 +12,7 @@ public class RegisteredName implements NodeName {
 
     public static RegisteredName parse(String registeredName) {
         RegisteredName result = new RegisteredName();
-        if (StringUtils.isEmpty(registeredName)) {
+        if (ObjectUtils.isEmpty(registeredName)) {
             return result;
         }
         String[] parts = registeredName.split("_");
@@ -28,7 +28,7 @@ public class RegisteredName implements NodeName {
     }
 
     public static String shorten(String registeredName) {
-        if (StringUtils.isEmpty(registeredName)) {
+        if (ObjectUtils.isEmpty(registeredName)) {
             return registeredName;
         }
         return parse(registeredName).toShortString();

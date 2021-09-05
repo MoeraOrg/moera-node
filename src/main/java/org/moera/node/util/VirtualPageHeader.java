@@ -2,7 +2,7 @@ package org.moera.node.util;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class VirtualPageHeader {
 
@@ -13,7 +13,7 @@ public class VirtualPageHeader {
     }
 
     public static void put(HttpServletResponse response, String page) {
-        if (!StringUtils.isEmpty(page)) {
+        if (!ObjectUtils.isEmpty(page)) {
             response.addHeader(X_MOERA, build(page));
         } else {
             response.addHeader(X_MOERA, "true");

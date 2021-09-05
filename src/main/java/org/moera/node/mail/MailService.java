@@ -30,7 +30,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @Service
 public class MailService {
@@ -83,8 +83,8 @@ public class MailService {
     }
 
     public void send(Mail mail) throws MailServiceException {
-        if (StringUtils.isEmpty(mail.getDomainName()) || mail.getDomainName().equals(Domains.DEFAULT_DOMAIN)
-                || StringUtils.isEmpty(mail.getEmail())) {
+        if (ObjectUtils.isEmpty(mail.getDomainName()) || mail.getDomainName().equals(Domains.DEFAULT_DOMAIN)
+                || ObjectUtils.isEmpty(mail.getEmail())) {
             return;
         }
 
@@ -98,7 +98,7 @@ public class MailService {
                 message.setTo(mail.getEmail());
                 message.setFrom(MAILROBOT_PREFIX + mail.getDomainName());
                 String replyTo = config.getMail().getReplyToAddress();
-                if (!StringUtils.isEmpty(replyTo)) {
+                if (!ObjectUtils.isEmpty(replyTo)) {
                     message.setReplyTo(replyTo);
                 }
                 message.setSubject(handler.getResult().getSubject().toString());

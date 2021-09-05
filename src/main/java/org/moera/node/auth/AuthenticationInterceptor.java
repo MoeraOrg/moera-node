@@ -24,6 +24,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -56,7 +57,7 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
 
     @PostConstruct
     public void init() throws RootSecretNotSetException {
-        if (StringUtils.isEmpty(config.getRootSecret())) {
+        if (ObjectUtils.isEmpty(config.getRootSecret())) {
             throw new RootSecretNotSetException();
         }
     }
@@ -103,7 +104,7 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
     private Secrets extractSecrets(HttpServletRequest request) {
         Secrets secrets = new Secrets();
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (!StringUtils.isEmpty(authHeader)) {
+        if (!ObjectUtils.isEmpty(authHeader)) {
             String[] parts = StringUtils.split(authHeader, " ");
             if (parts != null && parts[0].trim().equalsIgnoreCase("bearer")) {
                 String auth = parts[1].trim();
@@ -138,14 +139,14 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");
         }
-        if (!requestContext.isAdmin() && !StringUtils.isEmpty(requestContext.getClientName())) {
+        if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(requestContext.getClientName())) {
             log.info("Authorized with node name {}", requestContext.getClientName());
         }
     }
 
     private void processUserAgent(HttpServletRequest request) {
         String userAgent = request.getHeader("User-Agent");
-        if (StringUtils.isEmpty(userAgent)) {
+        if (ObjectUtils.isEmpty(userAgent)) {
             return;
         }
 

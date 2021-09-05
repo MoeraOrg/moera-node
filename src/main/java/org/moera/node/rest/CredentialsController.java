@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,8 +56,8 @@ public class CredentialsController {
 
         Options options = requestContext.getOptions();
         return new CredentialsCreated(
-                !StringUtils.isEmpty(options.getString("credentials.login"))
-                && !StringUtils.isEmpty(options.getString("credentials.password-hash")));
+                !ObjectUtils.isEmpty(options.getString("credentials.login"))
+                && !ObjectUtils.isEmpty(options.getString("credentials.password-hash")));
     }
 
     @PostMapping
@@ -66,8 +66,8 @@ public class CredentialsController {
         log.info("POST /credentials (login = '{}')", credentials.getLogin());
 
         requestContext.getOptions().runInTransaction(options -> {
-            if (!StringUtils.isEmpty(options.getString("credentials.login"))
-                    && !StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
+            if (!ObjectUtils.isEmpty(options.getString("credentials.login"))
+                    && !ObjectUtils.isEmpty(options.getString("credentials.password-hash"))) {
                 throw new OperationFailure("credentials.already-created");
             }
             options.set("credentials.login", credentials.getLogin());
@@ -82,7 +82,7 @@ public class CredentialsController {
     public Result put(@Valid @RequestBody CredentialsChange credentials) {
         log.info("PUT /credentials (login = '{}')", credentials.getLogin());
 
-        if (!StringUtils.isEmpty(credentials.getToken())) {
+        if (!ObjectUtils.isEmpty(credentials.getToken())) {
             PasswordResetToken token = passwordResetTokenRepository.findById(credentials.getToken())
                     .orElseThrow(() -> new ValidationFailure("credentials.wrong-reset-token"));
             if (!token.getNodeId().equals(requestContext.nodeId())) {
@@ -94,7 +94,7 @@ public class CredentialsController {
             passwordResetTokenRepository.delete(token);
         } else {
             if (!credentials.getLogin().equals(requestContext.getOptions().getString("credentials.login"))
-                    || StringUtils.isEmpty(credentials.getOldPassword())
+                    || ObjectUtils.isEmpty(credentials.getOldPassword())
                     || !Password.validate(requestContext.getOptions().getString("credentials.password-hash"),
                                           credentials.getOldPassword())) {
                 throw new OperationFailure("credentials.login-incorrect");
@@ -127,7 +127,7 @@ public class CredentialsController {
         log.info("POST /credentials/reset");
 
         String email = requestContext.getOptions().getString("profile.email");
-        if (StringUtils.isEmpty(email)) {
+        if (ObjectUtils.isEmpty(email)) {
             throw new OperationFailure("credentials.email-not-set");
         }
 

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.xml.sax.Attributes;
 
 public class XmlUtils {
@@ -33,7 +33,7 @@ public class XmlUtils {
     }
 
     public static CharSequence delicateAmps(String s, boolean xmlEntities) {
-        if (StringUtils.isEmpty(s)) {
+        if (ObjectUtils.isEmpty(s)) {
             return s;
         }
 

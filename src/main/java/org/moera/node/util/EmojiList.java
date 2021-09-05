@@ -24,7 +24,7 @@ public class EmojiList {
         if (!other) {
             accepted = Arrays.stream(parts)
                     .map(String::trim)
-                    .filter(p-> !StringUtils.isEmpty(p))
+                    .filter(StringUtils::hasLength)
                     .filter(p -> !p.equals("*"))
                     .map(EmojiList::parseValue)
                     .collect(Collectors.toSet());

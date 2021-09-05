@@ -12,7 +12,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class PostingInstants extends InstantsCreator {
@@ -77,7 +77,7 @@ public class PostingInstants extends InstantsCreator {
                                                      String description) {
         String summary = String.format("%s updated their post \"%s\"", formatNodeName(nodeName, fullName),
                 Util.he(postingHeading));
-        return StringUtils.isEmpty(description) ? summary : summary + ": " + Util.he(description);
+        return ObjectUtils.isEmpty(description) ? summary : summary + ": " + Util.he(description);
     }
 
 }

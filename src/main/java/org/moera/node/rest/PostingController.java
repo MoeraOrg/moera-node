@@ -55,7 +55,7 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -132,7 +132,7 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        if (StringUtils.isEmpty(postingText.getBodySrc())) {
+        if (ObjectUtils.isEmpty(postingText.getBodySrc())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
         }
         if (postingText.getBodySrc().length() > getMaxPostingSize()) {
@@ -237,7 +237,7 @@ public class PostingController {
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
         String clientName = requestContext.getClientName();
-        if (StringUtils.isEmpty(clientName)) {
+        if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
         if (postingInfo.isOriginal()) {
@@ -264,7 +264,7 @@ public class PostingController {
 
     private PostingInfo withSubscribers(PostingInfo postingInfo) {
         String clientName = requestContext.getClientName();
-        if (StringUtils.isEmpty(clientName)) {
+        if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
         if (postingInfo.isOriginal()) {

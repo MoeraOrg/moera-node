@@ -12,10 +12,10 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.HtmlSanitizer;
-import org.moera.node.text.shorten.Shortener;
 import org.moera.node.text.TextConverter;
+import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class CommentText {
 
@@ -242,8 +242,8 @@ public class CommentText {
         revision.setDigest(digest);
 
         Body body = new Body();
-        if (signature == null && (this.body == null || StringUtils.isEmpty(this.body))) {
-            if (!StringUtils.isEmpty(bodySrc)) {
+        if (signature == null && (this.body == null || ObjectUtils.isEmpty(this.body))) {
+            if (!ObjectUtils.isEmpty(bodySrc)) {
                 if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
                     revision.setBodySrc(bodySrc);
                     body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
@@ -281,7 +281,7 @@ public class CommentText {
                     Body bodyPreview = new Body(this.bodyPreview);
                     revision.setBodyPreview(this.bodyPreview);
                     revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                            !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
+                            !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
                 } catch (BodyMappingException e) {
                     e.setField("bodyPreview");
                     throw e;
@@ -297,8 +297,8 @@ public class CommentText {
     }
 
     public boolean sameAsRevision(EntryRevision revision) {
-        return (StringUtils.isEmpty(bodySrcFormat) || bodySrcFormat == revision.getBodySrcFormat())
-                && (StringUtils.isEmpty(bodySrc)
+        return (ObjectUtils.isEmpty(bodySrcFormat) || bodySrcFormat == revision.getBodySrcFormat())
+                && (ObjectUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
                 && (revision.getSignature() != null || signature == null);

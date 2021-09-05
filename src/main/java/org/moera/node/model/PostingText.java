@@ -16,7 +16,7 @@ import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class PostingText {
 
@@ -180,7 +180,7 @@ public class PostingText {
             revision.setBodySrcFormat(bodySrcFormat);
         }
 
-        if (!StringUtils.isEmpty(bodySrc)) {
+        if (!ObjectUtils.isEmpty(bodySrc)) {
             if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
                 revision.setBodySrc(bodySrc);
                 Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
@@ -214,8 +214,8 @@ public class PostingText {
     }
 
     public boolean sameAsRevision(EntryRevision revision) {
-        return (StringUtils.isEmpty(bodySrcFormat) || bodySrcFormat == revision.getBodySrcFormat())
-                && (StringUtils.isEmpty(bodySrc)
+        return (ObjectUtils.isEmpty(bodySrcFormat) || bodySrcFormat == revision.getBodySrcFormat())
+                && (ObjectUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
                 && (updateInfo != null ? updateInfo.getImportant() : false) == revision.isUpdateImportant()

@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -89,7 +89,7 @@ public class SubscriptionController {
         QSubscription subscription = QSubscription.subscription;
         BooleanBuilder where = new BooleanBuilder();
         where.and(subscription.nodeId.eq(requestContext.nodeId()));
-        if (!StringUtils.isEmpty(nodeName)) {
+        if (!ObjectUtils.isEmpty(nodeName)) {
             where.and(subscription.remoteNodeName.eq(nodeName));
         }
         if (type != null) {
@@ -121,7 +121,7 @@ public class SubscriptionController {
             throw new ValidationFailure("subscriptionDescription.reason.blank");
         }
         if (subscriptionDescription.getType() == SubscriptionType.FEED) {
-            if (StringUtils.isEmpty(subscriptionDescription.getFeedName())) {
+            if (ObjectUtils.isEmpty(subscriptionDescription.getFeedName())) {
                 throw new ValidationFailure("subscriptionDescription.feedName.blank");
             }
             if (!Feed.isStandard(subscriptionDescription.getFeedName())) {

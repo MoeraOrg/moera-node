@@ -19,7 +19,7 @@ import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,7 +66,7 @@ public class RedirectController {
                            @RequestParam(required = false) String location,
                            @RequestParam(required = false) UUID trackingId) {
         String href = "";
-        if (!StringUtils.isEmpty(name)) {
+        if (!ObjectUtils.isEmpty(name)) {
             RegisteredNameDetails details = namingCache.get(name);
             if (details == null || details.getNodeUri() == null) {
                 throw new PageNotFoundException();
@@ -76,13 +76,13 @@ public class RedirectController {
         if (trackingId != null) {
             markAsRead(trackingId);
         }
-        if (!StringUtils.isEmpty(location)) {
+        if (!ObjectUtils.isEmpty(location)) {
             href += location;
         }
-        if (!StringUtils.isEmpty(client)) {
+        if (!ObjectUtils.isEmpty(client)) {
             href = client + "/?href=" + Util.ue(href);
         }
-        return "redirect:" + (!StringUtils.isEmpty(href) ? href : "/");
+        return "redirect:" + (!ObjectUtils.isEmpty(href) ? href : "/");
     }
 
 }

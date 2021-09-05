@@ -5,7 +5,7 @@ import javax.inject.Inject;
 import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NodeName;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class TitleBuilder {
@@ -15,7 +15,7 @@ public class TitleBuilder {
 
     public CharSequence build(String title) {
         StringBuilder buf = new StringBuilder();
-        if (!StringUtils.isEmpty(title)) {
+        if (!ObjectUtils.isEmpty(title)) {
             buf.append(title);
             buf.append(' ');
             String name = "";
@@ -24,7 +24,7 @@ public class TitleBuilder {
                 name = rcp.fullName() != null ? rcp.fullName() : rcp.nodeName();
             } catch (Exception e) {
             }
-            if (!StringUtils.isEmpty(name)) {
+            if (!ObjectUtils.isEmpty(name)) {
                 buf.append("@ ");
                 buf.append(NodeName.shorten(name));
                 buf.append(' ');

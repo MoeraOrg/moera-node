@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,8 +49,8 @@ public class TokensController {
         log.info("POST /tokens (login = '{}')", credentials.getLogin());
 
         Options options = requestContext.getOptions();
-        if (StringUtils.isEmpty(options.getString("credentials.login"))
-                || StringUtils.isEmpty(options.getString("credentials.password-hash"))) {
+        if (ObjectUtils.isEmpty(options.getString("credentials.login"))
+                || ObjectUtils.isEmpty(options.getString("credentials.password-hash"))) {
             throw new OperationFailure("credentials.not-created");
         }
         if (!credentials.getLogin().equals(options.getString("credentials.login"))

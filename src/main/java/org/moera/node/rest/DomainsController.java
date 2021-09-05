@@ -30,7 +30,7 @@ import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -94,7 +94,7 @@ public class DomainsController {
         if (!config.isRegistrationPublic() && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
         }
-        if (StringUtils.isEmpty(domainAttributes.getName())) {
+        if (ObjectUtils.isEmpty(domainAttributes.getName())) {
             throw new ValidationFailure("domainAttributes.name.blank");
         }
         String name = domainAttributes.getName().toLowerCase();
@@ -124,7 +124,7 @@ public class DomainsController {
         log.info("PUT /domains/{}", name);
 
         name = name.toLowerCase();
-        String newName = !StringUtils.isEmpty(domainAttributes.getName())
+        String newName = !ObjectUtils.isEmpty(domainAttributes.getName())
                 ? domainAttributes.getName().toLowerCase() : name;
         UUID nodeId = domainAttributes.getNodeId() == null ? UUID.randomUUID() : domainAttributes.getNodeId();
 
@@ -188,7 +188,7 @@ public class DomainsController {
 
         Slugify slugify = new Slugify().withTransliterator(true);
         String domainName = slugify.slugify(nodeName);
-        if (StringUtils.isEmpty(domainName)) {
+        if (ObjectUtils.isEmpty(domainName)) {
             domainName = "x";
         }
         String fqdn = domainName + "." + config.getRegistrar().getDomain();

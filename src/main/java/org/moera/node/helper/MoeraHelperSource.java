@@ -22,7 +22,7 @@ import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @HelperSource
@@ -39,12 +39,12 @@ public class MoeraHelperSource {
 
         StringBuilder buf = new StringBuilder();
         RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
-        if (!StringUtils.isEmpty(registeredName.getName())) {
+        if (!ObjectUtils.isEmpty(registeredName.getName())) {
             RegisteredNameDetails details = namingCache.getFast(nodeName);
             if (!linked) {
                 details.setNodeUri("");
             }
-            String tag = !StringUtils.isEmpty(details.getNodeUri()) ? "a" : "span";
+            String tag = !ObjectUtils.isEmpty(details.getNodeUri()) ? "a" : "span";
 
             buf.append('<');
             buf.append(tag);
@@ -52,12 +52,12 @@ public class MoeraHelperSource {
                 HelperUtil.appendAttr(buf, "href", details.getNodeUri());
             }
             HelperUtil.appendAttr(buf, "class", "node-name");
-            if (!StringUtils.isEmpty(fullName)) {
+            if (!ObjectUtils.isEmpty(fullName)) {
                 HelperUtil.appendAttr(buf, "title", "@" + registeredName.toShortString());
             }
             buf.append('>');
 
-            if (!StringUtils.isEmpty(fullName)) {
+            if (!ObjectUtils.isEmpty(fullName)) {
                 HelperUtil.safeAppend(buf, fullName);
             } else {
                 HelperUtil.safeAppend(buf, registeredName.getName());
@@ -75,11 +75,11 @@ public class MoeraHelperSource {
     }
 
     public CharSequence shortName(String nodeName) {
-        return StringUtils.isEmpty(nodeName) ? "" : NodeName.shorten(nodeName);
+        return ObjectUtils.isEmpty(nodeName) ? "" : NodeName.shorten(nodeName);
     }
 
     public CharSequence shortGender(String gender) {
-        if (StringUtils.isEmpty(gender)) {
+        if (ObjectUtils.isEmpty(gender)) {
             return "";
         }
         switch (gender.toLowerCase()) {

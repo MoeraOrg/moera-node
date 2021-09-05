@@ -2,7 +2,7 @@ package org.moera.node.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @Configuration
 @ConfigurationProperties("node")
@@ -68,14 +68,14 @@ public class Config {
     public boolean isRegistrarEnabled() {
         return getMulti() == MultiHost.PUBLIC
                 && getRegistrar() != null
-                && !StringUtils.isEmpty(getRegistrar().getHost())
-                && !StringUtils.isEmpty(getRegistrar().getDomain());
+                && !ObjectUtils.isEmpty(getRegistrar().getHost())
+                && !ObjectUtils.isEmpty(getRegistrar().getDomain());
     }
 
     public boolean isRegistrationPublic() {
         return getMulti() == MultiHost.PUBLIC
                 && getRegistrar() != null
-                && !StringUtils.isEmpty(getRegistrar().getDomain());
+                && !ObjectUtils.isEmpty(getRegistrar().getDomain());
     }
 
     public MailConfig getMail() {

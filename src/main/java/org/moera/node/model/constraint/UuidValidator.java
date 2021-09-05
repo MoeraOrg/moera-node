@@ -4,7 +4,7 @@ import java.util.UUID;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class UuidValidator implements ConstraintValidator<Uuid, String> {
 
@@ -14,7 +14,7 @@ public class UuidValidator implements ConstraintValidator<Uuid, String> {
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        if (StringUtils.isEmpty(s)) {
+        if (ObjectUtils.isEmpty(s)) {
             return true;
         }
         try {

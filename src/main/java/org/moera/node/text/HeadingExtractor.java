@@ -7,14 +7,14 @@ import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
 import org.moera.node.model.Body;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 public class HeadingExtractor {
 
     private static final int HEADING_LENGTH = 80;
 
     public static String extract(Body body) {
-        if (!StringUtils.isEmpty(body.getSubject())) {
+        if (!ObjectUtils.isEmpty(body.getSubject())) {
             return Util.ellipsize(body.getSubject(), HEADING_LENGTH);
         }
         return extract(body.getText());

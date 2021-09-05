@@ -17,7 +17,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.util.Util;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingInfo implements ReactionsInfo {
@@ -106,7 +106,7 @@ public class PostingInfo implements ReactionsInfo {
             ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
         }
         bodyPreview = new Body(revision.getBodyPreview());
-        if (includeSource && !StringUtils.isEmpty(revision.getBodySrc())) {
+        if (includeSource && !ObjectUtils.isEmpty(revision.getBodySrc())) {
             bodySrc = new Body(revision.getBodySrc());
         }
         bodySrcHash = revision.getReceiverBodySrcHash() != null
@@ -163,7 +163,7 @@ public class PostingInfo implements ReactionsInfo {
         if (saneBodyPreview != null) {
             info.setSaneBodyPreview(saneBodyPreview);
         } else {
-            info.setSaneBodyPreview(!StringUtils.isEmpty(
+            info.setSaneBodyPreview(!ObjectUtils.isEmpty(
                     info.getBodyPreview().getText()) ? info.getBodyPreview().getText() : info.getBody().getText());
         }
         String saneBody = posting.getCurrentRevision().getSaneBody();
@@ -564,7 +564,7 @@ public class PostingInfo implements ReactionsInfo {
         entryRevision.setReceiverRevisionId(revisionId);
         entryRevision.setBodyPreview(bodyPreview.getEncoded());
         entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                !StringUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
+                !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
         entryRevision.setBodySrcFormat(bodySrcFormat);
         entryRevision.setReceiverBodySrcHash(bodySrcHash);
         entryRevision.setBodyFormat(bodyFormat);

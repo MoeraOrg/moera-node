@@ -14,7 +14,7 @@ import org.moera.node.registrar.RegistrarHost;
 import org.moera.node.util.UriUtil;
 import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -65,7 +65,7 @@ public class RegistrarUiController {
     }
 
     private String createDomain(String hostName) {
-        if (StringUtils.isEmpty(hostName)) {
+        if (ObjectUtils.isEmpty(hostName)) {
             return "blank";
         }
         if (!HOSTNAME.matcher(hostName).matches()) {
