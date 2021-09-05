@@ -22,24 +22,37 @@ public class Options {
 
     private static Logger log = LoggerFactory.getLogger(Options.class);
 
-    private Map<String, Object> values = new HashMap<>();
-    private ReadWriteLock valuesLock = new ReentrantReadWriteLock();
-    private ThreadLocal<Map<String, Object>> transaction = new ThreadLocal<>();
-    private ThreadLocal<Integer> transactionDepth = new ThreadLocal<>();
+    private final Map<String, Object> values = new HashMap<>();
+    private final ReadWriteLock valuesLock = new ReentrantReadWriteLock();
+    private final ThreadLocal<Map<String, Object>> transaction = new ThreadLocal<>();
+    private final ThreadLocal<Integer> transactionDepth = new ThreadLocal<>();
 
-    private UUID nodeId;
-    private OptionsMetadata optionsMetadata;
-    private OptionRepository optionRepository;
+    private final UUID nodeId;
+    private final OptionsMetadata optionsMetadata;
+    private final OptionRepository optionRepository;
 
     public Options(UUID nodeId, OptionsMetadata optionsMetadata, OptionRepository optionRepository) {
         this.nodeId = nodeId;
         this.optionsMetadata = optionsMetadata;
         this.optionRepository = optionRepository;
 
+        load();
+    }
+
+    private void load() {
         optionsMetadata.getDescriptors().values().stream()
                 .filter(desc -> desc.getDefaultValue() != null)
                 .forEach(desc -> putValue(desc.getName(), desc.getDefaultValue()));
         optionRepository.findAllByNodeId(nodeId).forEach(option -> putValue(option.getName(), option.getValue()));
+    }
+
+    public void reload() {
+        valuesLock.writeLock().lock();
+        try {
+            load();
+        } finally {
+            valuesLock.writeLock().unlock();
+        }
     }
 
     private void lockRead() {

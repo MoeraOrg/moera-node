@@ -1,6 +1,7 @@
 package org.moera.node.option;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -11,12 +12,17 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.moera.node.data.OptionDefault;
+import org.moera.node.data.OptionDefaultRepository;
 import org.moera.node.option.exception.UnknownOptionTypeException;
 import org.moera.node.option.type.OptionType;
 import org.moera.node.option.type.OptionTypeBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,7 +37,13 @@ public class OptionsMetadata {
     private Map<String, Object> typeModifiers;
 
     @Inject
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @Inject
     private ApplicationContext applicationContext;
+
+    @Inject
+    private OptionDefaultRepository optionDefaultRepository;
 
     @PostConstruct
     public void init() throws IOException {
@@ -39,7 +51,10 @@ public class OptionsMetadata {
                 .filter(bean -> bean instanceof OptionTypeBase)
                 .map(bean -> (OptionTypeBase) bean)
                 .collect(Collectors.toMap(OptionTypeBase::getTypeName, Function.identity()));
+        load();
+    }
 
+    private void load() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         List<OptionDescriptor> data = mapper.readValue(
                 applicationContext.getResource("classpath:options.yaml").getInputStream(),
@@ -52,6 +67,32 @@ public class OptionsMetadata {
                 .collect(Collectors.toMap(
                         OptionDescriptor::getName,
                         desc -> types.get(desc.getType()).parseTypeModifiers(desc.getModifiers())));
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void initDefaults() {
+        loadDefaults();
+        applicationEventPublisher.publishEvent(new OptionsMetadataConfiguredEvent(this));
+    }
+
+    private void loadDefaults() {
+        Collection<OptionDefault> defaults = optionDefaultRepository.findAll();
+        for (OptionDefault def : defaults) {
+            OptionDescriptor desc = descriptors.get(def.getName());
+            if (desc == null) {
+                log.warn("Unknown option: {}", def.getName());
+                continue;
+            }
+            desc.setDefaultValue(def.getValue());
+            if (def.getPrivileged() != null) {
+                desc.setPrivileged(def.getPrivileged());
+            }
+        }
+    }
+
+    public void reload() throws IOException {
+        load();
+        loadDefaults();
     }
 
     public OptionTypeBase getType(String type) {
