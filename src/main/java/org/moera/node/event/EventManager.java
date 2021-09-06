@@ -21,7 +21,6 @@ import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.domain.Domains;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PingEvent;
-import org.moera.node.model.event.SubscribedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -57,11 +56,11 @@ public class EventManager {
     @Inject
     private AuthenticationManager authenticationManager;
 
-    private Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
-    private List<EventPacket> queue = new ArrayList<>();
+    private final Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
+    private final List<EventPacket> queue = new ArrayList<>();
     private final long startedAt = Instant.now().getEpochSecond();
     private int lastOrdinal = 0;
-    private ReadWriteLock eventsLock = new ReentrantReadWriteLock();
+    private final ReadWriteLock eventsLock = new ReentrantReadWriteLock();
     private final Object deliverySignal = new Object();
 
     @EventListener(SessionConnectEvent.class)
@@ -114,11 +113,6 @@ public class EventManager {
             subscriber.setLastEventSeen(seen.lastEvent);
         }
         subscriber.setSubscribed(true);
-
-        Map<String, Object> attributes = accessor.getSessionAttributes();
-        String clientIp = (String) attributes.get("ip");
-
-        send(subscriber.getNodeId(), new SubscribedEvent(subscriber.getSessionId(), clientIp));
     }
 
     @EventListener(SessionUnsubscribeEvent.class)
