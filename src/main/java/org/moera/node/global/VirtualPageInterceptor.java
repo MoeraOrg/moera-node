@@ -51,6 +51,9 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
     }
 
     private boolean isAutoClient() {
+        if (!requestContext.getOptions().getBool("webui.redirect-to-client")) {
+            return false;
+        }
         switch (requestContext.getUserAgent()) {
             case FIREFOX:
             case CHROME:

@@ -219,6 +219,11 @@
   modifiers:
     multiline: true
 
+- name: webui.redirect-to-client
+  type: bool
+  defaultValue: true
+  title: "Web UI: Open in web client"
+
 - name: remote-posting-verification.lifetime
   type: Duration
   defaultValue: 1h
