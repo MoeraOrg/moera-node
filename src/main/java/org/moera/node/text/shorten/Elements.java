@@ -18,7 +18,7 @@ class Elements {
     }
 
     public static boolean isBreaking(Element element) {
-        return element.normalName().equals("br") || element.tag().isBlock();
+        return element.normalName().equals("br") || element.normalName().equals("li") || element.tag().isBlock();
     }
 
     public static boolean isObject(Element element) {
