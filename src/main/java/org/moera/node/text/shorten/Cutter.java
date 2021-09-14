@@ -23,28 +23,28 @@ class Cutter implements NodeFilter {
     public FilterResult head(Node node, int i) {
         boolean goOn = true;
 
-        if (ignoreContent == null) {
-            if (node instanceof TextNode) {
-                String text = ((TextNode) node).getWholeText();
-                if (offset.plus(text.length()).less(cut)) {
-                    target.appendChild(node.clone());
-                } else {
-                    int len = cut.distance(offset);
-                    target.appendChild(new TextNode(len < text.length() ? text.substring(0, len) : text));
-                }
+        if (node instanceof TextNode) {
+            String text = ((TextNode) node).getWholeText();
+            if (offset.plus(text.length()).less(cut) || ignoreContent != null) {
+                target.appendChild(node.clone());
+            } else {
+                int len = cut.distance(offset);
+                target.appendChild(new TextNode(len < text.length() ? text.substring(0, len) : text));
+            }
+            if (ignoreContent == null) {
                 offset = offset.plus(text.length());
                 if (offset.greaterOrEquals(cut) && ellipsis) {
                     target.appendChild(new TextNode("\u2026"));
                 }
                 goOn = offset.less(cut);
-            } else if (node instanceof Element) {
-                Element element = (Element) node;
-                if (Elements.isDetails(element)) {
-                    ignoreContent = element;
-                } else if (Elements.isObject(element)) {
-                    ignoreContent = element;
-                    goOn = offset.space(Elements.getHeight(element)).lessOrEquals(cut);
-                }
+            }
+        } else if (node instanceof Element && ignoreContent == null) {
+            Element element = (Element) node;
+            if (Elements.isDetails(element)) {
+                ignoreContent = element;
+            } else if (Elements.isObject(element)) {
+                ignoreContent = element;
+                goOn = offset.space(Elements.getHeight(element)).lessOrEquals(cut);
             }
         }
 
