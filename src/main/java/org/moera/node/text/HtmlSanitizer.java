@@ -1,14 +1,45 @@
 package org.moera.node.text;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.moera.node.model.Body;
 import org.owasp.html.CssSchema;
 import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.HtmlStreamEventReceiver;
+import org.owasp.html.HtmlStreamEventReceiverWrapper;
 import org.owasp.html.PolicyFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class HtmlSanitizer {
+
+    private static class Preprocessor extends HtmlStreamEventReceiverWrapper {
+
+        Preprocessor(HtmlStreamEventReceiver underlying) {
+            super(underlying);
+        }
+
+        @Override
+        public void openTag(String elementName, List<String> attrs) {
+            List<String> newAttrs = attrs;
+            if (elementName.equalsIgnoreCase("p")
+                    || elementName.equalsIgnoreCase("ol")
+                    || elementName.equalsIgnoreCase("ul")) {
+                newAttrs = new ArrayList<>();
+                for (int i = 0; i < attrs.size(); i += 2) {
+                    if (!attrs.get(i).equalsIgnoreCase("dir")) {
+                        newAttrs.add(attrs.get(i));
+                        newAttrs.add(attrs.get(i + 1));
+                    }
+                }
+                newAttrs.add("dir");
+                newAttrs.add("auto");
+            }
+            super.openTag(elementName, newAttrs);
+        }
+
+    }
 
     private static final PolicyFactory BASIC_HTML = new HtmlPolicyBuilder()
             .allowElements("address", "aside", "footer", "header", "hgroup", "nav", "section", "blockquote", "dd",
@@ -34,6 +65,7 @@ public class HtmlSanitizer {
                     "allowtransparency", "style").onElements("iframe")
             .allowAttributes("dir").globally()
             .allowStyling(CssSchema.withProperties(Set.of("text-align", "width", "height")))
+            .withPreprocessor(Preprocessor::new)
             .toFactory();
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(
             "www.youtube.com", "www.youtube-nocookie.com", "player.vimeo.com", "www.facebook.com", "peer.tube",

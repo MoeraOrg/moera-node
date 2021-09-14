@@ -23,6 +23,7 @@
 
     & > .content {
         overflow-wrap: break-word;
+        text-align: start;
 
         IMG, IFRAME {
             max-width: css-min(unquote("var(--feed-width) - 3.5rem"), unquote("100vw - 4rem"));
