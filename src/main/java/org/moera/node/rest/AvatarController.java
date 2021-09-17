@@ -36,6 +36,9 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.AvatarAddedEvent;
+import org.moera.node.model.event.AvatarDeletedEvent;
+import org.moera.node.model.event.AvatarOrderedEvent;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +130,11 @@ public class AvatarController {
             }
             avatar = avatarRepository.save(avatar);
 
-            return new AvatarInfo(avatar);
+            AvatarInfo avatarInfo = new AvatarInfo(avatar);
+
+            requestContext.send(new AvatarAddedEvent(avatarInfo));
+
+            return avatarInfo;
         } catch (IOException e) {
             throw new OperationFailure("media.storage-error");
         } finally {
@@ -154,6 +161,7 @@ public class AvatarController {
                     .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
             avatar.setOrdinal(ordinal);
             result[ordinal] = new AvatarOrdinal(avatar.getId().toString(), ordinal);
+            requestContext.send(new AvatarOrderedEvent(avatar));
             ordinal++;
         }
 
@@ -188,6 +196,8 @@ public class AvatarController {
         Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         avatarRepository.delete(avatar);
+
+        requestContext.send(new AvatarDeletedEvent(avatar));
 
         return Result.OK;
     }
