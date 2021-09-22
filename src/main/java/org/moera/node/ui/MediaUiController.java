@@ -45,6 +45,7 @@ public class MediaUiController {
     }
 
     @GetMapping("/private/{id}.{ext}")
+    @ResponseBody
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
