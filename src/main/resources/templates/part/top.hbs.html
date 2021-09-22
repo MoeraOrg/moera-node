@@ -16,6 +16,52 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {{#if ogUrl}}
+            <meta property="og:url" content="{{ogUrl}}">
+        {{/if}}
+        {{#if ogType}}
+            <meta property="og:type" content="{{ogType}}">
+        {{/if}}
+        {{#if ogTitle}}
+            <meta property="og:title" content="{{ogTitle}}">
+        {{/if}}
+        {{#if ogImage}}
+            <meta property="og:image" content="{{ogImage}}">
+        {{/if}}
+        {{#if ogImageType}}
+            <meta property="og:image:type" content="{{ogImageType}}">
+        {{/if}}
+        {{#if ogImageWidth}}
+            <meta property="og:image:width" content="{{ogImageWidth}}">
+        {{/if}}
+        {{#if ogImageHeight}}
+            <meta property="og:image:height" content="{{ogImageHeight}}">
+        {{/if}}
+        {{#if ogDescription}}
+            <meta property="og:description" content="{{ogDescription}}">
+        {{/if}}
+        {{#if ogSiteName}}
+            <meta property="og:site_name" content="{{ogSiteName}}">
+        {{/if}}
+        {{#if ogArticlePublishedTime}}
+            <meta property="article:published_time" content="{{ogArticlePublishedTime}}">
+        {{/if}}
+        {{#if ogArticleModifiedTime}}
+            <meta property="article:modified_time" content="{{ogArticleModifiedTime}}">
+        {{/if}}
+        <meta name="twitter:card" content="summary">
+        {{#if ogUrl}}
+            <meta name="twitter:url" content="{{ogUrl}}">
+        {{/if}}
+        {{#if ogTitle}}
+            <meta name="twitter:title" content="{{ogTitle}}">
+        {{/if}}
+        {{#if ogDescription}}
+            <meta name="twitter:description" content="{{ogDescription}}">
+        {{/if}}
+        {{#if ogImage}}
+            <meta name="twitter:image" content="{{ogImage}}">
+        {{/if}}
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
         <link rel="icon" href="/pics/icon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/pics/icon-apple-touch.png">

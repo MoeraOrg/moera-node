@@ -58,6 +58,9 @@ public class PeopleUiController {
         model.addAttribute("subscriptionsTotal", subscriptionsTotal);
         model.addAttribute("subscribers", subscribers);
 
+        model.addAttribute("ogUrl", requestContext.getSiteUrl() + "/people/subscribers");
+        model.addAttribute("ogTitle", "Subscribers");
+
         return "subscribers";
     }
 
@@ -79,6 +82,9 @@ public class PeopleUiController {
         model.addAttribute("subscribersTotal", subscribersTotal);
         model.addAttribute("subscriptionsTotal", subscriptionsTotal);
         model.addAttribute("subscriptions", subscriptions);
+
+        model.addAttribute("ogUrl", requestContext.getSiteUrl() + "/people/subscriptions");
+        model.addAttribute("ogTitle", "Subscriptions");
 
         return "subscriptions";
     }

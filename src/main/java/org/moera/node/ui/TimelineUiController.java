@@ -22,6 +22,7 @@ import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
@@ -83,6 +84,8 @@ public class TimelineUiController {
         model.addAttribute("stories", stories);
         model.addAttribute("pagination", timelinePublicPageOperations.createPagination(publicPage));
 
+        model.addAttribute("ogUrl", requestContext.getSiteUrl());
+
         return "timeline";
     }
 
@@ -140,6 +143,24 @@ public class TimelineUiController {
                     ? String.format("/post/%s?comment=%s", posting.getReceiverEntryId(), commentId)
                     : String.format("/post/%s", posting.getReceiverEntryId());
             model.addAttribute("commentsHref", NamingCache.getRedirector(posting.getReceiverName(), location));
+        }
+
+        model.addAttribute("ogUrl", requestContext.getSiteUrl() + String.format("/post/%s", posting.getId()));
+        model.addAttribute("ogType", "article");
+        model.addAttribute("ogTitle", posting.getCurrentRevision().getHeading());
+        if (posting.getOwnerAvatarMediaFile() != null) {
+            AvatarImage avatarImage = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
+            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
+            model.addAttribute("ogImageType", avatarImage.getMediaFile().getMimeType());
+            model.addAttribute("ogImageWidth", avatarImage.getWidth());
+            model.addAttribute("ogImageHeight", avatarImage.getHeight());
+        }
+        model.addAttribute("ogDescription", posting.getCurrentRevision().getHeading());
+        var createdAt = posting.getReceiverCreatedAt() != null ? posting.getReceiverCreatedAt() : posting.getCreatedAt();
+        model.addAttribute("ogArticlePublishedTime", createdAt.toInstant().toString());
+        if (posting.getEditedAt() != null) {
+            var editedAt = posting.getReceiverEditedAt() != null ? posting.getReceiverEditedAt() : posting.getEditedAt();
+            model.addAttribute("ogArticleModifiedTime", editedAt.toInstant().toString());
         }
 
         return "posting";

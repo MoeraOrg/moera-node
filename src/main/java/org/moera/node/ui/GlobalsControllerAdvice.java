@@ -8,6 +8,7 @@ import org.moera.node.global.WebClient;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.NodeNameInfo;
 import org.springframework.ui.Model;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -26,6 +27,24 @@ public class GlobalsControllerAdvice {
                     ? new AvatarImage(requestContext.getPublic().getAvatar()) : null);
             model.addAttribute("siteUrl", requestContext.getSiteUrl());
         }
+        model.addAttribute("ogType", "website");
+        if (requestContext.avatarId() != null) {
+            AvatarImage avatarImage = new AvatarImage(requestContext.getAvatar());
+            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
+            model.addAttribute("ogImageType", avatarImage.getMediaFile().getMimeType());
+            model.addAttribute("ogImageWidth", avatarImage.getWidth());
+            model.addAttribute("ogImageHeight", avatarImage.getHeight());
+        } else {
+            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/pics/avatar.png");
+            model.addAttribute("ogImageType", "image/png");
+            model.addAttribute("ogImageWidth", 200);
+            model.addAttribute("ogImageHeight", 200);
+        }
+        model.addAttribute("ogDescription", requestContext.getOptions().getString("profile.title"));
+        String siteName = !ObjectUtils.isEmpty(requestContext.fullName())
+                ? requestContext.fullName() : requestContext.nodeName();
+        model.addAttribute("ogSiteName", siteName);
+        model.addAttribute("ogTitle", siteName);
     }
 
 }
