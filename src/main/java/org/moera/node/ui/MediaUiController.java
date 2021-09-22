@@ -7,6 +7,7 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.global.MaxCache;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @UiController
 @RequestMapping("/moera/media")
+@MaxCache
 public class MediaUiController {
 
     @Inject
