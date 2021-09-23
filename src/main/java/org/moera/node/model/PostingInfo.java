@@ -15,6 +15,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
+import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.HtmlSanitizer;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -571,6 +572,7 @@ public class PostingInfo implements ReactionsInfo {
         entryRevision.setBody(body.getEncoded());
         entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
         entryRevision.setHeading(heading);
+        entryRevision.setDescription(HeadingExtractor.extractDescription(body));
         if (deletedAt != null) {
             entryRevision.setDeletedAt(Util.now());
         }

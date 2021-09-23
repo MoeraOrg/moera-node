@@ -182,6 +182,7 @@ public class PostingOperations {
             revision.setBody(template.getBody());
             revision.setSaneBody(template.getSaneBody());
             revision.setHeading(template.getHeading());
+            revision.setDescription(template.getDescription());
         }
 
         return revision;

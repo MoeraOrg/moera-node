@@ -57,6 +57,9 @@ public class EntryRevision {
     private String heading = "";
 
     @NotNull
+    private String description = "";
+
+    @NotNull
     private boolean updateImportant;
 
     @NotNull
@@ -189,6 +192,14 @@ public class EntryRevision {
 
     public void setHeading(String heading) {
         this.heading = heading;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public boolean isUpdateImportant() {

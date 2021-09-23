@@ -292,7 +292,7 @@ public class CommentText {
             }
         }
         if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
-            revision.setHeading(HeadingExtractor.extract(body));
+            revision.setHeading(HeadingExtractor.extractHeading(body));
         }
     }
 

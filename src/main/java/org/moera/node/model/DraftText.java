@@ -206,7 +206,7 @@ public class DraftText {
                 Body body = textConverter.toHtml(draft.getBodySrcFormat(), new Body(bodySrc));
                 draft.setBody(body.getEncoded());
                 draft.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                draft.setHeading(HeadingExtractor.extract(body));
+                draft.setHeading(HeadingExtractor.extractHeading(body));
             } else {
                 draft.setBodySrc(Body.EMPTY);
                 draft.setBody(bodySrc);

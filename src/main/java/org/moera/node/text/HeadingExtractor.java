@@ -13,17 +13,22 @@ import org.springframework.util.ObjectUtils;
 public class HeadingExtractor {
 
     private static final int HEADING_LENGTH = 80;
+    private static final int DESCRIPTION_LENGTH = 200;
 
-    public static String extract(Body body) {
+    public static String extractHeading(Body body) {
         if (!ObjectUtils.isEmpty(body.getSubject())) {
             return Util.ellipsize(body.getSubject(), HEADING_LENGTH);
         }
-        return extract(body.getText());
+        return extract(body.getText(), HEADING_LENGTH);
     }
 
-    private static String extract(String html) {
+    public static String extractDescription(Body body) {
+        return extract(body.getText(), DESCRIPTION_LENGTH);
+    }
+
+    private static String extract(String html, int len) {
         Document document = Jsoup.parseBodyFragment(html);
-        Extractor extractor = new Extractor();
+        Extractor extractor = new Extractor(len);
         document.filter(extractor);
         return extractor.getResult();
     }
@@ -32,6 +37,11 @@ public class HeadingExtractor {
 
         private final StringBuilder result = new StringBuilder();
         private boolean ignoreContent = false;
+        private final int len;
+
+        Extractor(int len) {
+            this.len = len;
+        }
 
         String getResult() {
             return result.toString();
@@ -64,8 +74,8 @@ public class HeadingExtractor {
                     result.append(' ');
                 }
                 result.append(text);
-                if (result.length() >= HEADING_LENGTH) {
-                    Util.ellipsize(result, HEADING_LENGTH);
+                if (result.length() >= len) {
+                    Util.ellipsize(result, len);
                     return true;
                 }
             }

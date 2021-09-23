@@ -437,7 +437,8 @@ CREATE TABLE public.entry_revisions (
     sane_body text,
     sane_body_preview text,
     update_important boolean DEFAULT false NOT NULL,
-    update_description character varying(128) DEFAULT ''::character varying NOT NULL
+    update_description character varying(128) DEFAULT ''::character varying NOT NULL,
+    description character varying(255) DEFAULT ''::character varying NOT NULL
 );
 
 
@@ -509,6 +510,20 @@ CREATE TABLE public.media_files (
 
 
 ALTER TABLE public.media_files OWNER TO moera;
+
+--
+-- Name: option_defaults; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.option_defaults (
+    id uuid NOT NULL,
+    name character varying(128) NOT NULL,
+    value character varying(4096),
+    privileged boolean
+);
+
+
+ALTER TABLE public.option_defaults OWNER TO moera;
 
 --
 -- Name: options; Type: TABLE; Schema: public; Owner: moera
@@ -928,6 +943,14 @@ ALTER TABLE ONLY public.media_files
 
 
 --
+-- Name: option_defaults option_defaults_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.option_defaults
+    ADD CONSTRAINT option_defaults_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: options options_node_id_name_key; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1314,6 +1337,13 @@ CREATE INDEX media_files_created_at_idx ON public.media_files USING btree (creat
 --
 
 CREATE INDEX media_files_deadline_idx ON public.media_files USING btree (deadline);
+
+
+--
+-- Name: option_defaults_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX option_defaults_name_idx ON public.option_defaults USING btree (name);
 
 
 --

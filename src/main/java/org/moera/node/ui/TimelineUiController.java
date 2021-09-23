@@ -155,7 +155,7 @@ public class TimelineUiController {
             model.addAttribute("ogImageWidth", avatarImage.getWidth());
             model.addAttribute("ogImageHeight", avatarImage.getHeight());
         }
-        model.addAttribute("ogDescription", posting.getCurrentRevision().getHeading());
+        model.addAttribute("ogDescription", posting.getCurrentRevision().getDescription());
         var createdAt = posting.getReceiverCreatedAt() != null ? posting.getReceiverCreatedAt() : posting.getCreatedAt();
         model.addAttribute("ogArticlePublishedTime", createdAt.toInstant().toString());
         if (posting.getEditedAt() != null) {
