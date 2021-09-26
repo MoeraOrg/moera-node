@@ -18,8 +18,9 @@ Installation instructions:
    an empty database `<dbname>` owned by this user (see detailed
    instructions here:
    http://moera.org/development/setup/create-db.html).
-3. Go to the source directory.
-4. Create `src/main/resources/application-dev.yml` with the following
+3. Create a directory `<media>`, where the server will keep media files.
+4. Go to the source directory.
+5. Create `src/main/resources/application-dev.yml` with the following
    content:
    
    ```yaml
@@ -33,20 +34,22 @@ Installation instructions:
        password: <password>
    node:
      root-secret: <secret>
+     media:
+       path: <media>
    ```
 
    * `<secret>` must be a long random string of letters and digits
      without spaces.
 
-5. By default, the server runs on port 8081. If you want it to run on a
+6. By default, the server runs on port 8081. If you want it to run on a
    different port, add these lines to the file above:
     
    ```yaml
    server:
      port: <port number>
    ```
-6. Execute `./run` script.
-7. If you use your own [naming server][1], make sure its location is set
+7. Execute `./run` script.
+8. If you use your own [naming server][1], make sure its location is set
    correctly in node settings.
 
 [1]: https://github.com/MoeraOrg/moera-naming
