@@ -206,6 +206,31 @@ $$;
 ALTER FUNCTION public.update_entity_replied_to_avatar_media_file_id() OWNER TO moera;
 
 --
+-- Name: update_entry_attachments_media_file_owner_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entry_attachments_media_file_owner_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_owner_reference(OLD.media_file_owner_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_owner_reference(OLD.media_file_owner_id, NEW.media_file_owner_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_owner_reference(NULL, NEW.media_file_owner_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entry_attachments_media_file_owner_id() OWNER TO moera;
+
+--
 -- Name: update_media_file_deadline(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -227,6 +252,29 @@ $$;
 
 
 ALTER FUNCTION public.update_media_file_deadline() OWNER TO moera;
+
+--
+-- Name: update_media_file_owner_reference(uuid, uuid); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_media_file_owner_reference(old_id uuid, new_id uuid) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF old_id = new_id THEN
+            RETURN;
+        END IF;
+        IF old_id IS NOT NULL THEN
+            UPDATE media_file_owners SET usage_count = usage_count - 1 WHERE id = old_id;
+        END IF;
+        IF new_id IS NOT NULL THEN
+            UPDATE media_file_owners SET usage_count = usage_count + 1 WHERE id = new_id;
+        END IF;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_media_file_owner_reference(old_id uuid, new_id uuid) OWNER TO postgres;
 
 --
 -- Name: update_media_file_reference(character varying, character varying); Type: FUNCTION; Schema: public; Owner: moera
@@ -398,6 +446,19 @@ CREATE TABLE public.entries (
 ALTER TABLE public.entries OWNER TO moera;
 
 --
+-- Name: entry_attachments; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.entry_attachments (
+    id uuid NOT NULL,
+    entry_id uuid NOT NULL,
+    media_file_owner_id uuid NOT NULL
+);
+
+
+ALTER TABLE public.entry_attachments OWNER TO moera;
+
+--
 -- Name: entry_revision_upgrades; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -486,7 +547,9 @@ CREATE TABLE public.media_file_owners (
     node_id uuid NOT NULL,
     owner_name character varying(63),
     media_file_id character varying(40) NOT NULL,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    usage_count integer DEFAULT 0 NOT NULL,
+    deadline timestamp without time zone
 );
 
 
@@ -903,6 +966,14 @@ ALTER TABLE ONLY public.entries
 
 
 --
+-- Name: entry_attachments entry_attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_attachments
+    ADD CONSTRAINT entry_attachments_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: entry_revision_upgrades entry_revision_upgrades_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1263,6 +1334,20 @@ CREATE INDEX entries_replied_to_revision_id_idx ON public.entries USING btree (r
 
 
 --
+-- Name: entry_attachments_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_attachments_entry_id_idx ON public.entry_attachments USING btree (entry_id);
+
+
+--
+-- Name: entry_attachments_media_file_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_attachments_media_file_owner_id_idx ON public.entry_attachments USING btree (media_file_owner_id);
+
+
+--
 -- Name: entry_revision_upgrades_entry_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1309,6 +1394,13 @@ CREATE INDEX entry_sources_entry_id_idx ON public.entry_sources USING btree (ent
 --
 
 CREATE INDEX entry_sources_remote_avatar_media_file_id_idx ON public.entry_sources USING btree (remote_avatar_media_file_id);
+
+
+--
+-- Name: media_file_owners_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_owners_deadline_idx ON public.media_file_owners USING btree (deadline);
 
 
 --
@@ -1669,6 +1761,13 @@ CREATE INDEX subscriptions_remote_avatar_media_file_id_idx ON public.subscriptio
 
 
 --
+-- Name: media_file_owners update_deadline; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_deadline BEFORE INSERT OR UPDATE OF usage_count, deadline ON public.media_file_owners FOR EACH ROW EXECUTE FUNCTION public.update_media_file_deadline();
+
+
+--
 -- Name: media_files update_deadline; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -1687,6 +1786,13 @@ CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_fi
 --
 
 CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_file_id ON public.media_file_owners FOR EACH ROW EXECUTE FUNCTION public.update_entity_media_file_id();
+
+
+--
+-- Name: entry_attachments update_media_file_owner_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_media_file_owner_id AFTER INSERT OR DELETE OR UPDATE OF media_file_owner_id ON public.entry_attachments FOR EACH ROW EXECUTE FUNCTION public.update_entry_attachments_media_file_owner_id();
 
 
 --
@@ -1865,6 +1971,22 @@ ALTER TABLE ONLY public.entries
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entries_replied_to_revision_id_fkey FOREIGN KEY (replied_to_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: entry_attachments entry_attachments_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_attachments
+    ADD CONSTRAINT entry_attachments_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: entry_attachments entry_attachments_media_file_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_attachments
+    ADD CONSTRAINT entry_attachments_media_file_owner_id_fkey FOREIGN KEY (media_file_owner_id) REFERENCES public.media_file_owners(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
