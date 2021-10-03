@@ -16,7 +16,7 @@ public class EntryAttachment {
 
     @ManyToOne
     @NotNull
-    private Entry entry;
+    private EntryRevision entryRevision;
 
     @ManyToOne
     @NotNull
@@ -30,12 +30,12 @@ public class EntryAttachment {
         this.id = id;
     }
 
-    public Entry getEntry() {
-        return entry;
+    public EntryRevision getEntryRevision() {
+        return entryRevision;
     }
 
-    public void setEntry(Entry entry) {
-        this.entry = entry;
+    public void setEntryRevision(EntryRevision entryRevision) {
+        this.entryRevision = entryRevision;
     }
 
     public MediaFileOwner getMediaFileOwner() {

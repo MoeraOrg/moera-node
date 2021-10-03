@@ -87,6 +87,9 @@ public class EntryRevision {
     private Timestamp deadline;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
+    private Set<EntryAttachment> attachments = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
     private Set<Reaction> reactions = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
@@ -288,6 +291,24 @@ public class EntryRevision {
 
     public void setDeadline(Timestamp deadline) {
         this.deadline = deadline;
+    }
+
+    public Set<EntryAttachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(Set<EntryAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    public void addAttachment(EntryAttachment attachment) {
+        attachments.add(attachment);
+        attachment.setEntryRevision(this);
+    }
+
+    public void removeAttachment(EntryAttachment attachment) {
+        attachments.removeIf(r -> r.getId().equals(attachment.getId()));
+        attachment.setEntryRevision(null);
     }
 
     public Set<Reaction> getReactions() {

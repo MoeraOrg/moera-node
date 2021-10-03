@@ -9,8 +9,8 @@ CREATE TABLE entry_attachments (
     media_file_owner_id uuid NOT NULL
 );
 ALTER TABLE entry_attachments ADD FOREIGN KEY (entry_id) REFERENCES entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
-ALTER TABLE entry_attachments ADD FOREIGN KEY (media_file_owner_id) REFERENCES media_file_owners(id)
-    ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE entry_attachments ADD CONSTRAINT entry_attachments_entry_id_fkey FOREIGN KEY (media_file_owner_id)
+    REFERENCES media_file_owners(id) ON UPDATE CASCADE ON DELETE CASCADE;
 CREATE INDEX entry_attachments_entry_id_idx ON entry_attachments(entry_id);
 CREATE INDEX entry_attachments_media_file_owner_id_idx ON entry_attachments(media_file_owner_id);
 CREATE FUNCTION update_media_file_owner_reference(old_id uuid, new_id uuid) RETURNS void
