@@ -1,13 +1,16 @@
 package org.moera.node.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.SourceFormat;
@@ -32,6 +35,8 @@ public class PostingText {
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;
+
+    private UUID[] media;
 
     @Valid
     private AcceptedReactions acceptedReactions;
@@ -86,6 +91,14 @@ public class PostingText {
 
     public void setBodySrcFormat(SourceFormat bodySrcFormat) {
         this.bodySrcFormat = bodySrcFormat;
+    }
+
+    public UUID[] getMedia() {
+        return media;
+    }
+
+    public void setMedia(UUID[] media) {
+        this.media = media;
     }
 
     public AcceptedReactions getAcceptedReactions() {
@@ -219,6 +232,9 @@ public class PostingText {
                 && (ObjectUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
+                && Arrays.equals(
+                        media != null ? media : new UUID[0],
+                        revision.getAttachments().stream().map(EntryAttachment::getMediaFileOwner).toArray())
                 && (updateInfo != null ? updateInfo.getImportant() : false) == revision.isUpdateImportant()
                 && Objects.equals(
                         updateInfo != null && updateInfo.getDescription() != null ? updateInfo.getDescription() : "",

@@ -12,9 +12,14 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
@@ -32,7 +37,10 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.AvatarDescription;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -56,10 +64,16 @@ public class MediaOperations {
     private static Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
     @Inject
+    private RequestContext requestContext;
+
+    @Inject
     private Config config;
 
     @Inject
     private MediaFileRepository mediaFileRepository;
+
+    @Inject
+    private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -179,6 +193,29 @@ public class MediaOperations {
         } else {
             found.accept(mediaFile);
         }
+    }
+
+    public List<MediaFileOwner> validateAttachments(UUID[] ids, Supplier<RuntimeException> notFound) {
+        if (ids == null || ids.length == 0) {
+            return Collections.emptyList();
+        }
+
+        List<MediaFileOwner> attached = new ArrayList<>();
+        Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(requestContext.nodeId(), ids)
+                .stream().collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
+        for (UUID id : ids) {
+            MediaFileOwner mediaFileOwner = mediaFileOwners.get(id);
+            if (mediaFileOwner == null) {
+                throw notFound.get();
+            }
+            if (mediaFileOwner.getOwnerName() == null && !requestContext.isAdmin()
+                    || mediaFileOwner.getOwnerName() != null
+                        && !mediaFileOwner.getOwnerName().equals(requestContext.getClientName())) {
+                throw notFound.get();
+            }
+            attached.add(mediaFileOwner);
+        }
+        return attached;
     }
 
     @Scheduled(fixedDelayString = "PT6H")

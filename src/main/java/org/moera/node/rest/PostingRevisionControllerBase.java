@@ -8,8 +8,10 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.Entitled;
@@ -128,7 +130,11 @@ public abstract class PostingRevisionControllerBase {
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
-        posting = postingOperations.createOrUpdatePosting(posting, revision, null, null, null);
+        List<MediaFileOwner> media = revision.getAttachments().stream()
+                .map(EntryAttachment::getMediaFileOwner)
+                .collect(Collectors.toList());
+        posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null,
+                null);
         requestContext.send(getRestorationEvent(posting));
         requestContext.send(Directions.postingSubscribers(posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));

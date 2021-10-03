@@ -14,9 +14,12 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.EntryAttachment;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.Feed;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
@@ -71,6 +74,9 @@ public class PostingOperations {
     private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
@@ -113,7 +119,8 @@ public class PostingOperations {
         return postingRepository.save(posting);
     }
 
-    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<StoryAttributes> publications,
+    public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<MediaFileOwner> media,
+                                         List<StoryAttributes> publications,
                                          Predicate<EntryRevision> isNothingChanged,
                                          Consumer<EntryRevision> revisionUpdater) {
         EntryRevision latest = posting.getCurrentRevision();
@@ -124,6 +131,12 @@ public class PostingOperations {
         EntryRevision current = newPostingRevision(posting, revision);
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
+        }
+        int ordinal = 0;
+        for (MediaFileOwner mfo : media) {
+            EntryAttachment attachment = new EntryAttachment(current, mfo, ordinal++);
+            attachment = entryAttachmentRepository.save(attachment);
+            current.addAttachment(attachment);
         }
         posting.setEditedAt(Util.now());
         posting = postingRepository.saveAndFlush(posting);

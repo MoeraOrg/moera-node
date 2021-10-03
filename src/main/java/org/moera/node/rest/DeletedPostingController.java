@@ -8,19 +8,21 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.EntryAttachment;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
-import org.moera.node.global.NoCache;
-import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
+import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
@@ -104,7 +106,11 @@ public class DeletedPostingController {
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
-        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null, null, null);
+        List<MediaFileOwner> media = posting.getCurrentRevision().getAttachments().stream()
+                .map(EntryAttachment::getMediaFileOwner)
+                .collect(Collectors.toList());
+        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media, null,
+                null, null);
         requestContext.send(new PostingRestoredEvent(posting));
         requestContext.send(Directions.postingSubscribers(posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));

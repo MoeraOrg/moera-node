@@ -13,6 +13,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -138,11 +139,14 @@ public class PostingController {
         if (postingText.getBodySrc().length() > getMaxPostingSize()) {
             throw new ValidationFailure("postingText.bodySrc.wrong-size");
         }
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(postingText.getMedia(),
+                () -> new ValidationFailure("postingText.media.not-found"));
 
         Posting posting = postingOperations.newPosting(postingText);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, null, postingText.getPublications(),
-                    null, revision -> postingText.toEntryRevision(revision, textConverter));
+            posting = postingOperations.createOrUpdatePosting(posting, null, media,
+                    postingText.getPublications(), null,
+                    revision -> postingText.toEntryRevision(revision, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -180,6 +184,9 @@ public class PostingController {
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(postingText.getMedia(),
+                () -> new ValidationFailure("postingText.media.not-found"));
+
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!posting.isOriginal()) {
@@ -188,8 +195,9 @@ public class PostingController {
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingText.toEntry(posting);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), null,
-                    postingText::sameAsRevision, revision -> postingText.toEntryRevision(revision, textConverter));
+            posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media,
+                    null, postingText::sameAsRevision,
+                    revision -> postingText.toEntryRevision(revision, textConverter));
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }

@@ -22,6 +22,19 @@ public class EntryAttachment {
     @NotNull
     private MediaFileOwner mediaFileOwner;
 
+    @NotNull
+    private int ordinal;
+
+    public EntryAttachment() {
+    }
+
+    public EntryAttachment(EntryRevision entryRevision, MediaFileOwner mediaFileOwner, int ordinal) {
+        this.id = UUID.randomUUID();
+        this.entryRevision = entryRevision;
+        this.mediaFileOwner = mediaFileOwner;
+        this.ordinal = ordinal;
+    }
+
     public UUID getId() {
         return id;
     }
@@ -44,6 +57,14 @@ public class EntryAttachment {
 
     public void setMediaFileOwner(MediaFileOwner mediaFileOwner) {
         this.mediaFileOwner = mediaFileOwner;
+    }
+
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    public void setOrdinal(int ordinal) {
+        this.ordinal = ordinal;
     }
 
 }
