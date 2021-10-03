@@ -16,7 +16,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.text.HeadingExtractor;
-import org.moera.node.text.HtmlSanitizer;
+import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 

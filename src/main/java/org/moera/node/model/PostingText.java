@@ -13,9 +13,10 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
-import org.moera.node.text.HtmlSanitizer;
+import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
@@ -188,7 +189,7 @@ public class PostingText {
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
-    public void toEntryRevision(EntryRevision revision, TextConverter textConverter) {
+    public void toEntryRevision(EntryRevision revision, TextConverter textConverter, List<MediaFileOwner> media) {
         if (bodySrcFormat != null) {
             revision.setBodySrcFormat(bodySrcFormat);
         }
@@ -198,15 +199,15 @@ public class PostingText {
                 revision.setBodySrc(bodySrc);
                 Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
                 revision.setBody(body.getEncoded());
-                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
+                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
                 revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
                 Body bodyPreview = Shortener.shorten(body);
                 if (bodyPreview != null) {
                     revision.setBodyPreview(bodyPreview.getEncoded());
-                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
+                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media));
                 } else {
                     revision.setBodyPreview(Body.EMPTY);
-                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true));
+                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true, media));
                 }
                 revision.setHeading(HeadingExtractor.extractHeading(body));
                 revision.setDescription(HeadingExtractor.extractDescription(body));

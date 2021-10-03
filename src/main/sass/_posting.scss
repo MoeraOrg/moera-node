@@ -28,11 +28,21 @@
         IMG, IFRAME {
             max-width: css-min(unquote("var(--feed-width) - 3.5rem"), unquote("100vw - 4rem"));
         }
+
+        IMG {
+            width: auto;
+            height: auto;
+        }
     }
 
     &.preview > .content {
         IMG, IFRAME {
             max-height: 35rem;
+        }
+
+        IMG {
+            width: auto;
+            height: auto;
         }
 
         @media only screen and (max-width: 575px) {

@@ -1,45 +1,16 @@
-package org.moera.node.text;
+package org.moera.node.text.sanitizer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.model.Body;
 import org.owasp.html.CssSchema;
 import org.owasp.html.HtmlPolicyBuilder;
-import org.owasp.html.HtmlStreamEventReceiver;
-import org.owasp.html.HtmlStreamEventReceiverWrapper;
 import org.owasp.html.PolicyFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class HtmlSanitizer {
-
-    private static class Preprocessor extends HtmlStreamEventReceiverWrapper {
-
-        Preprocessor(HtmlStreamEventReceiver underlying) {
-            super(underlying);
-        }
-
-        @Override
-        public void openTag(String elementName, List<String> attrs) {
-            List<String> newAttrs = attrs;
-            if (elementName.equalsIgnoreCase("p")
-                    || elementName.equalsIgnoreCase("ol")
-                    || elementName.equalsIgnoreCase("ul")) {
-                newAttrs = new ArrayList<>();
-                for (int i = 0; i < attrs.size(); i += 2) {
-                    if (!attrs.get(i).equalsIgnoreCase("dir")) {
-                        newAttrs.add(attrs.get(i));
-                        newAttrs.add(attrs.get(i + 1));
-                    }
-                }
-                newAttrs.add("dir");
-                newAttrs.add("auto");
-            }
-            super.openTag(elementName, newAttrs);
-        }
-
-    }
 
     private static final PolicyFactory BASIC_HTML = new HtmlPolicyBuilder()
             .allowElements("address", "aside", "footer", "header", "hgroup", "nav", "section", "blockquote", "dd",
@@ -65,7 +36,7 @@ public class HtmlSanitizer {
                     "allowtransparency", "style").onElements("iframe")
             .allowAttributes("dir").globally()
             .allowStyling(CssSchema.withProperties(Set.of("text-align", "width", "height")))
-            .withPreprocessor(Preprocessor::new)
+            .withPreprocessor(ParagraphProcessor::new)
             .toFactory();
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(
             "www.youtube.com", "www.youtube-nocookie.com", "player.vimeo.com", "www.facebook.com", "peer.tube",
@@ -90,20 +61,31 @@ public class HtmlSanitizer {
         return IFRAME_HOSTNAMES.contains(hostname);
     }
 
-    private static String sanitize(String html, boolean preview) {
+    private static String sanitize(String html, boolean preview, List<MediaFileOwner> media) {
         if (html == null) {
             return null;
         }
-        return (preview ? SAFE_PREVIEW_HTML : SAFE_HTML).sanitize(html);
+        PolicyFactory policyFactory = preview ? SAFE_PREVIEW_HTML : SAFE_HTML;
+        if (media != null && media.size() > 0) {
+            policyFactory = policyFactory.and(new HtmlPolicyBuilder()
+                    .withPreprocessor(u -> new ImageProcessor(u, media))
+                    .toFactory());
+        }
+        return policyFactory.sanitize(html);
     }
 
-    private static String sanitizeIfNeeded(String html, boolean preview) {
-        String saneHtml = sanitize(html, preview);
+    private static String sanitizeIfNeeded(String html, boolean preview, List<MediaFileOwner> media) {
+        String saneHtml = sanitize(html, preview, media);
         return saneHtml == null || saneHtml.equals(html) ? null : saneHtml;
     }
 
+    public static String sanitizeIfNeeded(Body body, boolean preview, List<MediaFileOwner> media) {
+        return sanitizeIfNeeded(body.getText(), preview, media);
+    }
+
+    @Deprecated
     public static String sanitizeIfNeeded(Body body, boolean preview) {
-        return sanitizeIfNeeded(body.getText(), preview);
+        return sanitizeIfNeeded(body, preview, null);
     }
 
 }
