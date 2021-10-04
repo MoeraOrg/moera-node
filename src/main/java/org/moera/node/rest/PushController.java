@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
@@ -60,6 +61,9 @@ public class PushController {
     @Inject
     private PlatformTransactionManager txManager;
 
+    @Inject
+    private EntityManager entityManager;
+
     @GetMapping(value = "/{clientId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Admin
     public PushEmitter get(@PathVariable String clientId,
@@ -84,6 +88,7 @@ public class PushController {
 
         PushEmitter emitter = new PushEmitter();
         emitter.send(PushEmitter.event().comment("ברוך הבא")); // To send HTTP headers immediately
+        entityManager.detach(client);
         pushService.register(requestContext.nodeId(), client, emitter, lastSeenMoment);
         return emitter;
     }
