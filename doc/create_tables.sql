@@ -451,8 +451,9 @@ ALTER TABLE public.entries OWNER TO moera;
 
 CREATE TABLE public.entry_attachments (
     id uuid NOT NULL,
-    entry_id uuid NOT NULL,
-    media_file_owner_id uuid NOT NULL
+    entry_revision_id uuid NOT NULL,
+    media_file_owner_id uuid NOT NULL,
+    ordinal integer NOT NULL
 );
 
 
@@ -554,6 +555,20 @@ CREATE TABLE public.media_file_owners (
 
 
 ALTER TABLE public.media_file_owners OWNER TO moera;
+
+--
+-- Name: media_file_previews; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.media_file_previews (
+    id uuid NOT NULL,
+    original_media_file_id character varying(40) NOT NULL,
+    size integer NOT NULL,
+    media_file_id character varying(40)
+);
+
+
+ALTER TABLE public.media_file_previews OWNER TO moera;
 
 --
 -- Name: media_files; Type: TABLE; Schema: public; Owner: moera
@@ -1006,6 +1021,14 @@ ALTER TABLE ONLY public.media_file_owners
 
 
 --
+-- Name: media_file_previews media_file_previews_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_previews
+    ADD CONSTRAINT media_file_previews_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: media_files media_files_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1334,10 +1357,10 @@ CREATE INDEX entries_replied_to_revision_id_idx ON public.entries USING btree (r
 
 
 --
--- Name: entry_attachments_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: entry_attachments_entry_revision_id_ordinal_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX entry_attachments_entry_id_idx ON public.entry_attachments USING btree (entry_id);
+CREATE INDEX entry_attachments_entry_revision_id_ordinal_idx ON public.entry_attachments USING btree (entry_revision_id, ordinal);
 
 
 --
@@ -1415,6 +1438,20 @@ CREATE INDEX media_file_owners_media_file_id_idx ON public.media_file_owners USI
 --
 
 CREATE UNIQUE INDEX media_file_owners_node_id_owner_name_media_file_id_idx ON public.media_file_owners USING btree (node_id, owner_name, media_file_id);
+
+
+--
+-- Name: media_file_previews_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_previews_media_file_id_idx ON public.media_file_previews USING btree (media_file_id);
+
+
+--
+-- Name: media_file_previews_original_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_previews_original_media_file_id_idx ON public.media_file_previews USING btree (original_media_file_id);
 
 
 --
@@ -1789,6 +1826,13 @@ CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_fi
 
 
 --
+-- Name: media_file_previews update_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_file_id ON public.media_file_previews FOR EACH ROW EXECUTE FUNCTION public.update_entity_media_file_id();
+
+
+--
 -- Name: entry_attachments update_media_file_owner_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -1974,11 +2018,11 @@ ALTER TABLE ONLY public.entries
 
 
 --
--- Name: entry_attachments entry_attachments_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: entry_attachments entry_attachments_entry_revision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.entry_attachments
-    ADD CONSTRAINT entry_attachments_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT entry_attachments_entry_revision_id_fkey FOREIGN KEY (entry_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -2035,6 +2079,22 @@ ALTER TABLE ONLY public.entry_sources
 
 ALTER TABLE ONLY public.media_file_owners
     ADD CONSTRAINT media_file_owners_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: media_file_previews media_file_previews_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_previews
+    ADD CONSTRAINT media_file_previews_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: media_file_previews media_file_previews_original_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.media_file_previews
+    ADD CONSTRAINT media_file_previews_original_media_file_id_fkey FOREIGN KEY (original_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

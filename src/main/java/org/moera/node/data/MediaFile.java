@@ -52,6 +52,9 @@ public class MediaFile {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediaFile")
     private Set<MediaFileOwner> owners = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "mediaFile")
+    private Set<MediaFilePreview> previews = new HashSet<>();
+
     public String getId() {
         return id;
     }
@@ -154,6 +157,24 @@ public class MediaFile {
     public void removeOwner(MediaFileOwner owner) {
         owners.removeIf(sr -> sr.getId().equals(owner.getId()));
         owner.setMediaFile(null);
+    }
+
+    public Set<MediaFilePreview> getPreviews() {
+        return previews;
+    }
+
+    public void setPreviews(Set<MediaFilePreview> previews) {
+        this.previews = previews;
+    }
+
+    public void addPreview(MediaFilePreview preview) {
+        previews.add(preview);
+        preview.setMediaFile(this);
+    }
+
+    public void removePreview(MediaFilePreview preview) {
+        previews.removeIf(sr -> sr.getId().equals(preview.getId()));
+        preview.setMediaFile(null);
     }
 
 }
