@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.MediaFilePreview;
 import org.owasp.html.HtmlStreamEventReceiver;
 import org.owasp.html.HtmlStreamEventReceiverWrapper;
 
@@ -21,11 +23,24 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 .collect(Collectors.toMap(mfo -> mfo.getMediaFile().getId(), Function.identity()));
     }
 
+    private String mediaPreview(String location, int size) {
+        return String.format("%s?size=%d", location, size);
+    }
+
+    private String mediaSources(String location, MediaFile mediaFile) {
+        List<String> sources = new ArrayList<>();
+        sources.add(String.format("%s %dw", location, mediaFile.getSizeX()));
+        for (MediaFilePreview preview : mediaFile.getPreviews()) {
+            sources.add(String.format("%s %dw", mediaPreview(location, preview.getSize()),
+                    preview.getMediaFile().getSizeX()));
+        }
+        return String.join(",", sources);
+    }
+
     @Override
     public void openTag(String elementName, List<String> attrs) {
-        List<String> newAttrs = attrs;
         if (elementName.equalsIgnoreCase("img")) {
-            newAttrs = new ArrayList<>();
+            List<String> newAttrs = new ArrayList<>();
             MediaFileOwner mediaFileOwner = null;
             Integer width = null;
             Integer height = null;
@@ -59,8 +74,16 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 return;
             }
 
+            String mediaLocation = "/moera/media/private/" + mediaFileOwner.getFileName();
+
+            super.openTag("a", new ArrayList<>(List.of("href", mediaLocation)));
+
             newAttrs.add("src");
-            newAttrs.add("/moera/media/private/" + mediaFileOwner.getFileName());
+            newAttrs.add(mediaPreview(mediaLocation, 900));
+            newAttrs.add("srcset");
+            newAttrs.add(mediaSources(mediaLocation, mediaFileOwner.getMediaFile()));
+            newAttrs.add("sizes");
+            newAttrs.add("(max-width: 400px) 350px, 900px");
 
             width = width == null || width == 0 ? null : width;
             height = height == null || height == 0 ? null : height;
@@ -79,8 +102,13 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             newAttrs.add(Long.toString(Math.round(scale * sizeX)));
             newAttrs.add("height");
             newAttrs.add(Long.toString(Math.round(scale * sizeY)));
+            super.openTag(elementName, newAttrs);
+
+            super.closeTag("a");
+
+            return;
         }
-        super.openTag(elementName, newAttrs);
+        super.openTag(elementName, attrs);
     }
 
 }

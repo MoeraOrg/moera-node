@@ -23,7 +23,7 @@ public class HtmlSanitizer {
             .allowAttributes("style").onElements("p")
             .allowAttributes("start", "type").onElements("ol")
             .allowAttributes("href", "data-nodename").onElements("a")
-            .allowAttributes("src", "srcset", "width", "height", "alt").onElements("img")
+            .allowAttributes("src", "srcset", "sizes", "width", "height", "alt").onElements("img")
             .allowAttributes("class")
                 .matching(false, "emoji")
                 .onElements("img")

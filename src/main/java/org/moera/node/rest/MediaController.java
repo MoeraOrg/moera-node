@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
@@ -66,6 +67,9 @@ public class MediaController {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private EntityManager entityManager;
 
     @PostConstruct
     public void init() throws Exception {
@@ -164,6 +168,7 @@ public class MediaController {
 
             MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
             for (int size : PREVIEW_SIZES) {
+                mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
                 mediaOperations.createPreview(mediaFile, size);
             }
 
