@@ -10,7 +10,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
@@ -362,9 +361,8 @@ public class NodeApi {
     }
 
     public MediaFileInfo postPublicMedia(String nodeName, String carte, MediaFile mediaFile) throws NodeApiException {
-        Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
         return call("POST", nodeName, "/media/public", auth("carte", carte),
-                mediaFile.getMimeType(), mediaPath, MediaFileInfo.class);
+                mediaFile.getMimeType(), mediaOperations.getPath(mediaFile), MediaFileInfo.class);
     }
 
 }

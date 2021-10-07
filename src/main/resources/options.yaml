@@ -347,3 +347,11 @@
   modifiers:
     min: 10d
     max: 180d
+
+- name: media.preview-gain
+  type: int
+  defaultValue: 15
+  title: Media preview gain factor
+  modifiers:
+    min: 5
+    max: 50

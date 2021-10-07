@@ -41,13 +41,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/media")
 public class MediaController {
 
-    private static Logger log = LoggerFactory.getLogger(MediaController.class);
+    private static final Logger log = LoggerFactory.getLogger(MediaController.class);
+
+    private static final int[] PREVIEW_SIZES = {900, 700};
 
     @Inject
     private Config config;
@@ -160,6 +163,9 @@ public class MediaController {
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
+            for (int size : PREVIEW_SIZES) {
+                mediaOperations.createPreview(mediaFile, size);
+            }
 
             mediaFileOwner = new MediaFileOwner();
             mediaFileOwner.setId(UUID.randomUUID());
@@ -209,17 +215,19 @@ public class MediaController {
 
     @GetMapping("/public/{id}/data")
     @ResponseBody
-    public ResponseEntity<Resource> getDataPublic(@PathVariable String id) {
+    public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
+                                                  @RequestParam(required = false) Integer size) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFile(id));
+        return mediaOperations.serve(getMediaFile(id), size);
     }
 
     @GetMapping("/private/{id}/data")
-    public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id) {
+    public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
+                                                   @RequestParam(required = false) Integer size) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile());
+        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), size);
     }
 
 }

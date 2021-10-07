@@ -29,6 +29,7 @@ import javax.imageio.stream.ImageInputStream;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.bouncycastle.crypto.io.DigestOutputStream;
@@ -39,6 +40,8 @@ import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
+import org.moera.node.data.MediaFilePreview;
+import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AvatarDescription;
@@ -76,6 +79,9 @@ public class MediaOperations {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
+    private MediaFilePreviewRepository mediaFilePreviewRepository;
+
+    @Inject
     private PlatformTransactionManager txManager;
 
     public TemporaryFile tmpFile() {
@@ -91,6 +97,10 @@ public class MediaOperations {
                 // next try
             }
         }
+    }
+
+    public Path getPath(MediaFile mediaFile) {
+        return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
     }
 
     public String transfer(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
@@ -154,6 +164,69 @@ public class MediaOperations {
         return mediaFile;
     }
 
+    public MediaFilePreview findLargerPreview(MediaFile original, int size) {
+        MediaFilePreview larger = null;
+        for (MediaFilePreview preview : original.getPreviews()) {
+            if (preview.getSize() >= size && (larger == null || larger.getSize() > preview.getSize())) {
+                larger = preview;
+            }
+        }
+        return larger;
+    }
+
+    public void createPreview(MediaFile original, int size) throws IOException {
+        if (original.getSizeX() <= size && original.getSizeY() <= size) {
+            return;
+        }
+
+        var previewFormat = MimeUtils.thumbnail(original.getMimeType());
+        if (previewFormat == null) {
+            return;
+        }
+
+        MediaFilePreview largerPreview = findLargerPreview(original, size);
+        if (largerPreview != null && largerPreview.getSize() == size) {
+            return;
+        }
+
+        var tmp = tmpFile();
+        try {
+            DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
+            OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
+
+            Thumbnails.of(getPath(original).toFile())
+                    .size(size, size)
+                    .toOutputStream(out);
+
+            long fileSize = Files.size(tmp.getPath());
+            long prevFileSize = largerPreview != null
+                    ? largerPreview.getMediaFile().getFileSize()
+                    : original.getFileSize();
+            if (fileSize >= prevFileSize) {
+                return;
+            }
+            long gain = (prevFileSize - fileSize) * 100 / prevFileSize;
+            if (gain < requestContext.getOptions().getInt("media.preview-gain")) {
+                return;
+            }
+
+            String mediaFileId = Util.base64urlencode(digestStream.getDigest());
+            MediaFile previewFile = putInPlace(mediaFileId, previewFormat.mimeType, tmp.getPath());
+            previewFile.setExposed(false);
+            previewFile = mediaFileRepository.save(previewFile);
+
+            MediaFilePreview preview = new MediaFilePreview();
+            preview.setId(UUID.randomUUID());
+            preview.setOriginalMediaFile(original);
+            preview.setSize(size);
+            preview.setMediaFile(previewFile);
+            preview = mediaFilePreviewRepository.save(preview);
+            original.addPreview(preview);
+        } finally {
+            Files.deleteIfExists(tmp.getPath());
+        }
+    }
+
     public ResponseEntity<Resource> serve(MediaFile mediaFile) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
@@ -162,7 +235,7 @@ public class MediaOperations {
             default:
             case "stream": {
                 headers.setContentLength(mediaFile.getFileSize());
-                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
+                Path mediaPath = getPath(mediaFile);
                 return new ResponseEntity<>(new FileSystemResource(mediaPath), headers, HttpStatus.OK);
             }
 
@@ -171,11 +244,20 @@ public class MediaOperations {
                 return new ResponseEntity<>(headers, HttpStatus.OK);
 
             case "sendfile": {
-                Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
+                Path mediaPath = getPath(mediaFile);
                 headers.add("X-SendFile", mediaPath.toAbsolutePath().toString());
                 return new ResponseEntity<>(headers, HttpStatus.OK);
             }
         }
+    }
+
+    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer size) {
+        if (size == null) {
+            return serve(mediaFile);
+        }
+
+        MediaFilePreview preview = findLargerPreview(mediaFile, size);
+        return serve(preview != null ? preview.getMediaFile() : mediaFile);
     }
 
     public void validateAvatar(AvatarDescription avatar, Consumer<MediaFile> found,
@@ -222,8 +304,7 @@ public class MediaOperations {
     public void purgeUnused() throws Throwable {
         Timestamp now = Util.now();
         List<Path> fileNames = mediaFileRepository.findUnused(now).stream()
-                .map(MediaFile::getFileName)
-                .map(fn -> FileSystems.getDefault().getPath(config.getMedia().getPath(), fn))
+                .map(this::getPath)
                 .collect(Collectors.toList());
         Transaction.execute(txManager, () -> {
             mediaFileRepository.deleteUnused(now);

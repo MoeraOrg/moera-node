@@ -2,9 +2,7 @@ package org.moera.node.rest;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -99,12 +97,10 @@ public class AvatarController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            Path mediaPath = FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
-
             DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
             OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
 
-            Thumbnails.of(mediaPath.toFile())
+            Thumbnails.of(mediaOperations.getPath(mediaFile).toFile())
                     .rotate(avatarAttributes.getRotate())
                     .sourceRegion(
                             avatarAttributes.getClipX(), avatarAttributes.getClipY(),

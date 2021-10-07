@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @UiController
@@ -38,20 +39,22 @@ public class MediaUiController {
 
     @GetMapping("/public/{id}.{ext}")
     @ResponseBody
-    public ResponseEntity<Resource> getDataPublic(@PathVariable String id) {
+    public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
+                                                  @RequestParam(required = false) Integer size) {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null || !mediaFile.isExposed()) {
             throw new PageNotFoundException();
         }
-        return mediaOperations.serve(mediaFile);
+        return mediaOperations.serve(mediaFile, size);
     }
 
     @GetMapping("/private/{id}.{ext}")
     @ResponseBody
-    public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id) {
+    public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
+                                                   @RequestParam(required = false) Integer size) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
-        return mediaOperations.serve(mediaFileOwner.getMediaFile());
+        return mediaOperations.serve(mediaFileOwner.getMediaFile(), size);
     }
 
 }
