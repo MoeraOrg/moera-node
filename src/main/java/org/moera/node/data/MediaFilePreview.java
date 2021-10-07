@@ -19,7 +19,7 @@ public class MediaFilePreview {
     private MediaFile originalMediaFile;
 
     @NotNull
-    private int size;
+    private int width;
 
     @ManyToOne
     private MediaFile mediaFile;
@@ -40,12 +40,12 @@ public class MediaFilePreview {
         this.originalMediaFile = originalMediaFile;
     }
 
-    public int getSize() {
-        return size;
+    public int getWidth() {
+        return width;
     }
 
-    public void setSize(int size) {
-        this.size = size;
+    public void setWidth(int width) {
+        this.width = width;
     }
 
     public MediaFile getMediaFile() {

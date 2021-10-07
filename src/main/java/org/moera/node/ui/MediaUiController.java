@@ -40,21 +40,21 @@ public class MediaUiController {
     @GetMapping("/public/{id}.{ext}")
     @ResponseBody
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
-                                                  @RequestParam(required = false) Integer size) {
+                                                  @RequestParam(required = false) Integer width) {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null || !mediaFile.isExposed()) {
             throw new PageNotFoundException();
         }
-        return mediaOperations.serve(mediaFile, size);
+        return mediaOperations.serve(mediaFile, width);
     }
 
     @GetMapping("/private/{id}.{ext}")
     @ResponseBody
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
-                                                   @RequestParam(required = false) Integer size) {
+                                                   @RequestParam(required = false) Integer width) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
-        return mediaOperations.serve(mediaFileOwner.getMediaFile(), size);
+        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width);
     }
 
 }

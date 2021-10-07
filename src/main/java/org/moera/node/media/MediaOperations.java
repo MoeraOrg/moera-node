@@ -64,7 +64,7 @@ public class MediaOperations {
 
     public static final String TMP_DIR = "tmp";
 
-    private static Logger log = LoggerFactory.getLogger(MediaOperations.class);
+    private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
     @Inject
     private RequestContext requestContext;
@@ -164,18 +164,18 @@ public class MediaOperations {
         return mediaFile;
     }
 
-    public MediaFilePreview findLargerPreview(MediaFile original, int size) {
+    public MediaFilePreview findLargerPreview(MediaFile original, int width) {
         MediaFilePreview larger = null;
         for (MediaFilePreview preview : original.getPreviews()) {
-            if (preview.getSize() >= size && (larger == null || larger.getSize() > preview.getSize())) {
+            if (preview.getWidth() >= width && (larger == null || larger.getWidth() > preview.getWidth())) {
                 larger = preview;
             }
         }
         return larger;
     }
 
-    public void createPreview(MediaFile original, int size) throws IOException {
-        if (original.getSizeX() <= size && original.getSizeY() <= size) {
+    public void createPreview(MediaFile original, int width) throws IOException {
+        if (original.getSizeX() <= width) {
             return;
         }
 
@@ -184,8 +184,8 @@ public class MediaOperations {
             return;
         }
 
-        MediaFilePreview largerPreview = findLargerPreview(original, size);
-        if (largerPreview != null && largerPreview.getSize() == size) {
+        MediaFilePreview largerPreview = findLargerPreview(original, width);
+        if (largerPreview != null && largerPreview.getWidth() == width) {
             return;
         }
 
@@ -195,7 +195,7 @@ public class MediaOperations {
             OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
 
             Thumbnails.of(getPath(original).toFile())
-                    .size(size, size)
+                    .width(width)
                     .toOutputStream(out);
 
             long fileSize = Files.size(tmp.getPath());
@@ -218,7 +218,7 @@ public class MediaOperations {
             MediaFilePreview preview = new MediaFilePreview();
             preview.setId(UUID.randomUUID());
             preview.setOriginalMediaFile(original);
-            preview.setSize(size);
+            preview.setWidth(width);
             preview.setMediaFile(previewFile);
             preview = mediaFilePreviewRepository.save(preview);
             original.addPreview(preview);
@@ -251,12 +251,12 @@ public class MediaOperations {
         }
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer size) {
-        if (size == null) {
+    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width) {
+        if (width == null) {
             return serve(mediaFile);
         }
 
-        MediaFilePreview preview = findLargerPreview(mediaFile, size);
+        MediaFilePreview preview = findLargerPreview(mediaFile, width);
         return serve(preview != null ? preview.getMediaFile() : mediaFile);
     }
 

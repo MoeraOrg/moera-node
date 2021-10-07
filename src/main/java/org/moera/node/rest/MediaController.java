@@ -221,18 +221,18 @@ public class MediaController {
     @GetMapping("/public/{id}/data")
     @ResponseBody
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
-                                                  @RequestParam(required = false) Integer size) {
+                                                  @RequestParam(required = false) Integer width) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFile(id), size);
+        return mediaOperations.serve(getMediaFile(id), width);
     }
 
     @GetMapping("/private/{id}/data")
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
-                                                   @RequestParam(required = false) Integer size) {
+                                                   @RequestParam(required = false) Integer width) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), size);
+        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), width);
     }
 
 }

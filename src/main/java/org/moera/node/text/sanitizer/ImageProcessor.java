@@ -23,15 +23,15 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 .collect(Collectors.toMap(mfo -> mfo.getMediaFile().getId(), Function.identity()));
     }
 
-    private String mediaPreview(String location, int size) {
-        return String.format("%s?size=%d", location, size);
+    private String mediaPreview(String location, int width) {
+        return String.format("%s?width=%d", location, width);
     }
 
     private String mediaSources(String location, MediaFile mediaFile) {
         List<String> sources = new ArrayList<>();
         sources.add(String.format("%s %dw", location, mediaFile.getSizeX()));
         for (MediaFilePreview preview : mediaFile.getPreviews()) {
-            sources.add(String.format("%s %dw", mediaPreview(location, preview.getSize()),
+            sources.add(String.format("%s %dw", mediaPreview(location, preview.getWidth()),
                     preview.getMediaFile().getSizeX()));
         }
         return String.join(",", sources);
