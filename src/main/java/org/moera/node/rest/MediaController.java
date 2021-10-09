@@ -51,7 +51,7 @@ public class MediaController {
 
     private static final Logger log = LoggerFactory.getLogger(MediaController.class);
 
-    private static final int[] PREVIEW_SIZES = {900, 700};
+    private static final int[] PREVIEW_SIZES = {1400, 900, 700};
 
     @Inject
     private Config config;

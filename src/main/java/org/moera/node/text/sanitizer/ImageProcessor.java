@@ -1,6 +1,7 @@
 package org.moera.node.text.sanitizer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -27,14 +28,19 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
         return String.format("%s?width=%d", location, width);
     }
 
-    private String mediaSources(String location, MediaFile mediaFile) {
+    private String mediaSources(String location, Collection<MediaFilePreview> previews) {
         List<String> sources = new ArrayList<>();
-        sources.add(String.format("%s %dw", location, mediaFile.getSizeX()));
-        for (MediaFilePreview preview : mediaFile.getPreviews()) {
+        for (MediaFilePreview preview : previews) {
             sources.add(String.format("%s %dw", mediaPreview(location, preview.getWidth()),
                     preview.getMediaFile().getSizeX()));
         }
         return String.join(",", sources);
+    }
+
+    private String mediaSizes(MediaFile mediaFile) {
+        return String.format("(max-width: 400px) %dpx, %dpx",
+                Math.min(350, mediaFile.findLargerPreview(350).getMediaFile().getSizeX()),
+                Math.min(900, mediaFile.findLargerPreview(900).getMediaFile().getSizeX()));
     }
 
     @Override
@@ -81,14 +87,15 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             newAttrs.add("src");
             newAttrs.add(mediaPreview(mediaLocation, 900));
             newAttrs.add("srcset");
-            newAttrs.add(mediaSources(mediaLocation, mediaFileOwner.getMediaFile()));
+            newAttrs.add(mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews()));
             newAttrs.add("sizes");
-            newAttrs.add("(max-width: 400px) 350px, 900px");
+            newAttrs.add(mediaSizes(mediaFileOwner.getMediaFile()));
 
             width = width == null || width == 0 ? null : width;
             height = height == null || height == 0 ? null : height;
-            Integer sizeX = mediaFileOwner.getMediaFile().getSizeX();
-            Integer sizeY = mediaFileOwner.getMediaFile().getSizeY();
+            MediaFile mediaFile = mediaFileOwner.getMediaFile().findLargerPreview(900).getMediaFile();
+            Integer sizeX = mediaFile.getSizeX();
+            Integer sizeY = mediaFile.getSizeY();
             double scale;
             if (width == null && height == null) {
                 scale = 1;

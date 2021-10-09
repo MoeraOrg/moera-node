@@ -177,4 +177,14 @@ public class MediaFile {
         preview.setOriginalMediaFile(null);
     }
 
+    public MediaFilePreview findLargerPreview(int width) {
+        MediaFilePreview larger = null;
+        for (MediaFilePreview preview : getPreviews()) {
+            if (preview.getWidth() >= width && (larger == null || larger.getWidth() > preview.getWidth())) {
+                larger = preview;
+            }
+        }
+        return larger;
+    }
+
 }

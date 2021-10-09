@@ -164,67 +164,56 @@ public class MediaOperations {
         return mediaFile;
     }
 
-    public MediaFilePreview findLargerPreview(MediaFile original, int width) {
-        MediaFilePreview larger = null;
-        for (MediaFilePreview preview : original.getPreviews()) {
-            if (preview.getWidth() >= width && (larger == null || larger.getWidth() > preview.getWidth())) {
-                larger = preview;
-            }
-        }
-        return larger;
-    }
-
     public void createPreview(MediaFile original, int width) throws IOException {
-        if (original.getSizeX() <= width) {
-            return;
-        }
-
         var previewFormat = MimeUtils.thumbnail(original.getMimeType());
         if (previewFormat == null) {
             return;
         }
 
-        MediaFilePreview largerPreview = findLargerPreview(original, width);
+        MediaFilePreview largerPreview = original.findLargerPreview(width);
         if (largerPreview != null && largerPreview.getWidth() == width) {
             return;
         }
 
-        var tmp = tmpFile();
-        try {
-            DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
-            OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
+        MediaFile previewFile = original;
+        if (original.getSizeX() > width) {
+            var tmp = tmpFile();
+            try {
+                DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
+                OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
 
-            Thumbnails.of(getPath(original).toFile())
-                    .width(width)
-                    .toOutputStream(out);
+                Thumbnails.of(getPath(original).toFile())
+                        .width(width)
+                        .toOutputStream(out);
 
-            long fileSize = Files.size(tmp.getPath());
-            long prevFileSize = largerPreview != null
-                    ? largerPreview.getMediaFile().getFileSize()
-                    : original.getFileSize();
-            if (fileSize >= prevFileSize) {
-                return;
+                long fileSize = Files.size(tmp.getPath());
+                long prevFileSize = largerPreview != null
+                        ? largerPreview.getMediaFile().getFileSize()
+                        : original.getFileSize();
+                long gain = (prevFileSize - fileSize) * 100 / prevFileSize; // negative, if fileSize > prevFileSize
+                if (gain < requestContext.getOptions().getInt("media.preview-gain")) {
+                    if (largerPreview != null) {
+                        return;
+                    }
+                    // otherwise original will be used in preview
+                } else {
+                    String mediaFileId = Util.base64urlencode(digestStream.getDigest());
+                    previewFile = putInPlace(mediaFileId, previewFormat.mimeType, tmp.getPath());
+                    previewFile.setExposed(false);
+                    previewFile = mediaFileRepository.save(previewFile);
+                }
+            } finally {
+                Files.deleteIfExists(tmp.getPath());
             }
-            long gain = (prevFileSize - fileSize) * 100 / prevFileSize;
-            if (gain < requestContext.getOptions().getInt("media.preview-gain")) {
-                return;
-            }
-
-            String mediaFileId = Util.base64urlencode(digestStream.getDigest());
-            MediaFile previewFile = putInPlace(mediaFileId, previewFormat.mimeType, tmp.getPath());
-            previewFile.setExposed(false);
-            previewFile = mediaFileRepository.save(previewFile);
-
-            MediaFilePreview preview = new MediaFilePreview();
-            preview.setId(UUID.randomUUID());
-            preview.setOriginalMediaFile(original);
-            preview.setWidth(width);
-            preview.setMediaFile(previewFile);
-            preview = mediaFilePreviewRepository.save(preview);
-            original.addPreview(preview);
-        } finally {
-            Files.deleteIfExists(tmp.getPath());
         }
+
+        MediaFilePreview preview = new MediaFilePreview();
+        preview.setId(UUID.randomUUID());
+        preview.setOriginalMediaFile(original);
+        preview.setWidth(width);
+        preview.setMediaFile(previewFile);
+        preview = mediaFilePreviewRepository.save(preview);
+        original.addPreview(preview);
     }
 
     public ResponseEntity<Resource> serve(MediaFile mediaFile) {
@@ -256,7 +245,7 @@ public class MediaOperations {
             return serve(mediaFile);
         }
 
-        MediaFilePreview preview = findLargerPreview(mediaFile, width);
+        MediaFilePreview preview = mediaFile.findLargerPreview(width);
         return serve(preview != null ? preview.getMediaFile() : mediaFile);
     }
 
