@@ -167,9 +167,10 @@ public class MediaController {
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
+            MediaFile croppedFile = mediaOperations.cropOriginal(mediaFile);
             for (int size : PREVIEW_SIZES) {
                 mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
-                mediaOperations.createPreview(mediaFile, size);
+                mediaOperations.createPreview(mediaFile, croppedFile, size);
             }
 
             mediaFileOwner = new MediaFileOwner();

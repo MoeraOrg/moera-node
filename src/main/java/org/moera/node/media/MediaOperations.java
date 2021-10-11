@@ -5,6 +5,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -164,7 +165,50 @@ public class MediaOperations {
         return mediaFile;
     }
 
-    public void createPreview(MediaFile original, int width) throws IOException {
+    private static Rectangle getPreviewRegion(MediaFile mediaFile) {
+        int width = mediaFile.getSizeX();
+        int height = mediaFile.getSizeY();
+        if (mediaFile.getSizeX() > mediaFile.getSizeY() * 5) {
+            width = mediaFile.getSizeY() * 5;
+        } else if (mediaFile.getSizeY() > mediaFile.getSizeX() * 5) {
+            height = mediaFile.getSizeX() * 5;
+        }
+        return new Rectangle(width, height);
+    }
+
+    public MediaFile cropOriginal(MediaFile original) throws IOException {
+        var previewFormat = MimeUtils.thumbnail(original.getMimeType());
+        if (previewFormat == null) {
+            return original;
+        }
+
+        Rectangle region = getPreviewRegion(original);
+        if (region.getSize().equals(original.getDimension())) {
+            return original;
+        }
+
+        var tmp = tmpFile();
+        try {
+            DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
+            OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
+
+            Thumbnails.of(getPath(original).toFile())
+                    .sourceRegion(region)
+                    .size(region.width, region.height)
+                    .toOutputStream(out);
+
+            String mediaFileId = Util.base64urlencode(digestStream.getDigest());
+            MediaFile cropped = putInPlace(mediaFileId, previewFormat.mimeType, tmp.getPath());
+            cropped.setExposed(false);
+            cropped = mediaFileRepository.save(cropped);
+
+            return cropped;
+        } finally {
+            Files.deleteIfExists(tmp.getPath());
+        }
+    }
+
+    public void createPreview(MediaFile original, MediaFile cropped, int width) throws IOException {
         var previewFormat = MimeUtils.thumbnail(original.getMimeType());
         if (previewFormat == null) {
             return;
@@ -175,21 +219,21 @@ public class MediaOperations {
             return;
         }
 
-        MediaFile previewFile = original;
-        if (original.getSizeX() > width) {
+        MediaFile previewFile = cropped;
+        if (cropped.getSizeX() > width) {
             var tmp = tmpFile();
             try {
                 DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
                 OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
 
-                Thumbnails.of(getPath(original).toFile())
+                Thumbnails.of(getPath(cropped).toFile())
                         .width(width)
                         .toOutputStream(out);
 
                 long fileSize = Files.size(tmp.getPath());
                 long prevFileSize = largerPreview != null
                         ? largerPreview.getMediaFile().getFileSize()
-                        : original.getFileSize();
+                        : cropped.getFileSize();
                 long gain = (prevFileSize - fileSize) * 100 / prevFileSize; // negative, if fileSize > prevFileSize
                 if (gain < requestContext.getOptions().getInt("media.preview-gain")) {
                     if (largerPreview != null) {

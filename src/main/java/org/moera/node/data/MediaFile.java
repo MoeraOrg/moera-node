@@ -91,6 +91,10 @@ public class MediaFile {
         this.sizeY = sizeY;
     }
 
+    public Dimension getDimension() {
+        return new Dimension(getSizeX(), getSizeY());
+    }
+
     public void setDimension(Dimension dimension) {
         if (dimension != null) {
             setSizeX(dimension.width);
