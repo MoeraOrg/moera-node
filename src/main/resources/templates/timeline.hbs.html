@@ -9,9 +9,11 @@
     <div class="no-postings">Nothing yet.</div>
 {{/unless}}
 
+{{galleries stories}}
+
 {{#each stories}}
     <a name="m{{moment}}"></a>
-    <div class="posting entry preview">
+    <div class="posting entry preview" data-id="{{posting.id}}">
         {{#if pinned}}
             <div class="pin-line">
                 <span class="badge badge-secondary">

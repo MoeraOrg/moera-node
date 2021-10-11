@@ -1,11 +1,16 @@
 package org.moera.node.helper;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
 import org.moera.node.global.RequestContext;
@@ -14,9 +19,11 @@ import org.moera.node.global.UserAgentOs;
 import org.moera.node.global.WebClient;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.AvatarInfo;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsInfo;
+import org.moera.node.model.StoryInfo;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
@@ -33,6 +40,9 @@ public class MoeraHelperSource {
 
     @Inject
     private NamingCache namingCache;
+
+    @Inject
+    private ObjectMapper objectMapper;
 
     public CharSequence nodename(String nodeName, String fullName, Options options) {
         boolean linked = HelperUtil.boolArg(options.hash("linked", "true"));
@@ -225,6 +235,42 @@ public class MoeraHelperSource {
         buf.append("?href=");
         buf.append(Util.ue(builder.toUriString()));
         buf.append("\">View in Web Client</a></div>");
+        return new SafeString(buf);
+    }
+
+    public CharSequence galleries(Object objects) throws JsonProcessingException {
+        Collection<?> entries;
+        if (objects instanceof Collection) {
+            entries = (Collection<?>) objects;
+        } else {
+            entries = List.of(objects);
+        }
+
+        Map<String, Map<String, String>[]> entryMap = new HashMap<>();
+        for (Object entry : entries) {
+            PostingInfo posting = null;
+            if (entry instanceof PostingInfo) {
+                posting = (PostingInfo) entry;
+            } else if (entry instanceof StoryInfo) {
+                    posting = ((StoryInfo) entry).getPosting();
+            }
+            if (posting == null) {
+                continue;
+            }
+            var props = Arrays.stream(posting.getMedia())
+                    .map(mfo -> Map.of(
+                            "id", mfo.getId(),
+                            "src", "/moera/media/" + mfo.getPath(),
+                            "thumb", "/moera/media/" + mfo.getPath() + "?width=150"))
+                    .toArray(Map[]::new);
+            entryMap.put(posting.getId(), props);
+        }
+
+        StringBuilder buf = new StringBuilder();
+        buf.append("<script>");
+        buf.append("window.galleries = ");
+        buf.append(objectMapper.writeValueAsString(entryMap));
+        buf.append(";</script>");
         return new SafeString(buf);
     }
 

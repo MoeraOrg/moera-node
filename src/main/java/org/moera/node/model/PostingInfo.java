@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
@@ -42,6 +44,7 @@ public class PostingInfo implements ReactionsInfo {
     private Body body;
     private String saneBody;
     private String bodyFormat;
+    private MediaFileInfo[] media;
     private String heading;
     private UpdateInfo updateInfo;
     private Long createdAt;
@@ -116,6 +119,10 @@ public class PostingInfo implements ReactionsInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
+        media = revision.getAttachments().stream()
+                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .map(a -> new MediaFileInfo(a.getMediaFileOwner()))
+                .toArray(MediaFileInfo[]::new);
         heading = revision.getHeading();
         if (!UpdateInfo.isEmpty(revision)) {
             updateInfo = new UpdateInfo(revision);
@@ -327,6 +334,14 @@ public class PostingInfo implements ReactionsInfo {
 
     public void setBodyFormat(String bodyFormat) {
         this.bodyFormat = bodyFormat;
+    }
+
+    public MediaFileInfo[] getMedia() {
+        return media;
+    }
+
+    public void setMedia(MediaFileInfo[] media) {
+        this.media = media;
     }
 
     public String getHeading() {

@@ -82,7 +82,11 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
 
             String mediaLocation = "/moera/media/private/" + mediaFileOwner.getFileName();
 
-            super.openTag("a", new ArrayList<>(List.of("href", mediaLocation)));
+            super.openTag("a", new ArrayList<>(List.of(
+                    "href", mediaLocation,
+                    "class", "entry-image",
+                    "data-id", mediaFileOwner.getId().toString()
+            )));
 
             newAttrs.add("src");
             newAttrs.add(mediaPreview(mediaLocation, 900));

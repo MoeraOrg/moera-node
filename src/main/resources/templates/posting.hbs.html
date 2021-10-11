@@ -25,7 +25,9 @@
        href="/timeline?before={{posting.timelineMoment}}">&larr; Timeline</a>
 {{/if}}
 
-<div class="posting entry">
+{{galleries posting}}
+
+<div class="posting entry" data-id="{{posting.id}}">
     {{#if posting.timelinePinned}}
         <div class="pin-line">
             <span class="badge badge-secondary">
