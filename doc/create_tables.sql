@@ -277,6 +277,44 @@ $$;
 ALTER FUNCTION public.update_media_file_owner_reference(old_id uuid, new_id uuid) OWNER TO postgres;
 
 --
+-- Name: update_media_file_preview_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_media_file_preview_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    DECLARE
+        old_media_file_id varchar(40) := NULL;
+        new_media_file_id varchar(40) := NULL;
+    BEGIN
+        IF TG_OP = 'DELETE' OR TG_OP = 'UPDATE' THEN
+            IF OLD.media_file_id <> OLD.original_media_file_id THEN
+                old_media_file_id := OLD.media_file_id;
+            END IF;
+        END IF;
+        IF TG_OP = 'UPDATE' OR TG_OP = 'INSERT' THEN
+            IF NEW.media_file_id <> NEW.original_media_file_id THEN
+                new_media_file_id := NEW.media_file_id;
+            END IF;
+        END IF;
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(old_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(old_media_file_id, new_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, new_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_media_file_preview_media_file_id() OWNER TO moera;
+
+--
 -- Name: update_media_file_reference(character varying, character varying); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -563,7 +601,7 @@ ALTER TABLE public.media_file_owners OWNER TO moera;
 CREATE TABLE public.media_file_previews (
     id uuid NOT NULL,
     original_media_file_id character varying(40) NOT NULL,
-    size integer NOT NULL,
+    width integer NOT NULL,
     media_file_id character varying(40)
 );
 
@@ -1829,7 +1867,7 @@ CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_fi
 -- Name: media_file_previews update_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
-CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_file_id ON public.media_file_previews FOR EACH ROW EXECUTE FUNCTION public.update_entity_media_file_id();
+CREATE TRIGGER update_media_file_id AFTER INSERT OR DELETE OR UPDATE OF media_file_id, original_media_file_id ON public.media_file_previews FOR EACH ROW EXECUTE FUNCTION public.update_media_file_preview_media_file_id();
 
 
 --
