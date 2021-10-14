@@ -25,6 +25,7 @@ public class PrivateMediaFileInfo {
         height = mediaFileOwner.getMediaFile().getSizeY();
         size = mediaFileOwner.getMediaFile().getFileSize();
         previews = mediaFileOwner.getMediaFile().getPreviews().stream()
+                .filter(pw -> pw.getMediaFile() != null)
                 .map(MediaFilePreviewInfo::new)
                 .toArray(MediaFilePreviewInfo[]::new);
     }

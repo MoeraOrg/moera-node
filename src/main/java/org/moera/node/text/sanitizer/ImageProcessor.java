@@ -31,6 +31,9 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
     private String mediaSources(String location, Collection<MediaFilePreview> previews) {
         List<String> sources = new ArrayList<>();
         for (MediaFilePreview preview : previews) {
+            if (preview.getMediaFile() == null) {
+                continue;
+            }
             sources.add(String.format("%s %dw", mediaPreview(location, preview.getWidth()),
                     preview.getMediaFile().getSizeX()));
         }

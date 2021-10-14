@@ -184,6 +184,9 @@ public class MediaFile {
     public MediaFilePreview findLargerPreview(int width) {
         MediaFilePreview larger = null;
         for (MediaFilePreview preview : getPreviews()) {
+            if (preview.getMediaFile() == null) {
+                continue;
+            }
             if (preview.getWidth() >= width && (larger == null || larger.getWidth() > preview.getWidth())) {
                 larger = preview;
             }
