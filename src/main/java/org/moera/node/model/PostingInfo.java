@@ -44,7 +44,7 @@ public class PostingInfo implements ReactionsInfo {
     private Body body;
     private String saneBody;
     private String bodyFormat;
-    private MediaFileInfo[] media;
+    private PrivateMediaFileInfo[] media;
     private String heading;
     private UpdateInfo updateInfo;
     private Long createdAt;
@@ -121,8 +121,8 @@ public class PostingInfo implements ReactionsInfo {
         bodyFormat = revision.getBodyFormat();
         media = revision.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(a -> new MediaFileInfo(a.getMediaFileOwner()))
-                .toArray(MediaFileInfo[]::new);
+                .map(a -> new PrivateMediaFileInfo(a.getMediaFileOwner()))
+                .toArray(PrivateMediaFileInfo[]::new);
         heading = revision.getHeading();
         if (!UpdateInfo.isEmpty(revision)) {
             updateInfo = new UpdateInfo(revision);
@@ -336,11 +336,11 @@ public class PostingInfo implements ReactionsInfo {
         this.bodyFormat = bodyFormat;
     }
 
-    public MediaFileInfo[] getMedia() {
+    public PrivateMediaFileInfo[] getMedia() {
         return media;
     }
 
-    public void setMedia(MediaFileInfo[] media) {
+    public void setMedia(PrivateMediaFileInfo[] media) {
         this.media = media;
     }
 

@@ -2,10 +2,9 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.MediaFileOwner;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MediaFileInfo {
+public class PublicMediaFileInfo {
 
     private String id;
     private String path;
@@ -13,18 +12,10 @@ public class MediaFileInfo {
     private Integer height;
     private long size;
 
-    public MediaFileInfo() {
+    public PublicMediaFileInfo() {
     }
 
-    public MediaFileInfo(MediaFileOwner mediaFileOwner) {
-        id = mediaFileOwner.getId().toString();
-        path = "private/" + mediaFileOwner.getFileName();
-        width = mediaFileOwner.getMediaFile().getSizeX();
-        height = mediaFileOwner.getMediaFile().getSizeY();
-        size = mediaFileOwner.getMediaFile().getFileSize();
-    }
-
-    public MediaFileInfo(MediaFile mediaFile) {
+    public PublicMediaFileInfo(MediaFile mediaFile) {
         id = mediaFile.getId();
         path = "public/" + mediaFile.getFileName();
         width = mediaFile.getSizeX();

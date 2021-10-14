@@ -27,9 +27,10 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.ThresholdReachedException;
-import org.moera.node.model.MediaFileInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.PrivateMediaFileInfo;
+import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,9 +120,9 @@ public class MediaController {
 
     @PostMapping("/public")
     @Transactional
-    public MediaFileInfo postPublic(@RequestHeader("Content-Type") MediaType mediaType,
-                                    @RequestHeader(value = "Content-Length", required = false) Long contentLength,
-                                    InputStream in) throws IOException {
+    public PublicMediaFileInfo postPublic(@RequestHeader("Content-Type") MediaType mediaType,
+                                          @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+                                          InputStream in) throws IOException {
         log.info("POST /media/public (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
@@ -136,7 +137,7 @@ public class MediaController {
             mediaFile.setExposed(true);
             mediaFile = mediaFileRepository.save(mediaFile);
 
-            return new MediaFileInfo(mediaFile);
+            return new PublicMediaFileInfo(mediaFile);
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
@@ -148,9 +149,9 @@ public class MediaController {
 
     @PostMapping("/private")
     @Transactional
-    public MediaFileInfo postPrivate(@RequestHeader("Content-Type") MediaType mediaType,
-                                     @RequestHeader(value = "Content-Length", required = false) Long contentLength,
-                                     InputStream in) throws IOException {
+    public PrivateMediaFileInfo postPrivate(@RequestHeader("Content-Type") MediaType mediaType,
+                                            @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+                                            InputStream in) throws IOException {
         log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
@@ -163,7 +164,7 @@ public class MediaController {
             String id = transfer(in, tmp.getOutputStream(), contentLength);
             MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
-                return new MediaFileInfo(mediaFileOwner);
+                return new PrivateMediaFileInfo(mediaFileOwner);
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
@@ -180,7 +181,7 @@ public class MediaController {
             mediaFileOwner.setMediaFile(mediaFile);
             mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
 
-            return new MediaFileInfo(mediaFileOwner);
+            return new PrivateMediaFileInfo(mediaFileOwner);
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
@@ -206,17 +207,17 @@ public class MediaController {
     }
 
     @GetMapping("/public/{id}/info")
-    public MediaFileInfo getInfoPublic(@PathVariable String id) {
+    public PublicMediaFileInfo getInfoPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
 
-        return new MediaFileInfo(getMediaFile(id));
+        return new PublicMediaFileInfo(getMediaFile(id));
     }
 
     @GetMapping("/private/{id}/info")
-    public MediaFileInfo getInfoPrivate(@PathVariable UUID id) {
+    public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
-        return new MediaFileInfo(getMediaFileOwner(id));
+        return new PrivateMediaFileInfo(getMediaFileOwner(id));
     }
 
     @GetMapping("/public/{id}/data")

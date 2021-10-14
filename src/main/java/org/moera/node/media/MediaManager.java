@@ -12,7 +12,7 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.MediaFileInfo;
+import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.ParametrizedLock;
 import org.slf4j.Logger;
@@ -136,7 +136,7 @@ public class MediaManager {
         if (mediaFile == null) {
             return;
         }
-        MediaFileInfo info = nodeApi.getPublicMediaInfo(nodeName, mediaFile.getId());
+        PublicMediaFileInfo info = nodeApi.getPublicMediaInfo(nodeName, mediaFile.getId());
         if (info != null) {
             return;
         }
