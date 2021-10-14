@@ -7,6 +7,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "media_file_previews")
 public class MediaFilePreview {
@@ -54,6 +56,11 @@ public class MediaFilePreview {
 
     public void setMediaFile(MediaFile mediaFile) {
         this.mediaFile = mediaFile;
+    }
+
+    @JsonIgnore
+    public boolean isOriginal() {
+        return mediaFile != null && mediaFile.getId().equals(originalMediaFile.getId());
     }
 
 }

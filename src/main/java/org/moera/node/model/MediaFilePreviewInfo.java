@@ -9,6 +9,7 @@ public class MediaFilePreviewInfo {
     private int targetWidth;
     private int width;
     private int height;
+    private boolean original;
 
     public MediaFilePreviewInfo() {
     }
@@ -17,6 +18,7 @@ public class MediaFilePreviewInfo {
         targetWidth = preview.getWidth();
         width = preview.getMediaFile().getSizeX();
         height = preview.getMediaFile().getSizeY();
+        original = preview.isOriginal();
     }
 
     public int getTargetWidth() {
@@ -41,6 +43,14 @@ public class MediaFilePreviewInfo {
 
     public void setHeight(int height) {
         this.height = height;
+    }
+
+    public boolean isOriginal() {
+        return original;
+    }
+
+    public void setOriginal(boolean original) {
+        this.original = original;
     }
 
 }
