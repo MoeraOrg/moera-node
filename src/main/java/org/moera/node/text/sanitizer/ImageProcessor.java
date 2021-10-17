@@ -58,7 +58,10 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 String attrName = attrs.get(i);
                 String attrValue = attrs.get(i + 1);
                 if (attrName.equalsIgnoreCase("src")) {
-                    mediaFileOwner = media.get(attrValue);
+                    if (!attrValue.startsWith("hash:")) {
+                        break;
+                    }
+                    mediaFileOwner = media.get(attrValue.substring(5));
                     if (mediaFileOwner == null) {
                         break;
                     }
