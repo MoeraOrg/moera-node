@@ -1,5 +1,6 @@
 package org.moera.node.ui;
 
+import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.global.RequestContext;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @UiController
 @RequestMapping("/moera")
@@ -36,8 +38,17 @@ public class MoeraUiController {
 
     @GetMapping("/post/{id}")
     @VirtualPage
-    public String post(@PathVariable String id) {
-        return "redirect:/post/" + id;
+    public String post(@PathVariable String id,
+                       @RequestParam(name = "comment", required = false) UUID commentId,
+                       @RequestParam(name = "media", required = false) UUID mediaId) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString("redirect:/post/" + id);
+        if (commentId != null) {
+            builder = builder.queryParam("comment", commentId);
+        }
+        if (mediaId != null) {
+            builder = builder.queryParam("media", mediaId);
+        }
+        return builder.build().toUriString();
     }
 
     @GetMapping("/compose")

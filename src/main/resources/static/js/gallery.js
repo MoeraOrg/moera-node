@@ -8,7 +8,23 @@ function galleryInit() {
         dynamicEl: [],
         plugins: [lgZoom, lgPager, lgFullscreen]
     });
+    document.body.addEventListener("lgBeforeSlide", galleryBeforeSlide);
+    document.body.addEventListener("lgAfterClose", galleryAfterClose);
     $(".entry-image").click(galleryClick);
+
+    if (window.galleryEntryId != null && window.galleryMediaId != null) {
+        galleryOpen(window.galleryEntryId, window.galleryMediaId);
+    }
+}
+
+function galleryBeforeSlide(event) {
+    const slide = window.gallerySlides[event.detail.index];
+    window.galleryMediaId = slide["id"];
+    window.history.replaceState(null, "", "/post/" + window.galleryEntryId + "?media=" + window.galleryMediaId);
+}
+
+function galleryAfterClose(event) {
+    window.history.replaceState(null, "", window.canonicalUrl);
 }
 
 function galleryGetSlide(list, id) {
@@ -22,15 +38,21 @@ function galleryGetSlide(list, id) {
     return 0;
 }
 
+function galleryOpen(entryId, mediaId) {
+    window.galleryEntryId = entryId;
+    const list = window.galleries[entryId];
+    window.gallerySlides = list;
+    if (list != null) {
+        window.gallery.refresh(list);
+        window.gallery.openGallery(galleryGetSlide(list, mediaId));
+    }
+}
+
 function galleryClick(event) {
     const entryId = $(event.currentTarget).parents(".entry").attr("data-id");
     if (entryId != null) {
-        const list = window.galleries[entryId];
-        if (list != null) {
-            window.gallery.refresh(list);
-            const id = event.currentTarget.getAttribute("data-id");
-            window.gallery.openGallery(galleryGetSlide(list, id));
-        }
+        const id = event.currentTarget.getAttribute("data-id");
+        galleryOpen(entryId, id);
     }
     event.preventDefault();
 }

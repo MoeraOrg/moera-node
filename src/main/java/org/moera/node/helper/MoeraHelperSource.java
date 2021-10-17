@@ -238,7 +238,8 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
-    public CharSequence galleries(Object objects) throws JsonProcessingException {
+    public CharSequence galleries(Object objects, String canonicalUrl, String entryId,
+                                  String mediaId) throws JsonProcessingException {
         Collection<?> entries;
         if (objects instanceof Collection) {
             entries = (Collection<?>) objects;
@@ -270,7 +271,27 @@ public class MoeraHelperSource {
         buf.append("<script>");
         buf.append("window.galleries = ");
         buf.append(objectMapper.writeValueAsString(entryMap));
-        buf.append(";</script>");
+        buf.append(";");
+        buf.append("window.canonicalUrl = \"");
+        buf.append(canonicalUrl);
+        buf.append("\";");
+        buf.append("window.galleryEntryId = ");
+        if (entryId != null) {
+            buf.append("\"");
+            buf.append(entryId);
+            buf.append("\";");
+        } else {
+            buf.append("null;");
+        }
+        buf.append("window.galleryMediaId = ");
+        if (mediaId != null) {
+            buf.append("\"");
+            buf.append(mediaId);
+            buf.append("\";");
+        } else {
+            buf.append("null;");
+        }
+        buf.append("</script>");
         return new SafeString(buf);
     }
 

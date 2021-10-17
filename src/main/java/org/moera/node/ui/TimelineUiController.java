@@ -34,6 +34,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @UiController
 public class TimelineUiController {
@@ -65,6 +66,8 @@ public class TimelineUiController {
     @GetMapping("/timeline")
     @VirtualPage
     public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
+        String canonicalUrl = "/timeline" + (before != null ? "?before=" + before : "");
+
         before = before != null ? before : Long.MAX_VALUE;
         List<StoryInfo> stories = Collections.emptyList();
         PublicPage publicPage = publicPageRepository.findContaining(requestContext.nodeId(), before);
@@ -80,6 +83,7 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build("Timeline"));
         model.addAttribute("menuIndex", "timeline");
+        model.addAttribute("canonicalUrl", canonicalUrl);
         model.addAttribute("anchor", "m" + before);
         model.addAttribute("stories", stories);
         model.addAttribute("pagination", timelinePublicPageOperations.createPagination(publicPage));
@@ -92,12 +96,18 @@ public class TimelineUiController {
     @GetMapping("/post/{id}")
     public String posting(@PathVariable UUID id, @RequestParam(required = false) Long before,
                           @RequestParam(name = "comment", required = false) UUID commentId,
+                          @RequestParam(name = "media", required = false) UUID mediaId,
                           HttpServletResponse response, Model model) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/post/" + id);
         if (commentId != null) {
-            VirtualPageHeader.put(response, String.format("/post/%s?comment=%s", id, commentId));
-        } else {
-            VirtualPageHeader.put(response, String.format("/post/%s", id));
+            builder = builder.queryParam("comment", commentId);
         }
+        String canonicalUrl = builder.build().toUriString();
+        if (mediaId != null) {
+            builder = builder.queryParam("media", mediaId);
+        }
+        VirtualPageHeader.put(response, builder.build().toUriString());
+
         if (requestContext.isBrowserExtension()) {
             return null;
         }
@@ -111,7 +121,10 @@ public class TimelineUiController {
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
         model.addAttribute("posting", PostingInfo.forUi(posting, stories));
+        model.addAttribute("canonicalUrl", canonicalUrl);
         model.addAttribute("openComments", commentId != null || before != null);
+        model.addAttribute("openMediaEntryId", (commentId != null ? commentId : id).toString());
+        model.addAttribute("openMediaId", Objects.toString(mediaId, null));
 
         if (posting.isOriginal()) {
             Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
