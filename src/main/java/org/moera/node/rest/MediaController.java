@@ -24,6 +24,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.InvalidImageException;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.ThresholdReachedException;
@@ -138,6 +139,8 @@ public class MediaController {
             mediaFile = mediaFileRepository.save(mediaFile);
 
             return new PublicMediaFileInfo(mediaFile);
+        } catch (InvalidImageException e) {
+            throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {

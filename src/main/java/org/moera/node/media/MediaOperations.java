@@ -126,7 +126,7 @@ public class MediaOperations {
         return Util.base64urlencode(digestStream.getDigest());
     }
 
-    private Dimension getImageDimension(String contentType, Path path) {
+    private Dimension getImageDimension(String contentType, Path path) throws InvalidImageException {
         Iterator<ImageReader> it = ImageIO.getImageReadersByMIMEType(contentType);
         while (it.hasNext()) {
             ImageReader reader = it.next();
@@ -144,7 +144,7 @@ public class MediaOperations {
             }
         }
 
-        return null;
+        throw new InvalidImageException();
     }
 
     @Transactional(REQUIRES_NEW)
@@ -158,7 +158,9 @@ public class MediaOperations {
             mediaFile = new MediaFile();
             mediaFile.setId(id);
             mediaFile.setMimeType(contentType);
-            mediaFile.setDimension(getImageDimension(contentType, mediaPath));
+            if (contentType.startsWith("image/")) {
+                mediaFile.setDimension(getImageDimension(contentType, mediaPath));
+            }
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile = mediaFileRepository.save(mediaFile);
         }
