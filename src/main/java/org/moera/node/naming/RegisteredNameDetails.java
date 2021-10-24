@@ -6,20 +6,23 @@ public class RegisteredNameDetails implements Cloneable {
 
     private String nodeName;
     private String nodeUri;
+    private String nodeProfileUri;
     private byte[] signingKey;
 
     public RegisteredNameDetails() {
     }
 
-    public RegisteredNameDetails(String nodeName, String nodeUri, byte[] signingKey) {
+    public RegisteredNameDetails(String nodeName, String nodeUri, String nodeProfileUri, byte[] signingKey) {
         this.nodeName = nodeName;
         this.nodeUri = nodeUri;
+        this.nodeProfileUri = nodeProfileUri;
         this.signingKey = signingKey;
     }
 
     public RegisteredNameDetails(RegisteredNameInfo info) {
         nodeName = RegisteredName.toString(info.getName(), info.getGeneration());
         nodeUri = info.getNodeUri();
+        nodeProfileUri = info.getNodeUri() + "/profile";
         signingKey = info.getSigningKey();
     }
 
@@ -39,6 +42,14 @@ public class RegisteredNameDetails implements Cloneable {
         this.nodeUri = nodeUri;
     }
 
+    public String getNodeProfileUri() {
+        return nodeProfileUri;
+    }
+
+    public void setNodeProfileUri(String nodeProfileUri) {
+        this.nodeProfileUri = nodeProfileUri;
+    }
+
     public byte[] getSigningKey() {
         return signingKey;
     }
@@ -49,7 +60,7 @@ public class RegisteredNameDetails implements Cloneable {
 
     @Override
     public RegisteredNameDetails clone() {
-        return new RegisteredNameDetails(nodeName, nodeUri, signingKey);
+        return new RegisteredNameDetails(nodeName, nodeUri, nodeProfileUri, signingKey);
     }
 
 }

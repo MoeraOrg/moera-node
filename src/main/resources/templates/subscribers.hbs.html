@@ -19,7 +19,7 @@
     <div class="row">
         {{#each subscribers}}
             <div class="person col-sm-4">
-                <a href="/profile" title="Profile">{{avatar avatar 48}}</a>
+                {{avatar avatar 48 nodeName=nodeName}}
                 {{nodename nodeName fullName}}
             </div>
         {{/each}}

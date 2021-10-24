@@ -40,7 +40,7 @@
         {{#if originalHref}}
             <a class="posting-source" href="{{originalHref}}"><i class="fas fa-retweet"></i></a>
         {{/if}}
-        {{avatar posting.ownerAvatar 48}}
+        {{avatar posting.ownerAvatar 48 nodeName=posting.ownerName}}
         <div class="owner-info">
             <span class="owner">
                 {{nodename posting.ownerName posting.ownerFullName}}
@@ -106,7 +106,7 @@
                     {{#assign "tsClass"}}{{/assign}}
                 {{/ifeq}}
                 <div class="comment entry {{focusedClass}} {{tsClass}}">
-                    {{avatar posting.ownerAvatar 36}}
+                    {{avatar posting.ownerAvatar 36 nodeName=ownerName}}
                     <div class="details">
                         <div class="owner-line">
                             <span class="owner">{{nodename ownerName ownerFullName}}</span>

@@ -86,7 +86,9 @@ public class NamingCache {
 
     public RegisteredNameDetails getFast(String name) {
         RegisteredNameDetails details = getOrRun(getKey(name));
-        return details != null ? details.clone() : new RegisteredNameDetails(name, getRedirector(name), null);
+        return details != null
+                ? details.clone()
+                : new RegisteredNameDetails(name, getRedirector(name), getRedirector(name, "/profile"), null);
     }
 
     public RegisteredNameDetails get(String name) {

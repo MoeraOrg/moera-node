@@ -102,10 +102,19 @@ public class MoeraHelperSource {
         }
     }
 
-    public CharSequence avatar(Object avatar, Object size) {
+    public CharSequence avatar(Object avatar, Object size, Options options) {
         long sz = HelperUtil.intArg(1, size);
+        String nodeName = options.hash("nodeName");
 
         StringBuilder buf = new StringBuilder();
+        RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
+        if (!ObjectUtils.isEmpty(registeredName.getName())) {
+            RegisteredNameDetails details = namingCache.getFast(nodeName);
+            buf.append("<a");
+            HelperUtil.appendAttr(buf, "href", details.getNodeProfileUri());
+            HelperUtil.appendAttr(buf, "title", "Profile");
+            buf.append('>');
+        }
         buf.append("<img");
         if (avatar == null) {
             HelperUtil.appendAttr(buf, "src", "/pics/avatar.png");
@@ -122,6 +131,9 @@ public class MoeraHelperSource {
         HelperUtil.appendAttr(buf, "width", sz);
         HelperUtil.appendAttr(buf, "height", sz);
         buf.append('>');
+        if (!ObjectUtils.isEmpty(registeredName.getName())) {
+            buf.append("</a>");
+        }
         return new SafeString(buf);
     }
 
