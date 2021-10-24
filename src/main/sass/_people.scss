@@ -45,6 +45,10 @@
             display: inline-block;
             margin-right: .5rem;
         }
+
+        A.node-name:hover {
+            text-decoration: underline;
+        }
     }
 
     .node-name {
