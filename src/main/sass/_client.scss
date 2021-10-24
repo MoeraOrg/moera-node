@@ -3,11 +3,11 @@
     margin-left: auto;
     margin-right: auto;
     margin-top: 5rem;
-    width: 35rem;
+    width: css-min(unquote("35rem"), unquote("100vw - 1rem"));
     padding: 2rem;
     font-size: 20pt;
     font-weight: bold;
-    color: var(--info);
+    color: var(--bs-info);
     text-align: center;
     line-height: 1.2;
 }

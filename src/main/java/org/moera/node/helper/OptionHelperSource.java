@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
 import org.moera.node.global.RequestContext;
+import org.moera.node.option.OptionsMetadata;
 
 @HelperSource
 public class OptionHelperSource {
@@ -12,8 +13,13 @@ public class OptionHelperSource {
     @Inject
     private RequestContext requestContext;
 
+    @Inject
+    private OptionsMetadata optionsMetadata;
+
     private String getOptionString(String name) {
-        return requestContext.getOptions() != null ? requestContext.getOptions().getString(name) : "";
+        return requestContext.getOptions() != null
+                ? requestContext.getOptions().getString(name)
+                : optionsMetadata.getDescriptor(name).getDefaultValue();
     }
 
     public CharSequence optionHtml(String name) {

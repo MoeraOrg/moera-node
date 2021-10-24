@@ -28,11 +28,6 @@
         IMG, IFRAME {
             max-width: css-min(unquote("var(--feed-width) - 3.5rem"), unquote("100vw - 4rem"));
         }
-
-        IMG {
-            width: auto;
-            height: auto;
-        }
     }
 
     &.preview > .content {
@@ -61,7 +56,7 @@
         display: flex;
 
         .posting-source {
-            color: var(--info);
+            color: var(--bs-info);
             margin-right: .3em;
         }
 
@@ -109,7 +104,7 @@
             max-width: 225px;
             text-align: center;
             text-decoration: none;
-            color: var(--gray-dark);
+            color: var(--bs-gray-dark);
             padding: .3rem;
             margin-right: .3rem;
             cursor: pointer;
@@ -133,6 +128,10 @@
             flex: auto;
             text-align: right;
             padding-top: .3em;
+
+            A {
+                text-decoration: none;
+            }
         }
 
         .share-popup {

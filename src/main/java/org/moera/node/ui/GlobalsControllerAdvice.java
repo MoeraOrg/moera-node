@@ -40,7 +40,9 @@ public class GlobalsControllerAdvice {
             model.addAttribute("ogImageWidth", 200);
             model.addAttribute("ogImageHeight", 200);
         }
-        model.addAttribute("ogDescription", requestContext.getOptions().getString("profile.title"));
+        if (requestContext.getOptions() != null) {
+            model.addAttribute("ogDescription", requestContext.getOptions().getString("profile.title"));
+        }
         String siteName = !ObjectUtils.isEmpty(requestContext.fullName())
                 ? requestContext.fullName() : requestContext.nodeName();
         model.addAttribute("ogSiteName", siteName);

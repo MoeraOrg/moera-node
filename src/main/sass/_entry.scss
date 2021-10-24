@@ -1,19 +1,32 @@
 .entry {
-    .content {
+    A:hover {
+        text-decoration: underline;
+    }
+
+    A.btn:hover {
+        text-decoration: none;
+    }
+
+    & > .content {
+        IMG {
+            width: auto;
+            height: auto;
+        }
+
         BLOCKQUOTE {
-            padding: 0.2rem 0.2rem 0.2rem 2.7rem;
+            padding: .2rem .2rem .2rem 2.7rem;
             position: relative;
             background-color: var(--blockquote);
-            border-radius: 0.5rem;
+            border-radius: .5rem;
             overflow: hidden;
 
             &::before {
                 content: "\201C";
                 font-family: serif;
                 font-size: 4rem;
-                color: var(--cyan);
+                color: var(--bs-cyan);
                 position: absolute;
-                left: 0.5rem;
+                left: .5rem;
                 top: -1rem;
             }
         }

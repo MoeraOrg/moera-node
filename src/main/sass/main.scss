@@ -25,6 +25,10 @@ BODY {
     padding-bottom: 2rem;
 }
 
+A, .btn-link {
+    text-decoration: none;
+}
+
 .container {
     max-width: var(--feed-width);
 
@@ -55,13 +59,14 @@ H2 .avatar-link {
     padding-bottom: 0;
 
     .navbar-brand {
-        padding-right: 1rem;
+        padding-left: .5rem;
+        padding-right: .5rem;
     }
 
     .node-name {
         color: var(--cyan-light);
         font-weight: bold;
-
+        margin-right: .5rem;
     }
 
     A.navbar-text:hover {
@@ -74,15 +79,15 @@ H2 .avatar-link {
         position: absolute;
         padding-right: 1rem;
         top: 2.5em;
-        right: 1em;
-        box-shadow: 0 0.125rem 0.25rem var(--shadow);
-        border: solid 1px var(--gray);
+        right: 0;
+        box-shadow: 0 .125rem .25rem var(--shadow);
+        border: solid 1px var(--bs-gray);
     }
 }
 
 SUB.generation {
     position: relative;
-    left: 0.2em;
+    left: .2em;
     font-size: 60%;
     font-weight: 400;
 }
@@ -116,40 +121,6 @@ SUB.generation {
     }
 }
 
-.registration-form {
-    @include pane;
-    margin-top: 2rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-
-    .title {
-        font-size: 4rem;
-        text-align: center;
-        margin-bottom: 1.5rem;
-
-        EM {
-            color: var(--green);
-        }
-    }
-
-    .domain {
-        font-weight: 500;
-        font-size: large;
-    }
-}
-
-.registration-next {
-    @include pane;
-    padding: 1rem;
-
-    H1 {
-        color: var(--green);
-    }
-    LI {
-        font-size: 1.2rem;
-    }
-}
-
 @import 'avatar';
 @import 'entry';
 @import 'posting';
@@ -158,3 +129,4 @@ SUB.generation {
 @import 'comment';
 @import 'client';
 @import 'profile';
+@import 'registrar';

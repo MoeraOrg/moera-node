@@ -9,9 +9,9 @@
     --green-light: #42d042; /* forest green + 20% lighter */
     --red-light: #df5a5a; /* fire brick + 20% lighter */
 
-    --verifying: var(--cyan);
+    --verifying: var(--bs-cyan);
     --correct: forestgreen;
-    --incorrect: var(--red);
+    --incorrect: var(--bs-red);
     --correct-light: var(--green-light);
     --incorrect-light: var(--red-light);
     --node-name: #385898;

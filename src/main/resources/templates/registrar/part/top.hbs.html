@@ -16,6 +16,7 @@
         <script src="/js/registrar.js"></script>
         <title>Get a blog | Moera</title>
     </head>
-    <body>
-        <div class="ml-3 mt-3">{{image "/pics/logo-64.png" alt="Moera"}}</div>
+    {{assignOption "maxWidth" "feed.width"}}
+    <body style="--feed-width: {{maxWidth}}px">
+        <div class="ms-3 mt-3">{{image "/pics/logo-64.png" alt="Moera"}}</div>
         <div class="container">

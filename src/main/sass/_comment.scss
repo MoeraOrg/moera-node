@@ -5,7 +5,7 @@
 
     SUMMARY {
         font-size: large;
-        color: var(--primary);
+        color: var(--bs-primary);
         font-weight: 500;
         margin-bottom: 1rem;
     }
@@ -86,11 +86,6 @@
             max-height: 16rem;
         }
 
-        IMG {
-            width: auto;
-            height: auto;
-        }
-
         .replied-to {
             margin-bottom: .3rem;
             font-size: 90%;
@@ -106,14 +101,14 @@
             }
 
             .node-name {
-                color: var(--gray);
+                color: var(--bs-gray);
                 font-weight: bold;
                 position: relative;
                 top: -.1em;
             }
 
             .heading {
-                color: var(--gray);
+                color: var(--bs-gray);
                 position: relative;
                 top: -.1em;
                 margin-left: .3em;
@@ -126,7 +121,7 @@
     }
 
     &.focused .content {
-        border: dashed 1px var(--primary);
+        border: dashed 1px var(--bs-primary);
     }
 
     .reactions-line {

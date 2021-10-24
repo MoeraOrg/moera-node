@@ -17,11 +17,6 @@
         background-color: var(--reactions-positive);
         border-radius: .9em;
         padding: .44em 1.1em;
-
-        &:hover {
-            text-decoration: underline;
-            cursor: pointer;
-        }
     }
 
 
@@ -30,10 +25,5 @@
         background-color: var(--reactions-negative);
         border-radius: .9em;
         padding: .44em 1.1em;
-
-        &:hover {
-            text-decoration: underline;
-            cursor: pointer;
-        }
     }
 }
