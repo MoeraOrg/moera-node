@@ -190,9 +190,9 @@ public class DraftController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
         }
-        updateAttachments(draft, media);
         updateDeadline(draft);
         draft = draftRepository.save(draft);
+        updateAttachments(draft, media);
 
         requestContext.send(new DraftAddedEvent(draft));
 
@@ -218,8 +218,8 @@ public class DraftController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
         }
-        updateAttachments(draft, media);
         updateDeadline(draft);
+        updateAttachments(draft, media);
 
         requestContext.send(new DraftUpdatedEvent(draft));
 

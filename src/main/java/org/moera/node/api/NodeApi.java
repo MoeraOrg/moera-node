@@ -366,4 +366,10 @@ public class NodeApi {
                 mediaFile.getMimeType(), mediaOperations.getPath(mediaFile), PublicMediaFileInfo.class);
     }
 
+    public TemporaryMediaFile getPrivateMedia(String nodeName,  String carte, String id, TemporaryFile tmpFile,
+                                              int maxSize) throws NodeApiException {
+        return call("GET", nodeName, String.format("/media/private/%s/data", Util.ue(id)),
+                auth("carte", carte), tmpFile, maxSize);
+    }
+
 }
