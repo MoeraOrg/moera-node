@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -48,6 +49,8 @@ public class DraftText {
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;
+
+    private UUID[] media;
 
     private Long publishAt;
 
@@ -148,6 +151,14 @@ public class DraftText {
 
     public void setBodySrcFormat(SourceFormat bodySrcFormat) {
         this.bodySrcFormat = bodySrcFormat;
+    }
+
+    public UUID[] getMedia() {
+        return media;
+    }
+
+    public void setMedia(UUID[] media) {
+        this.media = media;
     }
 
     public Long getPublishAt() {

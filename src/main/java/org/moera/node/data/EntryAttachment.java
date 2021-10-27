@@ -15,8 +15,10 @@ public class EntryAttachment {
     private UUID id;
 
     @ManyToOne
-    @NotNull
     private EntryRevision entryRevision;
+
+    @ManyToOne
+    private Draft draft;
 
     @ManyToOne
     @NotNull
@@ -35,6 +37,13 @@ public class EntryAttachment {
         this.ordinal = ordinal;
     }
 
+    public EntryAttachment(Draft draft, MediaFileOwner mediaFileOwner, int ordinal) {
+        this.id = UUID.randomUUID();
+        this.draft = draft;
+        this.mediaFileOwner = mediaFileOwner;
+        this.ordinal = ordinal;
+    }
+
     public UUID getId() {
         return id;
     }
@@ -49,6 +58,14 @@ public class EntryAttachment {
 
     public void setEntryRevision(EntryRevision entryRevision) {
         this.entryRevision = entryRevision;
+    }
+
+    public Draft getDraft() {
+        return draft;
+    }
+
+    public void setDraft(Draft draft) {
+        this.draft = draft;
     }
 
     public MediaFileOwner getMediaFileOwner() {

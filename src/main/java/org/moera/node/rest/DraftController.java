@@ -16,13 +16,17 @@ import org.moera.node.auth.Admin;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.DraftType;
+import org.moera.node.data.EntryAttachment;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.DraftInfo;
 import org.moera.node.model.DraftText;
@@ -70,7 +74,13 @@ public class DraftController {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
     private TextConverter textConverter;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @GetMapping
     @Admin
@@ -161,7 +171,7 @@ public class DraftController {
             throw new ValidationFailure("draftText.commentId.blank");
         }
 
-        validate(draftText);
+        List<MediaFileOwner> media = validate(draftText);
 
         Draft draft = new Draft();
         draft.setId(UUID.randomUUID());
@@ -180,6 +190,7 @@ public class DraftController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
         }
+        updateAttachments(draft, media);
         updateDeadline(draft);
         draft = draftRepository.save(draft);
 
@@ -198,16 +209,16 @@ public class DraftController {
                 LogUtil.format(draftText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat())));
 
-        validate(draftText);
+        List<MediaFileOwner> media = validate(draftText);
 
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
-        draftText.toDraft(draft, textConverter);
         try {
             draftText.toDraft(draft, textConverter);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
         }
+        updateAttachments(draft, media);
         updateDeadline(draft);
 
         requestContext.send(new DraftUpdatedEvent(draft));
@@ -215,7 +226,7 @@ public class DraftController {
         return new DraftInfo(draft);
     }
 
-    private void validate(@RequestBody @Valid DraftText draftText) {
+    private List<MediaFileOwner> validate(@RequestBody @Valid DraftText draftText) {
         if (draftText.getBodySrc() != null && draftText.getBodySrc().length() > getMaxPostingSize()) {
             throw new ValidationFailure("draftText.bodySrc.wrong-size");
         }
@@ -226,6 +237,23 @@ public class DraftController {
                 throw new ValidationFailure("draftText.ownerAvatar.mediaId.not-found");
             }
             draftText.setOwnerAvatarMediaFile(mediaFile);
+        }
+
+        return mediaOperations.validateAttachments(draftText.getMedia(),
+                () -> new ValidationFailure("draftText.media.not-found"));
+    }
+
+    private void updateAttachments(Draft draft, List<MediaFileOwner> media) {
+        for (EntryAttachment ea : draft.getAttachments()) {
+            draft.removeAttachment(ea);
+            entryAttachmentRepository.delete(ea);
+        }
+
+        int ordinal = 0;
+        for (MediaFileOwner mfo : media) {
+            EntryAttachment attachment = new EntryAttachment(draft, mfo, ordinal++);
+            attachment = entryAttachmentRepository.save(attachment);
+            draft.addAttachment(attachment);
         }
     }
 

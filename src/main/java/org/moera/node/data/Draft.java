@@ -1,11 +1,15 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -91,6 +95,9 @@ public class Draft {
 
     @NotNull
     private String updateDescription = "";
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "draft")
+    private Set<EntryAttachment> attachments = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -282,6 +289,24 @@ public class Draft {
 
     public void setUpdateDescription(String updateDescription) {
         this.updateDescription = updateDescription;
+    }
+
+    public Set<EntryAttachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(Set<EntryAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    public void addAttachment(EntryAttachment attachment) {
+        attachments.add(attachment);
+        attachment.setDraft(this);
+    }
+
+    public void removeAttachment(EntryAttachment attachment) {
+        attachments.removeIf(r -> r.getId().equals(attachment.getId()));
+        attachment.setDraft(null);
     }
 
 }

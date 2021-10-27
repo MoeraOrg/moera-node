@@ -1,8 +1,11 @@
 package org.moera.node.model;
 
+import java.util.Comparator;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftType;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
 
@@ -26,6 +29,7 @@ public class DraftInfo {
     private SourceFormat bodySrcFormat;
     private Body body;
     private String bodyFormat;
+    private PrivateMediaFileInfo[] media;
     private String heading;
     private Long publishAt;
     private UpdateInfo updateInfo;
@@ -55,6 +59,10 @@ public class DraftInfo {
         bodySrcFormat = draft.getBodySrcFormat();
         body = new Body(draft.getBody());
         bodyFormat = draft.getBodyFormat();
+        media = draft.getAttachments().stream()
+                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .map(a -> new PrivateMediaFileInfo(a.getMediaFileOwner()))
+                .toArray(PrivateMediaFileInfo[]::new);
         heading = draft.getHeading();
         publishAt = Util.toEpochSecond(draft.getPublishAt());
         if (!UpdateInfo.isEmpty(draft)) {
@@ -197,6 +205,14 @@ public class DraftInfo {
 
     public void setBodyFormat(String bodyFormat) {
         this.bodyFormat = bodyFormat;
+    }
+
+    public PrivateMediaFileInfo[] getMedia() {
+        return media;
+    }
+
+    public void setMedia(PrivateMediaFileInfo[] media) {
+        this.media = media;
     }
 
     public String getHeading() {
