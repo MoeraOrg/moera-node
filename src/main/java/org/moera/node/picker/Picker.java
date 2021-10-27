@@ -15,11 +15,14 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiErrorStatusException;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
+import org.moera.node.data.EntryAttachment;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntrySource;
 import org.moera.node.data.EntrySourceRepository;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -32,6 +35,7 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
@@ -56,21 +60,24 @@ import org.springframework.util.ObjectUtils;
 
 public class Picker extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(Picker.class);
+    private static final Logger log = LoggerFactory.getLogger(Picker.class);
 
-    private String remoteNodeName;
+    private final String remoteNodeName;
     private String remoteFullName;
     private MediaFile remoteAvatarMediaFile;
     private String remoteAvatarShape;
-    private BlockingQueue<Pick> queue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<Pick> queue = new LinkedBlockingQueue<>();
     private boolean stopped = false;
-    private PickerPool pool;
+    private final PickerPool pool;
 
     @Inject
     private PostingRepository postingRepository;
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
     private ReactionTotalRepository reactionTotalRepository;
@@ -195,6 +202,7 @@ public class Picker extends Task {
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
+            downloadMedia(postingInfo, null, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
@@ -206,6 +214,7 @@ public class Picker extends Task {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
+            downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
                 events.add(new PostingUpdatedEvent(posting));
             } else {
@@ -246,6 +255,19 @@ public class Picker extends Task {
         }
         posting.setCurrentRevision(revision);
         posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
+    }
+
+    private void downloadMedia(PostingInfo postingInfo, UUID entryId, EntryRevision revision) throws NodeApiException {
+        int ordinal = 0;
+        for (PrivateMediaFileInfo mediaInfo : postingInfo.getMedia()) {
+            MediaFileOwner media = mediaManager.downloadPrivateMedia(
+                    remoteNodeName, generateCarte(remoteNodeName), mediaInfo, entryId);
+            if (media != null) {
+                EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
+                attachment = entryAttachmentRepository.save(attachment);
+                revision.addAttachment(attachment);
+            }
+        }
     }
 
     private void publish(String feedName, Posting posting, List<Event> events) {

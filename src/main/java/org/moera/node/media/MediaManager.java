@@ -2,16 +2,23 @@ package org.moera.node.media;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 
 import org.moera.node.api.NodeApi;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.data.Avatar;
+import org.moera.node.data.EntryAttachment;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.ParametrizedLock;
@@ -24,7 +31,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MediaManager {
 
-    private static Logger log = LoggerFactory.getLogger(MediaManager.class);
+    private static final Logger log = LoggerFactory.getLogger(MediaManager.class);
 
     @Inject
     private UniversalContext universalContext;
@@ -36,7 +43,16 @@ public class MediaManager {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
+    private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private EntityManager entityManager;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -45,7 +61,7 @@ public class MediaManager {
     @Inject
     private TaskAutowire taskAutowire;
 
-    private ParametrizedLock<String> mediaFileLocks = new ParametrizedLock<>();
+    private final ParametrizedLock<String> mediaFileLocks = new ParametrizedLock<>();
 
     public MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws NodeApiException {
         if (id == null) {
@@ -68,9 +84,13 @@ public class MediaManager {
             var tmp = mediaOperations.tmpFile();
             try {
                 var tmpMedia = nodeApi.getPublicMedia(nodeName, id, tmp, maxSize);
+                if (!tmpMedia.getMediaFileId().equals(id)) {
+                    log.warn("Public media {} has hash {}", id, tmpMedia.getMediaFileId());
+                    return null;
+                }
                 mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath());
+                mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
                 mediaFile.setExposed(true);
-                mediaFile = mediaFileRepository.save(mediaFile);
 
                 return mediaFile;
             } catch (IOException e) {
@@ -148,6 +168,80 @@ public class MediaManager {
             return;
         }
         uploadPublicMedia(nodeName, carte, avatar.getMediaFile());
+    }
+
+    private MediaFileOwner findAttachedMedia(String mediaFileId, UUID entryId) {
+        if (entryId != null) {
+            MediaFileOwner mediaFileOwner = mediaFileOwnerRepository
+                    .findByAdminFile(universalContext.nodeId(), mediaFileId).orElse(null);
+            if (mediaFileOwner != null) {
+                EntryAttachment entryAttachment = entryAttachmentRepository
+                        .findByEntryIdAndMedia(universalContext.nodeId(), entryId, mediaFileOwner.getId()).orElse(null);
+                if (entryAttachment != null) {
+                    return mediaFileOwner;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public MediaFileOwner downloadPrivateMedia(String nodeName, String carte, String id, String mediaFileId,
+                                               int maxSize, UUID entryId) throws NodeApiException {
+        if (id == null) {
+            return null;
+        }
+
+        MediaFileOwner mediaFileOwner = findAttachedMedia(mediaFileId, entryId);
+        if (mediaFileOwner != null) {
+            return mediaFileOwner;
+        }
+
+        mediaFileLocks.lock(mediaFileId);
+        try {
+            // Could appear in meantime
+            mediaFileOwner = findAttachedMedia(mediaFileId, entryId);
+            if (mediaFileOwner != null) {
+                return mediaFileOwner;
+            }
+
+            var tmp = mediaOperations.tmpFile();
+            try {
+                var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, id, tmp, maxSize);
+                if (!tmpMedia.getMediaFileId().equals(mediaFileId)) {
+                    log.warn("Media {} has hash {} instead of {}", id, tmpMedia.getMediaFileId(), mediaFileId);
+                    return null;
+                }
+                MediaFile mediaFile = mediaOperations.putInPlace(mediaFileId, tmpMedia.getContentType(), tmp.getPath());
+                // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use
+                // our MediaFileOwner, if exists
+                mediaFileOwner = mediaFileOwnerRepository
+                        .findByAdminFile(universalContext.nodeId(), mediaFileId).orElse(null);
+                if (mediaFileOwner == null) {
+                    // entity is detached after putInPlace() transaction closed
+                    mediaFile = entityManager.merge(mediaFile);
+                    mediaFileOwner = mediaOperations.own(mediaFile, null);
+                }
+
+                return mediaFileOwner;
+            } catch (IOException e) {
+                throw new NodeApiException(String.format("Error storing private media %s: %s", id, e.getMessage()));
+            } finally {
+                try {
+                    Files.deleteIfExists(tmp.getPath());
+                } catch (IOException e) {
+                    log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+                }
+            }
+        } finally {
+            mediaFileLocks.unlock(mediaFileId);
+        }
+    }
+
+    public MediaFileOwner downloadPrivateMedia(String nodeName, String carte, PrivateMediaFileInfo info,
+                                               UUID entryId) throws NodeApiException {
+        return downloadPrivateMedia(nodeName, carte, info.getId(), info.getHash(),
+                universalContext.getOptions().getInt("posting.media.max-size"), entryId);
     }
 
 }

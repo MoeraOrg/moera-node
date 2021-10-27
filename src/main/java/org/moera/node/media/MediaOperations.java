@@ -44,7 +44,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -67,8 +67,10 @@ public class MediaOperations {
 
     private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
+    private static final int[] PREVIEW_SIZES = {1400, 900, 150};
+
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private Config config;
@@ -178,7 +180,7 @@ public class MediaOperations {
         return new Rectangle(width, height);
     }
 
-    public MediaFile cropOriginal(MediaFile original) throws IOException {
+    private MediaFile cropOriginal(MediaFile original) throws IOException {
         var previewFormat = MimeUtils.thumbnail(original.getMimeType());
         if (previewFormat == null) {
             return original;
@@ -210,7 +212,7 @@ public class MediaOperations {
         }
     }
 
-    public void createPreview(MediaFile original, MediaFile cropped, int width) throws IOException {
+    private void createPreview(MediaFile original, MediaFile cropped, int width) throws IOException {
         var previewFormat = MimeUtils.thumbnail(original.getMimeType());
         if (previewFormat == null) {
             return;
@@ -237,7 +239,7 @@ public class MediaOperations {
                         ? largerPreview.getMediaFile().getFileSize()
                         : cropped.getFileSize();
                 long gain = (prevFileSize - fileSize) * 100 / prevFileSize; // negative, if fileSize > prevFileSize
-                if (gain < requestContext.getOptions().getInt("media.preview-gain")) {
+                if (gain < universalContext.getOptions().getInt("media.preview-gain")) {
                     if (largerPreview != null) {
                         return;
                     }
@@ -260,6 +262,21 @@ public class MediaOperations {
         preview.setMediaFile(previewFile);
         preview = mediaFilePreviewRepository.save(preview);
         original.addPreview(preview);
+    }
+
+    public MediaFileOwner own(MediaFile mediaFile, String ownerName) throws IOException {
+        MediaFile croppedFile = cropOriginal(mediaFile);
+        for (int size : PREVIEW_SIZES) {
+            createPreview(mediaFile, croppedFile, size);
+        }
+
+        MediaFileOwner mediaFileOwner = new MediaFileOwner();
+        mediaFileOwner.setId(UUID.randomUUID());
+        mediaFileOwner.setNodeId(universalContext.nodeId());
+        mediaFileOwner.setOwnerName(ownerName);
+        mediaFileOwner.setMediaFile(mediaFile);
+
+        return mediaFileOwnerRepository.save(mediaFileOwner);
     }
 
     public ResponseEntity<Resource> serve(MediaFile mediaFile) {
@@ -312,22 +329,23 @@ public class MediaOperations {
         }
     }
 
-    public List<MediaFileOwner> validateAttachments(UUID[] ids, Supplier<RuntimeException> notFound) {
+    public List<MediaFileOwner> validateAttachments(UUID[] ids, Supplier<RuntimeException> notFound,
+                                                    boolean isAdmin, String clientName) {
         if (ids == null || ids.length == 0) {
             return Collections.emptyList();
         }
 
         List<MediaFileOwner> attached = new ArrayList<>();
-        Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(requestContext.nodeId(), ids)
+        Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
                 .stream().collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
         for (UUID id : ids) {
             MediaFileOwner mediaFileOwner = mediaFileOwners.get(id);
             if (mediaFileOwner == null) {
                 throw notFound.get();
             }
-            if (mediaFileOwner.getOwnerName() == null && !requestContext.isAdmin()
+            if (mediaFileOwner.getOwnerName() == null && !isAdmin
                     || mediaFileOwner.getOwnerName() != null
-                        && !mediaFileOwner.getOwnerName().equals(requestContext.getClientName())) {
+                        && !mediaFileOwner.getOwnerName().equals(clientName)) {
                 throw notFound.get();
             }
             attached.add(mediaFileOwner);

@@ -53,8 +53,6 @@ public class MediaController {
 
     private static final Logger log = LoggerFactory.getLogger(MediaController.class);
 
-    private static final int[] PREVIEW_SIZES = {1400, 900, 150};
-
     @Inject
     private Config config;
 
@@ -171,18 +169,9 @@ public class MediaController {
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
-            MediaFile croppedFile = mediaOperations.cropOriginal(mediaFile);
-            for (int size : PREVIEW_SIZES) {
-                mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
-                mediaOperations.createPreview(mediaFile, croppedFile, size);
-            }
-
-            mediaFileOwner = new MediaFileOwner();
-            mediaFileOwner.setId(UUID.randomUUID());
-            mediaFileOwner.setNodeId(requestContext.nodeId());
-            mediaFileOwner.setOwnerName(requestContext.isAdmin() ? null : requestContext.getClientName());
-            mediaFileOwner.setMediaFile(mediaFile);
-            mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
+            mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
+            mediaFileOwner = mediaOperations.own(mediaFile,
+                    requestContext.isAdmin() ? null : requestContext.getClientName());
 
             return new PrivateMediaFileInfo(mediaFileOwner);
         } catch (ThresholdReachedException e) {
