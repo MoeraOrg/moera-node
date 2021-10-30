@@ -29,7 +29,7 @@ public class DraftInfo {
     private SourceFormat bodySrcFormat;
     private Body body;
     private String bodyFormat;
-    private PrivateMediaFileInfo[] media;
+    private MediaAttachment[] media;
     private String heading;
     private Long publishAt;
     private UpdateInfo updateInfo;
@@ -61,8 +61,8 @@ public class DraftInfo {
         bodyFormat = draft.getBodyFormat();
         media = draft.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(a -> new PrivateMediaFileInfo(a.getMediaFileOwner()))
-                .toArray(PrivateMediaFileInfo[]::new);
+                .map(MediaAttachment::new)
+                .toArray(MediaAttachment[]::new);
         heading = draft.getHeading();
         publishAt = Util.toEpochSecond(draft.getPublishAt());
         if (!UpdateInfo.isEmpty(draft)) {
@@ -207,11 +207,11 @@ public class DraftInfo {
         this.bodyFormat = bodyFormat;
     }
 
-    public PrivateMediaFileInfo[] getMedia() {
+    public MediaAttachment[] getMedia() {
         return media;
     }
 
-    public void setMedia(PrivateMediaFileInfo[] media) {
+    public void setMedia(MediaAttachment[] media) {
         this.media = media;
     }
 

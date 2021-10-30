@@ -34,8 +34,8 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.media.MediaManager;
+import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
@@ -259,11 +259,12 @@ public class Picker extends Task {
 
     private void downloadMedia(PostingInfo postingInfo, UUID entryId, EntryRevision revision) throws NodeApiException {
         int ordinal = 0;
-        for (PrivateMediaFileInfo mediaInfo : postingInfo.getMedia()) {
+        for (MediaAttachment attach : postingInfo.getMedia()) {
             MediaFileOwner media = mediaManager.downloadPrivateMedia(
-                    remoteNodeName, generateCarte(remoteNodeName), mediaInfo, entryId);
+                    remoteNodeName, generateCarte(remoteNodeName), attach.getMedia(), entryId);
             if (media != null) {
                 EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
+                attachment.setEmbedded(attach.isEmbedded());
                 attachment = entryAttachmentRepository.save(attachment);
                 revision.addAttachment(attachment);
             }

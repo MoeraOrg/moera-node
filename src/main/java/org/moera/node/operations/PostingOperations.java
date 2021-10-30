@@ -43,6 +43,7 @@ import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.option.Options;
+import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
@@ -132,12 +133,18 @@ public class PostingOperations {
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
         }
-        int ordinal = 0;
-        for (MediaFileOwner mfo : media) {
-            EntryAttachment attachment = new EntryAttachment(current, mfo, ordinal++);
-            attachment = entryAttachmentRepository.save(attachment);
-            current.addAttachment(attachment);
+
+        if (media.size() > 0) {
+            Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(revision.getBody()).getText());
+            int ordinal = 0;
+            for (MediaFileOwner mfo : media) {
+                EntryAttachment attachment = new EntryAttachment(current, mfo, ordinal++);
+                attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
+                attachment = entryAttachmentRepository.save(attachment);
+                current.addAttachment(attachment);
+            }
         }
+
         posting.setEditedAt(Util.now());
         posting = postingRepository.saveAndFlush(posting);
         storyOperations.publish(posting, publications);

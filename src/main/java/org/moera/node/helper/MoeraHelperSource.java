@@ -19,6 +19,7 @@ import org.moera.node.global.UserAgentOs;
 import org.moera.node.global.WebClient;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.AvatarInfo;
+import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
@@ -271,6 +272,7 @@ public class MoeraHelperSource {
                 continue;
             }
             var props = Arrays.stream(posting.getMedia())
+                    .map(MediaAttachment::getMedia)
                     .map(mfo -> Map.of(
                             "id", mfo.getId(),
                             "src", "/moera/media/" + mfo.getPath(),

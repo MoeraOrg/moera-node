@@ -27,6 +27,9 @@ public class EntryAttachment {
     @NotNull
     private int ordinal;
 
+    @NotNull
+    private boolean embedded = true;
+
     public EntryAttachment() {
     }
 
@@ -82,6 +85,14 @@ public class EntryAttachment {
 
     public void setOrdinal(int ordinal) {
         this.ordinal = ordinal;
+    }
+
+    public boolean isEmbedded() {
+        return embedded;
+    }
+
+    public void setEmbedded(boolean embedded) {
+        this.embedded = embedded;
     }
 
 }
