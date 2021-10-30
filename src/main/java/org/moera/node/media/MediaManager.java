@@ -10,7 +10,6 @@ import javax.persistence.EntityManager;
 import org.moera.node.api.NodeApi;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.data.Avatar;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
@@ -175,9 +174,9 @@ public class MediaManager {
             MediaFileOwner mediaFileOwner = mediaFileOwnerRepository
                     .findByAdminFile(universalContext.nodeId(), mediaFileId).orElse(null);
             if (mediaFileOwner != null) {
-                EntryAttachment entryAttachment = entryAttachmentRepository
-                        .findByEntryIdAndMedia(universalContext.nodeId(), entryId, mediaFileOwner.getId()).orElse(null);
-                if (entryAttachment != null) {
+                int count = entryAttachmentRepository.countByEntryIdAndMedia(universalContext.nodeId(), entryId,
+                        mediaFileOwner.getId());
+                if (count > 0) {
                     return mediaFileOwner;
                 }
             }
