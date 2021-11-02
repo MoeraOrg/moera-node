@@ -4,7 +4,9 @@ import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -62,7 +64,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class DraftController {
 
-    private static Logger log = LoggerFactory.getLogger(DraftController.class);
+    private static final Logger log = LoggerFactory.getLogger(DraftController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -245,7 +247,8 @@ public class DraftController {
     }
 
     private void updateAttachments(Draft draft, List<MediaFileOwner> media) {
-        for (EntryAttachment ea : draft.getAttachments()) {
+        Set<EntryAttachment> attachments = new HashSet<>(draft.getAttachments());
+        for (EntryAttachment ea : attachments) {
             draft.removeAttachment(ea);
             entryAttachmentRepository.delete(ea);
         }
