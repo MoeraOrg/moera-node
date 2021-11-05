@@ -29,6 +29,7 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.model.Body;
 import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.DraftInfo;
 import org.moera.node.model.DraftText;
@@ -39,6 +40,7 @@ import org.moera.node.model.event.DraftAddedEvent;
 import org.moera.node.model.event.DraftDeletedEvent;
 import org.moera.node.model.event.DraftUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
+import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
@@ -253,9 +255,12 @@ public class DraftController {
             entryAttachmentRepository.delete(ea);
         }
 
+        Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(draft.getBody()).getText());
+
         int ordinal = 0;
         for (MediaFileOwner mfo : media) {
             EntryAttachment attachment = new EntryAttachment(draft, mfo, ordinal++);
+            attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
             attachment = entryAttachmentRepository.save(attachment);
             draft.addAttachment(attachment);
         }
