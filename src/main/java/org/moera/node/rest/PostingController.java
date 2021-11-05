@@ -133,7 +133,7 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        if (ObjectUtils.isEmpty(postingText.getBodySrc())) {
+        if (ObjectUtils.isEmpty(postingText.getBodySrc()) && ObjectUtils.isEmpty(postingText.getMedia())) {
             throw new ValidationFailure("postingText.bodySrc.blank");
         }
         if (postingText.getBodySrc().length() > getMaxPostingSize()) {

@@ -59,6 +59,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class MediaOperations {
@@ -331,7 +332,7 @@ public class MediaOperations {
 
     public List<MediaFileOwner> validateAttachments(UUID[] ids, Supplier<RuntimeException> notFound,
                                                     boolean isAdmin, String clientName) {
-        if (ids == null || ids.length == 0) {
+        if (ObjectUtils.isEmpty(ids)) {
             return Collections.emptyList();
         }
 
