@@ -118,6 +118,7 @@ public class PostingReactionInstants extends InstantsCreator {
         story.setSummary(buildAddedSummary(story, stories));
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
         story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
+        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
