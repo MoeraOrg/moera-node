@@ -86,4 +86,14 @@ public class PrivateMediaFileInfo {
         this.previews = previews;
     }
 
+    public MediaFilePreviewInfo findLargerPreview(int width) {
+        MediaFilePreviewInfo larger = null;
+        for (MediaFilePreviewInfo preview : getPreviews()) {
+            if (preview.getWidth() >= width && (larger == null || larger.getWidth() > preview.getWidth())) {
+                larger = preview;
+            }
+        }
+        return larger;
+    }
+
 }

@@ -58,6 +58,7 @@
         {{else}}
             <div class="content">{{{posting.saneBodyPreview}}}</div>
         {{/if}}
+        {{postingGallery posting.id posting.media}}
         <div class="reactions-line">
             {{reactions posting}}
             {{#if posting.totalComments}}

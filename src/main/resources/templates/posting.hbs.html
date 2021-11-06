@@ -63,6 +63,7 @@
         <div class="subject">{{posting.body.subject}}</div>
     {{/if}}
     <div class="content">{{{posting.saneBody}}}</div>
+    {{postingGallery posting.id posting.media}}
     <div class="reactions-line">
         {{reactions posting}}
         {{#if posting.totalComments}}

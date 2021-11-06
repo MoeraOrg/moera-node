@@ -1,7 +1,6 @@
 package org.moera.node.text.sanitizer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -9,7 +8,7 @@ import java.util.stream.Collectors;
 
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.data.MediaFilePreview;
+import org.moera.node.util.MediaUtil;
 import org.owasp.html.HtmlStreamEventReceiver;
 import org.owasp.html.HtmlStreamEventReceiverWrapper;
 
@@ -22,29 +21,6 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
 
         media = mediaFileOwners.stream()
                 .collect(Collectors.toMap(mfo -> mfo.getMediaFile().getId(), Function.identity()));
-    }
-
-    private String mediaPreview(String location, int width) {
-        return String.format("%s?width=%d", location, width);
-    }
-
-    private String mediaSources(String location, Collection<MediaFilePreview> previews) {
-        List<String> sources = new ArrayList<>();
-        for (MediaFilePreview preview : previews) {
-            if (preview.getMediaFile() == null) {
-                continue;
-            }
-            String url = preview.isOriginal() ? location : mediaPreview(location, preview.getWidth());
-            sources.add(String.format("%s %dw", url,
-                    preview.getMediaFile().getSizeX()));
-        }
-        return String.join(",", sources);
-    }
-
-    private String mediaSizes(MediaFile mediaFile) {
-        return String.format("(max-width: 400px) %dpx, %dpx",
-                Math.min(350, mediaFile.findLargerPreview(350).getMediaFile().getSizeX()),
-                Math.min(900, mediaFile.findLargerPreview(900).getMediaFile().getSizeX()));
     }
 
     @Override
@@ -96,11 +72,11 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             )));
 
             newAttrs.add("src");
-            newAttrs.add(mediaPreview(mediaLocation, 900));
+            newAttrs.add(MediaUtil.mediaPreview(mediaLocation, 900));
             newAttrs.add("srcset");
-            newAttrs.add(mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews()));
+            newAttrs.add(MediaUtil.mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews()));
             newAttrs.add("sizes");
-            newAttrs.add(mediaSizes(mediaFileOwner.getMediaFile()));
+            newAttrs.add(MediaUtil.mediaSizes(mediaFileOwner.getMediaFile()));
 
             width = width == null || width == 0 ? null : width;
             height = height == null || height == 0 ? null : height;
