@@ -159,7 +159,11 @@ public class GalleriesHelperSource {
         StringBuilder buf = new StringBuilder();
 
         if (images.size() == 1) {
-            buf.append(String.format("<div class=\"gallery single %s\">", orientation));
+            buf.append("<div");
+            HelperUtil.appendAttr(buf, "class", String.format("gallery single %s", orientation));
+            HelperUtil.appendAttr(buf, "style",
+                    String.format("--image-height: %dpx", images.get(0).getHeight()));
+            buf.append('>');
             buf.append(entryImage(postingId, images.get(0)));
             buf.append("</div>");
         } else {
