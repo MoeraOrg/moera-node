@@ -15,18 +15,18 @@ public class Shortener {
                || shortBody.getText() != null /* null is a signal that the text is short enough */;
     }
 
-    public static Body shorten(Body body) {
+    public static Body shorten(Body body, boolean withGallery) {
         Body shortBody = new Body();
         if (body.getSubject() != null && body.getSubject().length() > SHORT_TITLE_MAX) {
             shortBody.setSubject(Util.ellipsize(body.getSubject(), SHORT_TITLE_MAX));
         }
-        shortBody.setText(shorten(body.getText()));
+        shortBody.setText(shorten(body.getText(), withGallery));
         return isShortened(body, shortBody) ? shortBody : null;
     }
 
-    private static String shorten(String html) {
+    private static String shorten(String html, boolean withGallery) {
         Document document = Jsoup.parseBodyFragment(html.trim());
-        Measurer measurer = new Measurer();
+        Measurer measurer = new Measurer(withGallery);
         document.body().filter(measurer);
 
         if (measurer.isTextShort()) {

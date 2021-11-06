@@ -10,9 +10,15 @@ class Measurer implements NodeFilter {
     private static final String SENTENCE_END = ".?!";
     private static final String PHRASE_END = ":,;)";
 
-    private static final TextPosition TEXT_MIN = new TextPosition(4, 0);
-    private static final TextPosition TEXT_AVG = new TextPosition(8, 0);
-    private static final TextPosition TEXT_MAX = new TextPosition(10, 0);
+    private static final TextPosition TEXT_ONLY_MIN = new TextPosition(4, 0);
+    private static final TextPosition TEXT_ONLY_AVG = new TextPosition(8, 0);
+    private static final TextPosition TEXT_ONLY_MAX = new TextPosition(10, 0);
+
+    private static final TextPosition TEXT_WITH_GALLERY_MIN = new TextPosition(1, 0);
+    private static final TextPosition TEXT_WITH_GALLERY_AVG = new TextPosition(5, 0);
+    private static final TextPosition TEXT_WITH_GALLERY_MAX = new TextPosition(7, 0);
+
+    private final boolean withGallery;
 
     private TextPosition offset = new TextPosition();
     private TextPosition paragraphCut = null;
@@ -20,6 +26,22 @@ class Measurer implements NodeFilter {
     private TextPosition phraseCut = null;
     private TextPosition wordCut = null;
     private Element ignoreContent = null;
+
+    Measurer(boolean withGallery) {
+        this.withGallery = withGallery;
+    }
+
+    private TextPosition textMin() {
+        return withGallery ? TEXT_WITH_GALLERY_MIN : TEXT_ONLY_MIN;
+    }
+
+    private TextPosition textAvg() {
+        return withGallery ? TEXT_WITH_GALLERY_AVG : TEXT_ONLY_AVG;
+    }
+
+    private TextPosition textMax() {
+        return withGallery ? TEXT_WITH_GALLERY_MAX : TEXT_ONLY_MAX;
+    }
 
     public TextPosition getCut() {
         if (paragraphCut != null) {
@@ -34,11 +56,11 @@ class Measurer implements NodeFilter {
         if (wordCut != null) {
             return wordCut;
         }
-        return TEXT_MIN;
+        return textMin();
     }
 
     public boolean isTextShort() {
-        return offset.lessOrEquals(TEXT_MAX) || offset.lessOrEquals(getCut());
+        return offset.lessOrEquals(textMax()) || offset.lessOrEquals(getCut());
     }
 
     public boolean needsEllipsis() {
@@ -46,10 +68,10 @@ class Measurer implements NodeFilter {
     }
 
     private TextPosition closest(TextPosition incumbent, TextPosition challenger) {
-        if (challenger.less(TEXT_MIN) || challenger.greater(TEXT_MAX)) {
+        if (challenger.less(textMin()) || challenger.greater(textMax())) {
             return incumbent;
         }
-        return incumbent == null || challenger.distance(TEXT_AVG) < incumbent.distance(TEXT_AVG)
+        return incumbent == null || challenger.distance(textAvg()) < incumbent.distance(textAvg())
                 ? challenger : incumbent;
     }
 
@@ -103,7 +125,7 @@ class Measurer implements NodeFilter {
                 }
             }
         }
-        if (offset.lessOrEquals(TEXT_MAX)) {
+        if (offset.lessOrEquals(textMax())) {
             return FilterResult.CONTINUE;
         } else if (offset.greater(getCut())) {
             return FilterResult.STOP;
@@ -125,7 +147,7 @@ class Measurer implements NodeFilter {
                 ignoreContent = null;
                 boolean firstObject = false;
                 if (Elements.isObject(element)) {
-                    firstObject = offset.less(TEXT_MIN);
+                    firstObject = offset.less(textMin());
                     offset = offset.space(Elements.getHeight(element));
                 }
                 paragraphCut = firstObject ? offset : closest(paragraphCut, offset);

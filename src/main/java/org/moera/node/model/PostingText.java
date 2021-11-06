@@ -16,8 +16,9 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
-import org.moera.node.text.sanitizer.HtmlSanitizer;
+import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
+import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -189,6 +190,14 @@ public class PostingText {
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
+    private boolean hasAttachedGallery(Body body, List<MediaFileOwner> media) {
+        if (ObjectUtils.isEmpty(media)) {
+            return false;
+        }
+        int embeddedCount = MediaExtractor.extractMediaFileIds(body.getText()).size();
+        return media.size() > embeddedCount;
+    }
+
     public void toEntryRevision(EntryRevision revision, TextConverter textConverter, List<MediaFileOwner> media) {
         if (bodySrcFormat != null) {
             revision.setBodySrcFormat(bodySrcFormat);
@@ -201,7 +210,7 @@ public class PostingText {
                 revision.setBody(body.getEncoded());
                 revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
                 revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                Body bodyPreview = Shortener.shorten(body);
+                Body bodyPreview = Shortener.shorten(body, hasAttachedGallery(body, media));
                 if (bodyPreview != null) {
                     revision.setBodyPreview(bodyPreview.getEncoded());
                     revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media));

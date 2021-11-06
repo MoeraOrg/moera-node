@@ -68,7 +68,7 @@ public class CommentText {
             Body decodedBody = textConverter.toHtml(bodySrcFormat, new Body(bodySrc));
             body = decodedBody.getEncoded();
             bodyFormat = BodyFormat.MESSAGE.getValue();
-            Body decodedBodyPreview = Shortener.shorten(decodedBody);
+            Body decodedBodyPreview = Shortener.shorten(decodedBody, false);
             if (decodedBodyPreview == null) {
                 decodedBodyPreview = new Body(Body.EMPTY);
             }
@@ -250,7 +250,7 @@ public class CommentText {
                     revision.setBody(body.getEncoded());
                     revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
                     revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                    Body bodyPreview = Shortener.shorten(body);
+                    Body bodyPreview = Shortener.shorten(body, false);
                     if (bodyPreview != null) {
                         revision.setBodyPreview(bodyPreview.getEncoded());
                         revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
