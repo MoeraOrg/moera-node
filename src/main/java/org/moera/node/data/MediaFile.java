@@ -133,16 +133,8 @@ public class MediaFile {
         return usageCount;
     }
 
-    public void setUsageCount(int usageCount) {
-        this.usageCount = usageCount;
-    }
-
     public Timestamp getDeadline() {
         return deadline;
-    }
-
-    public void setDeadline(Timestamp deadline) {
-        this.deadline = deadline;
     }
 
     public Set<MediaFileOwner> getOwners() {

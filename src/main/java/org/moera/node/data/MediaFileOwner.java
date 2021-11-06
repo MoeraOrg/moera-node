@@ -2,6 +2,7 @@ package org.moera.node.data;
 
 import java.sql.Timestamp;
 import java.util.UUID;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -31,6 +32,13 @@ public class MediaFileOwner {
 
     @NotNull
     private Timestamp createdAt = Util.now();
+
+    @NotNull
+    @Column(insertable = false, updatable = false)
+    private int usageCount;
+
+    @Column(insertable = false, updatable = false)
+    private Timestamp deadline;
 
     public UUID getId() {
         return id;
@@ -74,6 +82,14 @@ public class MediaFileOwner {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getUsageCount() {
+        return usageCount;
+    }
+
+    public Timestamp getDeadline() {
+        return deadline;
     }
 
 }

@@ -357,6 +357,10 @@ public class MediaOperations {
     @Scheduled(fixedDelayString = "PT6H")
     public void purgeUnused() throws Throwable {
         Timestamp now = Util.now();
+        Transaction.execute(txManager, () -> {
+            mediaFileOwnerRepository.deleteUnused(now);
+            return null;
+        });
         List<Path> fileNames = mediaFileRepository.findUnused(now).stream()
                 .map(this::getPath)
                 .collect(Collectors.toList());
