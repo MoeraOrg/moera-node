@@ -151,14 +151,15 @@ public class StoryOperations {
     public void purgeExpired() throws Throwable {
         for (String domainName : domains.getAllDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
-            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false);
-            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true);
-            purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", false);
+            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
+            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true, true);
+            purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", false,
+                    domains.getDomainOptions(nodeId).getBool("news.purge-pinned"));
         }
     }
 
     private void purgeExpired(UUID nodeId, String domainName, String feedName, String optionName,
-                              boolean viewed) throws Throwable {
+                              boolean viewed, boolean purgePinned) throws Throwable {
         Duration lifetime = domains.getDomainOptions(domainName).getDuration(optionName).getDuration();
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
         List<Event> events = new ArrayList<>();
@@ -167,6 +168,9 @@ public class StoryOperations {
                 ? storyRepository.findExpiredViewed(nodeId, feedName, createdBefore)
                 : storyRepository.findExpired(nodeId, feedName, createdBefore);
             stories.forEach(story -> {
+                if (story.isPinned() && !purgePinned) {
+                    return;
+                }
                 storyRepository.delete(story);
                 events.add(new StoryDeletedEvent(story, true));
             });

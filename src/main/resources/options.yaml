@@ -152,7 +152,7 @@
 - name: posting.subject.present
   type: bool
   defaultValue: false
-  title: "Posts have titles"
+  title: Posts have titles
 
 - name: posting.time.relative
   type: bool
@@ -271,6 +271,11 @@
   modifiers:
     min: 1d
     max: 2000d
+
+- name: news.purge-pinned
+  type: bool
+  defaultValue: false
+  title: Purge pinned news
 
 - name: comment.max-size
   type: int
