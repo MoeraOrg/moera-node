@@ -59,6 +59,8 @@ public class HeadingExtractor {
                         ignoreContent = true;
                         text = element.hasAttr("title") ? element.attr("title") : "spoiler!";
                         text = "[" + text + "]";
+                    } else if (element.normalName().equals("img")) {
+                        text = Character.toString(0x1f5bc);
                     }
                 }
                 if (appendText(text)) {
