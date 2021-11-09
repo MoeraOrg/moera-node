@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Component
 public class MarkdownConverter {
 
-    static final Set<String> BLOCK_TAGS_MARKDOWN_ALLOWED = Set.of("blockquote", "details");
+    static final Set<String> BLOCK_TAGS_MARKDOWN_ALLOWED = Set.of("blockquote", "details", "figure", "figcaption");
     static final DataHolder DEFAULT_OPTIONS = new MutableDataSet()
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
             .set(Parser.HTML_BLOCK_TAGS, htmlBlockTags())
