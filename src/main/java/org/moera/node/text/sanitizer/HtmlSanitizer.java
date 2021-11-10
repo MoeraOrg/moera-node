@@ -5,7 +5,6 @@ import java.util.Set;
 
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.model.Body;
-import org.owasp.html.CssSchema;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -26,7 +25,7 @@ public class HtmlSanitizer {
             .allowAttributes("class")
                 .matching(false, "entry-image")
                 .onElements("a")
-            .allowAttributes("src", "srcset", "sizes", "width", "height", "alt").onElements("img")
+            .allowAttributes("src", "srcset", "sizes", "width", "height", "alt", "style").onElements("img")
             .allowAttributes("class")
                 .matching(false, "emoji")
                 .onElements("img")
@@ -38,7 +37,8 @@ public class HtmlSanitizer {
             .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen", "sandbox", "scrolling",
                     "allowtransparency", "style").onElements("iframe")
             .allowAttributes("dir").globally()
-            .allowStyling(CssSchema.withProperties(Set.of("text-align", "width", "height")))
+            // .allowStyling(CssSchema.withProperties(Set.of("text-align", "width", "height", "--width", "--height")))
+            // TODO CSS schema does not support CSS variables
             .withPreprocessor(ParagraphProcessor::new)
             .toFactory();
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(

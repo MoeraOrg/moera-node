@@ -83,7 +83,8 @@
         }
 
         IMG, IFRAME {
-            max-height: 16rem;
+            max-width: css-min(unquote("100vw - 7rem"), unquote("var(--feed-width) - 6.5rem"), unquote("var(--width, 100vw)"));
+            max-height: css-min(unquote("16rem"), unquote("var(--height, 200vh)"));
         }
 
         .replied-to {

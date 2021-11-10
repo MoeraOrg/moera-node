@@ -28,18 +28,16 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
         if (elementName.equalsIgnoreCase("img")) {
             List<String> newAttrs = new ArrayList<>();
             MediaFileOwner mediaFileOwner = null;
+            String src = null;
             Integer width = null;
             Integer height = null;
             for (int i = 0; i < attrs.size(); i += 2) {
                 String attrName = attrs.get(i);
                 String attrValue = attrs.get(i + 1);
                 if (attrName.equalsIgnoreCase("src")) {
-                    if (!attrValue.startsWith("hash:")) {
-                        break;
-                    }
-                    mediaFileOwner = media.get(attrValue.substring(5));
-                    if (mediaFileOwner == null) {
-                        break;
+                    src = attrValue;
+                    if (attrValue.startsWith("hash:")) {
+                        mediaFileOwner = media.get(attrValue.substring(5));
                     }
                 } else if (attrName.equalsIgnoreCase("width")) {
                     try {
@@ -59,7 +57,29 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 }
             }
             if (mediaFileOwner == null) {
-                super.openTag(elementName, attrs);
+                if (width == null && height == null) {
+                    super.openTag(elementName, attrs);
+                    return;
+                }
+
+                if (src != null) {
+                    newAttrs.add("src");
+                    newAttrs.add(src);
+                }
+                String style = "";
+                if (width != null) {
+                    newAttrs.add("width");
+                    newAttrs.add(Integer.toString(width));
+                    style += String.format("; --width: %spx", width);
+                }
+                if (height != null) {
+                    newAttrs.add("height");
+                    newAttrs.add(Integer.toString(height));
+                    style += String.format("; --height: %spx", height);
+                }
+                newAttrs.add("style");
+                newAttrs.add(style);
+                super.openTag(elementName, newAttrs);
                 return;
             }
 
@@ -91,11 +111,15 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 double scaleY = height != null ? (double) height / sizeY : 1;
                 scale = Math.min(scaleX, scaleY);
             }
+            String imageWidth = Long.toString(Math.round(scale * sizeX));
+            String imageHeight = Long.toString(Math.round(scale * sizeY));
 
             newAttrs.add("width");
-            newAttrs.add(Long.toString(Math.round(scale * sizeX)));
+            newAttrs.add(imageWidth);
             newAttrs.add("height");
-            newAttrs.add(Long.toString(Math.round(scale * sizeY)));
+            newAttrs.add(imageHeight);
+            newAttrs.add("style");
+            newAttrs.add(String.format("--width: %spx; --height: %spx", imageWidth, imageHeight));
             super.openTag(elementName, newAttrs);
 
             super.closeTag("a");
