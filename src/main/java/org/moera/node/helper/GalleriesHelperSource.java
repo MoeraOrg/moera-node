@@ -154,7 +154,7 @@ public class GalleriesHelperSource {
             return null;
         }
 
-        String orientation = images.get(0).getHeight() > images.get(0).getWidth() ? "vertical" : "horizontal";
+        String orientation = images.get(0).getHeight() < images.get(0).getWidth() ? "vertical" : "horizontal";
 
         StringBuilder buf = new StringBuilder();
 
@@ -165,6 +165,11 @@ public class GalleriesHelperSource {
                     String.format("--image-height: %dpx", images.get(0).getHeight()));
             buf.append('>');
             buf.append(entryImage(postingId, images.get(0)));
+            buf.append("</div>");
+        } else if (images.size() == 2) {
+            buf.append(String.format("<div class=\"gallery %s\">", orientation));
+            buf.append(entryImage(postingId, images.get(0), "row"));
+            buf.append(entryImage(postingId, images.get(1), "row"));
             buf.append("</div>");
         } else {
             int base = images.size() > 6 ? 0 : images.size() % 2;
