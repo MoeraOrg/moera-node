@@ -72,7 +72,7 @@
         height: auto;
 
         @media only screen and (min-width: 576px) {
-            height: css-min(unquote("750px"), unquote("var(--image-height)"));
+            height: css-min(unquote("650px"), unquote("var(--image-height)"));
         }
 
         &.horizontal {

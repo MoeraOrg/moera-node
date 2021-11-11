@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars.SafeString;
+import org.moera.node.global.RequestContext;
 import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.MediaFilePreviewInfo;
 import org.moera.node.model.PostingInfo;
@@ -23,6 +24,9 @@ import org.springframework.util.ObjectUtils;
 
 @HelperSource
 public class GalleriesHelperSource {
+
+    @Inject
+    private RequestContext requestContext;
 
     @Inject
     private ObjectMapper objectMapper;
@@ -141,6 +145,11 @@ public class GalleriesHelperSource {
         return new SafeString(buf);
     }
 
+    private int singleImageHeight(PrivateMediaFileInfo image) {
+        int maxWidth = requestContext.getOptions().getInt("feed.width") - 25;
+        return image.getWidth() <= maxWidth ? image.getHeight() : image.getHeight() * maxWidth / image.getWidth();
+    }
+
     public CharSequence postingGallery(String postingId, MediaAttachment[] media) {
         if (ObjectUtils.isEmpty(media)) {
             return null;
@@ -162,7 +171,7 @@ public class GalleriesHelperSource {
             buf.append("<div");
             HelperUtil.appendAttr(buf, "class", String.format("gallery single %s", orientation));
             HelperUtil.appendAttr(buf, "style",
-                    String.format("--image-height: %dpx", images.get(0).getHeight()));
+                    String.format("--image-height: %dpx", singleImageHeight(images.get(0))));
             buf.append('>');
             buf.append(entryImage(postingId, images.get(0)));
             buf.append("</div>");
