@@ -16,6 +16,12 @@
 	@return css-function(clamp, $values);
 }
 
+:root:root {
+    scroll-behavior: auto;
+    --bs-font-sans-serif: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans",
+                          sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
 HTML {
     font-size: 90%;
 }
