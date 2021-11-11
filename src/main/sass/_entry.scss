@@ -37,4 +37,36 @@
             }
         }
     }
+
+    .entry-image {
+        &:hover IMG {
+            filter: brightness(90%);
+        }
+
+        &.counted {
+            position: relative;
+
+            IMG {
+                filter: brightness(70%);
+            }
+
+            &:hover IMG {
+                filter: brightness(60%);
+            }
+        }
+
+        .count {
+            display: block;
+            position: absolute;
+            top: calc(50% - 1ex);
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 200%;
+            text-shadow: -2px 2px 4px var(--shadow);
+            z-index: 1;
+        }
+    }
 }

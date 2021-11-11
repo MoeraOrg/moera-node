@@ -1,6 +1,5 @@
 package org.moera.node.helper;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -104,24 +103,21 @@ public class GalleriesHelperSource {
 
         String style = null;
         if (flex != null || count != null) {
-            List<String> styles = new ArrayList<>();
             if ("row".equals(flex)) {
-                styles.add(String.format("flex: %f", ((float) imageWidth) / imageHeight));
+                style = String.format("flex: %f", ((float) imageWidth) / imageHeight);
             } else if ("column".equals(flex)) {
-                styles.add(String.format("flex: %f", ((float) imageHeight) / imageWidth));
+                style = String.format("flex: %f", ((float) imageHeight) / imageWidth);
             }
-            if (count != null && count > 0) {
-                styles.add("position: relative");
-            }
-            style = String.join(";", styles);
         }
+
+        String klass = count != null && count > 0 ? "entry-image counted" : "entry-image";
 
         StringBuilder buf = new StringBuilder();
 
         buf.append("<a");
         HelperUtil.appendAttr(buf, "href", String.format("/post/%s?media=%s",
                 Util.ue(postingId), Util.ue(mediaFile.getId())));
-        HelperUtil.appendAttr(buf, "class", "entry-image");
+        HelperUtil.appendAttr(buf, "class", klass);
         HelperUtil.appendAttr(buf, "data-id", mediaFile.getId());
         HelperUtil.appendAttr(buf, "style", style);
         buf.append('>');

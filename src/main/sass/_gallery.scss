@@ -37,7 +37,7 @@
         flex-direction: row;
     }
 
-    A {
+    .entry-image {
         display: block;
         border: 1px solid white;
         flex: 1;
@@ -87,7 +87,7 @@
             }
         }
 
-        A {
+        .entry-image {
             border: 0;
 
             IMG {
