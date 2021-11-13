@@ -1,6 +1,7 @@
 package org.moera.node.text.sanitizer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -19,8 +20,10 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
     ImageProcessor(HtmlStreamEventReceiver underlying, List<MediaFileOwner> mediaFileOwners) {
         super(underlying);
 
-        media = mediaFileOwners.stream()
-                .collect(Collectors.toMap(mfo -> mfo.getMediaFile().getId(), Function.identity()));
+        media = mediaFileOwners != null
+                ? mediaFileOwners.stream()
+                    .collect(Collectors.toMap(mfo -> mfo.getMediaFile().getId(), Function.identity()))
+                : Collections.emptyMap();
     }
 
     @Override

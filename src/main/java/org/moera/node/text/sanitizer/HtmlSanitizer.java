@@ -69,11 +69,9 @@ public class HtmlSanitizer {
             return null;
         }
         PolicyFactory policyFactory = preview ? SAFE_PREVIEW_HTML : SAFE_HTML;
-        if (media != null && media.size() > 0) {
-            policyFactory = policyFactory.and(new HtmlPolicyBuilder()
-                    .withPreprocessor(u -> new ImageProcessor(u, media))
-                    .toFactory());
-        }
+        policyFactory = policyFactory.and(new HtmlPolicyBuilder()
+                .withPreprocessor(u -> new ImageProcessor(u, media))
+                .toFactory());
         return policyFactory.sanitize(html);
     }
 
