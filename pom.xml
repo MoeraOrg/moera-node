@@ -68,17 +68,17 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>7.12.1</version>
+            <version>8.0.2</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars-springmvc</artifactId>
-            <version>4.2.0</version>
+            <version>4.3.0</version>
         </dependency>
         <dependency>
             <groupId>com.querydsl</groupId>
@@ -125,12 +125,12 @@
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>
-            <version>69.1</version>
+            <version>70.1</version>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.14.2</version>
+            <version>1.14.3</version>
         </dependency>
         <dependency>
             <groupId>com.vladsch.flexmark</groupId>
@@ -145,12 +145,12 @@
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>0.9.12</version>
+            <version>0.10.2</version>
         </dependency>
         <dependency>
             <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
             <artifactId>owasp-java-html-sanitizer</artifactId>
-            <version>20211018.1</version>
+            <version>20211018.2</version>
         </dependency>
         <dependency>
             <groupId>com.github.slugify</groupId>
