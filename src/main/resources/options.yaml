@@ -144,10 +144,26 @@
   type: int
   privileged: true
   defaultValue: 5242880
-  title: Maximal size of a media attachment in posts
+  title: Maximal size of a media attachment in a post
   modifiers:
     min: 65536
     max: 104857600
+
+- name: posting.image.recommended-size
+  type: int
+  defaultValue: 368640
+  title: Maximal size of a compressed image in a post
+  modifiers:
+    min: 65536
+    max: 104857600
+
+- name: posting.image.recommended-pixels
+  type: int
+  defaultValue: 1280
+  title: Maximal resolution of a compressed image in a post (in pixels)
+  modifiers:
+    min: 600
+    max: 10240
 
 - name: posting.subject.present
   type: bool
