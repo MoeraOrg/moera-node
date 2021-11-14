@@ -233,6 +233,7 @@ public class MediaOperations {
 
                 Thumbnails.of(getPath(cropped).toFile())
                         .width(width)
+                        .outputFormat(previewFormat.format)
                         .toOutputStream(out);
 
                 long fileSize = Files.size(tmp.getPath());
