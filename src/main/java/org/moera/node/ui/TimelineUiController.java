@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -25,6 +26,7 @@ import org.moera.node.global.VirtualPage;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.CommentPublicPageOperations;
@@ -161,7 +163,18 @@ public class TimelineUiController {
         model.addAttribute("ogUrl", requestContext.getSiteUrl() + String.format("/post/%s", posting.getId()));
         model.addAttribute("ogType", "article");
         model.addAttribute("ogTitle", posting.getCurrentRevision().getHeading());
-        if (posting.getOwnerAvatarMediaFile() != null) {
+        EntryAttachment attachment = posting.getCurrentRevision().getAttachments().stream()
+                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .filter(ea -> ea.getMediaFileOwner().getMediaFile().getSizeX() != null) // an image
+                .findFirst()
+                .orElse(null);
+        if (attachment != null) {
+            PrivateMediaFileInfo image = new PrivateMediaFileInfo(attachment.getMediaFileOwner());
+            model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + image.getPath());
+            model.addAttribute("ogImageType", attachment.getMediaFileOwner().getMediaFile().getMimeType());
+            model.addAttribute("ogImageWidth", image.getWidth());
+            model.addAttribute("ogImageHeight", image.getHeight());
+        } else if (posting.getOwnerAvatarMediaFile() != null) {
             AvatarImage avatarImage = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
             model.addAttribute("ogImageType", avatarImage.getMediaFile().getMimeType());
