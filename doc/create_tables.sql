@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.8 (Ubuntu 12.8-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.8 (Ubuntu 12.8-0ubuntu0.20.04.1)
+-- Dumped from database version 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -489,9 +489,11 @@ ALTER TABLE public.entries OWNER TO moera;
 
 CREATE TABLE public.entry_attachments (
     id uuid NOT NULL,
-    entry_revision_id uuid NOT NULL,
+    entry_revision_id uuid,
     media_file_owner_id uuid NOT NULL,
-    ordinal integer NOT NULL
+    ordinal integer NOT NULL,
+    draft_id uuid,
+    embedded boolean DEFAULT true NOT NULL
 );
 
 
@@ -621,7 +623,8 @@ CREATE TABLE public.media_files (
     created_at timestamp without time zone NOT NULL,
     exposed boolean DEFAULT false NOT NULL,
     usage_count integer DEFAULT 0 NOT NULL,
-    deadline timestamp without time zone
+    deadline timestamp without time zone,
+    digest bytea
 );
 
 
@@ -1395,6 +1398,13 @@ CREATE INDEX entries_replied_to_revision_id_idx ON public.entries USING btree (r
 
 
 --
+-- Name: entry_attachments_draft_id_ordinal_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entry_attachments_draft_id_ordinal_idx ON public.entry_attachments USING btree (draft_id, ordinal);
+
+
+--
 -- Name: entry_attachments_entry_revision_id_ordinal_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2053,6 +2063,14 @@ ALTER TABLE ONLY public.entries
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entries_replied_to_revision_id_fkey FOREIGN KEY (replied_to_revision_id) REFERENCES public.entry_revisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: entry_attachments entry_attachments_draft_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entry_attachments
+    ADD CONSTRAINT entry_attachments_draft_id_fkey FOREIGN KEY (draft_id) REFERENCES public.drafts(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

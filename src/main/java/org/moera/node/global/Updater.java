@@ -1,5 +1,6 @@
 package org.moera.node.global;
 
+import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.util.List;
@@ -9,16 +10,20 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.config.Config;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionUpgrade;
 import org.moera.node.data.EntryRevisionUpgradeRepository;
+import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.Body;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.AllRemoteAvatarsDownloadTask;
@@ -43,6 +48,9 @@ public class Updater {
     private static final int PAGE_SIZE = 1024;
 
     @Inject
+    private Config config;
+
+    @Inject
     private Domains domains;
 
     @Inject
@@ -50,6 +58,12 @@ public class Updater {
 
     @Inject
     private DomainUpgradeRepository domainUpgradeRepository;
+
+    @Inject
+    private MediaFileRepository mediaFileRepository;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -63,6 +77,7 @@ public class Updater {
     public void execute() {
         executeDomainUpgrades();
         executeEntryRevisionUpgrades();
+        executeMediaFileUpgrades();
     }
 
     private void executeDomainUpgrades() {
@@ -153,6 +168,23 @@ public class Updater {
         PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));
         log.info("Digest upgraded for entry {}, revision {}", posting.getId(), revision.getId());
+    }
+
+    private void executeMediaFileUpgrades() {
+        Pageable pageable = PageRequest.of(0, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "id"));
+        List<MediaFile> mediaFiles;
+        do {
+            mediaFiles = mediaFileRepository.findWithNoDigest(pageable);
+            mediaFiles.forEach(this::updateDigest);
+        } while (mediaFiles.size() > 0);
+    }
+
+    private void updateDigest(MediaFile mediaFile) {
+        try {
+            mediaFile.setDigest(mediaOperations.digest(mediaFile));
+        } catch (IOException e) {
+            log.warn("Cannot calculate digest of media file {}: {}", mediaFile.getId(), e.getMessage());
+        }
     }
 
 }

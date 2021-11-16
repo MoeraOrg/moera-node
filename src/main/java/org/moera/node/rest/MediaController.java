@@ -33,6 +33,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -131,8 +132,10 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            String id = transfer(in, tmp.getOutputStream(), contentLength);
-            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
+            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
+            String id = transfer(in, out, contentLength);
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                    id, toContentType(mediaType), tmp.getPath(), out.getDigest());
             mediaFile.setExposed(true);
             mediaFile = mediaFileRepository.save(mediaFile);
 
@@ -162,13 +165,15 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            String id = transfer(in, tmp.getOutputStream(), contentLength);
+            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
+            String id = transfer(in, out, contentLength);
             MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
                 return new PrivateMediaFileInfo(mediaFileOwner);
             }
 
-            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath());
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                    id, toContentType(mediaType), tmp.getPath(), out.getDigest());
             mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
             mediaFileOwner = mediaOperations.own(mediaFile,
                     requestContext.isAdmin() ? null : requestContext.getClientName());

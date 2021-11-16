@@ -39,6 +39,8 @@ public class MediaFile {
     @NotNull
     private boolean exposed;
 
+    private byte[] digest;
+
     @NotNull
     private Timestamp createdAt = Util.now();
 
@@ -119,6 +121,14 @@ public class MediaFile {
 
     public void setExposed(boolean exposed) {
         this.exposed = exposed;
+    }
+
+    public byte[] getDigest() {
+        return digest;
+    }
+
+    public void setDigest(byte[] digest) {
+        this.digest = digest;
     }
 
     public Timestamp getCreatedAt() {

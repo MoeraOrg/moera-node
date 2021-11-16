@@ -1,7 +1,6 @@
 package org.moera.node.rest;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.UUID;
@@ -11,9 +10,6 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import net.coobird.thumbnailator.Thumbnails;
-import org.apache.commons.io.output.TeeOutputStream;
-import org.bouncycastle.crypto.io.DigestOutputStream;
-import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.config.Config;
@@ -37,7 +33,7 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.AvatarAddedEvent;
 import org.moera.node.model.event.AvatarDeletedEvent;
 import org.moera.node.model.event.AvatarOrderedEvent;
-import org.moera.node.util.Util;
+import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -97,8 +93,7 @@ public class AvatarController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
-            OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
+            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
             Thumbnails.of(mediaOperations.getPath(mediaFile).toFile())
                     .rotate(avatarAttributes.getRotate())
@@ -108,8 +103,8 @@ public class AvatarController {
                     .size(avatarAttributes.getAvatarSize(), avatarAttributes.getAvatarSize())
                     .toOutputStream(out);
 
-            String mediaFileId = Util.base64urlencode(digestStream.getDigest());
-            MediaFile avatarFile = mediaOperations.putInPlace(mediaFileId, thumbnailFormat.mimeType, tmp.getPath());
+            MediaFile avatarFile = mediaOperations.putInPlace(
+                    out.getHash(), thumbnailFormat.mimeType, tmp.getPath(), out.getDigest());
             avatarFile.setExposed(true);
             avatarFile = mediaFileRepository.save(avatarFile);
 

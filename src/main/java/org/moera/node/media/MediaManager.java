@@ -87,7 +87,7 @@ public class MediaManager {
                     log.warn("Public media {} has hash {}", id, tmpMedia.getMediaFileId());
                     return null;
                 }
-                mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath());
+                mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath(), null);
                 mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
                 mediaFile.setExposed(true);
 
@@ -211,7 +211,8 @@ public class MediaManager {
                     log.warn("Media {} has hash {} instead of {}", id, tmpMedia.getMediaFileId(), mediaFileId);
                     return null;
                 }
-                MediaFile mediaFile = mediaOperations.putInPlace(mediaFileId, tmpMedia.getContentType(), tmp.getPath());
+                MediaFile mediaFile = mediaOperations.putInPlace(
+                        mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null);
                 // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use
                 // our MediaFileOwner, if exists
                 mediaFileOwner = mediaFileOwnerRepository

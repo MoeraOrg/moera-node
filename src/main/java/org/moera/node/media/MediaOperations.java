@@ -6,6 +6,7 @@ import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,9 +33,6 @@ import javax.transaction.Transactional;
 
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.input.BoundedInputStream;
-import org.apache.commons.io.output.TeeOutputStream;
-import org.bouncycastle.crypto.io.DigestOutputStream;
-import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
@@ -46,6 +44,7 @@ import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
+import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -108,9 +107,9 @@ public class MediaOperations {
     }
 
     public String transfer(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
-        DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
-        out = new TeeOutputStream(out, digestStream);
+        DigestingOutputStream digestingStream = new DigestingOutputStream(out);
 
+        out = digestingStream;
         if (contentLength != null) {
             if (contentLength > maxSize) {
                 throw new ThresholdReachedException();
@@ -126,7 +125,7 @@ public class MediaOperations {
             out.close();
         }
 
-        return Util.base64urlencode(digestStream.getDigest());
+        return digestingStream.getHash();
     }
 
     private Dimension getImageDimension(String contentType, Path path) throws InvalidImageException {
@@ -151,9 +150,13 @@ public class MediaOperations {
     }
 
     @Transactional(REQUIRES_NEW)
-    public MediaFile putInPlace(String id, String contentType, Path tmpPath) throws IOException {
+    public MediaFile putInPlace(String id, String contentType, Path tmpPath, byte[] digest) throws IOException {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null) {
+            if (digest == null) {
+                digest = digest(tmpPath);
+            }
+
             Path mediaPath = FileSystems.getDefault().getPath(
                     config.getMedia().getPath(), MimeUtils.fileName(id, contentType));
             Files.move(tmpPath, mediaPath, REPLACE_EXISTING);
@@ -165,9 +168,23 @@ public class MediaOperations {
                 mediaFile.setDimension(getImageDimension(contentType, mediaPath));
             }
             mediaFile.setFileSize(Files.size(mediaPath));
+            mediaFile.setDigest(digest);
             mediaFile = mediaFileRepository.save(mediaFile);
         }
         return mediaFile;
+    }
+
+    public byte[] digest(MediaFile mediaFile) throws IOException {
+        return digest(FileSystems.getDefault().getPath(
+                config.getMedia().getPath(), MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType())));
+    }
+
+    private byte[] digest(Path mediaPath) throws IOException {
+        DigestingOutputStream out = new DigestingOutputStream(OutputStream.nullOutputStream());
+        try (InputStream in = new FileInputStream(mediaPath.toFile())) {
+            in.transferTo(out);
+        }
+        return out.getDigest();
     }
 
     private static Rectangle getPreviewRegion(MediaFile mediaFile) {
@@ -194,16 +211,14 @@ public class MediaOperations {
 
         var tmp = tmpFile();
         try {
-            DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
-            OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
+            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
             Thumbnails.of(getPath(original).toFile())
                     .sourceRegion(region)
                     .size(region.width, region.height)
                     .toOutputStream(out);
 
-            String mediaFileId = Util.base64urlencode(digestStream.getDigest());
-            MediaFile cropped = putInPlace(mediaFileId, previewFormat.mimeType, tmp.getPath());
+            MediaFile cropped = putInPlace(out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest());
             cropped.setExposed(false);
             cropped = mediaFileRepository.save(cropped);
 
@@ -228,8 +243,7 @@ public class MediaOperations {
         if (cropped.getSizeX() > width) {
             var tmp = tmpFile();
             try {
-                DigestOutputStream digestStream = new DigestOutputStream(DigestFactory.getDigest("SHA-1"));
-                OutputStream out = new TeeOutputStream(tmp.getOutputStream(), digestStream);
+                DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
                 Thumbnails.of(getPath(cropped).toFile())
                         .width(width)
@@ -247,8 +261,7 @@ public class MediaOperations {
                     }
                     // otherwise original will be used in preview
                 } else {
-                    String mediaFileId = Util.base64urlencode(digestStream.getDigest());
-                    previewFile = putInPlace(mediaFileId, previewFormat.mimeType, tmp.getPath());
+                    previewFile = putInPlace(out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest());
                     previewFile.setExposed(false);
                     previewFile = mediaFileRepository.save(previewFile);
                 }
