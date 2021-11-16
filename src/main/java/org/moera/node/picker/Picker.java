@@ -203,6 +203,7 @@ public class Picker extends Task {
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
             downloadMedia(postingInfo, null, posting.getCurrentRevision());
+            signRevision(posting, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
@@ -215,6 +216,7 @@ public class Picker extends Task {
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
             downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision());
+            signRevision(posting, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
                 events.add(new PostingUpdatedEvent(posting));
             } else {
@@ -243,8 +245,6 @@ public class Picker extends Task {
         revision = entryRevisionRepository.save(revision);
         posting.addRevision(revision);
         postingInfo.toPickedEntryRevision(revision);
-        PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
-        revision.setDigest(CryptoUtil.digest(fingerprint));
         posting.setTotalRevisions(posting.getTotalRevisions() + 1);
 
         if (posting.getCurrentRevision() != null) {
@@ -255,6 +255,11 @@ public class Picker extends Task {
         }
         posting.setCurrentRevision(revision);
         posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
+    }
+
+    private void signRevision(Posting posting, EntryRevision revision) {
+        PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
+        revision.setDigest(CryptoUtil.digest(fingerprint));
     }
 
     private void downloadMedia(PostingInfo postingInfo, UUID entryId, EntryRevision revision) throws NodeApiException {

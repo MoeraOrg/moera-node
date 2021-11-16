@@ -1,5 +1,9 @@
 package org.moera.node.fingerprint;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.moera.commons.crypto.Digest;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
@@ -22,7 +26,7 @@ public class PostingFingerprint extends EntryFingerprint {
     public String bodyFormat;
     public long createdAt;
     public byte permissions; // TODO for future use
-    public byte attachments; // TODO for future use
+    public List<Digest<AttachmentFingerprint>> attachments = new ArrayList<>();
 
     public PostingFingerprint(Posting posting, EntryRevision revision) {
         super(0);
@@ -40,6 +44,17 @@ public class PostingFingerprint extends EntryFingerprint {
         bodyFormat = revision.getBodyFormat();
         createdAt = Util.toEpochSecond(posting.isOriginal()
                 ? revision.getCreatedAt() : revision.getReceiverCreatedAt());
+        if (revision.getAttachments() != null) {
+            attachments = revision.getAttachments().stream()
+                    .map(AttachmentFingerprint::new)
+                    .filter(af -> af.digest != null)
+                    .map(af -> {
+                        var digest = new Digest<AttachmentFingerprint>();
+                        digest.setValue(af);
+                        return digest;
+                    })
+                    .collect(Collectors.toList());
+        }
     }
 
     public PostingFingerprint(PostingInfo postingInfo) {
