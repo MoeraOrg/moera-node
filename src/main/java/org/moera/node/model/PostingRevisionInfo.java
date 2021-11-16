@@ -1,7 +1,10 @@
 package org.moera.node.model;
 
+import java.util.Comparator;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
@@ -16,6 +19,7 @@ public class PostingRevisionInfo implements RevisionInfo {
     private SourceFormat bodySrcFormat;
     private Body body;
     private String bodyFormat;
+    private MediaAttachment[] media;
     private String heading;
     private UpdateInfo updateInfo;
     private Long createdAt;
@@ -40,6 +44,10 @@ public class PostingRevisionInfo implements RevisionInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
+        media = revision.getAttachments().stream()
+                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .map(MediaAttachment::new)
+                .toArray(MediaAttachment[]::new);
         heading = revision.getHeading();
         if (!UpdateInfo.isEmpty(revision)) {
             updateInfo = new UpdateInfo(revision);
@@ -107,6 +115,14 @@ public class PostingRevisionInfo implements RevisionInfo {
 
     public void setBodyFormat(String bodyFormat) {
         this.bodyFormat = bodyFormat;
+    }
+
+    public MediaAttachment[] getMedia() {
+        return media;
+    }
+
+    public void setMedia(MediaAttachment[] media) {
+        this.media = media;
     }
 
     public String getHeading() {

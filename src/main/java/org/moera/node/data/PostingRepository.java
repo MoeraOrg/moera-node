@@ -22,10 +22,16 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
     Optional<Posting> findFullByNodeIdAndId(UUID nodeId, UUID id);
 
-    @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is not null")
+    @Query("select p from Posting p"
+            + " join fetch p.currentRevision cr left join fetch cr.attachments cra"
+            + " left join fetch cra.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
+            + " where p.nodeId = ?1 and p.deletedAt is not null")
     List<Posting> findDeleted(UUID nodeId, Pageable pageable);
 
-    @Query("select p from Posting p join fetch p.currentRevision join fetch p.reactionTotals"
+    @Query("select p from Posting p"
+            + " join fetch p.currentRevision cr left join fetch cr.attachments cra"
+            + " left join fetch cra.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
+            + " join fetch p.reactionTotals"
             + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is not null")
     Optional<Posting> findDeletedById(UUID nodeId, UUID id);
 
