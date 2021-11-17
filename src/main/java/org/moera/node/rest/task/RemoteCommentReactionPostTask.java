@@ -1,6 +1,7 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
+import java.util.function.Function;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -14,6 +15,7 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -76,8 +78,11 @@ public class RemoteCommentReactionPostTask extends Task {
     }
 
     private ReactionDescription buildReaction() {
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
+                pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf);
         PostingFingerprint postingFingerprint = postingRevisionInfo == null
-                ? new PostingFingerprint(postingInfo) : new PostingFingerprint(postingInfo, postingRevisionInfo);
+                ? new PostingFingerprint(postingInfo, mediaDigest)
+                : new PostingFingerprint(postingInfo, postingRevisionInfo, mediaDigest);
         CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, postingFingerprint);
         ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName(), attributes, commentFingerprint);
 

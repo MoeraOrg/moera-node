@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -14,12 +15,14 @@ import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PrivateMediaFileInfo;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -33,20 +36,24 @@ public class RepliedToDigestVerifier {
     @Inject
     private FingerprintManager fingerprintManager;
 
-    public byte[] getRepliedToDigest(String targetNodeName, PostingInfo postingInfo,
-                                     Map<String, PostingRevisionInfo> revisions, String repliedToId,
-                                     String repliedToRevisionId) throws NodeApiException {
+    @Inject
+    private MediaManager mediaManager;
+
+    public byte[] getRepliedToDigest(String targetNodeName, Function<String, String> generateCarte,
+                                     PostingInfo postingInfo, Map<String, PostingRevisionInfo> revisions,
+                                     String repliedToId, String repliedToRevisionId) throws NodeApiException {
         if (repliedToId == null) {
             return null;
         }
 
-        return getRepliedToDigest(targetNodeName, postingInfo, revisions, 0, new HashSet<>(), repliedToId,
-                new HashMap<>(), repliedToRevisionId);
+        return getRepliedToDigest(targetNodeName, generateCarte, postingInfo, revisions, 0, new HashSet<>(),
+                repliedToId, new HashMap<>(), repliedToRevisionId);
     }
 
-    private byte[] getRepliedToDigest(String targetNodeName, PostingInfo postingInfo,
-                                      Map<String, PostingRevisionInfo> postingRevisions, int depth, Set<String> visited,
-                                      String id, Map<String, CommentRevisionInfo> commentRevisions,
+    private byte[] getRepliedToDigest(String targetNodeName, Function<String, String> generateCarte,
+                                      PostingInfo postingInfo, Map<String, PostingRevisionInfo> postingRevisions,
+                                      int depth, Set<String> visited, String id,
+                                      Map<String, CommentRevisionInfo> commentRevisions,
                                       String revisionId) throws NodeApiException {
         if (id == null) {
             return null;
@@ -76,14 +83,15 @@ public class RepliedToDigestVerifier {
         }
 
         visited.add(id);
+
         String repliedToId = null;
         String repliedToRevisionId = null;
         if (commentInfo.getRepliedTo() != null) {
             repliedToId = commentInfo.getRepliedTo().getId();
             repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
         }
-        byte[] repliedToDigest = getRepliedToDigest(targetNodeName, postingInfo, postingRevisions, depth + 1,
-                visited, repliedToId, commentRevisions, repliedToRevisionId);
+        byte[] repliedToDigest = getRepliedToDigest(targetNodeName, generateCarte, postingInfo, postingRevisions,
+                depth + 1, visited, repliedToId, commentRevisions, repliedToRevisionId);
 
         PostingRevisionInfo postingRevisionInfo = postingRevisions.get(commentRevisionInfo.getPostingRevisionId());
         if (postingRevisionInfo == null) {
@@ -95,11 +103,15 @@ public class RepliedToDigestVerifier {
             }
             postingRevisions.put(commentRevisionInfo.getPostingRevisionId(), postingRevisionInfo);
         }
+
+        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
+                pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte.apply(targetNodeName), pmf);
+
         Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
                 commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
-                PostingInfo.class, PostingRevisionInfo.class, byte[].class);
+                PostingInfo.class, PostingRevisionInfo.class, Function.class, byte[].class);
         return CryptoUtil.digest(constructor, commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo,
-                repliedToDigest);
+                postingMediaDigest, repliedToDigest);
     }
 
     private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {

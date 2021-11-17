@@ -11,6 +11,11 @@ public class AttachmentFingerprint extends Fingerprint {
     public String objectType = FingerprintObjectType.ATTACHMENT.name();
     public byte[] digest;
 
+    public AttachmentFingerprint(byte[] digest) {
+        super(0);
+        this.digest = digest;
+    }
+
     public AttachmentFingerprint(EntryAttachment attachment) {
         super(0);
         digest = attachment.getMediaFileOwner().getMediaFile().getDigest();

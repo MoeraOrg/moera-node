@@ -1,11 +1,14 @@
 package org.moera.node.fingerprint;
 
+import java.util.function.Function;
+
 import org.moera.commons.crypto.Digest;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PrivateMediaFileInfo;
 
 @FingerprintVersion(objectType = FingerprintObjectType.COMMENT, version = 0)
 public class CommentFingerprint extends EntryFingerprint {
@@ -62,10 +65,11 @@ public class CommentFingerprint extends EntryFingerprint {
     }
 
     public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
-                              PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
+                              PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
-        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
         byte[] repliedToDigest = commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null;
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
@@ -77,10 +81,10 @@ public class CommentFingerprint extends EntryFingerprint {
 
     public CommentFingerprint(CommentInfo commentInfo,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
-                              byte[] repliedToDigest) {
+                              Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
-        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentInfo.getBodySrcHash());
         bodySrcFormat = commentInfo.getBodySrcFormat().getValue();
@@ -91,10 +95,10 @@ public class CommentFingerprint extends EntryFingerprint {
 
     public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
-                              byte[] repliedToDigest) {
+                              Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
-        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
         bodySrcFormat = commentRevisionInfo.getBodySrcFormat().getValue();

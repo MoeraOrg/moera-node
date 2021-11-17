@@ -106,7 +106,8 @@ public class MediaOperations {
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
     }
 
-    public static String transfer(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
+    public static DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength,
+                                                 int maxSize) throws IOException {
         DigestingOutputStream digestingStream = new DigestingOutputStream(out);
 
         out = digestingStream;
@@ -125,7 +126,7 @@ public class MediaOperations {
             out.close();
         }
 
-        return digestingStream.getHash();
+        return digestingStream;
     }
 
     private static Dimension getImageDimension(String contentType, Path path) throws InvalidImageException {

@@ -1,11 +1,14 @@
 package org.moera.node.fingerprint;
 
+import java.util.function.Function;
+
 import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
@@ -38,21 +41,23 @@ public class ReactionFingerprint extends Fingerprint {
     }
 
     public ReactionFingerprint(ReactionInfo reactionInfo, PostingInfo postingInfo,
-                               PostingRevisionInfo postingRevisionInfo) {
+                               PostingRevisionInfo postingRevisionInfo,
+                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
-        entryFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo));
+        entryFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();
     }
 
     public ReactionFingerprint(ReactionInfo reactionInfo, CommentInfo commentInfo,
                                CommentRevisionInfo commentRevisionInfo, PostingInfo postingInfo,
-                               PostingRevisionInfo postingRevisionInfo) {
+                               PostingRevisionInfo postingRevisionInfo,
+                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
         CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, commentRevisionInfo,
-                postingInfo, postingRevisionInfo);
+                postingInfo, postingRevisionInfo, postingMediaDigest);
         entryFingerprint.setValue(commentFingerprint);
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();

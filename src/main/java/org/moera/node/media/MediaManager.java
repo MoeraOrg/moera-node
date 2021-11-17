@@ -2,6 +2,9 @@ package org.moera.node.media;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -15,22 +18,29 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.RemoteMediaCache;
+import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.ParametrizedLock;
+import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class MediaManager {
 
     private static final Logger log = LoggerFactory.getLogger(MediaManager.class);
+
+    private static final int REMOTE_MEDIA_CACHE_TTL = 365; // days
 
     @Inject
     private UniversalContext universalContext;
@@ -48,7 +58,13 @@ public class MediaManager {
     private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
+    private RemoteMediaCacheRepository remoteMediaCacheRepository;
+
+    @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     @Inject
     private EntityManager entityManager;
@@ -213,6 +229,7 @@ public class MediaManager {
                 }
                 MediaFile mediaFile = mediaOperations.putInPlace(
                         mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null);
+                cacheRemoteMedia(nodeName, id, mediaFile.getDigest(), mediaFile);
                 // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use
                 // our MediaFileOwner, if exists
                 mediaFileOwner = mediaFileOwnerRepository
@@ -242,6 +259,55 @@ public class MediaManager {
                                                UUID entryId) throws NodeApiException {
         return downloadPrivateMedia(nodeName, carte, info.getId(), info.getHash(),
                 universalContext.getOptions().getInt("posting.media.max-size"), entryId);
+    }
+
+    public byte[] getPrivateMediaDigest(String nodeName, String carte, PrivateMediaFileInfo info) {
+        RemoteMediaCache cache = remoteMediaCacheRepository.findByMedia(nodeName, info.getId()).orElse(null);
+        if (cache != null) {
+            return cache.getDigest();
+        }
+
+        MediaFile mediaFile = mediaFileRepository.findById(info.getHash()).orElse(null);
+        if (mediaFile != null) {
+            cacheRemoteMedia(nodeName, info.getId(), mediaFile.getDigest(), mediaFile);
+            return mediaFile.getDigest();
+        }
+
+        var tmp = mediaOperations.tmpFile();
+        try {
+            var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, info.getId(), tmp,
+                    universalContext.getOptions().getInt("media.verification.max-size"));
+            cacheRemoteMedia(nodeName, info.getId(), tmpMedia.getDigest(), null);
+            return tmpMedia.getDigest();
+        } catch (NodeApiException e) {
+            return null; // TODO need more graceful approach
+        } finally {
+            try {
+                Files.deleteIfExists(tmp.getPath());
+            } catch (IOException e) {
+                log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+            }
+        }
+    }
+
+    private void cacheRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest, MediaFile mediaFile) {
+        try {
+            Transaction.execute(txManager, () -> {
+                RemoteMediaCache cache = new RemoteMediaCache();
+                cache.setId(UUID.randomUUID());
+                cache.setRemoteNodeName(remoteNodeName);
+                cache.setRemoteMediaId(remoteMediaId);
+                cache.setDigest(digest);
+                cache.setMediaFile(mediaFile);
+                cache.setDeadline(Timestamp.from(Instant.now().plus(REMOTE_MEDIA_CACHE_TTL, ChronoUnit.DAYS)));
+                remoteMediaCacheRepository.save(cache);
+                return null;
+            });
+        } catch (DataIntegrityViolationException e) {
+            // already created in another thread, ignore
+        } catch (Throwable e) {
+            log.error("Unexpected error occured while creating RemoteMediaCache: {}", e.getMessage());
+        }
     }
 
 }

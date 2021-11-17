@@ -107,9 +107,9 @@ public class MediaController {
         return mediaType.getType() + "/" + mediaType.getSubtype();
     }
 
-    private String transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
+    private DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
         int maxSize = requestContext.getOptions().getInt("posting.media.max-size");
-        return mediaOperations.transfer(in, out, contentLength, maxSize);
+        return MediaOperations.transfer(in, out, contentLength, maxSize);
     }
 
     private Optional<MediaFileOwner> findMediaFileOwnerByFile(String id) {
@@ -132,10 +132,9 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
-            String id = transfer(in, out, contentLength);
+            DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
             MediaFile mediaFile = mediaOperations.putInPlace(
-                    id, toContentType(mediaType), tmp.getPath(), out.getDigest());
+                    out.getHash(), toContentType(mediaType), tmp.getPath(), out.getDigest());
             mediaFile.setExposed(true);
             mediaFile = mediaFileRepository.save(mediaFile);
 
@@ -165,8 +164,8 @@ public class MediaController {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
-            String id = transfer(in, out, contentLength);
+            DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
+            String id = out.getHash();
             MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
                 return new PrivateMediaFileInfo(mediaFileOwner);

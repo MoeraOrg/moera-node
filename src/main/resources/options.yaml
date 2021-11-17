@@ -376,3 +376,12 @@
   modifiers:
     min: 5
     max: 50
+
+- name: media.verification.max-size
+  type: int
+  privileged: true
+  defaultValue: 10485760
+  title: Maximal size of a media downloaded for verification
+  modifiers:
+    min: 1048576
+    max: 104857600

@@ -96,8 +96,8 @@ public class RemoteCommentPostTask extends Task {
                     repliedToRevisionId = repliedToCommentInfo.getRevisionId();
                 }
             }
-            byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(targetNodeName, postingInfo,
-                    new HashMap<>(), repliedToId, repliedToRevisionId);
+            byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(targetNodeName, this::generateCarte,
+                    postingInfo, new HashMap<>(), repliedToId, repliedToRevisionId);
             CommentText commentText = buildComment(postingInfo, repliedToDigest);
             CommentInfo commentInfo;
             if (commentId == null) {
@@ -125,8 +125,12 @@ public class RemoteCommentPostTask extends Task {
 
     private CommentText buildComment(PostingInfo postingInfo, byte[] repliedToDigest) {
         CommentText commentText = new CommentText(nodeName(), fullName(), sourceText, textConverter);
-        CommentFingerprint fingerprint =
-                new CommentFingerprint(commentText, new PostingFingerprint(postingInfo), repliedToDigest);
+        CommentFingerprint fingerprint = new CommentFingerprint(
+                commentText,
+                new PostingFingerprint(
+                        postingInfo,
+                        pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf)),
+                repliedToDigest);
         commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         commentText.setSignatureVersion(CommentFingerprint.VERSION);
         return commentText;

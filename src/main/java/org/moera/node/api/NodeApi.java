@@ -32,9 +32,9 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.FeedSliceInfo;
-import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
@@ -45,6 +45,7 @@ import org.moera.node.model.WhoAmI;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.notification.NotificationPacket;
+import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.springframework.http.HttpHeaders;
@@ -128,16 +129,16 @@ public class NodeApi {
         OptionalLong len = response.headers().firstValueAsLong("Content-Length");
         Long contentLength = len.isPresent() ? len.getAsLong() : null;
         try {
-            String mediaFileId = mediaOperations.transfer(
+            DigestingOutputStream out = MediaOperations.transfer(
                     response.body(), tmpFile.getOutputStream(), contentLength, maxSize);
-            return new TemporaryMediaFile(mediaFileId, contentType);
+            return new TemporaryMediaFile(out.getHash(), contentType, out.getDigest());
         } catch (ThresholdReachedException e) {
             throw new NodeApiException(
-                    String.format("Public media %s at %s reports a wrong size or larger than %d bytes",
+                    String.format("Media %s at %s reports a wrong size or larger than %d bytes",
                             location, remoteNodeName, maxSize));
         } catch (IOException e) {
             throw new NodeApiException(
-                    String.format("Error downloading public media %s: %s", location, e.getMessage()));
+                    String.format("Error downloading media %s: %s", location, e.getMessage()));
         }
     }
 

@@ -4,10 +4,12 @@ public class TemporaryMediaFile {
 
     private final String mediaFileId;
     private final String contentType;
+    private final byte[] digest;
 
-    public TemporaryMediaFile(String mediaFileId, String contentType) {
+    public TemporaryMediaFile(String mediaFileId, String contentType, byte[] digest) {
         this.mediaFileId = mediaFileId;
         this.contentType = contentType;
+        this.digest = digest;
     }
 
     public String getMediaFileId() {
@@ -16,6 +18,10 @@ public class TemporaryMediaFile {
 
     public String getContentType() {
         return contentType;
+    }
+
+    public byte[] getDigest() {
+        return digest;
     }
 
 }
