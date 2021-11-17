@@ -106,7 +106,7 @@ public class MediaOperations {
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
     }
 
-    public String transfer(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
+    public static String transfer(InputStream in, OutputStream out, Long contentLength, int maxSize) throws IOException {
         DigestingOutputStream digestingStream = new DigestingOutputStream(out);
 
         out = digestingStream;
@@ -128,7 +128,7 @@ public class MediaOperations {
         return digestingStream.getHash();
     }
 
-    private Dimension getImageDimension(String contentType, Path path) throws InvalidImageException {
+    private static Dimension getImageDimension(String contentType, Path path) throws InvalidImageException {
         Iterator<ImageReader> it = ImageIO.getImageReadersByMIMEType(contentType);
         while (it.hasNext()) {
             ImageReader reader = it.next();
@@ -179,7 +179,7 @@ public class MediaOperations {
                 config.getMedia().getPath(), MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType())));
     }
 
-    private byte[] digest(Path mediaPath) throws IOException {
+    private static byte[] digest(Path mediaPath) throws IOException {
         DigestingOutputStream out = new DigestingOutputStream(OutputStream.nullOutputStream());
         try (InputStream in = new FileInputStream(mediaPath.toFile())) {
             in.transferTo(out);
