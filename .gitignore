@@ -1,8 +1,8 @@
 *.iml
 .*.swp
 *.log
-.idea/
-target/
-log/
-media/
+/.idea/
+/target/
+/log/
+/media/
 application-dev*.yml
