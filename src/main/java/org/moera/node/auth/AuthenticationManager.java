@@ -14,8 +14,8 @@ import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.fingerprint.CarteFingerprint;
 import org.moera.node.fingerprint.CarteProperties;
-import org.moera.node.fingerprint.FingerprintManager;
 import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.Util;
@@ -30,9 +30,6 @@ public class AuthenticationManager {
 
     @Inject
     private TokenRepository tokenRepository;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
 
     @Inject
     private NamingCache namingCache;
@@ -97,7 +94,7 @@ public class AuthenticationManager {
     }
 
     private Fingerprint carteFingerprintCreator(short version) {
-        Class<? extends Fingerprint> fingerprintClass = fingerprintManager.get(FingerprintObjectType.CARTE, version);
+        Class<? extends Fingerprint> fingerprintClass = Fingerprints.get(FingerprintObjectType.CARTE, version);
         if (fingerprintClass == null) {
             throw new InvalidCarteException("carte.unknown-fingerprint");
         }

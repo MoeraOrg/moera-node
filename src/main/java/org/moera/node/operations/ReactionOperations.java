@@ -1,6 +1,5 @@
 package org.moera.node.operations;
 
-import java.lang.reflect.Constructor;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -24,8 +23,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.event.EventManager;
-import org.moera.node.fingerprint.FingerprintManager;
-import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ReactionDescription;
@@ -61,7 +59,7 @@ public class ReactionOperations {
     public static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
     public static final int MAX_REACTIONS_PER_REQUEST = 200;
 
-    private static Logger log = LoggerFactory.getLogger(ReactionOperations.class);
+    private static final Logger log = LoggerFactory.getLogger(ReactionOperations.class);
 
     @Inject
     private RequestContext requestContext;
@@ -71,9 +69,6 @@ public class ReactionOperations {
 
     @Inject
     private NamingCache namingCache;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
 
     @Inject
     private EventManager eventManager;
@@ -110,15 +105,9 @@ public class ReactionOperations {
             reactionDescription.setOwnerName(ownerName);
         } else {
             byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
-            Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
-                    FingerprintObjectType.REACTION, reactionDescription.getSignatureVersion(),
-                    ReactionDescription.class, byte[].class);
-            if (!CryptoUtil.verify(
-                    reactionDescription.getSignature(),
-                    signingKey,
-                    constructor,
-                    reactionDescription,
-                    entry.getCurrentRevision().getDigest())) {
+            Fingerprint fingerprint = Fingerprints.reaction(reactionDescription.getSignatureVersion())
+                    .create(reactionDescription, entry.getCurrentRevision().getDigest());
+            if (!CryptoUtil.verify(fingerprint, reactionDescription.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
         }

@@ -1,7 +1,6 @@
 package org.moera.node.rest;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -14,8 +13,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
-import org.moera.node.fingerprint.FingerprintManager;
-import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -42,7 +40,7 @@ import org.springframework.web.method.HandlerMethod;
 @NoCache
 public class NotificationController {
 
-    private static Logger log = LoggerFactory.getLogger(NotificationController.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -55,9 +53,6 @@ public class NotificationController {
 
     @Inject
     private NamingClient namingClient;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
 
     @Inject
     private ObjectMapper objectMapper;
@@ -125,9 +120,8 @@ public class NotificationController {
             return false;
         }
 
-        Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
-                FingerprintObjectType.NOTIFICATION_PACKET, packet.getSignatureVersion(), NotificationPacket.class);
-        return CryptoUtil.verify(packet.getSignature(), signingKey, constructor, packet);
+        Fingerprint fingerprint = Fingerprints.notificationPacket(packet.getSignatureVersion()).create(packet);
+        return CryptoUtil.verify(fingerprint, packet.getSignature(), signingKey);
     }
 
     private byte[] fetchSigningKey(String ownerName) {

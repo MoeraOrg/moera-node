@@ -21,6 +21,11 @@ public class CarteFingerprint0 extends Fingerprint implements CarteProperties {
         super(0);
     }
 
+    public CarteFingerprint0(String ownerName, InetAddress address, Instant beginning, Instant deadline,
+                             String nodeName) {
+        this(ownerName, address, beginning, deadline);
+    }
+
     public CarteFingerprint0(String ownerName, InetAddress address, Instant beginning, Instant deadline) {
         super(0);
         this.ownerName = ownerName;

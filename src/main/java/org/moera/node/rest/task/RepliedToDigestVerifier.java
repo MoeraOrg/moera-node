@@ -1,6 +1,5 @@
 package org.moera.node.rest.task;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,8 +12,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApi;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
-import org.moera.node.fingerprint.FingerprintManager;
-import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
@@ -32,9 +30,6 @@ public class RepliedToDigestVerifier {
 
     @Inject
     protected NodeApi nodeApi;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
 
     @Inject
     private MediaManager mediaManager;
@@ -107,15 +102,10 @@ public class RepliedToDigestVerifier {
         Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte.apply(targetNodeName), pmf);
 
-        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
-                commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
-                PostingInfo.class, PostingRevisionInfo.class, Function.class, byte[].class);
-        return CryptoUtil.digest(constructor, commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo,
-                postingMediaDigest, repliedToDigest);
-    }
-
-    private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {
-        return fingerprintManager.getConstructor(FingerprintObjectType.COMMENT, version, parameterTypes);
+        Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
+                .create(commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo,
+                        postingMediaDigest, repliedToDigest);
+        return CryptoUtil.digest(fingerprint);
     }
 
 }

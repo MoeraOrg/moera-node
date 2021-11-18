@@ -1,6 +1,5 @@
 package org.moera.node.rest.task;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -14,8 +13,7 @@ import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.fingerprint.FingerprintManager;
-import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
@@ -29,17 +27,14 @@ import org.slf4j.LoggerFactory;
 
 public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteCommentVerifyTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteCommentVerifyTask.class);
 
-    private RemoteCommentVerification data;
+    private final RemoteCommentVerification data;
 
     private String remoteNodeName;
 
     @Inject
     private RemoteCommentVerificationRepository remoteCommentVerificationRepository;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
 
     @Inject
     private MediaManager mediaManager;
@@ -73,10 +68,6 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         } catch (Exception e) {
             error(e);
         }
-    }
-
-    private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {
-        return fingerprintManager.getConstructor(FingerprintObjectType.COMMENT, version, parameterTypes);
     }
 
     private void verify(PostingInfo postingInfo, CommentInfo commentInfo) throws NodeApiException {
@@ -114,12 +105,9 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         }
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
                 postingInfo, revisions, repliedToId, repliedToRevisionId);
-        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
-                commentInfo.getSignatureVersion(), CommentInfo.class, PostingInfo.class, PostingRevisionInfo.class,
-                Function.class, byte[].class);
-        succeeded(CryptoUtil.verify(
-                commentInfo.getSignature(), signingKey, constructor, commentInfo, postingInfo, revisionInfo,
-                postingMediaDigest, repliedToDigest));
+        Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
+                .create(commentInfo, postingInfo, revisionInfo, postingMediaDigest, repliedToDigest);
+        succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
     private void verify(PostingInfo postingInfo, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo)
@@ -157,12 +145,10 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         }
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
                 postingInfo, revisions, repliedToId, repliedToRevisionId);
-        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
-                commentInfo.getSignatureVersion(), CommentInfo.class, CommentRevisionInfo.class,
-                PostingInfo.class, PostingRevisionInfo.class, Function.class, byte[].class);
-        succeeded(CryptoUtil.verify(
-                commentInfo.getSignature(), signingKey, constructor, commentInfo, commentRevisionInfo,
-                postingInfo, postingRevisionInfo, postingMediaDigest, repliedToDigest));
+        Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
+                .create(commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo, postingMediaDigest,
+                        repliedToDigest);
+        succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
     private void updateData(Consumer<RemoteCommentVerification> updater) {

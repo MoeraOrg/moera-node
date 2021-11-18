@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -35,8 +34,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.event.EventManager;
-import org.moera.node.fingerprint.FingerprintManager;
-import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -93,7 +91,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class CommentController {
 
-    private static Logger log = LoggerFactory.getLogger(CommentController.class);
+    private static final Logger log = LoggerFactory.getLogger(CommentController.class);
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
 
@@ -114,9 +112,6 @@ public class CommentController {
 
     @Inject
     private NamingCache namingCache;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
 
     @Inject
     private CommentOperations commentOperations;
@@ -284,20 +279,12 @@ public class CommentController {
             }
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
-            Constructor<? extends Fingerprint> constructor = fingerprintManager.getConstructor(
-                    FingerprintObjectType.COMMENT, commentText.getSignatureVersion(),
-                    CommentText.class, byte[].class, byte[].class);
-            if (!CryptoUtil.verify(
-                    commentText.getSignature(),
-                    signingKey,
-                    constructor,
-                    commentText,
-                    posting.getCurrentRevision().getDigest(),
-                    repliedToDigest)) {
+            Fingerprint fingerprint = Fingerprints.comment(commentText.getSignatureVersion())
+                    .create(commentText, posting.getCurrentRevision().getDigest(), repliedToDigest);
+            if (!CryptoUtil.verify(fingerprint, commentText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
-            digest = CryptoUtil.digest(constructor, commentText, posting.getCurrentRevision().getDigest(),
-                    repliedToDigest);
+            digest = CryptoUtil.digest(fingerprint);
 
             if (ObjectUtils.isEmpty(commentText.getBody())) {
                 throw new ValidationFailure("commentText.body.blank");

@@ -1,6 +1,5 @@
 package org.moera.node.rest.task;
 
-import java.lang.reflect.Constructor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.inject.Inject;
@@ -10,8 +9,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.fingerprint.FingerprintManager;
-import org.moera.node.fingerprint.FingerprintObjectType;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
@@ -23,15 +21,12 @@ import org.slf4j.LoggerFactory;
 
 public class RemotePostingVerifyTask extends RemoteVerificationTask {
 
-    private static Logger log = LoggerFactory.getLogger(RemotePostingVerifyTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemotePostingVerifyTask.class);
 
-    private RemotePostingVerification data;
+    private final RemotePostingVerification data;
 
     @Inject
     private RemotePostingVerificationRepository remotePostingVerificationRepository;
-
-    @Inject
-    private FingerprintManager fingerprintManager;
 
     @Inject
     private MediaManager mediaManager;
@@ -58,10 +53,6 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         }
     }
 
-    private Constructor<? extends Fingerprint> getFingerprintConstructor(short version, Class<?>... parameterTypes) {
-        return fingerprintManager.getConstructor(FingerprintObjectType.POSTING, version, parameterTypes);
-    }
-
     private void verifySignature(PostingInfo postingInfo) {
         byte[] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
         if (signingKey == null) {
@@ -71,9 +62,9 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         data.setRevisionId(postingInfo.getRevisionId());
         Function<PrivateMediaFileInfo, byte[]> mediaDigest
                 = pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
-        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
-                postingInfo.getSignatureVersion(), PostingInfo.class, Function.class);
-        succeeded(CryptoUtil.verify(postingInfo.getSignature(), signingKey, constructor, postingInfo, mediaDigest));
+        Fingerprint fingerprint = Fingerprints.posting(postingInfo.getSignatureVersion())
+                .create(postingInfo, mediaDigest);
+        succeeded(CryptoUtil.verify(fingerprint, postingInfo.getSignature(), signingKey));
     }
 
     private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
@@ -84,11 +75,9 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         }
         Function<PrivateMediaFileInfo, byte[]> mediaDigest
                 = pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
-        Constructor<? extends Fingerprint> constructor = getFingerprintConstructor(
-                postingInfo.getSignatureVersion(), PostingInfo.class, PostingRevisionInfo.class, Function.class);
-        succeeded(CryptoUtil.verify(
-                postingRevisionInfo.getSignature(), signingKey, constructor, postingInfo, postingRevisionInfo,
-                mediaDigest));
+        Fingerprint fingerprint = Fingerprints.posting(postingInfo.getSignatureVersion())
+                .create(postingInfo, postingRevisionInfo, mediaDigest);
+        succeeded(CryptoUtil.verify(fingerprint, postingRevisionInfo.getSignature(), signingKey));
     }
 
     private void updateData(Consumer<RemotePostingVerification> updater) {
