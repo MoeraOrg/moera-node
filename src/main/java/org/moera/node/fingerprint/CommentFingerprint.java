@@ -3,6 +3,7 @@ package org.moera.node.fingerprint;
 import java.util.function.Function;
 
 import org.moera.commons.crypto.Digest;
+import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
@@ -17,8 +18,8 @@ public class CommentFingerprint extends EntryFingerprint {
 
     public String objectType = FingerprintObjectType.COMMENT.name();
     public String ownerName;
-    public Digest<PostingFingerprint> postingFingerprint = new Digest<>();
-    public Digest<CommentFingerprint> repliedToFingerprint = new Digest<>();
+    public Digest<Fingerprint> postingFingerprint = new Digest<>();
+    public Digest<Fingerprint> repliedToFingerprint = new Digest<>();
     public Digest<String> bodySrc = new Digest<>();
     public String bodySrcFormat;
     public String body;
@@ -39,7 +40,7 @@ public class CommentFingerprint extends EntryFingerprint {
         createdAt = commentText.getCreatedAt();
     }
 
-    public CommentFingerprint(CommentText commentText, PostingFingerprint postingFingerprint, byte[] repliedToDigest) {
+    public CommentFingerprint(CommentText commentText, Fingerprint postingFingerprint, byte[] repliedToDigest) {
         super(0);
         ownerName = commentText.getOwnerName();
         this.postingFingerprint.setValue(postingFingerprint);
@@ -51,7 +52,7 @@ public class CommentFingerprint extends EntryFingerprint {
         createdAt = commentText.getCreatedAt();
     }
 
-    public CommentFingerprint(CommentInfo commentInfo, PostingFingerprint postingFingerprint) {
+    public CommentFingerprint(CommentInfo commentInfo, Fingerprint postingFingerprint) {
         super(0);
         ownerName = commentInfo.getOwnerName();
         this.postingFingerprint.setValue(postingFingerprint);
@@ -69,7 +70,8 @@ public class CommentFingerprint extends EntryFingerprint {
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
-        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
+        this.postingFingerprint.setValue(Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
+                .create(postingInfo, postingRevisionInfo, postingMediaDigest));
         byte[] repliedToDigest = commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null;
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
@@ -84,7 +86,8 @@ public class CommentFingerprint extends EntryFingerprint {
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
-        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
+        this.postingFingerprint.setValue(Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
+                .create(postingInfo, postingRevisionInfo, postingMediaDigest));
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentInfo.getBodySrcHash());
         bodySrcFormat = commentInfo.getBodySrcFormat().getValue();
@@ -98,7 +101,8 @@ public class CommentFingerprint extends EntryFingerprint {
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
-        this.postingFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
+        this.postingFingerprint.setValue(Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
+                .create(postingInfo, postingRevisionInfo, postingMediaDigest));
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
         bodySrcFormat = commentRevisionInfo.getBodySrcFormat().getValue();

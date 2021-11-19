@@ -21,13 +21,13 @@ public class CommentFingerprintFactory extends FingerprintFactory {
         return constructor != null ? create(constructor, commentText, postingDigest, repliedToDigest) : null;
     }
 
-    public Fingerprint create(CommentText commentText, PostingFingerprint postingFingerprint, byte[] repliedToDigest) {
-        var constructor = getConstructor(CommentText.class, PostingFingerprint.class, byte[].class);
+    public Fingerprint create(CommentText commentText, Fingerprint postingFingerprint, byte[] repliedToDigest) {
+        var constructor = getConstructor(CommentText.class, Fingerprint.class, byte[].class);
         return constructor != null ? create(constructor, commentText, postingFingerprint, repliedToDigest) : null;
     }
 
-    public Fingerprint create(CommentInfo commentInfo, PostingFingerprint postingFingerprint) {
-        var constructor = getConstructor(CommentInfo.class, PostingFingerprint.class);
+    public Fingerprint create(CommentInfo commentInfo, Fingerprint postingFingerprint) {
+        var constructor = getConstructor(CommentInfo.class, Fingerprint.class);
         return constructor != null ? create(constructor, commentInfo, postingFingerprint) : null;
     }
 

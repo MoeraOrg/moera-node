@@ -9,7 +9,7 @@ import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
-import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.instant.PostingReactionInstants;
 import org.moera.node.media.MediaManager;
@@ -27,13 +27,13 @@ import org.slf4j.LoggerFactory;
 
 public class RemotePostingReactionPostTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(RemotePostingReactionPostTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemotePostingReactionPostTask.class);
 
-    private String targetNodeName;
+    private final String targetNodeName;
     private WhoAmI target;
     private MediaFile targetAvatarMediaFile;
-    private String postingId;
-    private ReactionAttributes attributes;
+    private final String postingId;
+    private final ReactionAttributes attributes;
     private PostingInfo postingInfo;
 
     @Inject
@@ -77,7 +77,7 @@ public class RemotePostingReactionPostTask extends Task {
         ReactionFingerprint fingerprint = new ReactionFingerprint(
                 nodeName(),
                 attributes,
-                new PostingFingerprint(
+                Fingerprints.posting(postingInfo.getSignatureVersion()).create(
                         postingInfo,
                         pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf)));
         ReactionDescription description = new ReactionDescription(nodeName(), fullName(), getAvatar(), attributes);

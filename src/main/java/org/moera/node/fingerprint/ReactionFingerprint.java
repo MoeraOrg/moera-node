@@ -20,7 +20,7 @@ public class ReactionFingerprint extends Fingerprint {
 
     public String objectType = FingerprintObjectType.REACTION.name();
     public String ownerName;
-    public Digest<EntryFingerprint> entryFingerprint = new Digest<>();
+    public Digest<Fingerprint> entryFingerprint = new Digest<>();
     public boolean negative;
     public int emoji;
 
@@ -32,7 +32,7 @@ public class ReactionFingerprint extends Fingerprint {
         emoji = description.getEmoji();
     }
 
-    public ReactionFingerprint(String ownerName, ReactionAttributes attributes, EntryFingerprint entryFingerprint) {
+    public ReactionFingerprint(String ownerName, ReactionAttributes attributes, Fingerprint entryFingerprint) {
         super(0);
         this.ownerName = ownerName;
         this.entryFingerprint.setValue(entryFingerprint);
@@ -45,7 +45,8 @@ public class ReactionFingerprint extends Fingerprint {
                                Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
-        entryFingerprint.setValue(new PostingFingerprint(postingInfo, postingRevisionInfo, postingMediaDigest));
+        entryFingerprint.setValue(Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
+                .create(postingInfo, postingRevisionInfo, postingMediaDigest));
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();
     }
@@ -56,8 +57,8 @@ public class ReactionFingerprint extends Fingerprint {
                                Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
-        CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, commentRevisionInfo,
-                postingInfo, postingRevisionInfo, postingMediaDigest);
+        Fingerprint commentFingerprint = Fingerprints.comment(commentRevisionInfo.getSignatureVersion())
+                .create(commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo, postingMediaDigest);
         entryFingerprint.setValue(commentFingerprint);
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();

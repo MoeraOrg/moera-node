@@ -1,28 +1,18 @@
 package org.moera.node.fingerprint;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.moera.commons.crypto.Digest;
-import org.moera.commons.crypto.Fingerprint;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
-import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.Util;
 
-@FingerprintVersion(objectType = FingerprintObjectType.POSTING, version = 1)
-public class PostingFingerprint extends EntryFingerprint {
-
-    public static final short VERSION = 1;
+@FingerprintVersion(objectType = FingerprintObjectType.POSTING, version = 0)
+public class PostingFingerprint0 extends EntryFingerprint {
 
     public String objectType = FingerprintObjectType.POSTING.name();
     public String receiverName;
@@ -33,10 +23,10 @@ public class PostingFingerprint extends EntryFingerprint {
     public String bodyFormat;
     public long createdAt;
     public byte permissions; // TODO for future use
-    public List<Digest<Fingerprint>> attachments = new ArrayList<>();
+    public byte attachments; // TODO for future use
 
-    public PostingFingerprint(Posting posting, EntryRevision revision) {
-        super(1);
+    public PostingFingerprint0(Posting posting, EntryRevision revision) {
+        super(0);
         // TODO it should be posting.receiverName, if it is not null, and node name otherwise,
         // to support postings in group nodes
         receiverName = posting.getOwnerName();
@@ -51,18 +41,14 @@ public class PostingFingerprint extends EntryFingerprint {
         bodyFormat = revision.getBodyFormat();
         createdAt = Util.toEpochSecond(posting.isOriginal()
                 ? revision.getCreatedAt() : revision.getReceiverCreatedAt());
-        if (revision.getAttachments() != null) {
-            attachments = revision.getAttachments().stream()
-                    .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                    .map(AttachmentFingerprint::new)
-                    .filter(af -> af.digest != null)
-                    .map(this::mediaAttachmentFingerprint)
-                    .collect(Collectors.toList());
-        }
     }
 
-    public PostingFingerprint(PostingInfo postingInfo, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
-        super(1);
+    public PostingFingerprint0(PostingInfo postingInfo, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+        this(postingInfo);
+    }
+
+    public PostingFingerprint0(PostingInfo postingInfo) {
+        super(0);
         receiverName = postingInfo.getOwnerName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingInfo.getBodySrcHash());
@@ -71,19 +57,15 @@ public class PostingFingerprint extends EntryFingerprint {
         bodyFormat = postingInfo.getBodyFormat();
         createdAt = postingInfo.isOriginal()
                 ? postingInfo.getRevisionCreatedAt() : postingInfo.getReceiverRevisionCreatedAt();
-        if (postingInfo.getMedia() != null) {
-            attachments = Arrays.stream(postingInfo.getMedia())
-                    .map(MediaAttachment::getMedia)
-                    .map(mediaDigest)
-                    .map(AttachmentFingerprint::new)
-                    .map(this::mediaAttachmentFingerprint)
-                    .collect(Collectors.toList());
-        }
     }
 
-    public PostingFingerprint(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
-                              Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
-        super(1);
+    public PostingFingerprint0(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                               Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+        this(postingInfo, postingRevisionInfo);
+    }
+
+    public PostingFingerprint0(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
+        super(0);
         receiverName = postingInfo.getOwnerName();
         ownerName = postingInfo.getOwnerName();
         bodySrc.setDigest(postingRevisionInfo.getBodySrcHash());
@@ -92,20 +74,6 @@ public class PostingFingerprint extends EntryFingerprint {
         bodyFormat = postingRevisionInfo.getBodyFormat();
         createdAt = postingInfo.isOriginal()
                 ? postingRevisionInfo.getCreatedAt() : postingRevisionInfo.getReceiverCreatedAt();
-        if (postingRevisionInfo.getMedia() != null) {
-            attachments = Arrays.stream(postingRevisionInfo.getMedia())
-                    .map(MediaAttachment::getMedia)
-                    .map(mediaDigest)
-                    .map(AttachmentFingerprint::new)
-                    .map(this::mediaAttachmentFingerprint)
-                    .collect(Collectors.toList());
-        }
-    }
-
-    private Digest<Fingerprint> mediaAttachmentFingerprint(AttachmentFingerprint af) {
-        var digest = new Digest<Fingerprint>();
-        digest.setValue(af);
-        return digest;
     }
 
 }

@@ -11,7 +11,7 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.fingerprint.CommentFingerprint;
-import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentCreated;
@@ -30,14 +30,14 @@ import org.slf4j.LoggerFactory;
 
 public class RemoteCommentPostTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteCommentPostTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteCommentPostTask.class);
 
-    private String targetNodeName;
+    private final String targetNodeName;
     private WhoAmI target;
     private MediaFile targetAvatarMediaFile;
-    private String postingId;
+    private final String postingId;
     private String commentId;
-    private CommentSourceText sourceText;
+    private final CommentSourceText sourceText;
     private PostingInfo postingInfo;
     private CommentInfo prevCommentInfo;
 
@@ -127,7 +127,7 @@ public class RemoteCommentPostTask extends Task {
         CommentText commentText = new CommentText(nodeName(), fullName(), sourceText, textConverter);
         CommentFingerprint fingerprint = new CommentFingerprint(
                 commentText,
-                new PostingFingerprint(
+                Fingerprints.posting(postingInfo.getSignatureVersion()).create(
                         postingInfo,
                         pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf)),
                 repliedToDigest);

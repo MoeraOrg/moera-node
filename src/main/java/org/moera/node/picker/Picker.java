@@ -12,6 +12,7 @@ import javax.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApiErrorStatusException;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
@@ -32,7 +33,7 @@ import org.moera.node.data.StoryType;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
-import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
@@ -203,7 +204,7 @@ public class Picker extends Task {
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
             downloadMedia(postingInfo, null, posting.getCurrentRevision());
-            signRevision(posting, posting.getCurrentRevision());
+            digestRevision(posting, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
@@ -216,7 +217,7 @@ public class Picker extends Task {
             postingInfo.toPickedPosting(posting);
             updateRevision(posting, postingInfo);
             downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision());
-            signRevision(posting, posting.getCurrentRevision());
+            digestRevision(posting, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
                 events.add(new PostingUpdatedEvent(posting));
             } else {
@@ -257,8 +258,8 @@ public class Picker extends Task {
         posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
     }
 
-    private void signRevision(Posting posting, EntryRevision revision) {
-        PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
+    private void digestRevision(Posting posting, EntryRevision revision) {
+        Fingerprint fingerprint = Fingerprints.posting(revision.getSignatureVersion()).create(posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));
     }
 

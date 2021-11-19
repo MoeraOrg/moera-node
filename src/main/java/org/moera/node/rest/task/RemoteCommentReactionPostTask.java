@@ -5,10 +5,10 @@ import java.util.function.Function;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
-import org.moera.node.fingerprint.CommentFingerprint;
-import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.instant.CommentReactionInstants;
 import org.moera.node.media.MediaManager;
@@ -25,12 +25,12 @@ import org.slf4j.LoggerFactory;
 
 public class RemoteCommentReactionPostTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteCommentReactionPostTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteCommentReactionPostTask.class);
 
-    private String targetNodeName;
-    private String postingId;
-    private String commentId;
-    private ReactionAttributes attributes;
+    private final String targetNodeName;
+    private final String postingId;
+    private final String commentId;
+    private final ReactionAttributes attributes;
     private PostingInfo postingInfo;
     private PostingRevisionInfo postingRevisionInfo;
     private CommentInfo commentInfo;
@@ -80,10 +80,12 @@ public class RemoteCommentReactionPostTask extends Task {
     private ReactionDescription buildReaction() {
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf);
-        PostingFingerprint postingFingerprint = postingRevisionInfo == null
-                ? new PostingFingerprint(postingInfo, mediaDigest)
-                : new PostingFingerprint(postingInfo, postingRevisionInfo, mediaDigest);
-        CommentFingerprint commentFingerprint = new CommentFingerprint(commentInfo, postingFingerprint);
+        Fingerprint postingFingerprint = postingRevisionInfo == null
+                ? Fingerprints.posting(postingInfo.getSignatureVersion()).create(postingInfo, mediaDigest)
+                : Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
+                        .create(postingInfo, postingRevisionInfo, mediaDigest);
+        Fingerprint commentFingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
+                .create(commentInfo, postingFingerprint);
         ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName(), attributes, commentFingerprint);
 
         ReactionDescription description = new ReactionDescription(nodeName(), fullName(), getAvatar(), attributes);
