@@ -60,7 +60,7 @@ public class PostingOperations {
 
     public static final int MAX_POSTINGS_PER_REQUEST = 200;
 
-    private static Logger log = LoggerFactory.getLogger(PostingOperations.class);
+    private static final Logger log = LoggerFactory.getLogger(PostingOperations.class);
 
     @Inject
     private RequestContext requestContext;

@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.Comment;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.SourceFormat;
@@ -32,6 +34,7 @@ public class CommentInfo implements ReactionsInfo {
     private Body body;
     private String saneBody;
     private String bodyFormat;
+    private MediaAttachment[] media;
     private String heading;
     private RepliedTo repliedTo;
     private long moment;
@@ -82,6 +85,10 @@ public class CommentInfo implements ReactionsInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
+        media = revision.getAttachments().stream()
+                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .map(MediaAttachment::new)
+                .toArray(MediaAttachment[]::new);
         heading = revision.getHeading();
         if (comment.getRepliedTo() != null) {
             repliedTo = new RepliedTo(comment);
@@ -243,6 +250,14 @@ public class CommentInfo implements ReactionsInfo {
 
     public void setBodyFormat(String bodyFormat) {
         this.bodyFormat = bodyFormat;
+    }
+
+    public MediaAttachment[] getMedia() {
+        return media;
+    }
+
+    public void setMedia(MediaAttachment[] media) {
+        this.media = media;
     }
 
     public String getHeading() {

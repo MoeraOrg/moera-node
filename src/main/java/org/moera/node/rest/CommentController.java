@@ -28,6 +28,8 @@ import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
@@ -111,6 +113,9 @@ public class CommentController {
     private ReactionRepository reactionRepository;
 
     @Inject
+    private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
     private NamingCache namingCache;
 
     @Inject
@@ -171,11 +176,14 @@ public class CommentController {
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(commentText.getMedia(),
+                () -> new ValidationFailure("commentText.media.not-found"),
+                requestContext.isAdmin(), requestContext.getClientName());
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
-            comment = commentOperations.createOrUpdateComment(posting, comment, null, null,
-                    revision -> commentText.toEntryRevision(revision, digest, textConverter));
+            comment = commentOperations.createOrUpdateComment(posting, comment, null, media, null,
+                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media));
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
@@ -229,13 +237,16 @@ public class CommentController {
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(commentText.getMedia(),
+                () -> new ValidationFailure("commentText.media.not-found"),
+                requestContext.isAdmin(), requestContext.getClientName());
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentText.toEntry(comment);
         try {
             comment = commentOperations.createOrUpdateComment(comment.getPosting(), comment,
-                    comment.getCurrentRevision(), commentText::sameAsRevision,
-                    revision -> commentText.toEntryRevision(revision, digest, textConverter));
+                    comment.getCurrentRevision(), media, commentText::sameAsRevision,
+                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media));
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
@@ -271,7 +282,7 @@ public class CommentController {
             }
             commentText.setOwnerName(clientName);
 
-            if (ObjectUtils.isEmpty(commentText.getBodySrc())) {
+            if (ObjectUtils.isEmpty(commentText.getBodySrc()) && ObjectUtils.isEmpty(commentText.getMedia())) {
                 throw new ValidationFailure("commentText.bodySrc.blank");
             }
             if (commentText.getBodySrc().length() > getMaxCommentSize()) {
@@ -280,13 +291,13 @@ public class CommentController {
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             Fingerprint fingerprint = Fingerprints.comment(commentText.getSignatureVersion())
-                    .create(commentText, posting.getCurrentRevision().getDigest(), repliedToDigest);
+                    .create(commentText, posting.getCurrentRevision().getDigest(), repliedToDigest, this::mediaDigest);
             if (!CryptoUtil.verify(fingerprint, commentText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
             digest = CryptoUtil.digest(fingerprint);
 
-            if (ObjectUtils.isEmpty(commentText.getBody())) {
+            if (ObjectUtils.isEmpty(commentText.getBody()) && ObjectUtils.isEmpty(commentText.getMedia())) {
                 throw new ValidationFailure("commentText.body.blank");
             }
             if (commentText.getBody().length() > getMaxCommentSize()) {
@@ -304,6 +315,11 @@ public class CommentController {
             }
         }
         return digest;
+    }
+
+    private byte[] mediaDigest(UUID id) {
+        MediaFileOwner media = mediaFileOwnerRepository.findById(id).orElse(null);
+        return media != null ? media.getMediaFile().getDigest() : null;
     }
 
     @GetMapping

@@ -1,7 +1,6 @@
 package org.moera.node.fingerprint;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -13,7 +12,6 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
-import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
@@ -33,7 +31,7 @@ public class PostingFingerprint extends EntryFingerprint {
     public String bodyFormat;
     public long createdAt;
     public byte permissions; // TODO for future use
-    public List<Digest<Fingerprint>> attachments = new ArrayList<>();
+    public List<Digest<Fingerprint>> attachments = Collections.emptyList();
 
     public PostingFingerprint(Posting posting, EntryRevision revision) {
         super(1);
@@ -71,14 +69,7 @@ public class PostingFingerprint extends EntryFingerprint {
         bodyFormat = postingInfo.getBodyFormat();
         createdAt = postingInfo.isOriginal()
                 ? postingInfo.getRevisionCreatedAt() : postingInfo.getReceiverRevisionCreatedAt();
-        if (postingInfo.getMedia() != null) {
-            attachments = Arrays.stream(postingInfo.getMedia())
-                    .map(MediaAttachment::getMedia)
-                    .map(mediaDigest)
-                    .map(AttachmentFingerprint::new)
-                    .map(this::mediaAttachmentFingerprint)
-                    .collect(Collectors.toList());
-        }
+        attachments = mediaAttachmentsFingerprint(postingInfo.getMedia(), mediaDigest);
     }
 
     public PostingFingerprint(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
@@ -92,20 +83,7 @@ public class PostingFingerprint extends EntryFingerprint {
         bodyFormat = postingRevisionInfo.getBodyFormat();
         createdAt = postingInfo.isOriginal()
                 ? postingRevisionInfo.getCreatedAt() : postingRevisionInfo.getReceiverCreatedAt();
-        if (postingRevisionInfo.getMedia() != null) {
-            attachments = Arrays.stream(postingRevisionInfo.getMedia())
-                    .map(MediaAttachment::getMedia)
-                    .map(mediaDigest)
-                    .map(AttachmentFingerprint::new)
-                    .map(this::mediaAttachmentFingerprint)
-                    .collect(Collectors.toList());
-        }
-    }
-
-    private Digest<Fingerprint> mediaAttachmentFingerprint(AttachmentFingerprint af) {
-        var digest = new Digest<Fingerprint>();
-        digest.setValue(af);
-        return digest;
+        attachments = mediaAttachmentsFingerprint(postingRevisionInfo.getMedia(), mediaDigest);
     }
 
 }

@@ -1,6 +1,11 @@
 package org.moera.node.fingerprint;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
@@ -26,9 +31,10 @@ public class CommentFingerprint extends EntryFingerprint {
     public String bodyFormat;
     public long createdAt;
     public byte permissions; // TODO for future use
-    public byte attachments; // TODO for future use
+    public List<Digest<Fingerprint>> attachments;
 
-    public CommentFingerprint(CommentText commentText, byte[] postingDigest, byte[] repliedToDigest) {
+    public CommentFingerprint(CommentText commentText, byte[] postingDigest, byte[] repliedToDigest,
+                              Function<UUID, byte[]> mediaDigest) {
         super(0);
         ownerName = commentText.getOwnerName();
         postingFingerprint.setDigest(postingDigest);
@@ -38,9 +44,11 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentText.getBody();
         bodyFormat = commentText.getBodyFormat();
         createdAt = commentText.getCreatedAt();
+        attachments = mediaAttachmentsFingerprint(commentText.getMedia(), mediaDigest);
     }
 
-    public CommentFingerprint(CommentText commentText, Fingerprint postingFingerprint, byte[] repliedToDigest) {
+    public CommentFingerprint(CommentText commentText, Fingerprint postingFingerprint, byte[] repliedToDigest,
+                              Function<UUID, byte[]> mediaDigest) {
         super(0);
         ownerName = commentText.getOwnerName();
         this.postingFingerprint.setValue(postingFingerprint);
@@ -50,9 +58,11 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentText.getBody();
         bodyFormat = commentText.getBodyFormat();
         createdAt = commentText.getCreatedAt();
+        attachments = mediaAttachmentsFingerprint(commentText.getMedia(), mediaDigest);
     }
 
-    public CommentFingerprint(CommentInfo commentInfo, Fingerprint postingFingerprint) {
+    public CommentFingerprint(CommentInfo commentInfo, Fingerprint postingFingerprint,
+                              Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
         this.postingFingerprint.setValue(postingFingerprint);
@@ -63,9 +73,11 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentInfo.getBody().getEncoded();
         bodyFormat = commentInfo.getBodyFormat();
         createdAt = commentInfo.getRevisionCreatedAt();
+        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), mediaDigest);
     }
 
     public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
+                              Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
@@ -79,9 +91,11 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentRevisionInfo.getBody().getEncoded();
         bodyFormat = commentRevisionInfo.getBodyFormat();
         createdAt = commentRevisionInfo.getCreatedAt();
+        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), commentMediaDigest);
     }
 
     public CommentFingerprint(CommentInfo commentInfo,
+                              Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
@@ -94,9 +108,11 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentInfo.getBody().getEncoded();
         bodyFormat = commentInfo.getBodyFormat();
         createdAt = commentInfo.getRevisionCreatedAt();
+        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), commentMediaDigest);
     }
 
     public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
+                              Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
@@ -109,6 +125,19 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentRevisionInfo.getBody().getEncoded();
         bodyFormat = commentRevisionInfo.getBodyFormat();
         createdAt = commentRevisionInfo.getCreatedAt();
+        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), commentMediaDigest);
+    }
+
+    private List<Digest<Fingerprint>> mediaAttachmentsFingerprint(UUID[] mediaIds, Function<UUID, byte[]> mediaDigest) {
+        if (mediaIds == null) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(mediaIds)
+                .map(mediaDigest)
+                .map(AttachmentFingerprint::new)
+                .map(this::mediaAttachmentFingerprint)
+                .collect(Collectors.toList());
     }
 
 }

@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -15,8 +16,11 @@ import javax.inject.Inject;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.EntryAttachment;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AcceptedReactions;
@@ -31,6 +35,7 @@ import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.ReplyCommentAddedNotification;
 import org.moera.node.model.notification.ReplyCommentDeletedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
@@ -45,7 +50,7 @@ public class CommentOperations {
     public static final int MAX_COMMENTS_PER_REQUEST = 200;
     private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
 
-    private static Logger log = LoggerFactory.getLogger(CommentOperations.class);
+    private static final Logger log = LoggerFactory.getLogger(CommentOperations.class);
 
     @Inject
     private RequestContext requestContext;
@@ -55,6 +60,9 @@ public class CommentOperations {
 
     @Inject
     private EntryRevisionRepository entryRevisionRepository;
+
+    @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
     private CommentPublicPageOperations commentPublicPageOperations;
@@ -113,7 +121,7 @@ public class CommentOperations {
     }
 
     public Comment createOrUpdateComment(Posting posting, Comment comment, EntryRevision revision,
-                                         Predicate<EntryRevision> isNothingChanged,
+                                         List<MediaFileOwner> media, Predicate<EntryRevision> isNothingChanged,
                                          Consumer<EntryRevision> revisionUpdater) {
         EntryRevision latest = comment.getCurrentRevision();
         if (latest != null) {
@@ -134,6 +142,18 @@ public class CommentOperations {
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
         }
+
+        if (media.size() > 0) {
+            Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()).getText());
+            int ordinal = 0;
+            for (MediaFileOwner mfo : media) {
+                EntryAttachment attachment = new EntryAttachment(current, mfo, ordinal++);
+                attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
+                attachment = entryAttachmentRepository.save(attachment);
+                current.addAttachment(attachment);
+            }
+        }
+
         comment.setEditedAt(Util.now());
         if (current.getSignature() == null) {
             current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));

@@ -94,7 +94,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
         updateData(data -> data.setRevisionId(commentInfo.getRevisionId()));
 
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, generateCarte(remoteNodeName), pmf);
 
         String repliedToId = null;
@@ -106,7 +106,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
                 postingInfo, revisions, repliedToId, repliedToRevisionId);
         Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, postingInfo, revisionInfo, postingMediaDigest, repliedToDigest);
+                .create(commentInfo, mediaDigest, postingInfo, revisionInfo, mediaDigest, repliedToDigest);
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
@@ -134,7 +134,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, generateCarte(remoteNodeName), pmf);
 
         String repliedToId = null;
@@ -146,7 +146,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
                 postingInfo, revisions, repliedToId, repliedToRevisionId);
         Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo, postingMediaDigest,
+                .create(commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo, mediaDigest,
                         repliedToDigest);
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }

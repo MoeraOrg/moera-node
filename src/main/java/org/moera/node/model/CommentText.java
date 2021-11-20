@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
@@ -7,12 +9,15 @@ import javax.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.text.HeadingExtractor;
-import org.moera.node.text.sanitizer.HtmlSanitizer;
+import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
+import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -40,6 +45,8 @@ public class CommentText {
     @Size(max = 75)
     private String bodyFormat;
 
+    private UUID[] media;
+
     private Long createdAt;
 
     @Valid
@@ -61,6 +68,7 @@ public class CommentText {
         ownerAvatar = sourceText.getOwnerAvatar();
         bodySrc = sourceText.getBodySrc();
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
+        media = sourceText.getMedia();
         createdAt = Util.toEpochSecond(Util.now());
         acceptedReactions = sourceText.getAcceptedReactions();
         repliedToId = sourceText.getRepliedToId();
@@ -151,6 +159,14 @@ public class CommentText {
         this.bodyFormat = bodyFormat;
     }
 
+    public UUID[] getMedia() {
+        return media;
+    }
+
+    public void setMedia(UUID[] media) {
+        this.media = media;
+    }
+
     public Long getCreatedAt() {
         return createdAt;
     }
@@ -230,7 +246,16 @@ public class CommentText {
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
-    public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter) {
+    private boolean hasAttachedGallery(Body body, List<MediaFileOwner> media) {
+        if (ObjectUtils.isEmpty(media)) {
+            return false;
+        }
+        int embeddedCount = MediaExtractor.extractMediaFileIds(body.getText()).size();
+        return media.size() > embeddedCount;
+    }
+
+    public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter,
+                                List<MediaFileOwner> media) {
         if (createdAt != null) {
             revision.setCreatedAt(Util.toTimestamp(createdAt));
         }
@@ -248,15 +273,15 @@ public class CommentText {
                     revision.setBodySrc(bodySrc);
                     body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
                     revision.setBody(body.getEncoded());
-                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
+                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
                     revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                    Body bodyPreview = Shortener.shorten(body, false);
+                    Body bodyPreview = Shortener.shorten(body, hasAttachedGallery(body, media));
                     if (bodyPreview != null) {
                         revision.setBodyPreview(bodyPreview.getEncoded());
-                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true));
+                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media));
                     } else {
                         revision.setBodyPreview(Body.EMPTY);
-                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true));
+                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true, media));
                     }
                 } else {
                     revision.setBodySrc(Body.EMPTY);
@@ -272,7 +297,7 @@ public class CommentText {
                 try {
                     body = new Body(this.body);
                     revision.setBody(this.body);
-                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
+                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
                 } catch (BodyMappingException e) {
                     e.setField("body");
                     throw e;
@@ -281,7 +306,7 @@ public class CommentText {
                     Body bodyPreview = new Body(this.bodyPreview);
                     revision.setBodyPreview(this.bodyPreview);
                     revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                            !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
+                            !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media));
                 } catch (BodyMappingException e) {
                     e.setField("bodyPreview");
                     throw e;
@@ -301,6 +326,9 @@ public class CommentText {
                 && (ObjectUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
+                && Arrays.equals(
+                        media != null ? media : new UUID[0],
+                        revision.getAttachments().stream().map(EntryAttachment::getMediaFileOwner).toArray())
                 && (revision.getSignature() != null || signature == null);
     }
 

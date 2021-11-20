@@ -99,12 +99,12 @@ public class RepliedToDigestVerifier {
             postingRevisions.put(commentRevisionInfo.getPostingRevisionId(), postingRevisionInfo);
         }
 
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte.apply(targetNodeName), pmf);
 
         Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo,
-                        postingMediaDigest, repliedToDigest);
+                .create(commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,
+                        mediaDigest, repliedToDigest);
         return CryptoUtil.digest(fingerprint);
     }
 

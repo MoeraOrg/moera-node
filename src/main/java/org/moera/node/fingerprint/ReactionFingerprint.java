@@ -52,13 +52,15 @@ public class ReactionFingerprint extends Fingerprint {
     }
 
     public ReactionFingerprint(ReactionInfo reactionInfo, CommentInfo commentInfo,
-                               CommentRevisionInfo commentRevisionInfo, PostingInfo postingInfo,
-                               PostingRevisionInfo postingRevisionInfo,
+                               CommentRevisionInfo commentRevisionInfo,
+                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
+                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
                                Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = reactionInfo.getOwnerName();
         Fingerprint commentFingerprint = Fingerprints.comment(commentRevisionInfo.getSignatureVersion())
-                .create(commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo, postingMediaDigest);
+                .create(commentInfo, commentRevisionInfo, commentMediaDigest, postingInfo, postingRevisionInfo,
+                        postingMediaDigest);
         entryFingerprint.setValue(commentFingerprint);
         negative = reactionInfo.isNegative();
         emoji = reactionInfo.getEmoji();

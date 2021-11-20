@@ -262,22 +262,28 @@ public class MediaManager {
     }
 
     public byte[] getPrivateMediaDigest(String nodeName, String carte, PrivateMediaFileInfo info) {
-        RemoteMediaCache cache = remoteMediaCacheRepository.findByMedia(nodeName, info.getId()).orElse(null);
+        return getPrivateMediaDigest(nodeName, carte, info.getId(), info.getHash());
+    }
+
+    public byte[] getPrivateMediaDigest(String nodeName, String carte, String id, String hash) {
+        RemoteMediaCache cache = remoteMediaCacheRepository.findByMedia(nodeName, id).orElse(null);
         if (cache != null) {
             return cache.getDigest();
         }
 
-        MediaFile mediaFile = mediaFileRepository.findById(info.getHash()).orElse(null);
-        if (mediaFile != null) {
-            cacheRemoteMedia(nodeName, info.getId(), mediaFile.getDigest(), mediaFile);
-            return mediaFile.getDigest();
+        if (hash != null) {
+            MediaFile mediaFile = mediaFileRepository.findById(hash).orElse(null);
+            if (mediaFile != null) {
+                cacheRemoteMedia(nodeName, id, mediaFile.getDigest(), mediaFile);
+                return mediaFile.getDigest();
+            }
         }
 
         var tmp = mediaOperations.tmpFile();
         try {
-            var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, info.getId(), tmp,
+            var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, id, tmp,
                     universalContext.getOptions().getInt("media.verification.max-size"));
-            cacheRemoteMedia(nodeName, info.getId(), tmpMedia.getDigest(), null);
+            cacheRemoteMedia(nodeName, id, tmpMedia.getDigest(), null);
             return tmpMedia.getDigest();
         } catch (NodeApiException e) {
             return null; // TODO need more graceful approach

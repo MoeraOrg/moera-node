@@ -112,12 +112,12 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             return;
         }
 
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
 
         Fingerprint fingerprint = Fingerprints.reaction(reactionInfo.getSignatureVersion())
-                .create(reactionInfo, commentInfo, commentRevisionInfo, postingInfo, postingRevisionInfo,
-                        postingMediaDigest);
+                .create(reactionInfo, commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,
+                        mediaDigest);
         succeeded(CryptoUtil.verify(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 

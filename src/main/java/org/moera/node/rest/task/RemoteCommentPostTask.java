@@ -130,7 +130,9 @@ public class RemoteCommentPostTask extends Task {
                 Fingerprints.posting(postingInfo.getSignatureVersion()).create(
                         postingInfo,
                         pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf)),
-                repliedToDigest);
+                repliedToDigest,
+                id -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName),
+                        id.toString(), null));
         commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         commentText.setSignatureVersion(CommentFingerprint.VERSION);
         return commentText;

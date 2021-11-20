@@ -39,13 +39,16 @@ public class ReactionFingerprintFactory extends FingerprintFactory {
     }
 
     public Fingerprint create(ReactionInfo reactionInfo, CommentInfo commentInfo,
-                              CommentRevisionInfo commentRevisionInfo, PostingInfo postingInfo,
-                              PostingRevisionInfo postingRevisionInfo,
+                              CommentRevisionInfo commentRevisionInfo,
+                              Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
+                              PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         var constructor = getConstructor(ReactionInfo.class, CommentInfo.class, CommentRevisionInfo.class,
                 PostingInfo.class, PostingRevisionInfo.class, Function.class);
-        return constructor != null ? create(constructor, reactionInfo, commentInfo, commentRevisionInfo, postingInfo,
-                postingRevisionInfo, postingMediaDigest) : null;
+        return constructor != null
+                ? create(constructor, reactionInfo, commentInfo, commentRevisionInfo, commentMediaDigest, postingInfo,
+                         postingRevisionInfo, postingMediaDigest)
+                : null;
     }
 
 }
