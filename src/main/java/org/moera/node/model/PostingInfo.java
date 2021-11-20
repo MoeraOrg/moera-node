@@ -14,6 +14,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
+import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
@@ -577,15 +578,19 @@ public class PostingInfo implements ReactionsInfo {
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {
+        List<MediaFileOwner> media = entryRevision.getAttachments().stream()
+                .map(EntryAttachment::getMediaFileOwner)
+                .collect(Collectors.toList());
+
         entryRevision.setReceiverRevisionId(revisionId);
         entryRevision.setBodyPreview(bodyPreview.getEncoded());
         entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true));
+                !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media));
         entryRevision.setBodySrcFormat(bodySrcFormat);
         entryRevision.setReceiverBodySrcHash(bodySrcHash);
         entryRevision.setBodyFormat(bodyFormat);
         entryRevision.setBody(body.getEncoded());
-        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false));
+        entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
         entryRevision.setHeading(heading);
         entryRevision.setDescription(HeadingExtractor.extractDescription(body));
         if (deletedAt != null) {

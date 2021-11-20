@@ -84,9 +84,4 @@ public class HtmlSanitizer {
         return sanitizeIfNeeded(body.getText(), preview, media);
     }
 
-    @Deprecated
-    public static String sanitizeIfNeeded(Body body, boolean preview) {
-        return sanitizeIfNeeded(body, preview, null);
-    }
-
 }

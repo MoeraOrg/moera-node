@@ -202,9 +202,9 @@ public class Picker extends Task {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
-            updateRevision(posting, postingInfo);
+            createRevision(posting, postingInfo);
             downloadMedia(postingInfo, null, posting.getCurrentRevision());
-            digestRevision(posting, posting.getCurrentRevision());
+            updateRevision(posting, postingInfo, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
@@ -215,9 +215,9 @@ public class Picker extends Task {
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);
-            updateRevision(posting, postingInfo);
+            createRevision(posting, postingInfo);
             downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision());
-            digestRevision(posting, posting.getCurrentRevision());
+            updateRevision(posting, postingInfo, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
                 events.add(new PostingUpdatedEvent(posting));
             } else {
@@ -235,7 +235,7 @@ public class Picker extends Task {
         return posting;
     }
 
-    private void updateRevision(Posting posting, PostingInfo postingInfo) {
+    private void createRevision(Posting posting, PostingInfo postingInfo) {
         if (postingInfo.getRevisionId().equals(posting.getCurrentReceiverRevisionId())) {
             return;
         }
@@ -245,7 +245,6 @@ public class Picker extends Task {
         revision.setEntry(posting);
         revision = entryRevisionRepository.save(revision);
         posting.addRevision(revision);
-        postingInfo.toPickedEntryRevision(revision);
         posting.setTotalRevisions(posting.getTotalRevisions() + 1);
 
         if (posting.getCurrentRevision() != null) {
@@ -258,7 +257,9 @@ public class Picker extends Task {
         posting.setCurrentReceiverRevisionId(revision.getReceiverRevisionId());
     }
 
-    private void digestRevision(Posting posting, EntryRevision revision) {
+    private void updateRevision(Posting posting, PostingInfo postingInfo, EntryRevision revision) {
+        postingInfo.toPickedEntryRevision(revision);
+
         Fingerprint fingerprint = Fingerprints.posting(revision.getSignatureVersion()).create(posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));
     }
