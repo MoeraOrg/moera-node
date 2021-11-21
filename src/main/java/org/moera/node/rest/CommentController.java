@@ -178,7 +178,7 @@ public class CommentController {
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
         List<MediaFileOwner> media = mediaOperations.validateAttachments(commentText.getMedia(),
                 () -> new ValidationFailure("commentText.media.not-found"),
-                requestContext.isAdmin(), requestContext.getClientName());
+                requestContext.isAdmin(), commentText.getOwnerName());
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
@@ -239,7 +239,7 @@ public class CommentController {
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
         List<MediaFileOwner> media = mediaOperations.validateAttachments(commentText.getMedia(),
                 () -> new ValidationFailure("commentText.media.not-found"),
-                requestContext.isAdmin(), requestContext.getClientName());
+                requestContext.isAdmin(), comment.getOwnerName());
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentText.toEntry(comment);
