@@ -1,25 +1,10 @@
-.posting .gallery {
-    display: flex;
-    width: 100%;
-
-    @media only screen and (min-width: 576px) {
-        height: 750px;
-    }
-
+.entry .gallery {
     &.horizontal {
         flex-direction: row;
-
-        @media only screen and (max-width: 575px) {
-            height: 75vw;
-        }
     }
 
     &.vertical {
         flex-direction: column;
-
-        @media only screen and (max-width: 575px) {
-            height: 125vw;
-        }
     }
 
     .gallery-row {
@@ -66,11 +51,41 @@
         }
     }
 
-
     &.single {
         border: 1px solid var(--gray-ultralight);
         height: auto;
 
+        .entry-image {
+            border: 0;
+
+            IMG {
+                object-fit: contain;
+            }
+        }
+    }
+}
+
+.posting .gallery {
+    display: flex;
+    width: 100%;
+
+    @media only screen and (min-width: 576px) {
+        height: 650px;
+    }
+
+    &.horizontal {
+        @media only screen and (max-width: 575px) {
+            height: 75vw;
+        }
+    }
+
+    &.vertical {
+        @media only screen and (max-width: 575px) {
+            height: 125vw;
+        }
+    }
+
+    &.single {
         @media only screen and (min-width: 576px) {
             height: css-min(unquote("650px"), unquote("var(--image-height)"));
         }
@@ -86,12 +101,43 @@
                 height: css-min(unquote("125vw"), unquote("var(--image-height)"));
             }
         }
+    }
+}
 
-        .entry-image {
-            border: 0;
+.comment .gallery {
+    display: flex;
+    width: 50%;
 
-            IMG {
-                object-fit: contain;
+    @media only screen and (min-width: 576px) {
+        height: 250px;
+    }
+
+    &.horizontal {
+        @media only screen and (max-width: 575px) {
+            height: 25vw;
+        }
+    }
+
+    &.vertical {
+        @media only screen and (max-width: 575px) {
+            height: 33vw;
+        }
+    }
+
+    &.single {
+        @media only screen and (min-width: 576px) {
+            height: css-min(unquote("250px"), unquote("var(--image-height)"));
+        }
+
+        &.horizontal {
+            @media only screen and (max-width: 575px) {
+                height: css-min(unquote("25vw"), unquote("var(--image-height)"));
+            }
+        }
+
+        &.vertical {
+            @media only screen and (max-width: 575px) {
+                height: css-min(unquote("33vw"), unquote("var(--image-height)"));
             }
         }
     }

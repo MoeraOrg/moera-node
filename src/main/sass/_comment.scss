@@ -82,9 +82,20 @@
             }
         }
 
+        IMG {
+            width: auto;
+            height: auto;
+        }
+
         IMG, IFRAME {
             max-width: css-min(unquote("100vw - 7rem"), unquote("var(--feed-width) - 6.5rem"), unquote("var(--width, 100vw)"));
             max-height: css-min(unquote("16rem"), unquote("var(--height, 200vh)"));
+        }
+
+        FIGCAPTION {
+            font-size: smaller;
+            line-height: 1.2;
+            margin-top: .3em;
         }
 
         .replied-to {
