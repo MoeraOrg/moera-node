@@ -16,7 +16,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class CommentInfo implements ReactionsInfo {
+public class CommentInfo implements MediaInfo, ReactionsInfo {
 
     private String id;
     private String ownerName;
@@ -124,6 +124,7 @@ public class CommentInfo implements ReactionsInfo {
         return info;
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -252,6 +253,7 @@ public class CommentInfo implements ReactionsInfo {
         this.bodyFormat = bodyFormat;
     }
 
+    @Override
     public MediaAttachment[] getMedia() {
         return media;
     }

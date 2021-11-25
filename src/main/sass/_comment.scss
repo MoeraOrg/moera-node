@@ -82,7 +82,7 @@
             }
         }
 
-        IMG {
+        IMG:not(.emoji) {
             width: auto;
             height: auto;
         }

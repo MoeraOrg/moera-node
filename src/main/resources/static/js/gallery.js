@@ -12,15 +12,18 @@ function galleryInit() {
     document.body.addEventListener("lgAfterClose", galleryAfterClose);
     $(".entry-image").click(galleryClick);
 
-    if (window.galleryEntryId != null && window.galleryMediaId != null) {
-        galleryOpen(window.galleryEntryId, window.galleryMediaId);
+    if (window.galleryPostingId != null && window.galleryMediaId != null) {
+        galleryOpen(window.galleryPostingId, window.galleryCommentId, window.galleryMediaId);
     }
 }
 
 function galleryBeforeSlide(event) {
     const slide = window.gallerySlides[event.detail.index];
     window.galleryMediaId = slide["id"];
-    window.history.replaceState(null, "", "/post/" + window.galleryEntryId + "?media=" + window.galleryMediaId);
+    const url = "/post/" + window.galleryPostingId + "?"
+        + (window.galleryCommentId != null ? "comment=" + window.galleryCommentId + "&" : "")
+        + "media=" + window.galleryMediaId;
+    window.history.replaceState(null, "", url);
 }
 
 function galleryAfterClose(event) {
@@ -38,9 +41,10 @@ function galleryGetSlide(list, id) {
     return 0;
 }
 
-function galleryOpen(entryId, mediaId) {
-    window.galleryEntryId = entryId;
-    const list = window.galleries[entryId];
+function galleryOpen(postingId, commentId, mediaId) {
+    window.galleryPostingId = postingId;
+    window.galleryCommentId = commentId;
+    const list = window.galleries[commentId ?? postingId];
     window.gallerySlides = list;
     if (list != null) {
         window.gallery.refresh(list);
@@ -49,10 +53,12 @@ function galleryOpen(entryId, mediaId) {
 }
 
 function galleryClick(event) {
-    const entryId = $(event.currentTarget).parents(".entry").attr("data-id");
-    if (entryId != null) {
+    const entry = $(event.currentTarget).parents(".entry");
+    const postingId = entry.attr("data-post-id");
+    const commentId = entry.attr("data-comment-id");
+    if (postingId != null) {
         const id = event.currentTarget.getAttribute("data-id");
-        galleryOpen(entryId, id);
+        galleryOpen(postingId, commentId, id);
     }
     event.preventDefault();
 }

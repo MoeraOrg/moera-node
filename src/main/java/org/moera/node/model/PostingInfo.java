@@ -24,7 +24,7 @@ import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PostingInfo implements ReactionsInfo {
+public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     private String id;
     private String revisionId;
@@ -180,6 +180,7 @@ public class PostingInfo implements ReactionsInfo {
         return info;
     }
 
+    @Override
     public String getId() {
         return id;
     }
@@ -337,6 +338,7 @@ public class PostingInfo implements ReactionsInfo {
         this.bodyFormat = bodyFormat;
     }
 
+    @Override
     public MediaAttachment[] getMedia() {
         return media;
     }

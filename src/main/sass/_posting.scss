@@ -25,7 +25,7 @@
         overflow-wrap: break-word;
         text-align: start;
 
-        IMG {
+        IMG:not(.emoji) {
             width: auto;
             height: auto;
         }

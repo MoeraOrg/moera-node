@@ -125,7 +125,8 @@ public class TimelineUiController {
         model.addAttribute("posting", PostingInfo.forUi(posting, stories));
         model.addAttribute("canonicalUrl", canonicalUrl);
         model.addAttribute("openComments", commentId != null || before != null);
-        model.addAttribute("openMediaEntryId", (commentId != null ? commentId : id).toString());
+        model.addAttribute("openMediaPostingId", id.toString());
+        model.addAttribute("openMediaCommentId", commentId != null ? commentId.toString() : null);
         model.addAttribute("openMediaId", Objects.toString(mediaId, null));
 
         if (posting.isOriginal()) {

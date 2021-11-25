@@ -25,9 +25,9 @@
        href="/timeline?before={{posting.timelineMoment}}">&larr; Timeline</a>
 {{/if}}
 
-{{galleries posting canonicalUrl openMediaEntryId openMediaId}}
+{{postingGalleries posting comments canonicalUrl openMediaPostingId openMediaCommentId openMediaId}}
 
-<div class="posting entry" data-id="{{posting.id}}">
+<div class="posting entry" data-post-id="{{posting.id}}">
     {{#if posting.timelinePinned}}
         <div class="pin-line">
             <span class="badge bg-secondary">
@@ -63,7 +63,7 @@
         <div class="subject">{{posting.body.subject}}</div>
     {{/if}}
     <div class="content">{{{posting.saneBody}}}</div>
-    {{postingGallery posting.id posting.media}}
+    {{entryGallery posting.id null posting.media}}
     <div class="reactions-line">
         {{reactions posting}}
         {{#if posting.totalComments}}
@@ -106,7 +106,8 @@
                 {{else}}
                     {{#assign "tsClass"}}{{/assign}}
                 {{/ifeq}}
-                <div class="comment entry {{focusedClass}} {{tsClass}}">
+                <div class="comment entry {{focusedClass}} {{tsClass}}" data-post-id="{{posting.id}}"
+                     data-comment-id="{{id}}">
                     {{avatar posting.ownerAvatar 36 nodeName=ownerName}}
                     <div class="details">
                         <div class="owner-line">
@@ -131,6 +132,7 @@
                             {{/if}}
                             {{{saneBody}}}
                         </div>
+                        {{entryGallery posting.id id media}}
                         <div class="reactions-line">
                             {{reactions this}}
                         </div>

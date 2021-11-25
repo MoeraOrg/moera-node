@@ -9,11 +9,11 @@
     <div class="no-postings">Nothing yet.</div>
 {{/unless}}
 
-{{galleries stories canonicalUrl null null}}
+{{feedGalleries stories canonicalUrl}}
 
 {{#each stories}}
     <a name="m{{moment}}"></a>
-    <div class="posting entry preview" data-id="{{posting.id}}">
+    <div class="posting entry preview" data-post-id="{{posting.id}}">
         {{#if pinned}}
             <div class="pin-line">
                 <span class="badge bg-secondary">
@@ -58,7 +58,7 @@
         {{else}}
             <div class="content">{{{posting.saneBodyPreview}}}</div>
         {{/if}}
-        {{postingGallery posting.id posting.media}}
+        {{entryGallery posting.id null posting.media}}
         <div class="reactions-line">
             {{reactions posting}}
             {{#if posting.totalComments}}
