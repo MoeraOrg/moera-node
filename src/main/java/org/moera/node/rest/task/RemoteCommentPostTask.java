@@ -1,8 +1,12 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
@@ -18,6 +22,7 @@ import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
+import org.moera.node.model.MediaWithDigest;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.model.event.RemoteCommentAddedEvent;
@@ -25,6 +30,7 @@ import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.moera.node.text.TextConverter;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,17 +131,34 @@ public class RemoteCommentPostTask extends Task {
 
     private CommentText buildComment(PostingInfo postingInfo, byte[] repliedToDigest) {
         CommentText commentText = new CommentText(nodeName(), fullName(), sourceText, textConverter);
+        Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         CommentFingerprint fingerprint = new CommentFingerprint(
                 commentText,
                 Fingerprints.posting(postingInfo.getSignatureVersion()).create(
                         postingInfo,
                         pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf)),
                 repliedToDigest,
-                id -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName),
-                        id.toString(), null));
+                id -> commentMediaDigest(id, mediaDigests));
         commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         commentText.setSignatureVersion(CommentFingerprint.VERSION);
         return commentText;
+    }
+
+    private Map<UUID, byte[]> buildMediaDigestsMap() {
+        if (sourceText.getMedia() == null) {
+            return Collections.emptyMap();
+        }
+
+        return Arrays.stream(sourceText.getMedia())
+                .collect(Collectors.toMap(MediaWithDigest::getId, md -> Util.base64decode(md.getDigest())));
+    }
+
+    private byte[] commentMediaDigest(UUID id, Map<UUID, byte[]> mediaDigests) {
+        if (mediaDigests.containsKey(id)) {
+            return mediaDigests.get(id);
+        }
+        return mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), id.toString(),
+                null);
     }
 
     private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) {

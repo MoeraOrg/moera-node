@@ -23,7 +23,8 @@ public class CommentSourceText {
 
     private SourceFormat bodySrcFormat;
 
-    private UUID[] media;
+    @Valid
+    private MediaWithDigest[] media;
 
     @Valid
     private AcceptedReactions acceptedReactions;
@@ -65,11 +66,11 @@ public class CommentSourceText {
         this.bodySrcFormat = bodySrcFormat;
     }
 
-    public UUID[] getMedia() {
+    public MediaWithDigest[] getMedia() {
         return media;
     }
 
-    public void setMedia(UUID[] media) {
+    public void setMedia(MediaWithDigest[] media) {
         this.media = media;
     }
 

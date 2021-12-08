@@ -68,7 +68,9 @@ public class CommentText {
         ownerAvatar = sourceText.getOwnerAvatar();
         bodySrc = sourceText.getBodySrc();
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
-        media = sourceText.getMedia();
+        media = sourceText.getMedia() != null
+                ? Arrays.stream(sourceText.getMedia()).map(MediaWithDigest::getId).toArray(UUID[]::new)
+                : null;
         createdAt = Util.toEpochSecond(Util.now());
         acceptedReactions = sourceText.getAcceptedReactions();
         repliedToId = sourceText.getRepliedToId();

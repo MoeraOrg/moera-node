@@ -237,9 +237,9 @@ public class CommentController {
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
+        boolean isAdmin = requestContext.isAdmin() || comment.getOwnerName().equals(requestContext.nodeName());
         List<MediaFileOwner> media = mediaOperations.validateAttachments(commentText.getMedia(),
-                () -> new ValidationFailure("commentText.media.not-found"),
-                requestContext.isAdmin(), comment.getOwnerName());
+                () -> new ValidationFailure("commentText.media.not-found"), isAdmin, comment.getOwnerName());
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentText.toEntry(comment);
