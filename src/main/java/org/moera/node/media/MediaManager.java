@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 
 import org.moera.node.api.NodeApi;
 import org.moera.node.api.NodeApiException;
@@ -27,11 +28,13 @@ import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -321,6 +324,12 @@ public class MediaManager {
         } catch (Throwable e) {
             log.error("Unexpected error occured while creating RemoteMediaCache: {}", e.getMessage());
         }
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @Transactional
+    public void purgeExpiredRemoteMedia() {
+        remoteMediaCacheRepository.deleteExpired(Util.now());
     }
 
 }
