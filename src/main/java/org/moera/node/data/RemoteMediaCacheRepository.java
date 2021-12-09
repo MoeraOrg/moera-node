@@ -10,4 +10,5 @@ public interface RemoteMediaCacheRepository extends JpaRepository<RemoteMediaCac
 
     @Query("select rmc from RemoteMediaCache rmc where rmc.remoteNodeName = ?1 and rmc.remoteMediaId = ?2")
     Optional<RemoteMediaCache> findByMedia(String remoteNodeName, String remoteMediaId);
+
 }

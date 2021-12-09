@@ -132,6 +132,7 @@ public class RemoteCommentPostTask extends Task {
     private CommentText buildComment(PostingInfo postingInfo, byte[] repliedToDigest) {
         CommentText commentText = new CommentText(nodeName(), fullName(), sourceText, textConverter);
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
+        cacheMediaDigests(mediaDigests);
         CommentFingerprint fingerprint = new CommentFingerprint(
                 commentText,
                 Fingerprints.posting(postingInfo.getSignatureVersion()).create(
@@ -150,7 +151,13 @@ public class RemoteCommentPostTask extends Task {
         }
 
         return Arrays.stream(sourceText.getMedia())
+                .filter(md -> md.getDigest() != null)
                 .collect(Collectors.toMap(MediaWithDigest::getId, md -> Util.base64decode(md.getDigest())));
+    }
+
+    private void cacheMediaDigests(Map<UUID, byte[]> mediaDigests) {
+        mediaDigests.forEach((id, digest) ->
+                mediaManager.cacheRemoteMediaIfNeeded(targetNodeName, id.toString(), digest));
     }
 
     private byte[] commentMediaDigest(UUID id, Map<UUID, byte[]> mediaDigests) {

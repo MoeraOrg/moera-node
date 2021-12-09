@@ -296,6 +296,13 @@ public class MediaManager {
         }
     }
 
+    public void cacheRemoteMediaIfNeeded(String remoteNodeName, String remoteMediaId, byte[] digest) {
+        RemoteMediaCache cache = remoteMediaCacheRepository.findByMedia(remoteNodeName, remoteMediaId).orElse(null);
+        if (cache == null) {
+            cacheRemoteMedia(remoteNodeName, remoteMediaId, digest, null);
+        }
+    }
+
     private void cacheRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest, MediaFile mediaFile) {
         try {
             Transaction.execute(txManager, () -> {
