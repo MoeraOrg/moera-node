@@ -232,7 +232,7 @@ public class MediaManager {
                 }
                 MediaFile mediaFile = mediaOperations.putInPlace(
                         mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null);
-                cacheRemoteMedia(nodeName, id, mediaFile.getDigest(), mediaFile);
+                cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
                 // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use
                 // our MediaFileOwner, if exists
                 mediaFileOwner = mediaFileOwnerRepository
@@ -269,7 +269,9 @@ public class MediaManager {
     }
 
     public byte[] getPrivateMediaDigest(String nodeName, String carte, String id, String hash) {
-        RemoteMediaCache cache = remoteMediaCacheRepository.findByMedia(nodeName, id).orElse(null);
+        RemoteMediaCache cache = remoteMediaCacheRepository
+                .findByMedia(universalContext.nodeId(), nodeName, id)
+                .orElse(null);
         if (cache != null) {
             return cache.getDigest();
         }
@@ -277,7 +279,7 @@ public class MediaManager {
         if (hash != null) {
             MediaFile mediaFile = mediaFileRepository.findById(hash).orElse(null);
             if (mediaFile != null) {
-                cacheRemoteMedia(nodeName, id, mediaFile.getDigest(), mediaFile);
+                cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
                 return mediaFile.getDigest();
             }
         }
@@ -286,7 +288,7 @@ public class MediaManager {
         try {
             var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, id, tmp,
                     universalContext.getOptions().getInt("media.verification.max-size"));
-            cacheRemoteMedia(nodeName, id, tmpMedia.getDigest(), null);
+            cacheRemoteMedia(null, nodeName, id, tmpMedia.getDigest(), null);
             return tmpMedia.getDigest();
         } catch (NodeApiException e) {
             return null; // TODO need more graceful approach
@@ -299,18 +301,22 @@ public class MediaManager {
         }
     }
 
-    public void cacheRemoteMediaIfNeeded(String remoteNodeName, String remoteMediaId, byte[] digest) {
-        RemoteMediaCache cache = remoteMediaCacheRepository.findByMedia(remoteNodeName, remoteMediaId).orElse(null);
+    public void cacheUploadedRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest) {
+        RemoteMediaCache cache = remoteMediaCacheRepository
+                .findByMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId)
+                .orElse(null);
         if (cache == null) {
-            cacheRemoteMedia(remoteNodeName, remoteMediaId, digest, null);
+            cacheRemoteMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId, digest, null);
         }
     }
 
-    private void cacheRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest, MediaFile mediaFile) {
+    private void cacheRemoteMedia(UUID nodeId, String remoteNodeName, String remoteMediaId, byte[] digest,
+                                  MediaFile mediaFile) {
         try {
             Transaction.execute(txManager, () -> {
                 RemoteMediaCache cache = new RemoteMediaCache();
                 cache.setId(UUID.randomUUID());
+                cache.setNodeId(nodeId);
                 cache.setRemoteNodeName(remoteNodeName);
                 cache.setRemoteMediaId(remoteMediaId);
                 cache.setDigest(digest);

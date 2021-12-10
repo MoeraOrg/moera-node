@@ -15,6 +15,8 @@ public class RemoteMediaCache {
     @Id
     private UUID id;
 
+    private UUID nodeId;
+
     @NotNull
     private String remoteNodeName;
 
@@ -36,6 +38,14 @@ public class RemoteMediaCache {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(UUID nodeId) {
+        this.nodeId = nodeId;
     }
 
     public String getRemoteNodeName() {

@@ -157,7 +157,7 @@ public class RemoteCommentPostTask extends Task {
 
     private void cacheMediaDigests(Map<UUID, byte[]> mediaDigests) {
         mediaDigests.forEach((id, digest) ->
-                mediaManager.cacheRemoteMediaIfNeeded(targetNodeName, id.toString(), digest));
+                mediaManager.cacheUploadedRemoteMedia(targetNodeName, id.toString(), digest));
     }
 
     private byte[] commentMediaDigest(UUID id, Map<UUID, byte[]> mediaDigests) {

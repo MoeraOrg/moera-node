@@ -10,8 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface RemoteMediaCacheRepository extends JpaRepository<RemoteMediaCache, UUID> {
 
-    @Query("select rmc from RemoteMediaCache rmc where rmc.remoteNodeName = ?1 and rmc.remoteMediaId = ?2")
-    Optional<RemoteMediaCache> findByMedia(String remoteNodeName, String remoteMediaId);
+    @Query("select rmc from RemoteMediaCache rmc"
+            + " where (rmc.nodeId = ?1 or rmc.nodeId is null) and rmc.remoteNodeName = ?2 and rmc.remoteMediaId = ?3")
+    Optional<RemoteMediaCache> findByMedia(UUID nodeId, String remoteNodeName, String remoteMediaId);
 
     @Query("delete from RemoteMediaCache rmc where rmc.deadline < ?1")
     @Modifying
