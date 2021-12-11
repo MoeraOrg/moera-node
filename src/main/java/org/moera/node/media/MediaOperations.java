@@ -346,10 +346,14 @@ public class MediaOperations {
     }
 
     public List<MediaFileOwner> validateAttachments(UUID[] ids, Supplier<RuntimeException> notFound,
+                                                    Supplier<RuntimeException> notCompressed,
                                                     boolean isAdmin, String clientName) {
         if (ObjectUtils.isEmpty(ids)) {
             return Collections.emptyList();
         }
+
+        Long recommendedSize = universalContext.getOptions().getLong("posting.image.recommended-size");
+        Integer recommendedPixels = universalContext.getOptions().getInt("posting.image.recommended-pixels");
 
         List<MediaFileOwner> attached = new ArrayList<>();
         Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
@@ -363,6 +367,15 @@ public class MediaOperations {
                     || mediaFileOwner.getOwnerName() != null
                         && !mediaFileOwner.getOwnerName().equals(clientName)) {
                 throw notFound.get();
+            }
+            if (notCompressed != null && !isAdmin) {
+                if (recommendedSize != null && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
+                    throw notCompressed.get();
+                }
+                if (recommendedPixels != null && (mediaFileOwner.getMediaFile().getSizeX() > recommendedPixels
+                        || mediaFileOwner.getMediaFile().getSizeY() > recommendedPixels)) {
+                    throw notCompressed.get();
+                }
             }
             attached.add(mediaFileOwner);
         }

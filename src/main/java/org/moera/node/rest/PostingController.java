@@ -139,9 +139,12 @@ public class PostingController {
         if (postingText.getBodySrc().length() > getMaxPostingSize()) {
             throw new ValidationFailure("postingText.bodySrc.wrong-size");
         }
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(postingText.getMedia(),
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+                postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
-                requestContext.isAdmin(), requestContext.getClientName());
+                () -> new ValidationFailure("postingText.media.not-compressed"),
+                requestContext.isAdmin(),
+                requestContext.getClientName());
 
         Posting posting = postingOperations.newPosting(postingText);
         try {
@@ -185,9 +188,12 @@ public class PostingController {
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(postingText.getMedia(),
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+                postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
-                requestContext.isAdmin(), requestContext.getClientName());
+                () -> new ValidationFailure("postingText.media.not-compressed"),
+                requestContext.isAdmin(),
+                requestContext.getClientName());
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));

@@ -245,7 +245,7 @@ public class DraftController {
 
         return mediaOperations.validateAttachments(draftText.getMedia(),
                 () -> new ValidationFailure("draftText.media.not-found"),
-                requestContext.isAdmin(), requestContext.getClientName());
+                null, requestContext.isAdmin(), requestContext.getClientName());
     }
 
     private void updateAttachments(Draft draft, List<MediaFileOwner> media) {

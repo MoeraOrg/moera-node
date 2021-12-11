@@ -176,9 +176,12 @@ public class CommentController {
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(commentText.getMedia(),
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+                commentText.getMedia(),
                 () -> new ValidationFailure("commentText.media.not-found"),
-                requestContext.isAdmin(), commentText.getOwnerName());
+                () -> new ValidationFailure("commentText.media.not-compressed"),
+                requestContext.isAdmin(),
+                commentText.getOwnerName());
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
@@ -238,8 +241,12 @@ public class CommentController {
                 commentText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
         boolean isAdmin = requestContext.isAdmin() || comment.getOwnerName().equals(requestContext.nodeName());
-        List<MediaFileOwner> media = mediaOperations.validateAttachments(commentText.getMedia(),
-                () -> new ValidationFailure("commentText.media.not-found"), isAdmin, comment.getOwnerName());
+        List<MediaFileOwner> media = mediaOperations.validateAttachments(
+                commentText.getMedia(),
+                () -> new ValidationFailure("commentText.media.not-found"),
+                () -> new ValidationFailure("commentText.media.not-compressed"),
+                isAdmin,
+                comment.getOwnerName());
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentText.toEntry(comment);
