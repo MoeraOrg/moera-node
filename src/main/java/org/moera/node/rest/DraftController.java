@@ -134,12 +134,12 @@ public class DraftController {
 
             case NEW_COMMENT:
                 drafts = draftRepository.findAllNewComment(
-                        requestContext.nodeId(), requestContext.nodeName(), postingId, pageable);
+                        requestContext.nodeId(), nodeName, postingId, pageable);
                 break;
 
             case COMMENT_UPDATE: {
                 drafts = draftRepository.findCommentUpdate(
-                        requestContext.nodeId(), requestContext.nodeName(), postingId, commentId, pageable);
+                        requestContext.nodeId(), nodeName, postingId, commentId, pageable);
                 break;
             }
 
