@@ -7,13 +7,19 @@ import org.moera.node.data.EntryAttachment;
 public class MediaAttachment {
 
     private PrivateMediaFileInfo media;
+    private RemoteMediaInfo remoteMedia;
     private boolean embedded;
 
     public MediaAttachment() {
     }
 
     public MediaAttachment(EntryAttachment attachment) {
-        media = new PrivateMediaFileInfo(attachment.getMediaFileOwner());
+        if (attachment.getMediaFileOwner() != null) {
+            media = new PrivateMediaFileInfo(attachment.getMediaFileOwner());
+        }
+        if (attachment.getRemoteMediaId() != null) {
+            remoteMedia = new RemoteMediaInfo(attachment);
+        }
         embedded = attachment.isEmbedded();
     }
 
@@ -23,6 +29,14 @@ public class MediaAttachment {
 
     public void setMedia(PrivateMediaFileInfo media) {
         this.media = media;
+    }
+
+    public RemoteMediaInfo getRemoteMedia() {
+        return remoteMedia;
+    }
+
+    public void setRemoteMedia(RemoteMediaInfo remoteMedia) {
+        this.remoteMedia = remoteMedia;
     }
 
     public boolean isEmbedded() {

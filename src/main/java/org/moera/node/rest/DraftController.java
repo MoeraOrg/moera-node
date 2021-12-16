@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.moera.node.model.BodyMappingException;
 import org.moera.node.model.DraftInfo;
 import org.moera.node.model.DraftText;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.RemoteMedia;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.DraftAddedEvent;
@@ -196,7 +198,7 @@ public class DraftController {
         }
         updateDeadline(draft);
         draft = draftRepository.save(draft);
-        updateAttachments(draft, media);
+        updateAttachments(draft, media, draftText.getMedia());
 
         requestContext.send(new DraftAddedEvent(draft));
 
@@ -223,7 +225,7 @@ public class DraftController {
             throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
         }
         updateDeadline(draft);
-        updateAttachments(draft, media);
+        updateAttachments(draft, media, draftText.getMedia());
 
         requestContext.send(new DraftUpdatedEvent(draft));
 
@@ -243,12 +245,26 @@ public class DraftController {
             draftText.setOwnerAvatarMediaFile(mediaFile);
         }
 
-        return mediaOperations.validateAttachments(draftText.getMedia(),
-                () -> new ValidationFailure("draftText.media.not-found"),
-                null, requestContext.isAdmin(), requestContext.getClientName());
+        if (draftText.getReceiverName().equals(requestContext.nodeName())) {
+            UUID[] ids;
+            try {
+                ids = Arrays.stream(draftText.getMedia())
+                        .map(RemoteMedia::getId)
+                        .map(UUID::fromString)
+                        .toArray(UUID[]::new);
+            } catch (IllegalArgumentException e) {
+                throw new ValidationFailure("draftText.media.not-found");
+            }
+
+            return mediaOperations.validateAttachments(ids,
+                    () -> new ValidationFailure("draftText.media.not-found"),
+                    null, requestContext.isAdmin(), requestContext.getClientName());
+        } else {
+            return Collections.emptyList();
+        }
     }
 
-    private void updateAttachments(Draft draft, List<MediaFileOwner> media) {
+    private void updateAttachments(Draft draft, List<MediaFileOwner> media, RemoteMedia[] remoteMedia) {
         Set<EntryAttachment> attachments = new HashSet<>(draft.getAttachments());
         for (EntryAttachment ea : attachments) {
             draft.removeAttachment(ea);
@@ -261,6 +277,12 @@ public class DraftController {
         for (MediaFileOwner mfo : media) {
             EntryAttachment attachment = new EntryAttachment(draft, mfo, ordinal++);
             attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
+            attachment = entryAttachmentRepository.save(attachment);
+            draft.addAttachment(attachment);
+        }
+        for (RemoteMedia md : remoteMedia) {
+            EntryAttachment attachment = new EntryAttachment(draft, md, ordinal++);
+            attachment.setEmbedded(embedded.contains(md.getHash()));
             attachment = entryAttachmentRepository.save(attachment);
             draft.addAttachment(attachment);
         }

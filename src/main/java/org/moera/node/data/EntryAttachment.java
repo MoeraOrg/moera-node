@@ -6,6 +6,10 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.moera.node.model.RemoteMedia;
+import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "entry_attachments")
@@ -21,8 +25,15 @@ public class EntryAttachment {
     private Draft draft;
 
     @ManyToOne
-    @NotNull
     private MediaFileOwner mediaFileOwner;
+
+    @Size(max = 40)
+    private String remoteMediaId;
+
+    @Size(max = 40)
+    private String remoteMediaHash;
+
+    private byte[] remoteMediaDigest;
 
     @NotNull
     private int ordinal;
@@ -44,6 +55,15 @@ public class EntryAttachment {
         this.id = UUID.randomUUID();
         this.draft = draft;
         this.mediaFileOwner = mediaFileOwner;
+        this.ordinal = ordinal;
+    }
+
+    public EntryAttachment(Draft draft, RemoteMedia remoteMedia, int ordinal) {
+        this.id = UUID.randomUUID();
+        this.draft = draft;
+        this.remoteMediaId = remoteMedia.getId();
+        this.remoteMediaHash = remoteMedia.getHash();
+        this.remoteMediaDigest = Util.base64decode(remoteMedia.getDigest());
         this.ordinal = ordinal;
     }
 
@@ -77,6 +97,30 @@ public class EntryAttachment {
 
     public void setMediaFileOwner(MediaFileOwner mediaFileOwner) {
         this.mediaFileOwner = mediaFileOwner;
+    }
+
+    public String getRemoteMediaId() {
+        return remoteMediaId;
+    }
+
+    public void setRemoteMediaId(String remoteMediaId) {
+        this.remoteMediaId = remoteMediaId;
+    }
+
+    public String getRemoteMediaHash() {
+        return remoteMediaHash;
+    }
+
+    public void setRemoteMediaHash(String remoteMediaHash) {
+        this.remoteMediaHash = remoteMediaHash;
+    }
+
+    public byte[] getRemoteMediaDigest() {
+        return remoteMediaDigest;
+    }
+
+    public void setRemoteMediaDigest(byte[] remoteMediaDigest) {
+        this.remoteMediaDigest = remoteMediaDigest;
     }
 
     public int getOrdinal() {

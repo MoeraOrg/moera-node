@@ -165,19 +165,19 @@ public class Util {
     }
 
     public static String base64encode(byte[] bytes) {
-        return Base64.getEncoder().encodeToString(bytes);
+        return bytes != null ? Base64.getEncoder().encodeToString(bytes) : null;
     }
 
     public static byte[] base64decode(String s) {
-        return Base64.getDecoder().decode(s);
+        return s != null ? Base64.getDecoder().decode(s) : null;
     }
 
     public static String base64urlencode(byte[] bytes) {
-        return Base64.getUrlEncoder().encodeToString(bytes);
+        return bytes != null ? Base64.getUrlEncoder().encodeToString(bytes) : null;
     }
 
     public static byte[] base64urldecode(String s) {
-        return Base64.getUrlDecoder().decode(s);
+        return s != null ? Base64.getUrlDecoder().decode(s) : null;
     }
 
     public static long currentMoment() {

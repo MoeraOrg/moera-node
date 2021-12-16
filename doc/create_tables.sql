@@ -490,10 +490,13 @@ ALTER TABLE public.entries OWNER TO moera;
 CREATE TABLE public.entry_attachments (
     id uuid NOT NULL,
     entry_revision_id uuid,
-    media_file_owner_id uuid NOT NULL,
+    media_file_owner_id uuid,
     ordinal integer NOT NULL,
     draft_id uuid,
-    embedded boolean DEFAULT true NOT NULL
+    embedded boolean DEFAULT true NOT NULL,
+    remote_media_id character varying(40),
+    remote_media_hash character varying(40),
+    remote_media_digest bytea
 );
 
 
@@ -834,6 +837,23 @@ CREATE TABLE public.reactions (
 
 
 ALTER TABLE public.reactions OWNER TO moera;
+
+--
+-- Name: remote_media_cache; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.remote_media_cache (
+    id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_media_id character varying(40) NOT NULL,
+    digest bytea NOT NULL,
+    media_file_id character varying(40),
+    deadline timestamp without time zone NOT NULL,
+    node_id uuid
+);
+
+
+ALTER TABLE public.remote_media_cache OWNER TO moera;
 
 --
 -- Name: remote_verifications; Type: TABLE; Schema: public; Owner: moera
@@ -1179,6 +1199,14 @@ ALTER TABLE ONLY public.reaction_totals
 
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT reactions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: remote_media_cache remote_media_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.remote_media_cache
+    ADD CONSTRAINT remote_media_cache_pkey PRIMARY KEY (id);
 
 
 --
@@ -1713,6 +1741,27 @@ CREATE INDEX reactions_owner_avatar_media_file_id_idx ON public.reactions USING 
 
 
 --
+-- Name: remote_media_cache_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX remote_media_cache_deadline_idx ON public.remote_media_cache USING btree (deadline);
+
+
+--
+-- Name: remote_media_cache_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX remote_media_cache_media_file_id_idx ON public.remote_media_cache USING btree (media_file_id);
+
+
+--
+-- Name: remote_media_cache_node_id_remote_node_name_remote_media_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX remote_media_cache_node_id_remote_node_name_remote_media_id_idx ON public.remote_media_cache USING btree (node_id, remote_node_name, remote_media_id);
+
+
+--
 -- Name: remote_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2223,6 +2272,14 @@ ALTER TABLE ONLY public.reactions
 
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT reactions_owner_avatar_media_file_id_fkey FOREIGN KEY (owner_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: remote_media_cache remote_media_cache_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.remote_media_cache
+    ADD CONSTRAINT remote_media_cache_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
