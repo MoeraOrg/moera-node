@@ -160,6 +160,14 @@ public class GalleriesHelperSource {
         return image.getWidth() <= maxWidth ? image.getHeight() : image.getHeight() * maxWidth / image.getWidth();
     }
 
+    private String majorOrientation(List<PrivateMediaFileInfo> images) {
+        int balance = 0;
+        for (int i = 0; i < 6 && i < images.size(); i++) {
+            balance += images.get(i).getHeight() < images.get(i).getWidth() ? 1 : -1;
+        }
+        return balance >= 0 ? "vertical" : "horizontal";
+    }
+
     public CharSequence entryGallery(String postingId, String commentId, MediaAttachment[] media) {
         if (ObjectUtils.isEmpty(media)) {
             return null;
@@ -173,46 +181,82 @@ public class GalleriesHelperSource {
             return null;
         }
 
-        String orientation = images.get(0).getHeight() < images.get(0).getWidth() ? "vertical" : "horizontal";
+        String orientation = majorOrientation(images);
 
         StringBuilder buf = new StringBuilder();
 
-        if (images.size() == 1) {
-            buf.append("<div");
-            HelperUtil.appendAttr(buf, "class", String.format("gallery single %s", orientation));
-            HelperUtil.appendAttr(buf, "style",
-                    String.format("--image-height: %dpx", singleImageHeight(images.get(0))));
-            buf.append('>');
-            buf.append(entryImage(postingId, commentId, images.get(0)));
-            buf.append("</div>");
-        } else if (images.size() == 2) {
-            buf.append(String.format("<div class=\"gallery %s\">", orientation));
-            buf.append(entryImage(postingId, commentId, images.get(0), "row"));
-            buf.append(entryImage(postingId, commentId, images.get(1), "row"));
-            buf.append("</div>");
-        } else {
-            int base = images.size() > 6 ? 0 : images.size() % 2;
+        switch (images.size()) {
+            case 1:
+                buf.append("<div");
+                HelperUtil.appendAttr(buf, "class", String.format("gallery single %s", orientation));
+                HelperUtil.appendAttr(buf, "style",
+                        String.format("--image-height: %dpx", singleImageHeight(images.get(0))));
+                buf.append('>');
+                buf.append(entryImage(postingId, commentId, images.get(0)));
+                buf.append("</div>");
+                break;
 
-            buf.append(String.format("<div class=\"gallery %s\">", orientation));
-            buf.append("<div class=\"gallery-row\">");
-            buf.append(entryImage(postingId, commentId, images.get(0), base == 0 ? "row" : null));
-            if (base == 0) {
+            case 2:
+                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append(entryImage(postingId, commentId, images.get(0), "row"));
                 buf.append(entryImage(postingId, commentId, images.get(1), "row"));
-            }
-            buf.append("</div>");
-            if (images.size() > 2) {
-                buf.append("<div class=\"gallery-row\">");
-                buf.append(entryImage(postingId, commentId, images.get(2 - base), "row"));
-                buf.append(entryImage(postingId, commentId, images.get(3 - base), "row"));
                 buf.append("</div>");
-            }
-            if (images.size() > 4) {
+                break;
+
+            case 3:
+                buf.append(String.format("<div class=\"gallery %s\">", orientation));
                 buf.append("<div class=\"gallery-row\">");
-                buf.append(entryImage(postingId, commentId, images.get(4 - base), "row"));
-                buf.append(entryImage(postingId, commentId, images.get(5 - base), "row", images.size() - 6));
+                buf.append(entryImage(postingId, commentId, images.get(0), null));
                 buf.append("</div>");
-            }
-            buf.append("</div>");
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(1), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(2), "row"));
+                buf.append("</div>");
+                buf.append("</div>");
+                break;
+
+            case 4:
+                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(0), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(1), "row"));
+                buf.append("</div>");
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(2), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(3), "row"));
+                buf.append("</div>");
+                buf.append("</div>");
+                break;
+
+            case 5:
+                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(0), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(1), "row"));
+                buf.append("</div>");
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(2), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(3), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(4), "row"));
+                buf.append("</div>");
+                buf.append("</div>");
+                break;
+
+            default:
+                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(0), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(1), "row"));
+                buf.append("</div>");
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(2), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(3), "row"));
+                buf.append("</div>");
+                buf.append("<div class=\"gallery-row\">");
+                buf.append(entryImage(postingId, commentId, images.get(4), "row"));
+                buf.append(entryImage(postingId, commentId, images.get(5), "row", images.size() - 6));
+                buf.append("</div>");
+                buf.append("</div>");
         }
 
         return new SafeString(buf);
