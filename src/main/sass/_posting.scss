@@ -36,9 +36,10 @@
         }
 
         FIGCAPTION {
-            font-size: smaller;
             line-height: 1.2;
             margin-top: .3em;
+            color: var(--bs-gray);
+            margin-left: .75em;
         }
     }
 
