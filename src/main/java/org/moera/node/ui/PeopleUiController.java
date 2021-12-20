@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
@@ -41,6 +42,7 @@ public class PeopleUiController {
 
     @GetMapping("/people/subscribers")
     @VirtualPage
+    @Transactional
     public String subscribers(Model model) {
         int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
@@ -66,6 +68,7 @@ public class PeopleUiController {
 
     @GetMapping("/people/subscriptions")
     @VirtualPage
+    @Transactional
     public String subscriptions(Model model) {
         int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);

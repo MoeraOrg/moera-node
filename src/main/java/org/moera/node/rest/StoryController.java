@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
@@ -37,7 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class StoryController {
 
-    private static Logger log = LoggerFactory.getLogger(StoryController.class);
+    private static final Logger log = LoggerFactory.getLogger(StoryController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -55,6 +56,7 @@ public class StoryController {
     private PushService pushService;
 
     @GetMapping("/{id}")
+    @Transactional
     public StoryInfo get(@PathVariable UUID id) {
         log.info("GET /stories/{id}, (id = {})", LogUtil.format(id));
 
@@ -68,6 +70,7 @@ public class StoryController {
 
     @PutMapping("/{id}")
     @Admin
+    @Transactional
     public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) throws Throwable {
         log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),

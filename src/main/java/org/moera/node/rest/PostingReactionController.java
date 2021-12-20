@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/moera/api/postings/{postingId}/reactions")
 public class PostingReactionController {
 
-    private static Logger log = LoggerFactory.getLogger(PostingReactionController.class);
+    private static final Logger log = LoggerFactory.getLogger(PostingReactionController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -140,6 +140,7 @@ public class PostingReactionController {
 
     @GetMapping
     @NoCache
+    @Transactional
     public ReactionsSliceInfo getAll(
             @PathVariable UUID postingId,
             @RequestParam(defaultValue = "false") boolean negative,
@@ -168,6 +169,7 @@ public class PostingReactionController {
     }
 
     @GetMapping("/{ownerName}")
+    @Transactional
     public ReactionInfo get(@PathVariable UUID postingId, @PathVariable String ownerName) {
         log.info("GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));

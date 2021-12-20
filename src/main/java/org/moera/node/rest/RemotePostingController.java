@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class RemotePostingController {
 
-    private static Logger log = LoggerFactory.getLogger(RemotePostingController.class);
+    private static final Logger log = LoggerFactory.getLogger(RemotePostingController.class);
 
     @Inject
     @Qualifier("remoteTaskExecutor")

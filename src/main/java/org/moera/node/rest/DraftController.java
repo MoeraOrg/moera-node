@@ -90,6 +90,7 @@ public class DraftController {
 
     @GetMapping
     @Admin
+    @Transactional
     public List<DraftInfo> getAll(
             @RequestParam DraftType draftType,
             @RequestParam String nodeName,
@@ -304,6 +305,7 @@ public class DraftController {
 
     @GetMapping("/{id}")
     @Admin
+    @Transactional
     public DraftInfo get(@PathVariable UUID id) {
         log.info("GET /drafts/{id}, (id = {})", LogUtil.format(id));
 

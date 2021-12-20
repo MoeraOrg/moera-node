@@ -56,7 +56,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class SubscriptionController {
 
-    private static Logger log = LoggerFactory.getLogger(SubscriptionController.class);
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -81,6 +81,7 @@ public class SubscriptionController {
     private TaskAutowire taskAutowire;
 
     @GetMapping
+    @Transactional
     public List<SubscriptionInfo> getAll(@RequestParam(required = false) String nodeName,
                                          @RequestParam(required = false) SubscriptionType type) {
         log.info("GET /people/subscriptions (nodeName = {}, type = {})",
@@ -212,6 +213,7 @@ public class SubscriptionController {
 
     @PostMapping("/search")
     @Admin
+    @Transactional
     public List<SubscriptionInfo> search(@Valid @RequestBody SubscriptionFilter filter) {
         log.info("GET /people/subscriptions/search");
 

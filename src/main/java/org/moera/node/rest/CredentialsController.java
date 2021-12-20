@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class CredentialsController {
 
-    private static Logger log = LoggerFactory.getLogger(CredentialsController.class);
+    private static final Logger log = LoggerFactory.getLogger(CredentialsController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -51,6 +51,7 @@ public class CredentialsController {
     private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @GetMapping
+    @Transactional
     public CredentialsCreated get() {
         log.info("GET /credentials");
 
@@ -123,6 +124,7 @@ public class CredentialsController {
     }
 
     @PostMapping("/reset")
+    @Transactional
     public EmailHint reset() {
         log.info("POST /credentials/reset");
 

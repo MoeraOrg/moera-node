@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class CommentReactionController {
 
-    private static Logger log = LoggerFactory.getLogger(CommentReactionController.class);
+    private static final Logger log = LoggerFactory.getLogger(CommentReactionController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -126,6 +126,7 @@ public class CommentReactionController {
     }
 
     @GetMapping
+    @Transactional
     public ReactionsSliceInfo getAll(
             @PathVariable UUID postingId,
             @PathVariable UUID commentId,
@@ -158,6 +159,7 @@ public class CommentReactionController {
     }
 
     @GetMapping("/{ownerName}")
+    @Transactional
     public ReactionInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName) {
         log.info("GET /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
                         + " (postingId = {}, commentId = {}, ownerName = {})",

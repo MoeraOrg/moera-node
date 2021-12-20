@@ -203,6 +203,7 @@ public class MediaController {
     }
 
     @GetMapping("/public/{id}/info")
+    @Transactional
     public PublicMediaFileInfo getInfoPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
 
@@ -210,6 +211,7 @@ public class MediaController {
     }
 
     @GetMapping("/private/{id}/info")
+    @Transactional
     public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
@@ -217,6 +219,7 @@ public class MediaController {
     }
 
     @GetMapping("/public/{id}/data")
+    @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
                                                   @RequestParam(required = false) Integer width) {
@@ -226,6 +229,7 @@ public class MediaController {
     }
 
     @GetMapping("/private/{id}/data")
+    @Transactional
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
                                                    @RequestParam(required = false) Integer width) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));

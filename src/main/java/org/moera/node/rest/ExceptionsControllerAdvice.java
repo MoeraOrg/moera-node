@@ -34,7 +34,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice(annotations = ApiController.class)
 public class ExceptionsControllerAdvice {
 
-    private static Logger log = LoggerFactory.getLogger(ExceptionsControllerAdvice.class);
+    private static final Logger log = LoggerFactory.getLogger(ExceptionsControllerAdvice.class);
 
     @Inject
     private MessageSource messageSource;

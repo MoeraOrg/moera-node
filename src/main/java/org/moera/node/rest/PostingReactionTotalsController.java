@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class PostingReactionTotalsController {
 
-    private static Logger log = LoggerFactory.getLogger(PostingReactionTotalsController.class);
+    private static final Logger log = LoggerFactory.getLogger(PostingReactionTotalsController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -35,6 +36,7 @@ public class PostingReactionTotalsController {
     private ReactionTotalOperations reactionTotalOperations;
 
     @GetMapping
+    @Transactional
     public ReactionTotalsInfo get(@PathVariable UUID postingId) {
         log.info("GET /postings/{postingId}/reaction-totals (postingId = {})", LogUtil.format(postingId));
 

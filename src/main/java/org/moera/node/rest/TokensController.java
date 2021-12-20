@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class TokensController {
 
-    private static Logger log = LoggerFactory.getLogger(TokensController.class);
+    private static final Logger log = LoggerFactory.getLogger(TokensController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -45,6 +45,7 @@ public class TokensController {
     private TokenRepository tokenRepository;
 
     @PostMapping
+    @Transactional
     public ResponseEntity<TokenCreated> post(@Valid @RequestBody Credentials credentials) {
         log.info("POST /tokens (login = '{}')", credentials.getLogin());
 
@@ -71,6 +72,7 @@ public class TokensController {
     }
 
     @GetMapping("/{token}")
+    @Transactional
     public TokenInfo get(@PathVariable String token) {
         log.info("GET /tokens/{}", token);
 

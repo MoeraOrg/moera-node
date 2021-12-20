@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
@@ -49,6 +50,7 @@ public class RegistrarUiController {
     }
 
     @PostMapping(value = "/registrar/register", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @Transactional
     public String register(RegistrarHost registrarHost, RedirectAttributes attributes) {
         if (!config.isRegistrarEnabled()) {
             throw new PageNotFoundException();

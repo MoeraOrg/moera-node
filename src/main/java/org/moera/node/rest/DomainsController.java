@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class DomainsController {
 
-    private static Logger log = LoggerFactory.getLogger(DomainsController.class);
+    private static final Logger log = LoggerFactory.getLogger(DomainsController.class);
 
     @Inject
     private Config config;

@@ -64,6 +64,7 @@ public abstract class PostingRevisionControllerBase {
 
     @GetMapping
     @NoCache
+    @Transactional
     public List<PostingRevisionInfo> getAll(@PathVariable UUID postingId,
                                             @RequestParam(required = false) Integer limit) {
         getLog().info("GET {}/{postingId}/revisions (postingId = {}, limit = {})",
@@ -88,6 +89,7 @@ public abstract class PostingRevisionControllerBase {
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public PostingRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID id) {
         getLog().info("GET {}/{postingId}/revisions/{id} (postingId = {}, id = {})",
                 getDirectory(),

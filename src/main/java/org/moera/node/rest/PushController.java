@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class PushController {
 
-    private static Logger log = LoggerFactory.getLogger(PushController.class);
+    private static final Logger log = LoggerFactory.getLogger(PushController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -129,6 +129,7 @@ public class PushController {
 
     @DeleteMapping("/{clientId}")
     @Admin
+    @Transactional
     public Result delete(@PathVariable String clientId) {
         log.info("DELETE /push/{clientId} (clientId = {})", LogUtil.format(clientId));
 

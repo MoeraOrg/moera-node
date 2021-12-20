@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Comment;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/moera/api/postings/{postingId}/comments/{commentId}/revisions")
 public class CommentRevisionController {
 
-    private static Logger log = LoggerFactory.getLogger(CommentRevisionController.class);
+    private static final Logger log = LoggerFactory.getLogger(CommentRevisionController.class);
 
     @Inject
     protected RequestContext requestContext;
@@ -43,6 +44,7 @@ public class CommentRevisionController {
 
     @GetMapping
     @NoCache
+    @Transactional
     public List<CommentRevisionInfo> getAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
         log.info("GET /postings/{postingId}/comments/{commentId}/revisions (postingId = {}, commentId = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId));
@@ -61,6 +63,7 @@ public class CommentRevisionController {
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public CommentRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable UUID id) {
         log.info("GET /postings/{postingId}/comments/{commentId}/revisions/{id}"
                         + " (postingId = {}, commentId = {}, id = {})",

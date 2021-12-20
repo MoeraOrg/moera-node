@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionRepository;
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class PeopleController {
 
-    private static Logger log = LoggerFactory.getLogger(PeopleController.class);
+    private static final Logger log = LoggerFactory.getLogger(PeopleController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -31,6 +32,7 @@ public class PeopleController {
     private SubscriptionRepository subscriptionRepository;
 
     @GetMapping
+    @Transactional
     public PeopleGeneralInfo get() {
         log.info("GET /people");
 

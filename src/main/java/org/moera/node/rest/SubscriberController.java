@@ -58,7 +58,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class SubscriberController {
 
-    private static Logger log = LoggerFactory.getLogger(SubscriberController.class);
+    private static final Logger log = LoggerFactory.getLogger(SubscriberController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -86,6 +86,7 @@ public class SubscriberController {
     private TaskAutowire taskAutowire;
 
     @GetMapping
+    @Transactional
     public List<SubscriberInfo> getAll(@RequestParam(required = false) String nodeName,
                                        @RequestParam(required = false) SubscriptionType type) {
         log.info("GET /people/subscribers (nodeName = {}, type = {})",
@@ -107,6 +108,7 @@ public class SubscriberController {
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public SubscriberInfo get(@PathVariable UUID id) {
         log.info("GET /people/subscribers/{id} (id = {})", LogUtil.format(id));
 

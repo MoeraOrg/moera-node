@@ -16,7 +16,7 @@ spring:
     validate-on-migrate: false # To be able to adjust DB schema without validation errors
 
   jpa:
-    open-in-view: true
+    open-in-view: false
     show-sql: false  # Show or not log for each sql query
     hibernate:
       ddl-auto: none  # Hibernate DDL auto (create, create-drop, update)

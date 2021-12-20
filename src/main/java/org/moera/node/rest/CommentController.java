@@ -330,6 +330,7 @@ public class CommentController {
     }
 
     @GetMapping
+    @Transactional
     public CommentsSliceInfo getAll(
             @PathVariable UUID postingId,
             @RequestParam(required = false) Long before,
@@ -435,6 +436,7 @@ public class CommentController {
     }
 
     @GetMapping("/{commentId}")
+    @Transactional
     public CommentInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId,
                            @RequestParam(required = false) String include) {
         log.info("GET /postings/{postingId}/comments/{commentId}, (postingId = {}, commentId = {}, include = {})",

@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class AsyncOperationController {
 
-    private static Logger log = LoggerFactory.getLogger(AsyncOperationController.class);
+    private static final Logger log = LoggerFactory.getLogger(AsyncOperationController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -46,6 +46,7 @@ public class AsyncOperationController {
 
     @GetMapping("/remote-posting-verification/{id}")
     @Admin
+    @Transactional
     public RemotePostingVerificationInfo getRemotePostingVerification(@PathVariable UUID id) {
         log.info("GET /async-operations/remote-posting-verification/{id}, (id = {})", LogUtil.format(id));
 
@@ -58,6 +59,7 @@ public class AsyncOperationController {
 
     @GetMapping("/remote-reaction-verification/{id}")
     @Admin
+    @Transactional
     public RemoteReactionVerificationInfo getRemoteReactionVerification(@PathVariable UUID id) {
         log.info("GET /async-operations/remote-reaction-verification/{id}, (id = {})", LogUtil.format(id));
 

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Admin
 public class DeletedPostingRevisionController extends PostingRevisionControllerBase {
 
-    private static Logger log = LoggerFactory.getLogger(DeletedPostingRevisionController.class);
+    private static final Logger log = LoggerFactory.getLogger(DeletedPostingRevisionController.class);
 
     @Override
     protected Logger getLog() {

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class ActivityReactionController {
 
-    private static Logger log = LoggerFactory.getLogger(ActivityReactionController.class);
+    private static final Logger log = LoggerFactory.getLogger(ActivityReactionController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -36,6 +37,7 @@ public class ActivityReactionController {
 
     @PostMapping("/search")
     @Admin
+    @Transactional
     public List<ActivityReactionInfo> search(@Valid @RequestBody ActivityReactionFilter filter) {
         log.info("GET /activity/reactions/search");
 

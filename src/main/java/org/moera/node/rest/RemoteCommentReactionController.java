@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class RemoteCommentReactionController {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteCommentReactionController.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteCommentReactionController.class);
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -72,7 +72,6 @@ public class RemoteCommentReactionController {
 
     @DeleteMapping
     @Admin
-    @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId,
                          @PathVariable String commentId) {
         log.info("DELETE /nodes/{nodeName}/postings/{postingId}/comments/{commentId}/reactions"

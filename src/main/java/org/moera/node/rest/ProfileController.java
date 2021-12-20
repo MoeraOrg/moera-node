@@ -2,14 +2,12 @@ package org.moera.node.rest;
 
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -36,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class ProfileController {
 
-    private static Logger log = LoggerFactory.getLogger(ProfileController.class);
+    private static final Logger log = LoggerFactory.getLogger(ProfileController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -46,14 +44,6 @@ public class ProfileController {
 
     @Inject
     private TextConverter textConverter;
-
-    private Avatar getAvatar() {
-        UUID id = requestContext.getOptions().getUuid("profile.avatar.id");
-        if (id == null) {
-            return null;
-        }
-        return avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-    }
 
     @GetMapping
     public ProfileInfo get(@RequestParam(required = false) String include) {

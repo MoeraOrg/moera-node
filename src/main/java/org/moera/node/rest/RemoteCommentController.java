@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class RemoteCommentController {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteCommentController.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteCommentController.class);
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -72,6 +72,7 @@ public class RemoteCommentController {
     @PostMapping
     @Admin
     @Entitled
+    @Transactional
     public Result post(@PathVariable String nodeName, @PathVariable String postingId,
                        @Valid @RequestBody CommentSourceText commentText) {
         log.info("POST /nodes/{nodeName}/postings/{postingId}/comments"
@@ -89,6 +90,7 @@ public class RemoteCommentController {
     @PutMapping("/{commentId}")
     @Admin
     @Entitled
+    @Transactional
     public Result put(@PathVariable String nodeName, @PathVariable String postingId, @PathVariable String commentId,
                       @Valid @RequestBody CommentSourceText commentText) {
         log.info("PUT /nodes/{nodeName}/postings/{postingId}/comments/{commentId}"

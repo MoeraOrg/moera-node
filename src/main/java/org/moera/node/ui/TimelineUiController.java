@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
@@ -67,6 +68,7 @@ public class TimelineUiController {
 
     @GetMapping("/timeline")
     @VirtualPage
+    @Transactional
     public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
         String canonicalUrl = "/timeline" + (before != null ? "?before=" + before : "");
 
@@ -96,6 +98,7 @@ public class TimelineUiController {
     }
 
     @GetMapping("/post/{id}")
+    @Transactional
     public String posting(@PathVariable UUID id, @RequestParam(required = false) Long before,
                           @RequestParam(name = "comment", required = false) UUID commentId,
                           @RequestParam(name = "media", required = false) UUID mediaId,

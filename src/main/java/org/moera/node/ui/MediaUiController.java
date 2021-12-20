@@ -2,6 +2,7 @@ package org.moera.node.ui;
 
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
@@ -38,6 +39,7 @@ public class MediaUiController {
     private MediaOperations mediaOperations;
 
     @GetMapping("/public/{id}.{ext}")
+    @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
                                                   @RequestParam(required = false) Integer width) {
@@ -49,6 +51,7 @@ public class MediaUiController {
     }
 
     @GetMapping("/private/{id}.{ext}")
+    @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
                                                    @RequestParam(required = false) Integer width) {

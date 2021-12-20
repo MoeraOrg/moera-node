@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
@@ -42,6 +43,7 @@ public class RssController {
     private StoryRepository storyRepository;
 
     @GetMapping("/rss")
+    @Transactional
     @ResponseBody
     public SyndFeed rss() {
         RequestContext rcp = requestContext.getPublic();

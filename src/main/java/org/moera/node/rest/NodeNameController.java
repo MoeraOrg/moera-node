@@ -55,7 +55,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @NoCache
 public class NodeNameController {
 
-    private static Logger log = LoggerFactory.getLogger(NodeNameController.class);
+    private static final Logger log = LoggerFactory.getLogger(NodeNameController.class);
 
     @Inject
     private RequestContext requestContext;

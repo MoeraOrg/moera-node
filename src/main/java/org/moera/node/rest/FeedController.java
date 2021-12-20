@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
@@ -70,7 +71,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class FeedController {
 
-    private static Logger log = LoggerFactory.getLogger(FeedController.class);
+    private static final Logger log = LoggerFactory.getLogger(FeedController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -100,6 +101,7 @@ public class FeedController {
     private PushService pushService;
 
     @GetMapping
+    @Transactional
     public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
 
@@ -123,6 +125,7 @@ public class FeedController {
     }
 
     @GetMapping("/{feedName}")
+    @Transactional
     public FeedInfo get(@PathVariable String feedName) {
         log.info("GET /feeds/{feedName} (feedName = {})", LogUtil.format(feedName));
 
@@ -147,6 +150,7 @@ public class FeedController {
     }
 
     @GetMapping("/{feedName}/status")
+    @Transactional
     public FeedStatus getStatus(@PathVariable String feedName) {
         log.info("GET /feeds/{feedName}/status (feedName = {})", LogUtil.format(feedName));
 
@@ -162,6 +166,7 @@ public class FeedController {
 
     @PutMapping("/{feedName}/status")
     @Admin
+    @Transactional
     public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change)
             throws Throwable {
         log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
@@ -211,6 +216,7 @@ public class FeedController {
     }
 
     @GetMapping("/{feedName}/stories")
+    @Transactional
     public FeedSliceInfo getStories(
             @PathVariable String feedName,
             @RequestParam(required = false) Long before,

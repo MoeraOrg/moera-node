@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class SettingsController {
 
-    private static Logger log = LoggerFactory.getLogger(SettingsController.class);
+    private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
 
     @Inject
     private RequestContext requestContext;

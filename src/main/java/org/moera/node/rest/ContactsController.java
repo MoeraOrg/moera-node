@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -46,6 +47,7 @@ public class ContactsController {
 
     @GetMapping
     @Admin
+    @Transactional
     public List<ContactInfo> getAll(@RequestParam(defaultValue = "") String query,
                                     @RequestParam(required = false) Integer limit) {
         limit = limit != null && limit <= MAX_CONTACTS_PER_REQUEST ? limit : MAX_CONTACTS_PER_REQUEST;

@@ -71,7 +71,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class PostingController {
 
-    private static Logger log = LoggerFactory.getLogger(PostingController.class);
+    private static final Logger log = LoggerFactory.getLogger(PostingController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -224,6 +224,7 @@ public class PostingController {
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public PostingInfo get(@PathVariable UUID id, @RequestParam(required = false) String include) {
         log.info("GET /postings/{id}, (id = {}, include = {})", LogUtil.format(id), LogUtil.format(include));
 

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -31,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class CarteController {
 
-    private static Logger log = LoggerFactory.getLogger(CarteController.class);
+    private static final Logger log = LoggerFactory.getLogger(CarteController.class);
 
     private static final int DEFAULT_SET_SIZE = 16;
     private static final int MAX_SET_SIZE = 128;
@@ -43,6 +44,7 @@ public class CarteController {
     @GetMapping
     @Admin
     @Entitled
+    @Transactional
     public CarteSet get(@RequestParam(required = false) Integer limit, HttpServletRequest request) {
         log.info("GET /cartes (limit = {})", LogUtil.format(limit));
 

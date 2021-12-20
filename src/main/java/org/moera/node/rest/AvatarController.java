@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/moera/api/avatars")
 public class AvatarController {
 
-    private static Logger log = LoggerFactory.getLogger(AvatarController.class);
+    private static final Logger log = LoggerFactory.getLogger(AvatarController.class);
 
     @Inject
     private Config config;
@@ -161,6 +161,7 @@ public class AvatarController {
 
     @GetMapping
     @NoCache
+    @Transactional
     public List<AvatarInfo> getAll() {
         log.info("GET /avatars");
 
@@ -170,6 +171,7 @@ public class AvatarController {
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public AvatarInfo get(@PathVariable UUID id) {
         log.info("GET /avatars/{id} (id = {})", LogUtil.format(id));
 

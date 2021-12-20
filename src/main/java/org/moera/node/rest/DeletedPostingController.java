@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @NoCache
 public class DeletedPostingController {
 
-    private static Logger log = LoggerFactory.getLogger(DeletedPostingController.class);
+    private static final Logger log = LoggerFactory.getLogger(DeletedPostingController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -60,6 +60,7 @@ public class DeletedPostingController {
 
     @GetMapping
     @Admin
+    @Transactional
     public List<PostingInfo> getAll(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer limit) {
@@ -85,6 +86,7 @@ public class DeletedPostingController {
 
     @GetMapping("/{id}")
     @Admin
+    @Transactional
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /deleted-postings/{id}, (id = {})", LogUtil.format(id));
 
