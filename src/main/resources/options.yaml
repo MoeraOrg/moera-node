@@ -142,7 +142,6 @@
 
 - name: posting.media.max-size
   type: int
-  privileged: true
   defaultValue: 5242880
   title: Maximal size of a media attachment in a post
   modifiers:
@@ -368,6 +367,15 @@
   modifiers:
     min: 10d
     max: 180d
+
+- name: media.max-size
+  type: int
+  privileged: true
+  defaultValue: 5242880
+  title: Maximal size of an uploaded media
+  modifiers:
+    min: 65536
+    max: 104857600
 
 - name: media.preview-gain
   type: int

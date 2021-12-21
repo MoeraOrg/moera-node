@@ -44,6 +44,7 @@ import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
+import org.moera.node.model.PostingFeatures;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -352,8 +353,9 @@ public class MediaOperations {
             return Collections.emptyList();
         }
 
-        Long recommendedSize = universalContext.getOptions().getLong("posting.image.recommended-size");
-        Integer recommendedPixels = universalContext.getOptions().getInt("posting.image.recommended-pixels");
+        PostingFeatures features = new PostingFeatures(universalContext.getOptions());
+        int recommendedSize = features.getImageRecommendedSize();
+        int recommendedPixels = features.getImageRecommendedPixels();
 
         List<MediaFileOwner> attached = new ArrayList<>();
         Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
@@ -369,11 +371,11 @@ public class MediaOperations {
                 throw notFound.get();
             }
             if (notCompressed != null && !isAdmin) {
-                if (recommendedSize != null && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
+                if (mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
                     throw notCompressed.get();
                 }
-                if (recommendedPixels != null && (mediaFileOwner.getMediaFile().getSizeX() > recommendedPixels
-                        || mediaFileOwner.getMediaFile().getSizeY() > recommendedPixels)) {
+                if (mediaFileOwner.getMediaFile().getSizeX() > recommendedPixels
+                        || mediaFileOwner.getMediaFile().getSizeY() > recommendedPixels) {
                     throw notCompressed.get();
                 }
             }

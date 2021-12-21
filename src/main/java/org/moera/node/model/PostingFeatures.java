@@ -10,8 +10,8 @@ public class PostingFeatures {
 
     private boolean subjectPresent;
     private final List<Choice> sourceFormats = Choice.forEnum(SourceFormat.class);
-    private long mediaMaxSize;
-    private long imageRecommendedSize;
+    private int mediaMaxSize;
+    private int imageRecommendedSize;
     private int imageRecommendedPixels;
 
     public PostingFeatures() {
@@ -19,8 +19,9 @@ public class PostingFeatures {
 
     public PostingFeatures(Options options) {
         subjectPresent = options.getBool("posting.subject.present");
-        mediaMaxSize = options.getLong("posting.media.max-size");
-        imageRecommendedSize = options.getLong("posting.image.recommended-size");
+        int maxSize = options.getInt("media.max-size");
+        mediaMaxSize = Math.min(maxSize, options.getInt("posting.media.max-size"));
+        imageRecommendedSize = Math.min(mediaMaxSize, options.getInt("posting.image.recommended-size"));
         imageRecommendedPixels = options.getInt("posting.image.recommended-pixels");
     }
 
@@ -36,15 +37,19 @@ public class PostingFeatures {
         return sourceFormats;
     }
 
-    public long getMediaMaxSize() {
+    public int getMediaMaxSize() {
         return mediaMaxSize;
     }
 
-    public long getImageRecommendedSize() {
+    public void setMediaMaxSize(int mediaMaxSize) {
+        this.mediaMaxSize = mediaMaxSize;
+    }
+
+    public int getImageRecommendedSize() {
         return imageRecommendedSize;
     }
 
-    public void setImageRecommendedSize(long imageRecommendedSize) {
+    public void setImageRecommendedSize(int imageRecommendedSize) {
         this.imageRecommendedSize = imageRecommendedSize;
     }
 

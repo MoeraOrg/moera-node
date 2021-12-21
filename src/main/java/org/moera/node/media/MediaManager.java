@@ -23,6 +23,7 @@ import org.moera.node.data.RemoteMediaCache;
 import org.moera.node.data.RemoteMediaCacheRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.task.TaskAutowire;
@@ -260,8 +261,8 @@ public class MediaManager {
 
     public MediaFileOwner downloadPrivateMedia(String nodeName, String carte, PrivateMediaFileInfo info,
                                                UUID entryId) throws NodeApiException {
-        return downloadPrivateMedia(nodeName, carte, info.getId(), info.getHash(),
-                universalContext.getOptions().getInt("posting.media.max-size"), entryId);
+        int maxSize = new PostingFeatures(universalContext.getOptions()).getMediaMaxSize();
+        return downloadPrivateMedia(nodeName, carte, info.getId(), info.getHash(), maxSize, entryId);
     }
 
     public byte[] getPrivateMediaDigest(String nodeName, String carte, PrivateMediaFileInfo info) {
