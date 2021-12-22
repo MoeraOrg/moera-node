@@ -7,13 +7,14 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.util.Util;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
+public class VirtualPageInterceptor implements HandlerInterceptor {
 
     @Inject
     private RequestContext requestContext;
@@ -41,10 +42,10 @@ public class VirtualPageInterceptor extends HandlerInterceptorAdapter {
             }
             return false;
         }
-        /*if (isAutoClient()) {
+        if (isAutoClient()) {
             response.sendRedirect(WebClient.URL + "?href=" + Util.ue(requestContext.getUrl()));
             return false;
-        }*/
+        }
 
         return true;
     }

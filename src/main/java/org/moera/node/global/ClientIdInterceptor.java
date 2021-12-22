@@ -6,10 +6,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class ClientIdInterceptor extends HandlerInterceptorAdapter {
+public class ClientIdInterceptor implements HandlerInterceptor {
 
     @Inject
     private RequestContext requestContext;

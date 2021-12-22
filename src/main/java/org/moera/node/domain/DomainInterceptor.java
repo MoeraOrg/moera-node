@@ -16,12 +16,12 @@ import org.moera.node.util.Util;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.util.UriComponents;
 
 @Component
-public class DomainInterceptor extends HandlerInterceptorAdapter {
+public class DomainInterceptor implements HandlerInterceptor {
 
     @Inject
     private Config config;

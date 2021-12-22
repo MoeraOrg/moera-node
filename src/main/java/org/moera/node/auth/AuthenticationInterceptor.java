@@ -27,10 +27,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
+public class AuthenticationInterceptor implements HandlerInterceptor {
 
     private static class Secrets {
         public String rootSecret;
@@ -38,7 +38,7 @@ public class AuthenticationInterceptor extends HandlerInterceptorAdapter {
         public String carte;
     }
 
-    private static Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
 
     @Inject
     private Config config;

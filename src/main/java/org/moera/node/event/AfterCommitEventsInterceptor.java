@@ -8,10 +8,10 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.mail.MailService;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class AfterCommitEventsInterceptor extends HandlerInterceptorAdapter {
+public class AfterCommitEventsInterceptor implements HandlerInterceptor {
 
     @Inject
     private RequestContext requestContext;

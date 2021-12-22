@@ -10,10 +10,10 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class CacheControlInterceptor extends HandlerInterceptorAdapter {
+public class CacheControlInterceptor implements HandlerInterceptor {
 
     private static final String X_ACCEPT_MOERA = "X-Accept-Moera";
 

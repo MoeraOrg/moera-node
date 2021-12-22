@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class NetworkLatencyInterceptor extends HandlerInterceptorAdapter {
+public class NetworkLatencyInterceptor implements HandlerInterceptor {
 
-    private static Logger log = LoggerFactory.getLogger(NetworkLatencyInterceptor.class);
+    private static final Logger log = LoggerFactory.getLogger(NetworkLatencyInterceptor.class);
 
     @Inject
     private Config config;

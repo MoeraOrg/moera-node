@@ -8,10 +8,10 @@ import org.moera.node.model.OperationFailure;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class EntitledInterceptor extends HandlerInterceptorAdapter {
+public class EntitledInterceptor implements HandlerInterceptor {
 
     @Inject
     private RequestContext requestContext;
