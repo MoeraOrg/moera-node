@@ -4,8 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import org.moera.commons.crypto.Fingerprint;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FingerprintFactory {
+
+    private static final Logger log = LoggerFactory.getLogger(FingerprintFactory.class);
 
     protected final Class<? extends Fingerprint> klass;
 
@@ -20,6 +24,7 @@ public class FingerprintFactory {
         try {
             return klass.getConstructor(parameterTypes);
         } catch (NoSuchMethodException e) {
+            log.error("Cannot find a fingerprint constructor", e);
             return null;
         }
     }
@@ -28,6 +33,7 @@ public class FingerprintFactory {
         try {
             return constructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            log.error("Cannot create a fingerprint", e);
             return null;
         }
     }
