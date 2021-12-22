@@ -16,9 +16,11 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -358,9 +360,13 @@ public class MediaOperations {
         int recommendedPixels = features.getImageRecommendedPixels();
 
         List<MediaFileOwner> attached = new ArrayList<>();
+        Set<UUID> usedIds = new HashSet<>();
         Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
                 .stream().collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
         for (UUID id : ids) {
+            if (usedIds.contains(id)) {
+                continue;
+            }
             MediaFileOwner mediaFileOwner = mediaFileOwners.get(id);
             if (mediaFileOwner == null) {
                 throw notFound.get();
@@ -380,6 +386,7 @@ public class MediaOperations {
                 }
             }
             attached.add(mediaFileOwner);
+            usedIds.add(id);
         }
         return attached;
     }
