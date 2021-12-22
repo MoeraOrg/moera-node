@@ -14,7 +14,7 @@
             padding: .3rem;
             font-size: larger;
             margin-right: 1rem;
-            color: var(--bs-gray);
+            color: var(--bs-gray-600);
             white-space: nowrap;
         }
 
@@ -22,7 +22,7 @@
             text-decoration: none;
 
             &:hover {
-                color: var(--bs-gray-dark);
+                color: var(--bs-gray-800);
             }
         }
 

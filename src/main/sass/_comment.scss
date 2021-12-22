@@ -1,5 +1,5 @@
 #comments {
-    border-top: 1px solid var(--gray-light);
+    border-top: 1px solid var(--bs-gray-400);
     margin-top: .5rem;
     padding-top: 1rem;
 
@@ -12,8 +12,8 @@
 }
 
 #comments-original {
-    border-top: 1px solid var(--gray-light);
-    border-bottom: 1px solid var(--gray-light);
+    border-top: 1px solid var(--bs-gray-400);
+    border-bottom: 1px solid var(--bs-gray-400);
     text-align: center;
     margin-top: .5rem;
     padding: .5rem;
@@ -48,7 +48,7 @@
     .date {
         font-size: 0.8rem;
         font-weight: normal;
-        color: var(--gray-medium);
+        color: var(--bs-gray-500);
         margin-left: 0.5em;
 
         A {
@@ -95,14 +95,14 @@
         FIGCAPTION {
             line-height: 1.2;
             margin-top: .3em;
-            color: var(--bs-gray);
+            color: var(--bs-gray-600);
             margin-left: .75em;
         }
 
         .replied-to {
             margin-bottom: .3rem;
             font-size: 90%;
-            border-left: 3px var(--gray-light) solid;
+            border-left: 3px var(--bs-gray-400) solid;
             padding-left: .5em;
 
             A {
@@ -110,18 +110,18 @@
             }
 
             .icon {
-                color: var(--gray-medium);
+                color: var(--bs-gray-500);
             }
 
             .node-name {
-                color: var(--bs-gray);
+                color: var(--bs-gray-600);
                 font-weight: bold;
                 position: relative;
                 top: -.1em;
             }
 
             .heading {
-                color: var(--bs-gray);
+                color: var(--bs-gray-600);
                 position: relative;
                 top: -.1em;
                 margin-left: .3em;

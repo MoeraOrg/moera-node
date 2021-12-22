@@ -1,4 +1,5 @@
 @import 'colors';
+@import 'zindex';
 
 @function css-function($function, $values...) {
 	@return $function + unquote("(") + $values + unquote(")");
@@ -87,7 +88,7 @@ H2 .avatar-link {
         top: 2.5em;
         right: 0;
         box-shadow: 0 .125rem .25rem var(--shadow);
-        border: solid 1px var(--bs-gray);
+        border: solid 1px var(--bs-gray-600);
     }
 }
 
@@ -100,7 +101,7 @@ SUB.generation {
 
 .no-postings {
 	font-weight: bold;
-	color: color(--gray-light);
+	color: color(--bs-gray-400);
 	font-size: 4rem;
 	margin-top: 5rem;
 }
@@ -117,7 +118,7 @@ SUB.generation {
 
 @mixin pane {
     background-color: white;
-    border: var(--gray-light) 1px solid;
+    border: var(--bs-gray-400) 1px solid;
     border-radius: 5px;
 
     @media only screen and (max-width: 575px) {

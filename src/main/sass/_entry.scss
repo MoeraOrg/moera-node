@@ -55,7 +55,7 @@
             font-weight: bold;
             font-size: 200%;
             text-shadow: -2px 2px 4px var(--shadow);
-            z-index: 1;
+            z-index: var(--zindex-text-overlay);
         }
     }
 }

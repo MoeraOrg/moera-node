@@ -38,7 +38,7 @@
         FIGCAPTION {
             line-height: 1.2;
             margin-top: .3em;
-            color: var(--bs-gray);
+            color: var(--bs-gray-600);
             margin-left: .75em;
         }
     }
@@ -86,7 +86,7 @@
         .date {
             font-size: .8rem;
             font-weight: normal;
-            color: var(--gray-medium);
+            color: var(--bs-gray-500);
 
             A {
                 color: inherit;
@@ -105,14 +105,14 @@
         display: flex;
         padding-top: .5rem;
         margin-top: .7rem;
-        border-top: 1px solid var(--gray-light);
+        border-top: 1px solid var(--bs-gray-400);
 
         .posting-button {
             flex: auto;
             max-width: 225px;
             text-align: center;
             text-decoration: none;
-            color: var(--bs-gray-dark);
+            color: var(--bs-gray-800);
             padding: .3rem;
             margin-right: .3rem;
             cursor: pointer;
