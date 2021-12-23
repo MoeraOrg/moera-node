@@ -1762,6 +1762,13 @@ CREATE UNIQUE INDEX remote_media_cache_node_id_remote_node_name_remote_media_id_
 
 
 --
+-- Name: remote_media_cache_null_remote_node_name_remote_media_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX remote_media_cache_null_remote_node_name_remote_media_id_idx ON public.remote_media_cache USING btree (remote_node_name, remote_media_id) WHERE (node_id IS NULL);
+
+
+--
 -- Name: remote_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
