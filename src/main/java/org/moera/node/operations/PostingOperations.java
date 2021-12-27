@@ -266,7 +266,7 @@ public class PostingOperations {
                 new PostingDeletedNotification(posting.getId()));
     }
 
-    @Scheduled(fixedDelayString = "PT1M")
+    @Scheduled(fixedDelayString = "PT1H")
     public void deleteUnlinked() throws Throwable {
         for (String domainName : domains.getAllDomainNames()) {
             Options options = domains.getDomainOptions(domainName);
