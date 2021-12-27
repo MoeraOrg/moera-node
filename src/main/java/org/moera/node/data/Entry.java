@@ -108,6 +108,9 @@ public class Entry {
     @ManyToOne
     private Entry parent;
 
+    @OneToOne
+    private MediaFileOwner parentMedia;
+
     @NotNull
     private int totalChildren;
 
@@ -412,6 +415,14 @@ public class Entry {
 
     public void setParent(Entry parent) {
         this.parent = parent;
+    }
+
+    public MediaFileOwner getParentMedia() {
+        return parentMedia;
+    }
+
+    public void setParentMedia(MediaFileOwner parentMedia) {
+        this.parentMedia = parentMedia;
     }
 
     public int getTotalChildren() {

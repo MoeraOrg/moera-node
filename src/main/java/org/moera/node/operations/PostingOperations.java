@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.BodyFormat;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -22,6 +23,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
@@ -95,6 +97,19 @@ public class PostingOperations {
     @Inject
     private PlatformTransactionManager txManager;
 
+    private Posting newPosting() {
+        Posting posting = new Posting();
+        posting.setId(UUID.randomUUID());
+        posting.setNodeId(requestContext.nodeId());
+        posting.setOwnerName(requestContext.nodeName());
+        posting.setOwnerFullName(requestContext.fullName());
+        if (requestContext.getAvatar() != null) {
+            posting.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
+            posting.setOwnerAvatarShape(requestContext.getAvatar().getShape());
+        }
+        return postingRepository.save(posting);
+    }
+
     public Posting newPosting(PostingText postingText) {
         if (postingText.getAcceptedReactions() == null) {
             postingText.setAcceptedReactions(new AcceptedReactions());
@@ -106,18 +121,26 @@ public class PostingOperations {
             postingText.getAcceptedReactions().setNegative("");
         }
 
-        Posting posting = new Posting();
-        posting.setId(UUID.randomUUID());
-        posting.setNodeId(requestContext.nodeId());
-        posting.setOwnerName(requestContext.nodeName());
-        posting.setOwnerFullName(requestContext.fullName());
-        if (requestContext.getAvatar() != null) {
-            posting.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
-            posting.setOwnerAvatarShape(requestContext.getAvatar().getShape());
-        }
+        Posting posting = newPosting();
         postingText.toEntry(posting);
 
-        return postingRepository.save(posting);
+        return posting;
+    }
+
+    public Posting newPosting(MediaFileOwner mediaFileOwner) {
+        Posting posting = newPosting();
+        posting.setParentMedia(mediaFileOwner);
+
+        EntryRevision revision = newRevision(posting, null);
+        revision.setBodySrc(Body.EMPTY);
+        revision.setBodySrcFormat(SourceFormat.MARKDOWN);
+        revision.setBody(Body.EMPTY);
+        revision.setSaneBody(Body.EMPTY);
+        revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
+        revision.setBodyPreview(Body.EMPTY);
+        revision.setSaneBodyPreview(Body.EMPTY);
+
+        return posting;
     }
 
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<MediaFileOwner> media,
@@ -129,7 +152,7 @@ public class PostingOperations {
             return postingRepository.saveAndFlush(posting);
         }
 
-        EntryRevision current = newPostingRevision(posting, revision);
+        EntryRevision current = newRevision(posting, revision);
         if (revisionUpdater != null) {
             revisionUpdater.accept(current);
         }
@@ -169,32 +192,17 @@ public class PostingOperations {
         return (ECPrivateKey) requestContext.getOptions().getPrivateKey("profile.signing-key");
     }
 
-    private EntryRevision newPostingRevision(Posting posting, EntryRevision template) {
-        EntryRevision revision;
-
-        if (template == null) {
-            revision = newRevision(posting, null);
-            posting.setTotalRevisions(1);
-        } else {
-            revision = newRevision(posting, template);
-            if (posting.getCurrentRevision().getDeletedAt() == null) {
-                posting.getCurrentRevision().setDeletedAt(Util.now());
-            }
-            posting.setTotalRevisions(posting.getTotalRevisions() + 1);
-        }
-        posting.setCurrentRevision(revision);
-
-        return revision;
-    }
-
     private EntryRevision newRevision(Posting posting, EntryRevision template) {
         EntryRevision revision = new EntryRevision();
         revision.setId(UUID.randomUUID());
         revision.setEntry(posting);
         revision = entryRevisionRepository.save(revision);
+
         posting.addRevision(revision);
 
-        if (template != null) {
+        if (template == null) {
+            posting.setTotalRevisions(1);
+        } else {
             revision.setBodyPreview(template.getBodyPreview());
             revision.setSaneBodyPreview(template.getSaneBodyPreview());
             revision.setBodySrc(template.getBodySrc());
@@ -203,7 +211,14 @@ public class PostingOperations {
             revision.setSaneBody(template.getSaneBody());
             revision.setHeading(template.getHeading());
             revision.setDescription(template.getDescription());
+
+            if (posting.getCurrentRevision().getDeletedAt() == null) {
+                posting.getCurrentRevision().setDeletedAt(Util.now());
+            }
+            posting.setTotalRevisions(posting.getTotalRevisions() + 1);
         }
+
+        posting.setCurrentRevision(revision);
 
         return revision;
     }

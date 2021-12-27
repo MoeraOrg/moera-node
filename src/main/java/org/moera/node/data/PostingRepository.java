@@ -16,7 +16,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     Optional<Posting> findByNodeIdAndId(UUID nodeId, UUID id);
 
     @Query("select p from Posting p"
-            + " join fetch p.currentRevision cr left join fetch cr.attachments cra"
+            + " left join fetch p.currentRevision cr left join fetch cr.attachments cra"
             + " left join fetch cra.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
             + " left join fetch p.reactionTotals left join fetch p.sources left join fetch p.ownerAvatarMediaFile"
             + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
@@ -42,7 +42,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Query("select p from Posting p where p.nodeId = ?1 and p.receiverName = ?2 and p.receiverEntryId = ?3")
     Optional<Posting> findByReceiverId(UUID nodeId, String receiverName, String receiverEntryId);
 
-    @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is null"
+    @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is null and p.parentMedia is null"
             + " and not exists(select s from Story s where s.entry.id = p.id)")
     List<Posting> findUnlinked(UUID nodeId);
 

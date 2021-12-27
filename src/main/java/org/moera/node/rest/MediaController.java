@@ -34,6 +34,7 @@ import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,9 @@ public class MediaController {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private PostingOperations postingOperations;
 
     @Inject
     private EntityManager entityManager;
@@ -177,6 +181,7 @@ public class MediaController {
             mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
             mediaFileOwner = mediaOperations.own(mediaFile,
                     requestContext.isAdmin() ? null : requestContext.getClientName());
+            mediaFileOwner.setPosting(postingOperations.newPosting(mediaFileOwner));
 
             return new PrivateMediaFileInfo(mediaFileOwner);
         } catch (ThresholdReachedException e) {

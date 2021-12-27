@@ -34,6 +34,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private String receiverFullName;
     private AvatarImage receiverAvatar;
     private String receiverPostingId;
+    private String parentMediaId;
     private String ownerName;
     private String ownerFullName;
     private AvatarImage ownerAvatar;
@@ -105,6 +106,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
             receiverAvatar = new AvatarImage(posting.getReceiverAvatarMediaFile(), posting.getReceiverAvatarShape());
         }
         receiverPostingId = posting.getReceiverEntryId();
+        parentMediaId = posting.getParentMedia() != null ? posting.getParentMedia().getId().toString() : null;
         ownerName = posting.getOwnerName();
         ownerFullName = posting.getOwnerFullName();
         if (posting.getOwnerAvatarMediaFile() != null) {
@@ -248,6 +250,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setReceiverPostingId(String receiverPostingId) {
         this.receiverPostingId = receiverPostingId;
+    }
+
+    public String getParentMediaId() {
+        return parentMediaId;
+    }
+
+    public void setParentMediaId(String parentMediaId) {
+        this.parentMediaId = parentMediaId;
     }
 
     public String getOwnerName() {

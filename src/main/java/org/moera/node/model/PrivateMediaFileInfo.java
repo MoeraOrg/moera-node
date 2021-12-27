@@ -12,6 +12,7 @@ public class PrivateMediaFileInfo {
     private Integer width;
     private Integer height;
     private long size;
+    private String postingId;
     private MediaFilePreviewInfo[] previews;
 
     public PrivateMediaFileInfo() {
@@ -24,6 +25,7 @@ public class PrivateMediaFileInfo {
         width = mediaFileOwner.getMediaFile().getSizeX();
         height = mediaFileOwner.getMediaFile().getSizeY();
         size = mediaFileOwner.getMediaFile().getFileSize();
+        postingId = mediaFileOwner.getPosting() != null ? mediaFileOwner.getPosting().getId().toString() : null;
         previews = mediaFileOwner.getMediaFile().getPreviews().stream()
                 .filter(pw -> pw.getMediaFile() != null)
                 .map(MediaFilePreviewInfo::new)
@@ -76,6 +78,14 @@ public class PrivateMediaFileInfo {
 
     public void setSize(long size) {
         this.size = size;
+    }
+
+    public String getPostingId() {
+        return postingId;
+    }
+
+    public void setPostingId(String postingId) {
+        this.postingId = postingId;
     }
 
     public MediaFilePreviewInfo[] getPreviews() {
