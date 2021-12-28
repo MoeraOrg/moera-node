@@ -1,5 +1,6 @@
 package org.moera.node.text;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,6 +15,9 @@ import org.springframework.util.ObjectUtils;
 public class MentionsExtractor {
 
     public static Set<String> extract(Body body) {
+        if (body.getText() == null) {
+            return Collections.emptySet();
+        }
         return extract(body.getText());
     }
 
