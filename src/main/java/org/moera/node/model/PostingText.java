@@ -55,6 +55,18 @@ public class PostingText {
     public PostingText() {
     }
 
+    public void initAcceptedReactionsDefaults() {
+        if (acceptedReactions == null) {
+            acceptedReactions = new AcceptedReactions();
+        }
+        if (acceptedReactions.getPositive() == null) {
+            acceptedReactions.setPositive("");
+        }
+        if (acceptedReactions.getNegative() == null) {
+            acceptedReactions.setNegative("");
+        }
+    }
+
     public String getOwnerFullName() {
         return ownerFullName;
     }

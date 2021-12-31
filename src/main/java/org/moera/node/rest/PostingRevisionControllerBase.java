@@ -136,7 +136,7 @@ public abstract class PostingRevisionControllerBase {
                 .map(EntryAttachment::getMediaFileOwner)
                 .collect(Collectors.toList());
         posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null,
-                null);
+                null, null);
         requestContext.send(getRestorationEvent(posting));
         requestContext.send(Directions.postingSubscribers(posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));

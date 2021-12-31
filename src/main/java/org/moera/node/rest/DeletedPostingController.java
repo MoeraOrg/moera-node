@@ -112,7 +112,7 @@ public class DeletedPostingController {
                 .map(EntryAttachment::getMediaFileOwner)
                 .collect(Collectors.toList());
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media, null,
-                null, null);
+                null, null, null);
         requestContext.send(new PostingRestoredEvent(posting));
         requestContext.send(Directions.postingSubscribers(posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));

@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -23,7 +24,6 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.Body;
 import org.moera.node.model.CommentText;
@@ -70,15 +70,7 @@ public class CommentOperations {
     private final MomentFinder momentFinder = new MomentFinder();
 
     public Comment newComment(Posting posting, CommentText commentText, Comment repliedTo) {
-        if (commentText.getAcceptedReactions() == null) {
-            commentText.setAcceptedReactions(new AcceptedReactions());
-        }
-        if (commentText.getAcceptedReactions().getPositive() == null) {
-            commentText.getAcceptedReactions().setPositive("");
-        }
-        if (commentText.getAcceptedReactions().getNegative() == null) {
-            commentText.getAcceptedReactions().setNegative("");
-        }
+        commentText.initAcceptedReactionsDefaults();
 
         Comment comment = new Comment();
         comment.setId(UUID.randomUUID());
@@ -122,7 +114,8 @@ public class CommentOperations {
 
     public Comment createOrUpdateComment(Posting posting, Comment comment, EntryRevision revision,
                                          List<MediaFileOwner> media, Predicate<EntryRevision> isNothingChanged,
-                                         Consumer<EntryRevision> revisionUpdater) {
+                                         Consumer<EntryRevision> revisionUpdater,
+                                         Consumer<Entry> mediaEntryUpdater) {
         EntryRevision latest = comment.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
@@ -151,6 +144,10 @@ public class CommentOperations {
                 attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
+
+                if (mediaEntryUpdater != null) {
+                    mediaEntryUpdater.accept(mfo.getPosting());
+                }
             }
         }
 

@@ -15,6 +15,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.BodyFormat;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -31,7 +32,6 @@ import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.AcceptedReactions;
 import org.moera.node.model.Body;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
@@ -111,15 +111,7 @@ public class PostingOperations {
     }
 
     public Posting newPosting(PostingText postingText) {
-        if (postingText.getAcceptedReactions() == null) {
-            postingText.setAcceptedReactions(new AcceptedReactions());
-        }
-        if (postingText.getAcceptedReactions().getPositive() == null) {
-            postingText.getAcceptedReactions().setPositive("");
-        }
-        if (postingText.getAcceptedReactions().getNegative() == null) {
-            postingText.getAcceptedReactions().setNegative("");
-        }
+        postingText.initAcceptedReactionsDefaults();
 
         Posting posting = newPosting();
         postingText.toEntry(posting);
@@ -146,7 +138,8 @@ public class PostingOperations {
     public Posting createOrUpdatePosting(Posting posting, EntryRevision revision, List<MediaFileOwner> media,
                                          List<StoryAttributes> publications,
                                          Predicate<EntryRevision> isNothingChanged,
-                                         Consumer<EntryRevision> revisionUpdater) {
+                                         Consumer<EntryRevision> revisionUpdater,
+                                         Consumer<Entry> mediaEntryUpdater) {
         EntryRevision latest = posting.getCurrentRevision();
         if (latest != null && isNothingChanged != null && isNothingChanged.test(latest)) {
             return postingRepository.saveAndFlush(posting);
@@ -165,6 +158,10 @@ public class PostingOperations {
                 attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
                 attachment = entryAttachmentRepository.save(attachment);
                 current.addAttachment(attachment);
+
+                if (mediaEntryUpdater != null) {
+                    mediaEntryUpdater.accept(mfo.getPosting());
+                }
             }
         }
 

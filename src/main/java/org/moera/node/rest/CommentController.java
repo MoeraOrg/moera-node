@@ -186,7 +186,8 @@ public class CommentController {
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
             comment = commentOperations.createOrUpdateComment(posting, comment, null, media, null,
-                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media));
+                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
+                    commentText::toEntry);
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
@@ -253,7 +254,8 @@ public class CommentController {
         try {
             comment = commentOperations.createOrUpdateComment(comment.getPosting(), comment,
                     comment.getCurrentRevision(), media, commentText::sameAsRevision,
-                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media));
+                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
+                    commentText::toEntry);
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
