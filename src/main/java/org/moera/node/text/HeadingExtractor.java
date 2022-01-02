@@ -23,6 +23,9 @@ public class HeadingExtractor {
     }
 
     public static String extractDescription(Body body) {
+        if (ObjectUtils.isEmpty(body.getText())) {
+            return "";
+        }
         return extract(body.getText(), DESCRIPTION_LENGTH);
     }
 

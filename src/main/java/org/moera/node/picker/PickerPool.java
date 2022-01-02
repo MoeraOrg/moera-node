@@ -13,7 +13,7 @@ import javax.inject.Inject;
 import org.moera.node.data.Pick;
 import org.moera.node.data.PickRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -48,7 +48,7 @@ public class PickerPool {
     private TaskAutowire taskAutowire;
 
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -116,7 +116,7 @@ public class PickerPool {
     private Pick storePick(final Pick detachedPick) throws Throwable {
         detachedPick.setId(UUID.randomUUID());
         if (detachedPick.getNodeId() == null) {
-            detachedPick.setNodeId(requestContext.nodeId());
+            detachedPick.setNodeId(universalContext.nodeId());
         }
         Pick pick = inTransaction(() -> pickRepository.saveAndFlush(detachedPick));
         pending.put(pick.getId(), pick);

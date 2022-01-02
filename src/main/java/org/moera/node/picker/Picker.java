@@ -162,7 +162,8 @@ public class Picker extends Task {
         List<Event> events = new ArrayList<>();
         List<DirectedNotification> notifications = new ArrayList<>();
         Posting posting = inTransaction(() -> {
-            Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), events, notifications);
+            Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(),
+                    events, notifications);
             saveSources(p, pick);
             return p;
         });
@@ -173,7 +174,8 @@ public class Picker extends Task {
         succeeded(posting, pick);
     }
 
-    private Posting downloadPosting(String remotePostingId, String feedName, List<Event> events,
+    private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
+                                    List<Event> events,
                                     List<DirectedNotification> notifications) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
@@ -197,6 +199,7 @@ public class Picker extends Task {
             posting = new Posting();
             posting.setId(UUID.randomUUID());
             posting.setNodeId(nodeId);
+            posting.setParentMedia(parentMedia);
             posting.setReceiverName(receiverName);
             posting.setReceiverFullName(receiverFullName);
             posting.setOwnerAvatarMediaFile(ownerAvatar);
@@ -274,8 +277,20 @@ public class Picker extends Task {
                 attachment.setEmbedded(attach.isEmbedded());
                 attachment = entryAttachmentRepository.save(attachment);
                 revision.addAttachment(attachment);
+
+                if (attach.getMedia().getPostingId() != null) {
+                    pickMediaPosting(media, attach.getMedia().getPostingId());
+                }
             }
         }
+    }
+
+    private void pickMediaPosting(MediaFileOwner media, String remotePostingId) {
+        Pick pick = new Pick();
+        pick.setRemoteNodeName(remoteNodeName);
+        pick.setRemotePostingId(remotePostingId);
+        pick.setMediaFileOwner(media);
+        pool.pick(pick);
     }
 
     private void publish(String feedName, Posting posting, List<Event> events) {

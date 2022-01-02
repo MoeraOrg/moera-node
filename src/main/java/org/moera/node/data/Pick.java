@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -29,11 +30,14 @@ public class Pick {
     private String remoteNodeName = "";
 
     @Size(max = 63)
-    private String remoteFeedName = "";
+    private String remoteFeedName;
 
     @NotNull
     @Size(max = 40)
     private String remotePostingId;
+
+    @ManyToOne
+    private MediaFileOwner mediaFileOwner;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -89,6 +93,14 @@ public class Pick {
 
     public void setRemotePostingId(String remotePostingId) {
         this.remotePostingId = remotePostingId;
+    }
+
+    public MediaFileOwner getMediaFileOwner() {
+        return mediaFileOwner;
+    }
+
+    public void setMediaFileOwner(MediaFileOwner mediaFileOwner) {
+        this.mediaFileOwner = mediaFileOwner;
     }
 
     public Timestamp getCreatedAt() {
