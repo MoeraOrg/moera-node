@@ -272,6 +272,8 @@ public class MediaManager {
     public byte[] getPrivateMediaDigest(String nodeName, String carte, String id, String hash) {
         RemoteMediaCache cache = remoteMediaCacheRepository
                 .findByMedia(universalContext.nodeId(), nodeName, id)
+                .stream()
+                .findFirst()
                 .orElse(null);
         if (cache != null) {
             return cache.getDigest();
@@ -303,10 +305,10 @@ public class MediaManager {
     }
 
     public void cacheUploadedRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest) {
-        RemoteMediaCache cache = remoteMediaCacheRepository
+        boolean cached = remoteMediaCacheRepository
                 .findByMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId)
-                .orElse(null);
-        if (cache == null) {
+                .size() > 0;
+        if (!cached) {
             cacheRemoteMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId, digest, null);
         }
     }

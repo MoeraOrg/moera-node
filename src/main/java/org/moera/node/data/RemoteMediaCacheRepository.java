@@ -1,7 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
-import java.util.Optional;
+import java.util.Collection;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,7 +12,7 @@ public interface RemoteMediaCacheRepository extends JpaRepository<RemoteMediaCac
 
     @Query("select rmc from RemoteMediaCache rmc"
             + " where (rmc.nodeId = ?1 or rmc.nodeId is null) and rmc.remoteNodeName = ?2 and rmc.remoteMediaId = ?3")
-    Optional<RemoteMediaCache> findByMedia(UUID nodeId, String remoteNodeName, String remoteMediaId);
+    Collection<RemoteMediaCache> findByMedia(UUID nodeId, String remoteNodeName, String remoteMediaId);
 
     @Query("delete from RemoteMediaCache rmc where rmc.deadline < ?1")
     @Modifying
