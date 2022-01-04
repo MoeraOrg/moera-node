@@ -38,6 +38,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.model.Body;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
@@ -76,6 +77,9 @@ public class PostingOperations {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private UniversalContext universalContext;
 
     @Inject
     private Domains domains;
@@ -325,9 +329,11 @@ public class PostingOperations {
         Transaction.execute(txManager, () -> {
             List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
             for (Posting posting : postings) {
+                universalContext.associate(posting.getNodeId());
                 List<Event> eventList = events.computeIfAbsent(posting.getNodeId(), id -> new ArrayList<>());
                 if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
                     log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
+                    storyOperations.unpublish(posting.getId(), posting.getNodeId(), eventList::add);
                     postingRepository.delete(posting);
 
                     eventList.add(new PostingDeletedEvent(posting));

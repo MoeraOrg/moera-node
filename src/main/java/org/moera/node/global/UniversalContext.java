@@ -73,9 +73,13 @@ public class UniversalContext {
         return avatar.get();
     }
 
-    public void associate(Task task) {
-        setNodeId(task.getNodeId());
+    public void associate(UUID nodeId) {
+        setNodeId(nodeId);
         MDC.put("domain", domains.getDomainName(nodeId()));
+    }
+
+    public void associate(Task task) {
+        associate(task.getNodeId());
     }
 
     public void send(Event event) {

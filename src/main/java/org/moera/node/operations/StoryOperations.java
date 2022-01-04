@@ -18,7 +18,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.event.Event;
@@ -40,7 +40,7 @@ public class StoryOperations {
     private static final Timestamp PINNED_TIME = Util.toTimestamp(9000000000000L); // 9E+12
 
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private Domains domains;
@@ -60,7 +60,7 @@ public class StoryOperations {
     private final MomentFinder momentFinder = new MomentFinder();
 
     public void updateMoment(Story story) {
-        updateMoment(story, requestContext.nodeId());
+        updateMoment(story, universalContext.nodeId());
     }
 
     public void updateMoment(Story story, UUID nodeId) {
@@ -70,7 +70,7 @@ public class StoryOperations {
     }
 
     public void publish(Entry posting, List<StoryAttributes> publications) {
-        publish(posting, publications, requestContext.nodeId(), requestContext::send);
+        publish(posting, publications, universalContext.nodeId(), universalContext::send);
     }
 
     public void publish(Entry posting, List<StoryAttributes> publications, UUID nodeId, Consumer<Event> eventSender) {
@@ -103,7 +103,7 @@ public class StoryOperations {
     }
 
     public FeedStatus getFeedStatus(String feedName, boolean isAdmin) {
-        return getFeedStatus(feedName, requestContext.nodeId(), isAdmin);
+        return getFeedStatus(feedName, universalContext.nodeId(), isAdmin);
     }
 
     public FeedStatus getFeedStatus(String feedName, UUID nodeId, boolean isAdmin) {
@@ -122,10 +122,10 @@ public class StoryOperations {
     }
 
     public void unpublish(UUID entryId) {
-        unpublish(entryId, requestContext.nodeId(), requestContext::send);
+        unpublish(entryId, universalContext.nodeId(), universalContext::send);
     }
 
-    private void unpublish(UUID entryId, UUID nodeId, Consumer<Event> eventSender) {
+    public void unpublish(UUID entryId, UUID nodeId, Consumer<Event> eventSender) {
         Set<String> feedNames = new HashSet<>();
         storyRepository.findByEntryId(nodeId, entryId).stream()
                 .filter(story -> story.getFeedName() != null)
