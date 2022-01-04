@@ -4,8 +4,12 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -23,26 +27,34 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
+import org.moera.node.event.EventManager;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.Body;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.event.CommentDeletedEvent;
+import org.moera.node.model.event.CommentUpdatedEvent;
+import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.notification.MentionCommentAddedNotification;
 import org.moera.node.model.notification.MentionCommentDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
+import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.model.notification.ReplyCommentAddedNotification;
 import org.moera.node.model.notification.ReplyCommentDeletedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class CommentOperations {
@@ -66,6 +78,15 @@ public class CommentOperations {
 
     @Inject
     private CommentPublicPageOperations commentPublicPageOperations;
+
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    @Inject
+    private EventManager eventManager;
+
+    @Inject
+    private NotificationSenderPool notificationSenderPool;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
@@ -285,6 +306,56 @@ public class CommentOperations {
         requestContext.send(Directions.postingSubscribers(comment.getPosting().getId()),
                 new PostingCommentsUpdatedNotification(
                         comment.getPosting().getId(), comment.getPosting().getTotalChildren()));
+    }
+
+    @Scheduled(fixedDelayString = "PT15M")
+    public void purgeExpired() throws Throwable {
+        Map<UUID, List<Event>> events = new HashMap<>();
+        List<PostingSubscriberNotification> notifications = new ArrayList<>();
+
+        Transaction.execute(txManager, () -> {
+            List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
+            comments.addAll(commentRepository.findExpired(Util.now()));
+            for (Comment comment : comments) {
+                List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
+                if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
+                    Posting posting = comment.getPosting();
+                    if (comment.getDeletedAt() == null) {
+                        log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
+                                LogUtil.format(posting.getId()),
+                                LogUtil.format(posting.getTotalChildren()),
+                                LogUtil.format(comment.getId()));
+                        posting.setTotalChildren(posting.getTotalChildren() - 1);
+                    }
+                    commentRepository.delete(comment);
+
+                    eventList.add(new CommentDeletedEvent(comment));
+                    eventList.add(new PostingCommentsChangedEvent(posting));
+                    notifications.add(
+                            new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
+                } else {
+                    EntryRevision revision = comment.getRevisions().stream()
+                            .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                            .orElse(null);
+                    if (revision != null) { // always
+                        revision.setDeletedAt(null);
+                        entryRevisionRepository.delete(comment.getCurrentRevision());
+                        comment.setCurrentRevision(revision);
+                        comment.setTotalRevisions(comment.getTotalRevisions() - 1);
+
+                        eventList.add(new CommentUpdatedEvent(comment));
+                    }
+                }
+            }
+
+            return null;
+        });
+
+        for (var e : events.entrySet()) {
+            e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
+        }
+        notifications.forEach(notification -> notificationSenderPool.send(
+                Directions.postingSubscribers(UUID.fromString(notification.getPostingId())), notification));
     }
 
 }

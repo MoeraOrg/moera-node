@@ -34,6 +34,7 @@ import org.moera.node.model.CommentText;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PostingText;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -263,6 +264,15 @@ public class NodeApi {
     public PostingRevisionInfo[] getPostingRevisions(String nodeName, String postingId) throws NodeApiException {
         return call("GET", nodeName, String.format("/postings/%s/revisions", Util.ue(postingId)), null,
                 PostingRevisionInfo[].class);
+    }
+
+    public PostingInfo postPosting(String nodeName, PostingText postingText) throws NodeApiException {
+        return call("POST", nodeName, "/postings", null, postingText, PostingInfo.class);
+    }
+
+    public PostingInfo putPosting(String nodeName, String postingId, PostingText postingText) throws NodeApiException {
+        return call("PUT", nodeName, String.format("/postings/%s", Util.ue(postingId)), null, postingText,
+                PostingInfo.class);
     }
 
     public ReactionCreated postPostingReaction(String nodeName, String postingId,

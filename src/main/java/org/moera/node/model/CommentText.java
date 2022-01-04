@@ -14,18 +14,17 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.SourceFormat;
-import org.moera.node.text.HeadingExtractor;
-import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
-import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
 public class CommentText {
 
+    @Size(max = 63)
     private String ownerName;
 
+    @Size(max = 96)
     private String ownerFullName;
 
     @Valid
@@ -260,14 +259,6 @@ public class CommentText {
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
-    private boolean hasAttachedGallery(Body body, List<MediaFileOwner> media) {
-        if (ObjectUtils.isEmpty(media)) {
-            return false;
-        }
-        int embeddedCount = MediaExtractor.extractMediaFileIds(body.getText()).size();
-        return media.size() > embeddedCount;
-    }
-
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter,
                                 List<MediaFileOwner> media) {
         if (createdAt != null) {
@@ -279,60 +270,7 @@ public class CommentText {
         revision.setSignature(signature);
         revision.setSignatureVersion(signatureVersion);
         revision.setDigest(digest);
-
-        Body body = new Body();
-        if (signature == null && (this.body == null || ObjectUtils.isEmpty(this.body))) {
-            if (!ObjectUtils.isEmpty(bodySrc)) {
-                if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
-                    revision.setBodySrc(bodySrc);
-                    body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
-                    revision.setBody(body.getEncoded());
-                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
-                    revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                    Body bodyPreview = Shortener.shorten(body, hasAttachedGallery(body, media));
-                    if (bodyPreview != null) {
-                        revision.setBodyPreview(bodyPreview.getEncoded());
-                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media));
-                    } else {
-                        revision.setBodyPreview(Body.EMPTY);
-                        revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true, media));
-                    }
-                } else {
-                    revision.setBodySrc(Body.EMPTY);
-                    revision.setBody(bodySrc);
-                    revision.setSaneBody(null);
-                    revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
-                }
-            }
-        } else {
-            revision.setBodySrc(bodySrc);
-            revision.setBodyFormat(bodyFormat);
-            if (BodyFormat.MESSAGE.getValue().equals(bodyFormat)) {
-                try {
-                    body = new Body(this.body);
-                    revision.setBody(this.body);
-                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
-                } catch (BodyMappingException e) {
-                    e.setField("body");
-                    throw e;
-                }
-                try {
-                    Body bodyPreview = new Body(this.bodyPreview);
-                    revision.setBodyPreview(this.bodyPreview);
-                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                            !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media));
-                } catch (BodyMappingException e) {
-                    e.setField("bodyPreview");
-                    throw e;
-                }
-            } else {
-                revision.setBody(this.body);
-                revision.setSaneBody(null);
-            }
-        }
-        if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
-            revision.setHeading(HeadingExtractor.extractHeading(body));
-        }
+        textConverter.toRevision(bodySrc, body, bodyFormat, bodyPreview, signature != null, media, revision);
     }
 
     public boolean sameAsRevision(EntryRevision revision) {

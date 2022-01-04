@@ -1,6 +1,8 @@
 package org.moera.node.rest;
 
 import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -11,9 +13,14 @@ import javax.persistence.LockModeType;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -27,6 +34,7 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
+import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -48,6 +56,7 @@ import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.PostingImportantUpdateNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.naming.NamingCache;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
@@ -73,6 +82,8 @@ public class PostingController {
 
     private static final Logger log = LoggerFactory.getLogger(PostingController.class);
 
+    private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
+
     @Inject
     private RequestContext requestContext;
 
@@ -95,6 +106,9 @@ public class PostingController {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
     private EntityManager entityManager;
 
     @Inject
@@ -109,6 +123,9 @@ public class PostingController {
     @Inject
     private TextConverter textConverter;
 
+    @Inject
+    private NamingCache namingCache;
+
     private int getMaxPostingSize() {
         return requestContext.getOptions().getInt("posting.max-size");
     }
@@ -121,7 +138,6 @@ public class PostingController {
     }
 
     @PostMapping
-    @Admin
     @Entitled
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
@@ -133,12 +149,7 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        if (ObjectUtils.isEmpty(postingText.getBodySrc()) && ObjectUtils.isEmpty(postingText.getMedia())) {
-            throw new ValidationFailure("postingText.bodySrc.blank");
-        }
-        if (postingText.getBodySrc().length() > getMaxPostingSize()) {
-            throw new ValidationFailure("postingText.bodySrc.wrong-size");
-        }
+        byte[] digest = validatePostingText(postingText, postingText.getOwnerName());
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
                 postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
@@ -150,7 +161,8 @@ public class PostingController {
         try {
             posting = postingOperations.createOrUpdatePosting(posting, null, media,
                     postingText.getPublications(), null,
-                    revision -> postingText.toEntryRevision(revision, textConverter, media), postingText::toEntry);
+                    revision -> postingText.toEntryRevision(revision, digest, textConverter, media),
+                    postingText::toEntry);
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -169,7 +181,6 @@ public class PostingController {
     }
 
     @PutMapping("/{id}")
-    @Admin
     @Entitled
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
@@ -178,13 +189,16 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!posting.isOriginal()) {
+            throw new ValidationFailure("posting.not-original");
+        }
         mediaOperations.validateAvatar(
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        if (postingText.getBodySrc() != null && postingText.getBodySrc().length() > getMaxPostingSize()) {
-            throw new ValidationFailure("postingText.bodySrc.wrong-size");
-        }
+        byte[] digest = validatePostingText(postingText, posting.getOwnerName());
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
@@ -195,19 +209,16 @@ public class PostingController {
                 requestContext.isAdmin(),
                 requestContext.getClientName());
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!posting.isOriginal()) {
-            throw new ValidationFailure("posting.not-original");
-        }
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingText.toEntry(posting);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media,
                     null, postingText::sameAsRevision,
-                    revision -> postingText.toEntryRevision(revision, textConverter, media), postingText::toEntry);
+                    revision -> postingText.toEntryRevision(revision, digest, textConverter, media),
+                    postingText::toEntry);
         } catch (BodyMappingException e) {
-            throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
+            String field = e.getField() != null ? e.getField() : "bodySrc";
+            throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
         }
         requestContext.send(new PostingUpdatedEvent(posting));
         requestContext.send(
@@ -221,6 +232,65 @@ public class PostingController {
         }
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
+    }
+
+    private byte[] validatePostingText(PostingText postingText, String ownerName) {
+        byte[] digest = null;
+        if (postingText.getSignature() == null) {
+            if (!requestContext.isAdmin()) {
+                String clientName = requestContext.getClientName();
+                if (ObjectUtils.isEmpty(clientName)) {
+                    throw new AuthenticationException();
+                }
+                if (!ObjectUtils.isEmpty(ownerName) && !ownerName.equals(clientName)) {
+                    throw new AuthenticationException();
+                }
+                postingText.setOwnerName(clientName);
+            } else {
+                if (!ObjectUtils.isEmpty(ownerName) && !ownerName.equals(requestContext.nodeName())) {
+                    throw new AuthenticationException();
+                }
+                postingText.setOwnerName(requestContext.nodeName());
+            }
+
+            if (ObjectUtils.isEmpty(postingText.getBodySrc()) && ObjectUtils.isEmpty(postingText.getMedia())) {
+                throw new ValidationFailure("postingText.bodySrc.blank");
+            }
+            if (postingText.getBodySrc().length() > getMaxPostingSize()) {
+                throw new ValidationFailure("postingText.bodySrc.wrong-size");
+            }
+        } else {
+            byte[] signingKey = namingCache.get(ownerName).getSigningKey();
+            Fingerprint fingerprint = Fingerprints.posting(postingText.getSignatureVersion())
+                    .create(postingText, this::mediaDigest);
+            if (!CryptoUtil.verify(fingerprint, postingText.getSignature(), signingKey)) {
+                throw new IncorrectSignatureException();
+            }
+            digest = CryptoUtil.digest(fingerprint);
+
+            if (ObjectUtils.isEmpty(postingText.getBody()) && ObjectUtils.isEmpty(postingText.getMedia())) {
+                throw new ValidationFailure("postingText.body.blank");
+            }
+            if (postingText.getBody().length() > getMaxPostingSize()) {
+                throw new ValidationFailure("postingText.body.wrong-size");
+            }
+            if (ObjectUtils.isEmpty(postingText.getBodyFormat())) {
+                throw new ValidationFailure("postingText.bodyFormat.blank");
+            }
+            if (postingText.getCreatedAt() == null) {
+                throw new ValidationFailure("postingText.createdAt.blank");
+            }
+            if (Duration.between(Instant.ofEpochSecond(postingText.getCreatedAt()), Instant.now()).abs()
+                    .compareTo(CREATED_AT_MARGIN) > 0) {
+                throw new ValidationFailure("postingText.createdAt.out-of-range");
+            }
+        }
+        return digest;
+    }
+
+    private byte[] mediaDigest(UUID id) {
+        MediaFileOwner media = mediaFileOwnerRepository.findById(id).orElse(null);
+        return media != null ? media.getMediaFile().getDigest() : null;
     }
 
     @GetMapping("/{id}")

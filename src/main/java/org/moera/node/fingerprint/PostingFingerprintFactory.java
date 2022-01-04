@@ -1,5 +1,6 @@
 package org.moera.node.fingerprint;
 
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.commons.crypto.Fingerprint;
@@ -7,6 +8,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PostingText;
 import org.moera.node.model.PrivateMediaFileInfo;
 
 public class PostingFingerprintFactory extends FingerprintFactory {
@@ -29,6 +31,11 @@ public class PostingFingerprintFactory extends FingerprintFactory {
                               Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
         var constructor = getConstructor(PostingInfo.class, PostingRevisionInfo.class, Function.class);
         return constructor != null ? create(constructor, postingInfo, postingRevisionInfo, mediaDigest) : null;
+    }
+
+    public Fingerprint create(PostingText postingText, Function<UUID, byte[]> mediaDigest) {
+        var constructor = getConstructor(PostingText.class, Function.class);
+        return constructor != null ? create(constructor, postingText, mediaDigest) : null;
     }
 
 }

@@ -15,15 +15,15 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.SourceFormat;
-import org.moera.node.text.HeadingExtractor;
-import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
-import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
 public class PostingText {
+
+    @Size(max = 63)
+    private String ownerName;
 
     @Size(max = 96)
     private String ownerFullName;
@@ -34,11 +34,20 @@ public class PostingText {
     @JsonIgnore
     private MediaFile ownerAvatarMediaFile;
 
+    private String bodyPreview;
+
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;
 
+    private String body;
+
+    @Size(max = 75)
+    private String bodyFormat;
+
     private UUID[] media;
+
+    private Long createdAt;
 
     @Valid
     private AcceptedReactions acceptedReactions;
@@ -52,7 +61,38 @@ public class PostingText {
     @Valid
     private UpdateInfo updateInfo;
 
+    private byte[] signature;
+
+    private short signatureVersion;
+
     public PostingText() {
+    }
+
+    public PostingText(String ownerName, String ownerFullName, PostingSourceText sourceText,
+                       TextConverter textConverter) {
+        this.ownerName = ownerName;
+        this.ownerFullName = ownerFullName;
+        ownerAvatar = sourceText.getOwnerAvatar();
+        bodySrc = sourceText.getBodySrc();
+        bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
+        media = sourceText.getMedia() != null
+                ? Arrays.stream(sourceText.getMedia()).map(MediaWithDigest::getId).toArray(UUID[]::new)
+                : null;
+        createdAt = Util.toEpochSecond(Util.now());
+        acceptedReactions = sourceText.getAcceptedReactions();
+        if (bodySrcFormat != SourceFormat.APPLICATION) {
+            Body decodedBody = textConverter.toHtml(bodySrcFormat, new Body(bodySrc));
+            body = decodedBody.getEncoded();
+            bodyFormat = BodyFormat.MESSAGE.getValue();
+            Body decodedBodyPreview = Shortener.shorten(decodedBody, false);
+            if (decodedBodyPreview == null) {
+                decodedBodyPreview = new Body(Body.EMPTY);
+            }
+            bodyPreview = decodedBodyPreview.getEncoded();
+        } else {
+            body = new Body(bodySrc).getEncoded();
+            bodyFormat = BodyFormat.APPLICATION.getValue();
+        }
     }
 
     public void initAcceptedReactionsDefaults() {
@@ -65,6 +105,14 @@ public class PostingText {
         if (acceptedReactions.getNegative() == null) {
             acceptedReactions.setNegative("");
         }
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
     public String getOwnerFullName() {
@@ -91,6 +139,14 @@ public class PostingText {
         this.ownerAvatarMediaFile = ownerAvatarMediaFile;
     }
 
+    public String getBodyPreview() {
+        return bodyPreview;
+    }
+
+    public void setBodyPreview(String bodyPreview) {
+        this.bodyPreview = bodyPreview;
+    }
+
     public String getBodySrc() {
         return bodySrc;
     }
@@ -107,12 +163,36 @@ public class PostingText {
         this.bodySrcFormat = bodySrcFormat;
     }
 
+    public String getBody() {
+        return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
+    }
+
+    public String getBodyFormat() {
+        return bodyFormat;
+    }
+
+    public void setBodyFormat(String bodyFormat) {
+        this.bodyFormat = bodyFormat;
+    }
+
     public UUID[] getMedia() {
         return media;
     }
 
     public void setMedia(UUID[] media) {
         this.media = media;
+    }
+
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
     }
 
     public AcceptedReactions getAcceptedReactions() {
@@ -155,6 +235,22 @@ public class PostingText {
         this.updateInfo = updateInfo;
     }
 
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public void setSignature(byte[] signature) {
+        this.signature = signature;
+    }
+
+    public short getSignatureVersion() {
+        return signatureVersion;
+    }
+
+    public void setSignatureVersion(short signatureVersion) {
+        this.signatureVersion = signatureVersion;
+    }
+
     public void toEntry(Entry entry) {
         if (sameAsEntry(entry)) {
             return;
@@ -174,6 +270,9 @@ public class PostingText {
         }
         if (reactionTotalsVisible != null) {
             entry.setReactionTotalsVisible(reactionTotalsVisible);
+        }
+        if (ownerName != null) {
+            entry.setOwnerName(ownerName);
         }
         if (ownerFullName != null) {
             entry.setOwnerFullName(ownerFullName);
@@ -196,48 +295,25 @@ public class PostingText {
                         || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
                && (reactionsVisible == null || reactionsVisible.equals(entry.isReactionsVisible()))
                && (reactionTotalsVisible == null || reactionTotalsVisible.equals(entry.isReactionTotalsVisible()))
+               && (ownerName == null || ownerName.equals(entry.getOwnerName()))
                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()))
                && (ownerAvatarMediaFile == null
                     || entry.getOwnerAvatarMediaFile() != null
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
     }
 
-    private boolean hasAttachedGallery(Body body, List<MediaFileOwner> media) {
-        if (ObjectUtils.isEmpty(media)) {
-            return false;
+    public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter,
+                                List<MediaFileOwner> media) {
+        if (createdAt != null) {
+            revision.setCreatedAt(Util.toTimestamp(createdAt));
         }
-        int embeddedCount = MediaExtractor.extractMediaFileIds(body.getText()).size();
-        return media.size() > embeddedCount;
-    }
-
-    public void toEntryRevision(EntryRevision revision, TextConverter textConverter, List<MediaFileOwner> media) {
         if (bodySrcFormat != null) {
             revision.setBodySrcFormat(bodySrcFormat);
         }
-
-        if (!ObjectUtils.isEmpty(bodySrc)) {
-            if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
-                revision.setBodySrc(bodySrc);
-                Body body = textConverter.toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
-                revision.setBody(body.getEncoded());
-                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
-                revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                Body bodyPreview = Shortener.shorten(body, hasAttachedGallery(body, media));
-                if (bodyPreview != null) {
-                    revision.setBodyPreview(bodyPreview.getEncoded());
-                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(bodyPreview, true, media));
-                } else {
-                    revision.setBodyPreview(Body.EMPTY);
-                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(body, true, media));
-                }
-                revision.setHeading(HeadingExtractor.extractHeading(body));
-                revision.setDescription(HeadingExtractor.extractDescription(body));
-            } else {
-                revision.setBodySrc(Body.EMPTY);
-                revision.setBody(bodySrc);
-                revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
-            }
-        }
+        revision.setSignature(signature);
+        revision.setSignatureVersion(signatureVersion);
+        revision.setDigest(digest);
+        textConverter.toRevision(bodySrc, body, bodyFormat, bodyPreview, signature != null, media, revision);
 
         if (updateInfo != null) {
             if (updateInfo.getImportant() != null) {
@@ -257,6 +333,7 @@ public class PostingText {
                 && Arrays.equals(
                         media != null ? media : new UUID[0],
                         revision.getAttachments().stream().map(EntryAttachment::getMediaFileOwner).toArray())
+                && (revision.getSignature() != null || signature == null)
                 && (updateInfo != null ? updateInfo.getImportant() : false) == revision.isUpdateImportant()
                 && Objects.equals(
                         updateInfo != null && updateInfo.getDescription() != null ? updateInfo.getDescription() : "",

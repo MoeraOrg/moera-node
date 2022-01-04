@@ -2,10 +2,15 @@ package org.moera.node.operations;
 
 import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -14,6 +19,7 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
@@ -37,10 +43,13 @@ import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingDeletedEvent;
+import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.PostingDeletedNotification;
+import org.moera.node.model.notification.PostingSubscriberNotification;
+import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
@@ -61,6 +70,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class PostingOperations {
 
     public static final int MAX_POSTINGS_PER_REQUEST = 200;
+    private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
 
     private static final Logger log = LoggerFactory.getLogger(PostingOperations.class);
 
@@ -170,10 +180,17 @@ public class PostingOperations {
         storyOperations.publish(posting, publications);
 
         current = posting.getCurrentRevision();
-        PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
-        current.setDigest(CryptoUtil.digest(fingerprint));
-        current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
-        current.setSignatureVersion(PostingFingerprint.VERSION);
+
+        if (current.getSignature() == null) {
+            if (posting.getOwnerName().equals(requestContext.nodeName())) {
+                PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
+                current.setDigest(CryptoUtil.digest(fingerprint));
+                current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
+                current.setSignatureVersion(PostingFingerprint.VERSION);
+            } else {
+                current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
+            }
+        }
 
         Story timelineStory = posting.getStory(Feed.TIMELINE);
         if (timelineStory != null) {
@@ -279,7 +296,7 @@ public class PostingOperations {
     }
 
     @Scheduled(fixedDelayString = "PT1H")
-    public void deleteUnlinked() throws Throwable {
+    public void purgeUnlinked() throws Throwable {
         for (String domainName : domains.getAllDomainNames()) {
             Options options = domains.getDomainOptions(domainName);
             List<Event> eventList = new ArrayList<>();
@@ -298,6 +315,47 @@ public class PostingOperations {
                 notificationSenderPool.send(nt.getFirst(), nt.getSecond());
             });
         }
+    }
+
+    @Scheduled(fixedDelayString = "PT15M")
+    public void purgeExpired() throws Throwable {
+        Map<UUID, List<Event>> events = new HashMap<>();
+        List<PostingSubscriberNotification> notifications = new ArrayList<>();
+
+        Transaction.execute(txManager, () -> {
+            List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
+            for (Posting posting : postings) {
+                List<Event> eventList = events.computeIfAbsent(posting.getNodeId(), id -> new ArrayList<>());
+                if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
+                    log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
+                    postingRepository.delete(posting);
+
+                    eventList.add(new PostingDeletedEvent(posting));
+                    notifications.add(new PostingDeletedNotification(posting.getId()));
+                } else {
+                    EntryRevision revision = posting.getRevisions().stream()
+                            .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                            .orElse(null);
+                    if (revision != null) { // always
+                        revision.setDeletedAt(null);
+                        entryRevisionRepository.delete(posting.getCurrentRevision());
+                        posting.setCurrentRevision(revision);
+                        posting.setTotalRevisions(posting.getTotalRevisions() - 1);
+
+                        eventList.add(new PostingUpdatedEvent(posting));
+                        notifications.add(new PostingUpdatedNotification(posting.getId()));
+                    }
+                }
+            }
+
+            return null;
+        });
+
+        for (var e : events.entrySet()) {
+            e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
+        }
+        notifications.forEach(notification -> notificationSenderPool.send(
+                Directions.postingSubscribers(UUID.fromString(notification.getPostingId())), notification));
     }
 
 }

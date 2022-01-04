@@ -46,4 +46,8 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             + " and not exists(select s from Story s where s.entry.id = p.id)")
     List<Posting> findUnlinked(UUID nodeId);
 
+    @Query("select p from Posting p left join fetch p.currentRevision"
+            + " where p.deletedAt is null and p.currentRevision.deadline < ?1")
+    List<Posting> findExpiredUnsigned(Timestamp deadline);
+
 }

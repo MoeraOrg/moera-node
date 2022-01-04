@@ -3,6 +3,7 @@ package org.moera.node.fingerprint;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PostingText;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.Util;
 
@@ -36,7 +38,7 @@ public class PostingFingerprint extends EntryFingerprint {
     public PostingFingerprint(Posting posting, EntryRevision revision) {
         super(1);
         // TODO it should be posting.receiverName, if it is not null, and node name otherwise,
-        // to support postings in group nodes
+        // to support postings in group nodes (?)
         receiverName = posting.getOwnerName();
         ownerName = posting.getOwnerName();
         if (posting.isOriginal()) {
@@ -84,6 +86,18 @@ public class PostingFingerprint extends EntryFingerprint {
         createdAt = postingInfo.isOriginal()
                 ? postingRevisionInfo.getCreatedAt() : postingRevisionInfo.getReceiverCreatedAt();
         attachments = mediaAttachmentsFingerprint(postingRevisionInfo.getMedia(), mediaDigest);
+    }
+
+    public PostingFingerprint(PostingText postingText, Function<UUID, byte[]> mediaDigest) {
+        super(1);
+        receiverName = postingText.getOwnerName();
+        ownerName = postingText.getOwnerName();
+        bodySrc.setValue(postingText.getBodySrc());
+        bodySrcFormat = postingText.getBodySrcFormat().getValue();
+        body = postingText.getBody();
+        bodyFormat = postingText.getBodyFormat();
+        createdAt = postingText.getCreatedAt();
+        attachments = mediaAttachmentsFingerprint(postingText.getMedia(), mediaDigest);
     }
 
 }
