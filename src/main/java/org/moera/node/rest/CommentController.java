@@ -139,6 +139,9 @@ public class CommentController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (posting.getCurrentRevision().getSignature() == null) {
+            throw new ValidationFailure("posting.not-signed");
+        }
         Comment repliedTo = null;
         if (commentText.getRepliedToId() != null) {
             repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentText.getRepliedToId())
