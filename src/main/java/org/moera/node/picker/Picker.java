@@ -294,6 +294,9 @@ public class Picker extends Task {
     }
 
     private void publish(String feedName, Posting posting, List<Event> events) {
+        if (feedName == null) {
+            return;
+        }
         int totalStories = storyRepository.countByFeedAndTypeAndEntryId(nodeId, feedName, StoryType.POSTING_ADDED,
                 posting.getId());
         if (totalStories > 0) {
