@@ -155,8 +155,17 @@ public class PostingOperations {
                                          Consumer<EntryRevision> revisionUpdater,
                                          Consumer<Entry> mediaEntryUpdater) {
         EntryRevision latest = posting.getCurrentRevision();
-        if (latest != null && isNothingChanged != null && isNothingChanged.test(latest)) {
-            return postingRepository.saveAndFlush(posting);
+        if (latest != null) {
+            if (isNothingChanged != null && isNothingChanged.test(latest)) {
+                return postingRepository.saveAndFlush(posting);
+            }
+            if (latest.getSignature() == null) {
+                posting.removeRevision(latest);
+                posting.setTotalRevisions(posting.getTotalRevisions() - 1);
+                posting.setCurrentRevision(null);
+                entryRevisionRepository.delete(latest);
+                latest = null;
+            }
         }
 
         EntryRevision current = newRevision(posting, revision);
