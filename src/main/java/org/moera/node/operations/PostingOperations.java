@@ -151,6 +151,8 @@ public class PostingOperations {
         revision.setBodyPreview(Body.EMPTY);
         revision.setSaneBodyPreview(Body.EMPTY);
 
+        signIfOwned(posting);
+
         return posting;
     }
 
@@ -195,9 +197,22 @@ public class PostingOperations {
 
         posting.setEditedAt(Util.now());
         posting = postingRepository.saveAndFlush(posting);
+        signIfOwned(posting);
+
         storyOperations.publish(posting, publications);
 
-        current = posting.getCurrentRevision();
+        Story timelineStory = posting.getStory(Feed.TIMELINE);
+        if (timelineStory != null) {
+            timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
+        }
+
+        notifyMentioned(posting.getId(), posting.getCurrentRevision(), latest);
+
+        return posting;
+    }
+
+    private void signIfOwned(Posting posting) {
+        EntryRevision current = posting.getCurrentRevision();
 
         if (current.getSignature() == null) {
             if (posting.getOwnerName().equals(requestContext.nodeName())) {
@@ -209,15 +224,6 @@ public class PostingOperations {
                 current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
             }
         }
-
-        Story timelineStory = posting.getStory(Feed.TIMELINE);
-        if (timelineStory != null) {
-            timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
-        }
-
-        notifyMentioned(posting.getId(), current, latest);
-
-        return posting;
     }
 
     private ECPrivateKey getSigningKey() {
