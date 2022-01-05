@@ -66,6 +66,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class PostingOperations {
@@ -111,15 +112,19 @@ public class PostingOperations {
     @Inject
     private PlatformTransactionManager txManager;
 
-    private Posting newPosting() {
+    private Posting newPosting(String ownerName) {
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
         posting.setNodeId(requestContext.nodeId());
-        posting.setOwnerName(requestContext.nodeName());
-        posting.setOwnerFullName(requestContext.fullName());
-        if (requestContext.getAvatar() != null) {
-            posting.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
-            posting.setOwnerAvatarShape(requestContext.getAvatar().getShape());
+        if (ObjectUtils.isEmpty(ownerName)) {
+            posting.setOwnerName(requestContext.nodeName());
+            posting.setOwnerFullName(requestContext.fullName());
+            if (requestContext.getAvatar() != null) {
+                posting.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
+                posting.setOwnerAvatarShape(requestContext.getAvatar().getShape());
+            }
+        } else {
+            posting.setOwnerName(ownerName);
         }
         return postingRepository.save(posting);
     }
@@ -127,14 +132,14 @@ public class PostingOperations {
     public Posting newPosting(PostingText postingText) {
         postingText.initAcceptedReactionsDefaults();
 
-        Posting posting = newPosting();
+        Posting posting = newPosting("");
         postingText.toEntry(posting);
 
         return posting;
     }
 
     public Posting newPosting(MediaFileOwner mediaFileOwner) {
-        Posting posting = newPosting();
+        Posting posting = newPosting(mediaFileOwner.getOwnerName());
         posting.setParentMedia(mediaFileOwner);
 
         EntryRevision revision = newRevision(posting, null);
