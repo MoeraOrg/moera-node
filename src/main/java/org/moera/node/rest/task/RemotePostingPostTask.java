@@ -12,7 +12,6 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnCommentRepository;
-import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.media.MediaManager;
@@ -96,7 +95,7 @@ public class RemotePostingPostTask extends Task {
                 postingText,
                 id -> postingMediaDigest(id, mediaDigests));
         postingText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
-        postingText.setSignatureVersion(CommentFingerprint.VERSION);
+        postingText.setSignatureVersion(PostingFingerprint.VERSION);
         return postingText;
     }
 
