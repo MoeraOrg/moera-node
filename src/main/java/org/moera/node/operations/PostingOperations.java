@@ -239,7 +239,7 @@ public class PostingOperations {
             revision.setHeading(template.getHeading());
             revision.setDescription(template.getDescription());
 
-            if (posting.getCurrentRevision().getDeletedAt() == null) {
+            if (posting.getCurrentRevision() != null && posting.getCurrentRevision().getDeletedAt() == null) {
                 posting.getCurrentRevision().setDeletedAt(Util.now());
             }
             posting.setTotalRevisions(posting.getTotalRevisions() + 1);
