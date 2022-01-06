@@ -15,6 +15,7 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
@@ -612,6 +613,12 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         entryRevision.setReceiverDeletedAt(Util.toTimestamp(deletedAt));
         entryRevision.setSignature(signature);
         entryRevision.setSignatureVersion(signatureVersion);
+    }
+
+    public void toOwnPosting(OwnPosting ownPosting) {
+        ownPosting.setRemotePostingId(id);
+        ownPosting.setHeading(heading);
+        ownPosting.setCreatedAt(Util.now());
     }
 
 }

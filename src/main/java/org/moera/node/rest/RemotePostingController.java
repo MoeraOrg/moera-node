@@ -8,6 +8,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.OwnPosting;
+import org.moera.node.data.OwnPostingRepository;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.SourceFormat;
@@ -20,6 +22,8 @@ import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.PostingSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.event.RemotePostingUpdatedEvent;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingPostTask;
 import org.moera.node.rest.task.RemotePostingVerifyTask;
 import org.moera.node.task.TaskAutowire;
@@ -52,10 +56,16 @@ public class RemotePostingController {
     private TaskAutowire taskAutowire;
 
     @Inject
+    private OwnPostingRepository ownPostingRepository;
+
+    @Inject
     private RemotePostingVerificationRepository remotePostingVerificationRepository;
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     @PostMapping
     @Admin
@@ -108,13 +118,13 @@ public class RemotePostingController {
                 LogUtil.format(nodeName),
                 LogUtil.format(postingId));
 
-        /*OwnComment ownComment = ownCommentRepository.findByRemoteCommentId(requestContext.nodeId(), nodeName,
-                postingId, commentId).orElse(null);
-        if (ownComment != null) {
+        OwnPosting ownPosting = ownPostingRepository
+                .findByRemotePostingId(requestContext.nodeId(), nodeName, postingId)
+                .orElse(null);
+        if (ownPosting != null) {
             contactOperations.updateCloseness(nodeName, -1);
-            contactOperations.updateCloseness(ownComment.getRemoteRepliedToName(), -1);
-            requestContext.send(new RemoteCommentUpdatedEvent(nodeName, postingId, commentId));
-        }*/
+            requestContext.send(new RemotePostingUpdatedEvent(nodeName, postingId));
+        }
 
         return Result.OK;
     }

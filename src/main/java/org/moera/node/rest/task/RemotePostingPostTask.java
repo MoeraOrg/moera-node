@@ -11,15 +11,18 @@ import javax.inject.Inject;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.OwnCommentRepository;
+import org.moera.node.data.OwnPosting;
+import org.moera.node.data.OwnPostingRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
-import org.moera.node.instant.CommentInstants;
+import org.moera.node.instant.PostingInstants;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.MediaWithDigest;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingSourceText;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.WhoAmI;
+import org.moera.node.model.event.RemotePostingAddedEvent;
+import org.moera.node.model.event.RemotePostingUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.moera.node.text.TextConverter;
@@ -42,13 +45,13 @@ public class RemotePostingPostTask extends Task {
     private TextConverter textConverter;
 
     @Inject
-    private OwnCommentRepository ownCommentRepository;
+    private OwnPostingRepository ownPostingRepository;
 
     @Inject
     private ContactOperations contactOperations;
 
     @Inject
-    private CommentInstants commentInstants;
+    private PostingInstants postingInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -74,10 +77,10 @@ public class RemotePostingPostTask extends Task {
             if (postingId == null) {
                 postingInfo = nodeApi.postPosting(targetNodeName, postingText);
                 postingId = postingInfo.getId();
-//                send(new RemoteCommentAddedEvent(targetNodeName, postingId, commentId));
+                send(new RemotePostingAddedEvent(targetNodeName, postingId));
             } else {
                 postingInfo = nodeApi.putPosting(targetNodeName, postingId, postingText);
-//                send(new RemoteCommentUpdatedEvent(targetNodeName, postingId, commentId));
+                send(new RemotePostingUpdatedEvent(targetNodeName, postingId));
             }
 
             savePosting(postingInfo);
@@ -123,35 +126,34 @@ public class RemotePostingPostTask extends Task {
     }
 
     private void savePosting(PostingInfo info) {
-        /*try {
+        if (info.getParentMediaId() != null) {
+            return;
+        }
+
+        try {
             inTransaction(() -> {
-                OwnComment ownComment = ownCommentRepository
-                        .findByRemoteCommentId(nodeId, targetNodeName, postingId, commentId)
+                OwnPosting ownPosting = ownPostingRepository
+                        .findByRemotePostingId(nodeId, targetNodeName, postingId)
                         .orElse(null);
-                if (ownComment == null) {
-                    ownComment = new OwnComment();
-                    ownComment.setId(UUID.randomUUID());
-                    ownComment.setNodeId(nodeId);
-                    ownComment.setRemoteNodeName(targetNodeName);
-                    ownComment.setRemoteFullName(target.getFullName());
+                if (ownPosting == null) {
+                    ownPosting = new OwnPosting();
+                    ownPosting.setId(UUID.randomUUID());
+                    ownPosting.setNodeId(nodeId);
+                    ownPosting.setRemoteNodeName(targetNodeName);
+                    ownPosting.setRemoteFullName(target.getFullName());
                     if (targetAvatarMediaFile != null) {
-                        ownComment.setRemoteAvatarMediaFile(targetAvatarMediaFile);
-                        ownComment.setRemoteAvatarShape(target.getAvatar().getShape());
+                        ownPosting.setRemoteAvatarMediaFile(targetAvatarMediaFile);
+                        ownPosting.setRemoteAvatarShape(target.getAvatar().getShape());
                     }
-                    if (repliedToAvatarMediaFile != null) {
-                        ownComment.setRemoteRepliedToAvatarMediaFile(repliedToAvatarMediaFile);
-                        ownComment.setRemoteRepliedToAvatarShape(info.getRepliedToAvatar().getShape());
-                    }
-                    ownComment = ownCommentRepository.save(ownComment);
+                    ownPosting = ownPostingRepository.save(ownPosting);
                     contactOperations.updateCloseness(nodeId, targetNodeName, 1);
-                    contactOperations.updateCloseness(nodeId, info.getRepliedToName(), 1);
                 }
-                info.toOwnComment(ownComment);
+                info.toOwnPosting(ownPosting);
                 return null;
             });
         } catch (Throwable e) {
             error(e);
-        }*/
+        }
     }
 
     private void success() {
@@ -165,11 +167,11 @@ public class RemotePostingPostTask extends Task {
             log.error("Error adding posting to node {}: {}", targetNodeName, e.getMessage());
         }
 
-        /*if (prevPostingInfo == null) {
-            commentInstants.addingFailed(postingId, postingInfo);
+        if (prevPostingInfo == null) {
+            postingInstants.remoteAddingFailed(target);
         } else {
-            commentInstants.updateFailed(postingId, postingInfo, commentId, prevPostingInfo);
-        }*/
+            postingInstants.remoteUpdateFailed(target, postingId, prevPostingInfo);
+        }
     }
 
 }

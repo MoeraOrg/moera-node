@@ -148,7 +148,7 @@ public class CommentInstants extends InstantsCreator {
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
-        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_TASK_FAILED);
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_POST_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
         story.setRemoteFullName(postingOwnerFullName);
@@ -173,7 +173,7 @@ public class CommentInstants extends InstantsCreator {
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
         String commentHeading = commentInfo != null ? commentInfo.getHeading() : "";
 
-        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_TASK_FAILED);
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_UPDATE_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
         story.setRemoteFullName(postingOwnerFullName);

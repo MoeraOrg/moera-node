@@ -75,6 +75,7 @@ public class StoryInfo {
 
             case MENTION_POSTING:
             case POSTING_UPDATED:
+            case POSTING_UPDATE_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 if (story.getRemoteAvatarMediaFile() != null) {
@@ -86,6 +87,7 @@ public class StoryInfo {
 
             case SUBSCRIBER_ADDED:
             case SUBSCRIBER_DELETED:
+            case POSTING_POST_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 if (story.getRemoteAvatarMediaFile() != null) {
@@ -110,6 +112,7 @@ public class StoryInfo {
             case COMMENT_REACTION_ADDED_POSITIVE:
             case COMMENT_REACTION_ADDED_NEGATIVE:
             case REMOTE_COMMENT_ADDED:
+            case COMMENT_UPDATE_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
@@ -118,6 +121,16 @@ public class StoryInfo {
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
+                break;
+
+            case COMMENT_POST_TASK_FAILED:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                }
+                info.setRemotePostingId(story.getRemotePostingId());
                 break;
         }
         return info;
