@@ -477,7 +477,8 @@ CREATE TABLE public.entries (
     receiver_avatar_media_file_id character varying(40),
     receiver_avatar_shape character varying(8),
     replied_to_avatar_media_file_id character varying(40),
-    replied_to_avatar_shape character varying(8)
+    replied_to_avatar_shape character varying(8),
+    parent_media_id uuid
 );
 
 
@@ -748,7 +749,8 @@ CREATE TABLE public.picks (
     remote_feed_name character varying(63),
     remote_posting_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    retry_at timestamp without time zone
+    retry_at timestamp without time zone,
+    media_file_owner_id uuid
 );
 
 
@@ -1398,6 +1400,13 @@ CREATE INDEX entries_parent_id_moment_idx ON public.entries USING btree (parent_
 
 
 --
+-- Name: entries_parent_media_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX entries_parent_media_id_idx ON public.entries USING btree (parent_media_id);
+
+
+--
 -- Name: entries_receiver_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1626,6 +1635,13 @@ CREATE INDEX pending_notifications_created_at_idx ON public.pending_notification
 --
 
 CREATE INDEX pending_notifications_node_id_idx ON public.pending_notifications USING btree (node_id);
+
+
+--
+-- Name: picks_media_file_owner_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX picks_media_file_owner_id_idx ON public.picks USING btree (media_file_owner_id);
 
 
 --
@@ -2090,6 +2106,14 @@ ALTER TABLE ONLY public.entries
 
 
 --
+-- Name: entries entries_parent_media_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_parent_media_id_fkey FOREIGN KEY (parent_media_id) REFERENCES public.media_file_owners(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
 -- Name: entries entries_receiver_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2231,6 +2255,14 @@ ALTER TABLE ONLY public.own_comments
 
 ALTER TABLE ONLY public.own_reactions
     ADD CONSTRAINT own_reactions_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: picks picks_media_file_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.picks
+    ADD CONSTRAINT picks_media_file_owner_id_fkey FOREIGN KEY (media_file_owner_id) REFERENCES public.media_file_owners(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
