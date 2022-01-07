@@ -207,12 +207,12 @@ public class Updater {
             if (nodeName == null) {
                 continue;
             }
+            universalContext.associate(nodeId);
             List<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findWithoutPosting(nodeId);
             for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
-                universalContext.associate(nodeId);
-                mediaFileOwner.setPosting(postingOperations.newPosting(mediaFileOwner));
+                mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
                 log.info("Created posting {} for media {}",
-                        mediaFileOwner.getPosting().getId(), mediaFileOwner.getId());
+                        mediaFileOwner.getPosting(null).getId(), mediaFileOwner.getId());
             }
         }
     }

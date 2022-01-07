@@ -34,7 +34,7 @@ public class PostingRevisionInfo implements RevisionInfo {
     public PostingRevisionInfo() {
     }
 
-    public PostingRevisionInfo(EntryRevision revision, boolean countsVisible) {
+    public PostingRevisionInfo(EntryRevision revision, String receiverName, boolean countsVisible) {
         id = revision.getId().toString();
         receiverId = revision.getReceiverRevisionId();
         bodyPreview = new Body(revision.getBodyPreview());
@@ -46,7 +46,7 @@ public class PostingRevisionInfo implements RevisionInfo {
         bodyFormat = revision.getBodyFormat();
         media = revision.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(MediaAttachment::new)
+                .map(ea -> new MediaAttachment(ea, receiverName))
                 .toArray(MediaAttachment[]::new);
         heading = revision.getHeading();
         if (!UpdateInfo.isEmpty(revision)) {

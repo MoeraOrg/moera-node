@@ -61,7 +61,7 @@ public class DraftInfo {
         bodyFormat = draft.getBodyFormat();
         media = draft.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(MediaAttachment::new)
+                .map(ea -> new MediaAttachment(ea, null))
                 .toArray(MediaAttachment[]::new);
         heading = draft.getHeading();
         publishAt = Util.toEpochSecond(draft.getPublishAt());

@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.Posting;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PrivateMediaFileInfo {
@@ -18,14 +19,15 @@ public class PrivateMediaFileInfo {
     public PrivateMediaFileInfo() {
     }
 
-    public PrivateMediaFileInfo(MediaFileOwner mediaFileOwner) {
+    public PrivateMediaFileInfo(MediaFileOwner mediaFileOwner, String receiverName) {
         id = mediaFileOwner.getId().toString();
         hash = mediaFileOwner.getMediaFile().getId();
         path = "private/" + mediaFileOwner.getFileName();
         width = mediaFileOwner.getMediaFile().getSizeX();
         height = mediaFileOwner.getMediaFile().getSizeY();
         size = mediaFileOwner.getMediaFile().getFileSize();
-        postingId = mediaFileOwner.getPosting() != null ? mediaFileOwner.getPosting().getId().toString() : null;
+        Posting posting = mediaFileOwner.getPosting(receiverName);
+        postingId = posting != null ? posting.getId().toString() : null;
         previews = mediaFileOwner.getMediaFile().getPreviews().stream()
                 .filter(pw -> pw.getMediaFile() != null)
                 .map(MediaFilePreviewInfo::new)

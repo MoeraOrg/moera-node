@@ -87,7 +87,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         bodyFormat = revision.getBodyFormat();
         media = revision.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(MediaAttachment::new)
+                .map(ea -> new MediaAttachment(ea, null))
                 .toArray(MediaAttachment[]::new);
         heading = revision.getHeading();
         if (comment.getRepliedTo() != null) {

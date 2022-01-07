@@ -1,12 +1,16 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -31,8 +35,8 @@ public class MediaFileOwner {
     @NotNull
     private MediaFile mediaFile;
 
-    @OneToOne(mappedBy = "parentMedia")
-    private Posting posting;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parentMedia")
+    private Set<Posting> postings = new HashSet<>();
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -80,18 +84,29 @@ public class MediaFileOwner {
         this.mediaFile = mediaFile;
     }
 
-    public Posting getPosting() {
-        return posting;
+    public Set<Posting> getPostings() {
+        return postings;
     }
 
-    public void setPosting(Posting posting) {
-        if (this.posting != null) {
-            this.posting.setParentMedia(null);
-        }
-        this.posting = posting;
-        if (posting != null) {
-            posting.setParentMedia(this);
-        }
+    public void setPostings(Set<Posting> postings) {
+        this.postings = postings;
+    }
+
+    public Posting getPosting(String receiverName) {
+        return postings.stream()
+                .filter(p -> Objects.equals(p.getReceiverName(), receiverName))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public void addPosting(Posting posting) {
+        postings.add(posting);
+        posting.setParentMedia(this);
+    }
+
+    public void removePosting(Posting posting) {
+        postings.removeIf(sr -> sr.getId().equals(posting.getId()));
+        posting.setParentMedia(null);
     }
 
     public Timestamp getCreatedAt() {

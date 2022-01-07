@@ -173,7 +173,7 @@ public class MediaController {
             String id = out.getHash();
             MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
-                return new PrivateMediaFileInfo(mediaFileOwner);
+                return new PrivateMediaFileInfo(mediaFileOwner, null);
             }
 
             MediaFile mediaFile = mediaOperations.putInPlace(
@@ -181,9 +181,9 @@ public class MediaController {
             mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
             mediaFileOwner = mediaOperations.own(mediaFile,
                     requestContext.isAdmin() ? null : requestContext.getClientName());
-            mediaFileOwner.setPosting(postingOperations.newPosting(mediaFileOwner));
+            mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
-            return new PrivateMediaFileInfo(mediaFileOwner);
+            return new PrivateMediaFileInfo(mediaFileOwner, null);
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
@@ -221,7 +221,7 @@ public class MediaController {
     public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
-        return new PrivateMediaFileInfo(getMediaFileOwner(id));
+        return new PrivateMediaFileInfo(getMediaFileOwner(id), null);
     }
 
     @GetMapping("/public/{id}/data")

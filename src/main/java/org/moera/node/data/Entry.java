@@ -108,7 +108,7 @@ public class Entry {
     @ManyToOne
     private Entry parent;
 
-    @OneToOne
+    @ManyToOne
     private MediaFileOwner parentMedia;
 
     @NotNull

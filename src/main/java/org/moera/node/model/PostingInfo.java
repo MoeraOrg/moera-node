@@ -125,7 +125,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         bodyFormat = revision.getBodyFormat();
         media = revision.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(MediaAttachment::new)
+                .map(ea -> new MediaAttachment(ea, receiverName))
                 .toArray(MediaAttachment[]::new);
         heading = revision.getHeading();
         if (!UpdateInfo.isEmpty(revision)) {

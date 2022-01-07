@@ -13,9 +13,9 @@ public class MediaAttachment {
     public MediaAttachment() {
     }
 
-    public MediaAttachment(EntryAttachment attachment) {
+    public MediaAttachment(EntryAttachment attachment, String receiverName) {
         if (attachment.getMediaFileOwner() != null) {
-            media = new PrivateMediaFileInfo(attachment.getMediaFileOwner());
+            media = new PrivateMediaFileInfo(attachment.getMediaFileOwner(), receiverName);
         }
         if (attachment.getRemoteMediaId() != null) {
             remoteMedia = new RemoteMediaInfo(attachment);

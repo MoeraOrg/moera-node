@@ -173,7 +173,8 @@ public class TimelineUiController {
                 .findFirst()
                 .orElse(null);
         if (attachment != null) {
-            PrivateMediaFileInfo image = new PrivateMediaFileInfo(attachment.getMediaFileOwner());
+            PrivateMediaFileInfo image =
+                    new PrivateMediaFileInfo(attachment.getMediaFileOwner(), posting.getReceiverName());
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + image.getPath());
             model.addAttribute("ogImageType", attachment.getMediaFileOwner().getMediaFile().getMimeType());
             model.addAttribute("ogImageWidth", image.getWidth());

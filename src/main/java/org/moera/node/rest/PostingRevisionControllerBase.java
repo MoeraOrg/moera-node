@@ -84,7 +84,7 @@ public abstract class PostingRevisionControllerBase {
         return entryRevisionRepository.findAllByEntryId(requestContext.nodeId(), postingId,
                 PageRequest.of(0, limit, Sort.Direction.DESC, "createdAt"))
                 .get()
-                .map(r -> new PostingRevisionInfo(r, countsVisible))
+                .map(r -> new PostingRevisionInfo(r, posting.getReceiverName(), countsVisible))
                 .collect(Collectors.toList());
     }
 
@@ -105,7 +105,8 @@ public abstract class PostingRevisionControllerBase {
             throw new ObjectNotFoundFailure("posting-revision.not-found");
         }
 
-        return new PostingRevisionInfo(revision, reactionTotalOperations.isVisibleToClient(posting));
+        return new PostingRevisionInfo(revision, posting.getReceiverName(),
+                reactionTotalOperations.isVisibleToClient(posting));
     }
 
     @PostMapping("/{id}/restore")
@@ -141,7 +142,7 @@ public abstract class PostingRevisionControllerBase {
         requestContext.send(Directions.postingSubscribers(posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
 
-        return new PostingRevisionInfo(revision, true);
+        return new PostingRevisionInfo(revision, posting.getReceiverName(), true);
     }
 
 }
