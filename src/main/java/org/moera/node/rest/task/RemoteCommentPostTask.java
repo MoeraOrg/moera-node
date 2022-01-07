@@ -133,10 +133,15 @@ public class RemoteCommentPostTask extends Task {
         CommentText commentText = new CommentText(nodeName(), fullName(), sourceText, textConverter);
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         cacheMediaDigests(mediaDigests);
+        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
+                ? mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName),
+                                                     postingInfo.getParentMediaId(), null)
+                : null;
         CommentFingerprint fingerprint = new CommentFingerprint(
                 commentText,
                 Fingerprints.posting(postingInfo.getSignatureVersion()).create(
                         postingInfo,
+                        parentMediaDigest,
                         pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf)),
                 repliedToDigest,
                 id -> commentMediaDigest(id, mediaDigests));

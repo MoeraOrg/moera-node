@@ -40,43 +40,48 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         try {
             PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), data.getPostingId());
             updateData(data -> data.setOwnerName(postingInfo.getReceiverName()));
+            byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
+                    ? mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
+                                                         postingInfo.getParentMediaId(), null)
+                    : null;
+            Function<PrivateMediaFileInfo, byte[]> mediaDigest
+                    = pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
+                                                                pmf);
 
             if (data.getRevisionId() == null) {
-                verifySignature(postingInfo);
+                verifySignature(postingInfo, parentMediaDigest, mediaDigest);
             } else {
                 PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(data.getNodeName(), data.getPostingId(),
                         data.getRevisionId());
-                verifySignature(postingInfo, revisionInfo);
+                verifySignature(postingInfo, revisionInfo, parentMediaDigest, mediaDigest);
             }
         } catch (Exception e) {
             error(e);
         }
     }
 
-    private void verifySignature(PostingInfo postingInfo) {
+    private void verifySignature(PostingInfo postingInfo, byte[] parentMediaDigest,
+                                 Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
         byte[] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
         if (signingKey == null) {
             succeeded(false);
             return;
         }
         data.setRevisionId(postingInfo.getRevisionId());
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest
-                = pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
         Fingerprint fingerprint = Fingerprints.posting(postingInfo.getSignatureVersion())
-                .create(postingInfo, mediaDigest);
+                .create(postingInfo, parentMediaDigest, mediaDigest);
         succeeded(CryptoUtil.verify(fingerprint, postingInfo.getSignature(), signingKey));
     }
 
-    private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo) {
+    private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                                 byte[] parentMediaDigest, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
         byte [] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingRevisionInfo.getCreatedAt());
         if (signingKey == null) {
             succeeded(false);
             return;
         }
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest
-                = pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
         Fingerprint fingerprint = Fingerprints.posting(postingInfo.getSignatureVersion())
-                .create(postingInfo, postingRevisionInfo, mediaDigest);
+                .create(postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest);
         succeeded(CryptoUtil.verify(fingerprint, postingRevisionInfo.getSignature(), signingKey));
     }
 

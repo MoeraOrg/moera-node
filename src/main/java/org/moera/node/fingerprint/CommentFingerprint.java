@@ -41,7 +41,7 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentText.getBody();
         bodyFormat = commentText.getBodyFormat();
         createdAt = commentText.getCreatedAt();
-        attachments = mediaAttachmentsFingerprint(commentText.getMedia(), mediaDigest);
+        attachments = mediaAttachmentsFingerprint(null, commentText.getMedia(), mediaDigest);
     }
 
     public CommentFingerprint(CommentText commentText, Fingerprint postingFingerprint, byte[] repliedToDigest,
@@ -55,7 +55,7 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentText.getBody();
         bodyFormat = commentText.getBodyFormat();
         createdAt = commentText.getCreatedAt();
-        attachments = mediaAttachmentsFingerprint(commentText.getMedia(), mediaDigest);
+        attachments = mediaAttachmentsFingerprint(null, commentText.getMedia(), mediaDigest);
     }
 
     public CommentFingerprint(CommentInfo commentInfo, Fingerprint postingFingerprint,
@@ -70,17 +70,18 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentInfo.getBody().getEncoded();
         bodyFormat = commentInfo.getBodyFormat();
         createdAt = commentInfo.getRevisionCreatedAt();
-        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), mediaDigest);
+        attachments = mediaAttachmentsFingerprint(null, commentInfo.getMedia(), mediaDigest);
     }
 
     public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
         this.postingFingerprint.setValue(Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
-                .create(postingInfo, postingRevisionInfo, postingMediaDigest));
+                .create(postingInfo, postingRevisionInfo, postingParentMediaDigest, postingMediaDigest));
         byte[] repliedToDigest = commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null;
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
@@ -88,41 +89,43 @@ public class CommentFingerprint extends EntryFingerprint {
         body = commentRevisionInfo.getBody().getEncoded();
         bodyFormat = commentRevisionInfo.getBodyFormat();
         createdAt = commentRevisionInfo.getCreatedAt();
-        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), commentMediaDigest);
+        attachments = mediaAttachmentsFingerprint(null, commentInfo.getMedia(), commentMediaDigest);
     }
 
     public CommentFingerprint(CommentInfo commentInfo,
                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
         this.postingFingerprint.setValue(Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
-                .create(postingInfo, postingRevisionInfo, postingMediaDigest));
+                .create(postingInfo, postingRevisionInfo, postingParentMediaDigest, postingMediaDigest));
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentInfo.getBodySrcHash());
         bodySrcFormat = commentInfo.getBodySrcFormat().getValue();
         body = commentInfo.getBody().getEncoded();
         bodyFormat = commentInfo.getBodyFormat();
         createdAt = commentInfo.getRevisionCreatedAt();
-        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), commentMediaDigest);
+        attachments = mediaAttachmentsFingerprint(null, commentInfo.getMedia(), commentMediaDigest);
     }
 
     public CommentFingerprint(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         super(0);
         ownerName = commentInfo.getOwnerName();
         this.postingFingerprint.setValue(Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
-                .create(postingInfo, postingRevisionInfo, postingMediaDigest));
+                .create(postingInfo, postingRevisionInfo, postingParentMediaDigest, postingMediaDigest));
         this.repliedToFingerprint.setDigest(repliedToDigest);
         bodySrc.setDigest(commentRevisionInfo.getBodySrcHash());
         bodySrcFormat = commentRevisionInfo.getBodySrcFormat().getValue();
         body = commentRevisionInfo.getBody().getEncoded();
         bodyFormat = commentRevisionInfo.getBodyFormat();
         createdAt = commentRevisionInfo.getCreatedAt();
-        attachments = mediaAttachmentsFingerprint(commentInfo.getMedia(), commentMediaDigest);
+        attachments = mediaAttachmentsFingerprint(null, commentInfo.getMedia(), commentMediaDigest);
     }
 
 }

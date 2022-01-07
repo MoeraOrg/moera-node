@@ -91,11 +91,15 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             return;
         }
 
+        byte[] postingParentMediaDigest = postingInfo.getParentMediaId() != null
+                ? mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
+                                                     postingInfo.getParentMediaId(), null)
+                : null;
         Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
 
         Fingerprint fingerprint = Fingerprints.reaction(reactionInfo.getSignatureVersion())
-                .create(reactionInfo, postingInfo, postingRevisionInfo, postingMediaDigest);
+                .create(reactionInfo, postingInfo, postingRevisionInfo, postingParentMediaDigest, postingMediaDigest);
         succeeded(CryptoUtil.verify(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 
@@ -112,12 +116,16 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             return;
         }
 
+        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
+                ? mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
+                                                     postingInfo.getParentMediaId(), null)
+                : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
 
         Fingerprint fingerprint = Fingerprints.reaction(reactionInfo.getSignatureVersion())
                 .create(reactionInfo, commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,
-                        mediaDigest);
+                        parentMediaDigest, mediaDigest);
         succeeded(CryptoUtil.verify(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 

@@ -1,5 +1,6 @@
 package org.moera.node.fingerprint;
 
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.commons.crypto.Digest;
@@ -8,6 +9,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PostingText;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.Util;
 
@@ -43,7 +45,8 @@ public class PostingFingerprint0 extends EntryFingerprint {
                 ? revision.getCreatedAt() : revision.getReceiverCreatedAt());
     }
 
-    public PostingFingerprint0(PostingInfo postingInfo, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+    public PostingFingerprint0(PostingInfo postingInfo, byte[] parentMediaDigest,
+                               Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
         this(postingInfo);
     }
 
@@ -60,7 +63,7 @@ public class PostingFingerprint0 extends EntryFingerprint {
     }
 
     public PostingFingerprint0(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
-                               Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+                               byte[] parentMediaDigest, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
         this(postingInfo, postingRevisionInfo);
     }
 
@@ -74,6 +77,21 @@ public class PostingFingerprint0 extends EntryFingerprint {
         bodyFormat = postingRevisionInfo.getBodyFormat();
         createdAt = postingInfo.isOriginal()
                 ? postingRevisionInfo.getCreatedAt() : postingRevisionInfo.getReceiverCreatedAt();
+    }
+
+    public PostingFingerprint0(PostingText postingText, byte[] parentMediaDigest, Function<UUID, byte[]> mediaDigest) {
+        this(postingText);
+    }
+
+    private PostingFingerprint0(PostingText postingText) {
+        super(1);
+        receiverName = postingText.getOwnerName();
+        ownerName = postingText.getOwnerName();
+        bodySrc.setValue(postingText.getBodySrc());
+        bodySrcFormat = postingText.getBodySrcFormat().getValue();
+        body = postingText.getBody();
+        bodyFormat = postingText.getBodyFormat();
+        createdAt = postingText.getCreatedAt();
     }
 
 }

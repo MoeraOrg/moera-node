@@ -42,36 +42,39 @@ public class CommentFingerprintFactory extends FingerprintFactory {
     public Fingerprint create(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         var constructor = getConstructor(CommentInfo.class, CommentRevisionInfo.class, Function.class,
-                PostingInfo.class, PostingRevisionInfo.class, Function.class);
+                PostingInfo.class, PostingRevisionInfo.class, byte[].class, Function.class);
         return constructor != null
                 ? create(constructor, commentInfo, commentRevisionInfo, commentMediaDigest, postingInfo,
-                         postingRevisionInfo, postingMediaDigest)
+                         postingRevisionInfo, postingParentMediaDigest, postingMediaDigest)
                 : null;
     }
 
     public Fingerprint create(CommentInfo commentInfo,
                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         var constructor = getConstructor(CommentInfo.class, Function.class, PostingInfo.class,
-                PostingRevisionInfo.class, Function.class, byte[].class);
+                PostingRevisionInfo.class, byte[].class, Function.class, byte[].class);
         return constructor != null
                 ? create(constructor, commentInfo, commentMediaDigest, postingInfo, postingRevisionInfo,
-                         postingMediaDigest, repliedToDigest)
+                         postingParentMediaDigest, postingMediaDigest, repliedToDigest)
                 : null;
     }
 
     public Fingerprint create(CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest, byte[] repliedToDigest) {
         var constructor = getConstructor(CommentInfo.class, CommentRevisionInfo.class, Function.class,
-                PostingInfo.class, PostingRevisionInfo.class, Function.class, byte[].class);
+                PostingInfo.class, PostingRevisionInfo.class, byte[].class, Function.class, byte[].class);
         return constructor != null
                 ? create(constructor, commentInfo, commentRevisionInfo, commentMediaDigest, postingInfo,
-                         postingRevisionInfo, postingMediaDigest, repliedToDigest)
+                         postingRevisionInfo, postingParentMediaDigest, postingMediaDigest, repliedToDigest)
                 : null;
     }
 

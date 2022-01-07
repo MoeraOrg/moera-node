@@ -10,13 +10,14 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.node.config.Config;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionUpgrade;
 import org.moera.node.data.EntryRevisionUpgradeRepository;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileOwner;
+import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.UpgradeType;
@@ -25,6 +26,7 @@ import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.Body;
+import org.moera.node.operations.PostingOperations;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.AllRemoteAvatarsDownloadTask;
 import org.moera.node.rest.task.AllRemoteProfilesSubscriptionTask;
@@ -43,15 +45,15 @@ import org.springframework.util.ObjectUtils;
 @Component
 public class Updater {
 
-    private static Logger log = LoggerFactory.getLogger(Updater.class);
+    private static final Logger log = LoggerFactory.getLogger(Updater.class);
 
     private static final int PAGE_SIZE = 1024;
 
     @Inject
-    private Config config;
+    private Domains domains;
 
     @Inject
-    private Domains domains;
+    private UniversalContext universalContext;
 
     @Inject
     private EntryRevisionUpgradeRepository entryRevisionUpgradeRepository;
@@ -63,7 +65,13 @@ public class Updater {
     private MediaFileRepository mediaFileRepository;
 
     @Inject
+    private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private PostingOperations postingOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -77,7 +85,7 @@ public class Updater {
     public void execute() {
         executeDomainUpgrades();
         executeEntryRevisionUpgrades();
-        executeMediaFileUpgrades();
+        executeMediaUpgrades();
     }
 
     private void executeDomainUpgrades() {
@@ -170,7 +178,12 @@ public class Updater {
         log.info("Digest upgraded for entry {}, revision {}", posting.getId(), revision.getId());
     }
 
-    private void executeMediaFileUpgrades() {
+    private void executeMediaUpgrades() {
+        updateMediaFileDigests();
+        createMediaPostings();
+    }
+
+    private void updateMediaFileDigests() {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE, Sort.by(Sort.Direction.ASC, "id"));
         List<MediaFile> mediaFiles;
         do {
@@ -184,6 +197,23 @@ public class Updater {
             mediaFile.setDigest(mediaOperations.digest(mediaFile));
         } catch (IOException e) {
             log.warn("Cannot calculate digest of media file {}: {}", mediaFile.getId(), e.getMessage());
+        }
+    }
+
+    private void createMediaPostings() {
+        for (String domainName : domains.getAllDomainNames()) {
+            UUID nodeId = domains.getDomainNodeId(domainName);
+            String nodeName = domains.getDomainOptions(domainName).nodeName();
+            if (nodeName == null) {
+                continue;
+            }
+            List<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findWithoutPosting(nodeId);
+            for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
+                universalContext.associate(nodeId);
+                mediaFileOwner.setPosting(postingOperations.newPosting(mediaFileOwner));
+                log.info("Created posting {} for media {}",
+                        mediaFileOwner.getPosting().getId(), mediaFileOwner.getId());
+            }
         }
     }
 

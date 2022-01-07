@@ -22,20 +22,23 @@ public class PostingFingerprintFactory extends FingerprintFactory {
         return constructor != null ? create(constructor, posting, revision) : null;
     }
 
-    public Fingerprint create(PostingInfo postingInfo, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
-        var constructor = getConstructor(PostingInfo.class, Function.class);
-        return constructor != null ? create(constructor, postingInfo, mediaDigest) : null;
+    public Fingerprint create(PostingInfo postingInfo, byte[] parentMediaDigest,
+                              Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+        var constructor = getConstructor(PostingInfo.class, byte[].class, Function.class);
+        return constructor != null ? create(constructor, postingInfo, parentMediaDigest, mediaDigest) : null;
     }
 
     public Fingerprint create(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
-                              Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
-        var constructor = getConstructor(PostingInfo.class, PostingRevisionInfo.class, Function.class);
-        return constructor != null ? create(constructor, postingInfo, postingRevisionInfo, mediaDigest) : null;
+                              byte[] parentMediaDigest, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+        var constructor = getConstructor(PostingInfo.class, PostingRevisionInfo.class, byte[].class, Function.class);
+        return constructor != null
+                ? create(constructor, postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest)
+                : null;
     }
 
-    public Fingerprint create(PostingText postingText, Function<UUID, byte[]> mediaDigest) {
-        var constructor = getConstructor(PostingText.class, Function.class);
-        return constructor != null ? create(constructor, postingText, mediaDigest) : null;
+    public Fingerprint create(PostingText postingText, byte[] parentMediaDigest, Function<UUID, byte[]> mediaDigest) {
+        var constructor = getConstructor(PostingText.class, byte[].class, Function.class);
+        return constructor != null ? create(constructor, postingText, parentMediaDigest, mediaDigest) : null;
     }
 
 }

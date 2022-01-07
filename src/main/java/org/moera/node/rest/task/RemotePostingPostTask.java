@@ -94,8 +94,13 @@ public class RemotePostingPostTask extends Task {
         PostingText postingText = new PostingText(nodeName(), fullName(), sourceText, textConverter);
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         cacheMediaDigests(mediaDigests);
+        byte[] parentMediaDigest = prevPostingInfo != null && prevPostingInfo.getParentMediaId() != null
+                ? mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName),
+                                                     prevPostingInfo.getParentMediaId(), null)
+                : null;
         PostingFingerprint fingerprint = new PostingFingerprint(
                 postingText,
+                parentMediaDigest,
                 id -> postingMediaDigest(id, mediaDigests));
         postingText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         postingText.setSignatureVersion(PostingFingerprint.VERSION);

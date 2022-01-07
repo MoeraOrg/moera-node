@@ -2,6 +2,7 @@ package org.moera.node.fingerprint;
 
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.data.EntryAttachment;
+import org.moera.node.data.MediaFileOwner;
 
 @FingerprintVersion(objectType = FingerprintObjectType.ATTACHMENT, version = 0)
 public class AttachmentFingerprint extends Fingerprint {
@@ -16,9 +17,12 @@ public class AttachmentFingerprint extends Fingerprint {
         this.digest = digest;
     }
 
+    public AttachmentFingerprint(MediaFileOwner mediaFileOwner) {
+        this(mediaFileOwner.getMediaFile().getDigest());
+    }
+
     public AttachmentFingerprint(EntryAttachment attachment) {
-        super(0);
-        digest = attachment.getMediaFileOwner().getMediaFile().getDigest();
+        this(attachment.getMediaFileOwner());
     }
 
 }

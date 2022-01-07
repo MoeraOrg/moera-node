@@ -30,11 +30,13 @@ public class ReactionFingerprintFactory extends FingerprintFactory {
 
     public Fingerprint create(ReactionInfo reactionInfo, PostingInfo postingInfo,
                               PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         var constructor = getConstructor(ReactionInfo.class, PostingInfo.class, PostingRevisionInfo.class,
-                Function.class);
+                byte[].class, Function.class);
         return constructor != null
-                ? create(constructor, reactionInfo, postingInfo, postingRevisionInfo, postingMediaDigest)
+                ? create(constructor, reactionInfo, postingInfo, postingRevisionInfo, postingParentMediaDigest,
+                         postingMediaDigest)
                 : null;
     }
 
@@ -42,12 +44,13 @@ public class ReactionFingerprintFactory extends FingerprintFactory {
                               CommentRevisionInfo commentRevisionInfo,
                               Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
                               PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
+                              byte[] postingParentMediaDigest,
                               Function<PrivateMediaFileInfo, byte[]> postingMediaDigest) {
         var constructor = getConstructor(ReactionInfo.class, CommentInfo.class, CommentRevisionInfo.class,
-                PostingInfo.class, PostingRevisionInfo.class, Function.class);
+                PostingInfo.class, PostingRevisionInfo.class, byte[].class, Function.class);
         return constructor != null
                 ? create(constructor, reactionInfo, commentInfo, commentRevisionInfo, commentMediaDigest, postingInfo,
-                         postingRevisionInfo, postingMediaDigest)
+                         postingRevisionInfo, postingParentMediaDigest, postingMediaDigest)
                 : null;
     }
 

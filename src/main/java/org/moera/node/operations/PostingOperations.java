@@ -115,13 +115,13 @@ public class PostingOperations {
     private Posting newPosting(String ownerName) {
         Posting posting = new Posting();
         posting.setId(UUID.randomUUID());
-        posting.setNodeId(requestContext.nodeId());
+        posting.setNodeId(universalContext.nodeId());
         if (ObjectUtils.isEmpty(ownerName)) {
-            posting.setOwnerName(requestContext.nodeName());
-            posting.setOwnerFullName(requestContext.fullName());
-            if (requestContext.getAvatar() != null) {
-                posting.setOwnerAvatarMediaFile(requestContext.getAvatar().getMediaFile());
-                posting.setOwnerAvatarShape(requestContext.getAvatar().getShape());
+            posting.setOwnerName(universalContext.nodeName());
+            posting.setOwnerFullName(universalContext.fullName());
+            if (universalContext.getAvatar() != null) {
+                posting.setOwnerAvatarMediaFile(universalContext.getAvatar().getMediaFile());
+                posting.setOwnerAvatarShape(universalContext.getAvatar().getShape());
             }
         } else {
             posting.setOwnerName(ownerName);
@@ -215,7 +215,7 @@ public class PostingOperations {
         EntryRevision current = posting.getCurrentRevision();
 
         if (current.getSignature() == null) {
-            if (posting.getOwnerName().equals(requestContext.nodeName())) {
+            if (posting.getOwnerName().equals(universalContext.nodeName())) {
                 PostingFingerprint fingerprint = new PostingFingerprint(posting, current);
                 current.setDigest(CryptoUtil.digest(fingerprint));
                 current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
@@ -227,7 +227,7 @@ public class PostingOperations {
     }
 
     private ECPrivateKey getSigningKey() {
-        return (ECPrivateKey) requestContext.getOptions().getPrivateKey("profile.signing-key");
+        return (ECPrivateKey) universalContext.getOptions().getPrivateKey("profile.signing-key");
     }
 
     private EntryRevision newRevision(Posting posting, EntryRevision template) {

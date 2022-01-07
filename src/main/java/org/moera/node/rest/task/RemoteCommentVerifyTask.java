@@ -94,6 +94,10 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
         updateData(data -> data.setRevisionId(commentInfo.getRevisionId()));
 
+        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
+                ? mediaManager.getPrivateMediaDigest(remoteNodeName, generateCarte(remoteNodeName),
+                                                     postingInfo.getParentMediaId(), null)
+                : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, generateCarte(remoteNodeName), pmf);
 
@@ -106,7 +110,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
                 postingInfo, revisions, repliedToId, repliedToRevisionId);
         Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, mediaDigest, postingInfo, revisionInfo, mediaDigest, repliedToDigest);
+                .create(commentInfo, mediaDigest, postingInfo, revisionInfo, parentMediaDigest, mediaDigest,
+                        repliedToDigest);
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
@@ -134,6 +139,10 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             return;
         }
 
+        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
+                ? mediaManager.getPrivateMediaDigest(remoteNodeName, generateCarte(remoteNodeName),
+                                                     postingInfo.getParentMediaId(), null)
+                : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(remoteNodeName, generateCarte(remoteNodeName), pmf);
 
@@ -146,8 +155,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
                 postingInfo, revisions, repliedToId, repliedToRevisionId);
         Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo, mediaDigest,
-                        repliedToDigest);
+                .create(commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,
+                        parentMediaDigest, mediaDigest, repliedToDigest);
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
 

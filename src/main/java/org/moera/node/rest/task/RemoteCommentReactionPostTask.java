@@ -78,12 +78,17 @@ public class RemoteCommentReactionPostTask extends Task {
     }
 
     private ReactionDescription buildReaction() {
+        byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
+                ? mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName),
+                                                     postingInfo.getParentMediaId(), null)
+                : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf);
         Fingerprint postingFingerprint = postingRevisionInfo == null
-                ? Fingerprints.posting(postingInfo.getSignatureVersion()).create(postingInfo, mediaDigest)
+                ? Fingerprints.posting(postingInfo.getSignatureVersion())
+                        .create(postingInfo, parentMediaDigest, mediaDigest)
                 : Fingerprints.posting(postingRevisionInfo.getSignatureVersion())
-                        .create(postingInfo, postingRevisionInfo, mediaDigest);
+                        .create(postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest);
         Fingerprint commentFingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
                 .create(commentInfo, postingFingerprint, mediaDigest);
         ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName(), attributes, commentFingerprint);

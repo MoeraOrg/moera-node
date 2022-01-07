@@ -149,7 +149,7 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        byte[] digest = validatePostingText(postingText, postingText.getOwnerName());
+        byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
                 postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
@@ -198,7 +198,7 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        byte[] digest = validatePostingText(postingText, posting.getOwnerName());
+        byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName());
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
@@ -234,7 +234,7 @@ public class PostingController {
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
     }
 
-    private byte[] validatePostingText(PostingText postingText, String ownerName) {
+    private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
         byte[] digest = null;
         if (postingText.getSignature() == null) {
             if (!requestContext.isAdmin()) {
@@ -262,7 +262,7 @@ public class PostingController {
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
             Fingerprint fingerprint = Fingerprints.posting(postingText.getSignatureVersion())
-                    .create(postingText, this::mediaDigest);
+                    .create(postingText, parentMediaDigest(posting), this::mediaDigest);
             if (!CryptoUtil.verify(fingerprint, postingText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
@@ -286,6 +286,12 @@ public class PostingController {
             }
         }
         return digest;
+    }
+
+    private byte[] parentMediaDigest(Posting posting) {
+        return posting != null && posting.getParentMedia() != null
+                ? posting.getParentMedia().getMediaFile().getDigest()
+                : null;
     }
 
     private byte[] mediaDigest(UUID id) {
