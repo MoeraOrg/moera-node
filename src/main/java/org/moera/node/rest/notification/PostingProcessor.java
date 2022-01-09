@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 @NotificationProcessor
 public class PostingProcessor {
 
-    private static Logger log = LoggerFactory.getLogger(PostingProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(PostingProcessor.class);
 
     private interface PostingSubscriptionRunnable {
 
