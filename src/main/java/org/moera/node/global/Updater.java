@@ -12,6 +12,8 @@ import javax.transaction.Transactional;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
+import org.moera.node.data.Entry;
+import org.moera.node.data.EntryRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionUpgrade;
 import org.moera.node.data.EntryRevisionUpgradeRepository;
@@ -66,6 +68,9 @@ public class Updater {
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
+    private EntryRepository entryRepository;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -210,7 +215,15 @@ public class Updater {
             universalContext.associate(nodeId);
             List<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findWithoutPosting(nodeId);
             for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
-                mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
+                Posting posting = postingOperations.newPosting(mediaFileOwner);
+                Entry parent = entryRepository.findByMediaId(mediaFileOwner.getId()).stream().findFirst().orElse(null);
+                if (parent != null) {
+                    posting.setAcceptedReactionsPositive(parent.getAcceptedReactionsPositive());
+                    posting.setAcceptedReactionsNegative(parent.getAcceptedReactionsNegative());
+                    posting.setReactionsVisible(parent.isReactionsVisible());
+                    posting.setReactionTotalsVisible(parent.isReactionTotalsVisible());
+                }
+                mediaFileOwner.addPosting(posting);
                 log.info("Created posting {} for media {}",
                         mediaFileOwner.getPosting(null).getId(), mediaFileOwner.getId());
             }
