@@ -2,7 +2,6 @@ package org.moera.node.fingerprint;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -34,7 +33,7 @@ public class EntryFingerprint extends Fingerprint {
             Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
 
         if (mediaAttachments == null) {
-            return Collections.emptyList();
+            mediaAttachments = new MediaAttachment[0];
         }
 
         List<Digest<Fingerprint>> digests = new ArrayList<>();
@@ -54,7 +53,7 @@ public class EntryFingerprint extends Fingerprint {
             byte[] parentMediaDigest, UUID[] mediaIds, Function<UUID, byte[]> mediaDigest) {
 
         if (mediaIds == null) {
-            return Collections.emptyList();
+            mediaIds = new UUID[0];
         }
 
         List<Digest<Fingerprint>> digests = new ArrayList<>();

@@ -31,6 +31,7 @@ import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
+import org.moera.node.model.EntryInfo;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
@@ -377,10 +378,19 @@ public class NodeApi {
                 mediaFile.getMimeType(), mediaOperations.getPath(mediaFile), PublicMediaFileInfo.class);
     }
 
-    public TemporaryMediaFile getPrivateMedia(String nodeName,  String carte, String id, TemporaryFile tmpFile,
+    public TemporaryMediaFile getPrivateMedia(String nodeName, String carte, String id, TemporaryFile tmpFile,
                                               int maxSize) throws NodeApiException {
         return call("GET", nodeName, String.format("/media/private/%s/data", Util.ue(id)),
                 auth("carte", carte), tmpFile, maxSize);
+    }
+
+    public EntryInfo[] getPrivateMediaParent(String nodeName, String carte, String id) throws NodeApiException {
+        try {
+            return call("GET", nodeName, String.format("/media/private/%s/parent", Util.ue(id)),
+                    auth("carte", carte), EntryInfo[].class);
+        } catch (NodeApiNotFoundException e) {
+            return null;
+        }
     }
 
 }

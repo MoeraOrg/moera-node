@@ -8,7 +8,10 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -18,19 +21,26 @@ import javax.transaction.Transactional;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
+import org.moera.node.data.Comment;
+import org.moera.node.data.Entry;
+import org.moera.node.data.EntryRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.Posting;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.ThresholdReachedException;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.EntryInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeatures;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ValidationFailure;
@@ -67,6 +77,9 @@ public class MediaController {
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
+
+    @Inject
+    private EntryRepository entryRepository;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -241,6 +254,27 @@ public class MediaController {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
         return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), width);
+    }
+
+    @GetMapping("/private/{id}/parent")
+    @Transactional
+    public List<EntryInfo> getParentPrivate(@PathVariable UUID id) {
+        log.info("GET /media/private/{id}/parent (id = {})", LogUtil.format(id));
+
+        MediaFileOwner mediaFileOwner = getMediaFileOwner(id);
+        Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwner.getId());
+        List<EntryInfo> parents = new ArrayList<>();
+        for (Entry entry : entries) {
+            boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(entry.getOwnerName());
+            if (entry instanceof Posting) {
+                parents.add(new EntryInfo(new PostingInfo((Posting) entry, isAdminOrOwner)));
+            }
+            if (entry instanceof Comment) {
+                parents.add(new EntryInfo(new CommentInfo((Comment) entry, isAdminOrOwner)));
+            }
+        }
+
+        return parents;
     }
 
 }

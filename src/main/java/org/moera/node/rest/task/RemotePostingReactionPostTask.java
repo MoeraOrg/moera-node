@@ -5,14 +5,19 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;
+import org.moera.node.instant.CommentMediaReactionInstants;
+import org.moera.node.instant.PostingMediaReactionInstants;
 import org.moera.node.instant.PostingReactionInstants;
 import org.moera.node.media.MediaManager;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.EntryInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
@@ -44,6 +49,12 @@ public class RemotePostingReactionPostTask extends Task {
 
     @Inject
     private PostingReactionInstants postingReactionInstants;
+
+    @Inject
+    private PostingMediaReactionInstants postingMediaReactionInstants;
+
+    @Inject
+    private CommentMediaReactionInstants commentMediaReactionInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -131,7 +142,40 @@ public class RemotePostingReactionPostTask extends Task {
             log.error("Error adding reaction to posting {} at node {}: {}", postingId, targetNodeName, e.getMessage());
         }
 
-        postingReactionInstants.addingFailed(postingId, postingInfo);
+        if (postingInfo.getParentMediaId() == null) {
+            postingReactionInstants.addingFailed(postingId, postingInfo);
+        } else {
+            PostingInfo parentPosting = null;
+            CommentInfo parentComment = null;
+            try {
+                EntryInfo[] parents = nodeApi.getPrivateMediaParent(targetNodeName, generateCarte(targetNodeName),
+                        postingInfo.getParentMediaId());
+                if (parents != null && parents.length > 0) {
+                    if (parents[0].getComment() == null) {
+                        parentPosting = parents[0].getPosting();
+                    } else {
+                        parentComment = parents[0].getComment();
+                        if (parentComment != null) {
+                            parentPosting = nodeApi.getPosting(targetNodeName, parentComment.getPostingId());
+                        }
+                    }
+                }
+            } catch (NodeApiException ex) {
+                log.error("Failed to get a parent posting/comment for media {} at node {}: {}",
+                        postingInfo.getParentMediaId(), targetNodeName, ex.getMessage());
+            }
+
+            if (parentComment == null) {
+                String parentPostingId = parentPosting != null ? parentPosting.getId() : null;
+                postingMediaReactionInstants.addingFailed(postingId, parentPostingId, postingInfo.getParentMediaId(),
+                        parentPosting);
+            } else {
+                String parentPostingId = parentComment.getPostingId();
+                String parentCommentId = parentComment.getId();
+                commentMediaReactionInstants.addingFailed(postingId, parentPostingId, parentCommentId,
+                        postingInfo.getParentMediaId(), parentPosting, parentComment);
+            }
+        }
     }
 
 }

@@ -51,6 +51,13 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     void deleteByRemotePostingAndCommentId(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName,
                                            String remotePostingId, String remoteCommentId);
 
+    @Modifying
+    @Query("delete from Story s"
+            + " where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.remoteNodeName = ?4"
+            + " and s.remotePostingId = ?5")
+    void deleteByRemotePostingId(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName,
+                                           String remotePostingId);
+
     @Query("select s from Story s left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
             + " left join fetch s.entry e"
             + " left join fetch e.currentRevision cr left join fetch cr.attachments cra"

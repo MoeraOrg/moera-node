@@ -30,12 +30,13 @@ public class StoryInfo {
     private String remoteFullName;
     private String remotePostingId;
     private String remoteCommentId;
+    private String remoteMediaId;
     private Map<String, String[]> operations;
 
     public StoryInfo() {
     }
 
-    protected StoryInfo(Story story, boolean isAdmin) {
+    private StoryInfo(Story story, boolean isAdmin) {
         id = story.getId().toString();
         feedName = story.getFeedName();
         storyType = story.getStoryType();
@@ -131,6 +132,54 @@ public class StoryInfo {
                             new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
+                break;
+
+            case POSTING_MEDIA_REACTION_ADDED_POSITIVE:
+            case POSTING_MEDIA_REACTION_ADDED_NEGATIVE:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                }
+                info.setRemotePostingId(story.getRemoteParentPostingId());
+                info.setRemoteMediaId(story.getRemoteParentMediaId());
+                break;
+
+            case COMMENT_MEDIA_REACTION_ADDED_POSITIVE:
+            case COMMENT_MEDIA_REACTION_ADDED_NEGATIVE:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                }
+                info.setRemotePostingId(story.getRemoteParentPostingId());
+                info.setRemoteCommentId(story.getRemoteParentCommentId());
+                info.setRemoteMediaId(story.getRemoteParentMediaId());
+                break;
+
+            case POSTING_MEDIA_REACTION_FAILED:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                }
+                info.setRemotePostingId(story.getRemoteParentPostingId());
+                info.setRemoteMediaId(story.getRemoteParentMediaId());
+                break;
+
+            case COMMENT_MEDIA_REACTION_FAILED:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
+                if (story.getRemoteAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                }
+                info.setRemotePostingId(story.getRemoteParentPostingId());
+                info.setRemoteCommentId(story.getRemoteParentCommentId());
+                info.setRemoteMediaId(story.getRemoteParentMediaId());
                 break;
         }
         return info;
@@ -278,6 +327,14 @@ public class StoryInfo {
 
     public void setRemoteCommentId(String remoteCommentId) {
         this.remoteCommentId = remoteCommentId;
+    }
+
+    public String getRemoteMediaId() {
+        return remoteMediaId;
+    }
+
+    public void setRemoteMediaId(String remoteMediaId) {
+        this.remoteMediaId = remoteMediaId;
     }
 
     public Map<String, String[]> getOperations() {

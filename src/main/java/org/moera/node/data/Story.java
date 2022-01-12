@@ -99,6 +99,15 @@ public class Story {
     @Size(max = 255)
     private String remoteRepliedToHeading;
 
+    @Size(max = 40)
+    private String remoteParentPostingId;
+
+    @Size(max = 40)
+    private String remoteParentCommentId;
+
+    @Size(max = 40)
+    private String remoteParentMediaId;
+
     @ManyToOne
     private Entry entry;
 
@@ -321,6 +330,30 @@ public class Story {
 
     public void setRemoteRepliedToHeading(String remoteRepliedToHeading) {
         this.remoteRepliedToHeading = remoteRepliedToHeading;
+    }
+
+    public String getRemoteParentPostingId() {
+        return remoteParentPostingId;
+    }
+
+    public void setRemoteParentPostingId(String remoteParentPostingId) {
+        this.remoteParentPostingId = remoteParentPostingId;
+    }
+
+    public String getRemoteParentCommentId() {
+        return remoteParentCommentId;
+    }
+
+    public void setRemoteParentCommentId(String remoteParentCommentId) {
+        this.remoteParentCommentId = remoteParentCommentId;
+    }
+
+    public String getRemoteParentMediaId() {
+        return remoteParentMediaId;
+    }
+
+    public void setRemoteParentMediaId(String remoteParentMediaId) {
+        this.remoteParentMediaId = remoteParentMediaId;
     }
 
     public Entry getEntry() {
