@@ -165,6 +165,19 @@ public class RemotePostingReactionPostTask extends Task {
                         postingInfo.getParentMediaId(), targetNodeName, ex.getMessage());
             }
 
+            try {
+                if (parentPosting != null && parentPosting.getOwnerAvatar() != null) {
+                    parentPosting.getOwnerAvatar().setMediaFile(
+                            mediaManager.downloadPublicMedia(targetNodeName, parentPosting.getOwnerAvatar()));
+                }
+                if (parentComment != null && parentComment.getOwnerAvatar() != null) {
+                    parentComment.getOwnerAvatar().setMediaFile(
+                            mediaManager.downloadPublicMedia(targetNodeName, parentComment.getOwnerAvatar()));
+                }
+            } catch (NodeApiException ex) {
+                // ignore
+            }
+
             if (parentComment == null) {
                 String parentPostingId = parentPosting != null ? parentPosting.getId() : null;
                 postingMediaReactionInstants.addingFailed(postingId, parentPostingId, postingInfo.getParentMediaId(),
