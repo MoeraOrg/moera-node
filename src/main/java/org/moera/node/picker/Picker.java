@@ -161,22 +161,25 @@ public class Picker extends Task {
 
         List<Event> events = new ArrayList<>();
         List<DirectedNotification> notifications = new ArrayList<>();
+        List<Pick> picks = new ArrayList<>();
         Posting posting = inTransaction(() -> {
             Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(),
-                    events, notifications);
+                    events, notifications, picks);
             saveSources(p, pick);
             return p;
         });
         events.forEach(event -> eventManager.send(nodeId, event));
         notifications.forEach(
                 dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
+        picks.forEach(pool::pick);
 
         succeeded(posting, pick);
     }
 
     private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
                                     List<Event> events,
-                                    List<DirectedNotification> notifications) throws NodeApiException {
+                                    List<DirectedNotification> notifications,
+                                    List<Pick> picks) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
@@ -206,7 +209,7 @@ public class Picker extends Task {
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             createRevision(posting, postingInfo);
-            downloadMedia(postingInfo, null, posting.getCurrentRevision());
+            downloadMedia(postingInfo, null, posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), events);
@@ -219,7 +222,7 @@ public class Picker extends Task {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);
             createRevision(posting, postingInfo);
-            downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision());
+            downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
                 events.add(new PostingUpdatedEvent(posting));
@@ -267,7 +270,8 @@ public class Picker extends Task {
         revision.setDigest(CryptoUtil.digest(fingerprint));
     }
 
-    private void downloadMedia(PostingInfo postingInfo, UUID entryId, EntryRevision revision) throws NodeApiException {
+    private void downloadMedia(PostingInfo postingInfo, UUID entryId, EntryRevision revision,
+                               List<Pick> picks) throws NodeApiException {
         int ordinal = 0;
         for (MediaAttachment attach : postingInfo.getMedia()) {
             MediaFileOwner media = mediaManager.downloadPrivateMedia(
@@ -279,18 +283,18 @@ public class Picker extends Task {
                 revision.addAttachment(attachment);
 
                 if (attach.getMedia().getPostingId() != null) {
-                    pickMediaPosting(media, attach.getMedia().getPostingId());
+                    picks.add(pickMediaPosting(media, attach.getMedia().getPostingId()));
                 }
             }
         }
     }
 
-    private void pickMediaPosting(MediaFileOwner media, String remotePostingId) {
+    private Pick pickMediaPosting(MediaFileOwner media, String remotePostingId) {
         Pick pick = new Pick();
         pick.setRemoteNodeName(remoteNodeName);
         pick.setRemotePostingId(remotePostingId);
         pick.setMediaFileOwner(media);
-        pool.pick(pick);
+        return pick;
     }
 
     private void publish(String feedName, Posting posting, List<Event> events) {
