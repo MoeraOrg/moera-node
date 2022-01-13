@@ -112,6 +112,7 @@ public class StoryInfo {
             case REPLY_COMMENT:
             case COMMENT_REACTION_ADDED_POSITIVE:
             case COMMENT_REACTION_ADDED_NEGATIVE:
+            case COMMENT_REACTION_TASK_FAILED:
             case REMOTE_COMMENT_ADDED:
             case COMMENT_UPDATE_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
@@ -125,6 +126,8 @@ public class StoryInfo {
                 break;
 
             case COMMENT_POST_TASK_FAILED:
+            case POSTING_SUBSCRIBE_TASK_FAILED:
+            case POSTING_REACTION_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {

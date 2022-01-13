@@ -189,7 +189,7 @@ public class CommentReactionInstants extends InstantsCreator {
         AvatarImage commentOwnerAvatar = commentInfo != null ? commentInfo.getOwnerAvatar() : null;
         String commentHeading = commentInfo != null ? commentInfo.getHeading() : "";
 
-        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_UPDATE_TASK_FAILED);
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_REACTION_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(postingOwnerName);
         story.setRemoteFullName(postingOwnerFullName);
