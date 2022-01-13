@@ -251,7 +251,6 @@ public class MediaManager {
                         }
                     }
                     cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
-
                 }
                 // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use
                 // our MediaFileOwner, if exists
