@@ -1,5 +1,6 @@
 package org.moera.node.operations;
 
+import java.security.interfaces.ECPrivateKey;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.inject.Inject;
 
+import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
@@ -28,6 +30,7 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.event.EventManager;
+import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.Body;
@@ -173,10 +176,9 @@ public class CommentOperations {
         }
 
         comment.setEditedAt(Util.now());
-        if (current.getSignature() == null) {
-            current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
-        }
         comment = commentRepository.saveAndFlush(comment);
+        signIfOwned(comment);
+
         commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
         notifyReplyAdded(posting, comment);
         notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
@@ -221,6 +223,25 @@ public class CommentOperations {
         }
 
         return revision;
+    }
+
+    private void signIfOwned(Comment comment) {
+        EntryRevision current = comment.getCurrentRevision();
+
+        if (current.getSignature() == null) {
+            if (comment.getOwnerName().equals(requestContext.nodeName())) {
+                CommentFingerprint fingerprint = new CommentFingerprint(comment);
+                current.setDigest(CryptoUtil.digest(fingerprint));
+                current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
+                current.setSignatureVersion(CommentFingerprint.VERSION);
+            } else {
+                current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
+            }
+        }
+    }
+
+    private ECPrivateKey getSigningKey() {
+        return (ECPrivateKey) requestContext.getOptions().getPrivateKey("profile.signing-key");
     }
 
     private void notifyReplyAdded(Posting posting, Comment comment) {

@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.data.Comment;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
@@ -15,6 +16,13 @@ public class CommentFingerprintFactory extends FingerprintFactory {
 
     public CommentFingerprintFactory(Class<? extends Fingerprint> klass) {
         super(klass);
+    }
+
+    public Fingerprint create(Comment comment) {
+        var constructor = getConstructor(Comment.class);
+        return constructor != null
+                ? create(constructor, comment)
+                : null;
     }
 
     public Fingerprint create(CommentText commentText, byte[] postingDigest, byte[] repliedToDigest,

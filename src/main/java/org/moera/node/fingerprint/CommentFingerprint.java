@@ -1,17 +1,22 @@
 package org.moera.node.fingerprint;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.moera.commons.crypto.Digest;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.data.Comment;
+import org.moera.node.data.EntryAttachment;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
+import org.moera.node.util.Util;
 
 @FingerprintVersion(objectType = FingerprintObjectType.COMMENT, version = 0)
 public class CommentFingerprint extends EntryFingerprint {
@@ -29,6 +34,25 @@ public class CommentFingerprint extends EntryFingerprint {
     public long createdAt;
     public byte permissions; // TODO for future use
     public List<Digest<Fingerprint>> attachments;
+
+    public CommentFingerprint(Comment comment) {
+        super(0);
+        ownerName = comment.getOwnerName();
+        postingFingerprint.setDigest(comment.getPosting().getCurrentRevision().getDigest());
+        byte[] repliedToDigest = comment.getRepliedTo() != null
+                ? comment.getRepliedTo().getCurrentRevision().getDigest() : null;
+        repliedToFingerprint.setDigest(repliedToDigest);
+        bodySrc.setValue(comment.getCurrentRevision().getBodySrc());
+        bodySrcFormat = comment.getCurrentRevision().getBodySrcFormat().getValue();
+        body = comment.getCurrentRevision().getBody();
+        bodyFormat = comment.getCurrentRevision().getBodyFormat();
+        createdAt = Util.toEpochSecond(comment.getCurrentRevision().getCreatedAt());
+        attachments = comment.getCurrentRevision().getAttachments().stream()
+                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .map(EntryAttachment::getMediaFileOwner)
+                .map(this::mediaAttachmentFingerprint)
+                .collect(Collectors.toList());
+    }
 
     public CommentFingerprint(CommentText commentText, byte[] postingDigest, byte[] repliedToDigest,
                               Function<UUID, byte[]> mediaDigest) {
