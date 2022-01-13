@@ -224,16 +224,35 @@ public class MediaManager {
                 return mediaFileOwner;
             }
 
-            var tmp = mediaOperations.tmpFile();
             try {
-                var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, id, tmp, maxSize);
-                if (!tmpMedia.getMediaFileId().equals(mediaFileId)) {
-                    log.warn("Media {} has hash {} instead of {}", id, tmpMedia.getMediaFileId(), mediaFileId);
-                    return null;
+                MediaFile mediaFile = remoteMediaCacheRepository.findDownloadedMedia(nodeName, id).stream()
+                        .findFirst()
+                        .orElse(null);
+                if (mediaFile != null) {
+                    if (!mediaFile.getId().equals(mediaFileId)) {
+                        log.warn("Media {} has hash {} instead of {}", id, mediaFile.getId(), mediaFileId);
+                        return null;
+                    }
+                } else {
+                    var tmp = mediaOperations.tmpFile();
+                    try {
+                        var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, id, tmp, maxSize);
+                        if (!tmpMedia.getMediaFileId().equals(mediaFileId)) {
+                            log.warn("Media {} has hash {} instead of {}", id, tmpMedia.getMediaFileId(), mediaFileId);
+                            return null;
+                        }
+                        mediaFile = mediaOperations.putInPlace(
+                                mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null);
+                    } finally {
+                        try {
+                            Files.deleteIfExists(tmp.getPath());
+                        } catch (IOException e) {
+                            log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
+                        }
+                    }
+                    cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
+
                 }
-                MediaFile mediaFile = mediaOperations.putInPlace(
-                        mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null);
-                cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
                 // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use
                 // our MediaFileOwner, if exists
                 mediaFileOwner = mediaFileOwnerRepository
@@ -247,12 +266,6 @@ public class MediaManager {
                 return mediaFileOwner;
             } catch (IOException e) {
                 throw new NodeApiException(String.format("Error storing private media %s: %s", id, e.getMessage()));
-            } finally {
-                try {
-                    Files.deleteIfExists(tmp.getPath());
-                } catch (IOException e) {
-                    log.warn("Error removing temporary media file {}: {}", tmp.getPath(), e.getMessage());
-                }
             }
         } finally {
             mediaFileLocks.unlock(mediaFileId);
