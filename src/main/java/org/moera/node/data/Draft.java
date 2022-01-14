@@ -40,6 +40,9 @@ public class Draft {
     @Size(max = 40)
     private String receiverCommentId;
 
+    @Size(max = 40)
+    private String repliedToId;
+
     @NotNull
     private Timestamp createdAt = Util.now();
 
@@ -145,6 +148,14 @@ public class Draft {
 
     public void setReceiverCommentId(String receiverCommentId) {
         this.receiverCommentId = receiverCommentId;
+    }
+
+    public String getRepliedToId() {
+        return repliedToId;
+    }
+
+    public void setRepliedToId(String repliedToId) {
+        this.repliedToId = repliedToId;
     }
 
     public Timestamp getCreatedAt() {

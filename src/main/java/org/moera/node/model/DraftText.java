@@ -29,6 +29,9 @@ public class DraftText {
     @Size(max = 40)
     private String receiverCommentId;
 
+    @Size(max = 40)
+    private String repliedToId;
+
     @Size(max = 96)
     private String ownerFullName;
 
@@ -86,6 +89,14 @@ public class DraftText {
 
     public void setReceiverCommentId(String receiverCommentId) {
         this.receiverCommentId = receiverCommentId;
+    }
+
+    public String getRepliedToId() {
+        return repliedToId;
+    }
+
+    public void setRepliedToId(String repliedToId) {
+        this.repliedToId = repliedToId;
     }
 
     public String getOwnerFullName() {
@@ -179,6 +190,7 @@ public class DraftText {
     public void toDraft(Draft draft, TextConverter textConverter) {
         draft.setDraftType(draftType);
         draft.setEditedAt(Util.now());
+        draft.setRepliedToId(repliedToId);
         if (ownerFullName != null) {
             draft.setOwnerFullName(ownerFullName);
         }

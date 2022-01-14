@@ -17,6 +17,7 @@ public class DraftInfo {
     private String receiverName;
     private String receiverPostingId;
     private String receiverCommentId;
+    private String repliedToId;
     private Long createdAt;
     private Long editedAt;
     private Long deadline;
@@ -43,6 +44,7 @@ public class DraftInfo {
         receiverName = draft.getReceiverName();
         receiverPostingId = draft.getReceiverPostingId();
         receiverCommentId = draft.getReceiverCommentId();
+        repliedToId = draft.getRepliedToId();
         createdAt = Util.toEpochSecond(draft.getCreatedAt());
         editedAt = Util.toEpochSecond(draft.getEditedAt());
         deadline = Util.toEpochSecond(draft.getDeadline());
@@ -109,6 +111,14 @@ public class DraftInfo {
 
     public void setReceiverCommentId(String receiverCommentId) {
         this.receiverCommentId = receiverCommentId;
+    }
+
+    public String getRepliedToId() {
+        return repliedToId;
+    }
+
+    public void setRepliedToId(String repliedToId) {
+        this.repliedToId = repliedToId;
     }
 
     public Long getCreatedAt() {
