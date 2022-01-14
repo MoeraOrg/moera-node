@@ -15,7 +15,7 @@ import org.moera.node.global.EntitledInterceptor;
 import org.moera.node.global.NetworkLatencyInterceptor;
 import org.moera.node.global.SyndFeedHttpMessageConverter;
 import org.moera.node.global.VirtualPageInterceptor;
-import org.moera.node.helper.HelperSource;
+import org.moera.node.ui.helper.HelperSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -36,7 +36,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableTransactionManagement
 public class MoeraNodeApplication implements WebMvcConfigurer {
 
-    private static Logger log = LoggerFactory.getLogger(MoeraNodeApplication.class);
+    private static final Logger log = LoggerFactory.getLogger(MoeraNodeApplication.class);
 
     @Inject
     private Config config;

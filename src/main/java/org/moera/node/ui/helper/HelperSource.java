@@ -1,4 +1,4 @@
-package org.moera.node.helper;
+package org.moera.node.ui.helper;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

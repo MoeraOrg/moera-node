@@ -1,4 +1,4 @@
-package org.moera.node.helper;
+package org.moera.node.ui.helper;
 
 public class TypeMismatchException extends RuntimeException {
 
