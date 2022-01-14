@@ -1,8 +1,8 @@
 package org.moera.node.helper;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Locale;
-
 import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
@@ -23,9 +23,19 @@ public class DateTimeHelperSource {
         LocalDateTime timestamp = epochSeconds != null
                 ? Util.toTimestamp(epochSeconds).toLocalDateTime()
                 : HelperUtil.timestampArg("date", options.hash("date"));
+        String isoDate = timestamp.toInstant(ZoneOffset.UTC).toString();
         Calendar calendar = Calendar.getInstance();
         Util.copyToCalendar(timestamp, calendar);
         String exactDate = new SimpleDateFormat(pattern, Locale.ENGLISH).format(calendar);
+        if (isDisplayDateFromNow(options)) {
+            return new SafeString(String.format("<time datetime=\"%s\" title=\"%s\">%s</time>",
+                    isoDate, exactDate, Util.fromNow(timestamp)));
+        } else {
+            return new SafeString(String.format("<time datetime=\"%s\">%s</time>", isoDate, exactDate));
+        }
+    }
+
+    private boolean isDisplayDateFromNow(Options options) {
         String fromNowOption = options.hash("fromNow");
         boolean fromNow = false;
         if (fromNowOption != null) {
@@ -34,17 +44,12 @@ public class DateTimeHelperSource {
                     fromNow = true;
                     break;
                 case "false":
-                    fromNow = false;
                     break;
                 default:
                     fromNow = requestContext.getOptions().getBool(fromNowOption);
             }
         }
-        if (!fromNow) {
-            return exactDate;
-        } else {
-            return new SafeString(String.format("<span title=\"%s\">%s</span>", exactDate, Util.fromNow(timestamp)));
-        }
+        return fromNow;
     }
 
 }
