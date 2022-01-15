@@ -57,7 +57,8 @@ public class GalleriesHelperSource {
                     .map(mfo -> Map.of(
                             "id", mfo.getId(),
                             "src", "/moera/media/" + mfo.getPath(),
-                            "thumb", "/moera/media/" + mfo.getPath() + "?width=150"))
+                            "thumb", "/moera/media/" + mfo.getPath() + "?width=150",
+                            "subHtmlUrl", "/moera/media/private/" + mfo.getId() + "/caption"))
                     .toArray(Map[]::new);
             entryMap.put(entry.getId(), props);
         }

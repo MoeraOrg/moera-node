@@ -3,10 +3,15 @@ function galleryInit() {
         return;
     }
 
+    if (!window.lightGallery) {
+        setTimeout(galleryInit, 1000);
+        return;
+    }
+
     window.gallery = lightGallery(document.body, {
         dynamic: true,
         dynamicEl: [],
-        plugins: [lgZoom, lgPager, lgFullscreen]
+        plugins: [lgZoom, lgFullscreen]
     });
     document.body.addEventListener("lgBeforeSlide", galleryBeforeSlide);
     document.body.addEventListener("lgAfterClose", galleryAfterClose);
@@ -24,6 +29,17 @@ function galleryBeforeSlide(event) {
         + (window.galleryCommentId != null ? "comment=" + window.galleryCommentId + "&" : "")
         + "media=" + window.galleryMediaId;
     window.history.replaceState(null, "", url);
+
+    if (slide["subHtml"] == null) {
+        fetch(slide["subHtmlUrl"])
+            .then(response => response.text())
+            .then(html => {
+                slide["subHtml"] = html;
+                document.querySelector(".lg-sub-html").innerHTML = html;
+            });
+    } else {
+        document.querySelector(".lg-sub-html").innerHTML = slide["subHtml"];
+    }
 }
 
 function galleryAfterClose(event) {
