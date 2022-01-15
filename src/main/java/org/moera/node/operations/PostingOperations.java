@@ -146,10 +146,10 @@ public class PostingOperations {
         revision.setBodySrc(Body.EMPTY);
         revision.setBodySrcFormat(SourceFormat.MARKDOWN);
         revision.setBody(Body.EMPTY);
-        revision.setSaneBody(Body.EMPTY);
+        revision.setSaneBody(null);
         revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
         revision.setBodyPreview(Body.EMPTY);
-        revision.setSaneBodyPreview(Body.EMPTY);
+        revision.setSaneBodyPreview(null);
 
         signIfOwned(posting);
 
