@@ -163,6 +163,9 @@ public class Entry {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<PublicPage> publicPages = new HashSet<>();
 
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "entry")
+    private SitemapRecord sitemapRecord;
+
     public UUID getId() {
         return id;
     }
@@ -618,6 +621,20 @@ public class Entry {
     public void removePublicPage(PublicPage publicPage) {
         publicPages.removeIf(pp -> pp.getId() == publicPage.getId());
         publicPage.setEntry(null);
+    }
+
+    public SitemapRecord getSitemapRecord() {
+        return sitemapRecord;
+    }
+
+    public void setSitemapRecord(SitemapRecord sitemapRecord) {
+        if (this.sitemapRecord != null) {
+            this.sitemapRecord.setEntry(null);
+        }
+        this.sitemapRecord = sitemapRecord;
+        if (sitemapRecord != null) {
+            sitemapRecord.setEntry(this);
+        }
     }
 
 }
