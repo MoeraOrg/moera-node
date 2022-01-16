@@ -36,6 +36,11 @@ function galleryBeforeSlide(event) {
             .then(html => {
                 slide["subHtml"] = html;
                 document.querySelector(".lg-sub-html").innerHTML = html;
+                const reactions = document.querySelector(".lg-sub-html .reactions");
+                if (reactions) {
+                    reactions.remove();
+                    document.querySelector(".lg-content").append(reactions);
+                }
             });
     } else {
         document.querySelector(".lg-sub-html").innerHTML = slide["subHtml"];

@@ -4,6 +4,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -14,11 +15,10 @@ import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.model.PostingInfo;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -67,15 +67,15 @@ public class MediaUiController {
 
     @GetMapping("/private/{id}/caption")
     @Transactional
-    @ResponseBody
-    public ResponseEntity<String> getCaptionPrivate(@PathVariable UUID id) {
+    public String getCaptionPrivate(@PathVariable UUID id, Model model) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
         Posting posting = mediaFileOwner.getPosting(null);
         String body = posting != null ? posting.getCurrentRevision().getSaneBody() : "";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_HTML);
-        return new ResponseEntity<>(body, headers, HttpStatus.OK);
+        model.addAttribute("posting", new PostingInfo(posting, false));
+        model.addAttribute("caption", new SafeString(body));
+
+        return "caption";
     }
 
 }

@@ -1,0 +1,41 @@
+.lg-content {
+    .reactions {
+        line-height: 1;
+
+        .positive, .negative {
+            position: absolute;
+            top: 0;
+            margin-right: 0;
+            opacity: .7;
+        }
+    }
+}
+
+@media only screen and (min-width: 576px) {
+    .lg-content {
+        .reactions {
+            .positive {
+                right: .25rem;
+            }
+
+            .negative {
+                top: 2rem;
+                right: .25rem;
+            }
+        }
+    }
+}
+
+@media only screen and (max-width: 575px) {
+    .lg-content {
+        .reactions {
+            .positive {
+                right: calc(50vw + .25rem);
+            }
+
+            .negative {
+                left: calc(50vw + .25rem);
+            }
+        }
+    }
+}
