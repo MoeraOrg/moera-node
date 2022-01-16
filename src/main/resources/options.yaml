@@ -131,6 +131,11 @@
     min: 10240
     max: 1048576
 
+- name: posting.non-admin.allowed
+  type: bool
+  defaultValue: false
+  title: "Allow any user to add posts (experimental)"
+
 - name: posting.max-size
   type: int
   privileged: true

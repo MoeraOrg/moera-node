@@ -145,6 +145,9 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
+        if (!requestContext.isAdmin() && !requestContext.getOptions().getBool("posting.non-admin.allowed")) {
+            throw new AuthenticationException();
+        }
         mediaOperations.validateAvatar(
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
