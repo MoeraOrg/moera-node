@@ -66,8 +66,15 @@
         overflow-wrap: break-word;
         text-align: start;
 
-        P:last-child {
-            margin-bottom: 0;
+        P {
+            margin-top: 1rem;
+
+            &:first-child {
+                margin-top: 0;
+            }
+            &:last-child {
+                margin-bottom: 0;
+            }
         }
 
         @media only screen and (min-width: 901px) {

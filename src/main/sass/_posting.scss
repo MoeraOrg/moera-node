@@ -25,6 +25,17 @@
         overflow-wrap: break-word;
         text-align: start;
 
+        P {
+            margin-top: 1rem;
+
+            &:first-child {
+                margin-top: 0;
+            }
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
         IMG:not(.emoji) {
             width: auto;
             height: auto;
