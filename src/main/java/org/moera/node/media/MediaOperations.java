@@ -299,10 +299,6 @@ public class MediaOperations {
     }
 
     public ResponseEntity<Resource> serve(MediaFile mediaFile) {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
 
