@@ -8,13 +8,13 @@
 
 @media only screen and (min-width: 576px) {
     .comment .gallery {
-        width: calc(css-min(unquote("var(--feed-width)"), unquote("100vw")) * 0.5);
+        width: calc(min(var(--feed-width), 100vw) * 0.5);
     }
 }
 
 @media only screen and (max-width: 575px) {
     .comment .gallery {
-        width: calc(css-min(unquote("var(--feed-width)"), unquote("100vw - 55px")));
+        width: calc(min(var(--feed-width), 100vw - 55px));
     }
 }
 
@@ -73,14 +73,13 @@
 
 .entry .gallery.single .entry-image IMG {
     object-fit: contain;
-    width: auto;
     height: auto;
     margin-left: auto;
     margin-right: auto;
 }
 
 .posting .gallery.single .entry-image IMG {
-    max-width: calc(css-min(unquote("var(--feed-width)"), unquote("100vw - 10px")));
+    max-width: calc(min(var(--feed-width), 100vw - 10px));
 }
 
 @media only screen and (min-width: 576px) {
@@ -89,7 +88,7 @@
     }
 
     .comment .gallery.single .entry-image IMG {
-        max-width: calc(css-min(unquote("var(--feed-width)"), unquote("100vw")) * 0.5);
+        max-width: calc(min(var(--feed-width), 100vw) * 0.5);
         max-height: css-min(unquote("250px"), unquote("var(--image-height)"));
     }
 }
@@ -104,7 +103,7 @@
     }
 
     .comment .gallery.single .entry-image IMG {
-        max-width: calc(css-min(unquote("var(--feed-width)"), unquote("100vw - 55px")));
+        max-width: calc(min(var(--feed-width), 100vw - 55px));
     }
 
     .comment .gallery.single.horizontal .entry-image IMG {
