@@ -29,7 +29,7 @@ public class GlobalsControllerAdvice {
             model.addAttribute("siteUrl", requestContext.getSiteUrl());
         }
         model.addAttribute("ogType", "website");
-        if (requestContext.avatarId() != null) {
+        if (requestContext.getAvatar() != null) {
             AvatarImage avatarImage = new AvatarImage(requestContext.getAvatar());
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
             model.addAttribute("ogImageType", avatarImage.getMediaFile().getMimeType());
