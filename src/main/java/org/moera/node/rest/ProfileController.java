@@ -8,7 +8,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.data.AvatarRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -38,9 +37,6 @@ public class ProfileController {
 
     @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private AvatarRepository avatarRepository;
 
     @Inject
     private TextConverter textConverter;
