@@ -104,6 +104,11 @@
   type: UUID
   internal: true
 
+- name: profile.fundraisers
+  type: string
+  defaultValue: "[]"
+  internal: true
+
 - name: webmaster.name
   type: string
   defaultValue:

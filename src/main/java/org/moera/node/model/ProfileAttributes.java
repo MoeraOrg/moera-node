@@ -33,6 +33,8 @@ public class ProfileAttributes {
     @Uuid
     private String avatarId; // not UUID type, because empty string is allowed
 
+    private FundraiserInfo[] fundraisers;
+
     public ProfileAttributes() {
     }
 
@@ -92,6 +94,14 @@ public class ProfileAttributes {
         this.avatarId = avatarId;
     }
 
+    public FundraiserInfo[] getFundraisers() {
+        return fundraisers;
+    }
+
+    public void setFundraisers(FundraiserInfo[] fundraisers) {
+        this.fundraisers = fundraisers;
+    }
+
     @Transactional
     public void toOptions(Options options, TextConverter textConverter) {
         String bioHtml;
@@ -109,6 +119,7 @@ public class ProfileAttributes {
             toOption("profile.bio.src.format", getBioSrcFormat().getValue(), opt);
             toOption("profile.bio.html", bioHtml, opt);
             toOption("profile.avatar.id", getAvatarId(), opt);
+            toOption("profile.fundraisers", FundraiserInfo.serializeValue(getFundraisers()), opt);
         });
     }
 

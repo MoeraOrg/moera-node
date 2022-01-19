@@ -19,6 +19,7 @@ public class ProfileInfo {
     private SourceFormat bioSrcFormat;
     private String bioHtml;
     private AvatarInfo avatar;
+    private FundraiserInfo[] fundraisers;
     private Map<String, String[]> operations;
 
     public ProfileInfo() {
@@ -40,6 +41,7 @@ public class ProfileInfo {
         if (requestContext.getAvatar() != null) {
             this.avatar = new AvatarInfo(requestContext.getAvatar());
         }
+        fundraisers = FundraiserInfo.deserializeValue(options.getString("profile.fundraisers"));
         operations = Collections.singletonMap("edit", new String[]{"admin"});
     }
 
@@ -105,6 +107,14 @@ public class ProfileInfo {
 
     public void setAvatar(AvatarInfo avatar) {
         this.avatar = avatar;
+    }
+
+    public FundraiserInfo[] getFundraisers() {
+        return fundraisers;
+    }
+
+    public void setFundraisers(FundraiserInfo[] fundraisers) {
+        this.fundraisers = fundraisers;
     }
 
     public Map<String, String[]> getOperations() {

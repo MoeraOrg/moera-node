@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 public class Choice {
 
-    private static Logger log = LoggerFactory.getLogger(Choice.class);
+    private static final Logger log = LoggerFactory.getLogger(Choice.class);
 
     private String value;
     private String title;
