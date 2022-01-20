@@ -55,4 +55,13 @@ public class FundraiserInfo {
         fields.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        try {
+            return new ObjectMapper().writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
 }
