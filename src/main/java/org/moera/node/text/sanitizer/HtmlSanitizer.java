@@ -22,16 +22,7 @@ public class HtmlSanitizer {
             .allowAttributes("style").onElements("p")
             .allowAttributes("start", "type").onElements("ol")
             .allowAttributes("href", "data-nodename", "data-id").onElements("a")
-            .allowAttributes("class")
-                .matching(false, "entry-image")
-                .onElements("a")
             .allowAttributes("src", "srcset", "sizes", "width", "height", "alt", "style").onElements("img")
-            .allowAttributes("class")
-                .matching(false, "emoji")
-                .onElements("img")
-            .allowAttributes("class")
-                .matching(false, "katex")
-                .onElements("div", "span")
             .allowAttributes("title").onElements("mr-spoiler")
             .allowAttributes("src").matching(HtmlSanitizer::validateIframeSrc).onElements("iframe")
             .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen", "sandbox", "scrolling",
@@ -51,12 +42,18 @@ public class HtmlSanitizer {
                     .allowAttributes("target")
                         .matching(false, "_blank")
                         .onElements("a")
+                    .allowAttributes("class")
+                        .matching(new ClassPolicy(false))
+                        .globally()
                     .toFactory());
     private static final PolicyFactory SAFE_PREVIEW_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
                     .allowElements(
                             (elementName, attrs) -> "b",
                             "h1", "h2", "h3", "h4", "h5", "h6")
+                    .allowAttributes("class")
+                        .matching(new ClassPolicy(true))
+                        .globally()
                     .toFactory());
 
     private static boolean validateIframeSrc(String src) {
