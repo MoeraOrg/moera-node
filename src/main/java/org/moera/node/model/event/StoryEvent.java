@@ -27,6 +27,8 @@ public class StoryEvent extends Event {
     private String postingId;
     private Boolean viewed;
     private Boolean read;
+    private String summaryNodeName;
+    private String summaryFullName;
     private AvatarImage summaryAvatar;
     private String summary;
     private String trackingId;
@@ -61,6 +63,8 @@ public class StoryEvent extends Event {
         remoteFullName = story.getRemoteFullName();
         remotePostingId = story.getRemotePostingId();
         remoteCommentId = story.getRemoteCommentId();
+        summaryNodeName = storyInfo.getSummaryNodeName();
+        summaryFullName = storyInfo.getSummaryFullName();
         summaryAvatar = storyInfo.getSummaryAvatar();
         summary = story.getSummary();
         operations = new HashMap<>();
@@ -139,6 +143,22 @@ public class StoryEvent extends Event {
 
     public void setRead(Boolean read) {
         this.read = read;
+    }
+
+    public String getSummaryNodeName() {
+        return summaryNodeName;
+    }
+
+    public void setSummaryNodeName(String summaryNodeName) {
+        this.summaryNodeName = summaryNodeName;
+    }
+
+    public String getSummaryFullName() {
+        return summaryFullName;
+    }
+
+    public void setSummaryFullName(String summaryFullName) {
+        this.summaryFullName = summaryFullName;
     }
 
     public AvatarImage getSummaryAvatar() {

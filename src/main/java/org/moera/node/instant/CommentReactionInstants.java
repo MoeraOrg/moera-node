@@ -139,6 +139,8 @@ public class CommentReactionInstants extends InstantsCreator {
         }
 
         story.setSummary(buildAddedSummary(story, stories));
+        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
+        story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
         story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
         story.setPublishedAt(Util.now());
