@@ -46,11 +46,15 @@
             max-height: var(--height, 200vh);
         }
 
+        FIGURE {
+           display: inline-block;
+        }
+
         FIGCAPTION {
-            line-height: 1.2;
-            margin-top: .3em;
+            font-size: .875em;
+            line-height: 1.5;
+            margin-top: .5em;
             color: var(--bs-gray-600);
-            margin-left: .75em;
         }
     }
 
