@@ -20,7 +20,6 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.node.config.Config;
 import org.moera.node.data.MediaFile;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
@@ -60,9 +59,6 @@ public class NodeApi {
 
     private static final Duration CALL_API_CONNECTION_TIMEOUT = Duration.ofSeconds(20);
     private static final Duration CALL_API_REQUEST_TIMEOUT = Duration.ofMinutes(1);
-
-    @Inject
-    private Config config;
 
     @Inject
     private ObjectMapper objectMapper;
