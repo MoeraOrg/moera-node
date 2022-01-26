@@ -9,7 +9,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import net.coobird.thumbnailator.Thumbnails;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.config.Config;
@@ -22,6 +21,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtils;
+import org.moera.node.media.ThumbnailUtil;
 import org.moera.node.model.AvatarAttributes;
 import org.moera.node.model.AvatarInfo;
 import org.moera.node.model.AvatarOrdinal;
@@ -95,7 +95,7 @@ public class AvatarController {
         try {
             DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
-            Thumbnails.of(mediaOperations.getPath(mediaFile).toFile())
+            ThumbnailUtil.thumbnailOf(mediaOperations.getPath(mediaFile).toFile(), mediaFile.getMimeType())
                     .rotate(avatarAttributes.getRotate())
                     .sourceRegion(
                             avatarAttributes.getClipX(), avatarAttributes.getClipY(),

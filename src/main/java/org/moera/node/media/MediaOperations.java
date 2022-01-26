@@ -33,7 +33,6 @@ import javax.imageio.stream.ImageInputStream;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
@@ -217,7 +216,7 @@ public class MediaOperations {
         try {
             DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
-            Thumbnails.of(getPath(original).toFile())
+            ThumbnailUtil.thumbnailOf(getPath(original).toFile(), original.getMimeType())
                     .sourceRegion(region)
                     .size(region.width, region.height)
                     .toOutputStream(out);
@@ -249,7 +248,7 @@ public class MediaOperations {
             try {
                 DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
-                Thumbnails.of(getPath(cropped).toFile())
+                ThumbnailUtil.thumbnailOf(getPath(cropped).toFile(), cropped.getMimeType())
                         .width(width)
                         .outputFormat(previewFormat.format)
                         .toOutputStream(out);
