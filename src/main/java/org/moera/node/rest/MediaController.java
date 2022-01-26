@@ -58,7 +58,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @ApiController
 @RequestMapping("/moera/api/media")
@@ -239,7 +238,6 @@ public class MediaController {
 
     @GetMapping("/public/{id}/data")
     @Transactional
-    @ResponseBody
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
                                                   @RequestParam(required = false) Integer width) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
