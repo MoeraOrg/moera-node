@@ -122,6 +122,7 @@ public class RemotePostingReactionPostTask extends Task {
                     contactOperations.updateCloseness(nodeId, targetNodeName, 0.25f);
                 }
                 info.toOwnReaction(ownReaction);
+                ownReaction.setPostingHeading(postingInfo.getHeading());
                 return null;
             });
         } catch (Throwable e) {

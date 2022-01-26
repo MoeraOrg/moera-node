@@ -198,6 +198,7 @@ public class RemoteCommentPostTask extends Task {
                     contactOperations.updateCloseness(nodeId, info.getRepliedToName(), 1);
                 }
                 info.toOwnComment(ownComment);
+                ownComment.setPostingHeading(postingInfo.getHeading());
                 return null;
             });
         } catch (Throwable e) {

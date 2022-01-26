@@ -56,6 +56,10 @@ public class OwnComment {
 
     @NotNull
     @Size(max = 255)
+    private String postingHeading = "";
+
+    @NotNull
+    @Size(max = 255)
     private String heading = "";
 
     @NotNull
@@ -155,6 +159,14 @@ public class OwnComment {
 
     public void setRemoteRepliedToAvatarShape(String remoteRepliedToAvatarShape) {
         this.remoteRepliedToAvatarShape = remoteRepliedToAvatarShape;
+    }
+
+    public String getPostingHeading() {
+        return postingHeading;
+    }
+
+    public void setPostingHeading(String postingHeading) {
+        this.postingHeading = postingHeading;
     }
 
     public String getHeading() {

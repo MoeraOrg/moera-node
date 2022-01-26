@@ -41,6 +41,10 @@ public class OwnReaction {
     private String remotePostingId = "";
 
     @NotNull
+    @Size(max = 255)
+    private String postingHeading = "";
+
+    @NotNull
     private boolean negative;
 
     @NotNull
@@ -103,6 +107,14 @@ public class OwnReaction {
 
     public void setRemotePostingId(String remotePostingId) {
         this.remotePostingId = remotePostingId;
+    }
+
+    public String getPostingHeading() {
+        return postingHeading;
+    }
+
+    public void setPostingHeading(String postingHeading) {
+        this.postingHeading = postingHeading;
     }
 
     public boolean isNegative() {
