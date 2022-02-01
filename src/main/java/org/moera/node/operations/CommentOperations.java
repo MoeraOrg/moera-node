@@ -170,7 +170,10 @@ public class CommentOperations {
                 current.addAttachment(attachment);
 
                 if (mediaEntryUpdater != null) {
-                    mediaEntryUpdater.accept(mfo.getPosting(null));
+                    Posting mediaPosting = mfo.getPosting(null);
+                    if (mediaPosting != null) {
+                        mediaEntryUpdater.accept(mediaPosting);
+                    }
                 }
             }
         }

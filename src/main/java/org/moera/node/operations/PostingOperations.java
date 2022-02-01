@@ -190,7 +190,10 @@ public class PostingOperations {
                 current.addAttachment(attachment);
 
                 if (mediaEntryUpdater != null) {
-                    mediaEntryUpdater.accept(mfo.getPosting(posting.getReceiverName()));
+                    Posting mediaPosting = mfo.getPosting(posting.getReceiverName());
+                    if (mediaPosting != null) {
+                        mediaEntryUpdater.accept(mediaPosting);
+                    }
                 }
             }
         }
