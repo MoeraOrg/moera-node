@@ -133,6 +133,7 @@
   defaultValue: 51200
   title: Maximal size of avatars
   modifiers:
+    format: size
     min: 10240
     max: 1048576
 
@@ -147,6 +148,7 @@
   defaultValue: 1048576
   title: Maximal size of posts
   modifiers:
+    format: size
     min: 1024
     max: 4194304
 
@@ -155,6 +157,7 @@
   defaultValue: 5242880
   title: Maximal size of a media attachment in a post
   modifiers:
+    format: size
     min: 65536
     max: 104857600
 
@@ -163,6 +166,7 @@
   defaultValue: 368640
   title: Maximal size of a compressed image in a post
   modifiers:
+    format: size
     min: 65536
     max: 104857600
 
@@ -308,6 +312,7 @@
   defaultValue: 65536
   title: Maximal size of comments
   modifiers:
+    format: size
     min: 1024
     max: 4194304
 
@@ -316,6 +321,7 @@
   defaultValue: 65536
   title: Maximal size of comments
   modifiers:
+    format: size
     min: 1024
     max: 4194304
 
@@ -384,6 +390,7 @@
   defaultValue: 5242880
   title: Maximal size of an uploaded media
   modifiers:
+    format: size
     min: 65536
     max: 104857600
 
@@ -401,5 +408,6 @@
   defaultValue: 10485760
   title: Maximal size of a media downloaded for verification
   modifiers:
+    format: size
     min: 1048576
     max: 104857600
