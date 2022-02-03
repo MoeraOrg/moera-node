@@ -38,7 +38,9 @@ public class GalleriesHelperSource {
                                          String mediaId) throws JsonProcessingException {
         Collection<MediaInfo> entries = new ArrayList<>();
         entries.add(posting);
-        entries.addAll(comments);
+        if (comments != null) {
+            entries.addAll(comments);
+        }
         return galleries(entries, canonicalUrl, postingId, commentId, mediaId);
     }
 
