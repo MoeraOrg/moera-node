@@ -45,8 +45,12 @@ public class ClassPolicy implements AttributePolicy {
             allowed("text-start", "text-end", "text-center"),
             allowed("text-*").notInPreview(),
             allowed("bg-*").notInPreview(),
+            allowed("border").notInPreview(),
             allowed("border-*").notInPreview(),
             allowed("fs-*").notInPreview(),
+            allowed("float-*"),
+            allowed("table").onElements("table"),
+            allowed("table-*").onElements("table", "th", "tr", "td"),
             allowed("entry-image").onElements("a"),
             allowed("emoji").onElements("img"),
             allowed("katex").onElements("div", "span")
