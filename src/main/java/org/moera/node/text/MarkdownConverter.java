@@ -30,10 +30,13 @@ import java.util.stream.Collectors;
 @Component
 public class MarkdownConverter {
 
-    static final Set<String> BLOCK_TAGS_MARKDOWN_ALLOWED = Set.of("blockquote", "details", "figure", "figcaption");
+    static final Set<String> BLOCK_TAGS_MARKDOWN_ALLOWED = Set.of(
+            "blockquote", "details", "figure", "figcaption", "table", "tbody", "td", "tfoot", "th", "thead", "tr",
+            "div");
     static final DataHolder DEFAULT_OPTIONS = new MutableDataSet()
             .set(Parser.LISTS_ITEM_PREFIX_CHARS, "*")
             .set(Parser.HTML_BLOCK_TAGS, htmlBlockTags())
+            .set(Parser.HTML_BLOCK_START_ONLY_ON_BLOCK_TAGS, true)
             .set(HtmlRenderer.SOFT_BREAK, "<br/>")
             .set(EmojiExtension.USE_IMAGE_TYPE, EmojiImageType.UNICODE_ONLY)
             .set(GitLabExtension.INS_PARSER, false)
