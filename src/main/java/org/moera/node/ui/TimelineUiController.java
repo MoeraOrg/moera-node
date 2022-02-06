@@ -12,6 +12,7 @@ import javax.transaction.Transactional;
 
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
@@ -25,6 +26,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.Body;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
@@ -34,6 +36,7 @@ import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.ui.Model;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -132,9 +135,10 @@ public class TimelineUiController {
         model.addAttribute("openMediaCommentId", commentId != null ? commentId.toString() : null);
         model.addAttribute("openMediaId", Objects.toString(mediaId, null));
 
+        Comment comment = commentId != null && posting.isOriginal()
+                ? commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null)
+                : null;
         if (posting.isOriginal()) {
-            Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                    .orElse(null);
             before = comment != null ? comment.getMoment() : before;
             before = before != null ? before : Long.MIN_VALUE + 1;
             List<CommentInfo> comments = Collections.emptyList();
@@ -157,18 +161,19 @@ public class TimelineUiController {
             model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
         } else {
             model.addAttribute("originalHref", NamingCache.getRedirector(posting.getReceiverName(),
-                    String.format("/post/%s", posting.getReceiverEntryId())));
-            String location = commentId != null
-                    ? String.format("/post/%s?comment=%s", posting.getReceiverEntryId(), commentId)
-                    : String.format("/post/%s", posting.getReceiverEntryId());
-            model.addAttribute("commentsHref", NamingCache.getRedirector(posting.getReceiverName(), location));
+                    entryLocation(posting.getReceiverEntryId(), null)));
+            model.addAttribute("commentsHref", NamingCache.getRedirector(posting.getReceiverName(),
+                    entryLocation(posting.getReceiverEntryId(), commentId)));
         }
 
-        model.addAttribute("ogUrl", requestContext.getSiteUrl() + String.format("/post/%s", posting.getId()));
+        model.addAttribute("ogUrl", requestContext.getSiteUrl() + entryLocation(posting.getId(), commentId));
         model.addAttribute("ogType", "article");
-        model.addAttribute("ogTitle", posting.getCurrentRevision().getHeading());
-        EntryAttachment attachment = posting.getCurrentRevision().getAttachments().stream()
+        Entry entry = comment != null ? comment : posting;
+        String subject = new Body(entry.getCurrentRevision().getBody()).getSubject();
+        model.addAttribute("ogTitle", !ObjectUtils.isEmpty(subject) ? subject : "(no title)");
+        EntryAttachment attachment = entry.getCurrentRevision().getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .filter(ea -> mediaId == null || ea.getMediaFileOwner().getId().equals(mediaId))
                 .filter(ea -> ea.getMediaFileOwner().getMediaFile().getSizeX() != null) // an image
                 .findFirst()
                 .orElse(null);
@@ -179,22 +184,30 @@ public class TimelineUiController {
             model.addAttribute("ogImageType", attachment.getMediaFileOwner().getMediaFile().getMimeType());
             model.addAttribute("ogImageWidth", image.getWidth());
             model.addAttribute("ogImageHeight", image.getHeight());
-        } else if (posting.getOwnerAvatarMediaFile() != null) {
-            AvatarImage avatarImage = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
+        } else if (entry.getOwnerAvatarMediaFile() != null) {
+            AvatarImage avatarImage = new AvatarImage(entry.getOwnerAvatarMediaFile(), entry.getOwnerAvatarShape());
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
             model.addAttribute("ogImageType", avatarImage.getMediaFile().getMimeType());
             model.addAttribute("ogImageWidth", avatarImage.getWidth());
             model.addAttribute("ogImageHeight", avatarImage.getHeight());
         }
-        model.addAttribute("ogDescription", posting.getCurrentRevision().getDescription());
-        var createdAt = posting.getReceiverCreatedAt() != null ? posting.getReceiverCreatedAt() : posting.getCreatedAt();
+        String description = entry.getCurrentRevision().getDescription();
+        description = !ObjectUtils.isEmpty(description) ? description : entry.getCurrentRevision().getHeading();
+        model.addAttribute("ogDescription", description);
+        var createdAt = entry.getReceiverCreatedAt() != null ? entry.getReceiverCreatedAt() : entry.getCreatedAt();
         model.addAttribute("ogArticlePublishedTime", createdAt.toInstant().toString());
-        if (posting.getEditedAt() != null) {
-            var editedAt = posting.getReceiverEditedAt() != null ? posting.getReceiverEditedAt() : posting.getEditedAt();
+        if (entry.getEditedAt() != null) {
+            var editedAt = entry.getReceiverEditedAt() != null ? entry.getReceiverEditedAt() : entry.getEditedAt();
             model.addAttribute("ogArticleModifiedTime", editedAt.toInstant().toString());
         }
 
         return "posting";
+    }
+
+    private String entryLocation(Object postingId, Object commentId) {
+        return commentId != null
+                ? String.format("/post/%s?comment=%s", postingId, commentId)
+                : String.format("/post/%s", postingId);
     }
 
 }

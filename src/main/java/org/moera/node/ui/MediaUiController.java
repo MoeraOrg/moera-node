@@ -71,7 +71,11 @@ public class MediaUiController {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
         Posting posting = mediaFileOwner.getPosting(null);
-        String body = posting != null ? posting.getCurrentRevision().getSaneBody() : "";
+        if (posting == null) {
+            throw new PageNotFoundException();
+        }
+        String body = posting.getCurrentRevision().getSaneBody();
+        body = body != null ? body : "";
         model.addAttribute("posting", new PostingInfo(posting, false));
         model.addAttribute("caption", new SafeString(body));
 
