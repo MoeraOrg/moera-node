@@ -24,6 +24,7 @@ import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Posting;
@@ -46,6 +47,7 @@ import org.moera.node.model.CommentText;
 import org.moera.node.model.CommentTotalInfo;
 import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.event.CommentAddedEvent;
 import org.moera.node.model.event.CommentDeletedEvent;
@@ -97,6 +99,9 @@ public class CommentController {
 
     @Inject
     private ReactionRepository reactionRepository;
+
+    @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
@@ -469,6 +474,25 @@ public class CommentController {
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());
     }
 
+    @GetMapping("/{commentId}/attached")
+    @Transactional
+    public List<PostingInfo> getAttached(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+        log.info("GET /postings/{postingId}/comments/{commentId}/attached, (postingId = {}, commentId = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId));
+
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        if (!comment.getPosting().getId().equals(postingId)) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
+        }
+        List<Posting> attached = entryAttachmentRepository.findOwnAttachedPostings(
+                requestContext.nodeId(), comment.getCurrentRevision().getId());
+        boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(comment.getOwnerName());
+        return attached.stream()
+                .map(p -> withClientReaction(new PostingInfo(p, false, isAdminOrOwner)))
+                .collect(Collectors.toList());
+    }
+
     private CommentInfo withClientReaction(CommentInfo commentInfo) {
         String clientName = requestContext.getClientName();
         if (ObjectUtils.isEmpty(clientName)) {
@@ -477,6 +501,16 @@ public class CommentController {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);
         commentInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
         return commentInfo;
+    }
+
+    private PostingInfo withClientReaction(PostingInfo postingInfo) {
+        String clientName = requestContext.getClientName();
+        if (ObjectUtils.isEmpty(clientName)) {
+            return postingInfo;
+        }
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
+        postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        return postingInfo;
     }
 
 }

@@ -19,6 +19,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.OwnReaction;
@@ -104,6 +105,9 @@ public class PostingController {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
+
+    @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
@@ -329,6 +333,24 @@ public class PostingController {
         storyOperations.unpublish(posting.getId());
 
         return Result.OK;
+    }
+
+    @GetMapping("/{id}/attached")
+    @Transactional
+    public List<PostingInfo> getAttached(@PathVariable UUID id) {
+        log.info("GET /postings/{id}/attached, (id = {})", LogUtil.format(id));
+
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        List<Posting> attached = posting.isOriginal()
+                ? entryAttachmentRepository.findOwnAttachedPostings(
+                        requestContext.nodeId(), posting.getCurrentRevision().getId())
+                : entryAttachmentRepository.findReceivedAttachedPostings(
+                        requestContext.nodeId(), posting.getCurrentRevision().getId(), posting.getReceiverName());
+        boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName());
+        return attached.stream()
+                .map(p -> withClientReaction(new PostingInfo(p, false, isAdminOrOwner)))
+                .collect(Collectors.toList());
     }
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
