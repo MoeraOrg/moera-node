@@ -138,6 +138,9 @@ public class ReactionOperations {
                 log.debug("Deleting reaction {}", LogUtil.format(reaction.getId()));
                 reactionTotalOperations.changeTotals(entry, reaction, -1);
                 reaction.setDeletedAt(Util.now());
+                if (reaction.getDeadline() == null) { // it's a real reaction, not a temporary one
+                    reaction.setReplaced(true);
+                }
                 ExtendedDuration reactionTtl =
                         requestContext.getOptions().getDuration("reaction.deleted.lifetime");
                 if (!reactionTtl.isNever()) {
@@ -217,14 +220,15 @@ public class ReactionOperations {
                 log.debug("Purging reaction {}, deletedAt = {}",
                         LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
                 Entry entry = reaction.getEntryRevision().getEntry();
-                if (reaction.getDeletedAt() == null) {
-                    List<Reaction> deleted = reactionRepository.findDeletedByEntryIdAndOwner(
+                if (reaction.getDeletedAt() == null) { // it's the current active reaction of the user to the entry
+                    List<Reaction> replaced = reactionRepository.findReplacedByEntryIdAndOwner(
                             entry.getId(),
                             reaction.getOwnerName(),
                             PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
-                    if (deleted.size() > 0) {
-                        Reaction next = deleted.get(0);
+                    if (replaced.size() > 0) {
+                        Reaction next = replaced.get(0);
                         next.setDeletedAt(null);
+                        next.setReplaced(false);
                         if (next.getSignature() != null) {
                             next.setDeadline(null);
                         }

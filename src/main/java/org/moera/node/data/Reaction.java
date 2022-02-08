@@ -51,6 +51,8 @@ public class Reaction {
 
     private Timestamp deletedAt;
 
+    private boolean replaced;
+
     private byte[] signature;
 
     private short signatureVersion;
@@ -149,6 +151,14 @@ public class Reaction {
 
     public void setDeletedAt(Timestamp deletedAt) {
         this.deletedAt = deletedAt;
+    }
+
+    public boolean isReplaced() {
+        return replaced;
+    }
+
+    public void setReplaced(boolean replaced) {
+        this.replaced = replaced;
     }
 
     public byte[] getSignature() {
