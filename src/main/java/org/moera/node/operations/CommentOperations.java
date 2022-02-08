@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.inject.Inject;
@@ -41,10 +42,11 @@ import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.notification.MentionCommentAddedNotification;
 import org.moera.node.model.notification.MentionCommentDeletedNotification;
+import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
-import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.model.notification.ReplyCommentAddedNotification;
 import org.moera.node.model.notification.ReplyCommentDeletedNotification;
+import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.text.MediaExtractor;
@@ -55,6 +57,7 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -276,27 +279,33 @@ public class CommentOperations {
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
         notifyMentioned(posting, commentId, ownerName, ownerFullName, ownerAvatar, current.getHeading(),
-                currentMentions, latestMentions);
+                currentMentions, latestMentions, requestContext::send);
+    }
+
+    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
+                                 AvatarImage ownerAvatar, Set<String> currentMentions, Set<String> latestMentions) {
+        notifyMentioned(posting, commentId, ownerName, ownerFullName, ownerAvatar, null, currentMentions,
+                latestMentions, requestContext::send);
     }
 
     private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
                                  AvatarImage ownerAvatar, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions) {
+                                 Set<String> latestMentions, BiConsumer<Direction, Notification> notificationSender) {
         currentMentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
-                .map(Directions::single)
-                .forEach(d -> requestContext.send(d,
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d -> notificationSender.accept(d,
                         new MentionCommentAddedNotification(posting.getId(), commentId,
                                 posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, ownerAvatar,
                                 currentHeading)));
         latestMentions.stream()
-                .filter(m -> !m.equals(requestContext.nodeName()))
+                .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !currentMentions.contains(m))
-                .map(Directions::single)
-                .forEach(d -> requestContext.send(d,
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d -> notificationSender.accept(d,
                         new MentionCommentDeletedNotification(posting.getId(), commentId)));
     }
 
@@ -322,7 +331,7 @@ public class CommentOperations {
         Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
         notifyReplyDeleted(comment.getPosting(), comment);
         notifyMentioned(comment.getPosting(), comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()), null,
+                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                 Collections.emptySet(), latestMentions);
 
         requestContext.send(new CommentDeletedEvent(comment));
@@ -335,15 +344,18 @@ public class CommentOperations {
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() throws Throwable {
         Map<UUID, List<Event>> events = new HashMap<>();
-        List<PostingSubscriberNotification> notifications = new ArrayList<>();
+        List<Pair<Direction, Notification>> notifications = new ArrayList<>();
 
         Transaction.execute(txManager, () -> {
             List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
             comments.addAll(commentRepository.findExpired(Util.now()));
             for (Comment comment : comments) {
                 List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
+                Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
+                Set<String> currentMentions = Collections.emptySet();
+                String currentHeading = null;
+                Posting posting = comment.getPosting();
                 if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
-                    Posting posting = comment.getPosting();
                     if (comment.getDeletedAt() == null) {
                         log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
                                 LogUtil.format(posting.getId()),
@@ -355,8 +367,8 @@ public class CommentOperations {
 
                     eventList.add(new CommentDeletedEvent(comment));
                     eventList.add(new PostingCommentsChangedEvent(posting));
-                    notifications.add(
-                            new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
+                    notifications.add(Pair.of(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                            new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren())));
                 } else {
                     EntryRevision revision = comment.getRevisions().stream()
                             .min(Comparator.comparing(EntryRevision::getCreatedAt))
@@ -366,10 +378,16 @@ public class CommentOperations {
                         entryRevisionRepository.delete(comment.getCurrentRevision());
                         comment.setCurrentRevision(revision);
                         comment.setTotalRevisions(comment.getTotalRevisions() - 1);
+                        currentMentions = MentionsExtractor.extract(new Body(revision.getBody()));
+                        currentHeading = revision.getHeading();
 
                         eventList.add(new CommentUpdatedEvent(comment));
                     }
                 }
+                notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
+                        currentHeading, currentMentions, latestMentions,
+                        (direction, notification) -> notifications.add(Pair.of(direction, notification)));
             }
 
             return null;
@@ -378,8 +396,7 @@ public class CommentOperations {
         for (var e : events.entrySet()) {
             e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
         }
-        notifications.forEach(notification -> notificationSenderPool.send(
-                Directions.postingSubscribers(UUID.fromString(notification.getPostingId())), notification));
+        notifications.forEach(dn -> notificationSenderPool.send(dn.getFirst(), dn.getSecond()));
     }
 
 }

@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -49,7 +50,6 @@ import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.PostingDeletedNotification;
-import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.Directions;
@@ -209,7 +209,7 @@ public class PostingOperations {
             timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
         }
 
-        notifyMentioned(posting.getId(), posting.getCurrentRevision(), latest);
+        notifyMentioned(posting.getId(), posting.getCurrentRevision(), latest, posting.getOwnerName());
 
         return posting;
     }
@@ -264,30 +264,30 @@ public class PostingOperations {
         return revision;
     }
 
-    private void notifyMentioned(UUID postingId, EntryRevision current, EntryRevision latest) {
+    private void notifyMentioned(UUID postingId, EntryRevision current, EntryRevision latest, String ownerName) {
         Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
         Set<String> latestMentions = latest != null
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
-        notifyMentioned(postingId, current.getHeading(), currentMentions, latestMentions, requestContext.nodeName(),
-                requestContext::send);
+        notifyMentioned(requestContext.nodeId(), postingId, current.getHeading(), currentMentions, latestMentions,
+                ownerName, requestContext::send);
     }
 
-    private void notifyMentioned(UUID postingId, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions, String nodeName,
+    private void notifyMentioned(UUID nodeId, UUID postingId, String currentHeading, Set<String> currentMentions,
+                                 Set<String> latestMentions, String ownerName,
                                  BiConsumer<Direction, Notification> notificationSender) {
         currentMentions.stream()
-                .filter(m -> !m.equals(nodeName))
+                .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
-                .map(Directions::single)
+                .map(m -> Directions.single(nodeId, m))
                 .forEach(d -> notificationSender.accept(d,
                         new MentionPostingAddedNotification(postingId, currentHeading)));
         latestMentions.stream()
-                .filter(m -> !m.equals(nodeName))
+                .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !currentMentions.contains(m))
-                .map(Directions::single)
+                .map(m -> Directions.single(nodeId, m))
                 .forEach(d -> notificationSender.accept(d, new MentionPostingDeletedNotification(postingId)));
     }
 
@@ -308,8 +308,8 @@ public class PostingOperations {
 
             if (posting.isOriginal()) {
                 Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));
-                notifyMentioned(posting.getId(), null, Collections.emptySet(), latestMentions,
-                        options.nodeName(), notificationSender);
+                notifyMentioned(posting.getNodeId(), posting.getId(), null, Collections.emptySet(),
+                        latestMentions, options.nodeName(), notificationSender);
             }
         }
         if (!posting.isOriginal() && unsubscribe) {
@@ -318,7 +318,7 @@ public class PostingOperations {
         }
 
         eventSender.accept(new PostingDeletedEvent(posting));
-        notificationSender.accept(Directions.postingSubscribers(posting.getId()),
+        notificationSender.accept(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingDeletedNotification(posting.getId()));
     }
 
@@ -347,20 +347,24 @@ public class PostingOperations {
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() throws Throwable {
         Map<UUID, List<Event>> events = new HashMap<>();
-        List<PostingSubscriberNotification> notifications = new ArrayList<>();
+        List<Pair<Direction, Notification>> notifications = new ArrayList<>();
 
         Transaction.execute(txManager, () -> {
             List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
             for (Posting posting : postings) {
                 universalContext.associate(posting.getNodeId());
                 List<Event> eventList = events.computeIfAbsent(posting.getNodeId(), id -> new ArrayList<>());
+                Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));
+                Set<String> currentMentions = Collections.emptySet();
+                String currentHeading = null;
                 if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
                     log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
                     storyOperations.unpublish(posting.getId(), posting.getNodeId(), eventList::add);
                     postingRepository.delete(posting);
 
                     eventList.add(new PostingDeletedEvent(posting));
-                    notifications.add(new PostingDeletedNotification(posting.getId()));
+                    notifications.add(Pair.of(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                            new PostingDeletedNotification(posting.getId())));
                 } else {
                     EntryRevision revision = posting.getRevisions().stream()
                             .min(Comparator.comparing(EntryRevision::getCreatedAt))
@@ -370,10 +374,18 @@ public class PostingOperations {
                         entryRevisionRepository.delete(posting.getCurrentRevision());
                         posting.setCurrentRevision(revision);
                         posting.setTotalRevisions(posting.getTotalRevisions() - 1);
+                        currentMentions = MentionsExtractor.extract(new Body(revision.getBody()));
+                        currentHeading = revision.getHeading();
 
                         eventList.add(new PostingUpdatedEvent(posting));
-                        notifications.add(new PostingUpdatedNotification(posting.getId()));
+                        notifications.add(Pair.of(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                                new PostingUpdatedNotification(posting.getId())));
                     }
+                }
+                if (posting.isOriginal()) {
+                    notifyMentioned(posting.getNodeId(), posting.getId(), currentHeading, currentMentions,
+                            latestMentions, posting.getOwnerName(),
+                            (direction, notification) -> notifications.add(Pair.of(direction, notification)));
                 }
             }
 
@@ -383,8 +395,7 @@ public class PostingOperations {
         for (var e : events.entrySet()) {
             e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
         }
-        notifications.forEach(notification -> notificationSenderPool.send(
-                Directions.postingSubscribers(UUID.fromString(notification.getPostingId())), notification));
+        notifications.forEach(dn -> notificationSenderPool.send(dn.getFirst(), dn.getSecond()));
     }
 
 }
