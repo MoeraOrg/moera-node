@@ -107,6 +107,12 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment <= ?4 and s.read = ?5")
     void updateRead(UUID nodeId, String feedName, boolean read, long beforeMoment, boolean currentRead);
 
+    @Query("select max(s.createdAt) from Story s where s.nodeId = ?1 and s.feedName = ?2")
+    Timestamp findLastCreatedAt(UUID nodeId, String feedName);
+
+    @Query("select min(s.createdAt) from Story s where s.nodeId = ?1 and s.feedName = ?2")
+    Timestamp findFirstCreatedAt(UUID nodeId, String feedName);
+
     @Query("select s from Story s where s.nodeId = ?1 and s.trackingId = ?2")
     Optional<Story> findByTrackingId(UUID nodeId, UUID trackingId);
 

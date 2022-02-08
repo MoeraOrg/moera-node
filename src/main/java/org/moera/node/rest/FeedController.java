@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -52,6 +53,7 @@ import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -105,22 +107,28 @@ public class FeedController {
     public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
 
-        Collection<FeedInfo> feeds = Feed.getAllStandard(requestContext.isAdmin());
+        Collection<FeedInfo> feeds = Feed.getAllStandard(requestContext.isAdmin())
+                .stream()
+                .map(FeedInfo::clone)
+                .peek(this::fillFeedTotals)
+                .collect(Collectors.toList());
+
         String clientName = requestContext.getClientName();
         if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
             Map<String, UUID> subscriberIds =
                 subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
                         .stream()
                         .collect(Collectors.toMap(Subscriber::getFeedName, Subscriber::getId, (id1, id2) -> id1));
-            feeds = feeds.stream().map(feedInfo -> {
+            feeds.forEach(feedInfo -> {
+                int total = storyRepository.countInFeed(requestContext.nodeId(), feedInfo.getFeedName());
+                feedInfo.setTotal(total);
                 UUID subscriberId = subscriberIds.get(feedInfo.getFeedName());
                 if (subscriberId != null) {
-                    feedInfo = feedInfo.clone();
                     feedInfo.setSubscriberId(subscriberId.toString());
                 }
-                return feedInfo;
-            }).collect(Collectors.toList());
+            });
         }
+
         return feeds;
     }
 
@@ -132,21 +140,29 @@ public class FeedController {
         if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin())) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
-        FeedInfo feedInfo = Feed.getStandard(feedName);
+
+        FeedInfo feedInfo = Feed.getStandard(feedName).clone();
+        fillFeedTotals(feedInfo);
+
         String clientName = requestContext.getClientName();
         if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
-            Subscriber subscriber =
-                    subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
-                            .stream()
-                            .filter(s -> s.getFeedName().equals(feedName))
-                            .findFirst()
-                            .orElse(null);
-            if (subscriber != null) {
-                feedInfo = feedInfo.clone();
-                feedInfo.setSubscriberId(subscriber.getId().toString());
-            }
+            subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
+                    .stream()
+                    .filter(s -> s.getFeedName().equals(feedName))
+                    .findFirst()
+                    .ifPresent(subscriber -> feedInfo.setSubscriberId(subscriber.getId().toString()));
         }
+
         return feedInfo;
+    }
+
+    private void fillFeedTotals(FeedInfo feedInfo) {
+        int total = storyRepository.countInFeed(requestContext.nodeId(), feedInfo.getFeedName());
+        feedInfo.setTotal(total);
+        Timestamp lastCreatedAt = storyRepository.findLastCreatedAt(requestContext.nodeId(), feedInfo.getFeedName());
+        feedInfo.setLastCreatedAt(Util.toEpochSecond(lastCreatedAt));
+        Timestamp firstCreatedAt = storyRepository.findFirstCreatedAt(requestContext.nodeId(), feedInfo.getFeedName());
+        feedInfo.setFirstCreatedAt(Util.toEpochSecond(firstCreatedAt));
     }
 
     @GetMapping("/{feedName}/status")

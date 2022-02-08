@@ -10,16 +10,12 @@ public class FeedInfo implements Cloneable {
     private String feedName;
     private String title;
     private String subscriberId;
+    private int total;
+    private Long firstCreatedAt;
+    private Long lastCreatedAt;
     private Map<String, String[]> operations;
 
     public FeedInfo() {
-    }
-
-    public FeedInfo(String feedName, String title, String subscriberId, Map<String, String[]> operations) {
-        this.feedName = feedName;
-        this.title = title;
-        this.subscriberId = subscriberId;
-        this.operations = operations;
     }
 
     public FeedInfo(String feedName) {
@@ -50,6 +46,30 @@ public class FeedInfo implements Cloneable {
         this.subscriberId = subscriberId;
     }
 
+    public int getTotal() {
+        return total;
+    }
+
+    public void setTotal(int total) {
+        this.total = total;
+    }
+
+    public Long getFirstCreatedAt() {
+        return firstCreatedAt;
+    }
+
+    public void setFirstCreatedAt(Long firstCreatedAt) {
+        this.firstCreatedAt = firstCreatedAt;
+    }
+
+    public Long getLastCreatedAt() {
+        return lastCreatedAt;
+    }
+
+    public void setLastCreatedAt(Long lastCreatedAt) {
+        this.lastCreatedAt = lastCreatedAt;
+    }
+
     public Map<String, String[]> getOperations() {
         return operations;
     }
@@ -60,7 +80,11 @@ public class FeedInfo implements Cloneable {
 
     @Override
     public FeedInfo clone() {
-        return new FeedInfo(feedName, title, subscriberId, operations);
+        try {
+            return (FeedInfo) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalArgumentException("Must implement Cloneable", e);
+        }
     }
 
 }
