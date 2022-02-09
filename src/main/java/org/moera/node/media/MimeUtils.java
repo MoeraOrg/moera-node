@@ -44,21 +44,21 @@ public class MimeUtils {
         MIME_EXTENSIONS.put("image/x-xpixmap", "xpm");
         MIME_EXTENSIONS.put("application/zip", "zip");
 
-        var loss = new ThumbnailFormat("image/jpeg", "JPEG");
+        var lossy = new ThumbnailFormat("image/jpeg", "JPEG");
         var lossless = new ThumbnailFormat("image/png", "PNG");
-        THUMBNAIL_FORMATS.put("image/avif", loss);
+        THUMBNAIL_FORMATS.put("image/avif", lossy);
         THUMBNAIL_FORMATS.put("image/gif", lossless);
-        THUMBNAIL_FORMATS.put("image/jp2", loss);
-        THUMBNAIL_FORMATS.put("image/jpeg", loss);
+        THUMBNAIL_FORMATS.put("image/jp2", lossy);
+        THUMBNAIL_FORMATS.put("image/jpeg", lossy);
         THUMBNAIL_FORMATS.put("image/pcx", lossless);
-        THUMBNAIL_FORMATS.put("image/pjpeg", loss);
+        THUMBNAIL_FORMATS.put("image/pjpeg", lossy);
         THUMBNAIL_FORMATS.put("image/png", lossless);
         THUMBNAIL_FORMATS.put("image/x-png", lossless);
         THUMBNAIL_FORMATS.put("image/svg+xml", lossless);
         THUMBNAIL_FORMATS.put("image/tiff", lossless);
         THUMBNAIL_FORMATS.put("image/vnd.microsoft.icon", lossless);
         THUMBNAIL_FORMATS.put("image/vnd.wap.wbmp", lossless);
-        THUMBNAIL_FORMATS.put("image/webp", loss);
+        THUMBNAIL_FORMATS.put("image/webp", lossy);
         THUMBNAIL_FORMATS.put("image/x-ms-bmp", lossless);
         THUMBNAIL_FORMATS.put("image/x-portable-anymap", lossless);
         THUMBNAIL_FORMATS.put("image/x-portable-bitmap", lossless);
