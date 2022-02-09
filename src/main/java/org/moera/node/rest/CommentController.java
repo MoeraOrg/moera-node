@@ -186,7 +186,7 @@ public class CommentController {
             }
             commentInstants.added(comment);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            requestContext.send(Directions.postingCommentsSubscribers(posting.getId()),
+            requestContext.send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
                     new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
                             comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
                             new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
@@ -195,7 +195,7 @@ public class CommentController {
 
         requestContext.send(new CommentAddedEvent(comment));
         requestContext.send(new PostingCommentsChangedEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
+        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
@@ -249,7 +249,7 @@ public class CommentController {
         if (comment.getCurrentRevision().getSignature() != null) {
             commentInstants.added(comment);
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            requestContext.send(Directions.postingCommentsSubscribers(postingId),
+            requestContext.send(Directions.postingCommentsSubscribers(comment.getNodeId(), postingId),
                     new PostingCommentAddedNotification(postingId,
                             comment.getPosting().getCurrentRevision().getHeading(), comment.getId(),
                             comment.getOwnerName(), comment.getOwnerFullName(),
@@ -465,7 +465,7 @@ public class CommentController {
             contactOperations.updateCloseness(comment.getOwnerName(), -1);
         }
         commentInstants.deleted(comment);
-        requestContext.send(Directions.postingCommentsSubscribers(postingId),
+        requestContext.send(Directions.postingCommentsSubscribers(comment.getNodeId(), postingId),
                 new PostingCommentDeletedNotification(postingId, comment.getId(), comment.getOwnerName(),
                         comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));

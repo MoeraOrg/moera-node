@@ -7,12 +7,11 @@ import java.util.UUID;
 import org.moera.node.data.Avatar;
 import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
-import org.moera.node.model.notification.Notification;
 import org.moera.node.notification.send.DirectedNotification;
-import org.moera.node.notification.send.Direction;
+import org.moera.node.notification.send.NotificationConsumer;
 import org.moera.node.option.Options;
 
-public interface RequestContext {
+public interface RequestContext extends NotificationConsumer {
 
     boolean isRegistrar();
 
@@ -82,7 +81,7 @@ public interface RequestContext {
 
     List<Event> getAfterCommitEvents();
 
-    void send(Direction direction, Notification notification);
+    void send(DirectedNotification notification);
 
     List<DirectedNotification> getAfterCommitNotifications();
 

@@ -128,7 +128,7 @@ public class PostingProcessor {
                 reactionTotalOperations.replaceAll(posting, notification.getTotals());
 
                 requestContext.send(new PostingReactionsChangedEvent(posting));
-                requestContext.send(Directions.postingSubscribers(posting.getId()),
+                requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                         new PostingReactionsUpdatedNotification(posting.getId(), notification.getTotals()));
             }
         });
@@ -144,7 +144,7 @@ public class PostingProcessor {
                 posting.setTotalChildren(notification.getTotal());
 
                 requestContext.send(new PostingCommentsChangedEvent(posting));
-                requestContext.send(Directions.postingSubscribers(posting.getId()),
+                requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                         new PostingCommentsUpdatedNotification(posting.getId(), notification.getTotal()));
             }
         });

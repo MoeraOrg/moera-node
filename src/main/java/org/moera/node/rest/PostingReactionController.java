@@ -118,7 +118,7 @@ public class PostingReactionController {
         requestContext.send(new PostingReactionsChangedEvent(posting));
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
+        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
@@ -130,7 +130,7 @@ public class PostingReactionController {
             return;
         }
         if (posting.getParentMedia() == null) {
-            requestContext.send(Directions.single(posting.getOwnerName()),
+            requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
                     new PostingReactionAddedNotification(null, null, null, null,
                             posting.getId(), posting.getCurrentRevision().getHeading(), reaction.getOwnerName(),
                             reaction.getOwnerFullName(),
@@ -141,7 +141,7 @@ public class PostingReactionController {
             for (Entry entry : entries) {
                 UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
                 UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                requestContext.send(Directions.single(posting.getOwnerName()),
+                requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
                         new PostingReactionAddedNotification(parentPostingId, parentCommentId,
                                 posting.getParentMedia().getId(), entry.getCurrentRevision().getHeading(),
                                 posting.getId(), posting.getCurrentRevision().getHeading(), reaction.getOwnerName(),
@@ -154,7 +154,7 @@ public class PostingReactionController {
 
     private void notifyDeleted(Posting posting, Reaction reaction) {
         if (posting.getParentMedia() == null) {
-            requestContext.send(Directions.single(posting.getOwnerName()),
+            requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
                     new PostingReactionDeletedNotification(null, null, null,
                             posting.getId(), reaction.getOwnerName(), reaction.getOwnerFullName(),
                             new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
@@ -164,7 +164,7 @@ public class PostingReactionController {
             for (Entry entry : entries) {
                 UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
                 UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                requestContext.send(Directions.single(posting.getOwnerName()),
+                requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
                         new PostingReactionDeletedNotification(parentPostingId, parentCommentId,
                                 posting.getParentMedia().getId(), posting.getId(), reaction.getOwnerName(),
                                 reaction.getOwnerFullName(),
@@ -264,11 +264,11 @@ public class PostingReactionController {
     }
 
     private void notifyDeletedAll(Posting posting, ReactionTotalOperations.ReactionTotalsData totalsInfo) {
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
+        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
 
         if (posting.getParentMedia() == null) {
-            requestContext.send(Directions.single(posting.getOwnerName()),
+            requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
                     new PostingReactionDeletedAllNotification(null, null, null,
                             posting.getId()));
         } else {
@@ -276,7 +276,7 @@ public class PostingReactionController {
             for (Entry entry : entries) {
                 UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
                 UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                requestContext.send(Directions.single(posting.getOwnerName()),
+                requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
                         new PostingReactionDeletedAllNotification(parentPostingId, parentCommentId,
                                 posting.getParentMedia().getId(), posting.getId()));
             }
@@ -310,7 +310,7 @@ public class PostingReactionController {
 
         requestContext.send(new PostingReactionsChangedEvent(posting));
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
+        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
 
         return totalsInfo.getClientInfo();

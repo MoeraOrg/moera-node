@@ -160,7 +160,7 @@ public class SubscriberController {
                     PostingUpdatedNotification notification = new PostingUpdatedNotification(posting.getId());
                     notification.setSubscriberId(subscriber.getId().toString());
                     notification.setSubscriptionCreatedAt(Util.now());
-                    requestContext.send(Directions.single(ownerName), notification);
+                    requestContext.send(Directions.single(requestContext.nodeId(), ownerName), notification);
                 }
             }
         }

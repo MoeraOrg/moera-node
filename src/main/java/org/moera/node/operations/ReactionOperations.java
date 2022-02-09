@@ -249,7 +249,7 @@ public class ReactionOperations {
                     Posting posting = (Posting) entry;
                     eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
                     var totalsInfo = reactionTotalOperations.getInfo(posting);
-                    notificationSenderPool.send(Directions.postingSubscribers(posting.getId()),
+                    notificationSenderPool.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                             new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
                     break;
                 }

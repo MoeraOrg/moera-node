@@ -12,11 +12,6 @@ class SingleDirection extends Direction {
         this.nodeName = nodeName;
     }
 
-    @Deprecated
-    SingleDirection(String nodeName) {
-        this.nodeName = nodeName;
-    }
-
     public String getNodeName() {
         return nodeName;
     }

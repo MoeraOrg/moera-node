@@ -5,16 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-
 import javax.inject.Inject;
 
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
-import org.moera.node.model.notification.Notification;
 import org.moera.node.notification.send.DirectedNotification;
-import org.moera.node.notification.send.Direction;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -227,8 +224,8 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public void send(Direction direction, Notification notification) {
-        afterCommitNotifications.add(new DirectedNotification(direction.nodeId(nodeId()), notification));
+    public void send(DirectedNotification notification) {
+        afterCommitNotifications.add(notification);
     }
 
     @Override

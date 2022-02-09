@@ -50,6 +50,7 @@ import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.DirectedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationConsumer;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
@@ -164,21 +165,19 @@ public class Picker extends Task {
         List<Pick> picks = new ArrayList<>();
         Posting posting = inTransaction(() -> {
             Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(),
-                    events, notifications, picks);
+                    events, notifications::add, picks);
             saveSources(p, pick);
             return p;
         });
         events.forEach(event -> eventManager.send(nodeId, event));
-        notifications.forEach(
-                dn -> notificationSenderPool.send(dn.getDirection().nodeId(nodeId), dn.getNotification()));
+        notifications.forEach(notificationSenderPool::send);
         picks.forEach(pool::pick);
 
         succeeded(posting, pick);
     }
 
     private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
-                                    List<Event> events,
-                                    List<DirectedNotification> notifications,
+                                    List<Event> events, NotificationConsumer notifications,
                                     List<Pick> picks) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
@@ -214,9 +213,9 @@ public class Picker extends Task {
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), events);
             events.add(new PostingAddedEvent(posting));
-            notifications.add(new DirectedNotification(
-                    Directions.feedSubscribers(feedName),
-                    new FeedPostingAddedNotification(feedName, posting.getId())));
+            notifications.send(
+                    Directions.feedSubscribers(nodeId, feedName),
+                    new FeedPostingAddedNotification(feedName, posting.getId()));
             publish(feedName, posting, events);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
@@ -230,9 +229,9 @@ public class Picker extends Task {
                 posting.setDeletedAt(null);
                 events.add(new PostingRestoredEvent(posting));
             }
-            notifications.add(new DirectedNotification(
-                    Directions.postingSubscribers(posting.getId()),
-                    new PostingUpdatedNotification(posting.getId())));
+            notifications.send(
+                    Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                    new PostingUpdatedNotification(posting.getId()));
         }
         var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());
         if (!reactionTotalOperations.isSame(reactionTotals, postingInfo.getReactions())) {

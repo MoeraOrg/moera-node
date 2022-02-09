@@ -18,15 +18,6 @@ public class Direction {
         return nodeId;
     }
 
-    public void setNodeId(UUID nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    public Direction nodeId(UUID nodeId) {
-        setNodeId(nodeId);
-        return this;
-    }
-
     @Override
     public boolean equals(Object peer) {
         if (this == peer) {

@@ -179,7 +179,7 @@ public class PostingController {
             final UUID postingId = posting.getId();
             postingText.getPublications().stream()
                     .map(StoryAttributes::getFeedName)
-                    .forEach(fn -> requestContext.send(Directions.feedSubscribers(fn),
+                    .forEach(fn -> requestContext.send(Directions.feedSubscribers(requestContext.nodeId(), fn),
                             new FeedPostingAddedNotification(fn, postingId)));
         }
 
@@ -229,11 +229,11 @@ public class PostingController {
         }
         requestContext.send(new PostingUpdatedEvent(posting));
         requestContext.send(
-                Directions.postingSubscribers(posting.getId()),
+                Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
         if (posting.getCurrentRevision().isUpdateImportant()) {
             requestContext.send(
-                    Directions.postingCommentsSubscribers(posting.getId()),
+                    Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
                     new PostingImportantUpdateNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
                             posting.getCurrentRevision().getUpdateDescription()));
         }

@@ -10,23 +10,6 @@ class SubscribersDirection extends Direction {
     private String feedName;
     private UUID postingId;
 
-    @Deprecated
-    SubscribersDirection(SubscriptionType subscriptionType) {
-        this.subscriptionType = subscriptionType;
-    }
-
-    @Deprecated
-    SubscribersDirection(SubscriptionType subscriptionType, String feedName) {
-        this.subscriptionType = subscriptionType;
-        this.feedName = feedName;
-    }
-
-    @Deprecated
-    SubscribersDirection(SubscriptionType subscriptionType, UUID postingId) {
-        this.subscriptionType = subscriptionType;
-        this.postingId = postingId;
-    }
-
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType) {
         super(nodeId);
         this.subscriptionType = subscriptionType;

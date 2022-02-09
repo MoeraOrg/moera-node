@@ -109,7 +109,7 @@ public class CommentReactionController {
         if (reaction.getSignature() == null) {
             return;
         }
-        requestContext.send(Directions.single(comment.getOwnerName()),
+        requestContext.send(Directions.single(requestContext.nodeId(), comment.getOwnerName()),
                 new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
                         comment.getPosting().getCurrentRevision().getHeading(),
                         comment.getCurrentRevision().getHeading(), reaction.getOwnerName(), reaction.getOwnerFullName(),
@@ -118,7 +118,7 @@ public class CommentReactionController {
     }
 
     private void notifyDeleted(Comment comment, Reaction reaction) {
-        requestContext.send(Directions.single(comment.getOwnerName()),
+        requestContext.send(Directions.single(requestContext.nodeId(), comment.getOwnerName()),
                 new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
                         reaction.getOwnerName(), reaction.getOwnerFullName(),
                         new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
@@ -202,7 +202,7 @@ public class CommentReactionController {
     }
 
     private void notifyDeletedAll(Comment comment) {
-        requestContext.send(Directions.single(comment.getOwnerName()),
+        requestContext.send(Directions.single(requestContext.nodeId(), comment.getOwnerName()),
                 new CommentReactionDeletedAllNotification(comment.getPosting().getId(), comment.getId()));
     }
 

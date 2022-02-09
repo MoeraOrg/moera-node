@@ -61,7 +61,7 @@ public class ProfileController {
         requestContext.send(new ProfileUpdatedEvent());
         requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.getOptions(),
                 requestContext.getAvatar()));
-        requestContext.send(Directions.profileSubscribers(), new ProfileUpdatedNotification());
+        requestContext.send(Directions.profileSubscribers(requestContext.nodeId()), new ProfileUpdatedNotification());
         if (!Objects.equals(requestContext.getOptions().getString("profile.email"), oldEmail)) {
             requestContext.send(new EmailConfirmMail());
         }

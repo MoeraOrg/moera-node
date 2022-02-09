@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.inject.Inject;
@@ -48,11 +47,11 @@ import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
-import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.notification.send.Direction;
+import org.moera.node.notification.send.DirectedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.notification.send.NotificationConsumer;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.option.Options;
 import org.moera.node.text.MediaExtractor;
@@ -62,7 +61,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -270,33 +268,33 @@ public class PostingOperations {
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
         notifyMentioned(requestContext.nodeId(), postingId, current.getHeading(), currentMentions, latestMentions,
-                ownerName, requestContext::send);
+                ownerName, requestContext);
     }
 
     private void notifyMentioned(UUID nodeId, UUID postingId, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions, String ownerName,
-                                 BiConsumer<Direction, Notification> notificationSender) {
+                                 Set<String> latestMentions, String ownerName, NotificationConsumer notificationSender) {
         currentMentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
                 .map(m -> Directions.single(nodeId, m))
-                .forEach(d -> notificationSender.accept(d,
+                .forEach(d -> notificationSender.send(d,
                         new MentionPostingAddedNotification(postingId, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !currentMentions.contains(m))
                 .map(m -> Directions.single(nodeId, m))
-                .forEach(d -> notificationSender.accept(d, new MentionPostingDeletedNotification(postingId)));
+                .forEach(d -> notificationSender.send(d,
+                        new MentionPostingDeletedNotification(postingId)));
     }
 
     public void deletePosting(Posting posting, boolean unsubscribe) {
-        deletePosting(posting, unsubscribe, requestContext.getOptions(), requestContext::send, requestContext::send);
+        deletePosting(posting, unsubscribe, requestContext.getOptions(), requestContext::send, requestContext);
     }
 
     private void deletePosting(Posting posting, boolean unsubscribe, Options options, Consumer<Event> eventSender,
-                               BiConsumer<Direction, Notification> notificationSender) {
+                               NotificationConsumer notificationSender) {
         posting.setDeletedAt(Util.now());
         ExtendedDuration postingTtl = options.getDuration("posting.deleted.lifetime");
         if (!postingTtl.isNever()) {
@@ -318,7 +316,8 @@ public class PostingOperations {
         }
 
         eventSender.accept(new PostingDeletedEvent(posting));
-        notificationSender.accept(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+        notificationSender.send(
+                Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingDeletedNotification(posting.getId()));
     }
 
@@ -327,27 +326,23 @@ public class PostingOperations {
         for (String domainName : domains.getAllDomainNames()) {
             Options options = domains.getDomainOptions(domainName);
             List<Event> eventList = new ArrayList<>();
-            List<Pair<Direction, Notification>> notificationList = new ArrayList<>();
+            List<DirectedNotification> notificationList = new ArrayList<>();
             Transaction.execute(txManager, () -> {
                 postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
                     log.info("Deleting unlinked posting {}", posting.getId());
-                    deletePosting(posting, true, options, eventList::add,
-                            (direction, notification) -> notificationList.add(Pair.of(direction, notification)));
+                    deletePosting(posting, true, options, eventList::add, notificationList::add);
                 });
                 return null;
             });
             eventList.forEach(event -> eventManager.send(options.nodeId(), event));
-            notificationList.forEach(nt -> {
-                nt.getFirst().setNodeId(options.nodeId());
-                notificationSenderPool.send(nt.getFirst(), nt.getSecond());
-            });
+            notificationList.forEach(notificationSenderPool::send);
         }
     }
 
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() throws Throwable {
         Map<UUID, List<Event>> events = new HashMap<>();
-        List<Pair<Direction, Notification>> notifications = new ArrayList<>();
+        List<DirectedNotification> notifications = new ArrayList<>();
 
         Transaction.execute(txManager, () -> {
             List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
@@ -363,7 +358,8 @@ public class PostingOperations {
                     postingRepository.delete(posting);
 
                     eventList.add(new PostingDeletedEvent(posting));
-                    notifications.add(Pair.of(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                    notifications.add(new DirectedNotification(
+                            Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                             new PostingDeletedNotification(posting.getId())));
                 } else {
                     EntryRevision revision = posting.getRevisions().stream()
@@ -378,14 +374,14 @@ public class PostingOperations {
                         currentHeading = revision.getHeading();
 
                         eventList.add(new PostingUpdatedEvent(posting));
-                        notifications.add(Pair.of(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                        notifications.add(new DirectedNotification(
+                                Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                                 new PostingUpdatedNotification(posting.getId())));
                     }
                 }
                 if (posting.isOriginal()) {
                     notifyMentioned(posting.getNodeId(), posting.getId(), currentHeading, currentMentions,
-                            latestMentions, posting.getOwnerName(),
-                            (direction, notification) -> notifications.add(Pair.of(direction, notification)));
+                            latestMentions, posting.getOwnerName(), notifications::add);
                 }
             }
 
@@ -395,7 +391,7 @@ public class PostingOperations {
         for (var e : events.entrySet()) {
             e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
         }
-        notifications.forEach(dn -> notificationSenderPool.send(dn.getFirst(), dn.getSecond()));
+        notifications.forEach(notificationSenderPool::send);
     }
 
 }

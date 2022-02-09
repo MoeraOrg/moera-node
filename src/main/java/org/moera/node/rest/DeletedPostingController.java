@@ -114,7 +114,7 @@ public class DeletedPostingController {
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media, null,
                 null, null, null);
         requestContext.send(new PostingRestoredEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
+        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);

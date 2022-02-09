@@ -38,14 +38,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
-public class NotificationSenderPool {
+public class NotificationSenderPool implements NotificationConsumer {
 
     private static final Duration EXECUTION_REJECTED_DELAY = Duration.of(5, ChronoUnit.MINUTES);
 
-    private static Logger log = LoggerFactory.getLogger(NotificationSenderPool.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationSenderPool.class);
 
-    private ConcurrentMap<SingleDirection, NotificationSender> senders = new ConcurrentHashMap<>();
-    private List<NotificationSender> pausedSenders = Collections.synchronizedList(new ArrayList<>());
+    private final ConcurrentMap<SingleDirection, NotificationSender> senders = new ConcurrentHashMap<>();
+    private final List<NotificationSender> pausedSenders = Collections.synchronizedList(new ArrayList<>());
 
     @Inject
     @Qualifier("notificationSenderTaskExecutor")
@@ -93,6 +93,12 @@ public class NotificationSenderPool {
         send(direction, notification);
     }
 
+    @Override
+    public void send(DirectedNotification directedNotification) {
+        send(directedNotification.getDirection(), directedNotification.getNotification());
+    }
+
+    @Override
     public void send(Direction direction, Notification notification) {
         log.info("Sending notification {}", notification.toLogMessage());
         if (direction instanceof SingleDirection) {

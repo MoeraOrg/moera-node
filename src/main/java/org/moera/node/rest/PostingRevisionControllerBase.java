@@ -139,7 +139,7 @@ public abstract class PostingRevisionControllerBase {
         posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null,
                 null, null);
         requestContext.send(getRestorationEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getId()),
+        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
 
         return new PostingRevisionInfo(revision, posting.getReceiverName(), true);
