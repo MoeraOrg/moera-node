@@ -259,7 +259,8 @@ public class CommentController {
 
         requestContext.send(new CommentUpdatedEvent(comment));
 
-        return withClientReaction(new CommentInfo(comment, true));
+        return withSeniorReaction(withClientReaction(new CommentInfo(comment, true)),
+                comment.getPosting().getOwnerName());
     }
 
     private byte[] validateCommentText(Posting posting, CommentText commentText, String ownerName,
@@ -437,8 +438,9 @@ public class CommentController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        return withClientReaction(new CommentInfo(comment, includeSet.contains("source"),
-                requestContext.isAdmin() || requestContext.isClient(comment.getOwnerName())));
+        return withSeniorReaction(withClientReaction(new CommentInfo(comment, includeSet.contains("source"),
+                requestContext.isAdmin() || requestContext.isClient(comment.getOwnerName()))),
+                comment.getPosting().getOwnerName());
     }
 
     @DeleteMapping("/{commentId}")
@@ -500,6 +502,12 @@ public class CommentController {
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);
         commentInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        return commentInfo;
+    }
+
+    private CommentInfo withSeniorReaction(CommentInfo commentInfo, String seniorName) {
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), seniorName);
+        commentInfo.setSeniorReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
         return commentInfo;
     }
 

@@ -49,6 +49,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private Map<String, String[]> operations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
+    private ClientReactionInfo seniorReaction;
     private ReactionTotalsInfo reactions;
 
     public CommentInfo() {
@@ -398,6 +399,14 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
 
     public void setClientReaction(ClientReactionInfo clientReaction) {
         this.clientReaction = clientReaction;
+    }
+
+    public ClientReactionInfo getSeniorReaction() {
+        return seniorReaction;
+    }
+
+    public void setSeniorReaction(ClientReactionInfo seniorReaction) {
+        this.seniorReaction = seniorReaction;
     }
 
     @Override
