@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.moera.node.data.Sitemap;
+import org.moera.node.util.Util;
 
 public class SitemapIndexItem {
 
@@ -18,9 +19,9 @@ public class SitemapIndexItem {
         this.lastModified = lastModified.toString();
     }
 
-    public SitemapIndexItem(String siteUrl, Sitemap sitemap) {
+    public SitemapIndexItem(String siteUrl, Sitemap sitemap, Instant earliestModified) {
         location = siteUrl + "/sitemaps/" + sitemap.getId();
-        lastModified = sitemap.getModifiedAt().toInstant().toString();
+        lastModified = Util.latest(sitemap.getModifiedAt().toInstant(), earliestModified).toString();
     }
 
     public String getLocation() {

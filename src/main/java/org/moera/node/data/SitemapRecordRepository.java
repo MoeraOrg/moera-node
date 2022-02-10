@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 public interface SitemapRecordRepository extends JpaRepository<SitemapRecord, UUID> {
 
     @Query("select p from Posting p left join p.sitemapRecord r where p.nodeId = ?1"
-            + " and (r is null or p.editedAt > r.modifiedAt)")
+            + " and (r is null or p.editedAt > r.modifiedAt) and p.deletedAt is null and p.parentMedia is null")
     Collection<Posting> findUpdated(UUID nodeId);
 
     @Query("select new org.moera.node.data.Sitemap(r.sitemapId, count(*), max(r.modifiedAt)) from SitemapRecord r"

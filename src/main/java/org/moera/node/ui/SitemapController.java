@@ -1,6 +1,9 @@
 package org.moera.node.ui;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +40,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/sitemaps")
 public class SitemapController {
 
+    private static final Instant SITEMAPS_UPGRADE_DATE = LocalDateTime
+            .of(2022, Month.FEBRUARY, 12, 0, 0)
+            .toInstant(ZoneOffset.UTC);
     private static final int MAX_SITEMAP_RECORD = 40000;
     private static final List<Pair<String, String>> STATIC_PAGES = List.of(
             Pair.of("/timeline", "hourly"),
@@ -63,7 +69,7 @@ public class SitemapController {
     @ResponseBody
     public SitemapIndex index() {
         Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(requestContext.nodeId());
-        SitemapIndex sitemapIndex = new SitemapIndex(requestContext.getSiteUrl(), sitemaps);
+        SitemapIndex sitemapIndex = new SitemapIndex(requestContext.getSiteUrl(), sitemaps, SITEMAPS_UPGRADE_DATE);
         sitemapIndex.getItems().add(
                 new SitemapIndexItem(requestContext.getSiteUrl(), "/sitemaps/static", applicationStartedAt));
         return sitemapIndex;

@@ -1,5 +1,6 @@
 package org.moera.node.ui.sitemap;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,8 +17,10 @@ public class SitemapIndex {
     @JacksonXmlProperty(localName = "sitemap")
     private List<SitemapIndexItem> items;
 
-    public SitemapIndex(String siteUrl, Collection<Sitemap> sitemaps) {
-        items = sitemaps.stream().map(m -> new SitemapIndexItem(siteUrl, m)).collect(Collectors.toList());
+    public SitemapIndex(String siteUrl, Collection<Sitemap> sitemaps, Instant earliestModified) {
+        items = sitemaps.stream()
+                .map(m -> new SitemapIndexItem(siteUrl, m, earliestModified))
+                .collect(Collectors.toList());
     }
 
     public List<SitemapIndexItem> getItems() {

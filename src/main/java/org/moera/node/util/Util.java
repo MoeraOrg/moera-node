@@ -59,6 +59,10 @@ public class Util {
         return s != null ? Pattern.quote(s.toString()) : null;
     }
 
+    public static Instant latest(Instant instant1, Instant instant2) {
+        return instant1.isBefore(instant2) ? instant2 : instant1;
+    }
+
     public static void copyToCalendar(LocalDateTime dateTime, Calendar calendar) {
         calendar.set(dateTime.getYear(), dateTime.getMonthValue() - 1, dateTime.getDayOfMonth(),
                 dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond());

@@ -121,7 +121,7 @@ public class TimelineUiController {
         }
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (posting == null || !posting.isMessage()) {
+        if (posting == null || !posting.isMessage() || posting.getParentMedia() != null) {
             throw new PageNotFoundException();
         }
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
