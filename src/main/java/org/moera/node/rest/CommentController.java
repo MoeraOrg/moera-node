@@ -343,17 +343,17 @@ public class CommentController {
         CommentsSliceInfo sliceInfo;
         if (after == null) {
             before = before != null ? before : SafeInteger.MAX_VALUE;
-            sliceInfo = getCommentsBefore(postingId, before, limit);
+            sliceInfo = getCommentsBefore(posting, before, limit);
         } else {
-            sliceInfo = getCommentsAfter(postingId, after, limit);
+            sliceInfo = getCommentsAfter(posting, after, limit);
         }
         calcSliceTotals(sliceInfo, posting);
 
         return sliceInfo;
     }
 
-    private CommentsSliceInfo getCommentsBefore(UUID postingId, long before, int limit) {
-        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId,
+    private CommentsSliceInfo getCommentsBefore(Posting posting, long before, int limit) {
+        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
                 SafeInteger.MIN_VALUE, before,
                 PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
@@ -363,12 +363,12 @@ public class CommentController {
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
-        fillSlice(sliceInfo, postingId, limit);
+        fillSlice(sliceInfo, posting, limit);
         return sliceInfo;
     }
 
-    private CommentsSliceInfo getCommentsAfter(UUID postingId, long after, int limit) {
-        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), postingId,
+    private CommentsSliceInfo getCommentsAfter(Posting posting, long after, int limit) {
+        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
                 after, SafeInteger.MAX_VALUE,
                 PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
@@ -378,32 +378,38 @@ public class CommentController {
         } else {
             sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
         }
-        fillSlice(sliceInfo, postingId, limit);
+        fillSlice(sliceInfo, posting, limit);
         return sliceInfo;
     }
 
-    private void fillSlice(CommentsSliceInfo sliceInfo, UUID postingId, int limit) {
+    private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit) {
         List<CommentInfo> comments = commentRepository.findInRange(
-                requestContext.nodeId(), postingId, sliceInfo.getAfter(), sliceInfo.getBefore())
+                requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
                 .map(c -> new CommentInfo(c, requestContext.isAdmin() || requestContext.isClient(c.getOwnerName())))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
+        if (comments.size() > limit) {
+            comments.remove(limit);
+        }
+        Map<String, CommentInfo> commentMap = comments.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
         String clientName = requestContext.getClientName();
         if (!ObjectUtils.isEmpty(clientName)) {
-            Map<String, CommentInfo> commentMap = comments.stream()
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
-            reactionRepository.findByCommentsInRangeAndOwner(
-                    requestContext.nodeId(), postingId, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
+            reactionRepository.findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
+                            sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
                     .stream()
                     .map(ClientReactionInfo::new)
                     .filter(r -> commentMap.containsKey(r.getEntryId()))
                     .forEach(r -> commentMap.get(r.getEntryId()).setClientReaction(r));
         }
-        if (comments.size() > limit) {
-            comments.remove(limit);
-        }
+        reactionRepository.findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
+                        sliceInfo.getAfter(), sliceInfo.getBefore(), posting.getOwnerName())
+                .stream()
+                .map(ClientReactionInfo::new)
+                .filter(r -> commentMap.containsKey(r.getEntryId()))
+                .forEach(r -> commentMap.get(r.getEntryId()).setSeniorReaction(r));
         sliceInfo.setComments(comments);
     }
 
