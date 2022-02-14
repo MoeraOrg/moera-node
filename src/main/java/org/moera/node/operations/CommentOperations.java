@@ -349,7 +349,9 @@ public class CommentOperations {
             comments.addAll(commentRepository.findExpired(Util.now()));
             for (Comment comment : comments) {
                 List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
-                Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
+                Set<String> latestMentions = comment.getCurrentRevision() != null
+                        ? MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()))
+                        : Collections.emptySet();
                 Set<String> currentMentions = Collections.emptySet();
                 String currentHeading = null;
                 Posting posting = comment.getPosting();
