@@ -91,18 +91,22 @@ public class NodeNameController {
             SecureRandom random = new SecureRandom();
 
             byte[] entropy = new byte[Words.TWENTY_FOUR.byteLength()];
-            random.nextBytes(entropy);
-            StringBuilder mnemonic = new StringBuilder();
-            new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, mnemonic::append);
-            byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE).calculateSeed(mnemonic.toString(), "");
-
-            secretInfo.setSecret(Util.base64encode(entropy));
-            secretInfo.setMnemonic(mnemonic.toString().split(" "));
-
-            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
             ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(Rules.EC_CURVE);
+            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
 
-            BigInteger d = new BigInteger(seed);
+            BigInteger d = BigInteger.ZERO;
+            while (d.equals(BigInteger.ZERO)) {
+                random.nextBytes(entropy);
+                StringBuilder mnemonic = new StringBuilder();
+                new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, mnemonic::append);
+                byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE)
+                        .calculateSeed(mnemonic.toString(), "");
+
+                secretInfo.setSecret(Util.base64encode(entropy));
+                secretInfo.setMnemonic(mnemonic.toString().split(" "));
+
+                d = new BigInteger(1, seed).remainder(ecSpec.getN());
+            }
             ECPoint q = ecSpec.getG().multiply(d);
             ECPublicKeySpec pubSpec = new ECPublicKeySpec(q, ecSpec);
             ECPublicKey publicUpdatingKey = (ECPublicKey) keyFactory.generatePublic(pubSpec);
@@ -157,9 +161,9 @@ public class NodeNameController {
 
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("secp256k1");
+            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(Rules.EC_CURVE);
 
-            BigInteger d = new BigInteger(seed);
+            BigInteger d = new BigInteger(1, seed).remainder(ecSpec.getN());
             ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
             ECPrivateKey privateUpdatingKey = (ECPrivateKey) keyFactory.generatePrivate(privateKeySpec);
 
