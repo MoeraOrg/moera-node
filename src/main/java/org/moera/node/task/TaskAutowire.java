@@ -9,15 +9,11 @@ import javax.inject.Inject;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TaskAutowire {
-
-    private static Logger log = LoggerFactory.getLogger(TaskAutowire.class);
 
     @Inject
     private Config config;
@@ -52,6 +48,7 @@ public class TaskAutowire {
                     return ips[0];
                 }
             } catch (UnknownHostException e) {
+                // ignore
             }
         }
 
