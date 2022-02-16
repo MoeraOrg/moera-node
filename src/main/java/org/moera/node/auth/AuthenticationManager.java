@@ -19,11 +19,15 @@ import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Component
 public class AuthenticationManager {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationManager.class);
 
     @Inject
     private RequestContext requestContext;
@@ -69,6 +73,7 @@ public class AuthenticationManager {
             throw new InvalidCarteException("carte.invalid");
         }
         if (!clientAddress.equals(fp.getAddress())) {
+            log.debug("Carte IP {} differs from client IP {}", fp.getAddress(), clientAddress);
             throw new InvalidCarteException("carte.invalid");
         }
         if (Instant.now().isBefore(Instant.ofEpochSecond(fp.getBeginning()).minusSeconds(120))) {
