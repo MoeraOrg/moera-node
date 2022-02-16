@@ -26,11 +26,11 @@ public class Domains {
 
     public static final String DEFAULT_DOMAIN = "_default_";
 
-    private static Logger log = LoggerFactory.getLogger(Domains.class);
+    private static final Logger log = LoggerFactory.getLogger(Domains.class);
 
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
-    private Map<UUID, DomainInfo> domains = new HashMap<>();
-    private Map<String, Options> domainOptions = new HashMap<>();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Map<UUID, DomainInfo> domains = new HashMap<>();
+    private final Map<String, Options> domainOptions = new HashMap<>();
 
     @Inject
     private ApplicationEventPublisher applicationEventPublisher;
