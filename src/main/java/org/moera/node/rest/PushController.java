@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
@@ -62,6 +63,7 @@ public class PushController {
     private PlatformTransactionManager txManager;
 
     @Inject
+    @PersistenceContext
     private EntityManager entityManager;
 
     @GetMapping(value = "/{clientId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import com.querydsl.core.BooleanBuilder;
@@ -43,6 +44,7 @@ public class ContactsController {
     private RequestContext requestContext;
 
     @Inject
+    @PersistenceContext
     private EntityManager entityManager;
 
     @GetMapping

@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import org.moera.node.api.NodeApi;
@@ -71,6 +72,7 @@ public class MediaManager {
     private PlatformTransactionManager txManager;
 
     @Inject
+    @PersistenceContext
     private EntityManager entityManager;
 
     @Inject

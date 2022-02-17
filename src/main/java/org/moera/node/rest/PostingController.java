@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
@@ -113,6 +114,7 @@ public class PostingController {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
+    @PersistenceContext
     private EntityManager entityManager;
 
     @Inject

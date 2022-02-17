@@ -16,6 +16,7 @@ import java.util.UUID;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
@@ -87,6 +88,7 @@ public class MediaController {
     private PostingOperations postingOperations;
 
     @Inject
+    @PersistenceContext
     private EntityManager entityManager;
 
     @PostConstruct
