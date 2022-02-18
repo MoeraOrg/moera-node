@@ -10,6 +10,7 @@ public class PrivateMediaFileInfo {
     private String id;
     private String hash;
     private String path;
+    private String mimeType;
     private Integer width;
     private Integer height;
     private long size;
@@ -23,6 +24,7 @@ public class PrivateMediaFileInfo {
         id = mediaFileOwner.getId().toString();
         hash = mediaFileOwner.getMediaFile().getId();
         path = "private/" + mediaFileOwner.getFileName();
+        mimeType = mediaFileOwner.getMediaFile().getMimeType();
         width = mediaFileOwner.getMediaFile().getSizeX();
         height = mediaFileOwner.getMediaFile().getSizeY();
         size = mediaFileOwner.getMediaFile().getFileSize();
@@ -56,6 +58,14 @@ public class PrivateMediaFileInfo {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 
     public Integer getWidth() {
