@@ -275,17 +275,20 @@ public class DraftController {
         Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(draft.getBody()).getText());
 
         int ordinal = 0;
-        for (MediaFileOwner mfo : media) {
-            EntryAttachment attachment = new EntryAttachment(draft, mfo, ordinal++);
-            attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
-            attachment = entryAttachmentRepository.save(attachment);
-            draft.addAttachment(attachment);
-        }
-        for (RemoteMedia md : remoteMedia) {
-            EntryAttachment attachment = new EntryAttachment(draft, md, ordinal++);
-            attachment.setEmbedded(embedded.contains(md.getHash()));
-            attachment = entryAttachmentRepository.save(attachment);
-            draft.addAttachment(attachment);
+        if (draft.getReceiverName().equals(requestContext.nodeName())) {
+            for (MediaFileOwner mfo : media) {
+                EntryAttachment attachment = new EntryAttachment(draft, mfo, ordinal++);
+                attachment.setEmbedded(embedded.contains(mfo.getMediaFile().getId()));
+                attachment = entryAttachmentRepository.save(attachment);
+                draft.addAttachment(attachment);
+            }
+        } else {
+            for (RemoteMedia md : remoteMedia) {
+                EntryAttachment attachment = new EntryAttachment(draft, md, ordinal++);
+                attachment.setEmbedded(embedded.contains(md.getHash()));
+                attachment = entryAttachmentRepository.save(attachment);
+                draft.addAttachment(attachment);
+            }
         }
     }
 
