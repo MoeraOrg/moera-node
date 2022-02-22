@@ -198,6 +198,8 @@ public class MediaController {
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
             return new PrivateMediaFileInfo(mediaFileOwner, null);
+        } catch (InvalidImageException e) {
+            throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
             throw new ValidationFailure("media.wrong-size");
         } catch (IOException e) {
