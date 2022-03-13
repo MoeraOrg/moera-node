@@ -247,6 +247,10 @@ public class DraftController {
         }
 
         if (draftText.getReceiverName().equals(requestContext.nodeName())) {
+            if (draftText.getMedia() == null) {
+                return Collections.emptyList();
+            }
+
             UUID[] ids;
             try {
                 ids = Arrays.stream(draftText.getMedia())
