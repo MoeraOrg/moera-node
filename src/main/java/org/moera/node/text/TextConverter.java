@@ -34,7 +34,7 @@ public class TextConverter {
     }
 
     public Body toHtml(SourceFormat format, Body source) {
-        Body converted = new Body();
+        Body converted = source.clone();
         converted.setSubject(source.getSubject());
         try {
             converted.setText(toHtml(format, source.getText()));
@@ -106,7 +106,7 @@ public class TextConverter {
         if (ObjectUtils.isEmpty(media)) {
             return false;
         }
-        int embeddedCount = MediaExtractor.extractMediaFileIds(body.getText()).size();
+        int embeddedCount = MediaExtractor.extractMediaFileIds(body).size();
         return media.size() > embeddedCount;
     }
 

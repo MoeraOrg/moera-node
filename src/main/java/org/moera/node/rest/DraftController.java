@@ -276,7 +276,7 @@ public class DraftController {
             entryAttachmentRepository.delete(ea);
         }
 
-        Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(draft.getBody()).getText());
+        Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(draft.getBody()));
 
         int ordinal = 0;
         if (draft.getReceiverName().equals(requestContext.nodeName())) {

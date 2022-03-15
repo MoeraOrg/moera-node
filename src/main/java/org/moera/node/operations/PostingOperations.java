@@ -179,7 +179,7 @@ public class PostingOperations {
         }
 
         if (media.size() > 0) {
-            Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()).getText());
+            Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
             int ordinal = 0;
             for (MediaFileOwner mfo : media) {
                 EntryAttachment attachment = new EntryAttachment(current, mfo, ordinal++);

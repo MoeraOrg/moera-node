@@ -1,6 +1,8 @@
 package org.moera.node.model.body;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +12,7 @@ import com.fasterxml.jackson.databind.util.StdConverter;
 
 @JsonSerialize(converter = Body.ToStringConverter.class)
 @JsonDeserialize(converter = Body.FromStringConverter.class)
-public class Body {
+public class Body implements Cloneable {
 
     public static final String EMPTY = "{}";
 
@@ -34,6 +36,7 @@ public class Body {
         } catch (IOException e) {
             throw new BodyMappingException(e);
         }
+        getLinkPreviews().forEach(lp -> lp.setParent(this));
     }
 
     private void encode() {
@@ -63,6 +66,7 @@ public class Body {
 
     public void setSubject(String subject) {
         decoded.setSubject(subject);
+        modified();
     }
 
     public String getText() {
@@ -71,7 +75,28 @@ public class Body {
 
     public void setText(String text) {
         decoded.setText(text);
+        modified();
+    }
+
+    public List<LinkPreview> getLinkPreviews() {
+        return decoded.getLinkPreviews() != null
+                ? Collections.unmodifiableList(decoded.getLinkPreviews())
+                : Collections.emptyList();
+    }
+
+    public void setLinkPreviews(List<LinkPreview> linkPreviews) {
+        linkPreviews.forEach(lp -> lp.setParent(this));
+        decoded.setLinkPreviews(linkPreviews);
+        modified();
+    }
+
+    void modified() {
         encoded = null;
+    }
+
+    @Override
+    public Body clone() {
+        return new Body(getEncoded());
     }
 
     public static class ToStringConverter extends StdConverter<Body, String> {

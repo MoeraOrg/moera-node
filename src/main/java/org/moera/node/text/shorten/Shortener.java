@@ -16,7 +16,7 @@ public class Shortener {
     }
 
     public static Body shorten(Body body, boolean withGallery) {
-        Body shortBody = new Body();
+        Body shortBody = body.clone();
         if (body.getSubject() != null && body.getSubject().length() > SHORT_TITLE_MAX) {
             shortBody.setSubject(Util.ellipsize(body.getSubject(), SHORT_TITLE_MAX));
         }
