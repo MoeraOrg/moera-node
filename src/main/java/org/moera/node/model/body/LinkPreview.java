@@ -11,6 +11,7 @@ public class LinkPreview {
     @JsonIgnore
     private Body parent;
 
+    private String siteName;
     private String url;
     private String title;
     private String description;
@@ -18,6 +19,15 @@ public class LinkPreview {
 
     public void setParent(Body parent) {
         this.parent = parent;
+    }
+
+    public String getSiteName() {
+        return siteName;
+    }
+
+    public void setSiteName(String siteName) {
+        this.siteName = siteName;
+        modified();
     }
 
     public String getUrl() {
