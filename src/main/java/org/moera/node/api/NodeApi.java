@@ -25,7 +25,7 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
 import org.moera.node.media.TemporaryMediaFile;
 import org.moera.node.media.ThresholdReachedException;
-import org.moera.node.model.BodyMappingException;
+import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;

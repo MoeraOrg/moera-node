@@ -7,6 +7,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.model.body.Body;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

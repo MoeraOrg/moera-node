@@ -19,6 +19,7 @@ import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
+import org.moera.node.model.body.Body;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.util.Util;

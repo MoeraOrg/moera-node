@@ -7,6 +7,7 @@ import org.moera.node.data.Draft;
 import org.moera.node.data.DraftType;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.model.body.Body;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

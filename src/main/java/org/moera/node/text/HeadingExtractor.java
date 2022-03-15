@@ -6,7 +6,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.NodeFilter;
-import org.moera.node.model.Body;
+import org.moera.node.model.body.Body;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 

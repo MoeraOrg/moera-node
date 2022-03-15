@@ -27,7 +27,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.Body;
+import org.moera.node.model.body.Body;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.AllRemoteAvatarsDownloadTask;

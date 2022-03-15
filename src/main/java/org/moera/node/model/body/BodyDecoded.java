@@ -1,4 +1,4 @@
-package org.moera.node.model;
+package org.moera.node.model.body;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.model.Body;
+import org.moera.node.model.body.Body;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.springframework.web.util.UriComponentsBuilder;

@@ -33,7 +33,7 @@ import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.Body;
+import org.moera.node.model.body.Body;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.event.CommentDeletedEvent;
 import org.moera.node.model.event.CommentUpdatedEvent;

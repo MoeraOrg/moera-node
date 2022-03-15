@@ -2,7 +2,7 @@ package org.moera.node.text.shorten;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.moera.node.model.Body;
+import org.moera.node.model.body.Body;
 import org.moera.node.util.Util;
 
 public class Shortener {

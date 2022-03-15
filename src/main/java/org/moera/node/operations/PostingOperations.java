@@ -39,7 +39,7 @@ import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.model.Body;
+import org.moera.node.model.body.Body;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.event.Event;

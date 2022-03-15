@@ -40,7 +40,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.BodyMappingException;
+import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;

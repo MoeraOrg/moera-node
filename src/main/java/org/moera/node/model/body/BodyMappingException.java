@@ -1,4 +1,4 @@
-package org.moera.node.model;
+package org.moera.node.model.body;
 
 public class BodyMappingException extends RuntimeException {
 

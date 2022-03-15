@@ -9,7 +9,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.select.NodeFilter;
-import org.moera.node.model.Body;
+import org.moera.node.model.body.Body;
 import org.springframework.util.ObjectUtils;
 
 public class MentionsExtractor {

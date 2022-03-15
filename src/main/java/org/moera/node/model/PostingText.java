@@ -15,6 +15,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.model.body.Body;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;
 import org.moera.node.util.Util;
