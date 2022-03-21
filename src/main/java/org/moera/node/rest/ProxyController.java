@@ -12,18 +12,22 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.model.LinkPreviewInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ValidationFailure;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,12 +36,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/moera/api/proxy")
 public class ProxyController {
 
+    private static final Logger log = LoggerFactory.getLogger(ProxyController.class);
+
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(20);
     private static final Duration REQUEST_TIMEOUT = Duration.ofMinutes(1);
 
     @GetMapping("/media")
     @Admin
     public ResponseEntity<Resource> getMedia(@RequestParam String url) {
+        log.info("GET /proxy/media, (url = {})", LogUtil.format(url));
+
         HttpClient client = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(CONNECTION_TIMEOUT)
@@ -80,6 +88,8 @@ public class ProxyController {
     @GetMapping("/link-preview")
     @Admin
     public LinkPreviewInfo getLinkPreview(@RequestParam String url) {
+        log.info("GET /proxy/link-preview, (url = {})", LogUtil.format(url));
+
         Document document = null;
         try {
             document = Jsoup.connect(url)
@@ -115,6 +125,12 @@ public class ProxyController {
                     break;
                 default:
                     // ignore
+            }
+        }
+        if (ObjectUtils.isEmpty(linkPreviewInfo.getTitle())) {
+            Elements titles = document.select("head title");
+            for (Element title : titles) {
+                linkPreviewInfo.setTitle(title.ownText());
             }
         }
         return linkPreviewInfo;
