@@ -7,7 +7,7 @@ import org.moera.node.util.Util;
 
 public class Shortener {
 
-    private static final int SHORT_TITLE_MAX = 80;
+    private static final int SHORT_TITLE_MAX = 100;
 
     private static boolean isShortened(Body body, Body shortBody) {
         return body.getSubject() != null && body.getSubject().length() > SHORT_TITLE_MAX
