@@ -28,12 +28,18 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private String revisionId;
     private Integer totalRevisions;
     private Body bodyPreview;
+
+    @JsonIgnore
     private String saneBodyPreview;
+
     private Body bodySrc;
     private byte[] bodySrcHash;
     private SourceFormat bodySrcFormat;
     private Body body;
+
+    @JsonIgnore
     private String saneBody;
+
     private String bodyFormat;
     private MediaAttachment[] media;
     private String heading;

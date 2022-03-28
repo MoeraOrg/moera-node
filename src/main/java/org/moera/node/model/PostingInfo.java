@@ -41,12 +41,18 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private String ownerFullName;
     private AvatarImage ownerAvatar;
     private Body bodyPreview;
+
+    @JsonIgnore
     private String saneBodyPreview;
+
     private Body bodySrc;
     private byte[] bodySrcHash;
     private SourceFormat bodySrcFormat;
     private Body body;
+
+    @JsonIgnore
     private String saneBody;
+
     private String bodyFormat;
     private MediaAttachment[] media;
     private String heading;
