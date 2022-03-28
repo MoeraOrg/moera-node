@@ -63,6 +63,7 @@
         <div class="subject">{{posting.body.subject}}</div>
     {{/if}}
     <div class="content">{{{posting.saneBody}}}</div>
+    {{> part/entrypreviews linkPreviews=posting.body.linkPreviews media=posting.media small=false}}
     {{entryGallery posting.id null posting.media}}
     <div class="reactions-line">
         {{reactions posting}}
@@ -132,6 +133,7 @@
                             {{/if}}
                             {{{saneBody}}}
                         </div>
+                        {{> part/entrypreviews linkPreviews=body.linkPreviews media=posting.media small=true}}
                         {{entryGallery posting.id id media}}
                         <div class="reactions-line">
                             {{reactions this}}
