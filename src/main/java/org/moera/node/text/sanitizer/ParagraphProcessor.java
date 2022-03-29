@@ -17,7 +17,8 @@ class ParagraphProcessor extends HtmlStreamEventReceiverWrapper {
         List<String> newAttrs = attrs;
         if (elementName.equalsIgnoreCase("p")
                 || elementName.equalsIgnoreCase("ol")
-                || elementName.equalsIgnoreCase("ul")) {
+                || elementName.equalsIgnoreCase("ul")
+                || elementName.matches("[hH][1-6]")) {
             newAttrs = new ArrayList<>();
             for (int i = 0; i < attrs.size(); i += 2) {
                 if (!attrs.get(i).equalsIgnoreCase("dir")) {

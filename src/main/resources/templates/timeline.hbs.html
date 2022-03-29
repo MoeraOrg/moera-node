@@ -44,10 +44,10 @@
             </div>
         </div>
         {{#if posting.bodyPreview.subject}}
-            <div class="subject"><a href="/post/{{posting.id}}">{{posting.bodyPreview.subject}}</a></div>
+            <div class="subject" dir="auto"><a href="/post/{{posting.id}}">{{posting.bodyPreview.subject}}</a></div>
         {{else}}
             {{#if posting.body.subject}}
-                <div class="subject"><a href="/post/{{posting.id}}">{{posting.body.subject}}</a></div>
+                <div class="subject" dir="auto"><a href="/post/{{posting.id}}">{{posting.body.subject}}</a></div>
             {{/if}}
         {{/if}}
         {{#if posting.bodyPreview.text}}

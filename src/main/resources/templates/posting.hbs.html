@@ -60,7 +60,7 @@
         </div>
     </div>
     {{#if posting.body.subject}}
-        <div class="subject">{{posting.body.subject}}</div>
+        <div class="subject" dir="auto">{{posting.body.subject}}</div>
     {{/if}}
     <div class="content">{{{posting.saneBody}}}</div>
     {{> part/entrypreviews linkPreviews=posting.body.linkPreviews media=posting.media small=false}}
