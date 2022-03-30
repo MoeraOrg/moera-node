@@ -50,6 +50,7 @@ import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
@@ -181,10 +182,11 @@ public class MediaController {
             throw new AuthenticationException();
         }
 
+        String id = null;
         var tmp = mediaOperations.tmpFile();
         try {
             DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
-            String id = out.getHash();
+            id = out.getHash();
             MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
             if (mediaFileOwner != null) {
                 return new PrivateMediaFileInfo(mediaFileOwner, null);
@@ -198,6 +200,16 @@ public class MediaController {
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
             return new PrivateMediaFileInfo(mediaFileOwner, null);
+        } catch (DataIntegrityViolationException e) {
+            // already created in another thread
+            if (id != null) {
+                MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
+                if (mediaFileOwner != null) {
+                    return new PrivateMediaFileInfo(mediaFileOwner, null);
+                }
+            }
+            // should not happen
+            throw e;
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
