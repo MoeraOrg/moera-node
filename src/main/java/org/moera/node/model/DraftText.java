@@ -12,6 +12,7 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
 import org.moera.node.text.HeadingExtractor;
+import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -229,7 +230,7 @@ public class DraftText {
                 Body body = textConverter.toHtml(draft.getBodySrcFormat(), new Body(bodySrc));
                 draft.setBody(body.getEncoded());
                 draft.setBodyFormat(BodyFormat.MESSAGE.getValue());
-                draft.setHeading(HeadingExtractor.extractHeading(body));
+                draft.setHeading(HeadingExtractor.extractHeading(body, hasAttachedGallery(body, media), true));
             } else {
                 draft.setBodySrc(Body.EMPTY);
                 draft.setBody(bodySrc);
@@ -249,6 +250,14 @@ public class DraftText {
                 draft.setUpdateDescription(updateInfo.getDescription());
             }
         }
+    }
+
+    private static boolean hasAttachedGallery(Body body, RemoteMedia[] media) {
+        if (ObjectUtils.isEmpty(media)) {
+            return false;
+        }
+        int embeddedCount = MediaExtractor.extractMediaFileIds(body).size();
+        return media.length > embeddedCount;
     }
 
 }

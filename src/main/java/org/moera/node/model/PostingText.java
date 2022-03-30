@@ -314,7 +314,8 @@ public class PostingText {
         revision.setSignature(signature);
         revision.setSignatureVersion(signatureVersion);
         revision.setDigest(digest);
-        textConverter.toRevision(bodySrc, body, bodyFormat, bodyPreview, signature != null, media, revision);
+        textConverter.toRevision(bodySrc, body, bodyFormat, bodyPreview, signature != null, media,
+                false, revision);
 
         if (updateInfo != null) {
             if (updateInfo.getImportant() != null) {

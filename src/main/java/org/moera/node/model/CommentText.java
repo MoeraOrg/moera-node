@@ -271,7 +271,8 @@ public class CommentText {
         revision.setSignature(signature);
         revision.setSignatureVersion(signatureVersion);
         revision.setDigest(digest);
-        textConverter.toRevision(bodySrc, body, bodyFormat, bodyPreview, signature != null, media, revision);
+        textConverter.toRevision(bodySrc, body, bodyFormat, bodyPreview, signature != null, media,
+                true, revision);
     }
 
     public boolean sameAsRevision(EntryRevision revision) {

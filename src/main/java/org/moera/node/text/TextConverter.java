@@ -45,7 +45,8 @@ public class TextConverter {
     }
 
     public void toRevision(String bodySrc, String sourceBody, String bodyFormat, String sourceBodyPreview,
-                           boolean isSigned, List<MediaFileOwner> media, EntryRevision revision) {
+                           boolean isSigned, List<MediaFileOwner> media, boolean collapseQuotationsInHeading,
+                           EntryRevision revision) {
         Body body = new Body();
         if (!isSigned && (sourceBody == null || ObjectUtils.isEmpty(sourceBody))) {
             if (!ObjectUtils.isEmpty(bodySrc)) {
@@ -97,7 +98,8 @@ public class TextConverter {
             }
         }
         if (!revision.getBodyFormat().equals(BodyFormat.APPLICATION.getValue())) {
-            revision.setHeading(HeadingExtractor.extractHeading(body));
+            revision.setHeading(
+                    HeadingExtractor.extractHeading(body, hasAttachedGallery(body, media), collapseQuotationsInHeading));
             revision.setDescription(HeadingExtractor.extractDescription(body));
         }
     }
