@@ -41,8 +41,9 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.PostingAddedLiberin;
+import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -51,15 +52,9 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
-import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.PostingAddedEvent;
-import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.notification.FeedPostingAddedNotification;
-import org.moera.node.model.notification.PostingImportantUpdateNotification;
-import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.text.TextConverter;
@@ -175,15 +170,8 @@ public class PostingController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
-        requestContext.send(new PostingAddedEvent(posting));
 
-        if (postingText.getPublications() != null) {
-            final UUID postingId = posting.getId();
-            postingText.getPublications().stream()
-                    .map(StoryAttributes::getFeedName)
-                    .forEach(fn -> requestContext.send(Directions.feedSubscribers(requestContext.nodeId(), fn),
-                            new FeedPostingAddedNotification(fn, postingId)));
-        }
+        requestContext.send(new PostingAddedLiberin(posting, postingText.getPublications()));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
                 .body(withStories(new PostingInfo(posting, true)));
@@ -229,16 +217,8 @@ public class PostingController {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
         }
-        requestContext.send(new PostingUpdatedEvent(posting));
-        requestContext.send(
-                Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingUpdatedNotification(posting.getId()));
-        if (posting.getCurrentRevision().isUpdateImportant()) {
-            requestContext.send(
-                    Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
-                    new PostingImportantUpdateNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
-                            posting.getCurrentRevision().getUpdateDescription()));
-        }
+
+        requestContext.send(new PostingUpdatedLiberin(posting));
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
     }
