@@ -17,7 +17,9 @@ import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.liberin.model.CommentReactionAddedLiberin;
+import org.moera.node.liberin.model.CommentReactionDeletedLiberin;
+import org.moera.node.liberin.model.CommentReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -26,11 +28,6 @@ import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.CommentReactionsChangedEvent;
-import org.moera.node.model.notification.CommentReactionAddedNotification;
-import org.moera.node.model.notification.CommentReactionDeletedAllNotification;
-import org.moera.node.model.notification.CommentReactionDeletedNotification;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.SafeInteger;
@@ -94,35 +91,16 @@ public class CommentReactionController {
         }
 
         reactionOperations.validate(reactionDescription, comment);
-        Reaction reaction = reactionOperations.post(reactionDescription, comment, r -> notifyDeleted(comment, r),
-                r -> notifyAdded(comment, r));
-        requestContext.send(new CommentReactionsChangedEvent(comment));
+        var liberin = new CommentReactionAddedLiberin(comment);
+        Reaction reaction = reactionOperations.post(reactionDescription, comment, liberin::setDeletedReaction,
+                liberin::setAddedReaction);
+        requestContext.send(liberin);
 
         var totalsInfo = reactionTotalOperations.getInfo(comment);
         return ResponseEntity.created(
                 URI.create(String.format("/postings/%s/comments/%s/reactions/%s",
                         postingId, comment.getId(), reaction.getId())))
                 .body(new ReactionCreated(reaction, totalsInfo.getClientInfo()));
-    }
-
-    private void notifyAdded(Comment comment, Reaction reaction) {
-        if (reaction.getSignature() == null) {
-            return;
-        }
-        requestContext.send(Directions.single(requestContext.nodeId(), comment.getOwnerName()),
-                new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
-                        comment.getPosting().getCurrentRevision().getHeading(),
-                        comment.getCurrentRevision().getHeading(), reaction.getOwnerName(), reaction.getOwnerFullName(),
-                        new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
-                        reaction.isNegative(), reaction.getEmoji()));
-    }
-
-    private void notifyDeleted(Comment comment, Reaction reaction) {
-        requestContext.send(Directions.single(requestContext.nodeId(), comment.getOwnerName()),
-                new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
-                        reaction.getOwnerName(), reaction.getOwnerFullName(),
-                        new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
-                        reaction.isNegative()));
     }
 
     @GetMapping
@@ -195,15 +173,10 @@ public class CommentReactionController {
 
         reactionRepository.deleteAllByEntryId(commentId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(commentId);
-        notifyDeletedAll(comment);
-        requestContext.send(new CommentReactionsChangedEvent(comment));
+
+        requestContext.send(new CommentReactionsDeletedAllLiberin(comment));
 
         return Result.OK;
-    }
-
-    private void notifyDeletedAll(Comment comment) {
-        requestContext.send(Directions.single(requestContext.nodeId(), comment.getOwnerName()),
-                new CommentReactionDeletedAllNotification(comment.getPosting().getId(), comment.getId()));
     }
 
     @DeleteMapping("/{ownerName}")
@@ -225,8 +198,9 @@ public class CommentReactionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        reactionOperations.delete(ownerName, comment, r -> notifyDeleted(comment, r));
-        requestContext.send(new CommentReactionsChangedEvent(comment));
+        var liberin = new CommentReactionDeletedLiberin(comment);
+        reactionOperations.delete(ownerName, comment, liberin::setReaction);
+        requestContext.send(liberin);
 
         return reactionTotalOperations.getInfo(comment).getClientInfo();
     }
