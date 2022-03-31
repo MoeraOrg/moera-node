@@ -150,6 +150,7 @@ public class EventManager {
                         deliverySignal.wait();
                     }
                 } catch (InterruptedException e) {
+                    // ignore
                 }
                 deliver();
             }
