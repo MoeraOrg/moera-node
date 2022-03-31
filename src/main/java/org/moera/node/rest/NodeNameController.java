@@ -29,13 +29,13 @@ import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.NodeNameInfo;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
@@ -206,7 +206,7 @@ public class NodeNameController {
             options.reset("profile.node-name");
             options.reset("profile.signing-key");
         });
-        requestContext.send(new NodeNameChangedEvent("", requestContext.getOptions(), requestContext.getAvatar()));
+        requestContext.send(new NodeNameChangedLiberin(requestContext.getOptions(), requestContext.getAvatar()));
 
         return Result.OK;
     }
