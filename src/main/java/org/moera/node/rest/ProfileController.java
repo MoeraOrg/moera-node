@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.util.Objects;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -11,13 +10,9 @@ import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.mail.EmailConfirmMail;
+import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.model.ProfileAttributes;
 import org.moera.node.model.ProfileInfo;
-import org.moera.node.model.event.NodeNameChangedEvent;
-import org.moera.node.model.event.ProfileUpdatedEvent;
-import org.moera.node.model.notification.ProfileUpdatedNotification;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -58,13 +53,9 @@ public class ProfileController {
 
         String oldEmail = requestContext.getOptions().getString("profile.email");
         profileAttributes.toOptions(requestContext.getOptions(), textConverter);
-        requestContext.send(new ProfileUpdatedEvent());
-        requestContext.send(new NodeNameChangedEvent(requestContext.nodeName(), requestContext.getOptions(),
-                requestContext.getAvatar()));
-        requestContext.send(Directions.profileSubscribers(requestContext.nodeId()), new ProfileUpdatedNotification());
-        if (!Objects.equals(requestContext.getOptions().getString("profile.email"), oldEmail)) {
-            requestContext.send(new EmailConfirmMail());
-        }
+
+        requestContext.send(new ProfileUpdatedLiberin(requestContext.nodeName(), requestContext.getOptions(),
+                requestContext.getAvatar(), oldEmail));
 
         return new ProfileInfo(requestContext, true);
     }

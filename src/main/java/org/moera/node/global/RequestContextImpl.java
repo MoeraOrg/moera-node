@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
+import org.moera.node.liberin.Liberin;
 import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
 import org.moera.node.notification.send.DirectedNotification;
@@ -34,9 +35,10 @@ public class RequestContextImpl implements RequestContext {
     private InetAddress localAddr;
     private UserAgent userAgent = UserAgent.UNKNOWN;
     private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
-    private List<Event> afterCommitEvents = new ArrayList<>();
-    private List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
-    private List<Mail> afterCommitMails = new ArrayList<>();
+    private final List<Liberin> afterCommitLiberins = new ArrayList<>();
+    private final List<Event> afterCommitEvents = new ArrayList<>();
+    private final List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
+    private final List<Mail> afterCommitMails = new ArrayList<>();
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -211,6 +213,16 @@ public class RequestContextImpl implements RequestContext {
             avatar = avatarRepository.findByNodeIdAndId(nodeId(), avatarId()).orElse(null);
         }
         return avatar;
+    }
+
+    @Override
+    public void send(Liberin liberin) {
+        afterCommitLiberins.add(liberin);
+    }
+
+    @Override
+    public List<Liberin> getAfterCommitLiberins() {
+        return afterCommitLiberins;
     }
 
     @Override

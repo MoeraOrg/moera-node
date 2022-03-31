@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.moera.node.data.Avatar;
+import org.moera.node.liberin.Liberin;
 import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
 import org.moera.node.notification.send.DirectedNotification;
@@ -77,16 +78,26 @@ public interface RequestContext extends NotificationConsumer {
 
     Avatar getAvatar();
 
+    void send(Liberin liberin);
+
+    List<Liberin> getAfterCommitLiberins();
+
+    @Deprecated
     void send(Event event);
 
+    @Deprecated
     List<Event> getAfterCommitEvents();
 
+    @Deprecated
     void send(DirectedNotification notification);
 
+    @Deprecated
     List<DirectedNotification> getAfterCommitNotifications();
 
+    @Deprecated
     void send(Mail mail);
 
+    @Deprecated
     List<Mail> getAfterCommitMails();
 
 }

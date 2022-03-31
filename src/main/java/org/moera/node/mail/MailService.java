@@ -53,9 +53,9 @@ public class MailService {
     @Lazy
     private HandlebarsViewResolver handlebarsViewResolver;
 
-    private BlockingQueue<MimeMessagePreparator> mailQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<MimeMessagePreparator> mailQueue = new LinkedBlockingQueue<>();
 
-    private Map<String, Template> compiledTemplates = new HashMap<>();
+    private final Map<String, Template> compiledTemplates = new HashMap<>();
 
     private Handlebars getHandlebars() {
         return handlebarsViewResolver.getHandlebars();
@@ -82,7 +82,7 @@ public class MailService {
         }
     }
 
-    public void send(Mail mail) throws MailServiceException {
+    private void send(Mail mail) throws MailServiceException {
         if (ObjectUtils.isEmpty(mail.getDomainName()) || mail.getDomainName().equals(Domains.DEFAULT_DOMAIN)
                 || ObjectUtils.isEmpty(mail.getEmail())) {
             return;
