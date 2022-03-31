@@ -29,18 +29,18 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.DraftAddedLiberin;
+import org.moera.node.liberin.model.DraftDeletedLiberin;
+import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.body.Body;
-import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.model.DraftInfo;
 import org.moera.node.model.DraftText;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.RemoteMedia;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.DraftAddedEvent;
-import org.moera.node.model.event.DraftDeletedEvent;
-import org.moera.node.model.event.DraftUpdatedEvent;
+import org.moera.node.model.body.Body;
+import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
@@ -201,7 +201,7 @@ public class DraftController {
         draft = draftRepository.save(draft);
         updateAttachments(draft, media, draftText.getMedia());
 
-        requestContext.send(new DraftAddedEvent(draft));
+        requestContext.send(new DraftAddedLiberin(draft));
 
         return ResponseEntity.created(URI.create("/drafts/" + draft.getId())).body(new DraftInfo(draft));
     }
@@ -228,7 +228,7 @@ public class DraftController {
         updateDeadline(draft);
         updateAttachments(draft, media, draftText.getMedia());
 
-        requestContext.send(new DraftUpdatedEvent(draft));
+        requestContext.send(new DraftUpdatedLiberin(draft));
 
         return new DraftInfo(draft);
     }
@@ -332,7 +332,7 @@ public class DraftController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         draftRepository.delete(draft);
 
-        requestContext.send(new DraftDeletedEvent(draft));
+        requestContext.send(new DraftDeletedLiberin(draft));
 
         return Result.OK;
     }
