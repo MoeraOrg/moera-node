@@ -17,9 +17,9 @@ import org.springframework.web.method.HandlerMethod;
 @Component
 public class NotificationRouter {
 
-    private static Logger log = LoggerFactory.getLogger(NotificationRouter.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationRouter.class);
 
-    private Map<NotificationType, HandlerMethod> handlers = new HashMap<>();
+    private final Map<NotificationType, HandlerMethod> handlers = new HashMap<>();
 
     @Inject
     private ApplicationContext applicationContext;

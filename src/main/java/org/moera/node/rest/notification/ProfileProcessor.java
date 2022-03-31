@@ -26,7 +26,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @NotificationProcessor
 public class ProfileProcessor {
 
-    private static Logger log = LoggerFactory.getLogger(ProfileProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(ProfileProcessor.class);
 
     @Inject
     private UniversalContext universalContext;

@@ -32,7 +32,7 @@ public class PickerPool {
     private static final Duration RETRY_MIN_DELAY = Duration.of(30, ChronoUnit.SECONDS);
     private static final Duration RETRY_MAX_DELAY = Duration.of(6, ChronoUnit.HOURS);
 
-    private static Logger log = LoggerFactory.getLogger(PickerPool.class);
+    private static final Logger log = LoggerFactory.getLogger(PickerPool.class);
 
     // We create one picker per remote node to make sure there will not be two threads that download
     // the same posting and step on each other's toes.

@@ -23,7 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class Pusher extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(Pusher.class);
+    private static final Logger log = LoggerFactory.getLogger(Pusher.class);
 
     private static final int QUEUE_CAPACITY = 20;
     private static final int DB_SLICE_SIZE = 20;

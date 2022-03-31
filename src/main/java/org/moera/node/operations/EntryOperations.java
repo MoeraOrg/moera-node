@@ -21,7 +21,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Component
 public class EntryOperations {
 
-    private static Logger log = LoggerFactory.getLogger(EntryOperations.class);
+    private static final Logger log = LoggerFactory.getLogger(EntryOperations.class);
 
     @Inject
     private Domains domains;

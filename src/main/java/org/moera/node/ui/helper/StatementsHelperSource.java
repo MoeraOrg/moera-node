@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 @HelperSource
 public class StatementsHelperSource {
 
-    private static Logger log = LoggerFactory.getLogger(StatementsHelperSource.class);
+    private static final Logger log = LoggerFactory.getLogger(StatementsHelperSource.class);
 
     public CharSequence assign(String variableName, Options options) throws IOException {
         CharSequence finalValue = options.apply(options.fn);

@@ -37,15 +37,15 @@ public class NotificationSender extends Task {
     private static final Duration RETRY_NAME_PERIOD = Duration.of(3, ChronoUnit.HOURS);
     private static final Duration SUBSCRIPTION_DELAY = Duration.of(7, ChronoUnit.MINUTES);
 
-    private static Logger log = LoggerFactory.getLogger(NotificationSender.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationSender.class);
 
-    private String receiverNodeName;
-    private BlockingQueue<Notification> queue = new LinkedBlockingQueue<>();
+    private final String receiverNodeName;
+    private final BlockingQueue<Notification> queue = new LinkedBlockingQueue<>();
     private Notification notification;
     private Duration delay;
     private boolean stopped = false;
     private Instant pausedTill;
-    private NotificationSenderPool pool;
+    private final NotificationSenderPool pool;
 
     @Inject
     private ObjectMapper objectMapper;

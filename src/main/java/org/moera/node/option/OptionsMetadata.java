@@ -30,7 +30,7 @@ public class OptionsMetadata {
 
     public static final String CLIENT_PREFIX = "client.";
 
-    private static Logger log = LoggerFactory.getLogger(OptionsMetadata.class);
+    private static final Logger log = LoggerFactory.getLogger(OptionsMetadata.class);
 
     private Map<String, OptionTypeBase> types;
     private Map<String, OptionDescriptor> descriptors;

@@ -41,7 +41,7 @@ import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 @Service
 public class EventManager {
 
-    private static Logger log = LoggerFactory.getLogger(EventManager.class);
+    private static final Logger log = LoggerFactory.getLogger(EventManager.class);
 
     private static final String USER_PREFIX = "/user";
     private static final String EVENT_DESTINATION = "/queue";

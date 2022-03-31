@@ -17,12 +17,12 @@ import org.springframework.context.ApplicationContext;
 @HelperSource
 public class ImagesHelperSource {
 
-    private static Logger log = LoggerFactory.getLogger(ImagesHelperSource.class);
+    private static final Logger log = LoggerFactory.getLogger(ImagesHelperSource.class);
 
     @Inject
     private ApplicationContext applicationContext;
 
-    private Map<String, Dimension> imageSizeCache = new HashMap<>();
+    private final Map<String, Dimension> imageSizeCache = new HashMap<>();
 
     public CharSequence image(CharSequence src, Options options) {
         CharSequence alt = options.hash("alt");

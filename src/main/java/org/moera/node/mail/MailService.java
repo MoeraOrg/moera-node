@@ -38,7 +38,7 @@ public class MailService {
     private static final String MAILROBOT_PREFIX = "mailrobot@";
     private static final String TEMPLATES_DIRECTORY = "mail/";
 
-    private static Logger log = LoggerFactory.getLogger(MailService.class);
+    private static final Logger log = LoggerFactory.getLogger(MailService.class);
 
     @Inject
     private Config config;

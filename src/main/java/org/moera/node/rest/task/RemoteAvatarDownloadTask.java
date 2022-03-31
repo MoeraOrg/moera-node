@@ -16,9 +16,9 @@ import org.slf4j.LoggerFactory;
 
 public class RemoteAvatarDownloadTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteAvatarDownloadTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteAvatarDownloadTask.class);
 
-    private String targetNodeName;
+    private final String targetNodeName;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;

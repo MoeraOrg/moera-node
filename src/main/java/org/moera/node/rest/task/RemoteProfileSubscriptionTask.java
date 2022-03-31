@@ -20,9 +20,9 @@ import org.slf4j.LoggerFactory;
 
 public class RemoteProfileSubscriptionTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(RemoteProfileSubscriptionTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteProfileSubscriptionTask.class);
 
-    private String targetNodeName;
+    private final String targetNodeName;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;

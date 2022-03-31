@@ -24,7 +24,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @Service
 public class PushService {
 
-    private static Logger log = LoggerFactory.getLogger(PushService.class);
+    private static final Logger log = LoggerFactory.getLogger(PushService.class);
 
     private final Map<UUID, PushClients> nodeClients = new ConcurrentHashMap<>();
 

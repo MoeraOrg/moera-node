@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class AllRemoteAvatarsDownloadTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(AllRemoteAvatarsDownloadTask.class);
+    private static final Logger log = LoggerFactory.getLogger(AllRemoteAvatarsDownloadTask.class);
 
     @Inject
     private SubscriptionRepository subscriptionRepository;

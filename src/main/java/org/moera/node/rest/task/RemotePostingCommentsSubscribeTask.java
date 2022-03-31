@@ -22,11 +22,11 @@ import org.slf4j.LoggerFactory;
 
 public class RemotePostingCommentsSubscribeTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(RemotePostingCommentsSubscribeTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemotePostingCommentsSubscribeTask.class);
 
-    private String targetNodeName;
-    private String postingId;
-    private SubscriptionReason reason;
+    private final String targetNodeName;
+    private final String postingId;
+    private final SubscriptionReason reason;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;

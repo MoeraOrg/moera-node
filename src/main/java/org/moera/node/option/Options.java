@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class Options {
 
-    private static Logger log = LoggerFactory.getLogger(Options.class);
+    private static final Logger log = LoggerFactory.getLogger(Options.class);
 
     private final Map<String, Object> values = new HashMap<>();
     private final ReadWriteLock valuesLock = new ReentrantReadWriteLock();

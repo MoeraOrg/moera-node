@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory;
 
 public class PublicMediaDownloadTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(PublicMediaDownloadTask.class);
+    private static final Logger log = LoggerFactory.getLogger(PublicMediaDownloadTask.class);
 
-    private String targetNodeName;
-    private String[] mediaIds;
-    private MediaFile[] mediaFiles;
-    private int maxSize;
-    private Consumer<MediaFile[]> callback;
+    private final String targetNodeName;
+    private final String[] mediaIds;
+    private final MediaFile[] mediaFiles;
+    private final int maxSize;
+    private final Consumer<MediaFile[]> callback;
 
     @Inject
     private MediaManager mediaManager;

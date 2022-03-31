@@ -23,7 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class PushClients {
 
-    private static Logger log = LoggerFactory.getLogger(PushClients.class);
+    private static final Logger log = LoggerFactory.getLogger(PushClients.class);
 
     private final UUID nodeId;
     private Map<String, PushClient> clients;

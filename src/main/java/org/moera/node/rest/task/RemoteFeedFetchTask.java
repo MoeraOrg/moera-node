@@ -20,11 +20,11 @@ public class RemoteFeedFetchTask extends Task {
 
     public static final int FETCH_LIMIT = 20;
 
-    private static Logger log = LoggerFactory.getLogger(RemoteFeedFetchTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteFeedFetchTask.class);
 
-    private String feedName;
-    private String remoteNodeName;
-    private String remoteFeedName;
+    private final String feedName;
+    private final String remoteNodeName;
+    private final String remoteFeedName;
 
     @Inject
     private PostingRepository postingRepository;

@@ -42,9 +42,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 @Service
 public class NamingClient {
 
-    private static Logger log = LoggerFactory.getLogger(NamingClient.class);
+    private static final Logger log = LoggerFactory.getLogger(NamingClient.class);
 
-    private Map<String, NamingService> namingServices = new ConcurrentHashMap<>();
+    private final Map<String, NamingService> namingServices = new ConcurrentHashMap<>();
 
     @Inject
     private Domains domains;

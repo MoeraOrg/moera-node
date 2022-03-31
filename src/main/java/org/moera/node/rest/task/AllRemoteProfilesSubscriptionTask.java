@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class AllRemoteProfilesSubscriptionTask extends Task {
 
-    private static Logger log = LoggerFactory.getLogger(AllRemoteProfilesSubscriptionTask.class);
+    private static final Logger log = LoggerFactory.getLogger(AllRemoteProfilesSubscriptionTask.class);
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
