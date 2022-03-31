@@ -19,12 +19,10 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.PostingRestoredEvent;
-import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -113,9 +111,8 @@ public class DeletedPostingController {
                 .collect(Collectors.toList());
         posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media, null,
                 null, null, null);
-        requestContext.send(new PostingRestoredEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingUpdatedNotification(posting.getId()));
+
+        requestContext.send(new PostingRestoredLiberin(posting));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
         return new PostingInfo(posting, stories, true);
