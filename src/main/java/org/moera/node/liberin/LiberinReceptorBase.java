@@ -9,6 +9,8 @@ import org.moera.node.model.event.Event;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.NotificationSenderPool;
+import org.moera.node.push.PushContent;
+import org.moera.node.push.PushService;
 
 public abstract class LiberinReceptorBase {
 
@@ -21,6 +23,9 @@ public abstract class LiberinReceptorBase {
     @Inject
     private MailService mailService;
 
+    @Inject
+    private PushService pushService;
+
     protected void send(Liberin liberin, Event event) {
         eventManager.send(liberin.getNodeId(), liberin.getClientId(), event);
     }
@@ -31,6 +36,10 @@ public abstract class LiberinReceptorBase {
 
     public void send(Liberin liberin, Mail mail) {
         mailService.send(liberin.getNodeId(), mail);
+    }
+
+    public void send(Liberin liberin, PushContent pushContent) {
+        pushService.send(liberin.getNodeId(), pushContent);
     }
 
 }

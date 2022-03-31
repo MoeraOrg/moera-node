@@ -35,6 +35,7 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedInfo;
 import org.moera.node.model.FeedSliceInfo;
@@ -45,8 +46,6 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
@@ -224,9 +223,8 @@ public class FeedController {
         }
 
         FeedStatus feedStatus = storyOperations.getFeedStatus(feedName, true);
-        requestContext.send(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
-        requestContext.send(new StoriesStatusUpdatedEvent(feedName, change));
-        pushService.send(requestContext.nodeId(), PushContent.feedUpdated(feedName, feedStatus));
+
+        requestContext.send(new FeedStatusUpdatedLiberin(feedName, feedStatus, change));
 
         return feedStatus;
     }
