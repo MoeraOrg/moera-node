@@ -17,13 +17,11 @@ public class ProfileReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void updated(ProfileUpdatedLiberin liberin) {
-        eventManager.send(liberin.getNodeId(), liberin.getClientId(), new ProfileUpdatedEvent());
-        eventManager.send(liberin.getNodeId(), liberin.getClientId(),
-                new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
-        notificationSenderPool.send(Directions.profileSubscribers(liberin.getNodeId()),
-                new ProfileUpdatedNotification());
+        send(liberin, new ProfileUpdatedEvent());
+        send(liberin, new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
+        send(Directions.profileSubscribers(liberin.getNodeId()), new ProfileUpdatedNotification());
         if (!Objects.equals(liberin.getOptions().getString("profile.email"), liberin.getOldEmail())) {
-            mailService.send(liberin.getNodeId(), new EmailConfirmMail());
+            send(liberin, new EmailConfirmMail());
         }
     }
 
