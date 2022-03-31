@@ -11,7 +11,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.config.Config;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.data.MediaFile;
@@ -19,6 +18,9 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.AvatarAddedLiberin;
+import org.moera.node.liberin.model.AvatarDeletedLiberin;
+import org.moera.node.liberin.model.AvatarOrderedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThumbnailUtil;
@@ -30,9 +32,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.AvatarAddedEvent;
-import org.moera.node.model.event.AvatarDeletedEvent;
-import org.moera.node.model.event.AvatarOrderedEvent;
 import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +47,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AvatarController {
 
     private static final Logger log = LoggerFactory.getLogger(AvatarController.class);
-
-    @Inject
-    private Config config;
 
     @Inject
     private RequestContext requestContext;
@@ -123,7 +119,7 @@ public class AvatarController {
 
             AvatarInfo avatarInfo = new AvatarInfo(avatar);
 
-            requestContext.send(new AvatarAddedEvent(avatarInfo));
+            requestContext.send(new AvatarAddedLiberin(avatarInfo));
 
             return avatarInfo;
         } catch (IOException e) {
@@ -152,7 +148,7 @@ public class AvatarController {
                     .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
             avatar.setOrdinal(ordinal);
             result[ordinal] = new AvatarOrdinal(avatar.getId().toString(), ordinal);
-            requestContext.send(new AvatarOrderedEvent(avatar));
+            requestContext.send(new AvatarOrderedLiberin(avatar));
             ordinal++;
         }
 
@@ -190,7 +186,7 @@ public class AvatarController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
         avatarRepository.delete(avatar);
 
-        requestContext.send(new AvatarDeletedEvent(avatar));
+        requestContext.send(new AvatarDeletedLiberin(avatar));
 
         return Result.OK;
     }
