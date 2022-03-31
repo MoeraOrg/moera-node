@@ -15,7 +15,7 @@ import org.moera.node.data.PasswordResetTokenRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.mail.PasswordResetMail;
+import org.moera.node.liberin.model.PasswordResetLiberin;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.CredentialsChange;
 import org.moera.node.model.CredentialsCreated;
@@ -141,7 +141,7 @@ public class CredentialsController {
                 requestContext.getOptions().getDuration("credentials-reset.token.lifetime").getDuration())));
         passwordResetTokenRepository.save(token);
 
-        requestContext.send(new PasswordResetMail(token.getToken()));
+        requestContext.send(new PasswordResetLiberin(token.getToken()));
 
         return new EmailHint(email);
     }
