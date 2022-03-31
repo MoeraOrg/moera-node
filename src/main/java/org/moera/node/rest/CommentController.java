@@ -38,9 +38,10 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.CommentInstants;
+import org.moera.node.liberin.model.CommentAddedLiberin;
+import org.moera.node.liberin.model.CommentDeletedLiberin;
+import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
@@ -50,15 +51,8 @@ import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.CommentAddedEvent;
-import org.moera.node.model.event.CommentDeletedEvent;
-import org.moera.node.model.event.CommentUpdatedEvent;
-import org.moera.node.model.event.PostingCommentsChangedEvent;
-import org.moera.node.model.notification.PostingCommentAddedNotification;
-import org.moera.node.model.notification.PostingCommentDeletedNotification;
-import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
+import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.text.TextConverter;
@@ -187,18 +181,9 @@ public class CommentController {
                 contactOperations.updateCloseness(comment.getOwnerName(), 1);
             }
             commentInstants.added(comment);
-            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            requestContext.send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
-                    new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
-                            comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                            comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
-        requestContext.send(new CommentAddedEvent(comment));
-        requestContext.send(new PostingCommentsChangedEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
+        requestContext.send(new CommentAddedLiberin(posting, comment));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
                 .body(new CommentCreated(comment, posting.getTotalChildren()));
@@ -250,16 +235,9 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             commentInstants.added(comment);
-            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            requestContext.send(Directions.postingCommentsSubscribers(comment.getNodeId(), postingId),
-                    new PostingCommentAddedNotification(postingId,
-                            comment.getPosting().getCurrentRevision().getHeading(), comment.getId(),
-                            comment.getOwnerName(), comment.getOwnerFullName(),
-                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                            comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
-        requestContext.send(new CommentUpdatedEvent(comment));
+        requestContext.send(new CommentUpdatedLiberin(comment));
 
         return withSeniorReaction(withClientReaction(new CommentInfo(comment, true)),
                 comment.getPosting().getOwnerName());
@@ -475,11 +453,8 @@ public class CommentController {
             contactOperations.updateCloseness(comment.getOwnerName(), -1);
         }
         commentInstants.deleted(comment);
-        requestContext.send(Directions.postingCommentsSubscribers(comment.getNodeId(), postingId),
-                new PostingCommentDeletedNotification(postingId, comment.getId(), comment.getOwnerName(),
-                        comment.getOwnerFullName(),
-                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
-        requestContext.send(new CommentDeletedEvent(comment));
+
+        requestContext.send(new CommentDeletedLiberin(comment));
 
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());
     }
