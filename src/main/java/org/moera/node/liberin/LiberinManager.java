@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.PostConstruct;
@@ -49,11 +48,7 @@ public class LiberinManager {
         }
     }
 
-    public void send(Liberin liberin) {
-        send(Collections.singletonList(liberin));
-    }
-
-    public void send(Liberin[] liberins) {
+    public void send(Liberin ...liberins) {
         send(Arrays.asList(liberins));
     }
 

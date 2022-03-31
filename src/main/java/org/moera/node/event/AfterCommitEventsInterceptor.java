@@ -33,10 +33,11 @@ public class AfterCommitEventsInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
         if (ex == null) {
-            requestContext.getAfterCommitLiberins().stream()
-                    .peek(liberin -> liberin.setNodeId(requestContext.nodeId()))
-                    .peek(liberin -> liberin.setClientId(requestContext.getClientId()))
-                    .forEach(liberin -> liberinManager.send(liberin));
+            requestContext.getAfterCommitLiberins().forEach(liberin -> {
+                liberin.setNodeId(requestContext.nodeId());
+                liberin.setClientId(requestContext.getClientId());
+            });
+            liberinManager.send(requestContext.getAfterCommitLiberins());
             requestContext.getAfterCommitEvents().forEach(
                     event -> eventManager.send(requestContext.nodeId(), requestContext.getClientId(), event)
             );
