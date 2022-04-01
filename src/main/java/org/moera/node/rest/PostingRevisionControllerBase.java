@@ -17,12 +17,10 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.Liberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
@@ -60,7 +58,7 @@ public abstract class PostingRevisionControllerBase {
 
     protected abstract EntryRevision findRevision(UUID postingId, UUID id);
 
-    protected abstract Event getRestorationEvent(Posting posting);
+    protected abstract Liberin getRestorationLiberin(Posting posting);
 
     @GetMapping
     @NoCache
@@ -138,9 +136,8 @@ public abstract class PostingRevisionControllerBase {
                 .collect(Collectors.toList());
         posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null,
                 null, null);
-        requestContext.send(getRestorationEvent(posting));
-        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingUpdatedNotification(posting.getId()));
+
+        requestContext.send(getRestorationLiberin(posting));
 
         return new PostingRevisionInfo(revision, posting.getReceiverName(), true);
     }

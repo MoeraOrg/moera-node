@@ -6,6 +6,7 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
+import org.moera.node.liberin.model.PostingRevisionRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.event.PostingAddedEvent;
@@ -50,6 +51,14 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         send(liberin, new PostingRestoredEvent(posting));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                new PostingUpdatedNotification(posting.getId()));
+    }
+
+    @LiberinMapping
+    public void revisionRestored(PostingRevisionRestoredLiberin liberin) {
+        Posting posting = liberin.getPosting();
+        send(liberin, new PostingUpdatedEvent(posting));
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
     }

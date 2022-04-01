@@ -2,12 +2,12 @@ package org.moera.node.rest;
 
 import java.util.UUID;
 
+import org.moera.node.auth.Admin;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.PostingRestoredEvent;
-import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,8 +40,8 @@ public class DeletedPostingRevisionController extends PostingRevisionControllerB
     }
 
     @Override
-    protected Event getRestorationEvent(Posting posting) {
-        return new PostingRestoredEvent(posting);
+    protected Liberin getRestorationLiberin(Posting posting) {
+        return new PostingRestoredLiberin(posting);
     }
 
 }

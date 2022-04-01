@@ -4,9 +4,9 @@ import java.util.UUID;
 
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.global.ApiController;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,8 +38,8 @@ public class PostingRevisionController extends PostingRevisionControllerBase {
     }
 
     @Override
-    protected Event getRestorationEvent(Posting posting) {
-        return new PostingUpdatedEvent(posting);
+    protected Liberin getRestorationLiberin(Posting posting) {
+        return new PostingUpdatedLiberin(posting);
     }
 
 }
