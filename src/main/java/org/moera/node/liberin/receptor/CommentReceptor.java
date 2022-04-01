@@ -62,7 +62,7 @@ public class CommentReceptor extends LiberinReceptorBase {
     }
 
     @LiberinMapping
-    public void updated(CommentDeletedLiberin liberin) {
+    public void deleted(CommentDeletedLiberin liberin) {
         Comment comment = liberin.getComment();
         UUID postingId = comment.getPosting().getId();
 
