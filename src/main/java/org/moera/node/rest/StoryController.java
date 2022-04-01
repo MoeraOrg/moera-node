@@ -13,13 +13,11 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.FeedStatus;
+import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.StoryInfo;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
@@ -101,16 +99,7 @@ public class StoryController {
             pushService.send(requestContext.nodeId(), content);
         }
 
-        if (!Feed.isAdmin(story.getFeedName())) {
-            requestContext.send(new StoryUpdatedEvent(story, false));
-        }
-        requestContext.send(new StoryUpdatedEvent(story, true));
-        FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName(), true);
-        requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus, true));
-        if (!Feed.isAdmin(story.getFeedName())) {
-            requestContext.send(new FeedStatusUpdatedEvent(story.getFeedName(), feedStatus.notAdmin(), false));
-        }
-        pushService.send(requestContext.nodeId(), PushContent.feedUpdated(story.getFeedName(), feedStatus));
+        requestContext.send(new StoryUpdatedLiberin(story));
 
         return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }
