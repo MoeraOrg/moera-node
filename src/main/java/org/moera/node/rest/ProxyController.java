@@ -90,7 +90,7 @@ public class ProxyController {
     public LinkPreviewInfo getLinkPreview(@RequestParam String url) {
         log.info("GET /proxy/link-preview, (url = {})", LogUtil.format(url));
 
-        Document document = null;
+        Document document;
         try {
             document = Jsoup.connect(url)
                     .followRedirects(true)
