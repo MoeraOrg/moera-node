@@ -18,12 +18,12 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemoteCommentPostTask;
 import org.moera.node.rest.task.RemoteCommentVerifyTask;
@@ -136,7 +136,7 @@ public class RemoteCommentController {
         if (ownComment != null) {
             contactOperations.updateCloseness(nodeName, -1);
             contactOperations.updateCloseness(ownComment.getRemoteRepliedToName(), -1);
-            requestContext.send(new RemoteCommentUpdatedEvent(nodeName, postingId, commentId));
+            requestContext.send(new RemoteCommentUpdatedLiberin(nodeName, postingId, commentId));
         }
 
         return Result.OK;

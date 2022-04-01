@@ -17,12 +17,12 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.PostingSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.RemotePostingUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingPostTask;
 import org.moera.node.rest.task.RemotePostingVerifyTask;
@@ -123,7 +123,7 @@ public class RemotePostingController {
                 .orElse(null);
         if (ownPosting != null) {
             contactOperations.updateCloseness(nodeName, -1);
-            requestContext.send(new RemotePostingUpdatedEvent(nodeName, postingId));
+            requestContext.send(new RemotePostingUpdatedLiberin(nodeName, postingId));
         }
 
         return Result.OK;
