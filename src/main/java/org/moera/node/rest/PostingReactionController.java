@@ -2,7 +2,6 @@ package org.moera.node.rest;
 
 import java.net.URI;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -11,9 +10,6 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.data.Comment;
-import org.moera.node.data.Entry;
-import org.moera.node.data.EntryRepository;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -24,7 +20,9 @@ import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.liberin.model.PostingReactionAddedLiberin;
+import org.moera.node.liberin.model.PostingReactionDeletedLiberin;
+import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
@@ -33,12 +31,6 @@ import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.PostingReactionsChangedEvent;
-import org.moera.node.model.notification.PostingReactionAddedNotification;
-import org.moera.node.model.notification.PostingReactionDeletedAllNotification;
-import org.moera.node.model.notification.PostingReactionDeletedNotification;
-import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.SafeInteger;
@@ -71,9 +63,6 @@ public class PostingReactionController {
 
     @Inject
     private OwnReactionRepository ownReactionRepository;
-
-    @Inject
-    private EntryRepository entryRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -112,66 +101,17 @@ public class PostingReactionController {
     }
 
     private ResponseEntity<ReactionCreated> postToOriginal(ReactionDescription reactionDescription, Posting posting) {
-        Reaction reaction = reactionOperations.post(reactionDescription, posting, r -> notifyDeleted(posting, r),
-                r -> notifyAdded(posting, r));
+        var liberin = new PostingReactionAddedLiberin(posting);
 
-        requestContext.send(new PostingReactionsChangedEvent(posting));
-
+        Reaction reaction = reactionOperations.post(reactionDescription, posting, liberin::setDeletedReaction,
+                liberin::setAddedReaction);
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
+
+        liberin.setReactionTotals(totalsInfo.getPublicInfo());
+        requestContext.send(liberin);
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
                 .body(new ReactionCreated(reaction, totalsInfo.getClientInfo()));
-    }
-
-    private void notifyAdded(Posting posting, Reaction reaction) {
-        if (reaction.getSignature() == null) {
-            return;
-        }
-        if (posting.getParentMedia() == null) {
-            requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
-                    new PostingReactionAddedNotification(null, null, null, null,
-                            posting.getId(), posting.getCurrentRevision().getHeading(), reaction.getOwnerName(),
-                            reaction.getOwnerFullName(),
-                            new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
-                            reaction.isNegative(), reaction.getEmoji()));
-        } else {
-            Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
-            for (Entry entry : entries) {
-                UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
-                UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
-                        new PostingReactionAddedNotification(parentPostingId, parentCommentId,
-                                posting.getParentMedia().getId(), entry.getCurrentRevision().getHeading(),
-                                posting.getId(), posting.getCurrentRevision().getHeading(), reaction.getOwnerName(),
-                                reaction.getOwnerFullName(),
-                                new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
-                                reaction.isNegative(), reaction.getEmoji()));
-            }
-        }
-    }
-
-    private void notifyDeleted(Posting posting, Reaction reaction) {
-        if (posting.getParentMedia() == null) {
-            requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
-                    new PostingReactionDeletedNotification(null, null, null,
-                            posting.getId(), reaction.getOwnerName(), reaction.getOwnerFullName(),
-                            new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
-                            reaction.isNegative()));
-        } else {
-            Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
-            for (Entry entry : entries) {
-                UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
-                UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
-                        new PostingReactionDeletedNotification(parentPostingId, parentCommentId,
-                                posting.getParentMedia().getId(), posting.getId(), reaction.getOwnerName(),
-                                reaction.getOwnerFullName(),
-                                new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape()),
-                                reaction.isNegative()));
-            }
-        }
     }
 
     private ResponseEntity<ReactionCreated> postToPickedAtHome(ReactionDescription reactionDescription,
@@ -256,31 +196,9 @@ public class PostingReactionController {
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(postingId);
 
-        requestContext.send(new PostingReactionsChangedEvent(posting));
-        var totalsInfo = reactionTotalOperations.getInfo(posting);
-        notifyDeletedAll(posting, totalsInfo);
+        requestContext.send(new PostingReactionsDeletedAllLiberin(posting));
 
         return Result.OK;
-    }
-
-    private void notifyDeletedAll(Posting posting, ReactionTotalOperations.ReactionTotalsData totalsInfo) {
-        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
-
-        if (posting.getParentMedia() == null) {
-            requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
-                    new PostingReactionDeletedAllNotification(null, null, null,
-                            posting.getId()));
-        } else {
-            Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
-            for (Entry entry : entries) {
-                UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
-                UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                requestContext.send(Directions.single(requestContext.nodeId(), posting.getOwnerName()),
-                        new PostingReactionDeletedAllNotification(parentPostingId, parentCommentId,
-                                posting.getParentMedia().getId(), posting.getId()));
-            }
-        }
     }
 
     @DeleteMapping("/{ownerName}")
@@ -306,12 +224,13 @@ public class PostingReactionController {
     }
 
     private ReactionTotalsInfo deleteFromOriginal(String ownerName, Posting posting) {
-        reactionOperations.delete(ownerName, posting, r -> notifyDeleted(posting, r));
+        var liberin = new PostingReactionDeletedLiberin(posting);
 
-        requestContext.send(new PostingReactionsChangedEvent(posting));
+        reactionOperations.delete(ownerName, posting, liberin::setReaction);
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
+
+        liberin.setReactionTotals(totalsInfo.getPublicInfo());
+        requestContext.send(liberin);
 
         return totalsInfo.getClientInfo();
     }
