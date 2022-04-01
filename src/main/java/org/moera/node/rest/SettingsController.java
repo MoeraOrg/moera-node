@@ -17,18 +17,17 @@ import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.OptionDefault;
 import org.moera.node.data.OptionDefaultRepository;
 import org.moera.node.domain.Domains;
-import org.moera.node.event.EventManager;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.NodeSettingsMetadataChangedLiberin;
+import org.moera.node.liberin.model.SettingsChangedLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SettingInfo;
 import org.moera.node.model.SettingMetaAttributes;
 import org.moera.node.model.SettingMetaInfo;
-import org.moera.node.model.event.ClientSettingsChangedEvent;
-import org.moera.node.model.event.NodeSettingsChangedEvent;
-import org.moera.node.model.event.NodeSettingsMetaChangedEvent;
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.option.type.OptionTypeBase;
@@ -65,7 +64,7 @@ public class SettingsController {
     private PlatformTransactionManager txManager;
 
     @Inject
-    private EventManager eventManager;
+    private LiberinManager liberinManager;
 
     private List<SettingInfo> getOptions(Predicate<String> nameFilter) {
         List<SettingInfo> list = new ArrayList<>();
@@ -160,8 +159,7 @@ public class SettingsController {
                     .map(domains::getDomainOptions)
                     .forEach(options -> {
                         options.reload();
-                        eventManager.send(options.nodeId(), new NodeSettingsMetaChangedEvent());
-                        eventManager.send(options.nodeId(), new NodeSettingsChangedEvent());
+                        liberinManager.send(new NodeSettingsMetadataChangedLiberin(options.nodeId()));
                     });
         }
 
@@ -175,7 +173,7 @@ public class SettingsController {
 
         AtomicBoolean nodeChanged = new AtomicBoolean(false);
         AtomicBoolean clientChanged = new AtomicBoolean(false);
-        requestContext.getOptions().runInTransaction(options -> {
+        requestContext.getOptions().runInTransaction(options ->
             settings.forEach(setting -> {
                 OptionDescriptor descriptor = optionsMetadata.getDescriptor(setting.getName());
                 if (descriptor == null) {
@@ -198,15 +196,10 @@ public class SettingsController {
                 } else {
                     nodeChanged.set(true);
                 }
-            });
-        });
+            })
+        );
 
-        if (nodeChanged.get()) {
-            requestContext.send(new NodeSettingsChangedEvent());
-        }
-        if (clientChanged.get()) {
-            requestContext.send(new ClientSettingsChangedEvent());
-        }
+        requestContext.send(new SettingsChangedLiberin(nodeChanged.get(), clientChanged.get()));
 
         return Result.OK;
     }
