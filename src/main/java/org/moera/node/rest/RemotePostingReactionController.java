@@ -16,10 +16,10 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.RemotePostingReactionDeletedLiberin;
 import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
-import org.moera.node.model.event.RemoteReactionDeletedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingReactionPostTask;
 import org.moera.node.rest.task.RemoteReactionVerifyTask;
@@ -92,7 +92,7 @@ public class RemotePostingReactionController {
         if (ownReaction != null) {
             ownReactionRepository.delete(ownReaction);
             contactOperations.updateCloseness(nodeName, -0.25f);
-            requestContext.send(new RemoteReactionDeletedEvent(nodeName, postingId));
+            requestContext.send(new RemotePostingReactionDeletedLiberin(nodeName, postingId));
         }
 
         return Result.OK;
