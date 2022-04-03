@@ -17,13 +17,14 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.QSubscriber;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.instant.SubscriberInstants;
+import org.moera.node.liberin.model.SubscriberAddedLiberin;
+import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -31,15 +32,9 @@ import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.PeopleChangedEvent;
-import org.moera.node.model.event.SubscriberAddedEvent;
-import org.moera.node.model.event.SubscriberDeletedEvent;
-import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.rest.task.RemoteAvatarDownloadTask;
 import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
 import org.moera.node.task.TaskAutowire;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -65,9 +60,6 @@ public class SubscriberController {
 
     @Inject
     private SubscriberRepository subscriberRepository;
-
-    @Inject
-    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private PostingRepository postingRepository;
@@ -154,15 +146,6 @@ public class SubscriberController {
                     requestContext.nodeId(), subscriberDescription.getPostingId())
                     .orElseThrow(() -> new ValidationFailure("subscriberDescription.postingId.not-found"));
             subscriber.setEntry(posting);
-
-            if (subscriber.getSubscriptionType() == SubscriptionType.POSTING) {
-                if (!Util.toEpochSecond(posting.getEditedAt()).equals(subscriberDescription.getLastUpdatedAt())) {
-                    PostingUpdatedNotification notification = new PostingUpdatedNotification(posting.getId());
-                    notification.setSubscriberId(subscriber.getId().toString());
-                    notification.setSubscriptionCreatedAt(Util.now());
-                    requestContext.send(Directions.single(requestContext.nodeId(), ownerName), notification);
-                }
-            }
         }
         subscriber = subscriberRepository.save(subscriber);
 
@@ -179,8 +162,7 @@ public class SubscriberController {
         }
 
         subscriberInstants.added(subscriber);
-        requestContext.send(new SubscriberAddedEvent(subscriber));
-        sendPeopleChangedEvent();
+        requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
 
         return new SubscriberInfo(subscriber);
     }
@@ -252,16 +234,9 @@ public class SubscriberController {
         }
 
         subscriberInstants.deleted(subscriber);
-        requestContext.send(new SubscriberDeletedEvent(subscriber));
-        sendPeopleChangedEvent();
+        requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
         return Result.OK;
-    }
-
-    private void sendPeopleChangedEvent() {
-        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
-        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
-        requestContext.send(new PeopleChangedEvent(subscribersTotal, subscriptionsTotal));
     }
 
 }

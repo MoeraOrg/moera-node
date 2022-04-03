@@ -14,7 +14,6 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QSubscription;
-import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
@@ -22,6 +21,8 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.SubscriptionAddedLiberin;
+import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -31,9 +32,6 @@ import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.PeopleChangedEvent;
-import org.moera.node.model.event.SubscriptionAddedEvent;
-import org.moera.node.model.event.SubscriptionDeletedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemoteAvatarDownloadTask;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
@@ -60,9 +58,6 @@ public class SubscriptionController {
 
     @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private SubscriberRepository subscriberRepository;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
@@ -156,8 +151,8 @@ public class SubscriptionController {
         } else {
             contactOperations.updateCloseness(subscription.getRemoteNodeName(), 1);
         }
-        requestContext.send(new SubscriptionAddedEvent(subscription));
-        sendPeopleChangedEvent();
+
+        requestContext.send(new SubscriptionAddedLiberin(subscription));
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             var fetchTask = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
@@ -205,8 +200,8 @@ public class SubscriptionController {
                 taskExecutor.execute(profileTask);
             }
         }
-        requestContext.send(new SubscriptionDeletedEvent(subscription));
-        sendPeopleChangedEvent();
+
+        requestContext.send(new SubscriptionDeletedLiberin(subscription));
 
         return Result.OK;
     }
@@ -231,12 +226,6 @@ public class SubscriptionController {
                 .filter(r -> filter.getPostings().contains(r.getRemotePosting()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
-    }
-
-    private void sendPeopleChangedEvent() {
-        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
-        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
-        requestContext.send(new PeopleChangedEvent(subscribersTotal, subscriptionsTotal));
     }
 
 }
