@@ -10,7 +10,6 @@ import javax.inject.Inject;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.mail.Mail;
 import org.moera.node.model.event.Event;
 import org.moera.node.notification.send.DirectedNotification;
 import org.moera.node.option.Options;
@@ -38,7 +37,6 @@ public class RequestContextImpl implements RequestContext {
     private final List<Liberin> afterCommitLiberins = new ArrayList<>();
     private final List<Event> afterCommitEvents = new ArrayList<>();
     private final List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
-    private final List<Mail> afterCommitMails = new ArrayList<>();
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -243,16 +241,6 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public List<DirectedNotification> getAfterCommitNotifications() {
         return afterCommitNotifications;
-    }
-
-    @Override
-    public void send(Mail mail) {
-        afterCommitMails.add(mail);
-    }
-
-    @Override
-    public List<Mail> getAfterCommitMails() {
-        return afterCommitMails;
     }
 
 }

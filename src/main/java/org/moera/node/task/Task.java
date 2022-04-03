@@ -85,6 +85,7 @@ public abstract class Task implements Runnable {
         return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName);
     }
 
+    @Deprecated
     protected void send(Event event) {
         universalContext.send(event);
     }

@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.LiberinManager;
-import org.moera.node.mail.MailService;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -26,9 +25,6 @@ public class AfterCommitEventsInterceptor implements HandlerInterceptor {
     @Inject
     private NotificationSenderPool notificationSenderPool;
 
-    @Inject
-    private MailService mailService;
-
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
@@ -43,7 +39,6 @@ public class AfterCommitEventsInterceptor implements HandlerInterceptor {
             );
             requestContext.getAfterCommitNotifications().forEach(
                     dn -> notificationSenderPool.send(dn.getDirection(), dn.getNotification()));
-            requestContext.getAfterCommitMails().forEach(mail -> mailService.send(requestContext.nodeId(), mail));
         }
     }
 
