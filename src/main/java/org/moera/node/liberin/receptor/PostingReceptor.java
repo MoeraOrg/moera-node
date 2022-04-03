@@ -98,11 +98,6 @@ public class PostingReceptor extends LiberinReceptorBase {
         Set<String> latestMentions = latest != null && latest.getSignature() != null
                 ? MentionsExtractor.extract(new Body(latest.getBody()))
                 : Collections.emptySet();
-        notifyMentioned(liberin, postingId, currentHeading, currentMentions, latestMentions, ownerName);
-    }
-
-    private void notifyMentioned(Liberin liberin, UUID postingId, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions, String ownerName) {
         currentMentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
