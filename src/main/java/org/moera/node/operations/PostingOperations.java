@@ -6,12 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -35,27 +31,18 @@ import org.moera.node.data.Story;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
-import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.model.body.Body;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.PostingDeletedLiberin;
+import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.PostingDeletedEvent;
-import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.notification.MentionPostingAddedNotification;
-import org.moera.node.model.notification.MentionPostingDeletedNotification;
-import org.moera.node.model.notification.PostingDeletedNotification;
-import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.notification.send.DirectedNotification;
-import org.moera.node.notification.send.Directions;
-import org.moera.node.notification.send.NotificationConsumer;
-import org.moera.node.notification.send.NotificationSenderPool;
+import org.moera.node.model.body.Body;
 import org.moera.node.option.Options;
 import org.moera.node.text.MediaExtractor;
-import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -102,10 +89,7 @@ public class PostingOperations {
     private TimelinePublicPageOperations timelinePublicPageOperations;
 
     @Inject
-    private EventManager eventManager;
-
-    @Inject
-    private NotificationSenderPool notificationSenderPool;
+    private LiberinManager liberinManager;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -169,7 +153,6 @@ public class PostingOperations {
                 posting.setTotalRevisions(posting.getTotalRevisions() - 1);
                 posting.setCurrentRevision(null);
                 entryRevisionRepository.delete(latest);
-                latest = null;
             }
         }
 
@@ -206,8 +189,6 @@ public class PostingOperations {
         if (timelineStory != null) {
             timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
         }
-
-        notifyMentioned(posting.getId(), posting.getCurrentRevision(), latest, posting.getOwnerName());
 
         return posting;
     }
@@ -262,39 +243,11 @@ public class PostingOperations {
         return revision;
     }
 
-    private void notifyMentioned(UUID postingId, EntryRevision current, EntryRevision latest, String ownerName) {
-        Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
-        Set<String> latestMentions = latest != null
-                ? MentionsExtractor.extract(new Body(latest.getBody()))
-                : Collections.emptySet();
-        notifyMentioned(requestContext.nodeId(), postingId, current.getHeading(), currentMentions, latestMentions,
-                ownerName, requestContext);
-    }
-
-    private void notifyMentioned(UUID nodeId, UUID postingId, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions, String ownerName, NotificationConsumer notificationSender) {
-        currentMentions.stream()
-                .filter(m -> !Objects.equals(ownerName, m))
-                .filter(m -> !m.equals(":"))
-                .filter(m -> !latestMentions.contains(m))
-                .map(m -> Directions.single(nodeId, m))
-                .forEach(d -> notificationSender.send(d,
-                        new MentionPostingAddedNotification(postingId, currentHeading)));
-        latestMentions.stream()
-                .filter(m -> !Objects.equals(ownerName, m))
-                .filter(m -> !m.equals(":"))
-                .filter(m -> !currentMentions.contains(m))
-                .map(m -> Directions.single(nodeId, m))
-                .forEach(d -> notificationSender.send(d,
-                        new MentionPostingDeletedNotification(postingId)));
-    }
-
     public void deletePosting(Posting posting, boolean unsubscribe) {
-        deletePosting(posting, unsubscribe, requestContext.getOptions(), requestContext::send, requestContext);
+        deletePosting(posting, unsubscribe, requestContext.getOptions());
     }
 
-    private void deletePosting(Posting posting, boolean unsubscribe, Options options, Consumer<Event> eventSender,
-                               NotificationConsumer notificationSender) {
+    private void deletePosting(Posting posting, boolean unsubscribe, Options options) {
         posting.setDeletedAt(Util.now());
         ExtendedDuration postingTtl = options.getDuration("posting.deleted.lifetime");
         if (!postingTtl.isNever()) {
@@ -303,64 +256,46 @@ public class PostingOperations {
 
         if (posting.getCurrentRevision() != null) {
             posting.getCurrentRevision().setDeletedAt(Util.now());
-
-            if (posting.isOriginal()) {
-                Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));
-                notifyMentioned(posting.getNodeId(), posting.getId(), null, Collections.emptySet(),
-                        latestMentions, options.nodeName(), notificationSender);
-            }
         }
         if (!posting.isOriginal() && unsubscribe) {
             subscriptionRepository.deleteByTypeAndNodeAndEntryId(options.nodeId(), SubscriptionType.POSTING,
                     posting.getReceiverName(), posting.getReceiverEntryId());
         }
-
-        eventSender.accept(new PostingDeletedEvent(posting));
-        notificationSender.send(
-                Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                new PostingDeletedNotification(posting.getId()));
     }
 
     @Scheduled(fixedDelayString = "PT1H")
     public void purgeUnlinked() throws Throwable {
         for (String domainName : domains.getAllDomainNames()) {
             Options options = domains.getDomainOptions(domainName);
-            List<Event> eventList = new ArrayList<>();
-            List<DirectedNotification> notificationList = new ArrayList<>();
+            List<Liberin> liberinList = new ArrayList<>();
             Transaction.execute(txManager, () -> {
                 postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
                     log.info("Deleting unlinked posting {}", posting.getId());
-                    deletePosting(posting, true, options, eventList::add, notificationList::add);
+                    EntryRevision latest = posting.getCurrentRevision();
+                    deletePosting(posting, true, options);
+                    liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
                 });
                 return null;
             });
-            eventList.forEach(event -> eventManager.send(options.nodeId(), event));
-            notificationList.forEach(notificationSenderPool::send);
+            liberinList.forEach(liberinManager::send);
         }
     }
 
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() throws Throwable {
-        Map<UUID, List<Event>> events = new HashMap<>();
-        List<DirectedNotification> notifications = new ArrayList<>();
+        List<Liberin> liberins = new ArrayList<>();
 
         Transaction.execute(txManager, () -> {
             List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
             for (Posting posting : postings) {
                 universalContext.associate(posting.getNodeId());
-                List<Event> eventList = events.computeIfAbsent(posting.getNodeId(), id -> new ArrayList<>());
-                Set<String> latestMentions = MentionsExtractor.extract(new Body(posting.getCurrentRevision().getBody()));
-                Set<String> currentMentions = Collections.emptySet();
-                String currentHeading = null;
+                EntryRevision latest = posting.getCurrentRevision();
                 if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
                     log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
-                    storyOperations.unpublish(posting.getId(), posting.getNodeId(), eventList::add);
+                    storyOperations.unpublish(posting.getId(), posting.getNodeId(), liberins::add);
                     postingRepository.delete(posting);
 
-                    eventList.add(new PostingDeletedEvent(posting));
-                    notifications.add(new DirectedNotification(
-                            Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                            new PostingDeletedNotification(posting.getId())));
+                    liberins.add(new PostingDeletedLiberin(posting, latest).withNodeId(posting.getNodeId()));
                 } else {
                     EntryRevision revision = posting.getRevisions().stream()
                             .min(Comparator.comparing(EntryRevision::getCreatedAt))
@@ -370,28 +305,16 @@ public class PostingOperations {
                         entryRevisionRepository.delete(posting.getCurrentRevision());
                         posting.setCurrentRevision(revision);
                         posting.setTotalRevisions(posting.getTotalRevisions() - 1);
-                        currentMentions = MentionsExtractor.extract(new Body(revision.getBody()));
-                        currentHeading = revision.getHeading();
 
-                        eventList.add(new PostingUpdatedEvent(posting));
-                        notifications.add(new DirectedNotification(
-                                Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                                new PostingUpdatedNotification(posting.getId())));
+                        liberins.add(new PostingUpdatedLiberin(posting, latest).withNodeId(posting.getNodeId()));
                     }
-                }
-                if (posting.isOriginal()) {
-                    notifyMentioned(posting.getNodeId(), posting.getId(), currentHeading, currentMentions,
-                            latestMentions, posting.getOwnerName(), notifications::add);
                 }
             }
 
             return null;
         });
 
-        for (var e : events.entrySet()) {
-            e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
-        }
-        notifications.forEach(notificationSenderPool::send);
+        liberins.forEach(liberinManager::send);
     }
 
 }

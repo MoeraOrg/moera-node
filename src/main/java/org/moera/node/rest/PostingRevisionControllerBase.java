@@ -58,7 +58,7 @@ public abstract class PostingRevisionControllerBase {
 
     protected abstract EntryRevision findRevision(UUID postingId, UUID id);
 
-    protected abstract Liberin getRestorationLiberin(Posting posting);
+    protected abstract Liberin getRestorationLiberin(Posting posting, EntryRevision latest);
 
     @GetMapping
     @NoCache
@@ -124,6 +124,7 @@ public abstract class PostingRevisionControllerBase {
         if (posting.getDeletedAt() == null && posting.getCurrentRevision().getId().equals(id)) {
             throw new ValidationFailure("posting-revision.already-current");
         }
+        EntryRevision latest = posting.getCurrentRevision();
         EntryRevision revision = findRevision(postingId, id);
         if (revision == null) {
             throw new ObjectNotFoundFailure("posting-revision.not-found");
@@ -137,7 +138,7 @@ public abstract class PostingRevisionControllerBase {
         posting = postingOperations.createOrUpdatePosting(posting, revision, media, null, null,
                 null, null);
 
-        requestContext.send(getRestorationLiberin(posting));
+        requestContext.send(getRestorationLiberin(posting, latest));
 
         return new PostingRevisionInfo(revision, posting.getReceiverName(), true);
     }

@@ -40,7 +40,7 @@ public class DeletedPostingRevisionController extends PostingRevisionControllerB
     }
 
     @Override
-    protected Liberin getRestorationLiberin(Posting posting) {
+    protected Liberin getRestorationLiberin(Posting posting, EntryRevision latest) {
         return new PostingRestoredLiberin(posting);
     }
 

@@ -38,8 +38,8 @@ public class PostingRevisionController extends PostingRevisionControllerBase {
     }
 
     @Override
-    protected Liberin getRestorationLiberin(Posting posting) {
-        return new PostingUpdatedLiberin(posting);
+    protected Liberin getRestorationLiberin(Posting posting, EntryRevision latest) {
+        return new PostingUpdatedLiberin(posting, latest);
     }
 
 }

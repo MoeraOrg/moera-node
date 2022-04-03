@@ -2,6 +2,7 @@ package org.moera.node.notification.send;
 
 import org.moera.node.model.notification.Notification;
 
+@Deprecated
 public class DirectedNotification {
 
     private Direction direction;

@@ -19,6 +19,8 @@ import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.event.Event;
@@ -125,26 +127,11 @@ public class StoryOperations {
         unpublish(entryId, universalContext.nodeId(), universalContext::send);
     }
 
-    public void unpublish(UUID entryId, UUID nodeId, Consumer<Event> eventSender) {
-        Set<String> feedNames = new HashSet<>();
+    public void unpublish(UUID entryId, UUID nodeId, Consumer<Liberin> liberinSender) {
         storyRepository.findByEntryId(nodeId, entryId).stream()
                 .filter(story -> story.getFeedName() != null)
-                .forEach(story -> {
-                    if (!Feed.isAdmin(story.getFeedName())) {
-                        eventSender.accept(new StoryDeletedEvent(story, false));
-                    }
-                    eventSender.accept(new StoryDeletedEvent(story, true));
-                    feedNames.add(story.getFeedName());
-                });
+                .forEach(story -> liberinSender.accept(new StoryDeletedLiberin(story)));
         storyRepository.deleteByEntryId(nodeId, entryId);
-        for (String feedName : feedNames) {
-            FeedStatus feedStatus = getFeedStatus(feedName, true);
-            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
-            if (!Feed.isAdmin(feedName)) {
-                eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
-            }
-            pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
-        }
     }
 
     @Scheduled(fixedDelayString = "P1D")

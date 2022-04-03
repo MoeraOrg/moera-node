@@ -21,6 +21,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.EntryAttachmentRepository;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.OwnReaction;
@@ -42,6 +43,7 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.PostingAddedLiberin;
+import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfo;
@@ -188,6 +190,7 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        EntryRevision latest = posting.getCurrentRevision();
         if (!posting.isOriginal()) {
             throw new ValidationFailure("posting.not-original");
         }
@@ -218,7 +221,7 @@ public class PostingController {
             throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
         }
 
-        requestContext.send(new PostingUpdatedLiberin(posting));
+        requestContext.send(new PostingUpdatedLiberin(posting, latest));
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
     }
@@ -310,9 +313,12 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        EntryRevision latest = posting.getCurrentRevision();
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingOperations.deletePosting(posting, true);
         storyOperations.unpublish(posting.getId());
+
+        requestContext.send(new PostingDeletedLiberin(posting, latest));
 
         return Result.OK;
     }

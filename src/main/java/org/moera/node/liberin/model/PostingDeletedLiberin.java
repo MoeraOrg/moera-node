@@ -4,12 +4,12 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
 
-public class PostingUpdatedLiberin extends Liberin {
+public class PostingDeletedLiberin extends Liberin {
 
     private Posting posting;
     private EntryRevision latestRevision;
 
-    public PostingUpdatedLiberin(Posting posting, EntryRevision latestRevision) {
+    public PostingDeletedLiberin(Posting posting, EntryRevision latestRevision) {
         this.posting = posting;
         this.latestRevision = latestRevision;
     }

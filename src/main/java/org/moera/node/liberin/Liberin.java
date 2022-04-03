@@ -18,6 +18,11 @@ public class Liberin {
         this.nodeId = nodeId;
     }
 
+    public Liberin withNodeId(UUID nodeId) {
+        setNodeId(nodeId);
+        return this;
+    }
+
     public String getClientId() {
         return clientId;
     }
