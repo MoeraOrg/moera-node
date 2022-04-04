@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.Liberin;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.naming.NodeName;
@@ -33,6 +34,11 @@ public class InstantsCreator {
         return universalContext.nodeName();
     }
 
+    protected void send(Liberin liberin) {
+        universalContext.send(liberin);
+    }
+
+    @Deprecated
     protected void send(Event event) {
         universalContext.send(event);
     }
@@ -46,11 +52,13 @@ public class InstantsCreator {
                 storyOperations.getFeedStatus(Feed.INSTANT, nodeId(), true), true));
     }
 
+    @Deprecated
     protected void sendPush(Story story) {
         PushContent content = PushContent.storyAdded(story);
         pushService.send(nodeId(), content);
     }
 
+    @Deprecated
     protected void deletePush(UUID id) {
         PushContent content = PushContent.storyDeleted(id);
         pushService.send(nodeId(), content);
