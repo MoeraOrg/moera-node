@@ -1,8 +1,12 @@
 package org.moera.node.liberin.receptor;
 
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import org.moera.node.data.Comment;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
@@ -11,14 +15,20 @@ import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.body.Body;
 import org.moera.node.model.event.CommentAddedEvent;
 import org.moera.node.model.event.CommentDeletedEvent;
 import org.moera.node.model.event.CommentUpdatedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
+import org.moera.node.model.notification.MentionCommentAddedNotification;
+import org.moera.node.model.notification.MentionCommentDeletedNotification;
 import org.moera.node.model.notification.PostingCommentAddedNotification;
 import org.moera.node.model.notification.PostingCommentDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
+import org.moera.node.model.notification.ReplyCommentAddedNotification;
+import org.moera.node.model.notification.ReplyCommentDeletedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.text.MentionsExtractor;
 
 @LiberinReceptor
 public class CommentReceptor extends LiberinReceptorBase {
@@ -37,6 +47,11 @@ public class CommentReceptor extends LiberinReceptorBase {
                             comment.getCurrentRevision().getHeading(), repliedToId));
         }
 
+        notifyReplyAdded(posting, comment);
+        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
+                comment.getCurrentRevision(), null);
+
         send(liberin, new CommentAddedEvent(comment));
         send(liberin, new PostingCommentsChangedEvent(posting));
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
@@ -46,13 +61,18 @@ public class CommentReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void updated(CommentUpdatedLiberin liberin) {
         Comment comment = liberin.getComment();
-        UUID postingId = comment.getPosting().getId();
+        Posting posting = comment.getPosting();
+
+        notifyReplyAdded(posting, comment);
+        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
+                comment.getCurrentRevision(), liberin.getLatestRevision());
 
         if (comment.getCurrentRevision().getSignature() != null) {
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            send(Directions.postingCommentsSubscribers(comment.getNodeId(), postingId),
-                    new PostingCommentAddedNotification(postingId,
-                            comment.getPosting().getCurrentRevision().getHeading(), comment.getId(),
+            send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId()),
+                    new PostingCommentAddedNotification(posting.getId(),
+                            posting.getCurrentRevision().getHeading(), comment.getId(),
                             comment.getOwnerName(), comment.getOwnerFullName(),
                             new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                             comment.getCurrentRevision().getHeading(), repliedToId));
@@ -64,13 +84,71 @@ public class CommentReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void deleted(CommentDeletedLiberin liberin) {
         Comment comment = liberin.getComment();
-        UUID postingId = comment.getPosting().getId();
+        Posting posting = comment.getPosting();
 
-        send(Directions.postingCommentsSubscribers(comment.getNodeId(), postingId),
-                new PostingCommentDeletedNotification(postingId, comment.getId(), comment.getOwnerName(),
+        notifyReplyDeleted(posting, comment);
+        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()), null,
+                liberin.getLatestRevision());
+
+        send(Directions.postingSubscribers(comment.getNodeId(), posting.getId()),
+                new PostingCommentsUpdatedNotification(
+                        posting.getId(), posting.getTotalChildren()));
+        send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId()),
+                new PostingCommentDeletedNotification(posting.getId(), comment.getId(), comment.getOwnerName(),
                         comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
+
         send(liberin, new CommentDeletedEvent(comment));
+        send(liberin, new PostingCommentsChangedEvent(posting));
+    }
+
+    private void notifyReplyAdded(Posting posting, Comment comment) {
+        if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null
+                || comment.getRevisions().size() > 1) {
+            return;
+        }
+        send(Directions.single(comment.getNodeId(), comment.getRepliedToName()),
+                new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
+                        posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
+                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
+                        comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
+    }
+
+    private void notifyReplyDeleted(Posting posting, Comment comment) {
+        if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null) {
+            return;
+        }
+        send(Directions.single(comment.getNodeId(), comment.getRepliedToName()),
+                new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
+                        comment.getOwnerName(), comment.getOwnerFullName(),
+                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
+    }
+
+    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
+                                 AvatarImage ownerAvatar, EntryRevision current, EntryRevision latest) {
+        String currentHeading = current != null ? current.getHeading() : null;
+        Set<String> currentMentions = current != null
+                ? MentionsExtractor.extract(new Body(current.getBody()))
+                : Collections.emptySet();
+        Set<String> latestMentions = latest != null
+                ? MentionsExtractor.extract(new Body(latest.getBody()))
+                : Collections.emptySet();
+        currentMentions.stream()
+                .filter(m -> !Objects.equals(ownerName, m))
+                .filter(m -> !m.equals(":"))
+                .filter(m -> !latestMentions.contains(m))
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d -> send(d,
+                        new MentionCommentAddedNotification(posting.getId(), commentId,
+                                posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, ownerAvatar,
+                                currentHeading)));
+        latestMentions.stream()
+                .filter(m -> !Objects.equals(ownerName, m))
+                .filter(m -> !m.equals(":"))
+                .filter(m -> !currentMentions.contains(m))
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d -> send(d, new MentionCommentDeletedNotification(posting.getId(), commentId)));
     }
 
 }

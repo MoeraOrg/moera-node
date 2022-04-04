@@ -26,6 +26,7 @@ import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryAttachmentRepository;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Posting;
@@ -203,6 +204,7 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        EntryRevision latest = comment.getCurrentRevision();
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -237,7 +239,7 @@ public class CommentController {
             commentInstants.added(comment);
         }
 
-        requestContext.send(new CommentUpdatedLiberin(comment));
+        requestContext.send(new CommentUpdatedLiberin(comment, latest));
 
         return withSeniorReaction(withClientReaction(new CommentInfo(comment, true)),
                 comment.getPosting().getOwnerName());
@@ -437,6 +439,7 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        EntryRevision latest = comment.getCurrentRevision();
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -454,7 +457,7 @@ public class CommentController {
         }
         commentInstants.deleted(comment);
 
-        requestContext.send(new CommentDeletedLiberin(comment));
+        requestContext.send(new CommentDeletedLiberin(comment, latest));
 
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());
     }

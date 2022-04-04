@@ -6,12 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -29,27 +25,15 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
-import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.body.Body;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.CommentDeletedLiberin;
+import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.model.CommentText;
-import org.moera.node.model.event.CommentDeletedEvent;
-import org.moera.node.model.event.CommentUpdatedEvent;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.PostingCommentsChangedEvent;
-import org.moera.node.model.notification.MentionCommentAddedNotification;
-import org.moera.node.model.notification.MentionCommentDeletedNotification;
-import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
-import org.moera.node.model.notification.ReplyCommentAddedNotification;
-import org.moera.node.model.notification.ReplyCommentDeletedNotification;
-import org.moera.node.notification.send.DirectedNotification;
-import org.moera.node.notification.send.Directions;
-import org.moera.node.notification.send.NotificationConsumer;
-import org.moera.node.notification.send.NotificationSenderPool;
+import org.moera.node.model.body.Body;
 import org.moera.node.text.MediaExtractor;
-import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Transaction;
@@ -87,10 +71,7 @@ public class CommentOperations {
     private PlatformTransactionManager txManager;
 
     @Inject
-    private EventManager eventManager;
-
-    @Inject
-    private NotificationSenderPool notificationSenderPool;
+    private LiberinManager liberinManager;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
@@ -151,7 +132,6 @@ public class CommentOperations {
                 comment.setTotalRevisions(comment.getTotalRevisions() - 1);
                 comment.setCurrentRevision(null);
                 entryRevisionRepository.delete(latest);
-                latest = null;
             }
         }
 
@@ -184,9 +164,6 @@ public class CommentOperations {
         signIfOwned(comment);
 
         commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
-        notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()), current, latest);
 
         return comment;
     }
@@ -248,65 +225,6 @@ public class CommentOperations {
         return (ECPrivateKey) requestContext.getOptions().getPrivateKey("profile.signing-key");
     }
 
-    private void notifyReplyAdded(Posting posting, Comment comment) {
-        if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null
-                || comment.getRevisions().size() > 1) {
-            return;
-        }
-        requestContext.send(Directions.single(comment.getNodeId(), comment.getRepliedToName()),
-                new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
-                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                        comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
-    }
-
-    private void notifyReplyDeleted(Posting posting, Comment comment) {
-        if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null) {
-            return;
-        }
-        requestContext.send(Directions.single(comment.getNodeId(), comment.getRepliedToName()),
-                new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        comment.getOwnerName(), comment.getOwnerFullName(),
-                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
-    }
-
-    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
-                                 AvatarImage ownerAvatar, EntryRevision current, EntryRevision latest) {
-        Set<String> currentMentions = MentionsExtractor.extract(new Body(current.getBody()));
-        Set<String> latestMentions = latest != null
-                ? MentionsExtractor.extract(new Body(latest.getBody()))
-                : Collections.emptySet();
-        notifyMentioned(posting, commentId, ownerName, ownerFullName, ownerAvatar, current.getHeading(),
-                currentMentions, latestMentions, requestContext);
-    }
-
-    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
-                                 AvatarImage ownerAvatar, Set<String> currentMentions, Set<String> latestMentions) {
-        notifyMentioned(posting, commentId, ownerName, ownerFullName, ownerAvatar, null, currentMentions,
-                latestMentions, requestContext);
-    }
-
-    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
-                                 AvatarImage ownerAvatar, String currentHeading, Set<String> currentMentions,
-                                 Set<String> latestMentions, NotificationConsumer notificationSender) {
-        currentMentions.stream()
-                .filter(m -> !Objects.equals(ownerName, m))
-                .filter(m -> !m.equals(":"))
-                .filter(m -> !latestMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m))
-                .forEach(d -> notificationSender.send(d,
-                        new MentionCommentAddedNotification(posting.getId(), commentId,
-                                posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, ownerAvatar,
-                                currentHeading)));
-        latestMentions.stream()
-                .filter(m -> !Objects.equals(ownerName, m))
-                .filter(m -> !m.equals(":"))
-                .filter(m -> !currentMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m))
-                .forEach(d -> notificationSender.send(d,
-                        new MentionCommentDeletedNotification(posting.getId(), commentId)));
-    }
-
     public void deleteComment(Comment comment) {
         comment.setDeletedAt(Util.now());
         ExtendedDuration postingTtl = requestContext.getOptions().getDuration("comment.deleted.lifetime");
@@ -325,35 +243,17 @@ public class CommentOperations {
                     LogUtil.format(comment.getPosting().getId()),
                     LogUtil.format(comment.getId()));
         }
-
-        Set<String> latestMentions = MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()));
-        notifyReplyDeleted(comment.getPosting(), comment);
-        notifyMentioned(comment.getPosting(), comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                Collections.emptySet(), latestMentions);
-
-        requestContext.send(new CommentDeletedEvent(comment));
-        requestContext.send(new PostingCommentsChangedEvent(comment.getPosting()));
-        requestContext.send(Directions.postingSubscribers(comment.getNodeId(), comment.getPosting().getId()),
-                new PostingCommentsUpdatedNotification(
-                        comment.getPosting().getId(), comment.getPosting().getTotalChildren()));
     }
 
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() throws Throwable {
-        Map<UUID, List<Event>> events = new HashMap<>();
-        List<DirectedNotification> notifications = new ArrayList<>();
+        List<Liberin> liberins = new ArrayList<>();
 
         Transaction.execute(txManager, () -> {
             List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
             comments.addAll(commentRepository.findExpired(Util.now()));
             for (Comment comment : comments) {
-                List<Event> eventList = events.computeIfAbsent(comment.getNodeId(), id -> new ArrayList<>());
-                Set<String> latestMentions = comment.getCurrentRevision() != null
-                        ? MentionsExtractor.extract(new Body(comment.getCurrentRevision().getBody()))
-                        : Collections.emptySet();
-                Set<String> currentMentions = Collections.emptySet();
-                String currentHeading = null;
+                EntryRevision latest = comment.getCurrentRevision();
                 Posting posting = comment.getPosting();
                 if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
                     if (comment.getDeletedAt() == null) {
@@ -365,11 +265,7 @@ public class CommentOperations {
                     }
                     commentRepository.delete(comment);
 
-                    eventList.add(new CommentDeletedEvent(comment));
-                    eventList.add(new PostingCommentsChangedEvent(posting));
-                    notifications.add(new DirectedNotification(
-                            Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                            new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren())));
+                    liberins.add(new CommentDeletedLiberin(comment, latest).withNodeId(posting.getNodeId()));
                 } else {
                     EntryRevision revision = comment.getRevisions().stream()
                             .min(Comparator.comparing(EntryRevision::getCreatedAt))
@@ -379,24 +275,16 @@ public class CommentOperations {
                         entryRevisionRepository.delete(comment.getCurrentRevision());
                         comment.setCurrentRevision(revision);
                         comment.setTotalRevisions(comment.getTotalRevisions() - 1);
-                        currentMentions = MentionsExtractor.extract(new Body(revision.getBody()));
-                        currentHeading = revision.getHeading();
 
-                        eventList.add(new CommentUpdatedEvent(comment));
+                        liberins.add(new CommentUpdatedLiberin(comment, latest).withNodeId(posting.getNodeId()));
                     }
                 }
-                notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                        currentHeading, currentMentions, latestMentions, notifications::add);
             }
 
             return null;
         });
 
-        for (var e : events.entrySet()) {
-            e.getValue().forEach(event -> eventManager.send(e.getKey(), event));
-        }
-        notifications.forEach(notificationSenderPool::send);
+        liberins.forEach(liberinManager::send);
     }
 
 }

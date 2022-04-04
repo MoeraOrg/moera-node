@@ -1,14 +1,17 @@
 package org.moera.node.liberin.model;
 
 import org.moera.node.data.Comment;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.liberin.Liberin;
 
 public class CommentUpdatedLiberin extends Liberin {
 
     private Comment comment;
+    private EntryRevision latestRevision;
 
-    public CommentUpdatedLiberin(Comment comment) {
+    public CommentUpdatedLiberin(Comment comment, EntryRevision latestRevision) {
         this.comment = comment;
+        this.latestRevision = latestRevision;
     }
 
     public Comment getComment() {
@@ -17,6 +20,14 @@ public class CommentUpdatedLiberin extends Liberin {
 
     public void setComment(Comment comment) {
         this.comment = comment;
+    }
+
+    public EntryRevision getLatestRevision() {
+        return latestRevision;
+    }
+
+    public void setLatestRevision(EntryRevision latestRevision) {
+        this.latestRevision = latestRevision;
     }
 
 }
