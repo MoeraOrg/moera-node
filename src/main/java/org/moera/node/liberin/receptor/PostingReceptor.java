@@ -12,18 +12,21 @@ import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.PostingAddedLiberin;
+import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.body.Body;
 import org.moera.node.model.event.PostingAddedEvent;
+import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
+import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.model.notification.PostingImportantUpdateNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
@@ -110,6 +113,15 @@ public class PostingReceptor extends LiberinReceptorBase {
                 .filter(m -> !currentMentions.contains(m))
                 .map(m -> Directions.single(liberin.getNodeId(), m))
                 .forEach(d -> send(d, new MentionPostingDeletedNotification(postingId)));
+    }
+
+    @LiberinMapping
+    public void commentTotalsUpdated(PostingCommentTotalsUpdatedLiberin liberin) {
+        Posting posting = liberin.getPosting();
+
+        send(liberin, new PostingCommentsChangedEvent(posting));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                new PostingCommentsUpdatedNotification(posting.getId(), liberin.getTotal()));
     }
 
 }

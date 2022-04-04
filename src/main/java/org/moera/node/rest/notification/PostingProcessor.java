@@ -12,9 +12,9 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
+import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.model.UnsubscribeFailure;
-import org.moera.node.model.event.PostingCommentsChangedEvent;
-import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
@@ -24,7 +24,6 @@ import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
-import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
@@ -127,9 +126,7 @@ public class PostingProcessor {
             if (!reactionTotalOperations.isSame(reactionTotals, notification.getTotals())) {
                 reactionTotalOperations.replaceAll(posting, notification.getTotals());
 
-                requestContext.send(new PostingReactionsChangedEvent(posting));
-                requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                        new PostingReactionsUpdatedNotification(posting.getId(), notification.getTotals()));
+                requestContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals()));
             }
         });
     }
@@ -143,9 +140,7 @@ public class PostingProcessor {
                         LogUtil.format(posting.getId()), LogUtil.format(notification.getTotal()));
                 posting.setTotalChildren(notification.getTotal());
 
-                requestContext.send(new PostingCommentsChangedEvent(posting));
-                requestContext.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                        new PostingCommentsUpdatedNotification(posting.getId(), notification.getTotal()));
+                requestContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal()));
             }
         });
     }

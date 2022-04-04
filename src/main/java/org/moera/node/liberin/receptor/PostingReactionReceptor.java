@@ -16,6 +16,7 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.PostingReactionAddedLiberin;
 import org.moera.node.liberin.model.PostingReactionDeletedLiberin;
+import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.ReactionTotalsInfo;
@@ -131,6 +132,15 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                 posting.getParentMedia().getId(), posting.getId()));
             }
         }
+    }
+
+    @LiberinMapping
+    public void totalsUpdated(PostingReactionTotalsUpdatedLiberin liberin) {
+        Posting posting = liberin.getPosting();
+
+        send(liberin, new PostingReactionsChangedEvent(posting));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+                new PostingReactionsUpdatedNotification(posting.getId(), liberin.getTotals()));
     }
 
 }
