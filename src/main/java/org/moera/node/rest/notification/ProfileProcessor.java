@@ -9,11 +9,11 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
+import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.UnsubscribeFailure;
-import org.moera.node.model.event.RemoteNodeAvatarChangedEvent;
-import org.moera.node.model.event.RemoteNodeFullNameChangedEvent;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
@@ -70,7 +70,7 @@ public class ProfileProcessor {
         } catch (Throwable e) {
             log.error("Error saving the full name: {}", e.getMessage());
         }
-        universalContext.send(new RemoteNodeFullNameChangedEvent(notification.getSenderNodeName(),
+        universalContext.send(new RemoteNodeFullNameChangedLiberin(notification.getSenderNodeName(),
                 notification.getSenderFullName()));
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
@@ -90,7 +90,7 @@ public class ProfileProcessor {
                 contactRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
                 return null;
             });
-            universalContext.send(new RemoteNodeAvatarChangedEvent(nodeName, new AvatarImage(mediaFile, shape)));
+            universalContext.send(new RemoteNodeAvatarChangedLiberin(nodeName, new AvatarImage(mediaFile, shape)));
         } catch (Throwable e) {
             log.error("Error saving the downloaded avatar: {}", e.getMessage());
         }

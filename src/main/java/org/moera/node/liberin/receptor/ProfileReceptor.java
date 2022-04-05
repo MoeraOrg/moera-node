@@ -5,6 +5,7 @@ import java.util.Objects;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.mail.EmailConfirmMail;
 import org.moera.node.model.event.NodeNameChangedEvent;
@@ -23,6 +24,11 @@ public class ProfileReceptor extends LiberinReceptorBase {
         if (!Objects.equals(liberin.getOptions().getString("profile.email"), liberin.getOldEmail())) {
             send(liberin, new EmailConfirmMail());
         }
+    }
+
+    @LiberinMapping
+    public void nodeNameChanged(NodeNameChangedLiberin liberin) {
+        send(liberin, new NodeNameChangedEvent("", liberin.getOptions(), liberin.getAvatar()));
     }
 
 }
