@@ -4,9 +4,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -17,18 +15,13 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
-import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.StoryAttributes;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
-import org.moera.node.push.PushContent;
-import org.moera.node.push.PushService;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -51,10 +44,7 @@ public class StoryOperations {
     private StoryRepository storyRepository;
 
     @Inject
-    private EventManager eventManager;
-
-    @Inject
-    private PushService pushService;
+    private LiberinManager liberinManager;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -75,11 +65,11 @@ public class StoryOperations {
         publish(posting, publications, universalContext.nodeId(), universalContext::send);
     }
 
-    public void publish(Entry posting, List<StoryAttributes> publications, UUID nodeId, Consumer<Event> eventSender) {
+    public void publish(Entry posting, List<StoryAttributes> publications, UUID nodeId,
+                        Consumer<Liberin> liberinSender) {
         if (publications == null) {
             return;
         }
-        Set<String> feedNames = new HashSet<>();
         for (StoryAttributes publication : publications) {
             Story story = new Story(UUID.randomUUID(), nodeId, StoryType.POSTING_ADDED);
             story.setEntry(posting);
@@ -88,19 +78,8 @@ public class StoryOperations {
             updateMoment(story, nodeId);
             story = storyRepository.saveAndFlush(story);
             posting.addStory(story);
-            if (!Feed.isAdmin(story.getFeedName())) {
-                eventSender.accept(new StoryAddedEvent(story, false));
-            }
-            eventSender.accept(new StoryAddedEvent(story, true));
-            feedNames.add(story.getFeedName());
-        }
-        for (String feedName : feedNames) {
-            FeedStatus feedStatus = getFeedStatus(feedName, nodeId, true);
-            eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus, true));
-            if (!Feed.isAdmin(feedName)) {
-                eventSender.accept(new FeedStatusUpdatedEvent(feedName, feedStatus.notAdmin(), false));
-            }
-            pushService.send(nodeId, PushContent.feedUpdated(feedName, feedStatus));
+
+            liberinSender.accept(new StoryAddedLiberin(story).withNodeId(nodeId));
         }
     }
 
@@ -149,7 +128,7 @@ public class StoryOperations {
                               boolean viewed, boolean purgePinned) throws Throwable {
         Duration lifetime = domains.getDomainOptions(domainName).getDuration(optionName).getDuration();
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
-        List<Event> events = new ArrayList<>();
+        List<Liberin> liberins = new ArrayList<>();
         Transaction.execute(txManager, () -> {
             List<Story> stories = viewed
                 ? storyRepository.findExpiredViewed(nodeId, feedName, createdBefore)
@@ -159,11 +138,11 @@ public class StoryOperations {
                     return;
                 }
                 storyRepository.delete(story);
-                events.add(new StoryDeletedEvent(story, true));
+                liberins.add(new StoryDeletedLiberin(story).withNodeId(nodeId));
             });
             return null;
         });
-        events.forEach(event -> eventManager.send(nodeId, event));
+        liberins.forEach(liberinManager::send);
     }
 
 }

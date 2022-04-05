@@ -4,16 +4,15 @@ import java.util.List;
 
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.StoryAttributes;
 
 public class PostingAddedLiberin extends Liberin {
 
     private Posting posting;
-    private List<StoryAttributes> publications;
+    private List<String> feeds;
 
-    public PostingAddedLiberin(Posting posting, List<StoryAttributes> publications) {
+    public PostingAddedLiberin(Posting posting, List<String> feeds) {
         this.posting = posting;
-        this.publications = publications;
+        this.feeds = feeds;
     }
 
     public Posting getPosting() {
@@ -24,12 +23,12 @@ public class PostingAddedLiberin extends Liberin {
         this.posting = posting;
     }
 
-    public List<StoryAttributes> getPublications() {
-        return publications;
+    public List<String> getFeeds() {
+        return feeds;
     }
 
-    public void setPublications(List<StoryAttributes> publications) {
-        this.publications = publications;
+    public void setFeeds(List<String> feeds) {
+        this.feeds = feeds;
     }
 
 }

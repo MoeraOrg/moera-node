@@ -54,6 +54,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
+import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
@@ -173,7 +174,10 @@ public class PostingController {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
 
-        requestContext.send(new PostingAddedLiberin(posting, postingText.getPublications()));
+        List<String> feeds = postingText.getPublications().stream()
+                .map(StoryAttributes::getFeedName)
+                .collect(Collectors.toList());
+        requestContext.send(new PostingAddedLiberin(posting, feeds));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
                 .body(withStories(new PostingInfo(posting, true)));

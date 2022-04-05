@@ -8,10 +8,12 @@ import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
@@ -22,6 +24,17 @@ public class StoryReceptor extends LiberinReceptorBase {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @LiberinMapping
+    public void updated(StoryAddedLiberin liberin) {
+        Story story = liberin.getStory();
+
+        if (!Feed.isAdmin(story.getFeedName())) {
+            send(liberin, new StoryAddedEvent(story, false));
+        }
+        send(liberin, new StoryAddedEvent(story, true));
+        feedStatusUpdated(liberin, story);
+    }
 
     @LiberinMapping
     public void updated(StoryUpdatedLiberin liberin) {

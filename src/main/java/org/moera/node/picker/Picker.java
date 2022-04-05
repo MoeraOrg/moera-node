@@ -34,6 +34,11 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.model.PostingAddedLiberin;
+import org.moera.node.liberin.model.PostingRestoredLiberin;
+import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
@@ -41,17 +46,6 @@ import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.WhoAmI;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.PostingAddedEvent;
-import org.moera.node.model.event.PostingRestoredEvent;
-import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.event.SubscriptionAddedEvent;
-import org.moera.node.model.notification.FeedPostingAddedNotification;
-import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.notification.send.DirectedNotification;
-import org.moera.node.notification.send.Directions;
-import org.moera.node.notification.send.NotificationConsumer;
-import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
@@ -101,9 +95,6 @@ public class Picker extends Task {
 
     @Inject
     private MediaManager mediaManager;
-
-    @Inject
-    private NotificationSenderPool notificationSenderPool;
 
     public Picker(PickerPool pool, String remoteNodeName) {
         this.pool = pool;
@@ -160,25 +151,22 @@ public class Picker extends Task {
     private void download(Pick pick) throws Throwable {
         log.info("Downloading from node '{}', postingId = {}", remoteNodeName, pick.getRemotePostingId());
 
-        List<Event> events = new ArrayList<>();
-        List<DirectedNotification> notifications = new ArrayList<>();
+        List<Liberin> liberins = new ArrayList<>();
         List<Pick> picks = new ArrayList<>();
         Posting posting = inTransaction(() -> {
             Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(),
-                    events, notifications::add, picks);
+                    liberins, picks);
             saveSources(p, pick);
             return p;
         });
-        events.forEach(event -> eventManager.send(nodeId, event));
-        notifications.forEach(notificationSenderPool::send);
+        liberins.forEach(this::send);
         picks.forEach(pool::pick);
 
         succeeded(posting, pick);
     }
 
     private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
-                                    List<Event> events, NotificationConsumer notifications,
-                                    List<Pick> picks) throws NodeApiException {
+                                    List<Liberin> liberins, List<Pick> picks) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
@@ -211,27 +199,22 @@ public class Picker extends Task {
             downloadMedia(postingInfo, null, posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
-                    posting.getReceiverEditedAt(), events);
-            events.add(new PostingAddedEvent(posting));
-            notifications.send(
-                    Directions.feedSubscribers(nodeId, feedName),
-                    new FeedPostingAddedNotification(feedName, posting.getId()));
-            publish(feedName, posting, events);
+                    posting.getReceiverEditedAt(), liberins);
+            liberins.add(new PostingAddedLiberin(posting, Collections.singletonList(feedName)).withNodeId(nodeId));
+            publish(feedName, posting, liberins); // FIXME duplicate liberin for story publishing
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);
+            EntryRevision latest = posting.getCurrentRevision();
             createRevision(posting, postingInfo);
             downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
-                events.add(new PostingUpdatedEvent(posting));
+                liberins.add(new PostingUpdatedLiberin(posting, latest).withNodeId(posting.getNodeId()));
             } else {
                 posting.setDeletedAt(null);
-                events.add(new PostingRestoredEvent(posting));
+                liberins.add(new PostingRestoredLiberin(posting).withNodeId(posting.getNodeId()));
             }
-            notifications.send(
-                    Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                    new PostingUpdatedNotification(posting.getId()));
         }
         var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());
         if (!reactionTotalOperations.isSame(reactionTotals, postingInfo.getReactions())) {
@@ -296,7 +279,7 @@ public class Picker extends Task {
         return pick;
     }
 
-    private void publish(String feedName, Posting posting, List<Event> events) {
+    private void publish(String feedName, Posting posting, List<Liberin> liberins) {
         if (feedName == null) {
             return;
         }
@@ -307,12 +290,12 @@ public class Picker extends Task {
         }
         StoryAttributes publication = new StoryAttributes();
         publication.setFeedName(feedName);
-        storyOperations.publish(posting, Collections.singletonList(publication), nodeId, events::add);
+        storyOperations.publish(posting, Collections.singletonList(publication), nodeId, liberins::add);
     }
 
     private void subscribe(String receiverName, String receiverFullName, MediaFile receiverAvatar,
                            String receiverAvatarShape, String receiverPostingId, Timestamp lastUpdatedAt,
-                           List<Event> events) throws NodeApiException {
+                           List<Liberin> liberins) throws NodeApiException {
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
                 receiverPostingId, fullName(), getAvatar(), Util.toEpochSecond(lastUpdatedAt));
         try {
@@ -331,7 +314,7 @@ public class Picker extends Task {
             }
             subscription.setRemoteEntryId(receiverPostingId);
             subscription = subscriptionRepository.save(subscription);
-            events.add(new SubscriptionAddedEvent(subscription));
+            liberins.add(new SubscriptionAddedLiberin(subscription).withNodeId(nodeId));
         } catch (NodeApiErrorStatusException e) {
             if (!e.getResult().getErrorCode().equals("subscriber.already-exists")) {
                 throw e;

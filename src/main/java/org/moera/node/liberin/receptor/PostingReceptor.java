@@ -16,7 +16,6 @@ import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
-import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.body.Body;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
@@ -40,13 +39,13 @@ public class PostingReceptor extends LiberinReceptorBase {
     public void added(PostingAddedLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        // FIXME isOriginal?
-        notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), null, posting.getOwnerName());
+        if (posting.isOriginal()) {
+            notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), null, posting.getOwnerName());
+        }
         send(liberin, new PostingAddedEvent(posting));
 
-        if (liberin.getPublications() != null) {
-            liberin.getPublications().stream()
-                    .map(StoryAttributes::getFeedName)
+        if (liberin.getFeeds() != null) {
+            liberin.getFeeds()
                     .forEach(fn -> send(Directions.feedSubscribers(liberin.getNodeId(), fn),
                             new FeedPostingAddedNotification(fn, posting.getId())));
         }
@@ -56,9 +55,10 @@ public class PostingReceptor extends LiberinReceptorBase {
     public void updated(PostingUpdatedLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        // FIXME isOriginal?
-        notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), liberin.getLatestRevision(),
-                posting.getOwnerName());
+        if (posting.isOriginal()) {
+            notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), liberin.getLatestRevision(),
+                    posting.getOwnerName());
+        }
         send(liberin, new PostingUpdatedEvent(posting));
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));
@@ -85,8 +85,9 @@ public class PostingReceptor extends LiberinReceptorBase {
     public void restored(PostingRestoredLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        // FIXME isOriginal?
-        notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), null, posting.getOwnerName());
+        if (posting.isOriginal()) {
+            notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), null, posting.getOwnerName());
+        }
         send(liberin, new PostingRestoredEvent(posting));
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingUpdatedNotification(posting.getId()));

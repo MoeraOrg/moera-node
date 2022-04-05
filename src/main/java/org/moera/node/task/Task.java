@@ -12,6 +12,7 @@ import org.moera.node.api.NodeApi;
 import org.moera.node.data.Avatar;
 import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.Liberin;
 import org.moera.node.model.event.Event;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
@@ -33,6 +34,7 @@ public abstract class Task implements Runnable {
     protected NodeApi nodeApi;
 
     @Inject
+    @Deprecated
     protected EventManager eventManager;
 
     @Inject
@@ -88,6 +90,10 @@ public abstract class Task implements Runnable {
     @Deprecated
     protected void send(Event event) {
         universalContext.send(event);
+    }
+
+    protected void send(Liberin liberin) {
+        universalContext.send(liberin);
     }
 
     protected <T> T inTransaction(Callable<T> inside) throws Throwable {
