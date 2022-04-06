@@ -13,7 +13,6 @@ import org.moera.node.data.Avatar;
 import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.event.Event;
 import org.moera.node.naming.NamingClient;
 import org.moera.node.naming.NodeName;
 import org.moera.node.naming.RegisteredName;
@@ -85,11 +84,6 @@ public abstract class Task implements Runnable {
 
     protected String generateCarte(String targetNodeName) {
         return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName);
-    }
-
-    @Deprecated
-    protected void send(Event event) {
-        universalContext.send(event);
     }
 
     protected void send(Liberin liberin) {

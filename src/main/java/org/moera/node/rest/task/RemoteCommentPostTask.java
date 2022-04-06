@@ -17,6 +17,8 @@ import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.instant.CommentInstants;
+import org.moera.node.liberin.model.RemoteCommentAddedLiberin;
+import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
@@ -25,8 +27,6 @@ import org.moera.node.model.CommentText;
 import org.moera.node.model.MediaWithDigest;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.WhoAmI;
-import org.moera.node.model.event.RemoteCommentAddedEvent;
-import org.moera.node.model.event.RemoteCommentUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.moera.node.text.TextConverter;
@@ -110,10 +110,10 @@ public class RemoteCommentPostTask extends Task {
                 CommentCreated created = nodeApi.postComment(targetNodeName, postingId, commentText);
                 commentInfo = created.getComment();
                 commentId = commentInfo.getId();
-                send(new RemoteCommentAddedEvent(targetNodeName, postingId, commentId));
+                send(new RemoteCommentAddedLiberin(targetNodeName, postingId, commentId));
             } else {
                 commentInfo = nodeApi.putComment(targetNodeName, postingId, commentId, commentText);
-                send(new RemoteCommentUpdatedEvent(targetNodeName, postingId, commentId));
+                send(new RemoteCommentUpdatedLiberin(targetNodeName, postingId, commentId));
             }
 
             MediaFile repliedToAvatarMediaFile = null;

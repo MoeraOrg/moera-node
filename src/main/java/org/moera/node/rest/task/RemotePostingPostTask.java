@@ -15,14 +15,14 @@ import org.moera.node.data.OwnPosting;
 import org.moera.node.data.OwnPostingRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.instant.PostingInstants;
+import org.moera.node.liberin.model.RemotePostingAddedLiberin;
+import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.MediaWithDigest;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingSourceText;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.WhoAmI;
-import org.moera.node.model.event.RemotePostingAddedEvent;
-import org.moera.node.model.event.RemotePostingUpdatedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.moera.node.text.TextConverter;
@@ -77,10 +77,10 @@ public class RemotePostingPostTask extends Task {
             if (postingId == null) {
                 postingInfo = nodeApi.postPosting(targetNodeName, postingText);
                 postingId = postingInfo.getId();
-                send(new RemotePostingAddedEvent(targetNodeName, postingId));
+                send(new RemotePostingAddedLiberin(targetNodeName, postingId));
             } else {
                 postingInfo = nodeApi.putPosting(targetNodeName, postingId, postingText);
-                send(new RemotePostingUpdatedEvent(targetNodeName, postingId));
+                send(new RemotePostingUpdatedLiberin(targetNodeName, postingId));
             }
 
             savePosting(postingInfo);

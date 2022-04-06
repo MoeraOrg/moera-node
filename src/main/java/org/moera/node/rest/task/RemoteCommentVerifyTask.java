@@ -14,14 +14,14 @@ import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.VerificationStatus;
 import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.liberin.model.RemoteCommentVerificationFailedLiberin;
+import org.moera.node.liberin.model.RemoteCommentVerifiedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
-import org.moera.node.model.event.RemoteCommentVerificationFailedEvent;
-import org.moera.node.model.event.RemoteCommentVerifiedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,7 +176,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
                 data.getCommentId(), data.getPostingId(), data.getNodeName(),
                 correct ? "correct" : "incorrect");
         updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
-        send(new RemoteCommentVerifiedEvent(data));
+        send(new RemoteCommentVerifiedLiberin(data));
     }
 
     @Override
@@ -188,7 +188,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             data.setErrorCode(errorCode);
             data.setErrorMessage(errorMessage);
         });
-        send(new RemoteCommentVerificationFailedEvent(data));
+        send(new RemoteCommentVerificationFailedLiberin(data));
     }
 
 }

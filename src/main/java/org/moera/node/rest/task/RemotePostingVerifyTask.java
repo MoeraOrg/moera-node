@@ -10,12 +10,12 @@ import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
 import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.liberin.model.RemotePostingVerificationFailedLiberin;
+import org.moera.node.liberin.model.RemotePostingVerifiedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
-import org.moera.node.model.event.RemotePostingVerificationFailedEvent;
-import org.moera.node.model.event.RemotePostingVerifiedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +100,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         log.info("Verified posting {}/{} at node {}: {}",
                 data.getPostingId(), data.getRevisionId(), data.getNodeName(), correct ? "correct" : "incorrect");
         updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
-        send(new RemotePostingVerifiedEvent(data));
+        send(new RemotePostingVerifiedLiberin(data));
     }
 
     @Override
@@ -112,7 +112,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             data.setErrorCode(errorCode);
             data.setErrorMessage(errorMessage);
         });
-        send(new RemotePostingVerificationFailedEvent(data));
+        send(new RemotePostingVerificationFailedLiberin(data));
     }
 
 }

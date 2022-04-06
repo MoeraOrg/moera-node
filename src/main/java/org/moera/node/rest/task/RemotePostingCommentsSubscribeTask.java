@@ -10,12 +10,12 @@ import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.instant.PostingInstants;
+import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.WhoAmI;
-import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +74,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             subscription.setRemoteEntryId(postingId);
             subscription.setReason(reason);
             subscription = subscriptionRepository.save(subscription);
-            send(new SubscriptionAddedEvent(subscription));
+            send(new SubscriptionAddedLiberin(subscription));
             success();
         } catch (Exception e) {
             error(e);

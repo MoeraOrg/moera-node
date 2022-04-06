@@ -11,6 +11,8 @@ import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;
 import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.liberin.model.RemoteReactionVerificationFailedLiberin;
+import org.moera.node.liberin.model.RemoteReactionVerifiedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
@@ -18,8 +20,6 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.ReactionInfo;
-import org.moera.node.model.event.RemoteReactionVerificationFailedEvent;
-import org.moera.node.model.event.RemoteReactionVerifiedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +150,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                     data.getOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(), status);
         }
         updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
-        send(new RemoteReactionVerifiedEvent(data));
+        send(new RemoteReactionVerifiedLiberin(data));
     }
 
     @Override
@@ -168,7 +168,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             data.setErrorCode(errorCode);
             data.setErrorMessage(errorMessage);
         });
-        send(new RemoteReactionVerificationFailedEvent(data));
+        send(new RemoteReactionVerificationFailedLiberin(data));
     }
 
 }

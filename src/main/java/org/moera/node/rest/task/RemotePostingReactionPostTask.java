@@ -15,6 +15,7 @@ import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.instant.CommentMediaReactionInstants;
 import org.moera.node.instant.PostingMediaReactionInstants;
 import org.moera.node.instant.PostingReactionInstants;
+import org.moera.node.liberin.model.RemotePostingReactionAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.EntryInfo;
@@ -24,7 +25,6 @@ import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.WhoAmI;
-import org.moera.node.model.event.RemoteReactionAddedEvent;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
@@ -128,7 +128,7 @@ public class RemotePostingReactionPostTask extends Task {
         } catch (Throwable e) {
             error(e);
         }
-        send(new RemoteReactionAddedEvent(targetNodeName, postingId, info));
+        send(new RemotePostingReactionAddedLiberin(targetNodeName, postingId, info));
     }
 
     private void success(ReactionCreated info) {
