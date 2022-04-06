@@ -8,6 +8,7 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.CommentReactionAddedLiberin;
 import org.moera.node.liberin.model.CommentReactionDeletedLiberin;
+import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.CommentReactionsDeletedAllLiberin;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.event.CommentReactionsChangedEvent;
@@ -60,6 +61,11 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
         send(Directions.single(liberin.getNodeId(), comment.getOwnerName()),
                 new CommentReactionDeletedAllNotification(comment.getPosting().getId(), comment.getId()));
         send(liberin, new CommentReactionsChangedEvent(comment));
+    }
+
+    @LiberinMapping
+    public void totalsUpdated(CommentReactionTotalsUpdatedLiberin liberin) {
+        send(liberin, new CommentReactionsChangedEvent(liberin.getComment()));
     }
 
 }

@@ -22,20 +22,17 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
-import org.moera.node.event.EventManager;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
+import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.event.CommentReactionsChangedEvent;
-import org.moera.node.model.event.PostingReactionsChangedEvent;
-import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.naming.NamingCache;
-import org.moera.node.notification.send.Directions;
-import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
@@ -71,10 +68,7 @@ public class ReactionOperations {
     private NamingCache namingCache;
 
     @Inject
-    private EventManager eventManager;
-
-    @Inject
-    private NotificationSenderPool notificationSenderPool;
+    private LiberinManager liberinManager;
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
@@ -247,16 +241,17 @@ public class ReactionOperations {
             switch (entry.getEntryType()) {
                 case POSTING: {
                     Posting posting = (Posting) entry;
-                    eventManager.send(posting.getNodeId(), new PostingReactionsChangedEvent(posting));
                     var totalsInfo = reactionTotalOperations.getInfo(posting);
-                    notificationSenderPool.send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
-                            new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
+                    liberinManager.send(
+                            new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
+                                    .withNodeId(posting.getNodeId()));
                     break;
                 }
 
                 case COMMENT: {
                     Comment comment = (Comment) entry;
-                    eventManager.send(comment.getNodeId(), new CommentReactionsChangedEvent(comment));
+                    liberinManager.send(
+                            new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId()));
                     break;
                 }
             }
