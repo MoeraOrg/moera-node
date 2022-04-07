@@ -10,7 +10,7 @@ import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;
-import org.moera.node.instant.CommentReactionInstants;
+import org.moera.node.liberin.model.RemoteCommentReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
@@ -34,9 +34,6 @@ public class RemoteCommentReactionPostTask extends Task {
     private PostingInfo postingInfo;
     private PostingRevisionInfo postingRevisionInfo;
     private CommentInfo commentInfo;
-
-    @Inject
-    private CommentReactionInstants commentReactionInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -113,7 +110,7 @@ public class RemoteCommentReactionPostTask extends Task {
                     commentId, postingId, targetNodeName, e.getMessage());
         }
 
-        commentReactionInstants.addingFailed(postingId, postingInfo, commentId, commentInfo);
+        send(new RemoteCommentReactionAddingFailedLiberin(postingId, postingInfo, commentId, commentInfo));
     }
 
 }

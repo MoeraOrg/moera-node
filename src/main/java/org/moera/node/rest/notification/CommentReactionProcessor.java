@@ -3,7 +3,10 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.node.instant.CommentReactionInstants;
+import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.RemoteCommentReactionAddedLiberin;
+import org.moera.node.liberin.model.RemoteCommentReactionDeletedAllLiberin;
+import org.moera.node.liberin.model.RemoteCommentReactionDeletedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.CommentReactionAddedNotification;
@@ -17,7 +20,7 @@ import org.moera.node.notification.receive.NotificationProcessor;
 public class CommentReactionProcessor {
 
     @Inject
-    private CommentReactionInstants commentReactionInstants;
+    private UniversalContext universalContext;
 
     @Inject
     private MediaManager mediaManager;
@@ -34,25 +37,27 @@ public class CommentReactionProcessor {
                     if (notification.getOwnerAvatar() != null) {
                         notification.getOwnerAvatar().setMediaFile(mediaFiles[1]);
                     }
-                    commentReactionInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                            notification.getSenderAvatar(), notification.getPostingId(), notification.getCommentId(),
-                            notification.getOwnerName(), notification.getOwnerFullName(), notification.getOwnerAvatar(),
-                            notification.getCommentHeading(), notification.isNegative(), notification.getEmoji());
+                    universalContext.send(new RemoteCommentReactionAddedLiberin(notification.getSenderNodeName(),
+                            notification.getSenderFullName(), notification.getSenderAvatar(),
+                            notification.getPostingId(), notification.getCommentId(), notification.getOwnerName(),
+                            notification.getOwnerFullName(), notification.getOwnerAvatar(),
+                            notification.getCommentHeading(), notification.isNegative(), notification.getEmoji()));
                 });
     }
 
     @NotificationMapping(NotificationType.COMMENT_REACTION_DELETED)
     @Transactional
     public void deleted(CommentReactionDeletedNotification notification) {
-        commentReactionInstants.deleted(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getCommentId(), notification.getOwnerName(), notification.isNegative());
+        universalContext.send(new RemoteCommentReactionDeletedLiberin(notification.getSenderNodeName(),
+                notification.getPostingId(), notification.getCommentId(), notification.getOwnerName(),
+                notification.isNegative()));
     }
 
     @NotificationMapping(NotificationType.COMMENT_REACTION_DELETED_ALL)
     @Transactional
     public void deletedAll(CommentReactionDeletedAllNotification notification) {
-        commentReactionInstants.deletedAll(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getCommentId());
+        universalContext.send(new RemoteCommentReactionDeletedAllLiberin(notification.getSenderNodeName(),
+                notification.getPostingId(), notification.getCommentId()));
     }
 
 }
