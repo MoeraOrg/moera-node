@@ -22,8 +22,8 @@ import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
-import org.moera.node.event.EventManager;
-import org.moera.node.model.event.SubscriberDeletedEvent;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.task.TaskAutowire;
@@ -61,7 +61,7 @@ public class NotificationSenderPool {
     private PendingNotificationRepository pendingNotificationRepository;
 
     @Inject
-    private EventManager eventManager;
+    private LiberinManager liberinManager;
 
     @Inject
     private ObjectMapper objectMapper;
@@ -179,10 +179,16 @@ public class NotificationSenderPool {
     }
 
     void unsubscribe(UUID subscriberId) {
-        subscriberRepository.findById(subscriberId).ifPresent(subscriber -> {
-            eventManager.send(subscriber.getNodeId(), new SubscriberDeletedEvent(subscriber));
-            subscriberRepository.delete(subscriber);
+        Subscriber subscriber = Transaction.executeQuietly(txManager, () -> {
+            Subscriber subscr = subscriberRepository.findById(subscriberId).orElse(null);
+            if (subscr != null) {
+                subscriberRepository.delete(subscr);
+            }
+            return subscr;
         });
+        if (subscriber != null) {
+            liberinManager.send(new SubscriberDeletedLiberin(subscriber).withNodeId(subscriber.getNodeId()));
+        }
     }
 
     private void storePending(NotificationSender sender, Notification notification) throws JsonProcessingException {

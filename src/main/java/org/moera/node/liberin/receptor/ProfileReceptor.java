@@ -7,9 +7,11 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
+import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
 import org.moera.node.mail.EmailConfirmMail;
 import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.model.event.ProfileUpdatedEvent;
+import org.moera.node.model.event.RegisteredNameOperationStatusEvent;
 import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 
@@ -29,6 +31,11 @@ public class ProfileReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void nodeNameChanged(NodeNameChangedLiberin liberin) {
         send(liberin, new NodeNameChangedEvent("", liberin.getOptions(), liberin.getAvatar()));
+    }
+
+    @LiberinMapping
+    public void registeredNameOperationStatus(RegisteredNameOperationStatusLiberin liberin) {
+        send(liberin, new RegisteredNameOperationStatusEvent());
     }
 
 }

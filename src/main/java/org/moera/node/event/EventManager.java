@@ -165,7 +165,6 @@ public class EventManager {
         queue.removeIf(packet -> packet.getSentAt() < boundary);
     }
 
-    @Deprecated
     public void send(UUID nodeId, Event event) {
         send(nodeId, null, event);
     }

@@ -6,12 +6,26 @@ import org.moera.node.option.Options;
 
 public class NodeNameChangedLiberin extends Liberin {
 
+    private String nodeName;
     private Options options;
     private Avatar avatar;
 
     public NodeNameChangedLiberin(Options options, Avatar avatar) {
+        this("", options, avatar);
+    }
+
+    public NodeNameChangedLiberin(String nodeName, Options options, Avatar avatar) {
+        this.nodeName = nodeName;
         this.options = options;
         this.avatar = avatar;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
     public Options getOptions() {

@@ -24,10 +24,10 @@ import org.moera.naming.rpc.PutCallFingerprint;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
-import org.moera.node.event.EventManager;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.NodeNameChangedLiberin;
+import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.event.NodeNameChangedEvent;
-import org.moera.node.model.event.RegisteredNameOperationStatusEvent;
 import org.moera.node.option.Options;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -56,7 +56,7 @@ public class NamingClient {
     private PlatformTransactionManager txManager;
 
     @Inject
-    private EventManager eventManager;
+    private LiberinManager liberinManager;
 
     @EventListener(DomainsConfiguredEvent.class)
     public void optionsLoaded() {
@@ -161,7 +161,7 @@ public class NamingClient {
         String prevStatus = options.getString("naming.operation.status");
         options.set("naming.operation.status", status.getValue());
         if (!Objects.equals(prevStatus, status.getValue())) {
-            eventManager.send(options.nodeId(), new RegisteredNameOperationStatusEvent());
+            liberinManager.send(new RegisteredNameOperationStatusLiberin().withNodeId(options.nodeId()));
         }
     }
 
@@ -192,7 +192,8 @@ public class NamingClient {
         String prevRegisteredName = options.nodeName();
         options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
-            eventManager.send(options.nodeId(), new NodeNameChangedEvent(newRegisteredName, options, null));
+            liberinManager.send(
+                    new NodeNameChangedLiberin(newRegisteredName, options, null).withNodeId(options.nodeId()));
         }
 
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");
