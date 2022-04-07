@@ -2,13 +2,15 @@ package org.moera.node.liberin;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.moera.node.global.UniversalContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -17,14 +19,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.method.HandlerMethod;
 
 @Service
-public class LiberinManager {
+public class LiberinManager implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(LiberinManager.class);
 
     private final Map<Class<? extends Liberin>, HandlerMethod> handlers = new HashMap<>();
+    private final BlockingQueue<Liberin> queue = new LinkedBlockingQueue<>();
 
     @Inject
     private ApplicationContext applicationContext;
+
+    @Inject
+    private UniversalContext universalContext;
 
     @PostConstruct
     public void init() {
@@ -46,27 +52,50 @@ public class LiberinManager {
                 log.debug("Mapping {} to method {}", type.getSimpleName(), method);
             }
         }
+
+        new Thread(this).start();
     }
 
     public void send(Liberin ...liberins) {
-        send(Arrays.asList(liberins));
+        try {
+            for (Liberin liberin : liberins) {
+                queue.put(liberin);
+            }
+        } catch (InterruptedException e) {
+            // ignore
+        }
     }
 
     public void send(Collection<Liberin> liberins) {
-        new Thread(() -> { // TODO should be short-living, but TaskExecutor is possibly needed
-            for (Liberin liberin : liberins) {
-                HandlerMethod handler = handlers.get(liberin.getClass());
-                if (handler == null) {
-                    log.warn("Mapping for liberin {} not found, skipping", liberin.getClass().getSimpleName());
-                    continue;
-                }
-                try {
-                    handler.getMethod().invoke(handler.getBean(), liberin);
-                } catch (InvocationTargetException | IllegalAccessException e) {
-                    log.error(String.format("Error handling liberin %s:", liberin.getClass().getSimpleName()), e);
-                }
+        send(liberins.toArray(Liberin[]::new));
+    }
+
+    @Override
+    public void run() {
+        boolean stopped = false;
+        while (!stopped || queue.peek() != null) {
+            Liberin liberin = null;
+            try {
+                liberin = queue.take();
+            } catch (InterruptedException e) {
+                stopped = true;
             }
-        }).start();
+            if (liberin == null) {
+                continue;
+            }
+
+            universalContext.associate(liberin.getNodeId());
+            HandlerMethod handler = handlers.get(liberin.getClass());
+            if (handler == null) {
+                log.warn("Mapping for liberin {} not found, skipping", liberin.getClass().getSimpleName());
+                continue;
+            }
+            try {
+                handler.getMethod().invoke(handler.getBean(), liberin);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                log.error(String.format("Error handling liberin %s:", liberin.getClass().getSimpleName()), e);
+            }
+        }
     }
 
 }
