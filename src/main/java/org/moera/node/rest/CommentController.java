@@ -38,7 +38,6 @@ import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.instant.CommentInstants;
 import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
@@ -121,9 +120,6 @@ public class CommentController {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Inject
-    private CommentInstants commentInstants;
-
     private int getMaxCommentSize() {
         return Math.min(requestContext.getOptions().getInt("comment.max-size"),
                 requestContext.getOptions().getInt("comment.max-size.soft"));
@@ -181,7 +177,6 @@ public class CommentController {
             } else {
                 contactOperations.updateCloseness(comment.getOwnerName(), 1);
             }
-            commentInstants.added(comment);
         }
 
         requestContext.send(new CommentAddedLiberin(posting, comment));
@@ -233,10 +228,6 @@ public class CommentController {
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
-        }
-
-        if (comment.getCurrentRevision().getSignature() != null) {
-            commentInstants.added(comment);
         }
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest));
@@ -455,7 +446,6 @@ public class CommentController {
         } else {
             contactOperations.updateCloseness(comment.getOwnerName(), -1);
         }
-        commentInstants.deleted(comment);
 
         requestContext.send(new CommentDeletedLiberin(comment, latest));
 

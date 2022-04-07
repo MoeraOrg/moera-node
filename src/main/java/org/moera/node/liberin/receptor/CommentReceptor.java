@@ -4,10 +4,12 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import javax.inject.Inject;
 
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.instant.CommentInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -33,20 +35,15 @@ import org.moera.node.text.MentionsExtractor;
 @LiberinReceptor
 public class CommentReceptor extends LiberinReceptorBase {
 
+    @Inject
+    private CommentInstants commentInstants;
+
     @LiberinMapping
     public void added(CommentAddedLiberin liberin) {
         Comment comment = liberin.getComment();
         Posting posting = liberin.getPosting();
 
-        if (comment.getCurrentRevision().getSignature() != null) {
-            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
-                    new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
-                            comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                            comment.getCurrentRevision().getHeading(), repliedToId));
-        }
-
+        notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
         notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
                 new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
@@ -63,20 +60,11 @@ public class CommentReceptor extends LiberinReceptorBase {
         Comment comment = liberin.getComment();
         Posting posting = comment.getPosting();
 
+        notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
         notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
                 new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                 comment.getCurrentRevision(), liberin.getLatestRevision());
-
-        if (comment.getCurrentRevision().getSignature() != null) {
-            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId()),
-                    new PostingCommentAddedNotification(posting.getId(),
-                            posting.getCurrentRevision().getHeading(), comment.getId(),
-                            comment.getOwnerName(), comment.getOwnerFullName(),
-                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                            comment.getCurrentRevision().getHeading(), repliedToId));
-        }
 
         send(liberin, new CommentUpdatedEvent(comment));
     }
@@ -86,6 +74,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         Comment comment = liberin.getComment();
         Posting posting = comment.getPosting();
 
+        commentInstants.deleted(comment);
         notifyReplyDeleted(posting, comment);
         notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
                 new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()), null,
@@ -101,6 +90,18 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         send(liberin, new CommentDeletedEvent(comment));
         send(liberin, new PostingCommentsChangedEvent(posting));
+    }
+
+    private void notifySubscribersCommentAdded(Posting posting, Comment comment) {
+        if (comment.getCurrentRevision().getSignature() != null) {
+            UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
+            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
+                    new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
+                            comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
+                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
+                            comment.getCurrentRevision().getHeading(), repliedToId));
+            commentInstants.added(comment);
+        }
     }
 
     private void notifyReplyAdded(Posting posting, Comment comment) {
@@ -127,6 +128,8 @@ public class CommentReceptor extends LiberinReceptorBase {
 
     private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
                                  AvatarImage ownerAvatar, EntryRevision current, EntryRevision latest) {
+        // TODO it is better to do this only for signed revisions. But it this case 'latest' should be the latest
+        // signed revision
         String currentHeading = current != null ? current.getHeading() : null;
         Set<String> currentMentions = current != null
                 ? MentionsExtractor.extract(new Body(current.getBody()))

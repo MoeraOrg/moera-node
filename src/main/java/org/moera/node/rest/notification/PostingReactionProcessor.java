@@ -7,9 +7,11 @@ import javax.transaction.Transactional;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.instant.CommentMediaReactionInstants;
 import org.moera.node.instant.PostingMediaReactionInstants;
 import org.moera.node.instant.PostingReactionInstants;
+import org.moera.node.liberin.model.RemoteCommentMediaReactionAddedLiberin;
+import org.moera.node.liberin.model.RemoteCommentMediaReactionDeletedAllLiberin;
+import org.moera.node.liberin.model.RemoteCommentMediaReactionDeletedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.NotificationType;
@@ -33,9 +35,6 @@ public class PostingReactionProcessor {
 
     @Inject
     private PostingMediaReactionInstants postingMediaReactionInstants;
-
-    @Inject
-    private CommentMediaReactionInstants commentMediaReactionInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -87,11 +86,13 @@ public class PostingReactionProcessor {
     }
 
     private void addedToCommentMedia(PostingReactionAddedNotification notification) {
-        commentMediaReactionInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                notification.getSenderAvatar(), notification.getPostingId(), notification.getParentPostingId(),
-                notification.getParentCommentId(), notification.getParentMediaId(), notification.getOwnerName(),
-                notification.getOwnerFullName(), notification.getOwnerAvatar(), notification.getPostingHeading(),
-                notification.isNegative(), notification.getEmoji());
+        universalContext.send(
+                new RemoteCommentMediaReactionAddedLiberin(notification.getSenderNodeName(),
+                        notification.getSenderFullName(), notification.getSenderAvatar(), notification.getPostingId(),
+                        notification.getParentPostingId(), notification.getParentCommentId(),
+                        notification.getParentMediaId(), notification.getOwnerName(), notification.getOwnerFullName(),
+                        notification.getOwnerAvatar(), notification.getPostingHeading(), notification.isNegative(),
+                        notification.getEmoji()));
     }
 
     @NotificationMapping(NotificationType.POSTING_REACTION_DELETED)
@@ -109,8 +110,9 @@ public class PostingReactionProcessor {
                 postingMediaReactionInstants.deleted(notification.getSenderNodeName(), notification.getPostingId(),
                         notification.getOwnerName(), notification.isNegative());
             } else {
-                commentMediaReactionInstants.deleted(notification.getSenderNodeName(), notification.getPostingId(),
-                        notification.getOwnerName(), notification.isNegative());
+                universalContext.send(
+                        new RemoteCommentMediaReactionDeletedLiberin(notification.getSenderNodeName(),
+                                notification.getPostingId(), notification.getOwnerName(), notification.isNegative()));
             }
         }
     }
@@ -128,7 +130,9 @@ public class PostingReactionProcessor {
             if (notification.getParentCommentId() == null) {
                 postingMediaReactionInstants.deletedAll(notification.getSenderNodeName(), notification.getPostingId());
             } else {
-                commentMediaReactionInstants.deletedAll(notification.getSenderNodeName(), notification.getPostingId());
+                universalContext.send(
+                        new RemoteCommentMediaReactionDeletedAllLiberin(notification.getSenderNodeName(),
+                                notification.getPostingId()));
             }
         }
     }

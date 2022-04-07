@@ -16,7 +16,8 @@ import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.fingerprint.Fingerprints;
-import org.moera.node.instant.CommentInstants;
+import org.moera.node.liberin.model.RemoteCommentAddingFailedLiberin;
+import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentAddedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaManager;
@@ -58,9 +59,6 @@ public class RemoteCommentPostTask extends Task {
 
     @Inject
     private ContactOperations contactOperations;
-
-    @Inject
-    private CommentInstants commentInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -218,9 +216,9 @@ public class RemoteCommentPostTask extends Task {
         }
 
         if (prevCommentInfo == null) {
-            commentInstants.addingFailed(postingId, postingInfo);
+            send(new RemoteCommentAddingFailedLiberin(postingId, postingInfo));
         } else {
-            commentInstants.updateFailed(postingId, postingInfo, commentId, prevCommentInfo);
+            send(new RemoteCommentUpdateFailedLiberin(postingId, postingInfo, commentId, prevCommentInfo));
         }
     }
 

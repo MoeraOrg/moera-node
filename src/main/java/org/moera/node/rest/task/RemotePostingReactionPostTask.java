@@ -12,9 +12,9 @@ import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;
-import org.moera.node.instant.CommentMediaReactionInstants;
 import org.moera.node.instant.PostingMediaReactionInstants;
 import org.moera.node.instant.PostingReactionInstants;
+import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingReactionAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
@@ -52,9 +52,6 @@ public class RemotePostingReactionPostTask extends Task {
 
     @Inject
     private PostingMediaReactionInstants postingMediaReactionInstants;
-
-    @Inject
-    private CommentMediaReactionInstants commentMediaReactionInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -184,10 +181,8 @@ public class RemotePostingReactionPostTask extends Task {
                 postingMediaReactionInstants.addingFailed(postingId, parentPostingId, postingInfo.getParentMediaId(),
                         parentPosting);
             } else {
-                String parentPostingId = parentComment.getPostingId();
-                String parentCommentId = parentComment.getId();
-                commentMediaReactionInstants.addingFailed(postingId, parentPostingId, parentCommentId,
-                        postingInfo.getParentMediaId(), parentPosting, parentComment);
+                send(new RemoteCommentMediaReactionAddingFailedLiberin(postingId, postingInfo.getParentMediaId(),
+                        parentPosting, parentComment));
             }
         }
     }
