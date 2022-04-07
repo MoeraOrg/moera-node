@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
-public class NotificationSenderPool implements NotificationConsumer {
+public class NotificationSenderPool {
 
     private static final Duration EXECUTION_REJECTED_DELAY = Duration.of(5, ChronoUnit.MINUTES);
 
@@ -93,12 +93,6 @@ public class NotificationSenderPool implements NotificationConsumer {
         send(direction, notification);
     }
 
-    @Override
-    public void send(DirectedNotification directedNotification) {
-        send(directedNotification.getDirection(), directedNotification.getNotification());
-    }
-
-    @Override
     public void send(Direction direction, Notification notification) {
         log.info("Sending notification {}", notification.toLogMessage());
         if (direction instanceof SingleDirection) {

@@ -17,9 +17,6 @@ import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -87,7 +84,6 @@ public class CommentReactionInstants extends InstantsCreator {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        feedStatusUpdated();
     }
 
     private static String buildSummary(String ownerName, String ownerFullName, int emoji) {
@@ -114,7 +110,6 @@ public class CommentReactionInstants extends InstantsCreator {
                 updated(story, false, false);
             }
         }
-        feedStatusUpdated();
     }
 
     public void deletedAll(String nodeName, String postingId, String commentId) {
@@ -122,7 +117,7 @@ public class CommentReactionInstants extends InstantsCreator {
                 StoryType.COMMENT_REACTION_ADDED_POSITIVE, nodeName, postingId, commentId);
         storyRepository.deleteByRemotePostingAndCommentId(nodeId(), Feed.INSTANT,
                 StoryType.COMMENT_REACTION_ADDED_NEGATIVE, nodeName, postingId, commentId);
-        feedStatusUpdated();
+        feedUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -132,9 +127,8 @@ public class CommentReactionInstants extends InstantsCreator {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                send(new StoryDeletedEvent(story, true));
+                storyDeleted(story);
             }
-            deletePush(story.getId());
             return;
         }
 
@@ -149,8 +143,7 @@ public class CommentReactionInstants extends InstantsCreator {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        sendPush(story);
+        storyAddedOrUpdated(story, isNew);
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {
@@ -212,9 +205,7 @@ public class CommentReactionInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildAddingFailedSummary(String postingOwnerName, String postingOwnerFullName,

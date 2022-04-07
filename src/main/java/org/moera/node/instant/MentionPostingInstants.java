@@ -8,8 +8,6 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -41,9 +39,7 @@ public class MentionPostingInstants extends InstantsCreator {
         story.setSummary(buildSummary(story, remotePostingHeading));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     public void deleted(String remoteNodeName, String remotePostingId) {
@@ -52,9 +48,7 @@ public class MentionPostingInstants extends InstantsCreator {
             return;
         }
         storyRepository.delete(story);
-        send(new StoryDeletedEvent(story, true));
-        deletePush(story.getId());
-        feedStatusUpdated();
+        storyDeleted(story);
     }
 
     private Story findStory(String remoteNodeName, String remotePostingId) {

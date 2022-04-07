@@ -15,9 +15,6 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -87,7 +84,6 @@ public class ReplyCommentInstants extends InstantsCreator {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        feedStatusUpdated();
     }
 
     public void deleted(String nodeName, String postingId, String commentId, String commentOwnerName) {
@@ -103,7 +99,6 @@ public class ReplyCommentInstants extends InstantsCreator {
             storyRepository.delete(substory);
             updated(story, false, false);
         }
-        feedStatusUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -113,9 +108,8 @@ public class ReplyCommentInstants extends InstantsCreator {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                send(new StoryDeletedEvent(story, true));
+                storyDeleted(story);
             }
-            deletePush(story.getId());
             return;
         }
 
@@ -131,8 +125,7 @@ public class ReplyCommentInstants extends InstantsCreator {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        sendPush(story);
+        storyAddedOrUpdated(story, isNew);
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {

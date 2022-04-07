@@ -10,6 +10,10 @@ public class FeedStatusUpdatedLiberin extends Liberin {
     private FeedStatus status;
     private FeedStatusChange change;
 
+    public FeedStatusUpdatedLiberin(String feedName, FeedStatus status) {
+        this(feedName, status, null);
+    }
+
     public FeedStatusUpdatedLiberin(String feedName, FeedStatus status, FeedStatusChange change) {
         this.feedName = feedName;
         this.status = status;

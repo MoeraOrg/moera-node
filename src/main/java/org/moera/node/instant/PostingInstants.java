@@ -10,7 +10,6 @@ import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.WhoAmI;
-import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -41,9 +40,7 @@ public class PostingInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildSubscribingToCommentsFailedSummary(String nodeName, String fullName,
@@ -69,9 +66,7 @@ public class PostingInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildPostingUpdatedSummary(String nodeName, String fullName, String postingHeading,
@@ -98,9 +93,7 @@ public class PostingInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildRemoteAddingFailedSummary(String nodeName, String fullName) {
@@ -126,9 +119,7 @@ public class PostingInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildRemoteUpdateFailedSummary(String nodeName, String fullName, String postingHeading) {

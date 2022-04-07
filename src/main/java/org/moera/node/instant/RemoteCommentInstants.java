@@ -16,9 +16,6 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -89,7 +86,6 @@ public class RemoteCommentInstants extends InstantsCreator {
         story.addSubstory(substory);
 
         updated(story, reason, isNewStory, true);
-        feedStatusUpdated();
     }
 
     public void deleted(String remoteNodeName, String remotePostingId, String remoteOwnerName, String remoteCommentId,
@@ -106,7 +102,6 @@ public class RemoteCommentInstants extends InstantsCreator {
             storyRepository.delete(substory);
             updated(story, reason, false, false);
         }
-        feedStatusUpdated();
     }
 
     private void updated(Story story, SubscriptionReason reason, boolean isNew, boolean isAdded) {
@@ -116,9 +111,8 @@ public class RemoteCommentInstants extends InstantsCreator {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                send(new StoryDeletedEvent(story, true));
+                storyDeleted(story);
             }
-            deletePush(story.getId());
             return;
         }
 
@@ -134,8 +128,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        sendPush(story);
+        storyAddedOrUpdated(story, isNew);
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories, SubscriptionReason reason) {

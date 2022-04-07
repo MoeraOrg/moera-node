@@ -10,8 +10,6 @@ import javax.inject.Inject;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.event.Event;
-import org.moera.node.notification.send.DirectedNotification;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
@@ -35,8 +33,6 @@ public class RequestContextImpl implements RequestContext {
     private UserAgent userAgent = UserAgent.UNKNOWN;
     private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
     private final List<Liberin> afterCommitLiberins = new ArrayList<>();
-    private final List<Event> afterCommitEvents = new ArrayList<>();
-    private final List<DirectedNotification> afterCommitNotifications = new ArrayList<>();
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -221,26 +217,6 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public List<Liberin> getAfterCommitLiberins() {
         return afterCommitLiberins;
-    }
-
-    @Override
-    public void send(Event event) {
-        afterCommitEvents.add(event);
-    }
-
-    @Override
-    public List<Event> getAfterCommitEvents() {
-        return afterCommitEvents;
-    }
-
-    @Override
-    public void send(DirectedNotification notification) {
-        afterCommitNotifications.add(notification);
-    }
-
-    @Override
-    public List<DirectedNotification> getAfterCommitNotifications() {
-        return afterCommitNotifications;
     }
 
 }

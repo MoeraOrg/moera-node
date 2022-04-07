@@ -10,7 +10,6 @@ import javax.inject.Inject;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.api.NodeApi;
 import org.moera.node.data.Avatar;
-import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.naming.NamingClient;
@@ -31,10 +30,6 @@ public abstract class Task implements Runnable {
 
     @Inject
     protected NodeApi nodeApi;
-
-    @Inject
-    @Deprecated
-    protected EventManager eventManager;
 
     @Inject
     private NamingClient namingClient;

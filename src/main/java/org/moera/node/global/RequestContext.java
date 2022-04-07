@@ -6,12 +6,9 @@ import java.util.UUID;
 
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.event.Event;
-import org.moera.node.notification.send.DirectedNotification;
-import org.moera.node.notification.send.NotificationConsumer;
 import org.moera.node.option.Options;
 
-public interface RequestContext extends NotificationConsumer {
+public interface RequestContext {
 
     boolean isRegistrar();
 
@@ -80,17 +77,5 @@ public interface RequestContext extends NotificationConsumer {
     void send(Liberin liberin);
 
     List<Liberin> getAfterCommitLiberins();
-
-    @Deprecated
-    void send(Event event);
-
-    @Deprecated
-    List<Event> getAfterCommitEvents();
-
-    @Deprecated
-    void send(DirectedNotification notification);
-
-    @Deprecated
-    List<DirectedNotification> getAfterCommitNotifications();
 
 }

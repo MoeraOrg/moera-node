@@ -6,10 +6,8 @@ import javax.inject.Inject;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.domain.Domains;
-import org.moera.node.event.EventManager;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
-import org.moera.node.model.event.Event;
 import org.moera.node.option.Options;
 import org.moera.node.task.Task;
 import org.slf4j.MDC;
@@ -29,9 +27,6 @@ public class UniversalContext {
 
     @Inject
     private LiberinManager liberinManager;
-
-    @Inject
-    private EventManager eventManager;
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -93,15 +88,6 @@ public class UniversalContext {
             liberinManager.send(liberin);
         } else {
             requestContext.send(liberin);
-        }
-    }
-
-    @Deprecated
-    public void send(Event event) {
-        if (nodeId.get() != null) {
-            eventManager.send(nodeId.get(), event);
-        } else {
-            requestContext.send(event);
         }
     }
 

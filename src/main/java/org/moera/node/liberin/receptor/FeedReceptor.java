@@ -1,5 +1,6 @@
 package org.moera.node.liberin.receptor;
 
+import org.moera.node.data.Feed;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -14,7 +15,13 @@ public class FeedReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void statusUpdated(FeedStatusUpdatedLiberin liberin) {
         send(liberin, new FeedStatusUpdatedEvent(liberin.getFeedName(), liberin.getStatus(), true));
-        send(liberin, new StoriesStatusUpdatedEvent(liberin.getFeedName(), liberin.getChange()));
+        if (!Feed.isAdmin(liberin.getFeedName())) {
+            send(liberin,
+                    new FeedStatusUpdatedEvent(liberin.getFeedName(), liberin.getStatus().notAdmin(), false));
+        }
+        if (liberin.getChange() != null) {
+            send(liberin, new StoriesStatusUpdatedEvent(liberin.getFeedName(), liberin.getChange()));
+        }
         send(liberin, PushContent.feedUpdated(liberin.getFeedName(), liberin.getStatus()));
     }
 

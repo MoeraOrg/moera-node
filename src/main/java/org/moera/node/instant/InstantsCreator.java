@@ -6,13 +6,13 @@ import javax.inject.Inject;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.liberin.Liberin;
-import org.moera.node.model.event.Event;
-import org.moera.node.model.event.FeedStatusUpdatedEvent;
+import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
+import org.moera.node.liberin.model.StoryAddedLiberin;
+import org.moera.node.liberin.model.StoryDeletedLiberin;
+import org.moera.node.liberin.model.StoryUpdatedLiberin;
+import org.moera.node.model.FeedStatus;
 import org.moera.node.naming.NodeName;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.push.PushContent;
-import org.moera.node.push.PushService;
 import org.moera.node.util.Util;
 
 public class InstantsCreator {
@@ -23,9 +23,6 @@ public class InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    @Inject
-    private PushService pushService;
-
     protected UUID nodeId() {
         return universalContext.nodeId();
     }
@@ -34,34 +31,33 @@ public class InstantsCreator {
         return universalContext.nodeName();
     }
 
-    protected void send(Liberin liberin) {
-        universalContext.send(liberin);
+    protected void storyAdded(Story story) {
+        universalContext.send(new StoryAddedLiberin(story));
     }
 
-    @Deprecated
-    protected void send(Event event) {
-        universalContext.send(event);
+    protected void storyUpdated(Story story) {
+        universalContext.send(new StoryUpdatedLiberin(story));
+    }
+
+    protected void storyAddedOrUpdated(Story story, boolean isAdded) {
+        if (isAdded) {
+            storyAdded(story);
+        } else {
+            storyUpdated(story);
+        }
+    }
+
+    protected void storyDeleted(Story story) {
+        universalContext.send(new StoryDeletedLiberin(story));
+    }
+
+    protected void feedUpdated() {
+        FeedStatus feedStatus = storyOperations.getFeedStatus(Feed.INSTANT, true);
+        universalContext.send(new FeedStatusUpdatedLiberin(Feed.INSTANT, feedStatus));
     }
 
     protected void updateMoment(Story story) {
         storyOperations.updateMoment(story, nodeId());
-    }
-
-    protected void feedStatusUpdated() {
-        send(new FeedStatusUpdatedEvent(Feed.INSTANT,
-                storyOperations.getFeedStatus(Feed.INSTANT, nodeId(), true), true));
-    }
-
-    @Deprecated
-    protected void sendPush(Story story) {
-        PushContent content = PushContent.storyAdded(story);
-        pushService.send(nodeId(), content);
-    }
-
-    @Deprecated
-    protected void deletePush(UUID id) {
-        PushContent content = PushContent.storyDeleted(id);
-        pushService.send(nodeId(), content);
     }
 
     protected static String formatNodeName(String name, String fullName) {

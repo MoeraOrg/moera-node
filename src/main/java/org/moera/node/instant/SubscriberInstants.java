@@ -9,8 +9,6 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.operations.StoryOperations;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +29,7 @@ public class SubscriberInstants extends InstantsCreator {
         Story story = findDeletedStory(subscriber.getRemoteNodeName());
         if (story != null && !story.isRead()) {
             storyRepository.delete(story);
-            send(new StoryDeletedEvent(story, true));
+            storyDeleted(story);
         }
 
         story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_ADDED);
@@ -43,9 +41,7 @@ public class SubscriberInstants extends InstantsCreator {
         story.setSummary(buildAddedSummary(subscriber));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildAddedSummary(Subscriber subscriber) {
@@ -62,7 +58,7 @@ public class SubscriberInstants extends InstantsCreator {
         Story story = findAddedStory(subscriber.getRemoteNodeName());
         if (story != null && !story.isRead()) {
             storyRepository.delete(story);
-            send(new StoryDeletedEvent(story, true));
+            storyDeleted(story);
         }
 
         story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_DELETED);
@@ -74,9 +70,7 @@ public class SubscriberInstants extends InstantsCreator {
         story.setSummary(buildDeletedSummary(subscriber));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildDeletedSummary(Subscriber subscriber) {

@@ -17,9 +17,6 @@ import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -67,7 +64,6 @@ public class CommentInstants extends InstantsCreator {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        feedStatusUpdated();
     }
 
     public void deleted(Comment comment) {
@@ -83,7 +79,6 @@ public class CommentInstants extends InstantsCreator {
             storyRepository.delete(substory);
             updated(story, false, false);
         }
-        feedStatusUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -93,9 +88,8 @@ public class CommentInstants extends InstantsCreator {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                send(new StoryDeletedEvent(story, true));
+                storyDeleted(story);
             }
-            deletePush(story.getId());
             return;
         }
 
@@ -110,8 +104,7 @@ public class CommentInstants extends InstantsCreator {
             story.setViewed(false);
         }
         updateMoment(story);
-        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        sendPush(story);
+        storyAddedOrUpdated(story, isNew);
     }
 
     private static String buildAddedSummary(Story story, List<Story> stories) {
@@ -161,9 +154,7 @@ public class CommentInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     public void updateFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
@@ -188,9 +179,7 @@ public class CommentInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {

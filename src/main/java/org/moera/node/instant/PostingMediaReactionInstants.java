@@ -16,9 +16,6 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.event.StoryAddedEvent;
-import org.moera.node.model.event.StoryDeletedEvent;
-import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -86,7 +83,6 @@ public class PostingMediaReactionInstants extends InstantsCreator {
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
-        feedStatusUpdated();
     }
 
     private static String buildSummary(String ownerName, String ownerFullName, int emoji) {
@@ -113,7 +109,6 @@ public class PostingMediaReactionInstants extends InstantsCreator {
                 updated(story, false, false);
             }
         }
-        feedStatusUpdated();
     }
 
     public void deletedAll(String nodeName, String postingId) {
@@ -121,7 +116,7 @@ public class PostingMediaReactionInstants extends InstantsCreator {
                 StoryType.POSTING_MEDIA_REACTION_ADDED_POSITIVE, nodeName, postingId);
         storyRepository.deleteByRemotePostingId(nodeId(), Feed.INSTANT,
                 StoryType.POSTING_MEDIA_REACTION_ADDED_NEGATIVE, nodeName, postingId);
-        feedStatusUpdated();
+        feedUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
@@ -131,9 +126,8 @@ public class PostingMediaReactionInstants extends InstantsCreator {
         if (stories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
-                send(new StoryDeletedEvent(story, true));
+                storyDeleted(story);
             }
-            deletePush(story.getId());
             return;
         }
 
@@ -148,8 +142,7 @@ public class PostingMediaReactionInstants extends InstantsCreator {
             story.setViewed(false);
         }
         storyOperations.updateMoment(story);
-        send(isNew ? new StoryAddedEvent(story, true) : new StoryUpdatedEvent(story, true));
-        sendPush(story);
+        storyAddedOrUpdated(story, isNew);
     }
 
     private String buildAddedSummary(Story story, List<Story> stories) {
@@ -202,9 +195,7 @@ public class PostingMediaReactionInstants extends InstantsCreator {
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
-        send(new StoryAddedEvent(story, true));
-        sendPush(story);
-        feedStatusUpdated();
+        storyAdded(story);
     }
 
     private static String buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
