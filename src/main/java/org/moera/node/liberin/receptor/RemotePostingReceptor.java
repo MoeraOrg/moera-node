@@ -1,8 +1,13 @@
 package org.moera.node.liberin.receptor;
 
+import javax.inject.Inject;
+
+import org.moera.node.instant.MentionPostingInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.MentionInRemotePostingAddedLiberin;
+import org.moera.node.liberin.model.MentionInRemotePostingDeletedLiberin;
 import org.moera.node.liberin.model.RemotePostingAddedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerificationFailedLiberin;
@@ -14,6 +19,9 @@ import org.moera.node.model.event.RemotePostingVerifiedEvent;
 
 @LiberinReceptor
 public class RemotePostingReceptor extends LiberinReceptorBase {
+
+    @Inject
+    private MentionPostingInstants mentionPostingInstants;
 
     @LiberinMapping
     public void added(RemotePostingAddedLiberin liberin) {
@@ -33,6 +41,17 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void verificationFailed(RemotePostingVerificationFailedLiberin liberin) {
         send(liberin, new RemotePostingVerificationFailedEvent(liberin.getData()));
+    }
+
+    @LiberinMapping
+    public void mentionAdded(MentionInRemotePostingAddedLiberin liberin) {
+        mentionPostingInstants.added(liberin.getNodeName(), liberin.getFullName(), liberin.getAvatar(),
+                liberin.getPostingId(), liberin.getPostingHeading());
+    }
+
+    @LiberinMapping
+    public void mentionDeleted(MentionInRemotePostingDeletedLiberin liberin) {
+        mentionPostingInstants.deleted(liberin.getNodeName(), liberin.getPostingId());
     }
 
 }

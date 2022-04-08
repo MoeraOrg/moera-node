@@ -4,7 +4,9 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.SubscriptionReason;
-import org.moera.node.instant.MentionPostingInstants;
+import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.MentionInRemotePostingAddedLiberin;
+import org.moera.node.liberin.model.MentionInRemotePostingDeletedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
@@ -21,7 +23,7 @@ import org.springframework.core.task.TaskExecutor;
 public class MentionPostingProcessor {
 
     @Inject
-    private MentionPostingInstants mentionPostingInstants;
+    private UniversalContext universalContext;
 
     @Inject
     private TaskAutowire taskAutowire;
@@ -42,8 +44,10 @@ public class MentionPostingProcessor {
                     if (notification.getSenderAvatar() != null) {
                         notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
                     }
-                    mentionPostingInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                            notification.getSenderAvatar(), notification.getPostingId(), notification.getHeading());
+                    universalContext.send(
+                            new MentionInRemotePostingAddedLiberin(notification.getSenderNodeName(),
+                                    notification.getSenderFullName(), notification.getSenderAvatar(),
+                                    notification.getPostingId(), notification.getHeading()));
                 });
         var task = new RemotePostingCommentsSubscribeTask(
                 notification.getSenderNodeName(), notification.getPostingId(), SubscriptionReason.MENTION);
@@ -54,7 +58,8 @@ public class MentionPostingProcessor {
     @NotificationMapping(NotificationType.MENTION_POSTING_DELETED)
     @Transactional
     public void deleted(MentionPostingDeletedNotification notification) {
-        mentionPostingInstants.deleted(notification.getSenderNodeName(), notification.getPostingId());
+        universalContext.send(
+                new MentionInRemotePostingDeletedLiberin(notification.getSenderNodeName(), notification.getPostingId()));
     }
 
 }
