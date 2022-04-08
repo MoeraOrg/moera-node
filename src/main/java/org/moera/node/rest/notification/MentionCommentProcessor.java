@@ -3,7 +3,9 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.node.instant.MentionCommentInstants;
+import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.MentionInRemoteCommentAddedLiberin;
+import org.moera.node.liberin.model.MentionInRemoteCommentDeletedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.MentionCommentAddedNotification;
@@ -16,7 +18,7 @@ import org.moera.node.notification.receive.NotificationProcessor;
 public class MentionCommentProcessor {
 
     @Inject
-    private MentionCommentInstants mentionCommentInstants;
+    private UniversalContext universalContext;
 
     @Inject
     private MediaManager mediaManager;
@@ -33,19 +35,22 @@ public class MentionCommentProcessor {
                     if (notification.getCommentOwnerAvatar() != null) {
                         notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
                     }
-                    mentionCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                            notification.getSenderAvatar(), notification.getPostingId(),
-                            notification.getPostingHeading(), notification.getCommentOwnerName(),
-                            notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
-                            notification.getCommentId(), notification.getCommentHeading());
+                    universalContext.send(
+                            new MentionInRemoteCommentAddedLiberin(notification.getSenderNodeName(),
+                                    notification.getSenderFullName(), notification.getSenderAvatar(),
+                                    notification.getPostingId(), notification.getPostingHeading(),
+                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                    notification.getCommentOwnerAvatar(), notification.getCommentId(),
+                                    notification.getCommentHeading()));
                 });
     }
 
     @NotificationMapping(NotificationType.MENTION_COMMENT_DELETED)
     @Transactional
     public void deleted(MentionCommentDeletedNotification notification) {
-        mentionCommentInstants.deleted(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getCommentId());
+        universalContext.send(
+                new MentionInRemoteCommentDeletedLiberin(notification.getSenderNodeName(), notification.getPostingId(),
+                        notification.getCommentId()));
     }
 
 }

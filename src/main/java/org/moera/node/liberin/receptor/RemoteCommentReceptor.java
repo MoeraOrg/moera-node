@@ -3,9 +3,12 @@ package org.moera.node.liberin.receptor;
 import javax.inject.Inject;
 
 import org.moera.node.instant.CommentInstants;
+import org.moera.node.instant.MentionCommentInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.MentionInRemoteCommentAddedLiberin;
+import org.moera.node.liberin.model.MentionInRemoteCommentDeletedLiberin;
 import org.moera.node.liberin.model.RemoteCommentAddedLiberin;
 import org.moera.node.liberin.model.RemoteCommentAddingFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
@@ -22,6 +25,9 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
 
     @Inject
     private CommentInstants commentInstants;
+
+    @Inject
+    private MentionCommentInstants mentionCommentInstants;
 
     @LiberinMapping
     public void added(RemoteCommentAddedLiberin liberin) {
@@ -54,6 +60,18 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void verificationFailed(RemoteCommentVerificationFailedLiberin liberin) {
         send(liberin, new RemoteCommentVerificationFailedEvent(liberin.getData()));
+    }
+
+    @LiberinMapping
+    public void mentionAdded(MentionInRemoteCommentAddedLiberin liberin) {
+        mentionCommentInstants.added(liberin.getNodeName(), liberin.getFullName(), liberin.getAvatar(),
+                liberin.getPostingId(), liberin.getPostingHeading(), liberin.getOwnerName(), liberin.getOwnerFullName(),
+                liberin.getOwnerAvatar(), liberin.getCommentId(), liberin.getCommentHeading());
+    }
+
+    @LiberinMapping
+    public void mentionDeleted(MentionInRemoteCommentDeletedLiberin liberin) {
+        mentionCommentInstants.deleted(liberin.getNodeName(), liberin.getPostingId(), liberin.getCommentId());
     }
 
 }
