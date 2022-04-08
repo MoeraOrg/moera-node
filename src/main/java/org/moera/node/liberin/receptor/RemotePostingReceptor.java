@@ -9,6 +9,7 @@ import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.MentionInRemotePostingAddedLiberin;
 import org.moera.node.liberin.model.MentionInRemotePostingDeletedLiberin;
 import org.moera.node.liberin.model.RemotePostingAddedLiberin;
+import org.moera.node.liberin.model.RemotePostingDeletedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerifiedLiberin;
@@ -30,6 +31,11 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void updated(RemotePostingUpdatedLiberin liberin) {
+        send(liberin, new RemotePostingUpdatedEvent(liberin.getNodeName(), liberin.getPostingId()));
+    }
+
+    @LiberinMapping
+    public void deleted(RemotePostingDeletedLiberin liberin) {
         send(liberin, new RemotePostingUpdatedEvent(liberin.getNodeName(), liberin.getPostingId()));
     }
 
