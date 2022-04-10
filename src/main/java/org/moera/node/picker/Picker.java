@@ -200,8 +200,8 @@ public class Picker extends Task {
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), liberins);
-            liberins.add(new PostingAddedLiberin(posting, Collections.singletonList(feedName)).withNodeId(nodeId));
-            publish(feedName, posting, liberins); // FIXME duplicate liberin for story publishing
+            liberins.add(new PostingAddedLiberin(posting).withNodeId(nodeId));
+            publish(feedName, posting, liberins);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);

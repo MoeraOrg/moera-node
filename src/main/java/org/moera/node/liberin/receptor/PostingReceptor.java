@@ -22,7 +22,6 @@ import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
@@ -43,12 +42,6 @@ public class PostingReceptor extends LiberinReceptorBase {
             notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), null, posting.getOwnerName());
         }
         send(liberin, new PostingAddedEvent(posting));
-
-        if (liberin.getFeeds() != null) {
-            liberin.getFeeds()
-                    .forEach(fn -> send(Directions.feedSubscribers(liberin.getNodeId(), fn),
-                            new FeedPostingAddedNotification(fn, posting.getId())));
-        }
     }
 
     @LiberinMapping

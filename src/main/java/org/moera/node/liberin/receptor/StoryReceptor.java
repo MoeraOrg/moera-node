@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
+import org.moera.node.data.StoryType;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -16,6 +17,8 @@ import org.moera.node.model.FeedStatus;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
+import org.moera.node.model.notification.FeedPostingAddedNotification;
+import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
 
@@ -33,6 +36,10 @@ public class StoryReceptor extends LiberinReceptorBase {
             send(liberin, new StoryAddedEvent(story, false));
         }
         send(liberin, new StoryAddedEvent(story, true));
+        if (story.getStoryType() == StoryType.POSTING_ADDED && story.getEntry() != null) {
+            send(Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName()),
+                    new FeedPostingAddedNotification(story.getFeedName(), story.getEntry().getId()));
+        }
         push(story);
         feedStatusUpdated(story);
     }
