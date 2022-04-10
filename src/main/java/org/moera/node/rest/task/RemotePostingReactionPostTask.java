@@ -12,10 +12,10 @@ import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;
-import org.moera.node.instant.PostingMediaReactionInstants;
-import org.moera.node.instant.PostingReactionInstants;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
+import org.moera.node.liberin.model.RemotePostingMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingReactionAddedLiberin;
+import org.moera.node.liberin.model.RemotePostingReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.EntryInfo;
@@ -46,12 +46,6 @@ public class RemotePostingReactionPostTask extends Task {
 
     @Inject
     private ContactOperations contactOperations;
-
-    @Inject
-    private PostingReactionInstants postingReactionInstants;
-
-    @Inject
-    private PostingMediaReactionInstants postingMediaReactionInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -141,7 +135,7 @@ public class RemotePostingReactionPostTask extends Task {
         }
 
         if (postingInfo.getParentMediaId() == null) {
-            postingReactionInstants.addingFailed(postingId, postingInfo);
+            send(new RemotePostingReactionAddingFailedLiberin(postingId, postingInfo));
         } else {
             PostingInfo parentPosting = null;
             CommentInfo parentComment = null;
@@ -178,8 +172,8 @@ public class RemotePostingReactionPostTask extends Task {
 
             if (parentComment == null) {
                 String parentPostingId = parentPosting != null ? parentPosting.getId() : null;
-                postingMediaReactionInstants.addingFailed(postingId, parentPostingId, postingInfo.getParentMediaId(),
-                        parentPosting);
+                send(new RemotePostingMediaReactionAddingFailedLiberin(postingId, parentPostingId,
+                        postingInfo.getParentMediaId(), parentPosting));
             } else {
                 send(new RemoteCommentMediaReactionAddingFailedLiberin(postingId, postingInfo.getParentMediaId(),
                         parentPosting, parentComment));

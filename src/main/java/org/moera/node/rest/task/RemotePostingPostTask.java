@@ -14,8 +14,9 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.OwnPostingRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
-import org.moera.node.instant.PostingInstants;
 import org.moera.node.liberin.model.RemotePostingAddedLiberin;
+import org.moera.node.liberin.model.RemotePostingAddingFailedLiberin;
+import org.moera.node.liberin.model.RemotePostingUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.MediaWithDigest;
@@ -49,9 +50,6 @@ public class RemotePostingPostTask extends Task {
 
     @Inject
     private ContactOperations contactOperations;
-
-    @Inject
-    private PostingInstants postingInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -173,9 +171,9 @@ public class RemotePostingPostTask extends Task {
         }
 
         if (prevPostingInfo == null) {
-            postingInstants.remoteAddingFailed(target);
+            send(new RemotePostingAddingFailedLiberin(target));
         } else {
-            postingInstants.remoteUpdateFailed(target, postingId, prevPostingInfo);
+            send(new RemotePostingUpdateFailedLiberin(target, postingId, prevPostingInfo));
         }
     }
 

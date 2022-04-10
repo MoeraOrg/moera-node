@@ -7,9 +7,9 @@ import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
-import org.moera.node.global.RequestContext;
-import org.moera.node.instant.PostingInstants;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.instant.RemoteCommentInstants;
+import org.moera.node.liberin.model.RemotePostingImportantUpdateLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.UnsubscribeFailure;
@@ -25,7 +25,7 @@ import org.moera.node.notification.receive.NotificationProcessor;
 public class RemotePostingProcessor {
 
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
@@ -37,14 +37,11 @@ public class RemotePostingProcessor {
     private RemoteCommentInstants remoteCommentInstants;
 
     @Inject
-    private PostingInstants postingInstants;
-
-    @Inject
     private MediaManager mediaManager;
 
     private Subscription getSubscription(PostingSubscriberNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+                universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
         if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.POSTING_COMMENTS
                 || !notification.getPostingId().equals(subscription.getRemoteEntryId())) {
             throw new UnsubscribeFailure();
@@ -57,7 +54,7 @@ public class RemotePostingProcessor {
     public void commentAdded(PostingCommentAddedNotification notification) {
         Subscription subscription = getSubscription(notification);
         if (notification.getCommentRepliedTo() != null) {
-            int count = ownCommentRepository.countByRemoteCommentId(requestContext.nodeId(),
+            int count = ownCommentRepository.countByRemoteCommentId(universalContext.nodeId(),
                     notification.getSenderNodeName(), notification.getPostingId(), notification.getCommentRepliedTo());
             if (count > 0) {
                 return; // We should receive another notification about somebody replied to our comment
@@ -98,9 +95,11 @@ public class RemotePostingProcessor {
                     if (notification.getSenderAvatar() != null) {
                         notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
                     }
-                    postingInstants.updated(notification.getSenderNodeName(), notification.getSenderFullName(),
-                            notification.getSenderAvatar(), notification.getPostingId(),
-                            notification.getPostingHeading(), notification.getDescription());
+                    universalContext.send(
+                            new RemotePostingImportantUpdateLiberin(notification.getSenderNodeName(),
+                                    notification.getSenderFullName(), notification.getSenderAvatar(),
+                                    notification.getPostingId(), notification.getPostingHeading(),
+                                    notification.getDescription()));
                 });
     }
 

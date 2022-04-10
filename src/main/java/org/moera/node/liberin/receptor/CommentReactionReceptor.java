@@ -31,6 +31,15 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
     }
 
     private void updated(Liberin liberin, Comment comment, Reaction addedReaction, Reaction deletedReaction) {
+        if (deletedReaction != null) {
+            send(Directions.single(liberin.getNodeId(), comment.getOwnerName()),
+                    new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
+                            deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
+                            new AvatarImage(
+                                    deletedReaction.getOwnerAvatarMediaFile(), deletedReaction.getOwnerAvatarShape()),
+                            deletedReaction.isNegative()));
+        }
+
         if (addedReaction != null && addedReaction.getSignature() != null) {
             send(Directions.single(liberin.getNodeId(), comment.getOwnerName()),
                     new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
@@ -40,15 +49,6 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                             new AvatarImage(
                                     addedReaction.getOwnerAvatarMediaFile(), addedReaction.getOwnerAvatarShape()),
                             addedReaction.isNegative(), addedReaction.getEmoji()));
-        }
-
-        if (deletedReaction != null) {
-            send(Directions.single(liberin.getNodeId(), comment.getOwnerName()),
-                    new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
-                            deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
-                            new AvatarImage(
-                                    deletedReaction.getOwnerAvatarMediaFile(), deletedReaction.getOwnerAvatarShape()),
-                            deletedReaction.isNegative()));
         }
 
         send(liberin, new CommentReactionsChangedEvent(comment));

@@ -10,6 +10,7 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
+import org.moera.node.instant.PostingReactionInstants;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
@@ -37,6 +38,9 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
 
+    @Inject
+    private PostingReactionInstants postingReactionInstants;
+
     @LiberinMapping
     public void added(PostingReactionAddedLiberin liberin) {
         Posting posting = liberin.getPosting();
@@ -54,15 +58,47 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
 
     private void updated(Liberin liberin, Posting posting, Reaction addedReaction, Reaction deletedReaction,
                          ReactionTotalsInfo reactionTotals) {
+        if (deletedReaction != null) {
+            AvatarImage ownerAvatar = new AvatarImage(deletedReaction.getOwnerAvatarMediaFile(),
+                    deletedReaction.getOwnerAvatarShape());
+            if (posting.getParentMedia() == null) {
+                // FIXME if not our node is author of the posting
+                send(Directions.single(liberin.getNodeId(), posting.getOwnerName()),
+                        new PostingReactionDeletedNotification(null, null, null,
+                                posting.getId(), deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
+                                ownerAvatar, deletedReaction.isNegative()));
+                // FIXME else
+                postingReactionInstants.deleted(posting.getId(), deletedReaction.getOwnerName(),
+                        deletedReaction.isNegative());
+            } else {
+                Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
+                for (Entry entry : entries) {
+                    UUID parentPostingId = entry instanceof Comment
+                            ? ((Comment) entry).getPosting().getId()
+                            : entry.getId();
+                    UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
+                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName()),
+                            new PostingReactionDeletedNotification(parentPostingId, parentCommentId,
+                                    posting.getParentMedia().getId(), posting.getId(), deletedReaction.getOwnerName(),
+                                    deletedReaction.getOwnerFullName(),
+                                    ownerAvatar, deletedReaction.isNegative()));
+                }
+            }
+        }
+
         if (addedReaction != null && addedReaction.getSignature() != null) {
             AvatarImage ownerAvatar = new AvatarImage(addedReaction.getOwnerAvatarMediaFile(),
                     addedReaction.getOwnerAvatarShape());
             if (posting.getParentMedia() == null) {
+                // FIXME if not our node is author of the posting
                 send(Directions.single(liberin.getNodeId(), posting.getOwnerName()),
                         new PostingReactionAddedNotification(null, null, null, null,
                                 posting.getId(), posting.getCurrentRevision().getHeading(),
                                 addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
                                 ownerAvatar, addedReaction.isNegative(), addedReaction.getEmoji()));
+                // FIXME else
+                postingReactionInstants.added(posting, addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
+                        ownerAvatar, addedReaction.isNegative(), addedReaction.getEmoji());
             } else {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
                 for (Entry entry : entries) {
@@ -76,30 +112,6 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                     posting.getId(), posting.getCurrentRevision().getHeading(),
                                     addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
                                     ownerAvatar, addedReaction.isNegative(), addedReaction.getEmoji()));
-                }
-            }
-        }
-
-        if (deletedReaction != null) {
-            AvatarImage ownerAvatar = new AvatarImage(deletedReaction.getOwnerAvatarMediaFile(),
-                    deletedReaction.getOwnerAvatarShape());
-            if (posting.getParentMedia() == null) {
-                send(Directions.single(liberin.getNodeId(), posting.getOwnerName()),
-                        new PostingReactionDeletedNotification(null, null, null,
-                                posting.getId(), deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
-                                ownerAvatar, deletedReaction.isNegative()));
-            } else {
-                Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
-                for (Entry entry : entries) {
-                    UUID parentPostingId = entry instanceof Comment
-                            ? ((Comment) entry).getPosting().getId()
-                            : entry.getId();
-                    UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName()),
-                            new PostingReactionDeletedNotification(parentPostingId, parentCommentId,
-                                    posting.getParentMedia().getId(), posting.getId(), deletedReaction.getOwnerName(),
-                                    deletedReaction.getOwnerFullName(),
-                                    ownerAvatar, deletedReaction.isNegative()));
                 }
             }
         }
@@ -119,9 +131,12 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                 new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
 
         if (posting.getParentMedia() == null) {
+            // FIXME if not our node is author of the posting
             send(Directions.single(liberin.getNodeId(), posting.getOwnerName()),
                     new PostingReactionDeletedAllNotification(null, null, null,
                             posting.getId()));
+            // FIXME else
+            postingReactionInstants.deletedAll(posting.getId());
         } else {
             Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
             for (Entry entry : entries) {

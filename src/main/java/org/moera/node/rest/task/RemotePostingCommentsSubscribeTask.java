@@ -9,7 +9,7 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
-import org.moera.node.instant.PostingInstants;
+import org.moera.node.liberin.model.RemotePostingCommentsSubscribeFailedLiberin;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
@@ -30,9 +30,6 @@ public class RemotePostingCommentsSubscribeTask extends Task {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
-
-    @Inject
-    private PostingInstants postingInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -103,7 +100,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
         } catch (Exception ex) {
             // ignore
         }
-        postingInstants.subscribingToCommentsFailed(postingId, postingInfo);
+        send(new RemotePostingCommentsSubscribeFailedLiberin(postingId, postingInfo));
     }
 
 }
