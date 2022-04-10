@@ -22,7 +22,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.instant.SubscriberInstants;
 import org.moera.node.liberin.model.SubscriberAddedLiberin;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.media.MediaOperations;
@@ -66,9 +65,6 @@ public class SubscriberController {
 
     @Inject
     private MediaOperations mediaOperations;
-
-    @Inject
-    private SubscriberInstants subscriberInstants;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -161,7 +157,6 @@ public class SubscriberController {
             taskExecutor.execute(avatarTask);
         }
 
-        subscriberInstants.added(subscriber);
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
 
         return new SubscriberInfo(subscriber);
@@ -233,7 +228,6 @@ public class SubscriberController {
             taskExecutor.execute(profileTask);
         }
 
-        subscriberInstants.deleted(subscriber);
         requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
         return Result.OK;

@@ -6,6 +6,7 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.instant.SubscriberInstants;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
@@ -28,6 +29,9 @@ public class SubscriberReceptor extends LiberinReceptorBase {
     @Inject
     private SubscriptionRepository subscriptionRepository;
 
+    @Inject
+    private SubscriberInstants subscriberInstants;
+
     @LiberinMapping
     public void added(SubscriberAddedLiberin liberin) {
         Subscriber subscriber = liberin.getSubscriber();
@@ -42,12 +46,14 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         }
         send(liberin, new SubscriberAddedEvent(subscriber));
         sendPeopleChangedEvent(liberin);
+        subscriberInstants.added(subscriber);
     }
 
     @LiberinMapping
     public void deleted(SubscriberDeletedLiberin liberin) {
         send(liberin, new SubscriberDeletedEvent(liberin.getSubscriber()));
         sendPeopleChangedEvent(liberin);
+        subscriberInstants.deleted(liberin.getSubscriber());
     }
 
     private void sendPeopleChangedEvent(Liberin liberin) {

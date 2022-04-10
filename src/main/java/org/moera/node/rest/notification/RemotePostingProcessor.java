@@ -8,7 +8,8 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.instant.RemoteCommentInstants;
+import org.moera.node.liberin.model.ForeignCommentAddedLiberin;
+import org.moera.node.liberin.model.ForeignCommentDeletedLiberin;
 import org.moera.node.liberin.model.RemotePostingImportantUpdateLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
@@ -32,9 +33,6 @@ public class RemotePostingProcessor {
 
     @Inject
     private OwnCommentRepository ownCommentRepository;
-
-    @Inject
-    private RemoteCommentInstants remoteCommentInstants;
 
     @Inject
     private MediaManager mediaManager;
@@ -69,11 +67,13 @@ public class RemotePostingProcessor {
                     if (notification.getCommentOwnerAvatar() != null) {
                         notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
                     }
-                    remoteCommentInstants.added(notification.getSenderNodeName(), notification.getSenderFullName(),
-                            notification.getSenderAvatar(), notification.getPostingId(),
-                            notification.getPostingHeading(), notification.getCommentOwnerName(),
-                            notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
-                            notification.getCommentId(), notification.getCommentHeading(), subscription.getReason());
+                    universalContext.send(
+                            new ForeignCommentAddedLiberin(notification.getSenderNodeName(),
+                                    notification.getSenderFullName(), notification.getSenderAvatar(),
+                                    notification.getPostingId(), notification.getPostingHeading(),
+                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                    notification.getCommentOwnerAvatar(), notification.getCommentId(),
+                                    notification.getCommentHeading(), subscription.getReason()));
                 });
     }
 
@@ -81,8 +81,9 @@ public class RemotePostingProcessor {
     @Transactional
     public void commentDeleted(PostingCommentDeletedNotification notification) {
         Subscription subscription = getSubscription(notification);
-        remoteCommentInstants.deleted(notification.getSenderNodeName(), notification.getPostingId(),
-                notification.getCommentOwnerName(), notification.getCommentId(), subscription.getReason());
+        universalContext.send(
+                new ForeignCommentDeletedLiberin(notification.getSenderNodeName(), notification.getPostingId(),
+                        notification.getCommentOwnerName(), notification.getCommentId(), subscription.getReason()));
     }
 
     @NotificationMapping(NotificationType.POSTING_IMPORTANT_UPDATE)
