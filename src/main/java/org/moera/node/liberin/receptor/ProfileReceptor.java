@@ -24,7 +24,7 @@ public class ProfileReceptor extends LiberinReceptorBase {
         send(liberin, new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
         send(Directions.profileSubscribers(liberin.getNodeId()), new ProfileUpdatedNotification());
         if (!Objects.equals(liberin.getOptions().getString("profile.email"), liberin.getOldEmail())) {
-            send(liberin, new EmailConfirmMail());
+            send(new EmailConfirmMail());
         }
     }
 

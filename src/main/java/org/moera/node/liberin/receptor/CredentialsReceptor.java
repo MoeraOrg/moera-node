@@ -11,7 +11,7 @@ public class CredentialsReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void passwordReset(PasswordResetLiberin liberin) {
-        send(liberin, new PasswordResetMail(liberin.getToken()));
+        send(new PasswordResetMail(liberin.getToken()));
     }
 
 }

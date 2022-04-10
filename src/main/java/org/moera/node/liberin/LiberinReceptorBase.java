@@ -3,6 +3,7 @@ package org.moera.node.liberin;
 import javax.inject.Inject;
 
 import org.moera.node.event.EventManager;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.mail.Mail;
 import org.moera.node.mail.MailService;
 import org.moera.node.model.event.Event;
@@ -13,6 +14,9 @@ import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
 
 public abstract class LiberinReceptorBase {
+
+    @Inject
+    private UniversalContext universalContext;
 
     @Inject
     private LiberinManager liberinManager;
@@ -29,8 +33,8 @@ public abstract class LiberinReceptorBase {
     @Inject
     private PushService pushService;
 
-    protected void send(Liberin liberin, Liberin subLiberin) {
-        liberinManager.send(subLiberin.withNodeId(liberin.getNodeId()));
+    protected void send(Liberin subLiberin) {
+        liberinManager.send(subLiberin.withNodeId(universalContext.nodeId()));
     }
 
     protected void send(Liberin liberin, Event event) {
@@ -41,12 +45,12 @@ public abstract class LiberinReceptorBase {
         notificationSenderPool.send(direction, notification);
     }
 
-    protected void send(Liberin liberin, Mail mail) {
-        mailService.send(liberin.getNodeId(), mail);
+    protected void send(Mail mail) {
+        mailService.send(universalContext.nodeId(), mail);
     }
 
-    protected void send(Liberin liberin, PushContent pushContent) {
-        pushService.send(liberin.getNodeId(), pushContent);
+    protected void send(PushContent pushContent) {
+        pushService.send(universalContext.nodeId(), pushContent);
     }
 
 }

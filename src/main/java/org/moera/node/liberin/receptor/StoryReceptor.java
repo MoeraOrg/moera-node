@@ -5,7 +5,6 @@ import javax.inject.Inject;
 
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
-import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -34,8 +33,8 @@ public class StoryReceptor extends LiberinReceptorBase {
             send(liberin, new StoryAddedEvent(story, false));
         }
         send(liberin, new StoryAddedEvent(story, true));
-        push(liberin, story);
-        feedStatusUpdated(liberin, story);
+        push(story);
+        feedStatusUpdated(story);
     }
 
     @LiberinMapping
@@ -46,8 +45,8 @@ public class StoryReceptor extends LiberinReceptorBase {
             send(liberin, new StoryUpdatedEvent(story, false));
         }
         send(liberin, new StoryUpdatedEvent(story, true));
-        push(liberin, story);
-        feedStatusUpdated(liberin, story);
+        push(story);
+        feedStatusUpdated(story);
     }
 
     @LiberinMapping
@@ -58,25 +57,25 @@ public class StoryReceptor extends LiberinReceptorBase {
             send(liberin, new StoryDeletedEvent(story, false));
         }
         send(liberin, new StoryDeletedEvent(story, true));
-        deletePush(liberin, story);
-        feedStatusUpdated(liberin, story);
+        deletePush(story);
+        feedStatusUpdated(story);
     }
 
-    private void push(Liberin liberin, Story story) {
+    private void push(Story story) {
         if (Objects.equals(story.getFeedName(), Feed.INSTANT)) {
-            send(liberin, PushContent.storyAdded(story));
+            send(PushContent.storyAdded(story));
         }
     }
 
-    private void deletePush(Liberin liberin, Story story) {
+    private void deletePush(Story story) {
         if (Objects.equals(story.getFeedName(), Feed.INSTANT)) {
-            send(liberin, PushContent.storyDeleted(story.getId()));
+            send(PushContent.storyDeleted(story.getId()));
         }
     }
 
-    private void feedStatusUpdated(Liberin liberin, Story story) {
+    private void feedStatusUpdated(Story story) {
         FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName(), true);
-        send(liberin, new FeedStatusUpdatedLiberin(story.getFeedName(), feedStatus));
+        send(new FeedStatusUpdatedLiberin(story.getFeedName(), feedStatus));
     }
 
 }

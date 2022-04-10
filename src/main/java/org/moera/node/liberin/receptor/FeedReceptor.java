@@ -22,7 +22,7 @@ public class FeedReceptor extends LiberinReceptorBase {
         if (liberin.getChange() != null) {
             send(liberin, new StoriesStatusUpdatedEvent(liberin.getFeedName(), liberin.getChange()));
         }
-        send(liberin, PushContent.feedUpdated(liberin.getFeedName(), liberin.getStatus()));
+        send(PushContent.feedUpdated(liberin.getFeedName(), liberin.getStatus()));
     }
 
 }
