@@ -16,7 +16,7 @@ import org.moera.node.push.PushService;
 public abstract class LiberinReceptorBase {
 
     @Inject
-    private UniversalContext universalContext;
+    protected UniversalContext universalContext;
 
     @Inject
     private LiberinManager liberinManager;
