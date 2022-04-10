@@ -1,6 +1,5 @@
 package org.moera.node.liberin;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,11 +10,13 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.node.global.UniversalContext;
+import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.method.HandlerMethod;
 
 @Service
@@ -31,6 +32,9 @@ public class LiberinManager implements Runnable {
 
     @Inject
     private UniversalContext universalContext;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     @PostConstruct
     public void init() {
@@ -91,8 +95,12 @@ public class LiberinManager implements Runnable {
                 continue;
             }
             try {
-                handler.getMethod().invoke(handler.getBean(), liberin);
-            } catch (InvocationTargetException | IllegalAccessException e) {
+                Liberin lb = liberin;
+                Transaction.execute(txManager, () -> {
+                    handler.getMethod().invoke(handler.getBean(), lb);
+                    return null;
+                });
+            } catch (Throwable e) {
                 log.error(String.format("Error handling liberin %s:", liberin.getClass().getSimpleName()), e);
             }
         }
