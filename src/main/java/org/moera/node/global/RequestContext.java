@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.UUID;
 
+import org.moera.node.auth.Principal;
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
@@ -73,6 +74,8 @@ public interface RequestContext {
     UUID avatarId();
 
     Avatar getAvatar();
+
+    boolean isPrincipal(Principal principal);
 
     void send(Liberin liberin);
 

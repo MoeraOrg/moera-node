@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.auth.Principal;
+import org.moera.node.auth.UnresolvedPrincipalException;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.liberin.Liberin;
@@ -207,6 +209,19 @@ public class RequestContextImpl implements RequestContext {
             avatar = avatarRepository.findByNodeIdAndId(nodeId(), avatarId()).orElse(null);
         }
         return avatar;
+    }
+
+    @Override
+    public boolean isPrincipal(Principal principal) {
+        if (principal.isAdmin()) {
+            return isAdmin();
+        } else if (principal.isSigned()) {
+            return getClientName() != null;
+        } else if (principal.isNode()) {
+            return Objects.equals(getClientName(), principal.getNodeName());
+        } else {
+            throw new UnresolvedPrincipalException(principal);
+        }
     }
 
     @Override
