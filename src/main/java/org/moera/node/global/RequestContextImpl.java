@@ -213,18 +213,22 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(Principal principal) {
+        if (principal.isOnly()) {
+            return Objects.equals(getClientName(), principal.getNodeName());
+        }
         if (isAdmin()) {
             return true;
         }
         if (principal.isAdmin()) {
             return false;
-        } else if (principal.isSigned()) {
-            return getClientName() != null;
-        } else if (principal.isNode()) {
-            return Objects.equals(getClientName(), principal.getNodeName());
-        } else {
-            throw new UnresolvedPrincipalException(principal);
         }
+        if (principal.isSigned()) {
+            return getClientName() != null;
+        }
+        if (principal.isNode()) {
+            return Objects.equals(getClientName(), principal.getNodeName());
+        }
+        throw new UnresolvedPrincipalException(principal);
     }
 
     @Override

@@ -6,6 +6,7 @@ public class Principal {
 
     public static final Principal ADMIN = new Principal("admin");
     public static final Principal SIGNED = new Principal("signed");
+    public static final Principal RULER = new Principal("ruler");
     public static final Principal OWNER = new Principal("owner");
 
     private final String value;
@@ -22,6 +23,10 @@ public class Principal {
         return new Principal("node:" + nodeName);
     }
 
+    public static Principal ofOnly(String nodeName) {
+        return new Principal("only:" + nodeName);
+    }
+
     public String getValue() {
         return value;
     }
@@ -34,6 +39,10 @@ public class Principal {
         return value.equals(SIGNED.value);
     }
 
+    public boolean isRuler() {
+        return value.equals(RULER.value);
+    }
+
     public boolean isOwner() {
         return value.equals(OWNER.value);
     }
@@ -42,12 +51,22 @@ public class Principal {
         return value.startsWith("node:");
     }
 
+    public boolean isOnly() {
+        return value.startsWith("only:");
+    }
+
     public String getNodeName() {
-        return isNode() ? value.substring(5) : null;
+        return isNode() || isOnly() ? value.substring(5) : null;
     }
 
     public Principal withOwner(String ownerName) {
-        return isOwner() ? Principal.ofNode(ownerName) : this;
+        if (isOwner()) {
+            return Principal.ofOnly(ownerName);
+        }
+        if (isRuler()) {
+            return Principal.ofNode(ownerName);
+        }
+        return this;
     }
 
     @Override
