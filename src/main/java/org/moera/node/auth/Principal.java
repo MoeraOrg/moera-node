@@ -10,7 +10,7 @@ public class Principal {
 
     private final String value;
 
-    public Principal(String value) {
+    Principal(String value) {
         if (value == null) {
             throw new IllegalArgumentException("Principal cannot be null");
         }
