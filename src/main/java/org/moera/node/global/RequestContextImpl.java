@@ -213,8 +213,11 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(Principal principal) {
+        if (isAdmin()) {
+            return true;
+        }
         if (principal.isAdmin()) {
-            return isAdmin();
+            return false;
         } else if (principal.isSigned()) {
             return getClientName() != null;
         } else if (principal.isNode()) {
