@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.Principal;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
@@ -69,7 +70,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private byte[] signature;
     private Short signatureVersion;
     private List<FeedReference> feedReferences;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -153,11 +154,10 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
         operations = new HashMap<>();
-        operations.put("edit", receiverName == null ? new String[]{"owner"} : new String[0]);
-        operations.put("delete", receiverName == null ? new String[]{"owner", "admin"} : new String[]{"admin"});
-        operations.put("revisions", new String[0]);
-        operations.put("reactions",
-                posting.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
+        operations.put("edit", receiverName == null ? Principal.OWNER : Principal.NONE);
+        operations.put("delete", receiverName == null ? Principal.RULER : Principal.ADMIN);
+        operations.put("revisions", Principal.NONE);
+        operations.put("reactions", posting.isReactionsVisible() ? Principal.PUBLIC : Principal.RULER);
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
@@ -507,11 +507,11 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     // end
 
     @Override
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

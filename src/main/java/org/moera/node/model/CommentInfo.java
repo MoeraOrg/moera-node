@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
@@ -53,7 +54,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private byte[] digest;
     private byte[] signature;
     private Short signatureVersion;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ClientReactionInfo seniorReaction;
@@ -111,11 +112,10 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         operations = new HashMap<>();
-        operations.put("edit", new String[]{"owner"});
-        operations.put("delete", new String[]{"owner", "admin"});
-        operations.put("revisions", new String[0]);
-        operations.put("reactions",
-                comment.isReactionsVisible() ? new String[]{"public"} : new String[]{"owner", "admin"});
+        operations.put("edit", Principal.OWNER);
+        operations.put("delete", Principal.RULER);
+        operations.put("revisions", Principal.NONE);
+        operations.put("reactions", comment.isReactionsVisible() ? Principal.PUBLIC : Principal.RULER);
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(comment.getAcceptedReactionsNegative());
@@ -384,11 +384,11 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     }
 
     @Override
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

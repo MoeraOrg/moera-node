@@ -7,6 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.moera.node.event.EventSubscriber;
@@ -36,7 +37,7 @@ public class StoryEvent extends Event {
     private String remoteFullName;
     private String remotePostingId;
     private String remoteCommentId;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
     @JsonIgnore
     private boolean isAdmin;
 
@@ -68,8 +69,8 @@ public class StoryEvent extends Event {
         summaryAvatar = storyInfo.getSummaryAvatar();
         summary = story.getSummary();
         operations = new HashMap<>();
-        operations.put("edit", new String[]{"admin"});
-        operations.put("delete", new String[]{"admin"});
+        operations.put("edit", Principal.ADMIN);
+        operations.put("delete", Principal.ADMIN);
         this.isAdmin = isAdmin;
     }
 
@@ -217,11 +218,11 @@ public class StoryEvent extends Event {
         this.remoteCommentId = remoteCommentId;
     }
 
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

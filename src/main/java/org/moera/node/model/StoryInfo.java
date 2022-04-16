@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.moera.node.util.Util;
@@ -33,7 +34,7 @@ public class StoryInfo {
     private String remotePostingId;
     private String remoteCommentId;
     private String remoteMediaId;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
 
     public StoryInfo() {
     }
@@ -53,8 +54,8 @@ public class StoryInfo {
         }
         summary = story.getSummary();
         operations = new HashMap<>();
-        operations.put("edit", new String[]{"admin"});
-        operations.put("delete", new String[]{"admin"});
+        operations.put("edit", Principal.ADMIN);
+        operations.put("delete", Principal.ADMIN);
     }
 
     public static StoryInfo build(Story story, boolean isAdmin,
@@ -390,11 +391,11 @@ public class StoryInfo {
         this.remoteMediaId = remoteMediaId;
     }
 
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Principal;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryType;
@@ -29,7 +30,7 @@ public class ReactionInfo {
     private Long deadline;
     private byte[] signature;
     private Short signatureVersion;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
 
     public ReactionInfo() {
     }
@@ -58,7 +59,7 @@ public class ReactionInfo {
         signature = reaction.getSignature();
         signatureVersion = reaction.getSignatureVersion();
         operations = new HashMap<>();
-        operations.put("delete", new String[]{"owner", "admin"});
+        operations.put("delete", Principal.RULER);
     }
 
     public static ReactionInfo ofPosting(UUID postingId) {
@@ -185,11 +186,11 @@ public class ReactionInfo {
         this.signatureVersion = signatureVersion;
     }
 
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

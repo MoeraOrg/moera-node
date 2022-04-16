@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
 
@@ -15,7 +16,7 @@ public class FeedReference {
     private boolean pinned;
     private Long moment;
     private String storyId;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
 
     public FeedReference() {
     }
@@ -27,8 +28,8 @@ public class FeedReference {
         moment = story.getMoment();
         storyId = story.getId().toString();
         operations = new HashMap<>();
-        operations.put("edit", new String[]{"admin"});
-        operations.put("delete", new String[]{"admin"});
+        operations.put("edit", Principal.ADMIN);
+        operations.put("delete", Principal.ADMIN);
     }
 
     public String getFeedName() {
@@ -71,11 +72,11 @@ public class FeedReference {
         this.storyId = storyId;
     }
 
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

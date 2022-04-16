@@ -4,10 +4,12 @@ import java.util.Objects;
 
 public class Principal {
 
+    public static final Principal NONE = new Principal("none");
     public static final Principal ADMIN = new Principal("admin");
     public static final Principal SIGNED = new Principal("signed");
     public static final Principal RULER = new Principal("ruler");
     public static final Principal OWNER = new Principal("owner");
+    public static final Principal PUBLIC = new Principal("public");
 
     private final String value;
 
@@ -31,6 +33,10 @@ public class Principal {
         return value;
     }
 
+    public boolean isNone() {
+        return value.equals(NONE.value);
+    }
+
     public boolean isAdmin() {
         return value.equals(ADMIN.value);
     }
@@ -45,6 +51,10 @@ public class Principal {
 
     public boolean isOwner() {
         return value.equals(OWNER.value);
+    }
+
+    public boolean isPublic() {
+        return value.equals(PUBLIC.value);
     }
 
     public boolean isNode() {

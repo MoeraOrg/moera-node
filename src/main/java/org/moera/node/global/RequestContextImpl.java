@@ -213,6 +213,9 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(Principal principal) {
+        if (principal.isNone()) {
+            return false;
+        }
         if (principal.isOnly()) {
             return Objects.equals(getClientName(), principal.getNodeName());
         }

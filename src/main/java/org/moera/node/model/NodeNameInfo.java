@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.naming.rpc.OperationStatus;
+import org.moera.node.auth.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
 
@@ -16,7 +17,7 @@ public class NodeNameInfo {
     private Long operationStatusUpdated;
     private String operationErrorCode;
     private String operationErrorMessage;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
 
     public NodeNameInfo() {
     }
@@ -52,7 +53,7 @@ public class NodeNameInfo {
                 }
             }
         }
-        operations = Collections.singletonMap("manage", new String[]{"admin"});
+        operations = Collections.singletonMap("manage", Principal.ADMIN);
     }
 
     public String getName() {
@@ -95,11 +96,11 @@ public class NodeNameInfo {
         this.operationErrorMessage = operationErrorMessage;
     }
 
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

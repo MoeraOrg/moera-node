@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Principal;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FeedInfo implements Cloneable {
@@ -13,7 +14,7 @@ public class FeedInfo implements Cloneable {
     private int total;
     private Long firstCreatedAt;
     private Long lastCreatedAt;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
 
     public FeedInfo() {
     }
@@ -70,11 +71,11 @@ public class FeedInfo implements Cloneable {
         this.lastCreatedAt = lastCreatedAt;
     }
 
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

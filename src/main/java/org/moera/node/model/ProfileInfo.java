@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Principal;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
@@ -20,7 +21,7 @@ public class ProfileInfo {
     private String bioHtml;
     private AvatarInfo avatar;
     private FundraiserInfo[] fundraisers;
-    private Map<String, String[]> operations;
+    private Map<String, Principal> operations;
 
     public ProfileInfo() {
     }
@@ -42,7 +43,7 @@ public class ProfileInfo {
             this.avatar = new AvatarInfo(requestContext.getAvatar());
         }
         fundraisers = FundraiserInfo.deserializeValue(options.getString("profile.fundraisers"));
-        operations = Collections.singletonMap("edit", new String[]{"admin"});
+        operations = Collections.singletonMap("edit", Principal.ADMIN);
     }
 
     public String getFullName() {
@@ -117,11 +118,11 @@ public class ProfileInfo {
         this.fundraisers = fundraisers;
     }
 
-    public Map<String, String[]> getOperations() {
+    public Map<String, Principal> getOperations() {
         return operations;
     }
 
-    public void setOperations(Map<String, String[]> operations) {
+    public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
     }
 

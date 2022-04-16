@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.moera.node.auth.Principal;
 import org.moera.node.model.FeedInfo;
 
 public class Feed {
@@ -19,16 +20,16 @@ public class Feed {
     static {
         FeedInfo feedInfo = new FeedInfo(TIMELINE);
         feedInfo.setTitle("Timeline");
-        feedInfo.setOperations(Collections.singletonMap("add", new String[]{"admin"}));
+        feedInfo.setOperations(Collections.singletonMap("add", Principal.ADMIN));
         STANDARD.put(TIMELINE, feedInfo);
 
         feedInfo = new FeedInfo(INSTANT);
-        feedInfo.setOperations(Collections.singletonMap("add", new String[]{}));
+        feedInfo.setOperations(Collections.singletonMap("add", Principal.NONE));
         STANDARD.put(INSTANT, feedInfo);
 
         feedInfo = new FeedInfo(NEWS);
         feedInfo.setTitle("News");
-        feedInfo.setOperations(Collections.singletonMap("add", new String[]{}));
+        feedInfo.setOperations(Collections.singletonMap("add", Principal.NONE));
         STANDARD.put(NEWS, feedInfo);
     }
 
