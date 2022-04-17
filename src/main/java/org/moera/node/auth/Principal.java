@@ -2,6 +2,12 @@ package org.moera.node.auth;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.util.StdConverter;
+
+@JsonSerialize(converter = Principal.ToStringConverter.class)
+@JsonDeserialize(converter = Principal.FromStringConverter.class)
 public class Principal {
 
     public static final Principal NONE = new Principal("none");
@@ -100,6 +106,24 @@ public class Principal {
     @Override
     public String toString() {
         return value;
+    }
+
+    public static class ToStringConverter extends StdConverter<Principal, String> {
+
+        @Override
+        public String convert(Principal principal) {
+            return principal.getValue();
+        }
+
+    }
+
+    public static class FromStringConverter extends StdConverter<String, Principal> {
+
+        @Override
+        public Principal convert(String s) {
+            return new Principal(s);
+        }
+
     }
 
 }
