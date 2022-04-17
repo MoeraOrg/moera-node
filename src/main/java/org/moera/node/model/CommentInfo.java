@@ -8,7 +8,7 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.node.auth.Principal;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;

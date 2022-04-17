@@ -3,7 +3,7 @@ package org.moera.node.model;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.Principal;
+import org.moera.node.auth.principal.Principal;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FeedInfo implements Cloneable {

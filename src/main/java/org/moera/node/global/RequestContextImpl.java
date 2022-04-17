@@ -7,8 +7,8 @@ import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.node.auth.Principal;
-import org.moera.node.auth.UnresolvedPrincipalException;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.UnresolvedPrincipalException;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.liberin.Liberin;

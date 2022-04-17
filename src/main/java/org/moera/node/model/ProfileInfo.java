@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.Principal;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;

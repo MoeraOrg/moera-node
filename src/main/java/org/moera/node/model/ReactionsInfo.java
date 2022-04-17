@@ -2,7 +2,7 @@ package org.moera.node.model;
 
 import java.util.Map;
 
-import org.moera.node.auth.Principal;
+import org.moera.node.auth.principal.Principal;
 
 public interface ReactionsInfo {
 

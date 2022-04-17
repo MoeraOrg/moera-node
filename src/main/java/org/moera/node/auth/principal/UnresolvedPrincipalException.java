@@ -1,4 +1,4 @@
-package org.moera.node.auth;
+package org.moera.node.auth.principal;
 
 public class UnresolvedPrincipalException extends RuntimeException {
 

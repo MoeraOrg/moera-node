@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.Principal;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
 

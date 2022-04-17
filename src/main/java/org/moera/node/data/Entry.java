@@ -21,12 +21,16 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.TypeDef;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalType;
 import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "entries")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "entryType", discriminatorType = DiscriminatorType.INTEGER)
+@TypeDef(name = "Principal", typeClass = PrincipalType.class, defaultForType = Principal.class)
 public class Entry {
 
     @Id
@@ -138,6 +142,8 @@ public class Entry {
     private String repliedToHeading;
 
     private byte[] repliedToDigest;
+
+    private Principal readPrincipal;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
@@ -506,6 +512,14 @@ public class Entry {
 
     public void setRepliedToDigest(byte[] repliedToDigest) {
         this.repliedToDigest = repliedToDigest;
+    }
+
+    public Principal getReadPrincipal() {
+        return readPrincipal;
+    }
+
+    public void setReadPrincipal(Principal readPrincipal) {
+        this.readPrincipal = readPrincipal;
     }
 
     public Set<Story> getStories() {

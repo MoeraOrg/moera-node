@@ -1,4 +1,4 @@
-package org.moera.node.auth;
+package org.moera.node.auth.principal;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;

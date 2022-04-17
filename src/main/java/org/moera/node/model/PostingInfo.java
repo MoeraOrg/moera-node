@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.node.auth.Principal;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
@@ -154,6 +154,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
         operations = new HashMap<>();
+        operations.put("view", posting.getReadPrincipal());
         operations.put("edit", receiverName == null ? Principal.OWNER : Principal.NONE);
         operations.put("delete", receiverName == null ? Principal.RULER : Principal.ADMIN);
         operations.put("revisions", Principal.NONE);

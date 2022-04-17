@@ -1,4 +1,4 @@
-package org.moera.node.auth;
+package org.moera.node.auth.principal;
 
 import java.util.Objects;
 
@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.util.StdConverter;
 
 @JsonSerialize(converter = Principal.ToStringConverter.class)
 @JsonDeserialize(converter = Principal.FromStringConverter.class)
-public class Principal {
+public class Principal implements Cloneable {
 
     public static final Principal NONE = new Principal("none");
     public static final Principal ADMIN = new Principal("admin");
@@ -106,6 +106,11 @@ public class Principal {
     @Override
     public String toString() {
         return value;
+    }
+
+    @Override
+    protected Principal clone() {
+        return new Principal(value);
     }
 
     public static class ToStringConverter extends StdConverter<Principal, String> {
