@@ -32,12 +32,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class AuthenticationInterceptor implements HandlerInterceptor {
 
-    private static class Secrets {
-        public String rootSecret;
-        public String token;
-        public String carte;
-    }
-
     private static final Logger log = LoggerFactory.getLogger(AuthenticationInterceptor.class);
 
     @Inject
@@ -101,32 +95,21 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         objectMapper.writeValue(response.getWriter(), new Result(errorCode, message));
     }
 
-    private Secrets extractSecrets(HttpServletRequest request) {
-        Secrets secrets = new Secrets();
+    private AuthSecrets extractSecrets(HttpServletRequest request) {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (!ObjectUtils.isEmpty(authHeader)) {
             String[] parts = StringUtils.split(authHeader, " ");
             if (parts != null && parts[0].trim().equalsIgnoreCase("bearer")) {
-                String auth = parts[1].trim();
-                if (auth.startsWith("secret:")) {
-                    secrets.rootSecret = auth.substring(7);
-                } else if (auth.startsWith("token:")) {
-                    secrets.token = auth.substring(6);
-                } else if (auth.startsWith("carte:")) {
-                    secrets.carte = auth.substring(6);
-                } else {
-                    secrets.token = auth;
-                }
-                return secrets;
+                return new AuthSecrets(parts[1].trim());
             }
         }
-        return secrets;
+        return new AuthSecrets();
     }
 
     private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException, UnknownHostException {
         requestContext.setLocalAddr(InetAddress.getByName(request.getLocalAddr()));
         requestContext.setBrowserExtension(request.getHeader("X-Accept-Moera") != null);
-        Secrets secrets = extractSecrets(request);
+        AuthSecrets secrets = extractSecrets(request);
         if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {
             requestContext.setRootAdmin(true);
             MDC.put("auth", "!");
