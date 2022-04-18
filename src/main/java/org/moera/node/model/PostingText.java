@@ -2,12 +2,14 @@ package org.moera.node.model;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
@@ -66,6 +68,8 @@ public class PostingText {
 
     private short signatureVersion;
 
+    private Map<String, Principal> operations;
+
     public PostingText() {
     }
 
@@ -94,6 +98,7 @@ public class PostingText {
             body = new Body(bodySrc).getEncoded();
             bodyFormat = BodyFormat.APPLICATION.getValue();
         }
+        operations = sourceText.getOperations();
     }
 
     public void initAcceptedReactionsDefaults() {
@@ -252,6 +257,18 @@ public class PostingText {
         this.signatureVersion = signatureVersion;
     }
 
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
+    }
+
+    public Principal getPrincipal(String operationName) {
+        return operations != null ? operations.get(operationName) : null;
+    }
+
     public void toEntry(Entry entry) {
         if (sameAsEntry(entry)) {
             return;
@@ -286,6 +303,9 @@ public class PostingText {
                 entry.setOwnerAvatarShape(ownerAvatar.getShape());
             }
         }
+        if (getPrincipal("view") != null) {
+            entry.setViewPrincipal(getPrincipal("view"));
+        }
     }
 
     public boolean sameAsEntry(Entry entry) {
@@ -300,7 +320,8 @@ public class PostingText {
                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()))
                && (ownerAvatarMediaFile == null
                     || entry.getOwnerAvatarMediaFile() != null
-                        && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
+                        && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()))
+               && Objects.equals(getPrincipal("view"), entry.getViewPrincipal());
     }
 
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter,

@@ -63,7 +63,7 @@ public class PrincipalType implements UserType {
 
     @Override
     public Object deepCopy(Object o) throws HibernateException {
-        return ((Principal) o).clone();
+        return o != null ? ((Principal) o).clone() : o;
     }
 
     @Override
@@ -73,12 +73,12 @@ public class PrincipalType implements UserType {
 
     @Override
     public Serializable disassemble(Object o) throws HibernateException {
-        return ((Principal) o).getValue();
+        return o != null ? ((Principal) o).getValue() : null;
     }
 
     @Override
     public Object assemble(Serializable serializable, Object o) throws HibernateException {
-        return new Principal((String) o);
+        return o != null ? new Principal((String) o) : null;
     }
 
     @Override

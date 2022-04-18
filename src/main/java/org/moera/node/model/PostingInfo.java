@@ -154,7 +154,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
         operations = new HashMap<>();
-        operations.put("view", posting.getReadPrincipal());
+        operations.put("view", posting.getViewPrincipal());
         operations.put("edit", receiverName == null ? Principal.OWNER : Principal.NONE);
         operations.put("delete", receiverName == null ? Principal.RULER : Principal.ADMIN);
         operations.put("revisions", Principal.NONE);

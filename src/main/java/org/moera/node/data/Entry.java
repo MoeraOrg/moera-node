@@ -143,7 +143,7 @@ public class Entry {
 
     private byte[] repliedToDigest;
 
-    private Principal readPrincipal;
+    private Principal viewPrincipal = Principal.PUBLIC;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
@@ -514,12 +514,12 @@ public class Entry {
         this.repliedToDigest = repliedToDigest;
     }
 
-    public Principal getReadPrincipal() {
-        return readPrincipal;
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
     }
 
-    public void setReadPrincipal(Principal readPrincipal) {
-        this.readPrincipal = readPrincipal;
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
     }
 
     public Set<Story> getStories() {
