@@ -59,7 +59,7 @@ public class ReactionInfo {
         signature = reaction.getSignature();
         signatureVersion = reaction.getSignatureVersion();
         operations = new HashMap<>();
-        operations.put("delete", Principal.RULER);
+        operations.put("delete", Principal.PRIVATE);
     }
 
     public static ReactionInfo ofPosting(UUID postingId) {

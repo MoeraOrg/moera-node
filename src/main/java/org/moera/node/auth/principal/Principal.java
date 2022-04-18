@@ -13,7 +13,7 @@ public class Principal implements Cloneable {
     public static final Principal NONE = new Principal("none");
     public static final Principal ADMIN = new Principal("admin");
     public static final Principal SIGNED = new Principal("signed");
-    public static final Principal RULER = new Principal("ruler");
+    public static final Principal PRIVATE = new Principal("private");
     public static final Principal OWNER = new Principal("owner");
     public static final Principal PUBLIC = new Principal("public");
 
@@ -51,8 +51,8 @@ public class Principal implements Cloneable {
         return value.equals(SIGNED.value);
     }
 
-    public boolean isRuler() {
-        return value.equals(RULER.value);
+    public boolean isPrivate() {
+        return value.equals(PRIVATE.value);
     }
 
     public boolean isOwner() {
@@ -79,7 +79,7 @@ public class Principal implements Cloneable {
         if (isOwner()) {
             return Principal.ofOnly(ownerName);
         }
-        if (isRuler()) {
+        if (isPrivate()) {
             return Principal.ofNode(ownerName);
         }
         return this;
