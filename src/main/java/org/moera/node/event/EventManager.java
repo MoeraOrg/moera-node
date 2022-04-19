@@ -1,5 +1,7 @@
 package org.moera.node.event;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -16,9 +18,11 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.AuthSecrets;
 import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.domain.Domains;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PingEvent;
 import org.slf4j.Logger;
@@ -48,6 +52,9 @@ public class EventManager {
     private static final String TOKEN_HEADER = "token";
 
     @Inject
+    private UniversalContext universalContext;
+
+    @Inject
     private Domains domains;
 
     @Inject
@@ -72,19 +79,41 @@ public class EventManager {
         }
         UUID nodeId = domains.getDomainNodeId(accessor.getHost());
         nodeId = nodeId != null ? nodeId : domains.getDomainNodeId(Domains.DEFAULT_DOMAIN);
+        universalContext.associate(nodeId);
+
+        AuthSecrets secrets = new AuthSecrets(accessor.getFirstNativeHeader(TOKEN_HEADER));
         boolean admin = false;
+        String clientName = null;
         try {
-            admin = authenticationManager.isAdminToken(accessor.getFirstNativeHeader(TOKEN_HEADER), nodeId);
-        } catch (InvalidTokenException e) { // Ignore, the client will detect the problem from REST API requests
+            admin = authenticationManager.isAdminToken(secrets.token, nodeId);
+            if (admin) {
+                clientName = universalContext.nodeName();
+            } else {
+                clientName = authenticationManager.getClientName(secrets.carte, getRemoteAddress(accessor));
+            }
+        } catch (InvalidTokenException | UnknownHostException e) {
+            // Ignore, the client will detect the problem from REST API requests
         }
-        MDC.put("domain", domains.getDomainEffectiveName(accessor.getHost()));
-        log.info("Session connect, id = {} {}", accessor.getSessionId(), admin ? "admin" : "non-admin");
+        log.info("Session connect, id = {} {} clientName = {}",
+                accessor.getSessionId(), admin ? "admin" : "non-admin", LogUtil.format(clientName));
 
         EventSubscriber subscriber = new EventSubscriber();
         subscriber.setNodeId(nodeId);
         subscriber.setSessionId(accessor.getSessionId());
         subscriber.setAdmin(admin);
+        subscriber.setClientName(clientName);
         subscribers.put(accessor.getSessionId(), subscriber);
+    }
+
+    private InetAddress getRemoteAddress(StompHeaderAccessor accessor) throws UnknownHostException {
+        String address = "127.0.0.1";
+        if (accessor.getSessionAttributes() != null) {
+            Object ip = accessor.getSessionAttributes().get("ip");
+            if (ip != null) {
+                address = ip.toString();
+            }
+        }
+        return InetAddress.getByName(address);
     }
 
     @EventListener(SessionSubscribeEvent.class)

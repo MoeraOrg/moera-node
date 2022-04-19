@@ -8,6 +8,7 @@ public class EventSubscriber {
     private String sessionId;
     private int lastEventSeen;
     private boolean admin;
+    private String clientName;
     private boolean subscribed;
 
     public UUID getNodeId() {
@@ -40,6 +41,14 @@ public class EventSubscriber {
 
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
     }
 
     public boolean isSubscribed() {
