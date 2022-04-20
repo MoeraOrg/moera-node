@@ -4,13 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
-import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.util.Util;
@@ -38,15 +36,13 @@ public class StoryEvent extends Event {
     private String remotePostingId;
     private String remoteCommentId;
     private Map<String, Principal> operations;
-    @JsonIgnore
-    private boolean isAdmin;
 
     protected StoryEvent(EventType type) {
         super(type);
     }
 
     protected StoryEvent(EventType type, Story story, boolean isAdmin) {
-        super(type);
+        super(type, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
         StoryInfo storyInfo = StoryInfo.build(story, isAdmin, st -> null);
         id = story.getId().toString();
         storyType = story.getStoryType();
@@ -71,7 +67,6 @@ public class StoryEvent extends Event {
         operations = new HashMap<>();
         operations.put("edit", Principal.ADMIN);
         operations.put("delete", Principal.ADMIN);
-        this.isAdmin = isAdmin;
     }
 
     public String getId() {
@@ -224,11 +219,6 @@ public class StoryEvent extends Event {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin() == isAdmin;
     }
 
     @Override

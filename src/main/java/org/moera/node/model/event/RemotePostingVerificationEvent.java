@@ -3,8 +3,8 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.RemotePostingVerification;
-import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 
 public abstract class RemotePostingVerificationEvent extends Event {
@@ -16,11 +16,11 @@ public abstract class RemotePostingVerificationEvent extends Event {
     private String revisionId;
 
     protected RemotePostingVerificationEvent(EventType type) {
-        super(type);
+        super(type, Principal.ADMIN);
     }
 
     protected RemotePostingVerificationEvent(EventType type, RemotePostingVerification data) {
-        super(type);
+        super(type, Principal.ADMIN);
         id = data.getId().toString();
         nodeName = data.getNodeName();
         receiverName = data.getOwnerName();
@@ -66,11 +66,6 @@ public abstract class RemotePostingVerificationEvent extends Event {
 
     public void setRevisionId(String revisionId) {
         this.revisionId = revisionId;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin();
     }
 
     @Override

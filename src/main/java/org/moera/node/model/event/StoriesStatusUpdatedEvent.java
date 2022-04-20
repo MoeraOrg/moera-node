@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
-import org.moera.node.event.EventSubscriber;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.model.FeedStatusChange;
 import org.springframework.data.util.Pair;
 
@@ -17,11 +17,11 @@ public class StoriesStatusUpdatedEvent extends Event {
     private long before;
 
     public StoriesStatusUpdatedEvent() {
-        super(EventType.STORIES_STATUS_UPDATED);
+        super(EventType.STORIES_STATUS_UPDATED, Principal.ADMIN);
     }
 
     public StoriesStatusUpdatedEvent(String feedName, FeedStatusChange change) {
-        super(EventType.STORIES_STATUS_UPDATED);
+        super(EventType.STORIES_STATUS_UPDATED, Principal.ADMIN);
 
         this.feedName = feedName;
         viewed = change.getViewed();
@@ -59,11 +59,6 @@ public class StoriesStatusUpdatedEvent extends Event {
 
     public void setBefore(long before) {
         this.before = before;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin();
     }
 
     @Override

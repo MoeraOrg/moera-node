@@ -3,7 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.event.EventSubscriber;
+import org.moera.node.auth.principal.Principal;
 import org.springframework.data.util.Pair;
 
 public class RemoteReactionEvent extends Event {
@@ -12,11 +12,11 @@ public class RemoteReactionEvent extends Event {
     private String remotePostingId;
 
     protected RemoteReactionEvent(EventType type) {
-        super(type);
+        super(type, Principal.ADMIN);
     }
 
     protected RemoteReactionEvent(EventType type, String remoteNodeName, String remotePostingId) {
-        super(type);
+        super(type, Principal.ADMIN);
         this.remoteNodeName = remoteNodeName;
         this.remotePostingId = remotePostingId;
     }
@@ -35,11 +35,6 @@ public class RemoteReactionEvent extends Event {
 
     public void setRemotePostingId(String remotePostingId) {
         this.remotePostingId = remotePostingId;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin();
     }
 
     @Override

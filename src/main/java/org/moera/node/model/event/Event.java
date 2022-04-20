@@ -4,15 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 
 public abstract class Event {
 
     private EventType type;
+    @JsonIgnore
+    private Principal principal = Principal.PUBLIC;
 
     protected Event(EventType type) {
         this.type = type;
+    }
+
+    public Event(EventType type, Principal principal) {
+        this.type = type;
+        this.principal = principal;
     }
 
     public EventType getType() {
@@ -23,8 +32,16 @@ public abstract class Event {
         this.type = type;
     }
 
+    public Principal getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(Principal principal) {
+        this.principal = principal;
+    }
+
     public boolean isPermitted(EventSubscriber subscriber) {
-        return true;
+        return principal.includes(subscriber.isAdmin(), subscriber.getClientName());
     }
 
     public final String toLogMessage() {

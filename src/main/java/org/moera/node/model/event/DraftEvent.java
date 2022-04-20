@@ -3,9 +3,9 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftType;
-import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 
 public class DraftEvent extends Event {
@@ -17,11 +17,11 @@ public class DraftEvent extends Event {
     private String receiverCommentId;
 
     protected DraftEvent(EventType type) {
-        super(type);
+        super(type, Principal.ADMIN);
     }
 
     protected DraftEvent(EventType type, Draft draft) {
-        super(type);
+        super(type, Principal.ADMIN);
         id = draft.getId().toString();
         draftType = draft.getDraftType();
         receiverName = draft.getReceiverName();
@@ -67,11 +67,6 @@ public class DraftEvent extends Event {
 
     public void setReceiverCommentId(String receiverCommentId) {
         this.receiverCommentId = receiverCommentId;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin();
     }
 
     @Override

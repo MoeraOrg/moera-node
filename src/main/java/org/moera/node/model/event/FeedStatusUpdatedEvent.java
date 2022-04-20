@@ -2,9 +2,8 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.commons.util.LogUtil;
-import org.moera.node.event.EventSubscriber;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.model.FeedStatus;
 import org.springframework.data.util.Pair;
 
@@ -12,19 +11,16 @@ public class FeedStatusUpdatedEvent extends Event {
 
     private String feedName;
     private FeedStatus status;
-    @JsonIgnore
-    private boolean isAdmin;
 
     public FeedStatusUpdatedEvent() {
         super(EventType.FEED_STATUS_UPDATED);
     }
 
     public FeedStatusUpdatedEvent(String feedName, FeedStatus status, boolean isAdmin) {
-        super(EventType.FEED_STATUS_UPDATED);
+        super(EventType.FEED_STATUS_UPDATED, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
 
         this.feedName = feedName;
         this.status = status;
-        this.isAdmin = isAdmin;
     }
 
     public String getFeedName() {
@@ -41,11 +37,6 @@ public class FeedStatusUpdatedEvent extends Event {
 
     public void setStatus(FeedStatus status) {
         this.status = status;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin() == isAdmin;
     }
 
     @Override

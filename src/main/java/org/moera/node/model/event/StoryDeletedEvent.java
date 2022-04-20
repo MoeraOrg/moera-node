@@ -2,12 +2,11 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
-import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -18,21 +17,18 @@ public class StoryDeletedEvent extends Event {
     private String feedName;
     private long moment;
     private String postingId;
-    @JsonIgnore
-    private boolean isAdmin;
 
     public StoryDeletedEvent() {
         super(EventType.STORY_DELETED);
     }
 
     public StoryDeletedEvent(Story story, boolean isAdmin) {
-        super(EventType.STORY_DELETED);
+        super(EventType.STORY_DELETED, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
         id = story.getId().toString();
         storyType = story.getStoryType();
         feedName = story.getFeedName();
         moment = story.getMoment();
         postingId = story.getEntry() != null ? story.getEntry().getId().toString() : null;
-        this.isAdmin = isAdmin;
     }
 
     public String getId() {
@@ -73,11 +69,6 @@ public class StoryDeletedEvent extends Event {
 
     public void setPostingId(String postingId) {
         this.postingId = postingId;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin() == isAdmin;
     }
 
     @Override

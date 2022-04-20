@@ -3,8 +3,8 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.RemoteCommentVerification;
-import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 
 public abstract class RemoteCommentVerificationEvent extends Event {
@@ -15,11 +15,11 @@ public abstract class RemoteCommentVerificationEvent extends Event {
     private String commentId;
 
     protected RemoteCommentVerificationEvent(EventType type) {
-        super(type);
+        super(type, Principal.ADMIN);
     }
 
     protected RemoteCommentVerificationEvent(EventType type, RemoteCommentVerification data) {
-        super(type);
+        super(type, Principal.ADMIN);
         id = data.getId().toString();
         nodeName = data.getNodeName();
         postingId = data.getPostingId();
@@ -56,11 +56,6 @@ public abstract class RemoteCommentVerificationEvent extends Event {
 
     public void setCommentId(String commentId) {
         this.commentId = commentId;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin();
     }
 
     @Override

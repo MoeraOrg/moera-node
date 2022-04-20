@@ -3,8 +3,8 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.RemoteReactionVerification;
-import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 
 public abstract class RemoteReactionVerificationEvent extends Event {
@@ -16,11 +16,11 @@ public abstract class RemoteReactionVerificationEvent extends Event {
     private String reactionOwnerName;
 
     protected RemoteReactionVerificationEvent(EventType type) {
-        super(type);
+        super(type, Principal.ADMIN);
     }
 
     protected RemoteReactionVerificationEvent(EventType type, RemoteReactionVerification data) {
-        super(type);
+        super(type, Principal.ADMIN);
         id = data.getId().toString();
         nodeName = data.getNodeName();
         postingId = data.getPostingId();
@@ -66,11 +66,6 @@ public abstract class RemoteReactionVerificationEvent extends Event {
 
     public void setReactionOwnerName(String reactionOwnerName) {
         this.reactionOwnerName = reactionOwnerName;
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin();
     }
 
     @Override

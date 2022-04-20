@@ -113,6 +113,28 @@ public class Principal implements Cloneable {
         return new Principal(value);
     }
 
+    public boolean includes(boolean admin, String nodeName) {
+        if (isNone()) {
+            return false;
+        }
+        if (isOnly()) {
+            return Objects.equals(nodeName, getNodeName());
+        }
+        if (admin) {
+            return true;
+        }
+        if (isAdmin()) {
+            return false;
+        }
+        if (isSigned()) {
+            return nodeName != null;
+        }
+        if (isNode()) {
+            return Objects.equals(nodeName, getNodeName());
+        }
+        throw new UnresolvedPrincipalException(this);
+    }
+
     public static class ToStringConverter extends StdConverter<Principal, String> {
 
         @Override

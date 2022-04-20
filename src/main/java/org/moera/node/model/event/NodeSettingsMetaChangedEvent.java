@@ -1,16 +1,11 @@
 package org.moera.node.model.event;
 
-import org.moera.node.event.EventSubscriber;
+import org.moera.node.auth.principal.Principal;
 
 public class NodeSettingsMetaChangedEvent extends Event {
 
     public NodeSettingsMetaChangedEvent() {
-        super(EventType.NODE_SETTINGS_META_CHANGED);
-    }
-
-    @Override
-    public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isAdmin();
+        super(EventType.NODE_SETTINGS_META_CHANGED, Principal.ADMIN);
     }
 
 }
