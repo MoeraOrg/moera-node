@@ -20,6 +20,7 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
@@ -298,6 +299,7 @@ public class FeedController {
                 requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
                 .map(this::buildStoryInfo)
+                .filter(this::isStoryVisible)
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .collect(Collectors.toList());
         String clientName = requestContext.getClientName();
@@ -434,6 +436,17 @@ public class FeedController {
                             requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()));
                 }
         );
+    }
+
+    private boolean isStoryVisible(StoryInfo storyInfo) {
+        PostingInfo postingInfo = storyInfo.getPosting();
+        if (postingInfo == null) {
+            return true;
+        }
+        Principal viewPrincipal = postingInfo.getOperations() != null
+                ? postingInfo.getOperations().getOrDefault("view", Principal.PUBLIC)
+                : Principal.PUBLIC;
+        return requestContext.isPrincipal(viewPrincipal.withOwner(postingInfo.getOwnerName()));
     }
 
 }

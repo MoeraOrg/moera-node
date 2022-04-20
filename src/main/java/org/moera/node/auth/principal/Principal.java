@@ -114,6 +114,9 @@ public class Principal implements Cloneable {
     }
 
     public boolean includes(boolean admin, String nodeName) {
+        if (isPublic()) {
+            return true;
+        }
         if (isNone()) {
             return false;
         }

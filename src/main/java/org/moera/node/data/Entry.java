@@ -518,6 +518,10 @@ public class Entry {
         return viewPrincipal;
     }
 
+    public Principal getViewPrincipalAbsolute() {
+        return getViewPrincipal().withOwner(getOwnerName());
+    }
+
     public void setViewPrincipal(Principal viewPrincipal) {
         this.viewPrincipal = viewPrincipal;
     }

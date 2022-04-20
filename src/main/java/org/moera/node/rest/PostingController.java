@@ -300,6 +300,9 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
                 requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())))));
@@ -330,6 +333,9 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
         List<Posting> attached = posting.isOriginal()
                 ? entryAttachmentRepository.findOwnAttachedPostings(
                         requestContext.nodeId(), posting.getCurrentRevision().getId())

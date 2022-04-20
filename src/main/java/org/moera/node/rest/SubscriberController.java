@@ -141,6 +141,9 @@ public class SubscriberController {
             Posting posting = postingRepository.findByNodeIdAndId(
                     requestContext.nodeId(), subscriberDescription.getPostingId())
                     .orElseThrow(() -> new ValidationFailure("subscriberDescription.postingId.not-found"));
+            if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+                throw new ObjectNotFoundFailure("posting.not-found");
+            }
             subscriber.setEntry(posting);
         }
         subscriber = subscriberRepository.save(subscriber);
