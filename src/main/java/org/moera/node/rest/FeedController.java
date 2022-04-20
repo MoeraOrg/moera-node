@@ -267,30 +267,38 @@ public class FeedController {
     }
 
     private FeedSliceInfo getStoriesBefore(String feedName, long before, int limit) {
-        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE, before,
-                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         FeedSliceInfo sliceInfo = new FeedSliceInfo();
         sliceInfo.setBefore(before);
-        if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(SafeInteger.MIN_VALUE);
-        } else {
-            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
-        }
-        fillSlice(sliceInfo, feedName, limit);
+        long sliceBefore = before;
+        do {
+            Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE,
+                    sliceBefore, PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+            if (page.getNumberOfElements() < limit + 1) {
+                sliceInfo.setAfter(SafeInteger.MIN_VALUE);
+            } else {
+                sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+            }
+            fillSlice(sliceInfo, feedName, limit);
+            sliceBefore = sliceInfo.getAfter();
+        } while (sliceBefore > SafeInteger.MIN_VALUE && sliceInfo.getStories().size() < limit / 2);
         return sliceInfo;
     }
 
     private FeedSliceInfo getStoriesAfter(String feedName, long after, int limit) {
-        Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, after, SafeInteger.MAX_VALUE,
-                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
         FeedSliceInfo sliceInfo = new FeedSliceInfo();
         sliceInfo.setAfter(after);
-        if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setBefore(SafeInteger.MAX_VALUE);
-        } else {
-            sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
-        }
-        fillSlice(sliceInfo, feedName, limit);
+        long sliceAfter = after;
+        do {
+            Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, sliceAfter,
+                    SafeInteger.MAX_VALUE, PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
+            if (page.getNumberOfElements() < limit + 1) {
+                sliceInfo.setBefore(SafeInteger.MAX_VALUE);
+            } else {
+                sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
+            }
+            fillSlice(sliceInfo, feedName, limit);
+            sliceAfter = sliceInfo.getBefore();
+        } while (sliceAfter < SafeInteger.MAX_VALUE && sliceInfo.getStories().size() < limit / 2);
         return sliceInfo;
     }
 
@@ -319,10 +327,10 @@ public class FeedController {
                 fillOwnInfo(stories, postingMap);
             }
         }
-        if (stories.size() > limit) {
-            stories.remove(limit);
+        sliceInfo.getStories().addAll(stories);
+        if (sliceInfo.getStories().size() > limit) {
+            sliceInfo.getStories().remove(limit);
         }
-        sliceInfo.setStories(stories);
     }
 
     private void fillRemoteInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {

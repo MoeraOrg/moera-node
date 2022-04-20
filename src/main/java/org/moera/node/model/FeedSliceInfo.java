@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -9,7 +10,7 @@ public class FeedSliceInfo {
 
     private long before;
     private long after;
-    private List<StoryInfo> stories;
+    private List<StoryInfo> stories = new ArrayList<>();
     private int totalInPast;
     private int totalInFuture;
 
