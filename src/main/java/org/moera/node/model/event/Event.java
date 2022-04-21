@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 
@@ -13,15 +14,19 @@ public abstract class Event {
 
     private EventType type;
     @JsonIgnore
-    private Principal principal = Principal.PUBLIC;
+    private PrincipalFilter filter;
 
     protected Event(EventType type) {
-        this.type = type;
+        this(type, PrincipalFilter.by(Principal.PUBLIC));
     }
 
-    public Event(EventType type, Principal principal) {
+    protected Event(EventType type, Principal filter) {
+        this(type, PrincipalFilter.by(filter));
+    }
+
+    protected Event(EventType type, PrincipalFilter filter) {
         this.type = type;
-        this.principal = principal;
+        this.filter = filter;
     }
 
     public EventType getType() {
@@ -32,16 +37,16 @@ public abstract class Event {
         this.type = type;
     }
 
-    public Principal getPrincipal() {
-        return principal;
+    public PrincipalFilter getFilter() {
+        return filter;
     }
 
-    public void setPrincipal(Principal principal) {
-        this.principal = principal;
+    public void setFilter(PrincipalFilter filter) {
+        this.filter = filter;
     }
 
     public boolean isPermitted(EventSubscriber subscriber) {
-        return principal.includes(subscriber.isAdmin(), subscriber.getClientName());
+        return filter.includes(subscriber.isAdmin(), subscriber.getClientName());
     }
 
     public final String toLogMessage() {
