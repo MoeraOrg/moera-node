@@ -138,6 +138,34 @@ public class Principal implements Cloneable {
         throw new UnresolvedPrincipalException(this);
     }
 
+    public boolean isOneOf(int flags) {
+        if (isNone()) {
+            return (flags & PrincipalFlag.NONE) != 0;
+        }
+        if (isAdmin()) {
+            return (flags & PrincipalFlag.ADMIN) != 0;
+        }
+        if (isSigned()) {
+            return (flags & PrincipalFlag.SIGNED) != 0;
+        }
+        if (isPrivate()) {
+            return (flags & PrincipalFlag.PRIVATE) != 0;
+        }
+        if (isOwner()) {
+            return (flags & PrincipalFlag.OWNER) != 0;
+        }
+        if (isPublic()) {
+            return (flags & PrincipalFlag.PUBLIC) != 0;
+        }
+        if (isNode()) {
+            return (flags & PrincipalFlag.NODE) != 0;
+        }
+        if (isOnly()) {
+            return (flags & PrincipalFlag.ONLY) != 0;
+        }
+        return false;
+    }
+
     public static class ToStringConverter extends StdConverter<Principal, String> {
 
         @Override

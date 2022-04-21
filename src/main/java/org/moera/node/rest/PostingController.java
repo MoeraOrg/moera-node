@@ -20,6 +20,8 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
@@ -276,6 +278,11 @@ public class PostingController {
                     .compareTo(CREATED_AT_MARGIN) > 0) {
                 throw new ValidationFailure("postingText.createdAt.out-of-range");
             }
+        }
+        Principal viewPrincipal = postingText.getPrincipal("view");
+        if (viewPrincipal != null
+                && !viewPrincipal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
+            throw new ValidationFailure("postingText.operations.wrong-principal");
         }
         return digest;
     }
