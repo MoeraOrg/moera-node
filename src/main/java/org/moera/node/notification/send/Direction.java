@@ -3,19 +3,37 @@ package org.moera.node.notification.send;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFilter;
+
 public class Direction {
 
-    private UUID nodeId;
+    private final UUID nodeId;
+    private final PrincipalFilter principalFilter;
 
-    public Direction() {
+    protected Direction() {
+        this(null, PrincipalFilter.by(Principal.PUBLIC));
     }
 
-    public Direction(UUID nodeId) {
+    protected Direction(UUID nodeId) {
+        this(nodeId, PrincipalFilter.by(Principal.PUBLIC));
+    }
+
+    protected Direction(UUID nodeId, PrincipalFilter principalFilter) {
         this.nodeId = nodeId;
+        this.principalFilter = principalFilter;
     }
 
     public UUID getNodeId() {
         return nodeId;
+    }
+
+    public PrincipalFilter getPrincipalFilter() {
+        return principalFilter;
+    }
+
+    public boolean isPermitted(boolean remoteIsSelf, String remoteNodeName) {
+        return principalFilter.includes(remoteIsSelf, remoteNodeName);
     }
 
     @Override

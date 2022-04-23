@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -21,6 +22,7 @@ import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
+import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
@@ -46,6 +48,9 @@ public class NotificationSenderPool {
 
     private final ConcurrentMap<SingleDirection, NotificationSender> senders = new ConcurrentHashMap<>();
     private final List<NotificationSender> pausedSenders = Collections.synchronizedList(new ArrayList<>());
+
+    @Inject
+    private Domains domains;
 
     @Inject
     @Qualifier("notificationSenderTaskExecutor")
@@ -125,7 +130,8 @@ public class NotificationSenderPool {
                     break;
             }
             for (Subscriber subscriber : subscribers) {
-                SingleDirection dir = new SingleDirection(subscriber.getNodeId(), subscriber.getRemoteNodeName());
+                SingleDirection dir = new SingleDirection(subscriber.getNodeId(), subscriber.getRemoteNodeName(),
+                        direction.getPrincipalFilter());
                 Notification nt = notification.clone();
                 if (nt instanceof SubscriberNotification) {
                     ((SubscriberNotification) nt).setSubscriberId(subscriber.getId().toString());
@@ -139,6 +145,11 @@ public class NotificationSenderPool {
     }
 
     private void sendSingle(SingleDirection direction, Notification notification) {
+        String nodeName = domains.getDomainOptions(direction.getNodeId()).nodeName();
+        if (!direction.isPermitted(Objects.equals(nodeName, direction.getNodeName()), direction.getNodeName())) {
+            return;
+        }
+
         while (true) {
             NotificationSender sender;
             do {

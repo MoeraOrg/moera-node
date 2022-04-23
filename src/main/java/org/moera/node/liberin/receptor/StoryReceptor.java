@@ -3,6 +3,7 @@ package org.moera.node.liberin.receptor;
 import java.util.Objects;
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
@@ -37,7 +38,8 @@ public class StoryReceptor extends LiberinReceptorBase {
         }
         send(liberin, new StoryAddedEvent(story, true));
         if (story.getStoryType() == StoryType.POSTING_ADDED && story.getEntry() != null) {
-            send(Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName()),
+            send(Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName(),
+                            PrincipalFilter.by(story.getEntry().getViewPrincipalAbsolute())),
                     new FeedPostingAddedNotification(story.getFeedName(), story.getEntry().getId()));
         }
         push(story);

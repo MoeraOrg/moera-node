@@ -3,12 +3,19 @@ package org.moera.node.notification.send;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.moera.node.auth.principal.PrincipalFilter;
+
 class SingleDirection extends Direction {
 
     private String nodeName;
 
     SingleDirection(UUID nodeId, String nodeName) {
         super(nodeId);
+        this.nodeName = nodeName;
+    }
+
+    SingleDirection(UUID nodeId, String nodeName, PrincipalFilter filter) {
+        super(nodeId, filter);
         this.nodeName = nodeName;
     }
 
