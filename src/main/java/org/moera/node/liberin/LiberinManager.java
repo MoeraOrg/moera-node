@@ -89,6 +89,7 @@ public class LiberinManager implements Runnable {
             }
 
             universalContext.associate(liberin.getNodeId());
+            log.debug("Delivering liberin {}", liberin.getClass().getSimpleName());
             HandlerMethod handler = handlers.get(liberin.getClass());
             if (handler == null) {
                 log.warn("Mapping for liberin {} not found, skipping", liberin.getClass().getSimpleName());

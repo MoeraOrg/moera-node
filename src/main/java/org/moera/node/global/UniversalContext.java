@@ -12,6 +12,7 @@ import org.moera.node.option.Options;
 import org.moera.node.task.Task;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
 
 @Component
 public class UniversalContext {
@@ -32,7 +33,7 @@ public class UniversalContext {
     private AvatarRepository avatarRepository;
 
     private boolean isBackground() {
-        return nodeId.get() != null;
+        return RequestContextHolder.getRequestAttributes() == null;
     }
 
     public UUID nodeId() {
