@@ -5,7 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.springframework.data.util.Pair;
 
@@ -22,13 +21,14 @@ public class StoryDeletedEvent extends Event {
         super(EventType.STORY_DELETED);
     }
 
-    public StoryDeletedEvent(Story story, boolean isAdmin) {
+    public StoryDeletedEvent(String id, StoryType storyType, String feedName, long moment, String postingId,
+                             boolean isAdmin) {
         super(EventType.STORY_DELETED, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
-        id = story.getId().toString();
-        storyType = story.getStoryType();
-        feedName = story.getFeedName();
-        moment = story.getMoment();
-        postingId = story.getEntry() != null ? story.getEntry().getId().toString() : null;
+        this.id = id;
+        this.storyType = storyType;
+        this.feedName = feedName;
+        this.moment = moment;
+        this.postingId = postingId;
     }
 
     public String getId() {

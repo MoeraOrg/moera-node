@@ -1,6 +1,7 @@
 package org.moera.node.liberin.receptor;
 
 import java.util.Objects;
+import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.auth.principal.PrincipalFilter;
@@ -43,7 +44,7 @@ public class StoryReceptor extends LiberinReceptorBase {
                     new FeedPostingAddedNotification(story.getFeedName(), story.getEntry().getId()));
         }
         push(story);
-        feedStatusUpdated(story);
+        feedStatusUpdated(story.getFeedName());
     }
 
     @LiberinMapping
@@ -55,19 +56,21 @@ public class StoryReceptor extends LiberinReceptorBase {
         }
         send(liberin, new StoryUpdatedEvent(story, true));
         push(story);
-        feedStatusUpdated(story);
+        feedStatusUpdated(story.getFeedName());
     }
 
     @LiberinMapping
     public void deleted(StoryDeletedLiberin liberin) {
-        Story story = liberin.getStory();
-
-        if (!Feed.isAdmin(story.getFeedName())) {
-            send(liberin, new StoryDeletedEvent(story, false));
+        if (!Feed.isAdmin(liberin.getFeedName())) {
+            send(liberin,
+                    new StoryDeletedEvent(liberin.getId().toString(), liberin.getStoryType(), liberin.getFeedName(),
+                            liberin.getMoment(), liberin.getPostingId().toString(), false));
         }
-        send(liberin, new StoryDeletedEvent(story, true));
-        deletePush(story);
-        feedStatusUpdated(story);
+        send(liberin,
+                new StoryDeletedEvent(liberin.getId().toString(), liberin.getStoryType(), liberin.getFeedName(),
+                        liberin.getMoment(), liberin.getPostingId().toString(), true));
+        deletePush(liberin.getFeedName(), liberin.getId());
+        feedStatusUpdated(liberin.getFeedName());
     }
 
     private void push(Story story) {
@@ -76,15 +79,15 @@ public class StoryReceptor extends LiberinReceptorBase {
         }
     }
 
-    private void deletePush(Story story) {
-        if (Objects.equals(story.getFeedName(), Feed.INSTANT)) {
-            send(PushContent.storyDeleted(story.getId()));
+    private void deletePush(String feedName, UUID id) {
+        if (Objects.equals(feedName, Feed.INSTANT)) {
+            send(PushContent.storyDeleted(id));
         }
     }
 
-    private void feedStatusUpdated(Story story) {
-        FeedStatus feedStatus = storyOperations.getFeedStatus(story.getFeedName(), true);
-        send(new FeedStatusUpdatedLiberin(story.getFeedName(), feedStatus));
+    private void feedStatusUpdated(String feedName) {
+        FeedStatus feedStatus = storyOperations.getFeedStatus(feedName, true);
+        send(new FeedStatusUpdatedLiberin(feedName, feedStatus));
     }
 
 }

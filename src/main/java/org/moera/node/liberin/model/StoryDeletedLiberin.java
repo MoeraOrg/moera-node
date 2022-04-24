@@ -1,22 +1,65 @@
 package org.moera.node.liberin.model;
 
+import java.util.UUID;
+
 import org.moera.node.data.Story;
+import org.moera.node.data.StoryType;
 import org.moera.node.liberin.Liberin;
 
 public class StoryDeletedLiberin extends Liberin {
 
-    private Story story;
+    private UUID id;
+    private StoryType storyType;
+    private String feedName;
+    private long moment;
+    private UUID postingId;
 
     public StoryDeletedLiberin(Story story) {
-        this.story = story;
+        id = story.getId();
+        storyType = story.getStoryType();
+        feedName = story.getFeedName();
+        moment = story.getMoment();
+        postingId = story.getEntry() != null ? story.getEntry().getId() : null;
     }
 
-    public Story getStory() {
-        return story;
+    public UUID getId() {
+        return id;
     }
 
-    public void setStory(Story story) {
-        this.story = story;
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public StoryType getStoryType() {
+        return storyType;
+    }
+
+    public void setStoryType(StoryType storyType) {
+        this.storyType = storyType;
+    }
+
+    public String getFeedName() {
+        return feedName;
+    }
+
+    public void setFeedName(String feedName) {
+        this.feedName = feedName;
+    }
+
+    public long getMoment() {
+        return moment;
+    }
+
+    public void setMoment(long moment) {
+        this.moment = moment;
+    }
+
+    public UUID getPostingId() {
+        return postingId;
+    }
+
+    public void setPostingId(UUID postingId) {
+        this.postingId = postingId;
     }
 
 }
