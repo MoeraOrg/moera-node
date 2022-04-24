@@ -109,8 +109,8 @@ public class StoryOperations {
     public void unpublish(UUID entryId, UUID nodeId, Consumer<Liberin> liberinSender) {
         storyRepository.findByEntryId(nodeId, entryId).stream()
                 .filter(story -> story.getFeedName() != null)
-                .forEach(story -> liberinSender.accept(new StoryDeletedLiberin(story)));
-        storyRepository.deleteByEntryId(nodeId, entryId);
+                .peek(story -> liberinSender.accept(new StoryDeletedLiberin(story).withNodeId(nodeId)))
+                .forEach(storyRepository::delete);
     }
 
     @Scheduled(fixedDelayString = "P1D")

@@ -37,10 +37,6 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
     List<Story> findByEntryId(UUID nodeId, UUID entryId);
 
     @Modifying
-    @Query("delete from Story s where s.nodeId = ?1 and s.entry.id = ?2")
-    void deleteByEntryId(UUID nodeId, UUID entryId);
-
-    @Modifying
     @Query("delete from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3 and s.entry.id = ?4")
     void deleteByFeedAndTypeAndEntryId(UUID nodeId, String feedName, StoryType storyType, UUID entryId);
 
