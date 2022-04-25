@@ -84,8 +84,8 @@ public class UniversalContext {
     }
 
     public void send(Liberin liberin) {
-        if (nodeId.get() != null) {
-            liberin.setNodeId(nodeId.get());
+        if (isBackground()) {
+            liberin.setNodeId(nodeId());
             liberinManager.send(liberin);
         } else {
             requestContext.send(liberin);
