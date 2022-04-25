@@ -16,6 +16,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApiErrorStatusException;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -203,6 +204,7 @@ public class Picker extends Task {
             liberins.add(new PostingAddedLiberin(posting).withNodeId(nodeId));
             publish(feedName, posting, liberins);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
+            Principal latestView = posting.getViewPrincipalAbsolute();
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);
             EntryRevision latest = posting.getCurrentRevision();
@@ -210,7 +212,7 @@ public class Picker extends Task {
             downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
-                liberins.add(new PostingUpdatedLiberin(posting, latest).withNodeId(posting.getNodeId()));
+                liberins.add(new PostingUpdatedLiberin(posting, latest, latestView).withNodeId(posting.getNodeId()));
             } else {
                 posting.setDeletedAt(null);
                 liberins.add(new PostingRestoredLiberin(posting).withNodeId(posting.getNodeId()));

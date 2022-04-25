@@ -306,7 +306,8 @@ public class PostingOperations {
                         posting.setCurrentRevision(revision);
                         posting.setTotalRevisions(posting.getTotalRevisions() - 1);
 
-                        liberins.add(new PostingUpdatedLiberin(posting, latest).withNodeId(posting.getNodeId()));
+                        liberins.add(new PostingUpdatedLiberin(posting, latest, posting.getViewPrincipalAbsolute())
+                                .withNodeId(posting.getNodeId()));
                     }
                 }
             }

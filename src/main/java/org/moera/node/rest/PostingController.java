@@ -192,6 +192,7 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Principal latestView = posting.getViewPrincipalAbsolute();
         EntryRevision latest = posting.getCurrentRevision();
         if (!posting.isOriginal()) {
             throw new ValidationFailure("posting.not-original");
@@ -223,7 +224,7 @@ public class PostingController {
             throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
         }
 
-        requestContext.send(new PostingUpdatedLiberin(posting, latest));
+        requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
     }
