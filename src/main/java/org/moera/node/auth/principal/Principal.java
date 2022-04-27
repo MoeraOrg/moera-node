@@ -166,7 +166,7 @@ public class Principal implements Cloneable {
         return false;
     }
 
-    public Principal disjunct(Principal principal) {
+    public Principal or(Principal principal) {
         if (isPublic() || principal.isPublic()) {
             return Principal.PUBLIC;
         }

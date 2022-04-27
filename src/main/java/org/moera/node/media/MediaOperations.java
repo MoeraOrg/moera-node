@@ -313,14 +313,14 @@ public class MediaOperations {
         Principal view =
                 entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId()).stream()
                         .map(Entry::getViewPrincipal)
-                        .reduce(Principal.PRIVATE, Principal::disjunct);
+                        .reduce(Principal.PRIVATE, Principal::or);
         mediaFileOwner.setViewPrincipal(view);
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
         for (Posting posting : mediaFileOwner.getPostings()) {
             view = entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId()).stream()
                     .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
                     .map(Entry::getViewPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::disjunct);
+                    .reduce(Principal.PRIVATE, Principal::or);
             posting.setViewPrincipal(view);
         }
     }
