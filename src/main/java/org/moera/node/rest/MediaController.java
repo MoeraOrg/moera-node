@@ -232,8 +232,12 @@ public class MediaController {
     }
 
     private MediaFileOwner getMediaFileOwner(UUID id) {
-        return mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
+        MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
+        if (!requestContext.isPrincipal(mediaFileOwner.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("media.not-found");
+        }
+        return mediaFileOwner;
     }
 
     @GetMapping("/public/{id}/info")

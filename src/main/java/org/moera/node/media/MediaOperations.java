@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -36,13 +37,17 @@ import javax.transaction.Transactional;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.config.Config;
+import org.moera.node.data.Entry;
+import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
+import org.moera.node.data.Posting;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
 import org.moera.node.model.PostingFeatures;
@@ -85,6 +90,9 @@ public class MediaOperations {
 
     @Inject
     private MediaFilePreviewRepository mediaFilePreviewRepository;
+
+    @Inject
+    private EntryAttachmentRepository entryAttachmentRepository;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -297,6 +305,30 @@ public class MediaOperations {
         return mediaFileOwnerRepository.save(mediaFileOwner);
     }
 
+    public void updatePermissions(MediaFileOwner mediaFileOwner) {
+        if (mediaFileOwner == null) {
+            return;
+        }
+
+        Principal view =
+                entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId()).stream()
+                        .map(Entry::getViewPrincipal)
+                        .reduce(Principal.PRIVATE, Principal::disjunct);
+        mediaFileOwner.setViewPrincipal(view);
+        mediaFileOwner.setPermissionsUpdatedAt(Util.now());
+        for (Posting posting : mediaFileOwner.getPostings()) {
+            view = entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId()).stream()
+                    .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
+                    .map(Entry::getViewPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::disjunct);
+            posting.setViewPrincipal(view);
+        }
+    }
+
+    public void updatePermissions(Entry entry) {
+        entry.getCurrentRevision().getAttachments().forEach(ea -> updatePermissions(ea.getMediaFileOwner()));
+    }
+
     public ResponseEntity<Resource> serve(MediaFile mediaFile) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
@@ -412,6 +444,12 @@ public class MediaOperations {
                 // ignore
             }
         }
+    }
+
+    @Scheduled(fixedDelayString = "PT15M")
+    @Transactional
+    public void refreshPermissions() {
+        mediaFileOwnerRepository.findOutdatedPermissions().forEach(this::updatePermissions);
     }
 
 }

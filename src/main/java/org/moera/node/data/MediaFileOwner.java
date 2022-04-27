@@ -15,11 +15,15 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.TypeDef;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalType;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "media_file_owners")
+@TypeDef(name = "Principal", typeClass = PrincipalType.class, defaultForType = Principal.class)
 public class MediaFileOwner {
 
     @Id
@@ -45,8 +49,17 @@ public class MediaFileOwner {
     @Column(insertable = false, updatable = false)
     private int usageCount;
 
+    @NotNull
+    @Column(insertable = false, updatable = false)
+    private Timestamp usageUpdatedAt;
+
     @Column(insertable = false, updatable = false)
     private Timestamp deadline;
+
+    private Principal viewPrincipal = Principal.PRIVATE;
+
+    @NotNull
+    private Timestamp permissionsUpdatedAt = Util.now();
 
     public UUID getId() {
         return id;
@@ -121,8 +134,32 @@ public class MediaFileOwner {
         return usageCount;
     }
 
+    public Timestamp getUsageUpdatedAt() {
+        return usageUpdatedAt;
+    }
+
     public Timestamp getDeadline() {
         return deadline;
+    }
+
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
+    }
+
+    public Principal getViewPrincipalAbsolute() {
+        return getViewPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
+    }
+
+    public Timestamp getPermissionsUpdatedAt() {
+        return permissionsUpdatedAt;
+    }
+
+    public void setPermissionsUpdatedAt(Timestamp permissionsUpdatedAt) {
+        this.permissionsUpdatedAt = permissionsUpdatedAt;
     }
 
 }

@@ -38,6 +38,7 @@ import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.body.Body;
@@ -83,6 +84,9 @@ public class PostingOperations {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private MediaOperations mediaOperations;
+
+    @Inject
     private StoryOperations storyOperations;
 
     @Inject
@@ -123,6 +127,7 @@ public class PostingOperations {
     public Posting newPosting(MediaFileOwner mediaFileOwner) {
         Posting posting = newPosting(mediaFileOwner.getOwnerName());
         posting.setParentMedia(mediaFileOwner);
+        posting.setViewPrincipal(mediaFileOwner.getViewPrincipal());
 
         EntryRevision revision = newRevision(posting, null);
         revision.setBodySrc(Body.EMPTY);
@@ -182,6 +187,7 @@ public class PostingOperations {
         posting.setEditedAt(Util.now());
         posting = postingRepository.saveAndFlush(posting);
         signIfOwned(posting);
+        mediaOperations.updatePermissions(posting);
 
         storyOperations.publish(posting, publications);
 
@@ -257,6 +263,9 @@ public class PostingOperations {
         if (posting.getCurrentRevision() != null) {
             posting.getCurrentRevision().setDeletedAt(Util.now());
         }
+        posting = postingRepository.saveAndFlush(posting);
+        mediaOperations.updatePermissions(posting);
+
         if (!posting.isOriginal() && unsubscribe) {
             subscriptionRepository.deleteByTypeAndNodeAndEntryId(options.nodeId(), SubscriptionType.POSTING,
                     posting.getReceiverName(), posting.getReceiverEntryId());

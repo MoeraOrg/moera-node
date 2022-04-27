@@ -166,6 +166,28 @@ public class Principal implements Cloneable {
         return false;
     }
 
+    public Principal disjunct(Principal principal) {
+        if (isPublic() || principal.isPublic()) {
+            return Principal.PUBLIC;
+        }
+        if (isSigned() || principal.isSigned()) {
+            return Principal.SIGNED;
+        }
+        if (isPrivate() || principal.isPrivate()) {
+            return Principal.PRIVATE;
+        }
+        if (isAdmin() && principal.isOwner() || isOwner() && principal.isAdmin()) {
+            return Principal.PRIVATE;
+        }
+        if (isOwner() || principal.isOwner()) {
+            return Principal.OWNER;
+        }
+        if (isAdmin() || principal.isAdmin()) {
+            return Principal.ADMIN;
+        }
+        return Principal.NONE;
+    }
+
     public static class ToStringConverter extends StdConverter<Principal, String> {
 
         @Override

@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +12,10 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
     @Query("select count(*) from EntryAttachment ea left join ea.entryRevision er left join er.entry e"
             + " where e.nodeId = ?1 and er.entry.id = ?2 and ea.mediaFileOwner.id = ?3")
     int countByEntryIdAndMedia(UUID nodeId, UUID entryId, UUID mediaId);
+
+    @Query("select e from EntryAttachment ea left join ea.entryRevision er left join er.entry e"
+            + " where er.deletedAt is null and ea.mediaFileOwner.nodeId = ?1 and ea.mediaFileOwner.id = ?2")
+    Collection<Entry> findByMedia(UUID nodeId, UUID mediaId);
 
     @Query("select p from EntryAttachment ea"
             + " left join ea.mediaFileOwner mfo full join mfo.postings p left join fetch p.currentRevision"

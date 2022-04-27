@@ -231,6 +231,29 @@ $$;
 ALTER FUNCTION public.update_entry_attachments_media_file_owner_id() OWNER TO moera;
 
 --
+-- Name: update_entry_media_file_owner_usage(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entry_media_file_owner_usage() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        UPDATE media_file_owners
+        SET usage_updated_at = now()
+        WHERE id IN (
+            SELECT media_file_owner_id
+            FROM entry_attachments
+            WHERE entry_attachments.entry_revision_id = OLD.current_revision_id
+             OR entry_attachments.entry_revision_id = NEW.current_revision_id
+        );
+        RETURN NEW;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entry_media_file_owner_usage() OWNER TO moera;
+
+--
 -- Name: update_media_file_deadline(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -254,7 +277,7 @@ $$;
 ALTER FUNCTION public.update_media_file_deadline() OWNER TO moera;
 
 --
--- Name: update_media_file_owner_reference(uuid, uuid); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: update_media_file_owner_reference(uuid, uuid); Type: FUNCTION; Schema: public; Owner: moera
 --
 
 CREATE FUNCTION public.update_media_file_owner_reference(old_id uuid, new_id uuid) RETURNS void
@@ -265,16 +288,16 @@ CREATE FUNCTION public.update_media_file_owner_reference(old_id uuid, new_id uui
             RETURN;
         END IF;
         IF old_id IS NOT NULL THEN
-            UPDATE media_file_owners SET usage_count = usage_count - 1 WHERE id = old_id;
+            UPDATE media_file_owners SET usage_count = usage_count - 1, usage_updated_at = now() WHERE id = old_id;
         END IF;
         IF new_id IS NOT NULL THEN
-            UPDATE media_file_owners SET usage_count = usage_count + 1 WHERE id = new_id;
+            UPDATE media_file_owners SET usage_count = usage_count + 1, usage_updated_at = now() WHERE id = new_id;
         END IF;
     END;
 $$;
 
 
-ALTER FUNCTION public.update_media_file_owner_reference(old_id uuid, new_id uuid) OWNER TO postgres;
+ALTER FUNCTION public.update_media_file_owner_reference(old_id uuid, new_id uuid) OWNER TO moera;
 
 --
 -- Name: update_media_file_preview_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
@@ -431,7 +454,8 @@ CREATE TABLE public.drafts (
     heading character varying(255) DEFAULT ''::character varying NOT NULL,
     update_important boolean DEFAULT false NOT NULL,
     update_description character varying(128) DEFAULT ''::character varying NOT NULL,
-    publish_at timestamp without time zone
+    publish_at timestamp without time zone,
+    replied_to_id character varying(40)
 );
 
 
@@ -478,7 +502,8 @@ CREATE TABLE public.entries (
     receiver_avatar_shape character varying(8),
     replied_to_avatar_media_file_id character varying(40),
     replied_to_avatar_shape character varying(8),
-    parent_media_id uuid
+    parent_media_id uuid,
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
 );
 
 
@@ -594,7 +619,10 @@ CREATE TABLE public.media_file_owners (
     media_file_id character varying(40) NOT NULL,
     created_at timestamp without time zone NOT NULL,
     usage_count integer DEFAULT 0 NOT NULL,
-    deadline timestamp without time zone
+    deadline timestamp without time zone,
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    usage_updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
@@ -680,11 +708,31 @@ CREATE TABLE public.own_comments (
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
     remote_replied_to_avatar_media_file_id character varying(40),
-    remote_replied_to_avatar_shape character varying(8)
+    remote_replied_to_avatar_shape character varying(8),
+    posting_heading character varying(255) DEFAULT ''::character varying NOT NULL
 );
 
 
 ALTER TABLE public.own_comments OWNER TO moera;
+
+--
+-- Name: own_postings; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.own_postings (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_full_name character varying(96),
+    remote_posting_id character varying(40) NOT NULL,
+    heading character varying(255) NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8)
+);
+
+
+ALTER TABLE public.own_postings OWNER TO moera;
 
 --
 -- Name: own_reactions; Type: TABLE; Schema: public; Owner: moera
@@ -700,7 +748,8 @@ CREATE TABLE public.own_reactions (
     created_at timestamp without time zone NOT NULL,
     remote_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8)
+    remote_avatar_shape character varying(8),
+    posting_heading character varying(255) DEFAULT ''::character varying NOT NULL
 );
 
 
@@ -834,7 +883,8 @@ CREATE TABLE public.reactions (
     moment bigint NOT NULL,
     owner_full_name character varying(96),
     owner_avatar_media_file_id character varying(40),
-    owner_avatar_shape character varying(8)
+    owner_avatar_shape character varying(8),
+    replaced boolean DEFAULT false NOT NULL
 );
 
 
@@ -900,6 +950,23 @@ CREATE TABLE public.schema_history (
 ALTER TABLE public.schema_history OWNER TO moera;
 
 --
+-- Name: sitemap_records; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.sitemap_records (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    sitemap_id uuid NOT NULL,
+    entry_id uuid NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    modified_at timestamp without time zone NOT NULL,
+    total_updates integer NOT NULL
+);
+
+
+ALTER TABLE public.sitemap_records OWNER TO moera;
+
+--
 -- Name: stories; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -930,7 +997,10 @@ CREATE TABLE public.stories (
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
     remote_owner_avatar_media_file_id character varying(40),
-    remote_owner_avatar_shape character varying(8)
+    remote_owner_avatar_shape character varying(8),
+    remote_parent_posting_id character varying(40),
+    remote_parent_comment_id character varying(40),
+    remote_parent_media_id character varying(40)
 );
 
 
@@ -1132,6 +1202,14 @@ ALTER TABLE ONLY public.own_comments
 
 
 --
+-- Name: own_postings own_postings_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.own_postings
+    ADD CONSTRAINT own_postings_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: own_reactions own_reactions_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1225,6 +1303,14 @@ ALTER TABLE ONLY public.remote_verifications
 
 ALTER TABLE ONLY public.schema_history
     ADD CONSTRAINT schema_history_pk PRIMARY KEY (installed_rank);
+
+
+--
+-- Name: sitemap_records sitemap_records_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sitemap_records
+    ADD CONSTRAINT sitemap_records_pkey PRIMARY KEY (id);
 
 
 --
@@ -1400,10 +1486,24 @@ CREATE INDEX entries_parent_id_moment_idx ON public.entries USING btree (parent_
 
 
 --
--- Name: entries_parent_media_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: entries_parent_media_id_not_null_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE UNIQUE INDEX entries_parent_media_id_idx ON public.entries USING btree (parent_media_id);
+CREATE UNIQUE INDEX entries_parent_media_id_not_null_idx ON public.entries USING btree (parent_media_id, receiver_name) WHERE (receiver_name IS NOT NULL);
+
+
+--
+-- Name: entries_parent_media_id_null_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX entries_parent_media_id_null_idx ON public.entries USING btree (parent_media_id) WHERE (receiver_name IS NULL);
+
+
+--
+-- Name: entries_parent_media_id_receiver_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX entries_parent_media_id_receiver_name_idx ON public.entries USING btree (parent_media_id, receiver_name);
 
 
 --
@@ -1519,6 +1619,13 @@ CREATE INDEX media_file_owners_media_file_id_idx ON public.media_file_owners USI
 
 
 --
+-- Name: media_file_owners_node_id_null_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX media_file_owners_node_id_null_media_file_id_idx ON public.media_file_owners USING btree (node_id, media_file_id) WHERE (owner_name IS NULL);
+
+
+--
 -- Name: media_file_owners_node_id_owner_name_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1593,6 +1700,20 @@ CREATE INDEX own_comments_remote_avatar_media_file_id_idx ON public.own_comments
 --
 
 CREATE INDEX own_comments_remote_replied_to_avatar_media_file_id_idx ON public.own_comments USING btree (remote_replied_to_avatar_media_file_id);
+
+
+--
+-- Name: own_postings_node_id_remote_node_name_remote_posting_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX own_postings_node_id_remote_node_name_remote_posting_id_idx ON public.own_postings USING btree (node_id, remote_node_name, remote_posting_id);
+
+
+--
+-- Name: own_postings_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX own_postings_remote_avatar_media_file_id_idx ON public.own_postings USING btree (remote_avatar_media_file_id);
 
 
 --
@@ -1743,6 +1864,13 @@ CREATE INDEX reactions_entry_revision_id_negative_emoji_idx ON public.reactions 
 
 
 --
+-- Name: reactions_entry_revision_id_null_owner_name_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX reactions_entry_revision_id_null_owner_name_id_idx ON public.reactions USING btree (entry_revision_id, owner_name) WHERE (deleted_at IS NULL);
+
+
+--
 -- Name: reactions_moment_entry_revision_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1813,10 +1941,31 @@ CREATE INDEX schema_history_s_idx ON public.schema_history USING btree (success)
 
 
 --
+-- Name: sitemap_records_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX sitemap_records_entry_id_idx ON public.sitemap_records USING btree (entry_id);
+
+
+--
+-- Name: sitemap_records_node_id_sitemap_id_modified_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sitemap_records_node_id_sitemap_id_modified_at_idx ON public.sitemap_records USING btree (node_id, sitemap_id, modified_at);
+
+
+--
 -- Name: stories_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE INDEX stories_entry_id_idx ON public.stories USING btree (entry_id);
+
+
+--
+-- Name: stories_node_id_feed_name_created_at_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX stories_node_id_feed_name_created_at_idx ON public.stories USING btree (node_id, feed_name, created_at);
 
 
 --
@@ -1960,6 +2109,13 @@ CREATE TRIGGER update_media_file_owner_id AFTER INSERT OR DELETE OR UPDATE OF me
 
 
 --
+-- Name: entries update_media_file_owner_usage; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_media_file_owner_usage AFTER UPDATE OF current_revision_id, deleted_at, view_principal ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entry_media_file_owner_usage();
+
+
+--
 -- Name: drafts update_owner_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -2006,6 +2162,13 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 --
 
 CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.own_comments FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: own_postings update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.own_postings FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
 
 
 --
@@ -2250,6 +2413,14 @@ ALTER TABLE ONLY public.own_comments
 
 
 --
+-- Name: own_postings own_postings_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.own_postings
+    ADD CONSTRAINT own_postings_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: own_reactions own_reactions_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2319,6 +2490,14 @@ ALTER TABLE ONLY public.reactions
 
 ALTER TABLE ONLY public.remote_media_cache
     ADD CONSTRAINT remote_media_cache_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: sitemap_records sitemap_records_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sitemap_records
+    ADD CONSTRAINT sitemap_records_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

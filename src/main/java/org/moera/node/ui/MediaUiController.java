@@ -62,6 +62,9 @@ public class MediaUiController {
                                                    @RequestParam(required = false) Integer width) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
+        if (!requestContext.isPrincipal(mediaFileOwner.getViewPrincipalAbsolute())) {
+            throw new PageNotFoundException();
+        }
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width);
     }
 
@@ -71,7 +74,7 @@ public class MediaUiController {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
         Posting posting = mediaFileOwner.getPosting(null);
-        if (posting == null) {
+        if (posting == null || !requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
             throw new PageNotFoundException();
         }
         String body = posting.getCurrentRevision().getSaneBody();

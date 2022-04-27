@@ -2,6 +2,7 @@ package org.moera.node.notification.send;
 
 import java.util.UUID;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.SubscriptionType;
 
@@ -12,7 +13,7 @@ class SubscribersDirection extends Direction {
     private UUID postingId;
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType) {
-        this(nodeId, subscriptionType, null, null, null);
+        this(nodeId, subscriptionType, null, null, PrincipalFilter.by(Principal.PUBLIC));
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, PrincipalFilter filter) {
@@ -20,7 +21,7 @@ class SubscribersDirection extends Direction {
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, String feedName) {
-        this(nodeId, subscriptionType, feedName, null, null);
+        this(nodeId, subscriptionType, feedName, null, PrincipalFilter.by(Principal.PUBLIC));
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, String feedName, PrincipalFilter filter) {
@@ -28,7 +29,7 @@ class SubscribersDirection extends Direction {
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, UUID postingId) {
-        this(nodeId, subscriptionType, null, postingId, null);
+        this(nodeId, subscriptionType, null, postingId, PrincipalFilter.by(Principal.PUBLIC));
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, UUID postingId, PrincipalFilter filter) {
