@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.StoryType;
 import org.springframework.data.util.Pair;
 
@@ -22,8 +23,8 @@ public class StoryDeletedEvent extends Event {
     }
 
     public StoryDeletedEvent(String id, StoryType storyType, String feedName, long moment, String postingId,
-                             boolean isAdmin) {
-        super(EventType.STORY_DELETED, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
+                             boolean isAdmin, PrincipalFilter viewFilter) {
+        super(EventType.STORY_DELETED, isAdmin ? Principal.ADMIN : viewFilter.a().andNot(Principal.ADMIN));
         this.id = id;
         this.storyType = storyType;
         this.feedName = feedName;

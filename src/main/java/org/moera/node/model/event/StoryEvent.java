@@ -42,7 +42,7 @@ public class StoryEvent extends Event {
     }
 
     protected StoryEvent(EventType type, Story story, boolean isAdmin) {
-        super(type, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
+        super(type, isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN));
         StoryInfo storyInfo = StoryInfo.build(story, isAdmin, st -> null);
         id = story.getId().toString();
         storyType = story.getStoryType();

@@ -37,6 +37,11 @@ public final class PrincipalExpression implements PrincipalFilter {
         this.right = right;
     }
 
+    @Override
+    public PrincipalExpression a() {
+        return this;
+    }
+
     public static PrincipalExpression by(Principal principal) {
         return new PrincipalExpression(principal, false);
     }

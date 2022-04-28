@@ -189,6 +189,7 @@ public class Principal implements Cloneable, PrincipalFilter {
         return Principal.NONE;
     }
 
+    @Override
     public PrincipalExpression a() {
         return PrincipalExpression.by(this);
     }

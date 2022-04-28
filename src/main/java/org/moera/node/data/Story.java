@@ -11,9 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.util.Util;
 
 @Entity
@@ -362,6 +365,17 @@ public class Story {
 
     public void setEntry(Entry entry) {
         this.entry = entry;
+    }
+
+    @Transient
+    public PrincipalFilter getViewPrincipalFilter() {
+        if (getEntry() == null) {
+            return Principal.PUBLIC;
+        }
+        Principal viewEntry = getEntry().getViewPrincipalAbsolute();
+        return getEntry().getParent() != null
+                ? getEntry().getParent().getViewPrincipalAbsolute().a().and(viewEntry)
+                : viewEntry;
     }
 
     public Set<Story> getSubstories() {

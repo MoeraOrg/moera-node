@@ -2,6 +2,7 @@ package org.moera.node.liberin.model;
 
 import java.util.UUID;
 
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.moera.node.liberin.Liberin;
@@ -13,6 +14,7 @@ public class StoryDeletedLiberin extends Liberin {
     private String feedName;
     private long moment;
     private UUID postingId;
+    private PrincipalFilter viewFilter;
 
     public StoryDeletedLiberin(Story story) {
         id = story.getId();
@@ -20,6 +22,7 @@ public class StoryDeletedLiberin extends Liberin {
         feedName = story.getFeedName();
         moment = story.getMoment();
         postingId = story.getEntry() != null ? story.getEntry().getId() : null;
+        viewFilter = story.getViewPrincipalFilter();
     }
 
     public UUID getId() {
@@ -60,6 +63,14 @@ public class StoryDeletedLiberin extends Liberin {
 
     public void setPostingId(UUID postingId) {
         this.postingId = postingId;
+    }
+
+    public PrincipalFilter getViewFilter() {
+        return viewFilter;
+    }
+
+    public void setViewFilter(PrincipalFilter viewFilter) {
+        this.viewFilter = viewFilter;
     }
 
 }

@@ -63,11 +63,11 @@ public class StoryReceptor extends LiberinReceptorBase {
         if (!Feed.isAdmin(liberin.getFeedName())) {
             send(liberin,
                     new StoryDeletedEvent(liberin.getId().toString(), liberin.getStoryType(), liberin.getFeedName(),
-                            liberin.getMoment(), liberin.getPostingId().toString(), false));
+                            liberin.getMoment(), liberin.getPostingId().toString(), false, liberin.getViewFilter()));
         }
         send(liberin,
                 new StoryDeletedEvent(liberin.getId().toString(), liberin.getStoryType(), liberin.getFeedName(),
-                        liberin.getMoment(), liberin.getPostingId().toString(), true));
+                        liberin.getMoment(), liberin.getPostingId().toString(), true, liberin.getViewFilter()));
         deletePush(liberin.getFeedName(), liberin.getId());
         feedStatusUpdated(liberin.getFeedName());
     }
