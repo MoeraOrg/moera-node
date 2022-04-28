@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Posting;
 import org.springframework.data.util.Pair;
 
@@ -14,8 +15,17 @@ public class PostingEvent extends Event {
         super(type);
     }
 
+    protected PostingEvent(EventType type, PrincipalFilter filter) {
+        super(type, filter);
+    }
+
     protected PostingEvent(EventType type, Posting posting) {
         super(type);
+        this.id = posting.getId().toString();
+    }
+
+    protected PostingEvent(EventType type, Posting posting, PrincipalFilter filter) {
+        super(type, filter);
         this.id = posting.getId().toString();
     }
 

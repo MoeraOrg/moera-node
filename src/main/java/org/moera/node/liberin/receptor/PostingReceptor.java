@@ -1,14 +1,20 @@
 package org.moera.node.liberin.receptor;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
@@ -24,6 +30,7 @@ import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
+import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
@@ -36,6 +43,9 @@ import org.moera.node.text.MentionsExtractor;
 @LiberinReceptor
 public class PostingReceptor extends LiberinReceptorBase {
 
+    @Inject
+    private StoryRepository storyRepository;
+
     @LiberinMapping
     public void added(PostingAddedLiberin liberin) {
         Posting posting = liberin.getPosting();
@@ -44,7 +54,7 @@ public class PostingReceptor extends LiberinReceptorBase {
             notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
                     null, Principal.PUBLIC, posting.getOwnerName());
         }
-        send(liberin, new PostingAddedEvent(posting));
+        send(liberin, new PostingAddedEvent(posting, posting.getViewPrincipalAbsolute()));
     }
 
     @LiberinMapping
@@ -55,14 +65,31 @@ public class PostingReceptor extends LiberinReceptorBase {
             notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
                     liberin.getLatestRevision(), liberin.getLatestViewPrincipal(), posting.getOwnerName());
         }
-        send(liberin, new PostingUpdatedEvent(posting));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+
+        PrincipalExpression addedFilter = posting.getViewPrincipalAbsolute().a()
+                .andNot(liberin.getLatestViewPrincipal());
+        send(liberin, new PostingAddedEvent(posting, addedFilter));
+        List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
+        stories.forEach(story ->
+                send(Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
+                        new FeedPostingAddedNotification(story.getFeedName(), posting.getId())));
+
+        PrincipalExpression updatedFilter = posting.getViewPrincipalAbsolute().a()
+                .and(liberin.getLatestViewPrincipal());
+        send(liberin, new PostingUpdatedEvent(posting, updatedFilter));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
                 new PostingUpdatedNotification(posting.getId()));
         if (posting.getCurrentRevision().isUpdateImportant()) {
-            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
+            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
                     new PostingImportantUpdateNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
                             posting.getCurrentRevision().getUpdateDescription()));
         }
+
+        PrincipalExpression deletedFilter = posting.getViewPrincipalAbsolute().not()
+                .and(liberin.getLatestViewPrincipal());
+        send(liberin, new PostingDeletedEvent(posting, deletedFilter));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), deletedFilter),
+                new PostingDeletedNotification(posting.getId()));
     }
 
     @LiberinMapping
@@ -73,8 +100,8 @@ public class PostingReceptor extends LiberinReceptorBase {
             notifyMentioned(liberin, posting.getId(), null, Principal.PUBLIC, liberin.getLatestRevision(),
                     posting.getViewPrincipalAbsolute(), posting.getOwnerName());
         }
-        send(liberin, new PostingDeletedEvent(posting));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+        send(liberin, new PostingDeletedEvent(posting, posting.getViewPrincipalAbsolute()));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewPrincipalAbsolute()),
                 new PostingDeletedNotification(posting.getId()));
     }
 
@@ -86,8 +113,8 @@ public class PostingReceptor extends LiberinReceptorBase {
             notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
                     null, Principal.PUBLIC, posting.getOwnerName());
         }
-        send(liberin, new PostingRestoredEvent(posting));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+        send(liberin, new PostingRestoredEvent(posting, posting.getViewPrincipalAbsolute()));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewPrincipalAbsolute()),
                 new PostingUpdatedNotification(posting.getId()));
     }
 

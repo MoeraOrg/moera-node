@@ -215,6 +215,7 @@ public class Picker extends Task {
                 liberins.add(new PostingUpdatedLiberin(posting, latest, latestView).withNodeId(posting.getNodeId()));
             } else {
                 posting.setDeletedAt(null);
+                publish(feedName, posting, liberins);
                 liberins.add(new PostingRestoredLiberin(posting).withNodeId(posting.getNodeId()));
             }
         }
