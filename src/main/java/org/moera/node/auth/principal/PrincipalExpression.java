@@ -100,4 +100,23 @@ public final class PrincipalExpression implements PrincipalFilter {
         throw new InvalidPrincipalExpression("Operation not set");
     }
 
+    @Override
+    public String toString() {
+        if (principal != null) {
+            return (inverse ? "not " : "") + principal;
+        }
+        if (operation == null) {
+            throw new InvalidPrincipalExpression("Operation not set");
+        }
+        if (left == null) {
+            throw new InvalidPrincipalExpression("Left operand not set");
+        }
+        if (right == null) {
+            throw new InvalidPrincipalExpression("Right operand not set");
+        }
+        return inverse
+                ? String.format("not ((%s) %s (%s))", left, operation.name().toLowerCase(), right)
+                : String.format("(%s) %s (%s)", left, operation.name().toLowerCase(), right);
+    }
+
 }

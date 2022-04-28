@@ -101,17 +101,19 @@ public class NotificationSenderPool {
     public void send(Direction direction, Notification notification) {
         log.info("Sending notification {}", notification.toLogMessage());
         if (direction instanceof SingleDirection) {
-            log.info("Sending to node '{}' only", ((SingleDirection) direction).getNodeName());
+            log.info("Sending to node '{}' only, if {}",
+                    ((SingleDirection) direction).getNodeName(), direction.getPrincipalFilter());
             sendSingle((SingleDirection) direction, notification);
             return;
         }
         if (direction instanceof SubscribersDirection) {
             SubscribersDirection sd = (SubscribersDirection) direction;
 
-            log.info("Sending to '{}' subscribers (feedName = {}, postingId = {})",
+            log.info("Sending to '{}' subscribers (feedName = {}, postingId = {}), if {}",
                     sd.getSubscriptionType().getValue(),
                     LogUtil.format(sd.getFeedName()),
-                    LogUtil.format(sd.getPostingId()));
+                    LogUtil.format(sd.getPostingId()),
+                    direction.getPrincipalFilter());
 
             List<Subscriber> subscribers = Collections.emptyList();
             switch (sd.getSubscriptionType()) {

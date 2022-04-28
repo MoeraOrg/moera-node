@@ -200,7 +200,7 @@ public class EventManager {
 
     public void send(UUID nodeId, String clientId, Event event) {
         MDC.put("domain", domains.getDomainName(nodeId));
-        log.info("Event arrived: {}", event.toLogMessage());
+        log.info("Event arrived: {} for {}", event.toLogMessage(), event.getFilter());
 
         eventsLock.writeLock().lock();
         try {
