@@ -12,11 +12,11 @@ public class Direction {
     private final PrincipalFilter principalFilter;
 
     protected Direction() {
-        this(null, PrincipalFilter.by(Principal.PUBLIC));
+        this(null, Principal.PUBLIC);
     }
 
     protected Direction(UUID nodeId) {
-        this(nodeId, PrincipalFilter.by(Principal.PUBLIC));
+        this(nodeId, Principal.PUBLIC);
     }
 
     protected Direction(UUID nodeId, PrincipalFilter principalFilter) {

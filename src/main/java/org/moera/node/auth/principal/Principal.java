@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.util.StdConverter;
 
 @JsonSerialize(converter = Principal.ToStringConverter.class)
 @JsonDeserialize(converter = Principal.FromStringConverter.class)
-public class Principal implements Cloneable {
+public class Principal implements Cloneable, PrincipalFilter {
 
     public static final Principal NONE = new Principal("none");
     public static final Principal ADMIN = new Principal("admin");
@@ -113,6 +113,7 @@ public class Principal implements Cloneable {
         return new Principal(value);
     }
 
+    @Override
     public boolean includes(boolean admin, String nodeName) {
         if (isPublic()) {
             return true;
@@ -186,6 +187,14 @@ public class Principal implements Cloneable {
             return Principal.ADMIN;
         }
         return Principal.NONE;
+    }
+
+    public PrincipalExpression a() {
+        return PrincipalExpression.by(this);
+    }
+
+    public PrincipalExpression not() {
+        return PrincipalExpression.byNot(this);
     }
 
     public static class ToStringConverter extends StdConverter<Principal, String> {

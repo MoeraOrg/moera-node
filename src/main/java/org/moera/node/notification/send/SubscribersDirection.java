@@ -13,7 +13,7 @@ class SubscribersDirection extends Direction {
     private UUID postingId;
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType) {
-        this(nodeId, subscriptionType, null, null, PrincipalFilter.by(Principal.PUBLIC));
+        this(nodeId, subscriptionType, null, null, Principal.PUBLIC);
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, PrincipalFilter filter) {
@@ -21,7 +21,7 @@ class SubscribersDirection extends Direction {
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, String feedName) {
-        this(nodeId, subscriptionType, feedName, null, PrincipalFilter.by(Principal.PUBLIC));
+        this(nodeId, subscriptionType, feedName, null, Principal.PUBLIC);
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, String feedName, PrincipalFilter filter) {
@@ -29,7 +29,7 @@ class SubscribersDirection extends Direction {
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, UUID postingId) {
-        this(nodeId, subscriptionType, null, postingId, PrincipalFilter.by(Principal.PUBLIC));
+        this(nodeId, subscriptionType, null, postingId, Principal.PUBLIC);
     }
 
     SubscribersDirection(UUID nodeId, SubscriptionType subscriptionType, UUID postingId, PrincipalFilter filter) {

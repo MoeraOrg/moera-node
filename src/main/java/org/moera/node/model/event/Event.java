@@ -17,11 +17,7 @@ public abstract class Event {
     private PrincipalFilter filter;
 
     protected Event(EventType type) {
-        this(type, PrincipalFilter.by(Principal.PUBLIC));
-    }
-
-    protected Event(EventType type, Principal filter) {
-        this(type, PrincipalFilter.by(filter));
+        this(type, Principal.PUBLIC);
     }
 
     protected Event(EventType type, PrincipalFilter filter) {
