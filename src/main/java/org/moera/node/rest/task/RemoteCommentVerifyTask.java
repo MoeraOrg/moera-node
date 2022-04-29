@@ -51,11 +51,12 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         try {
             remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
-            PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+            PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName),
+                    remotePostingId);
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();
                 remotePostingId = postingInfo.getReceiverPostingId();
-                postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+                postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName), remotePostingId);
             }
             CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
             if (data.getRevisionId() == null) {
@@ -73,8 +74,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
     private void verify(PostingInfo postingInfo, CommentInfo commentInfo) throws NodeApiException {
         PostingRevisionInfo revisionInfo;
         try {
-            revisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
-                    commentInfo.getPostingRevisionId());
+            revisionInfo = nodeApi.getPostingRevision(remoteNodeName, generateCarte(remoteNodeName),
+                    postingInfo.getId(), commentInfo.getPostingRevisionId());
         } catch (NodeApiNotFoundException e) {
             succeeded(false);
             return;
@@ -120,8 +121,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
         PostingRevisionInfo postingRevisionInfo;
         try {
-            postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, postingInfo.getId(),
-                    commentInfo.getPostingRevisionId());
+            postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName, generateCarte(remoteNodeName),
+                    postingInfo.getId(), commentInfo.getPostingRevisionId());
         } catch (NodeApiNotFoundException e) {
             succeeded(false);
             return;

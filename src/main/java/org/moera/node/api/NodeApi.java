@@ -245,22 +245,17 @@ public class NodeApi {
         return call("GET", nodeName, "/whoami", null, WhoAmI.class);
     }
 
-    public PostingInfo getPosting(String nodeName, String postingId) throws NodeApiException {
-        return call("GET", nodeName, String.format("/postings/%s", Util.ue(postingId)), null,
-                PostingInfo.class);
+    public PostingInfo getPosting(String nodeName, String carte, String postingId) throws NodeApiException {
+        return call("GET", nodeName, String.format("/postings/%s", Util.ue(postingId)),
+                auth("carte", carte), PostingInfo.class);
     }
 
-    public PostingRevisionInfo getPostingRevision(String nodeName, String postingId, String revisionId)
+    public PostingRevisionInfo getPostingRevision(String nodeName, String carte, String postingId, String revisionId)
             throws NodeApiException {
 
         return call("GET", nodeName,
-                String.format("/postings/%s/revisions/%s", Util.ue(postingId), Util.ue(revisionId)), null,
-                PostingRevisionInfo.class);
-    }
-
-    public PostingRevisionInfo[] getPostingRevisions(String nodeName, String postingId) throws NodeApiException {
-        return call("GET", nodeName, String.format("/postings/%s/revisions", Util.ue(postingId)), null,
-                PostingRevisionInfo[].class);
+                String.format("/postings/%s/revisions/%s", Util.ue(postingId), Util.ue(revisionId)),
+                auth("carte", carte), PostingRevisionInfo.class);
     }
 
     public PostingInfo postPosting(String nodeName, PostingText postingText) throws NodeApiException {

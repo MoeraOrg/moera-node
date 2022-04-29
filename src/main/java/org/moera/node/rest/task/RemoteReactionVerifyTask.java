@@ -44,18 +44,19 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         try {
             String remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
-            PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+            PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName),
+                    remotePostingId);
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();
                 remotePostingId = postingInfo.getReceiverPostingId();
-                postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+                postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName), remotePostingId);
             }
             if (data.getCommentId() == null) {
                 ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
                         data.getOwnerName());
                 try {
                     PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
-                            remotePostingId, reactionInfo.getPostingRevisionId());
+                            generateCarte(remoteNodeName), remotePostingId, reactionInfo.getPostingRevisionId());
                     verify(postingInfo, postingRevisionInfo, reactionInfo);
                 } catch (NodeApiNotFoundException e) {
                     succeeded(false);
@@ -68,7 +69,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                     CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName,
                             remotePostingId, data.getCommentId(), reactionInfo.getCommentRevisionId());
                     PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
-                            remotePostingId, commentInfo.getPostingRevisionId());
+                            generateCarte(remoteNodeName), remotePostingId, commentInfo.getPostingRevisionId());
                     verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
                 } catch (NodeApiNotFoundException e) {
                     succeeded(false);

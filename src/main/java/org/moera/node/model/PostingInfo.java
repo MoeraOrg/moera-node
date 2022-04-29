@@ -596,6 +596,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setReactionsVisible(reactionsVisible);
         posting.setReactionTotalsVisible(reactionTotalsVisible);
         posting.setTotalChildren(totalComments);
+        // TODO visibility to a particular group of friends should be converted to something here
+        posting.setViewPrincipal(getOperations().getOrDefault("view", Principal.PUBLIC));
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {

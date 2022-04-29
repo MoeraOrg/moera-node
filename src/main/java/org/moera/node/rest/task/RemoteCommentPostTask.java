@@ -77,7 +77,7 @@ public class RemoteCommentPostTask extends Task {
             target = nodeApi.whoAmI(targetNodeName);
             targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar());
 
-            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            postingInfo = nodeApi.getPosting(targetNodeName, generateCarte(targetNodeName), postingId);
             if (postingInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar());
                 postingInfo.getOwnerAvatar().setMediaFile(mediaFile);

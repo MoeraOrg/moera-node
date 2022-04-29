@@ -91,8 +91,8 @@ public class RepliedToDigestVerifier {
         PostingRevisionInfo postingRevisionInfo = postingRevisions.get(commentRevisionInfo.getPostingRevisionId());
         if (postingRevisionInfo == null) {
             try {
-                postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, postingInfo.getId(),
-                        commentRevisionInfo.getPostingRevisionId());
+                postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, generateCarte.apply(targetNodeName),
+                        postingInfo.getId(), commentRevisionInfo.getPostingRevisionId());
             } catch (NodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }

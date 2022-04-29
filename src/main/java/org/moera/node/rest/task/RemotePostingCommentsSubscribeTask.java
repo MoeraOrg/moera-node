@@ -92,7 +92,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
 
         PostingInfo postingInfo = null;
         try {
-            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            postingInfo = nodeApi.getPosting(targetNodeName, generateCarte(targetNodeName), postingId);
             if (postingInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar());
                 postingInfo.getOwnerAvatar().setMediaFile(mediaFile);

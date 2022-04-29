@@ -69,7 +69,9 @@ public class RemotePostingPostTask extends Task {
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName),
                     sourceText.getOwnerAvatarMediaFile());
 
-            prevPostingInfo = postingId != null ? nodeApi.getPosting(targetNodeName, postingId) : null;
+            prevPostingInfo = postingId != null
+                    ? nodeApi.getPosting(targetNodeName, generateCarte(targetNodeName), postingId)
+                    : null;
             PostingText postingText = buildPosting();
             PostingInfo postingInfo;
             if (postingId == null) {

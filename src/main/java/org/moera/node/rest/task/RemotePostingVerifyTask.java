@@ -38,7 +38,8 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
     @Override
     protected void execute() {
         try {
-            PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), data.getPostingId());
+            PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), generateCarte(data.getNodeName()),
+                    data.getPostingId());
             updateData(data -> data.setOwnerName(postingInfo.getReceiverName()));
             byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
                     ? mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
@@ -51,8 +52,8 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo, parentMediaDigest, mediaDigest);
             } else {
-                PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(data.getNodeName(), data.getPostingId(),
-                        data.getRevisionId());
+                PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(data.getNodeName(),
+                        generateCarte(data.getNodeName()), data.getPostingId(), data.getRevisionId());
                 verifySignature(postingInfo, revisionInfo, parentMediaDigest, mediaDigest);
             }
         } catch (Exception e) {

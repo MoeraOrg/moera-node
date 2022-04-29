@@ -62,7 +62,7 @@ public class RemotePostingReactionPostTask extends Task {
             target = nodeApi.whoAmI(targetNodeName);
             targetAvatarMediaFile = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar());
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
-            postingInfo = nodeApi.getPosting(targetNodeName, postingId);
+            postingInfo = nodeApi.getPosting(targetNodeName, generateCarte(targetNodeName), postingId);
             if (postingInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, postingInfo.getOwnerAvatar());
                 postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
@@ -148,7 +148,8 @@ public class RemotePostingReactionPostTask extends Task {
                     } else {
                         parentComment = parents[0].getComment();
                         if (parentComment != null) {
-                            parentPosting = nodeApi.getPosting(targetNodeName, parentComment.getPostingId());
+                            parentPosting = nodeApi.getPosting(targetNodeName, generateCarte(targetNodeName),
+                                    parentComment.getPostingId());
                         }
                     }
                 }

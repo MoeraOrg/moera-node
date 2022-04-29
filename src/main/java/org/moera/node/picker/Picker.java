@@ -168,7 +168,7 @@ public class Picker extends Task {
 
     private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
                                     List<Liberin> liberins, List<Pick> picks) throws NodeApiException {
-        PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, remotePostingId);
+        PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName), remotePostingId);
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
         String receiverFullName = postingInfo.isOriginal()
