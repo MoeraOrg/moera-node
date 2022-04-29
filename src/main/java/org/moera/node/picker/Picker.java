@@ -41,6 +41,7 @@ import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.media.MediaManager;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
@@ -87,6 +88,9 @@ public class Picker extends Task {
 
     @Inject
     private EntrySourceRepository entrySourceRepository;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @Inject
     private StoryOperations storyOperations;
@@ -219,10 +223,14 @@ public class Picker extends Task {
                 liberins.add(new PostingRestoredLiberin(posting).withNodeId(posting.getNodeId()));
             }
         }
+        posting = postingRepository.saveAndFlush(posting);
+        mediaOperations.updatePermissions(posting);
+
         var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());
         if (!reactionTotalOperations.isSame(reactionTotals, postingInfo.getReactions())) {
             reactionTotalOperations.replaceAll(posting, postingInfo.getReactions());
         }
+
         return posting;
     }
 
