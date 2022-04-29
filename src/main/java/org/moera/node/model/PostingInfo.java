@@ -597,6 +597,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setReactionTotalsVisible(reactionTotalsVisible);
         posting.setTotalChildren(totalComments);
         // TODO visibility to a particular group of friends should be converted to something here
+        // https://github.com/MoeraOrg/moera-issues/issues/207
         posting.setViewPrincipal(getOperations().getOrDefault("view", Principal.PUBLIC));
     }
 
