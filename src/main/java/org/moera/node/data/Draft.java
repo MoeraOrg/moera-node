@@ -99,6 +99,9 @@ public class Draft {
     @NotNull
     private String updateDescription = "";
 
+    @NotNull
+    private String operations = "{}";
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "draft")
     private Set<EntryAttachment> attachments = new HashSet<>();
 
@@ -300,6 +303,14 @@ public class Draft {
 
     public void setUpdateDescription(String updateDescription) {
         this.updateDescription = updateDescription;
+    }
+
+    public String getOperations() {
+        return operations;
+    }
+
+    public void setOperations(String operations) {
+        this.operations = operations;
     }
 
     public Set<EntryAttachment> getAttachments() {

@@ -1,17 +1,25 @@
 package org.moera.node.model;
 
 import java.util.Comparator;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftType;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DraftInfo {
+
+    private static final Logger log = LoggerFactory.getLogger(DraftInfo.class);
 
     private String id;
     private DraftType draftType;
@@ -35,6 +43,7 @@ public class DraftInfo {
     private String heading;
     private Long publishAt;
     private UpdateInfo updateInfo;
+    private Map<String, Principal> operations;
 
     public DraftInfo() {
     }
@@ -71,7 +80,11 @@ public class DraftInfo {
         if (!UpdateInfo.isEmpty(draft)) {
             updateInfo = new UpdateInfo(draft);
         }
-
+        try {
+            operations = new ObjectMapper().readValue(draft.getOperations(), Map.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error deserializing Draft.operations", e);
+        }
     }
 
     public String getId() {
@@ -248,6 +261,14 @@ public class DraftInfo {
 
     public void setUpdateInfo(UpdateInfo updateInfo) {
         this.updateInfo = updateInfo;
+    }
+
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
     }
 
 }

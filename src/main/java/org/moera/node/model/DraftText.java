@@ -1,10 +1,14 @@
 package org.moera.node.model;
 
+import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftType;
@@ -15,9 +19,13 @@ import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
 
 public class DraftText {
+
+    private static final Logger log = LoggerFactory.getLogger(DraftText.class);
 
     private DraftType draftType;
 
@@ -60,6 +68,8 @@ public class DraftText {
 
     @Valid
     private UpdateInfo updateInfo;
+
+    private Map<String, Principal> operations;
 
     public DraftType getDraftType() {
         return draftType;
@@ -189,6 +199,14 @@ public class DraftText {
         this.updateInfo = updateInfo;
     }
 
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
+    }
+
     public void toDraft(Draft draft, TextConverter textConverter) {
         draft.setDraftType(draftType);
         draft.setEditedAt(Util.now());
@@ -248,6 +266,14 @@ public class DraftText {
             }
             if (updateInfo.getDescription() != null) {
                 draft.setUpdateDescription(updateInfo.getDescription());
+            }
+        }
+
+        if (operations != null) {
+            try {
+                draft.setOperations(new ObjectMapper().writeValueAsString(operations));
+            } catch (JsonProcessingException e) {
+                log.error("Error serializing DraftText.operations", e);
             }
         }
     }
