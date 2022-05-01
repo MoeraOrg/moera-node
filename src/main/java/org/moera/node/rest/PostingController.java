@@ -4,6 +4,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -192,11 +193,11 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        Principal latestView = posting.getViewPrincipalAbsolute();
-        EntryRevision latest = posting.getCurrentRevision();
         if (!posting.isOriginal()) {
             throw new ValidationFailure("posting.not-original");
         }
+        Principal latestView = posting.getViewPrincipalAbsolute();
+        EntryRevision latest = posting.getCurrentRevision();
         mediaOperations.validateAvatar(
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
@@ -332,6 +333,46 @@ public class PostingController {
         requestContext.send(new PostingDeletedLiberin(posting, latest));
 
         return Result.OK;
+    }
+
+    @GetMapping("/{id}/operations")
+    @Transactional
+    public Map<String, Principal> getOperations(@PathVariable UUID id) {
+        log.info("GET /postings/{id}/operations, (id = {})", LogUtil.format(id));
+
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+
+        return new PostingInfo(posting, true).getOperations();
+    }
+
+    @PutMapping("/{id}/operations")
+    @Admin
+    @Transactional
+    public Map<String, Principal> putOperations(@PathVariable UUID id,
+                                                @Valid @RequestBody Map<String, Principal> operations) {
+        log.info("PUT /postings/{id}/operations, (id = {})", LogUtil.format(id));
+
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        Principal latestView = posting.getViewPrincipalAbsolute();
+
+        Principal viewPrincipal = operations.get("view");
+        if (viewPrincipal != null) {
+            if (!viewPrincipal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
+                throw new ValidationFailure("posting-operations.wrong-principal");
+            }
+            posting.setViewPrincipal(viewPrincipal);
+        }
+
+        posting.setEditedAt(Util.now());
+
+        requestContext.send(new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), latestView));
+
+        return new PostingInfo(posting, true).getOperations();
     }
 
     @GetMapping("/{id}/attached")
