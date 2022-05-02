@@ -20,6 +20,8 @@ import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.AuthenticationCategory;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
@@ -234,7 +236,7 @@ public class MediaController {
     private MediaFileOwner getMediaFileOwner(UUID id) {
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        if (!requestContext.isPrincipal(mediaFileOwner.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(mediaFileOwner.getViewPrincipalAbsolute(requestContext.nodeName()))) {
             throw new ObjectNotFoundFailure("media.not-found");
         }
         return mediaFileOwner;
@@ -249,6 +251,7 @@ public class MediaController {
     }
 
     @GetMapping("/private/{id}/info")
+    @AuthenticationCategory(AuthCategory.VIEW_MEDIA)
     @Transactional
     public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
@@ -266,6 +269,7 @@ public class MediaController {
     }
 
     @GetMapping("/private/{id}/data")
+    @AuthenticationCategory(AuthCategory.VIEW_MEDIA)
     @Transactional
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
                                                    @RequestParam(required = false) Integer width) {

@@ -17,7 +17,7 @@ public class CarteFingerprint extends Fingerprint implements CarteProperties {
     public long beginning;
     public long deadline;
     public String nodeName;
-    public byte permissions; // TODO for future use
+    public long authCategory;
     public byte[] salt;
 
     public CarteFingerprint() {
@@ -25,13 +25,14 @@ public class CarteFingerprint extends Fingerprint implements CarteProperties {
     }
 
     public CarteFingerprint(String ownerName, InetAddress address, Instant beginning, Instant deadline,
-                            String nodeName) {
+                            String nodeName, long authCategory) {
         super(1);
         this.ownerName = ownerName;
         this.address = address;
         this.beginning = beginning.getEpochSecond();
         this.deadline = deadline.getEpochSecond();
         this.nodeName = nodeName;
+        this.authCategory = authCategory;
         salt = new byte[8];
         new SecureRandom().nextBytes(salt);
     }
@@ -65,7 +66,10 @@ public class CarteFingerprint extends Fingerprint implements CarteProperties {
         return nodeName;
     }
 
-    @Override
+    public long getAuthCategory() {
+        return authCategory;
+    }
+
     public byte[] getSalt() {
         return salt;
     }

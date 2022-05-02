@@ -146,8 +146,8 @@ public class MediaFileOwner {
         return viewPrincipal;
     }
 
-    public Principal getViewPrincipalAbsolute() {
-        return getViewPrincipal().withOwner(getOwnerName());
+    public Principal getViewPrincipalAbsolute(String nodeName) {
+        return getViewPrincipal().withOwner(getOwnerName() != null ? getOwnerName() : nodeName);
     }
 
     public void setViewPrincipal(Principal viewPrincipal) {

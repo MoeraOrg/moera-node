@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.config.Config;
+import org.moera.node.data.Token;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
@@ -66,13 +67,27 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             if (!(handler instanceof HandlerMethod)) {
                 return true;
             }
-            if (((HandlerMethod) handler).hasMethodAnnotation(RootAdmin.class) && !requestContext.isRootAdmin()) {
+            HandlerMethod handlerMethod = (HandlerMethod) handler;
+            if (handlerMethod.hasMethodAnnotation(RootAdmin.class) && !requestContext.isRootAdmin()) {
                 throw new AuthenticationException();
             }
-            if ((((HandlerMethod) handler).hasMethodAnnotation(Admin.class)
-                    || ((HandlerMethod) handler).getBeanType().isAnnotationPresent(Admin.class))
-                    && !requestContext.isAdmin()) {
+            if ((handlerMethod.hasMethodAnnotation(Admin.class)
+                    || handlerMethod.getBeanType().isAnnotationPresent(Admin.class)) && !requestContext.isAdmin()) {
                 throw new AuthenticationException();
+            }
+            if (requestContext.getAuthCategory() != AuthCategory.ALL) {
+                AuthenticationCategory authenticationCategory =
+                        handlerMethod.getMethodAnnotation(AuthenticationCategory.class);
+                if (authenticationCategory != null) {
+                    long authCategory = authenticationCategory.value();
+                    if ((authCategory & requestContext.getAuthCategory()) != authCategory) {
+                        throw new AuthenticationException();
+                    }
+                } else {
+                    if ((AuthCategory.OTHER & requestContext.getAuthCategory()) == 0) {
+                        throw new AuthenticationException();
+                    }
+                }
             }
 
             return true;
@@ -96,6 +111,11 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     }
 
     private AuthSecrets extractSecrets(HttpServletRequest request) {
+        String auth = request.getParameter("auth");
+        if (!ObjectUtils.isEmpty(auth)) {
+            return new AuthSecrets(auth);
+        }
+
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (!ObjectUtils.isEmpty(authHeader)) {
             String[] parts = StringUtils.split(authHeader, " ");
@@ -114,11 +134,16 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             requestContext.setRootAdmin(true);
             MDC.put("auth", "!");
         }
-        requestContext.setAdmin(authenticationManager.isAdminToken(secrets.token, requestContext.nodeId()));
+        Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
+        requestContext.setAdmin(token != null);
+        requestContext.setAuthCategory(token != null ? token.getAuthCategory() : AuthCategory.ALL);
         MDC.put("auth", requestContext.isAdmin() ? "#" : "$");
         try {
-            requestContext.setClientName(
-                    authenticationManager.getClientName(secrets.carte, UriUtil.remoteAddress(request)));
+            CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, UriUtil.remoteAddress(request));
+            if (carteAuthInfo != null) {
+                requestContext.setClientName(carteAuthInfo.getClientName());
+                requestContext.setAuthCategory(carteAuthInfo.getAuthCategory());
+            }
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");
         }

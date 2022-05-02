@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.api.NodeApi;
+import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Avatar;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
@@ -78,7 +79,7 @@ public abstract class Task implements Runnable {
     }
 
     protected String generateCarte(String targetNodeName) {
-        return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName);
+        return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, AuthCategory.ALL);
     }
 
     protected void send(Liberin liberin) {

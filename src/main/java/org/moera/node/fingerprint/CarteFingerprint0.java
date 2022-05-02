@@ -5,6 +5,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.auth.AuthCategory;
 
 @FingerprintVersion(objectType = FingerprintObjectType.CARTE, version = 0)
 public class CarteFingerprint0 extends Fingerprint implements CarteProperties {
@@ -62,6 +63,10 @@ public class CarteFingerprint0 extends Fingerprint implements CarteProperties {
     }
 
     @Override
+    public long getAuthCategory() {
+        return AuthCategory.ALL;
+    }
+
     public byte[] getSalt() {
         return salt;
     }

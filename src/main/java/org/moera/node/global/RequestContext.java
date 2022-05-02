@@ -29,6 +29,10 @@ public interface RequestContext {
 
     void setAdmin(boolean admin);
 
+    long getAuthCategory();
+
+    void setAuthCategory(long authCategory);
+
     Options getOptions();
 
     void setOptions(Options options);

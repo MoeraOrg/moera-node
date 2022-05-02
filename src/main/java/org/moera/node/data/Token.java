@@ -25,7 +25,7 @@ public class Token {
     private String name;
 
     @NotNull
-    private boolean admin;
+    private long authCategory;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -57,12 +57,12 @@ public class Token {
         this.name = name;
     }
 
-    public boolean isAdmin() {
-        return admin;
+    public long getAuthCategory() {
+        return authCategory;
     }
 
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
+    public void setAuthCategory(long authCategory) {
+        this.authCategory = authCategory;
     }
 
     public Timestamp getCreatedAt() {

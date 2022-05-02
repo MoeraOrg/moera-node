@@ -14,6 +14,6 @@ public interface CarteProperties {
 
     long getDeadline();
 
-    byte[] getSalt();
+    long getAuthCategory();
 
 }

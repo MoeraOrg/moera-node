@@ -39,7 +39,7 @@ public class AuthenticationManager {
     @Inject
     private NamingCache namingCache;
 
-    public boolean isAdminToken(String tokenS, UUID nodeId) throws InvalidTokenException {
+    public Token getToken(String tokenS, UUID nodeId) throws InvalidTokenException {
         if (!ObjectUtils.isEmpty(tokenS)) {
             Token token = tokenRepository.findById(tokenS).orElse(null);
             if (token == null) {
@@ -52,12 +52,12 @@ public class AuthenticationManager {
                         LogUtil.format(token.getNodeId()), LogUtil.format(token.getDeadline()));
                 throw new InvalidTokenException();
             }
-            return token.isAdmin();
+            return token;
         }
-        return false;
+        return null;
     }
 
-    public String getClientName(String carteS, InetAddress clientAddress) {
+    public CarteAuthInfo getCarte(String carteS, InetAddress clientAddress) {
         if (ObjectUtils.isEmpty(carteS)) {
             return null;
         }
@@ -108,7 +108,7 @@ public class AuthenticationManager {
             log.info("Carte: signature verification failed");
             throw new InvalidCarteException("carte.invalid-signature");
         }
-        return fp.getOwnerName();
+        return new CarteAuthInfo(fp);
     }
 
     private Fingerprint carteFingerprintCreator(short version) {

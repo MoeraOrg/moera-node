@@ -5,6 +5,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
+import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.AuthenticationCategory;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -55,6 +57,7 @@ public class MediaUiController {
     }
 
     @GetMapping("/private/{id}.{ext}")
+    @AuthenticationCategory(AuthCategory.VIEW_MEDIA)
     @MaxCache
     @Transactional
     @ResponseBody
@@ -62,7 +65,7 @@ public class MediaUiController {
                                                    @RequestParam(required = false) Integer width) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
-        if (!requestContext.isPrincipal(mediaFileOwner.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(mediaFileOwner.getViewPrincipalAbsolute(requestContext.nodeName()))) {
             throw new PageNotFoundException();
         }
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width);

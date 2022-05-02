@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Token;
 
 public class TokenInfo {
@@ -19,7 +20,7 @@ public class TokenInfo {
     public TokenInfo(Token tokenData) {
         token = tokenData.getToken();
         valid = true;
-        permissions = tokenData.isAdmin() ? new String[]{"admin"} : new String[0];
+        permissions = AuthCategory.toStrings(tokenData.getAuthCategory());
     }
 
     public String getToken() {

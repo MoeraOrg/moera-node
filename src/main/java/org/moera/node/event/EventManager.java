@@ -18,9 +18,12 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.AuthSecrets;
 import org.moera.node.auth.AuthenticationManager;
+import org.moera.node.auth.CarteAuthInfo;
 import org.moera.node.auth.InvalidTokenException;
+import org.moera.node.data.Token;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.event.Event;
@@ -85,11 +88,17 @@ public class EventManager {
         boolean admin = false;
         String clientName = null;
         try {
-            admin = authenticationManager.isAdminToken(secrets.token, nodeId);
-            if (admin) {
-                clientName = universalContext.nodeName();
-            } else {
-                clientName = authenticationManager.getClientName(secrets.carte, getRemoteAddress(accessor));
+            Token token = authenticationManager.getToken(secrets.token, nodeId);
+            if (token != null) {
+                if (token.getAuthCategory() == AuthCategory.ALL) {
+                    admin = true;
+                    clientName = universalContext.nodeName();
+                }
+            } else if (secrets.carte != null) {
+                CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, getRemoteAddress(accessor));
+                if (carteAuthInfo != null && carteAuthInfo.getAuthCategory() == AuthCategory.ALL) {
+                    clientName = carteAuthInfo.getClientName();
+                }
             }
         } catch (InvalidTokenException | UnknownHostException e) {
             // Ignore, the client will detect the problem from REST API requests

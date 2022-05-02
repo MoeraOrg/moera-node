@@ -24,6 +24,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean browserExtension;
     private boolean rootAdmin;
     private boolean admin;
+    private long authCategory;
     private Options options;
     private Avatar avatar;
     private String url;
@@ -81,6 +82,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    @Override
+    public long getAuthCategory() {
+        return authCategory;
+    }
+
+    @Override
+    public void setAuthCategory(long authCategory) {
+        this.authCategory = authCategory;
     }
 
     @Override

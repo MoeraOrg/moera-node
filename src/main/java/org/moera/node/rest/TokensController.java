@@ -14,8 +14,8 @@ import org.moera.node.data.TokenRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.Credentials;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.TokenAttributes;
 import org.moera.node.model.TokenCreated;
 import org.moera.node.model.TokenInfo;
 import org.moera.node.option.Options;
@@ -46,29 +46,28 @@ public class TokensController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<TokenCreated> post(@Valid @RequestBody Credentials credentials) {
-        log.info("POST /tokens (login = '{}')", credentials.getLogin());
+    public ResponseEntity<TokenCreated> post(@Valid @RequestBody TokenAttributes attributes) {
+        log.info("POST /tokens (login = '{}')", attributes.getLogin());
 
         Options options = requestContext.getOptions();
         if (ObjectUtils.isEmpty(options.getString("credentials.login"))
                 || ObjectUtils.isEmpty(options.getString("credentials.password-hash"))) {
             throw new OperationFailure("credentials.not-created");
         }
-        if (!credentials.getLogin().equals(options.getString("credentials.login"))
-            || !Password.validate(options.getString("credentials.password-hash"), credentials.getPassword())) {
+        if (!attributes.getLogin().equals(options.getString("credentials.login"))
+            || !Password.validate(options.getString("credentials.password-hash"), attributes.getPassword())) {
             throw new OperationFailure("credentials.login-incorrect");
         }
 
         Token token = new Token();
         token.setNodeId(options.nodeId());
         token.setToken(CryptoUtil.token());
-        token.setAdmin(true);
+        token.setAuthCategory(attributes.getAuthCategory());
         token.setDeadline(Timestamp.from(Instant.now().plus(
                 options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
 
-        return ResponseEntity.created(URI.create("/tokens/" + token.getToken()))
-                .body(new TokenCreated(token.getToken(), "admin"));
+        return ResponseEntity.created(URI.create("/tokens/" + token.getToken())).body(new TokenCreated(token));
     }
 
     @GetMapping("/{token}")

@@ -12,6 +12,7 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthCategory;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -19,7 +20,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.CarteInfo;
 import org.moera.node.model.CarteSet;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.util.Carte;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,27 +54,33 @@ public class CarteController {
         String ownerName = requestContext.nodeName();
         PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
 
-        List<CarteInfo> cartes = new ArrayList<>();
-        Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
         try {
             InetAddress remoteAddress = UriUtil.remoteAddress(request);
-            for (int i = 0; i <  limit; i++) {
-                    CarteInfo carteInfo = new CarteInfo();
-                    carteInfo.setCarte(Carte.generate(ownerName, remoteAddress, beginning, signingKey, null));
-                    carteInfo.setBeginning(beginning.getEpochSecond());
-                    beginning = Carte.getDeadline(beginning);
-                    carteInfo.setDeadline(beginning.getEpochSecond());
-                    cartes.add(carteInfo);
-            }
 
             CarteSet carteSet = new CarteSet();
             carteSet.setCartesIp(remoteAddress.getHostAddress());
-            carteSet.setCartes(cartes);
+            carteSet.setCartes(generateCarteList(ownerName, signingKey, remoteAddress, limit));
             carteSet.setCreatedAt(Instant.now().getEpochSecond());
             return carteSet;
         } catch (UnknownHostException e) {
             throw new OperationFailure("carte.client-address-unknown");
         }
+    }
+
+    private List<CarteInfo> generateCarteList(String ownerName, PrivateKey signingKey, InetAddress remoteAddress,
+                                              int limit) {
+        List<CarteInfo> cartes = new ArrayList<>();
+        Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
+        for (int i = 0; i < limit; i++) {
+            CarteInfo carteAll = CarteInfo.generate(ownerName, remoteAddress, beginning, signingKey, null,
+                    AuthCategory.ALL);
+            CarteInfo carteViewMedia = CarteInfo.generate(ownerName, remoteAddress, beginning, signingKey, null,
+                    AuthCategory.VIEW_MEDIA);
+            cartes.add(carteAll);
+            cartes.add(carteViewMedia);
+            beginning = Instant.ofEpochSecond(carteAll.getDeadline());
+        }
+        return cartes;
     }
 
 }
