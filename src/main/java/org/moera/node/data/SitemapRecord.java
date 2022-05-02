@@ -8,6 +8,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.util.Util;
 
 @Entity
@@ -35,6 +36,9 @@ public class SitemapRecord {
     @NotNull
     private int totalUpdates;
 
+    @NotNull
+    private boolean visible;
+
     public SitemapRecord() {
     }
 
@@ -46,6 +50,13 @@ public class SitemapRecord {
         createdAt = posting.getCreatedAt();
         modifiedAt = posting.getEditedAt();
         totalUpdates = Math.max(posting.getTotalRevisions(), 1);
+        visible = posting.getViewPrincipal().equals(Principal.PUBLIC);
+    }
+
+    public void update(Posting posting) {
+        modifiedAt = posting.getEditedAt();
+        totalUpdates = totalUpdates + 1;
+        visible = posting.getViewPrincipal().equals(Principal.PUBLIC);
     }
 
     public UUID getId() {
@@ -102,6 +113,14 @@ public class SitemapRecord {
 
     public void setTotalUpdates(int totalUpdates) {
         this.totalUpdates = totalUpdates;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
 }

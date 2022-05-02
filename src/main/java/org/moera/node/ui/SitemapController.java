@@ -119,8 +119,7 @@ public class SitemapController {
             Sitemap sitemap = findAvailableSitemap(sitemaps);
             for (Posting posting : postings) {
                 if (posting.getSitemapRecord() != null) {
-                    posting.getSitemapRecord().setModifiedAt(posting.getEditedAt());
-                    posting.getSitemapRecord().setTotalUpdates(posting.getSitemapRecord().getTotalUpdates() + 1);
+                    posting.getSitemapRecord().update(posting);
                     log.debug("Updated posting {}", posting.getId());
                 } else {
                     SitemapRecord record = new SitemapRecord(sitemap.getId(), posting);

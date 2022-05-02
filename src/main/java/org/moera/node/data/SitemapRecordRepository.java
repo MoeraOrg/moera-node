@@ -16,7 +16,7 @@ public interface SitemapRecordRepository extends JpaRepository<SitemapRecord, UU
             + " where r.nodeId = ?1 group by r.sitemapId")
     Collection<Sitemap> findSitemaps(UUID nodeId);
 
-    @Query("select r from SitemapRecord r where r.nodeId = ?1 and r.sitemapId = ?2")
+    @Query("select r from SitemapRecord r where r.nodeId = ?1 and r.sitemapId = ?2 and r.visible = true")
     Collection<SitemapRecord> findRecords(UUID nodeId, UUID id);
 
 }
