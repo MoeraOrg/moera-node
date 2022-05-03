@@ -16,6 +16,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
@@ -191,9 +192,11 @@ public class PostingOperations {
 
         storyOperations.publish(posting, publications);
 
-        Story timelineStory = posting.getStory(Feed.TIMELINE);
-        if (timelineStory != null) {
-            timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
+        if (posting.getViewPrincipal().equals(Principal.PUBLIC)) {
+            Story timelineStory = posting.getStory(Feed.TIMELINE);
+            if (timelineStory != null) {
+                timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
+            }
         }
 
         return posting;
