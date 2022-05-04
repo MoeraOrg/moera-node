@@ -10,7 +10,6 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
-import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -27,11 +26,11 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.body.Body;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.model.body.Body;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
@@ -84,7 +83,7 @@ public class TimelineUiController {
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
                     .filter(t -> t.getEntry().isMessage())
-                    .filter(t -> t.getEntry().getViewPrincipal().equals(Principal.PUBLIC))
+                    .filter(t -> t.getEntry().getViewPrincipal().isPublic())
                     .map(s -> StoryInfo.build(s, false, t -> PostingInfo.forUi((Posting) t.getEntry())))
                     .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                     .collect(Collectors.toList());

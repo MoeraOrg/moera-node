@@ -8,7 +8,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
-import org.moera.node.auth.principal.Principal;
 import org.moera.node.util.Util;
 
 @Entity
@@ -50,13 +49,13 @@ public class SitemapRecord {
         createdAt = posting.getCreatedAt();
         modifiedAt = posting.getEditedAt();
         totalUpdates = Math.max(posting.getTotalRevisions(), 1);
-        visible = posting.getViewPrincipal().equals(Principal.PUBLIC);
+        visible = posting.getViewPrincipal().isPublic();
     }
 
     public void update(Posting posting) {
         modifiedAt = posting.getEditedAt();
         totalUpdates = totalUpdates + 1;
-        visible = posting.getViewPrincipal().equals(Principal.PUBLIC);
+        visible = posting.getViewPrincipal().isPublic();
     }
 
     public UUID getId() {

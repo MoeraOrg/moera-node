@@ -224,6 +224,11 @@
     max: 2000d
     never: true
 
+- name: posting.picked.hide-on-delete
+  type: bool
+  defaultValue: false
+  title: Do not delete Newsfeed posts when original is deleted
+
 - name: feed.width
   type: int
   defaultValue: 900

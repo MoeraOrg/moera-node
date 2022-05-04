@@ -4,6 +4,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -13,7 +15,9 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
+import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
+import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.notification.FeedPostingAddedNotification;
 import org.moera.node.model.notification.NotificationType;
@@ -28,6 +32,7 @@ import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.picker.PickerPool;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,8 +118,20 @@ public class PostingProcessor {
     @Transactional
     public void deleted(PostingDeletedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) -> {
-            postingOperations.deletePosting(posting, false);
-            storyOperations.unpublish(posting.getId());
+            EntryRevision latest = posting.getCurrentRevision();
+            if (requestContext.getOptions().getBool("posting.picked.hide-on-delete")) {
+                Principal latestView = posting.getViewPrincipalAbsolute();
+                posting.setViewPrincipal(Principal.ADMIN);
+                posting.setEditedAt(Util.now());
+                posting.setReceiverDeletedAt(Util.now());
+
+                requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
+            } else {
+                postingOperations.deletePosting(posting, false);
+                storyOperations.unpublish(posting.getId());
+
+                requestContext.send(new PostingDeletedLiberin(posting, latest));
+            }
         });
     }
 

@@ -71,6 +71,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Short signatureVersion;
     private List<FeedReference> feedReferences;
     private Map<String, Principal> operations;
+    private Map<String, Principal> receiverOperations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -144,7 +145,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         deletedAt = Util.toEpochSecond(posting.getDeletedAt());
         receiverCreatedAt = Util.toEpochSecond(posting.getReceiverCreatedAt());
         receiverEditedAt = Util.toEpochSecond(posting.getReceiverEditedAt());
-        receiverDeletedAt = Util.toEpochSecond(revision.getReceiverDeletedAt());
+        receiverDeletedAt = Util.toEpochSecond(posting.getReceiverDeletedAt());
         revisionCreatedAt = Util.toEpochSecond(revision.getCreatedAt());
         receiverRevisionCreatedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
@@ -159,6 +160,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         operations.put("delete", receiverName == null ? Principal.PRIVATE : Principal.ADMIN);
         operations.put("revisions", Principal.NONE);
         operations.put("reactions", posting.isReactionsVisible() ? Principal.PUBLIC : Principal.PRIVATE);
+        receiverOperations = new HashMap<>();
+        receiverOperations.put("view", posting.getReceiverViewPrincipal());
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
@@ -516,6 +519,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         this.operations = operations;
     }
 
+    public Map<String, Principal> getReceiverOperations() {
+        return receiverOperations;
+    }
+
+    public void setReceiverOperations(Map<String, Principal> receiverOperations) {
+        this.receiverOperations = receiverOperations;
+    }
+
     public AcceptedReactions getAcceptedReactions() {
         return acceptedReactions;
     }
@@ -598,7 +609,9 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setTotalChildren(totalComments);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
-        posting.setViewPrincipal(getOperations().getOrDefault("view", Principal.PUBLIC));
+        Principal viewPrincipal = getOperations().getOrDefault("view", Principal.PUBLIC);
+        posting.setViewPrincipal(viewPrincipal);
+        posting.setReceiverViewPrincipal(viewPrincipal);
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {

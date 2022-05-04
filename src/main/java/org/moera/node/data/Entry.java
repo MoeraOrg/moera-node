@@ -84,6 +84,8 @@ public class Entry {
 
     private Timestamp receiverEditedAt;
 
+    private Timestamp receiverDeletedAt;
+
     private Timestamp deadline;
 
     @NotNull
@@ -144,6 +146,8 @@ public class Entry {
     private byte[] repliedToDigest;
 
     private Principal viewPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewPrincipal;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
@@ -311,6 +315,14 @@ public class Entry {
 
     public void setReceiverEditedAt(Timestamp receiverEditedAt) {
         this.receiverEditedAt = receiverEditedAt;
+    }
+
+    public Timestamp getReceiverDeletedAt() {
+        return receiverDeletedAt;
+    }
+
+    public void setReceiverDeletedAt(Timestamp receiverDeletedAt) {
+        this.receiverDeletedAt = receiverDeletedAt;
     }
 
     public Timestamp getDeadline() {
@@ -524,6 +536,14 @@ public class Entry {
 
     public void setViewPrincipal(Principal viewPrincipal) {
         this.viewPrincipal = viewPrincipal;
+    }
+
+    public Principal getReceiverViewPrincipal() {
+        return receiverViewPrincipal;
+    }
+
+    public void setReceiverViewPrincipal(Principal receiverViewPrincipal) {
+        this.receiverViewPrincipal = receiverViewPrincipal;
     }
 
     public Set<Story> getStories() {
