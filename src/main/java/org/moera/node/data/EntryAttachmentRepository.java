@@ -13,7 +13,7 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
             + " where e.nodeId = ?1 and er.entry.id = ?2 and ea.mediaFileOwner.id = ?3")
     int countByEntryIdAndMedia(UUID nodeId, UUID entryId, UUID mediaId);
 
-    @Query("select e from EntryAttachment ea left join ea.entryRevision er left join er.entry e"
+    @Query("select e from EntryAttachment ea full join ea.entryRevision er full join er.entry e"
             + " where er.deletedAt is null and ea.mediaFileOwner.nodeId = ?1 and ea.mediaFileOwner.id = ?2")
     Collection<Entry> findByMedia(UUID nodeId, UUID mediaId);
 
