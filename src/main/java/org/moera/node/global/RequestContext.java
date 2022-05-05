@@ -4,12 +4,12 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.UUID;
 
-import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 
-public interface RequestContext {
+public interface RequestContext extends AccessChecker {
 
     boolean isRegistrar();
 
@@ -78,8 +78,6 @@ public interface RequestContext {
     UUID avatarId();
 
     Avatar getAvatar();
-
-    boolean isPrincipal(Principal principal);
 
     void send(Liberin liberin);
 

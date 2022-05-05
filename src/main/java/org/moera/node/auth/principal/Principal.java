@@ -167,7 +167,7 @@ public class Principal implements Cloneable, PrincipalFilter {
         return false;
     }
 
-    public Principal or(Principal principal) {
+    public Principal union(Principal principal) {
         if (isPublic() || principal.isPublic()) {
             return Principal.PUBLIC;
         }
