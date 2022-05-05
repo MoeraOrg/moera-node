@@ -114,7 +114,6 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         operations = new HashMap<>();
         operations.put("edit", Principal.OWNER);
         operations.put("delete", Principal.PRIVATE);
-        operations.put("revisions", Principal.NONE);
         operations.put("reactions", comment.isReactionsVisible() ? Principal.PUBLIC : Principal.PRIVATE);
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
