@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.moera.node.auth.Admin;
@@ -30,13 +31,13 @@ public class DeletedPostingRevisionController extends PostingRevisionControllerB
     }
 
     @Override
-    protected Posting findPosting(UUID postingId) {
-        return postingRepository.findDeletedById(requestContext.nodeId(), postingId).orElse(null);
+    protected Optional<Posting> findPosting(UUID postingId) {
+        return postingRepository.findDeletedById(requestContext.nodeId(), postingId);
     }
 
     @Override
-    protected EntryRevision findRevision(UUID postingId, UUID id) {
-        return entryRevisionRepository.findByDeletedEntryIdAndId(requestContext.nodeId(), postingId, id).orElse(null);
+    protected Optional<EntryRevision> findRevision(UUID postingId, UUID id) {
+        return entryRevisionRepository.findByDeletedEntryIdAndId(requestContext.nodeId(), postingId, id);
     }
 
     @Override

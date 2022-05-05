@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.moera.node.data.EntryRevision;
@@ -28,13 +29,13 @@ public class PostingRevisionController extends PostingRevisionControllerBase {
     }
 
     @Override
-    protected Posting findPosting(UUID postingId) {
-        return postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
+    protected Optional<Posting> findPosting(UUID postingId) {
+        return postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId);
     }
 
     @Override
-    protected EntryRevision findRevision(UUID postingId, UUID id) {
-        return entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), postingId, id).orElse(null);
+    protected Optional<EntryRevision> findRevision(UUID postingId, UUID id) {
+        return entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), postingId, id);
     }
 
     @Override

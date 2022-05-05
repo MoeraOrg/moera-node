@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -54,9 +55,23 @@ public abstract class PostingRevisionControllerBase {
 
     protected abstract String getDirectory();
 
-    protected abstract Posting findPosting(UUID postingId);
+    protected abstract Optional<Posting> findPosting(UUID postingId);
 
-    protected abstract EntryRevision findRevision(UUID postingId, UUID id);
+    private Posting getPosting(UUID postingId) {
+        Posting posting = findPosting(postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        return posting;
+    }
+
+    protected abstract Optional<EntryRevision> findRevision(UUID postingId, UUID id);
+
+    private EntryRevision getRevision(UUID postingId, UUID id) {
+        return findRevision(postingId, id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"));
+    }
 
     protected abstract Liberin getRestorationLiberin(Posting posting, EntryRevision latest);
 
@@ -68,10 +83,7 @@ public abstract class PostingRevisionControllerBase {
         getLog().info("GET {}/{postingId}/revisions (postingId = {}, limit = {})",
                 getDirectory(), LogUtil.format(postingId), LogUtil.format(limit));
 
-        Posting posting = findPosting(postingId);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = getPosting(postingId);
 
         limit = limit != null && limit <= MAX_REVISIONS_PER_REQUEST ? limit : MAX_REVISIONS_PER_REQUEST;
         if (limit < 0) {
@@ -94,14 +106,8 @@ public abstract class PostingRevisionControllerBase {
                 LogUtil.format(postingId),
                 LogUtil.format(id));
 
-        Posting posting = findPosting(postingId);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
-        EntryRevision revision = findRevision(postingId, id);
-        if (revision == null) {
-            throw new ObjectNotFoundFailure("posting-revision.not-found");
-        }
+        Posting posting = getPosting(postingId);
+        EntryRevision revision = getRevision(postingId, id);
 
         return new PostingRevisionInfo(revision, posting.getReceiverName(),
                 reactionTotalOperations.isVisibleToClient(posting));
@@ -117,18 +123,12 @@ public abstract class PostingRevisionControllerBase {
                 LogUtil.format(postingId),
                 LogUtil.format(id));
 
-        Posting posting = findPosting(postingId);
-        if (posting == null) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        Posting posting = getPosting(postingId);
         if (posting.getDeletedAt() == null && posting.getCurrentRevision().getId().equals(id)) {
             throw new ValidationFailure("posting-revision.already-current");
         }
         EntryRevision latest = posting.getCurrentRevision();
-        EntryRevision revision = findRevision(postingId, id);
-        if (revision == null) {
-            throw new ObjectNotFoundFailure("posting-revision.not-found");
-        }
+        EntryRevision revision = getRevision(postingId, id);
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
