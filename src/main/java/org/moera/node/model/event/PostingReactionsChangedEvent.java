@@ -1,5 +1,6 @@
 package org.moera.node.model.event;
 
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Posting;
 
 public class PostingReactionsChangedEvent extends PostingEvent {
@@ -8,8 +9,12 @@ public class PostingReactionsChangedEvent extends PostingEvent {
         super(EventType.POSTING_REACTIONS_CHANGED);
     }
 
-    public PostingReactionsChangedEvent(Posting posting) {
-        super(EventType.POSTING_REACTIONS_CHANGED, posting);
+    public PostingReactionsChangedEvent(PrincipalFilter filter) {
+        super(EventType.POSTING_REACTIONS_CHANGED, filter);
+    }
+
+    public PostingReactionsChangedEvent(Posting posting, PrincipalFilter filter) {
+        super(EventType.POSTING_REACTIONS_CHANGED, posting, filter);
     }
 
 }

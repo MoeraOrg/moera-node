@@ -128,6 +128,7 @@ public class PostingOperations {
         Posting posting = newPosting(mediaFileOwner.getOwnerName());
         posting.setParentMedia(mediaFileOwner);
         posting.setViewPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewCommentsPrincipal(mediaFileOwner.getViewPrincipal());
 
         EntryRevision revision = newRevision(posting, null);
         revision.setBodySrc(Body.EMPTY);

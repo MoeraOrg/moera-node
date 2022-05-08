@@ -1,5 +1,6 @@
 package org.moera.node.model.event;
 
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 
 public class CommentReactionsChangedEvent extends CommentEvent {
@@ -8,8 +9,12 @@ public class CommentReactionsChangedEvent extends CommentEvent {
         super(EventType.COMMENT_REACTIONS_CHANGED);
     }
 
-    public CommentReactionsChangedEvent(Comment comment) {
-        super(EventType.COMMENT_REACTIONS_CHANGED, comment);
+    public CommentReactionsChangedEvent(PrincipalFilter filter) {
+        super(EventType.COMMENT_REACTIONS_CHANGED, filter);
+    }
+
+    public CommentReactionsChangedEvent(Comment comment, PrincipalFilter filter) {
+        super(EventType.COMMENT_REACTIONS_CHANGED, comment, filter);
     }
 
 }

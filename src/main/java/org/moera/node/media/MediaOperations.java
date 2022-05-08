@@ -322,6 +322,7 @@ public class MediaOperations {
                     .map(Entry::getViewPrincipal)
                     .reduce(Principal.PRIVATE, Principal::union);
             posting.setViewPrincipal(view);
+            posting.setViewCommentsPrincipal(view);
         }
     }
 

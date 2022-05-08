@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
@@ -234,6 +235,13 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public List<Liberin> getAfterCommitLiberins() {
         return afterCommitLiberins;
+    }
+
+    @Override
+    public void authenticatedWithSignature(String nodeName) {
+        setAdmin(Objects.equals(nodeName, nodeName()));
+        setClientName(nodeName);
+        setAuthCategory(AuthCategory.ALL);
     }
 
 }

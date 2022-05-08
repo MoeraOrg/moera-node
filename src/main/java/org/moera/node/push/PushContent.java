@@ -3,6 +3,7 @@ package org.moera.node.push;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.model.FeedStatus;
@@ -60,7 +61,7 @@ public class PushContent {
     public static PushContent storyAdded(Story story) {
         PushContent packet = new PushContent(PushContentType.STORY_ADDED);
         packet.setStory(StoryInfo.build(story, true,
-                t -> new PostingInfo((Posting) t.getEntry(), true)));
+                t -> new PostingInfo((Posting) t.getEntry(), AccessCheckers.ADMIN)));
         return packet;
     }
 

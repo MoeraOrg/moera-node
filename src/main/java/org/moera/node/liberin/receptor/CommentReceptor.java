@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
@@ -49,9 +50,9 @@ public class CommentReceptor extends LiberinReceptorBase {
                 new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                 comment.getCurrentRevision(), null);
 
-        send(liberin, new CommentAddedEvent(comment));
-        send(liberin, new PostingCommentsChangedEvent(posting));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+        send(liberin, new CommentAddedEvent(comment, visibilityFilter(posting)));
+        send(liberin, new PostingCommentsChangedEvent(posting, visibilityFilter(posting)));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), visibilityFilter(posting)),
                 new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
     }
 
@@ -66,7 +67,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
                 comment.getCurrentRevision(), liberin.getLatestRevision());
 
-        send(liberin, new CommentUpdatedEvent(comment));
+        send(liberin, new CommentUpdatedEvent(comment, visibilityFilter(posting)));
     }
 
     @LiberinMapping
@@ -80,22 +81,26 @@ public class CommentReceptor extends LiberinReceptorBase {
                 new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()), null,
                 liberin.getLatestRevision());
 
-        send(Directions.postingSubscribers(comment.getNodeId(), posting.getId()),
+        send(Directions.postingSubscribers(comment.getNodeId(), posting.getId(), visibilityFilter(posting)),
                 new PostingCommentsUpdatedNotification(
                         posting.getId(), posting.getTotalChildren()));
-        send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId()),
+        send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId(), visibilityFilter(posting)),
                 new PostingCommentDeletedNotification(posting.getId(), comment.getId(), comment.getOwnerName(),
                         comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
 
-        send(liberin, new CommentDeletedEvent(comment));
-        send(liberin, new PostingCommentsChangedEvent(posting));
+        send(liberin, new CommentDeletedEvent(comment, visibilityFilter(posting)));
+        send(liberin, new PostingCommentsChangedEvent(posting, visibilityFilter(posting)));
+    }
+
+    private PrincipalFilter visibilityFilter(Posting posting) {
+        return posting.getViewPrincipalAbsolute().a().and(posting.getViewCommentsPrincipal());
     }
 
     private void notifySubscribersCommentAdded(Posting posting, Comment comment) {
         if (comment.getCurrentRevision().getSignature() != null) {
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId()),
+            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), visibilityFilter(posting)),
                     new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
                             comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
                             new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
@@ -109,7 +114,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 || comment.getRevisions().size() > 1) {
             return;
         }
-        send(Directions.single(comment.getNodeId(), comment.getRepliedToName()),
+        send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting)),
                 new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
                         posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
@@ -120,7 +125,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null) {
             return;
         }
-        send(Directions.single(comment.getNodeId(), comment.getRepliedToName()),
+        send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting)),
                 new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
                         comment.getOwnerName(), comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
@@ -141,7 +146,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m))
+                .map(m -> Directions.single(posting.getNodeId(), m, visibilityFilter(posting)))
                 .forEach(d -> send(d,
                         new MentionCommentAddedNotification(posting.getId(), commentId,
                                 posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, ownerAvatar,
@@ -150,7 +155,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
                 .filter(m -> !currentMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m))
+                .map(m -> Directions.single(posting.getNodeId(), m, visibilityFilter(posting)))
                 .forEach(d -> send(d, new MentionCommentDeletedNotification(posting.getId(), commentId)));
     }
 

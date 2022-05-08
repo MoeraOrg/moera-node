@@ -62,6 +62,9 @@ public class StoryController {
         if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin()) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
+        if (story.getEntry() != null && !requestContext.isPrincipal(story.getViewPrincipalFilter())) {
+            throw new ObjectNotFoundFailure("story.not-found");
+        }
 
         return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
     }
@@ -80,6 +83,9 @@ public class StoryController {
         Story story = Transaction.execute(txManager, () -> {
             Story currentStory = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                     .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
+            if (currentStory.getEntry() != null && !requestContext.isPrincipal(currentStory.getViewPrincipalFilter())) {
+                throw new ObjectNotFoundFailure("story.not-found");
+            }
             storyAttributes.toStory(currentStory);
             if (storyAttributes.getFeedName() != null
                     || storyAttributes.getPublishAt() != null

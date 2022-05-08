@@ -1,5 +1,6 @@
 package org.moera.node.liberin.receptor;
 
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
@@ -32,7 +33,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
 
     private void updated(Liberin liberin, Comment comment, Reaction addedReaction, Reaction deletedReaction) {
         if (deletedReaction != null) {
-            send(Directions.single(liberin.getNodeId(), comment.getOwnerName()),
+            send(Directions.single(liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment)),
                     new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
                             deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
                             new AvatarImage(
@@ -41,7 +42,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
         }
 
         if (addedReaction != null && addedReaction.getSignature() != null) {
-            send(Directions.single(liberin.getNodeId(), comment.getOwnerName()),
+            send(Directions.single(liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment)),
                     new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
                             comment.getPosting().getCurrentRevision().getHeading(),
                             comment.getCurrentRevision().getHeading(), addedReaction.getOwnerName(),
@@ -51,21 +52,25 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                             addedReaction.isNegative(), addedReaction.getEmoji()));
         }
 
-        send(liberin, new CommentReactionsChangedEvent(comment));
+        send(liberin, new CommentReactionsChangedEvent(comment, visibilityFilter(comment)));
     }
 
     @LiberinMapping
     public void deletedAll(CommentReactionsDeletedAllLiberin liberin) {
         Comment comment = liberin.getComment();
 
-        send(Directions.single(liberin.getNodeId(), comment.getOwnerName()),
+        send(Directions.single(liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment)),
                 new CommentReactionDeletedAllNotification(comment.getPosting().getId(), comment.getId()));
-        send(liberin, new CommentReactionsChangedEvent(comment));
+        send(liberin, new CommentReactionsChangedEvent(comment, visibilityFilter(comment)));
     }
 
     @LiberinMapping
     public void totalsUpdated(CommentReactionTotalsUpdatedLiberin liberin) {
-        send(liberin, new CommentReactionsChangedEvent(liberin.getComment()));
+        send(liberin, new CommentReactionsChangedEvent(liberin.getComment(), visibilityFilter(liberin.getComment())));
+    }
+
+    private PrincipalFilter visibilityFilter(Comment comment) {
+        return comment.getPosting().getViewPrincipalAbsolute().a().and(comment.getPosting().getViewCommentsPrincipal());
     }
 
 }

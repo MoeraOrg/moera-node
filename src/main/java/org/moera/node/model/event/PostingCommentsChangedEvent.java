@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Posting;
 import org.springframework.data.util.Pair;
 
@@ -14,8 +15,12 @@ public class PostingCommentsChangedEvent extends PostingEvent {
         super(EventType.POSTING_COMMENTS_CHANGED);
     }
 
-    public PostingCommentsChangedEvent(Posting posting) {
-        super(EventType.POSTING_COMMENTS_CHANGED, posting);
+    public PostingCommentsChangedEvent(PrincipalFilter filter) {
+        super(EventType.POSTING_COMMENTS_CHANGED, filter);
+    }
+
+    public PostingCommentsChangedEvent(Posting posting, PrincipalFilter filter) {
+        super(EventType.POSTING_COMMENTS_CHANGED, posting, filter);
 
         total = posting.getTotalChildren();
     }

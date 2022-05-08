@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +151,15 @@ public class CommentController {
         }
         byte[] repliedToDigest = repliedTo != null ? repliedTo.getCurrentRevision().getDigest() : null;
         byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName(), repliedToDigest);
+        if (commentText.getSignature() != null) {
+            requestContext.authenticatedWithSignature(commentText.getOwnerName());
+        }
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(posting.getViewCommentsPrincipalAbsolute())) {
+            throw new AuthenticationException();
+        }
         mediaOperations.validateAvatar(
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
@@ -206,6 +216,15 @@ public class CommentController {
         byte[] repliedToDigest = comment.getRepliedTo() != null
                 ? comment.getRepliedTo().getCurrentRevision().getDigest() : null;
         byte[] digest = validateCommentText(comment.getPosting(), commentText, comment.getOwnerName(), repliedToDigest);
+        if (commentText.getSignature() != null) {
+            requestContext.authenticatedWithSignature(commentText.getOwnerName());
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
+            throw new AuthenticationException();
+        }
         mediaOperations.validateAvatar(
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
@@ -303,6 +322,16 @@ public class CommentController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(posting.getViewCommentsPrincipalAbsolute())) {
+            CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
+            sliceInfo.setBefore(SafeInteger.MAX_VALUE);
+            sliceInfo.setAfter(SafeInteger.MIN_VALUE);
+            sliceInfo.setComments(Collections.emptyList());
+            return sliceInfo;
+        }
         if (before != null && after != null) {
             throw new ValidationFailure("comments.before-after-exclusive");
         }
@@ -413,6 +442,12 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -431,6 +466,12 @@ public class CommentController {
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
+        if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -460,14 +501,19 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         List<Posting> attached = entryAttachmentRepository.findOwnAttachedPostings(
                 requestContext.nodeId(), comment.getCurrentRevision().getId());
-        boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(comment.getOwnerName());
         return attached.stream()
-                .map(p -> withClientReaction(new PostingInfo(p, false, isAdminOrOwner)))
+                .map(p -> withClientReaction(new PostingInfo(p, false, requestContext)))
                 .collect(Collectors.toList());
     }
 

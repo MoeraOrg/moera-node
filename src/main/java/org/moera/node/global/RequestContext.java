@@ -83,4 +83,6 @@ public interface RequestContext extends AccessChecker {
 
     List<Liberin> getAfterCommitLiberins();
 
+    void authenticatedWithSignature(String nodeName);
+
 }

@@ -306,6 +306,9 @@ public class PostingText {
         if (getPrincipal("view") != null) {
             entry.setViewPrincipal(getPrincipal("view"));
         }
+        if (getPrincipal("viewComments") != null) {
+            entry.setViewCommentsPrincipal(getPrincipal("viewComments"));
+        }
     }
 
     public boolean sameAsEntry(Entry entry) {
@@ -321,7 +324,8 @@ public class PostingText {
                && (ownerAvatarMediaFile == null
                     || entry.getOwnerAvatarMediaFile() != null
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()))
-               && Objects.equals(getPrincipal("view"), entry.getViewPrincipal());
+               && Objects.equals(getPrincipal("view"), entry.getViewPrincipal())
+               && Objects.equals(getPrincipal("viewComments"), entry.getViewCommentsPrincipal());
     }
 
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter,

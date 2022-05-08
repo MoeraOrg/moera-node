@@ -85,6 +85,9 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
         if (posting.getCurrentRevision().getSignature() == null) {
             throw new ValidationFailure("posting.not-signed");
         }
@@ -153,6 +156,9 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
         if (!posting.isReactionsVisible() && !requestContext.isAdmin()
                 && !requestContext.isClient(posting.getOwnerName())) {
             return ReactionsSliceInfo.EMPTY;
@@ -174,6 +180,9 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
         if (!posting.isReactionsVisible() && !requestContext.isAdmin()
                 && !requestContext.isClient(posting.getOwnerName())) {
             return ReactionInfo.ofPosting(postingId);
@@ -192,6 +201,9 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
 
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(postingId);
@@ -213,6 +225,9 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
 
         if (posting.isOriginal()) {
             return deleteFromOriginal(ownerName, posting);

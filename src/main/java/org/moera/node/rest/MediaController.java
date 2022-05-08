@@ -287,10 +287,10 @@ public class MediaController {
         Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwner.getId());
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {
-            boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(entry.getOwnerName());
             if (entry instanceof Posting) {
-                parents.add(new EntryInfo(new PostingInfo((Posting) entry, isAdminOrOwner)));
+                parents.add(new EntryInfo(new PostingInfo((Posting) entry, requestContext)));
             }
+            boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(entry.getOwnerName());
             if (entry instanceof Comment) {
                 parents.add(new EntryInfo(new CommentInfo((Comment) entry, isAdminOrOwner)));
             }

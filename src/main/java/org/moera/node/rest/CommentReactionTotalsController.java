@@ -43,6 +43,12 @@ public class CommentReactionTotalsController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }

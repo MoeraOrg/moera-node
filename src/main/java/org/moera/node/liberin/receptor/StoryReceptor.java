@@ -38,8 +38,7 @@ public class StoryReceptor extends LiberinReceptorBase {
         }
         send(liberin, new StoryAddedEvent(story, true));
         if (story.getStoryType() == StoryType.POSTING_ADDED && story.getEntry() != null) {
-            send(Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName(),
-                            story.getEntry().getViewPrincipalAbsolute()),
+            send(Directions.feedSubscribers(liberin.getNodeId(), story.getFeedName(), story.getViewPrincipalFilter()),
                     new FeedPostingAddedNotification(story.getFeedName(), story.getEntry().getId()));
         }
         push(story);

@@ -82,7 +82,7 @@ public class MediaUiController {
         }
         String body = posting.getCurrentRevision().getSaneBody();
         body = body != null ? body : "";
-        model.addAttribute("posting", new PostingInfo(posting, false));
+        model.addAttribute("posting", new PostingInfo(posting, requestContext));
         model.addAttribute("caption", new SafeString(body));
 
         return "caption";

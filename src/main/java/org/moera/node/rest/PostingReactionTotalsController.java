@@ -42,6 +42,9 @@ public class PostingReactionTotalsController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
 
         return reactionTotalOperations.getInfo(posting).getClientInfo();
     }

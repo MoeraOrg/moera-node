@@ -159,6 +159,9 @@ public class PostingController {
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
         byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
+        if (postingText.getSignature() != null) {
+            requestContext.authenticatedWithSignature(postingText.getOwnerName());
+        }
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
                 postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
@@ -179,7 +182,7 @@ public class PostingController {
         requestContext.send(new PostingAddedLiberin(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
-                .body(withStories(new PostingInfo(posting, true)));
+                .body(withStories(new PostingInfo(posting, requestContext)));
     }
 
     @PutMapping("/{id}")
@@ -203,6 +206,12 @@ public class PostingController {
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
         byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName());
+        if (postingText.getSignature() != null) {
+            requestContext.authenticatedWithSignature(postingText.getOwnerName());
+        }
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
@@ -227,7 +236,7 @@ public class PostingController {
 
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
-        return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, true))));
+        return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, requestContext))));
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
@@ -314,7 +323,7 @@ public class PostingController {
         }
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
-                requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName())))));
+                requestContext))));
     }
 
     @DeleteMapping("/{id}")
@@ -346,7 +355,7 @@ public class PostingController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
-        return new PostingInfo(posting, true).getOperations();
+        return new PostingInfo(posting, requestContext).getOperations();
     }
 
     @PutMapping("/{id}/operations")
@@ -368,11 +377,19 @@ public class PostingController {
             posting.setViewPrincipal(viewPrincipal);
         }
 
+        Principal viewCommentsPrincipal = operations.get("viewComments");
+        if (viewCommentsPrincipal != null) {
+            if (!viewCommentsPrincipal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
+                throw new ValidationFailure("posting-operations.wrong-principal");
+            }
+            posting.setViewCommentsPrincipal(viewCommentsPrincipal);
+        }
+
         posting.setEditedAt(Util.now());
 
         requestContext.send(new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), latestView));
 
-        return new PostingInfo(posting, true).getOperations();
+        return new PostingInfo(posting, requestContext).getOperations();
     }
 
     @GetMapping("/{id}/attached")
@@ -390,9 +407,8 @@ public class PostingController {
                         requestContext.nodeId(), posting.getCurrentRevision().getId())
                 : entryAttachmentRepository.findReceivedAttachedPostings(
                         requestContext.nodeId(), posting.getCurrentRevision().getId(), posting.getReceiverName());
-        boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName());
         return attached.stream()
-                .map(p -> withClientReaction(new PostingInfo(p, false, isAdminOrOwner)))
+                .map(p -> withClientReaction(new PostingInfo(p, false, requestContext)))
                 .collect(Collectors.toList());
     }
 

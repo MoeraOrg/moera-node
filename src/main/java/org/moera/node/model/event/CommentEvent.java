@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.springframework.data.util.Pair;
 
@@ -16,8 +17,12 @@ public class CommentEvent extends Event {
         super(type);
     }
 
-    protected CommentEvent(EventType type, Comment comment) {
-        super(type);
+    protected CommentEvent(EventType type, PrincipalFilter filter) {
+        super(type, filter);
+    }
+
+    protected CommentEvent(EventType type, Comment comment, PrincipalFilter filter) {
+        super(type, filter);
         this.id = comment.getId().toString();
         this.postingId = comment.getPosting().getId().toString();
         this.moment = comment.getMoment();

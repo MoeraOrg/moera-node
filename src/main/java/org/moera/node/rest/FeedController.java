@@ -440,8 +440,7 @@ public class FeedController {
                 requestContext.isAdmin(),
                 t -> {
                     Posting posting = (Posting) t.getEntry();
-                    return new PostingInfo(posting,
-                            requestContext.isAdmin() || requestContext.isClient(posting.getOwnerName()));
+                    return new PostingInfo(posting, requestContext);
                 }
         );
     }

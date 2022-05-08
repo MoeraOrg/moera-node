@@ -11,6 +11,7 @@ import javax.inject.Inject;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalExpression;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
@@ -149,8 +150,10 @@ public class PostingReceptor extends LiberinReceptorBase {
     public void commentTotalsUpdated(PostingCommentTotalsUpdatedLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        send(liberin, new PostingCommentsChangedEvent(posting));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
+        PrincipalFilter viewFilter = posting.getViewPrincipalAbsolute().a()
+                .and(posting.getViewCommentsPrincipalAbsolute());
+        send(liberin, new PostingCommentsChangedEvent(posting, viewFilter));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), viewFilter),
                 new PostingCommentsUpdatedNotification(posting.getId(), liberin.getTotal()));
     }
 

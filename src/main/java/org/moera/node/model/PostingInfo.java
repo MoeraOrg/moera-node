@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
@@ -88,24 +90,24 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         this.id = id.toString();
     }
 
-    public PostingInfo(Posting posting, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), false, isAdminOrOwner);
+    public PostingInfo(Posting posting, AccessChecker accessChecker) {
+        this(posting, posting.getCurrentRevision(), false, accessChecker);
     }
 
-    public PostingInfo(Posting posting, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), includeSource, isAdminOrOwner);
+    public PostingInfo(Posting posting, boolean includeSource, AccessChecker accessChecker) {
+        this(posting, posting.getCurrentRevision(), includeSource, accessChecker);
     }
 
-    public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
-        this(posting, revision, null, includeSource, isAdminOrOwner);
+    public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {
+        this(posting, revision, null, includeSource, accessChecker);
     }
 
-    public PostingInfo(Posting posting, List<Story> stories, boolean isAdminOrOwner) {
-        this(posting, posting.getCurrentRevision(), stories, false, isAdminOrOwner);
+    public PostingInfo(Posting posting, List<Story> stories, AccessChecker accessChecker) {
+        this(posting, posting.getCurrentRevision(), stories, false, accessChecker);
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, List<Story> stories, boolean includeSource,
-                       boolean isAdminOrOwner) {
+                       AccessChecker accessChecker) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
         receiverRevisionId = revision.getReceiverRevisionId();
@@ -158,20 +160,25 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         operations.put("view", posting.getViewPrincipal());
         operations.put("edit", receiverName == null ? Principal.OWNER : Principal.NONE);
         operations.put("delete", receiverName == null ? Principal.PRIVATE : Principal.ADMIN);
+        operations.put("viewComments", posting.getViewCommentsPrincipal());
         operations.put("reactions", posting.isReactionsVisible() ? Principal.PUBLIC : Principal.PRIVATE);
         receiverOperations = new HashMap<>();
         receiverOperations.put("view", posting.getReceiverViewPrincipal());
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
-        reactions = new ReactionTotalsInfo(posting.getReactionTotals(),
-                isAdminOrOwner && posting.isOriginal() || posting.isReactionTotalsVisible());
+        Principal viewReactions = posting.isReactionTotalsVisible()
+                ? Principal.PUBLIC
+                : (posting.isOriginal() ? Principal.PRIVATE : Principal.NONE);
+        reactions = new ReactionTotalsInfo(posting.getReactionTotals(), accessChecker.isPrincipal(viewReactions));
         reactionsVisible = posting.isReactionsVisible();
         reactionTotalsVisible = posting.isReactionTotalsVisible();
         sources = posting.getSources() != null
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
-        totalComments = posting.getTotalChildren();
+        totalComments = accessChecker.isPrincipal(posting.getViewCommentsPrincipalAbsolute())
+                ? posting.getTotalChildren()
+                : 0;
         subscriptions = PostingSubscriptionsInfo.fromSubscribers(posting.getSubscribers());
     }
 
@@ -180,7 +187,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     }
 
     public static PostingInfo forUi(Posting posting, List<Story> stories) {
-        PostingInfo info = new PostingInfo(posting, stories, false);
+        PostingInfo info = new PostingInfo(posting, stories, AccessCheckers.PUBLIC);
         String saneBodyPreview = posting.getCurrentRevision().getSaneBodyPreview();
         if (saneBodyPreview != null) {
             info.setSaneBodyPreview(saneBodyPreview);
@@ -611,6 +618,11 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         Principal viewPrincipal = getOperations().getOrDefault("view", Principal.PUBLIC);
         posting.setViewPrincipal(viewPrincipal);
         posting.setReceiverViewPrincipal(viewPrincipal);
+        // TODO visibility to a particular group of friends should be converted to something here
+        // https://github.com/MoeraOrg/moera-issues/issues/207
+        Principal viewCommentsPrincipal = getOperations().getOrDefault("viewComments", Principal.PUBLIC);
+        posting.setViewCommentsPrincipal(viewCommentsPrincipal);
+        posting.setReceiverViewCommentsPrincipal(viewCommentsPrincipal);
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {
