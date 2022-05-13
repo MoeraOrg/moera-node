@@ -295,6 +295,12 @@ public class PostingController {
                 && !viewPrincipal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
             throw new ValidationFailure("postingText.operations.wrong-principal");
         }
+        Principal viewCommentsPrincipal = postingText.getPrincipal("viewComments");
+        if (viewCommentsPrincipal != null
+                && !viewCommentsPrincipal.isOneOf(
+                        PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
+            throw new ValidationFailure("postingText.operations.wrong-principal");
+        }
         return digest;
     }
 
@@ -379,7 +385,8 @@ public class PostingController {
 
         Principal viewCommentsPrincipal = operations.get("viewComments");
         if (viewCommentsPrincipal != null) {
-            if (!viewCommentsPrincipal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
+            if (!viewCommentsPrincipal.isOneOf(
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
                 throw new ValidationFailure("posting-operations.wrong-principal");
             }
             posting.setViewCommentsPrincipal(viewCommentsPrincipal);
