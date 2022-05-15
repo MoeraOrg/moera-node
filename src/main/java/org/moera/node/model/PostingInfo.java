@@ -161,9 +161,12 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         operations.put("edit", receiverName == null ? Principal.OWNER : Principal.NONE);
         operations.put("delete", receiverName == null ? Principal.PRIVATE : Principal.ADMIN);
         operations.put("viewComments", posting.getViewCommentsPrincipal());
+        operations.put("addComment", posting.getAddCommentPrincipal());
         operations.put("reactions", posting.isReactionsVisible() ? Principal.PUBLIC : Principal.PRIVATE);
         receiverOperations = new HashMap<>();
         receiverOperations.put("view", posting.getReceiverViewPrincipal());
+        receiverOperations.put("viewComments", posting.getReceiverViewCommentsPrincipal());
+        receiverOperations.put("addComment", posting.getReceiverAddCommentPrincipal());
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
@@ -615,14 +618,17 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setTotalChildren(totalComments);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
-        Principal viewPrincipal = getOperations().getOrDefault("view", Principal.PUBLIC);
-        posting.setViewPrincipal(viewPrincipal);
-        posting.setReceiverViewPrincipal(viewPrincipal);
+        Principal principal = getOperations().getOrDefault("view", Principal.PUBLIC);
+        posting.setViewPrincipal(principal);
+        posting.setReceiverViewPrincipal(principal);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
-        Principal viewCommentsPrincipal = getOperations().getOrDefault("viewComments", Principal.PUBLIC);
-        posting.setViewCommentsPrincipal(viewCommentsPrincipal);
-        posting.setReceiverViewCommentsPrincipal(viewCommentsPrincipal);
+        principal = getOperations().getOrDefault("viewComments", Principal.PUBLIC);
+        posting.setViewCommentsPrincipal(principal);
+        posting.setReceiverViewCommentsPrincipal(principal);
+        principal = getOperations().getOrDefault("addComment", Principal.PUBLIC);
+        posting.setAddCommentPrincipal(Principal.NONE);
+        posting.setReceiverViewCommentsPrincipal(principal);
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {

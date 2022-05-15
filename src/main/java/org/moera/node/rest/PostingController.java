@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -290,18 +291,28 @@ public class PostingController {
                 throw new ValidationFailure("postingText.createdAt.out-of-range");
             }
         }
-        Principal viewPrincipal = postingText.getPrincipal("view");
-        if (viewPrincipal != null
-                && !viewPrincipal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
-            throw new ValidationFailure("postingText.operations.wrong-principal");
-        }
-        Principal viewCommentsPrincipal = postingText.getPrincipal("viewComments");
-        if (viewCommentsPrincipal != null
-                && !viewCommentsPrincipal.isOneOf(
-                        PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
-            throw new ValidationFailure("postingText.operations.wrong-principal");
-        }
+        validateOperations(postingText::getPrincipal, "postingText.operations.wrong-principal");
         return digest;
+    }
+
+    private void validateOperations(Function<String, Principal> getPrincipal, String errorCode) {
+        Principal principal = getPrincipal.apply("view");
+        if (principal != null
+                && !principal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
+            throw new ValidationFailure(errorCode);
+        }
+        principal = getPrincipal.apply("viewComments");
+        if (principal != null
+                && !principal.isOneOf(
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
+            throw new ValidationFailure(errorCode);
+        }
+        principal = getPrincipal.apply("addComment");
+        if (principal != null
+                && !principal.isOneOf(
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
+            throw new ValidationFailure(errorCode);
+        }
     }
 
     private byte[] parentMediaDigest(Posting posting) {
@@ -375,22 +386,7 @@ public class PostingController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         Principal latestView = posting.getViewPrincipalAbsolute();
 
-        Principal viewPrincipal = operations.get("view");
-        if (viewPrincipal != null) {
-            if (!viewPrincipal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
-                throw new ValidationFailure("posting-operations.wrong-principal");
-            }
-            posting.setViewPrincipal(viewPrincipal);
-        }
-
-        Principal viewCommentsPrincipal = operations.get("viewComments");
-        if (viewCommentsPrincipal != null) {
-            if (!viewCommentsPrincipal.isOneOf(
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
-                throw new ValidationFailure("posting-operations.wrong-principal");
-            }
-            posting.setViewCommentsPrincipal(viewCommentsPrincipal);
-        }
+        validateOperations(operations::get, "posting-operations.wrong-principal");
 
         posting.setEditedAt(Util.now());
 

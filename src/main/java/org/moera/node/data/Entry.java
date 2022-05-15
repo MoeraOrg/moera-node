@@ -153,6 +153,10 @@ public class Entry {
 
     private Principal receiverViewCommentsPrincipal;
 
+    private Principal addCommentPrincipal = Principal.PUBLIC;
+
+    private Principal receiverAddCommentPrincipal;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -568,6 +572,26 @@ public class Entry {
 
     public void setReceiverViewCommentsPrincipal(Principal receiverViewCommentsPrincipal) {
         this.receiverViewCommentsPrincipal = receiverViewCommentsPrincipal;
+    }
+
+    public Principal getAddCommentPrincipal() {
+        return addCommentPrincipal;
+    }
+
+    public Principal getAddCommentPrincipalAbsolute() {
+        return getAddCommentPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setAddCommentPrincipal(Principal addCommentPrincipal) {
+        this.addCommentPrincipal = addCommentPrincipal;
+    }
+
+    public Principal getReceiverAddCommentPrincipal() {
+        return receiverAddCommentPrincipal;
+    }
+
+    public void setReceiverAddCommentPrincipal(Principal receiverAddCommentPrincipal) {
+        this.receiverAddCommentPrincipal = receiverAddCommentPrincipal;
     }
 
     public Set<Story> getStories() {

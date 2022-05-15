@@ -160,6 +160,9 @@ public class CommentController {
         if (!requestContext.isPrincipal(posting.getViewCommentsPrincipalAbsolute())) {
             throw new AuthenticationException();
         }
+        if (!requestContext.isPrincipal(posting.getAddCommentPrincipalAbsolute())) {
+            throw new AuthenticationException();
+        }
         mediaOperations.validateAvatar(
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,

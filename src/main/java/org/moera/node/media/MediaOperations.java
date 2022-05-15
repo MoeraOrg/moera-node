@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -310,19 +311,29 @@ public class MediaOperations {
             return;
         }
 
-        Principal view =
-                entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId()).stream()
-                        .map(Entry::getViewPrincipal)
-                        .reduce(Principal.PRIVATE, Principal::union);
+        Collection<Entry> entries =
+                entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
+        Principal view = entries.stream()
+                .map(Entry::getViewPrincipal)
+                .reduce(Principal.PRIVATE, Principal::union);
         mediaFileOwner.setViewPrincipal(view);
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
         for (Posting posting : mediaFileOwner.getPostings()) {
-            view = entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId()).stream()
+            List<Entry> list = entries.stream()
                     .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
+                    .collect(Collectors.toList());
+            Principal principal = list.stream()
                     .map(Entry::getViewPrincipal)
                     .reduce(Principal.PRIVATE, Principal::union);
-            posting.setViewPrincipal(view);
-            posting.setViewCommentsPrincipal(view);
+            posting.setViewPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getViewCommentsPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setViewCommentsPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getAddCommentPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setAddCommentPrincipal(principal);
         }
     }
 
