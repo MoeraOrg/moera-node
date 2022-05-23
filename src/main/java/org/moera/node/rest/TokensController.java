@@ -9,6 +9,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Password;
+import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.global.ApiController;
@@ -62,7 +63,7 @@ public class TokensController {
         Token token = new Token();
         token.setNodeId(options.nodeId());
         token.setToken(CryptoUtil.token());
-        token.setAuthCategory(attributes.getAuthCategory());
+        token.setAuthCategory(attributes.getAuthCategory() != null ? attributes.getAuthCategory() : AuthCategory.ALL);
         token.setDeadline(Timestamp.from(Instant.now().plus(
                 options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
