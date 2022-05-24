@@ -94,7 +94,7 @@ public class CommentReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalFilter visibilityFilter(Posting posting) {
-        return posting.getViewPrincipalAbsolute().a().and(posting.getViewCommentsPrincipal());
+        return posting.getViewPrincipalAbsolute().a().and(posting.getViewCommentsPrincipalAbsolute());
     }
 
     private void notifySubscribersCommentAdded(Posting posting, Comment comment) {

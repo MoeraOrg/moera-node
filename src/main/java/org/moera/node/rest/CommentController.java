@@ -195,7 +195,7 @@ public class CommentController {
         requestContext.send(new CommentAddedLiberin(posting, comment));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
-                .body(new CommentCreated(comment, posting.getTotalChildren()));
+                .body(new CommentCreated(comment, posting.getTotalChildren(), requestContext));
     }
 
     @PutMapping("/{commentId}")
@@ -254,7 +254,7 @@ public class CommentController {
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest));
 
-        return withSeniorReaction(withClientReaction(new CommentInfo(comment, true)),
+        return withSeniorReaction(withClientReaction(new CommentInfo(comment, requestContext)),
                 comment.getPosting().getOwnerName());
     }
 
@@ -391,7 +391,7 @@ public class CommentController {
         List<CommentInfo> comments = commentRepository.findInRange(
                 requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
-                .map(c -> new CommentInfo(c, requestContext.isAdmin() || requestContext.isClient(c.getOwnerName())))
+                .map(c -> new CommentInfo(c, requestContext))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
         if (comments.size() > limit) {
@@ -455,8 +455,8 @@ public class CommentController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        return withSeniorReaction(withClientReaction(new CommentInfo(comment, includeSet.contains("source"),
-                requestContext.isAdmin() || requestContext.isClient(comment.getOwnerName()))),
+        return withSeniorReaction(
+                withClientReaction(new CommentInfo(comment, includeSet.contains("source"), requestContext)),
                 comment.getPosting().getOwnerName());
     }
 

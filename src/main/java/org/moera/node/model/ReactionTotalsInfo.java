@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.data.Entry;
 import org.moera.node.data.ReactionTotal;
 
 public class ReactionTotalsInfo {
@@ -15,9 +17,18 @@ public class ReactionTotalsInfo {
     public ReactionTotalsInfo() {
     }
 
-    public ReactionTotalsInfo(Collection<ReactionTotal> totals, boolean countsVisible) {
+    public ReactionTotalsInfo(Collection<ReactionTotal> totals, Entry entry, AccessChecker accessChecker) {
+        boolean forged = totals.stream().anyMatch(ReactionTotal::isForged);
+        boolean totalsVisible = !forged && isTotalsVisible(entry, accessChecker);
+        boolean negativeTotalsVisible = !forged && isNegativeTotalsVisible(entry, accessChecker);
+        boolean ratiosVisible = isRatiosVisible(entry, accessChecker);
+        boolean negativeRatiosVisible = isNegativeRatiosVisible(entry, accessChecker);
+
+        if (!totalsVisible && !ratiosVisible) {
+            return;
+        }
         int sum = 0;
-        if (!countsVisible) {
+        if (!totalsVisible) {
             sum = (int) totals.stream()
                     .collect(Collectors.summarizingInt(ReactionTotal::getTotal))
                     .getSum();
@@ -26,13 +37,54 @@ public class ReactionTotalsInfo {
             if (total.getTotal() == 0) {
                 continue;
             }
-            ReactionTotalInfo info = countsVisible
-                    ? ReactionTotalInfo.countsInfo(total) : ReactionTotalInfo.shareInfo(total, sum);
+            ReactionTotalInfo info = totalsVisible
+                    ? ReactionTotalInfo.countsInfo(total)
+                    : ReactionTotalInfo.shareInfo(total, sum);
             if (!total.isNegative()) {
                 positive.add(info);
             } else {
-                negative.add(info);
+                if (totalsVisible && negativeTotalsVisible || !totalsVisible && negativeRatiosVisible) {
+                    negative.add(info);
+                }
             }
+        }
+    }
+
+    private static boolean isTotalsVisible(Entry entry, AccessChecker accessChecker) {
+        if (entry.isOriginal()) {
+            return accessChecker.isPrincipal(entry.getViewReactionsPrincipalAbsolute().a()
+                    .or(entry.getViewReactionTotalsPrincipalAbsolute()));
+        } else {
+            return accessChecker.isPrincipal(entry.getReceiverViewReactionsPrincipalAbsolute().a()
+                    .or(entry.getReceiverViewReactionTotalsPrincipalAbsolute()));
+        }
+    }
+
+    private static boolean isNegativeTotalsVisible(Entry entry, AccessChecker accessChecker) {
+        if (entry.isOriginal()) {
+            return accessChecker.isPrincipal(entry.getViewReactionsPrincipalAbsolute().a()
+                    .or(entry.getViewNegativeReactionsPrincipalAbsolute()))
+                    || accessChecker.isPrincipal(entry.getViewNegativeReactionTotalsPrincipalAbsolute());
+        } else {
+            return accessChecker.isPrincipal(entry.getReceiverViewReactionsPrincipalAbsolute().a()
+                    .or(entry.getReceiverViewNegativeReactionsPrincipalAbsolute()))
+                    || accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionTotalsPrincipalAbsolute());
+        }
+    }
+
+    private static boolean isRatiosVisible(Entry entry, AccessChecker accessChecker) {
+        if (entry.isOriginal()) {
+            return accessChecker.isPrincipal(entry.getViewReactionRatiosPrincipalAbsolute());
+        } else {
+            return accessChecker.isPrincipal(entry.getReceiverViewReactionRatiosPrincipalAbsolute());
+        }
+    }
+
+    private static boolean isNegativeRatiosVisible(Entry entry, AccessChecker accessChecker) {
+        if (entry.isOriginal()) {
+            return accessChecker.isPrincipal(entry.getViewNegativeReactionRatiosPrincipalAbsolute());
+        } else {
+            return accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionRatiosPrincipalAbsolute());
         }
     }
 

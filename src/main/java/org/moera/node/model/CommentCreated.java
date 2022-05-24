@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Comment;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,8 +13,8 @@ public class CommentCreated {
     public CommentCreated() {
     }
 
-    public CommentCreated(Comment comment, Integer total) {
-        this.comment = comment != null ? new CommentInfo(comment, true) : null;
+    public CommentCreated(Comment comment, Integer total, AccessChecker accessChecker) {
+        this.comment = comment != null ? new CommentInfo(comment, accessChecker) : null;
         this.total = total;
     }
 

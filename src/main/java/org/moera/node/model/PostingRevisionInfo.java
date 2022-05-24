@@ -4,8 +4,10 @@ import java.util.Comparator;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
+import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
 import org.moera.node.util.Util;
@@ -35,7 +37,8 @@ public class PostingRevisionInfo implements RevisionInfo {
     public PostingRevisionInfo() {
     }
 
-    public PostingRevisionInfo(EntryRevision revision, String receiverName, boolean countsVisible) {
+    public PostingRevisionInfo(Posting posting, EntryRevision revision, String receiverName,
+                               AccessChecker accessChecker) {
         id = revision.getId().toString();
         receiverId = revision.getReceiverRevisionId();
         bodyPreview = new Body(revision.getBodyPreview());
@@ -59,7 +62,7 @@ public class PostingRevisionInfo implements RevisionInfo {
         receiverDeletedAt = Util.toEpochSecond(revision.getReceiverDeletedAt());
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        reactions = new ReactionTotalsInfo(revision.getReactionTotals(), countsVisible);
+        reactions = new ReactionTotalsInfo(revision.getReactionTotals(), posting, accessChecker);
     }
 
     public String getId() {

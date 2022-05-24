@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.9 (Ubuntu 12.9-0ubuntu0.20.04.1)
+-- Dumped from database version 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -445,8 +445,6 @@ CREATE TABLE public.drafts (
     owner_avatar_shape character varying(8),
     accepted_reactions_positive character varying(255) NOT NULL,
     accepted_reactions_negative character varying(255) NOT NULL,
-    reactions_visible boolean DEFAULT true NOT NULL,
-    reaction_totals_visible boolean DEFAULT true NOT NULL,
     body_src text NOT NULL,
     body_src_format smallint DEFAULT 0 NOT NULL,
     body text NOT NULL,
@@ -455,7 +453,8 @@ CREATE TABLE public.drafts (
     update_important boolean DEFAULT false NOT NULL,
     update_description character varying(128) DEFAULT ''::character varying NOT NULL,
     publish_at timestamp without time zone,
-    replied_to_id character varying(40)
+    replied_to_id character varying(40),
+    operations text DEFAULT '{}'::text NOT NULL
 );
 
 
@@ -477,8 +476,6 @@ CREATE TABLE public.entries (
     receiver_name character varying(63),
     accepted_reactions_positive character varying(255) NOT NULL,
     accepted_reactions_negative character varying(255) NOT NULL,
-    reactions_visible boolean DEFAULT true NOT NULL,
-    reaction_totals_visible boolean DEFAULT true NOT NULL,
     deadline timestamp without time zone,
     receiver_created_at timestamp without time zone,
     current_receiver_revision_id character varying(40),
@@ -503,7 +500,31 @@ CREATE TABLE public.entries (
     replied_to_avatar_media_file_id character varying(40),
     replied_to_avatar_shape character varying(8),
     parent_media_id uuid,
-    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_principal character varying(70),
+    receiver_deleted_at timestamp without time zone,
+    view_comments_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_comments_principal character varying(70),
+    add_comment_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_add_comment_principal character varying(70),
+    view_reactions_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_reactions_principal character varying(70),
+    view_negative_reactions_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_negative_reactions_principal character varying(70),
+    view_reaction_totals_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_reaction_totals_principal character varying(70),
+    view_negative_reaction_totals_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_negative_reaction_totals_principal character varying(70),
+    add_reaction_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_add_reaction_principal character varying(70),
+    add_negative_reaction_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_add_negative_reaction_principal character varying(70),
+    view_reaction_ratios_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_reaction_ratios_principal character varying(70),
+    view_negative_reaction_ratios_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    receiver_view_negative_reaction_ratios_principal character varying(70),
+    receiver_edit_principal character varying(70),
+    receiver_delete_principal character varying(70)
 );
 
 
@@ -859,6 +880,7 @@ CREATE TABLE public.reaction_totals (
     negative boolean NOT NULL,
     emoji integer NOT NULL,
     total integer NOT NULL,
+    forged boolean DEFAULT false NOT NULL,
     CONSTRAINT reaction_totals_check CHECK (((entry_id IS NOT NULL) OR (entry_revision_id IS NOT NULL)))
 );
 
@@ -960,7 +982,8 @@ CREATE TABLE public.sitemap_records (
     entry_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     modified_at timestamp without time zone NOT NULL,
-    total_updates integer NOT NULL
+    total_updates integer NOT NULL,
+    visible boolean DEFAULT true NOT NULL
 );
 
 
@@ -1056,10 +1079,10 @@ ALTER TABLE public.subscriptions OWNER TO moera;
 CREATE TABLE public.tokens (
     token character varying(45) NOT NULL,
     name character varying(127),
-    admin boolean NOT NULL,
     created_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone NOT NULL,
-    node_id uuid NOT NULL
+    node_id uuid NOT NULL,
+    auth_category bigint DEFAULT 0 NOT NULL
 );
 
 

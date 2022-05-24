@@ -105,12 +105,6 @@ public class Entry {
     @Size(max = 255)
     private String acceptedReactionsNegative = "";
 
-    @NotNull
-    private boolean reactionsVisible = true;
-
-    @NotNull
-    private boolean reactionTotalsVisible = true;
-
     @ManyToOne
     private Entry parent;
 
@@ -149,6 +143,10 @@ public class Entry {
 
     private Principal receiverViewPrincipal;
 
+    private Principal receiverEditPrincipal;
+
+    private Principal receiverDeletePrincipal;
+
     private Principal viewCommentsPrincipal = Principal.PUBLIC;
 
     private Principal receiverViewCommentsPrincipal;
@@ -156,6 +154,38 @@ public class Entry {
     private Principal addCommentPrincipal = Principal.PUBLIC;
 
     private Principal receiverAddCommentPrincipal;
+
+    private Principal viewReactionsPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewReactionsPrincipal;
+
+    private Principal viewNegativeReactionsPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewNegativeReactionsPrincipal;
+
+    private Principal viewReactionTotalsPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewReactionTotalsPrincipal;
+
+    private Principal viewNegativeReactionTotalsPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewNegativeReactionTotalsPrincipal;
+
+    private Principal viewReactionRatiosPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewReactionRatiosPrincipal;
+
+    private Principal viewNegativeReactionRatiosPrincipal = Principal.PUBLIC;
+
+    private Principal receiverViewNegativeReactionRatiosPrincipal;
+
+    private Principal addReactionPrincipal = Principal.PUBLIC;
+
+    private Principal receiverAddReactionPrincipal;
+
+    private Principal addNegativeReactionPrincipal = Principal.PUBLIC;
+
+    private Principal receiverAddNegativeReactionPrincipal;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
@@ -386,22 +416,6 @@ public class Entry {
         this.acceptedReactionsNegative = acceptedReactionsNegative;
     }
 
-    public boolean isReactionsVisible() {
-        return reactionsVisible;
-    }
-
-    public void setReactionsVisible(boolean reactionsVisible) {
-        this.reactionsVisible = reactionsVisible;
-    }
-
-    public boolean isReactionTotalsVisible() {
-        return reactionTotalsVisible;
-    }
-
-    public void setReactionTotalsVisible(boolean reactionTotalsVisible) {
-        this.reactionTotalsVisible = reactionTotalsVisible;
-    }
-
     public Set<EntryRevision> getRevisions() {
         return revisions;
     }
@@ -554,6 +568,22 @@ public class Entry {
         this.receiverViewPrincipal = receiverViewPrincipal;
     }
 
+    public Principal getReceiverEditPrincipal() {
+        return receiverEditPrincipal;
+    }
+
+    public void setReceiverEditPrincipal(Principal receiverEditPrincipal) {
+        this.receiverEditPrincipal = receiverEditPrincipal;
+    }
+
+    public Principal getReceiverDeletePrincipal() {
+        return receiverDeletePrincipal;
+    }
+
+    public void setReceiverDeletePrincipal(Principal receiverDeletePrincipal) {
+        this.receiverDeletePrincipal = receiverDeletePrincipal;
+    }
+
     public Principal getViewCommentsPrincipal() {
         return viewCommentsPrincipal;
     }
@@ -592,6 +622,202 @@ public class Entry {
 
     public void setReceiverAddCommentPrincipal(Principal receiverAddCommentPrincipal) {
         this.receiverAddCommentPrincipal = receiverAddCommentPrincipal;
+    }
+
+    public Principal getViewReactionsPrincipal() {
+        return viewReactionsPrincipal;
+    }
+
+    public Principal getViewReactionsPrincipalAbsolute() {
+        return getViewReactionsPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setViewReactionsPrincipal(Principal viewReactionsPrincipal) {
+        this.viewReactionsPrincipal = viewReactionsPrincipal;
+    }
+
+    public Principal getReceiverViewReactionsPrincipal() {
+        return receiverViewReactionsPrincipal;
+    }
+
+    public Principal getReceiverViewReactionsPrincipalAbsolute() {
+        return getReceiverViewReactionsPrincipal() != null && getReceiverName() != null
+                ? getReceiverViewReactionsPrincipal().withOwner(getReceiverName())
+                : Principal.PUBLIC;
+    }
+
+    public void setReceiverViewReactionsPrincipal(Principal receiverViewReactionsPrincipal) {
+        this.receiverViewReactionsPrincipal = receiverViewReactionsPrincipal;
+    }
+
+    public Principal getViewNegativeReactionsPrincipal() {
+        return viewNegativeReactionsPrincipal;
+    }
+
+    public Principal getViewNegativeReactionsPrincipalAbsolute() {
+        return getViewNegativeReactionsPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setViewNegativeReactionsPrincipal(Principal viewNegativeReactionsPrincipal) {
+        this.viewNegativeReactionsPrincipal = viewNegativeReactionsPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionsPrincipal() {
+        return receiverViewNegativeReactionsPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionsPrincipalAbsolute() {
+        return getReceiverViewNegativeReactionsPrincipal() != null && getReceiverName() != null
+                ? getReceiverViewNegativeReactionsPrincipal().withOwner(getReceiverName())
+                : Principal.PUBLIC;
+    }
+
+    public void setReceiverViewNegativeReactionsPrincipal(Principal receiverViewNegativeReactionsPrincipal) {
+        this.receiverViewNegativeReactionsPrincipal = receiverViewNegativeReactionsPrincipal;
+    }
+
+    public Principal getViewReactionTotalsPrincipal() {
+        return viewReactionTotalsPrincipal;
+    }
+
+    public Principal getViewReactionTotalsPrincipalAbsolute() {
+        return getViewReactionTotalsPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setViewReactionTotalsPrincipal(Principal viewReactionTotalsPrincipal) {
+        this.viewReactionTotalsPrincipal = viewReactionTotalsPrincipal;
+    }
+
+    public Principal getReceiverViewReactionTotalsPrincipal() {
+        return receiverViewReactionTotalsPrincipal;
+    }
+
+    public Principal getReceiverViewReactionTotalsPrincipalAbsolute() {
+        return getReceiverViewReactionTotalsPrincipal() != null && getReceiverName() != null
+                ? getReceiverViewReactionTotalsPrincipal().withOwner(getReceiverName())
+                : Principal.PUBLIC;
+    }
+
+    public void setReceiverViewReactionTotalsPrincipal(Principal receiverViewReactionTotalsPrincipal) {
+        this.receiverViewReactionTotalsPrincipal = receiverViewReactionTotalsPrincipal;
+    }
+
+    public Principal getViewNegativeReactionTotalsPrincipal() {
+        return viewNegativeReactionTotalsPrincipal;
+    }
+
+    public Principal getViewNegativeReactionTotalsPrincipalAbsolute() {
+        return getViewNegativeReactionTotalsPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setViewNegativeReactionTotalsPrincipal(Principal viewNegativeReactionTotalsPrincipal) {
+        this.viewNegativeReactionTotalsPrincipal = viewNegativeReactionTotalsPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionTotalsPrincipal() {
+        return receiverViewNegativeReactionTotalsPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionTotalsPrincipalAbsolute() {
+        return getReceiverViewNegativeReactionTotalsPrincipal() != null && getReceiverName() != null
+                ? getReceiverViewNegativeReactionTotalsPrincipal().withOwner(getReceiverName())
+                : Principal.PUBLIC;
+    }
+
+    public void setReceiverViewNegativeReactionTotalsPrincipal(Principal receiverViewNegativeReactionTotalsPrincipal) {
+        this.receiverViewNegativeReactionTotalsPrincipal = receiverViewNegativeReactionTotalsPrincipal;
+    }
+
+    public Principal getViewReactionRatiosPrincipal() {
+        return viewReactionRatiosPrincipal;
+    }
+
+    public Principal getViewReactionRatiosPrincipalAbsolute() {
+        return getViewReactionRatiosPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setViewReactionRatiosPrincipal(Principal viewReactionRatiosPrincipal) {
+        this.viewReactionRatiosPrincipal = viewReactionRatiosPrincipal;
+    }
+
+    public Principal getReceiverViewReactionRatiosPrincipal() {
+        return receiverViewReactionRatiosPrincipal;
+    }
+
+    public Principal getReceiverViewReactionRatiosPrincipalAbsolute() {
+        return getReceiverViewReactionRatiosPrincipal() != null && getReceiverName() != null
+                ? getReceiverViewReactionRatiosPrincipal().withOwner(getReceiverName())
+                : Principal.PUBLIC;
+    }
+
+    public void setReceiverViewReactionRatiosPrincipal(Principal receiverViewReactionRatiosPrincipal) {
+        this.receiverViewReactionRatiosPrincipal = receiverViewReactionRatiosPrincipal;
+    }
+
+    public Principal getViewNegativeReactionRatiosPrincipal() {
+        return viewNegativeReactionRatiosPrincipal;
+    }
+
+    public Principal getViewNegativeReactionRatiosPrincipalAbsolute() {
+        return getViewNegativeReactionRatiosPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setViewNegativeReactionRatiosPrincipal(Principal viewNegativeReactionRatiosPrincipal) {
+        this.viewNegativeReactionRatiosPrincipal = viewNegativeReactionRatiosPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionRatiosPrincipal() {
+        return receiverViewNegativeReactionRatiosPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionRatiosPrincipalAbsolute() {
+        return getReceiverViewNegativeReactionRatiosPrincipal() != null && getReceiverName() != null
+                ? getReceiverViewNegativeReactionRatiosPrincipal().withOwner(getReceiverName())
+                : Principal.PUBLIC;
+    }
+
+    public void setReceiverViewNegativeReactionRatiosPrincipal(Principal receiverViewNegativeReactionRatiosPrincipal) {
+        this.receiverViewNegativeReactionRatiosPrincipal = receiverViewNegativeReactionRatiosPrincipal;
+    }
+
+    public Principal getAddReactionPrincipal() {
+        return addReactionPrincipal;
+    }
+
+    public Principal getAddReactionPrincipalAbsolute() {
+        return getAddReactionPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setAddReactionPrincipal(Principal addReactionPrincipal) {
+        this.addReactionPrincipal = addReactionPrincipal;
+    }
+
+    public Principal getReceiverAddReactionPrincipal() {
+        return receiverAddReactionPrincipal;
+    }
+
+    public void setReceiverAddReactionPrincipal(Principal receiverAddReactionPrincipal) {
+        this.receiverAddReactionPrincipal = receiverAddReactionPrincipal;
+    }
+
+    public Principal getAddNegativeReactionPrincipal() {
+        return addNegativeReactionPrincipal;
+    }
+
+    public Principal getAddNegativeReactionPrincipalAbsolute() {
+        return getAddNegativeReactionPrincipal().withOwner(getOwnerName());
+    }
+
+    public void setAddNegativeReactionPrincipal(Principal addNegativeReactionPrincipal) {
+        this.addNegativeReactionPrincipal = addNegativeReactionPrincipal;
+    }
+
+    public Principal getReceiverAddNegativeReactionPrincipal() {
+        return receiverAddNegativeReactionPrincipal;
+    }
+
+    public void setReceiverAddNegativeReactionPrincipal(Principal receiverAddNegativeReactionPrincipal) {
+        this.receiverAddNegativeReactionPrincipal = receiverAddNegativeReactionPrincipal;
     }
 
     public Set<Story> getStories() {

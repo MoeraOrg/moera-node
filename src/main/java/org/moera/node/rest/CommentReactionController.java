@@ -135,8 +135,10 @@ public class CommentReactionController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!comment.isReactionsVisible() && !requestContext.isAdmin()
-                && !requestContext.isClient(comment.getOwnerName())) {
+        if (!requestContext.isPrincipal(comment.getViewReactionsPrincipalAbsolute())) {
+            return ReactionsSliceInfo.EMPTY;
+        }
+        if (negative && !requestContext.isPrincipal(comment.getViewNegativeReactionsPrincipalAbsolute())) {
             return ReactionsSliceInfo.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
@@ -166,14 +168,18 @@ public class CommentReactionController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!comment.isReactionsVisible() && !requestContext.isAdmin()
-                && !requestContext.isClient(comment.getOwnerName())) {
-            return ReactionInfo.ofComment(commentId);
+        if (!requestContext.isPrincipal(comment.getViewReactionsPrincipalAbsolute())) {
+            return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentId, ownerName);
 
-        return reaction != null ? new ReactionInfo(reaction) : ReactionInfo.ofComment(commentId);
+        if (reaction == null || reaction.isNegative()
+                && !requestContext.isPrincipal(comment.getViewNegativeReactionsPrincipalAbsolute())) {
+            return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
+        }
+
+        return new ReactionInfo(reaction);
     }
 
     @DeleteMapping

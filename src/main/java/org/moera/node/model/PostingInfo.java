@@ -77,8 +77,6 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
-    private Boolean reactionsVisible;
-    private Boolean reactionTotalsVisible;
     private List<PostingSourceInfo> sources;
     private Integer totalComments;
     private PostingSubscriptionsInfo subscriptions = new PostingSubscriptionsInfo();
@@ -162,20 +160,32 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         operations.put("delete", receiverName == null ? Principal.PRIVATE : Principal.ADMIN);
         operations.put("viewComments", posting.getViewCommentsPrincipal());
         operations.put("addComment", posting.getAddCommentPrincipal());
-        operations.put("reactions", posting.isReactionsVisible() ? Principal.PUBLIC : Principal.PRIVATE);
+        operations.put("viewReactions", posting.getViewReactionsPrincipal());
+        operations.put("viewNegativeReactions", posting.getViewNegativeReactionsPrincipal());
+        operations.put("viewReactionTotals", posting.getViewReactionTotalsPrincipal());
+        operations.put("viewNegativeReactionTotals", posting.getViewNegativeReactionTotalsPrincipal());
+        operations.put("viewReactionRatios", posting.getViewReactionRatiosPrincipal());
+        operations.put("viewNegativeReactionRatios", posting.getViewNegativeReactionRatiosPrincipal());
+        operations.put("addReaction", posting.getAddReactionPrincipal());
+        operations.put("addNegativeReaction", posting.getAddNegativeReactionPrincipal());
         receiverOperations = new HashMap<>();
         receiverOperations.put("view", posting.getReceiverViewPrincipal());
+        receiverOperations.put("edit", posting.getReceiverEditPrincipal());
+        receiverOperations.put("delete", posting.getReceiverDeletePrincipal());
         receiverOperations.put("viewComments", posting.getReceiverViewCommentsPrincipal());
         receiverOperations.put("addComment", posting.getReceiverAddCommentPrincipal());
+        receiverOperations.put("viewReactions", posting.getReceiverViewReactionsPrincipal());
+        receiverOperations.put("viewNegativeReactions", posting.getReceiverViewNegativeReactionsPrincipal());
+        receiverOperations.put("viewReactionTotals", posting.getReceiverViewReactionTotalsPrincipal());
+        receiverOperations.put("viewNegativeReactionTotals", posting.getReceiverViewNegativeReactionTotalsPrincipal());
+        receiverOperations.put("viewReactionRatios", posting.getReceiverViewReactionRatiosPrincipal());
+        receiverOperations.put("viewNegativeReactionRatios", posting.getReceiverViewNegativeReactionRatiosPrincipal());
+        receiverOperations.put("addReaction", posting.getReceiverAddReactionPrincipal());
+        receiverOperations.put("addNegativeReaction", posting.getReceiverAddNegativeReactionPrincipal());
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
-        Principal viewReactions = posting.isReactionTotalsVisible()
-                ? Principal.PUBLIC
-                : (posting.isOriginal() ? Principal.PRIVATE : Principal.NONE);
-        reactions = new ReactionTotalsInfo(posting.getReactionTotals(), accessChecker.isPrincipal(viewReactions));
-        reactionsVisible = posting.isReactionsVisible();
-        reactionTotalsVisible = posting.isReactionTotalsVisible();
+        reactions = new ReactionTotalsInfo(posting.getReactionTotals(), posting, accessChecker);
         sources = posting.getSources() != null
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
@@ -561,22 +571,6 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         this.reactions = reactions;
     }
 
-    public Boolean getReactionsVisible() {
-        return reactionsVisible;
-    }
-
-    public void setReactionsVisible(Boolean reactionsVisible) {
-        this.reactionsVisible = reactionsVisible;
-    }
-
-    public Boolean getReactionTotalsVisible() {
-        return reactionTotalsVisible;
-    }
-
-    public void setReactionTotalsVisible(Boolean reactionTotalsVisible) {
-        this.reactionTotalsVisible = reactionTotalsVisible;
-    }
-
     public List<PostingSourceInfo> getSources() {
         return sources;
     }
@@ -613,8 +607,6 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setReceiverEditedAt(Util.toTimestamp(isOriginal() ? editedAt : receiverEditedAt));
         posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
-        posting.setReactionsVisible(reactionsVisible);
-        posting.setReactionTotalsVisible(reactionTotalsVisible);
         posting.setTotalChildren(totalComments);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
@@ -623,12 +615,40 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setReceiverViewPrincipal(principal);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
+        principal = getOperations().getOrDefault("edit", Principal.PRIVATE);
+        posting.setReceiverEditPrincipal(principal);
+        principal = getOperations().getOrDefault("delete", Principal.PRIVATE);
+        posting.setReceiverDeletePrincipal(principal);
         principal = getOperations().getOrDefault("viewComments", Principal.PUBLIC);
-        posting.setViewCommentsPrincipal(principal);
+        posting.setViewCommentsPrincipal(Principal.NONE);
         posting.setReceiverViewCommentsPrincipal(principal);
         principal = getOperations().getOrDefault("addComment", Principal.PUBLIC);
         posting.setAddCommentPrincipal(Principal.NONE);
-        posting.setReceiverViewCommentsPrincipal(principal);
+        posting.setReceiverAddCommentPrincipal(principal);
+        principal = getOperations().getOrDefault("viewReactions", Principal.PUBLIC);
+        posting.setViewReactionsPrincipal(Principal.NONE);
+        posting.setReceiverViewReactionsPrincipal(principal);
+        principal = getOperations().getOrDefault("viewNegativeReactions", Principal.PUBLIC);
+        posting.setViewNegativeReactionsPrincipal(Principal.NONE);
+        posting.setReceiverViewNegativeReactionsPrincipal(principal);
+        principal = getOperations().getOrDefault("viewReactionTotals", Principal.PUBLIC);
+        posting.setViewReactionTotalsPrincipal(principal);
+        posting.setReceiverViewReactionTotalsPrincipal(principal);
+        principal = getOperations().getOrDefault("viewNegativeReactionTotals", Principal.PUBLIC);
+        posting.setViewNegativeReactionTotalsPrincipal(principal);
+        posting.setReceiverViewNegativeReactionTotalsPrincipal(principal);
+        principal = getOperations().getOrDefault("viewReactionRatios", Principal.PUBLIC);
+        posting.setViewReactionRatiosPrincipal(principal);
+        posting.setReceiverViewReactionRatiosPrincipal(principal);
+        principal = getOperations().getOrDefault("viewNegativeReactionRatios", Principal.PUBLIC);
+        posting.setViewNegativeReactionRatiosPrincipal(principal);
+        posting.setReceiverViewNegativeReactionRatiosPrincipal(principal);
+        principal = getOperations().getOrDefault("addReaction", Principal.PUBLIC);
+        posting.setAddReactionPrincipal(Principal.NONE);
+        posting.setReceiverAddReactionPrincipal(principal);
+        principal = getOperations().getOrDefault("addNegativeReaction", Principal.PUBLIC);
+        posting.setAddNegativeReactionPrincipal(Principal.NONE);
+        posting.setReceiverAddNegativeReactionPrincipal(principal);
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {

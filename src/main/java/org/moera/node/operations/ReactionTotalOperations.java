@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
@@ -68,22 +69,12 @@ public class ReactionTotalOperations {
             this.totals = totals;
         }
 
-        public boolean isVisibleToClient() {
-            return isVisibleToPublic()
-                    || (requestContext.isAdmin() || requestContext.isClient(entry.getOwnerName()))
-                        && entry.isOriginal();
-        }
-
-        public boolean isVisibleToPublic() {
-            return entry.isReactionTotalsVisible();
-        }
-
         public ReactionTotalsInfo getClientInfo() {
-            return new ReactionTotalsInfo(totals, isVisibleToClient());
+            return new ReactionTotalsInfo(totals, entry, requestContext);
         }
 
         public ReactionTotalsInfo getPublicInfo() {
-            return new ReactionTotalsInfo(totals, isVisibleToPublic());
+            return new ReactionTotalsInfo(totals, entry, AccessCheckers.PUBLIC);
         }
 
     }
@@ -108,6 +99,7 @@ public class ReactionTotalOperations {
             reactionTotal.setNegative(negative);
             reactionTotal.setEmoji(reactionTotalInfo.getEmoji());
             reactionTotal.setTotal(realOrVirtualTotal(reactionTotalInfo));
+            reactionTotal.setForged(reactionTotalInfo.getTotal() == null);
             reactionTotalRepository.save(reactionTotal);
         }
     }
@@ -131,11 +123,6 @@ public class ReactionTotalOperations {
             }
         }
         return true;
-    }
-
-    public boolean isVisibleToClient(Entry entry) {
-        return entry.isReactionTotalsVisible() || requestContext.isAdmin()
-                || requestContext.isClient(entry.getOwnerName());
     }
 
     public ReactionTotalsData getInfo(Entry entry) {

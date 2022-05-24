@@ -61,9 +61,8 @@ public class CommentRevisionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        boolean countsVisible = reactionTotalOperations.isVisibleToClient(comment);
         return comment.getRevisions().stream()
-                .map(r -> new CommentRevisionInfo(r, countsVisible))
+                .map(r -> new CommentRevisionInfo(comment, r, requestContext))
                 .sorted(Comparator.comparing(CommentRevisionInfo::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
@@ -89,7 +88,7 @@ public class CommentRevisionController {
         EntryRevision revision = entryRevisionRepository.findByEntryIdAndId(requestContext.nodeId(), commentId, id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment-revision.not-found"));
 
-        return new CommentRevisionInfo(revision, reactionTotalOperations.isVisibleToClient(comment));
+        return new CommentRevisionInfo(comment, revision, requestContext);
     }
 
 }

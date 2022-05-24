@@ -33,8 +33,6 @@ public class DraftInfo {
     private String ownerFullName;
     private AvatarImage ownerAvatar;
     private AcceptedReactions acceptedReactions;
-    private Boolean reactionsVisible;
-    private Boolean reactionTotalsVisible;
     private Body bodySrc;
     private SourceFormat bodySrcFormat;
     private Body body;
@@ -65,8 +63,6 @@ public class DraftInfo {
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(draft.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(draft.getAcceptedReactionsNegative());
-        reactionsVisible = draft.isReactionsVisible();
-        reactionTotalsVisible = draft.isReactionTotalsVisible();
         bodySrc = new Body(draft.getBodySrc());
         bodySrcFormat = draft.getBodySrcFormat();
         body = new Body(draft.getBody());
@@ -181,22 +177,6 @@ public class DraftInfo {
 
     public void setAcceptedReactions(AcceptedReactions acceptedReactions) {
         this.acceptedReactions = acceptedReactions;
-    }
-
-    public Boolean getReactionsVisible() {
-        return reactionsVisible;
-    }
-
-    public void setReactionsVisible(Boolean reactionsVisible) {
-        this.reactionsVisible = reactionsVisible;
-    }
-
-    public Boolean getReactionTotalsVisible() {
-        return reactionTotalsVisible;
-    }
-
-    public void setReactionTotalsVisible(Boolean reactionTotalsVisible) {
-        this.reactionTotalsVisible = reactionTotalsVisible;
     }
 
     public Body getBodySrc() {

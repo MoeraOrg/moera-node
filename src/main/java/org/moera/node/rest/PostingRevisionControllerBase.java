@@ -90,11 +90,10 @@ public abstract class PostingRevisionControllerBase {
             throw new ValidationFailure("limit.invalid");
         }
 
-        boolean countsVisible = reactionTotalOperations.isVisibleToClient(posting);
         return entryRevisionRepository.findAllByEntryId(requestContext.nodeId(), postingId,
                 PageRequest.of(0, limit, Sort.Direction.DESC, "createdAt"))
                 .get()
-                .map(r -> new PostingRevisionInfo(r, posting.getReceiverName(), countsVisible))
+                .map(r -> new PostingRevisionInfo(posting, r, posting.getReceiverName(), requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -109,8 +108,7 @@ public abstract class PostingRevisionControllerBase {
         Posting posting = getPosting(postingId);
         EntryRevision revision = getRevision(postingId, id);
 
-        return new PostingRevisionInfo(revision, posting.getReceiverName(),
-                reactionTotalOperations.isVisibleToClient(posting));
+        return new PostingRevisionInfo(posting, revision, posting.getReceiverName(), requestContext);
     }
 
     @PostMapping("/{id}/restore")
@@ -140,7 +138,7 @@ public abstract class PostingRevisionControllerBase {
 
         requestContext.send(getRestorationLiberin(posting, latest));
 
-        return new PostingRevisionInfo(revision, posting.getReceiverName(), true);
+        return new PostingRevisionInfo(posting, revision, posting.getReceiverName(), requestContext);
     }
 
 }

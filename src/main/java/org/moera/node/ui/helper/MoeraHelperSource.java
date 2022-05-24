@@ -1,6 +1,5 @@
 package org.moera.node.ui.helper;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -129,7 +128,11 @@ public class MoeraHelperSource {
 
     public CharSequence reactions(ReactionsInfo reactionsInfo) {
         ReactionTotalsInfo totalsInfo = reactionsInfo.getReactions();
-        boolean totalsVisible = Arrays.asList(reactionsInfo.getOperations().get("reactions")).contains("public");
+        boolean totalsVisible = reactionsInfo.getOperations().get("viewReactions").isPublic()
+                || reactionsInfo.getOperations().get("viewReactionTotals").isPublic();
+        boolean negativeTotalsVisible = reactionsInfo.getOperations().get("viewReactions").isPublic()
+                && reactionsInfo.getOperations().get("viewNegativeReactions").isPublic()
+                || reactionsInfo.getOperations().get("viewNegativeReactionTotals").isPublic();
 
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");
@@ -144,7 +147,7 @@ public class MoeraHelperSource {
         if (totalsInfo.getNegative().size() > 0) {
             buf.append("<span class=\"negative\">");
             appendEmojis(buf, totalsInfo.getNegative());
-            if (totalsVisible) {
+            if (totalsVisible && negativeTotalsVisible) {
                 buf.append(sum(totalsInfo.getNegative()));
             }
             buf.append("</span>");

@@ -290,9 +290,8 @@ public class MediaController {
             if (entry instanceof Posting) {
                 parents.add(new EntryInfo(new PostingInfo((Posting) entry, requestContext)));
             }
-            boolean isAdminOrOwner = requestContext.isAdmin() || requestContext.isClient(entry.getOwnerName());
             if (entry instanceof Comment) {
-                parents.add(new EntryInfo(new CommentInfo((Comment) entry, isAdminOrOwner)));
+                parents.add(new EntryInfo(new CommentInfo((Comment) entry, requestContext)));
             }
         }
 

@@ -130,6 +130,14 @@ public class PostingOperations {
         posting.setViewPrincipal(mediaFileOwner.getViewPrincipal());
         posting.setViewCommentsPrincipal(mediaFileOwner.getViewPrincipal());
         posting.setAddCommentPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewReactionsPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewNegativeReactionsPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewReactionTotalsPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewNegativeReactionTotalsPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewReactionRatiosPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setViewNegativeReactionRatiosPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setAddReactionPrincipal(mediaFileOwner.getViewPrincipal());
+        posting.setAddNegativeReactionPrincipal(mediaFileOwner.getViewPrincipal());
 
         EntryRevision revision = newRevision(posting, null);
         revision.setBodySrc(Body.EMPTY);

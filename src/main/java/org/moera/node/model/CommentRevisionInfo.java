@@ -2,6 +2,8 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
@@ -30,7 +32,7 @@ public class CommentRevisionInfo implements RevisionInfo {
     public CommentRevisionInfo() {
     }
 
-    public CommentRevisionInfo(EntryRevision revision, boolean countsVisible) {
+    public CommentRevisionInfo(Comment comment, EntryRevision revision, AccessChecker accessChecker) {
         id = revision.getId().toString();
         postingRevisionId = revision.getParent().getId().toString();
         bodyPreview = new Body(revision.getBodyPreview());
@@ -47,7 +49,7 @@ public class CommentRevisionInfo implements RevisionInfo {
         digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        reactions = new ReactionTotalsInfo(revision.getReactionTotals(), countsVisible);
+        reactions = new ReactionTotalsInfo(revision.getReactionTotals(), comment, accessChecker);
     }
 
     public String getId() {

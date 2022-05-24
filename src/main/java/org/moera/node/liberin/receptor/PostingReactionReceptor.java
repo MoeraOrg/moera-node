@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
@@ -65,13 +66,16 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     deletedReaction.getOwnerAvatarShape());
             if (posting.getParentMedia() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
-                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting)),
+                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
+                                    visibilityFilter(posting, deletedReaction)),
                             new PostingReactionDeletedNotification(null, null, null,
                                     posting.getId(), deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
                                     ownerAvatar, deletedReaction.isNegative()));
                 } else {
-                    postingReactionInstants.deleted(posting.getId(), deletedReaction.getOwnerName(),
-                            deletedReaction.isNegative());
+                    if (visibilityFilter(posting, deletedReaction).includes(true, posting.getOwnerName())) {
+                        postingReactionInstants.deleted(posting.getId(), deletedReaction.getOwnerName(),
+                                deletedReaction.isNegative());
+                    }
                 }
             } else {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
@@ -80,7 +84,8 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                             ? ((Comment) entry).getPosting().getId()
                             : entry.getId();
                     UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting)),
+                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
+                                    visibilityFilter(posting, deletedReaction)),
                             new PostingReactionDeletedNotification(parentPostingId, parentCommentId,
                                     posting.getParentMedia().getId(), posting.getId(), deletedReaction.getOwnerName(),
                                     deletedReaction.getOwnerFullName(),
@@ -94,14 +99,18 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     addedReaction.getOwnerAvatarShape());
             if (posting.getParentMedia() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
-                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting)),
+                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
+                                    visibilityFilter(posting, addedReaction)),
                             new PostingReactionAddedNotification(null, null, null, null,
                                     posting.getId(), posting.getCurrentRevision().getHeading(),
                                     addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
                                     ownerAvatar, addedReaction.isNegative(), addedReaction.getEmoji()));
                 } else {
-                    postingReactionInstants.added(posting, addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
-                            ownerAvatar, addedReaction.isNegative(), addedReaction.getEmoji());
+                    if (visibilityFilter(posting, addedReaction).includes(true, posting.getOwnerName())) {
+                        postingReactionInstants.added(posting, addedReaction.getOwnerName(),
+                                addedReaction.getOwnerFullName(), ownerAvatar, addedReaction.isNegative(),
+                                addedReaction.getEmoji());
+                    }
                 }
             } else {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
@@ -110,7 +119,8 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                             ? ((Comment) entry).getPosting().getId()
                             : entry.getId();
                     UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting)),
+                    send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
+                                    visibilityFilter(posting, addedReaction)),
                             new PostingReactionAddedNotification(parentPostingId, parentCommentId,
                                     posting.getParentMedia().getId(), entry.getCurrentRevision().getHeading(),
                                     posting.getId(), posting.getCurrentRevision().getHeading(),
@@ -120,8 +130,8 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
             }
         }
 
-        send(liberin, new PostingReactionsChangedEvent(posting, visibilityFilter(posting)));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), visibilityFilter(posting)),
+        send(liberin, new PostingReactionsChangedEvent(posting));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingReactionsUpdatedNotification(posting.getId(), reactionTotals));
     }
 
@@ -129,25 +139,27 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     public void deletedAll(PostingReactionsDeletedAllLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        send(liberin, new PostingReactionsChangedEvent(posting, visibilityFilter(posting)));
+        send(liberin, new PostingReactionsChangedEvent(posting));
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), visibilityFilter(posting)),
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingReactionsUpdatedNotification(posting.getId(), totalsInfo.getPublicInfo()));
 
         if (posting.getParentMedia() == null) {
             if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
-                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting)),
+                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting, null)),
                         new PostingReactionDeletedAllNotification(null, null, null,
                                 posting.getId()));
             } else {
-                postingReactionInstants.deletedAll(posting.getId());
+                if (visibilityFilter(posting, null).includes(true, posting.getOwnerName())) {
+                    postingReactionInstants.deletedAll(posting.getId());
+                }
             }
         } else {
             Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
             for (Entry entry : entries) {
                 UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
                 UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting)),
+                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting, null)),
                         new PostingReactionDeletedAllNotification(parentPostingId, parentCommentId,
                                 posting.getParentMedia().getId(), posting.getId()));
             }
@@ -158,13 +170,17 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     public void totalsUpdated(PostingReactionTotalsUpdatedLiberin liberin) {
         Posting posting = liberin.getPosting();
 
-        send(liberin, new PostingReactionsChangedEvent(posting, visibilityFilter(posting)));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), visibilityFilter(posting)),
+        send(liberin, new PostingReactionsChangedEvent(posting));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId()),
                 new PostingReactionsUpdatedNotification(posting.getId(), liberin.getTotals()));
     }
 
-    private PrincipalFilter visibilityFilter(Posting posting) {
-        return posting.getViewPrincipalAbsolute();
+    private PrincipalFilter visibilityFilter(Posting posting, Reaction reaction) {
+        return posting.getViewPrincipalAbsolute().a()
+                .and(posting.getViewReactionsPrincipalAbsolute())
+                .and(reaction != null && reaction.isNegative()
+                        ? posting.getViewNegativeReactionsPrincipalAbsolute()
+                        : Principal.PUBLIC);
     }
 
 }

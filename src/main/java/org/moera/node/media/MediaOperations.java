@@ -322,6 +322,8 @@ public class MediaOperations {
             List<Entry> list = entries.stream()
                     .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
                     .collect(Collectors.toList());
+            list.forEach(e -> posting.setAcceptedReactionsPositive(e.getAcceptedReactionsPositive()));
+            list.forEach(e -> posting.setAcceptedReactionsNegative(e.getAcceptedReactionsNegative()));
             Principal principal = list.stream()
                     .map(Entry::getViewPrincipal)
                     .reduce(Principal.PRIVATE, Principal::union);
@@ -334,6 +336,38 @@ public class MediaOperations {
                     .map(Entry::getAddCommentPrincipal)
                     .reduce(Principal.PRIVATE, Principal::union);
             posting.setAddCommentPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getViewReactionsPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setViewReactionsPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getViewNegativeReactionsPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setViewNegativeReactionsPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getViewReactionTotalsPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setViewReactionTotalsPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getViewNegativeReactionTotalsPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setViewNegativeReactionTotalsPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getViewReactionRatiosPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setViewReactionRatiosPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getViewNegativeReactionRatiosPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setViewNegativeReactionTotalsPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getAddReactionPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setAddReactionPrincipal(principal);
+            principal = list.stream()
+                    .map(Entry::getAddNegativeReactionPrincipal)
+                    .reduce(Principal.PRIVATE, Principal::union);
+            posting.setAddNegativeReactionPrincipal(principal);
         }
     }
 

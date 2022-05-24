@@ -104,6 +104,17 @@ public class ReactionOperations {
             if (!CryptoUtil.verify(fingerprint, reactionDescription.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
+            requestContext.authenticatedWithSignature(reactionDescription.getOwnerName());
+        }
+
+        if (entry.isOriginal()) {
+            if (!requestContext.isPrincipal(entry.getAddReactionPrincipalAbsolute())) {
+                throw new AuthenticationException();
+            }
+            if (reactionDescription.isNegative()
+                    && !requestContext.isPrincipal(entry.getAddNegativeReactionPrincipalAbsolute())) {
+                throw new AuthenticationException();
+            }
         }
 
         EmojiList accepted = new EmojiList(!reactionDescription.isNegative()

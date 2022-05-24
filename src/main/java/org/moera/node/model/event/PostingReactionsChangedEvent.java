@@ -13,6 +13,10 @@ public class PostingReactionsChangedEvent extends PostingEvent {
         super(EventType.POSTING_REACTIONS_CHANGED, filter);
     }
 
+    public PostingReactionsChangedEvent(Posting posting) {
+        super(EventType.POSTING_REACTIONS_CHANGED, posting);
+    }
+
     public PostingReactionsChangedEvent(Posting posting, PrincipalFilter filter) {
         super(EventType.POSTING_REACTIONS_CHANGED, posting, filter);
     }

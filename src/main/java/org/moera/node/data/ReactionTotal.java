@@ -29,6 +29,9 @@ public class ReactionTotal {
     @NotNull
     private int total;
 
+    @NotNull
+    private boolean forged;
+
     public UUID getId() {
         return id;
     }
@@ -75,6 +78,14 @@ public class ReactionTotal {
 
     public void setTotal(int total) {
         this.total = total;
+    }
+
+    public boolean isForged() {
+        return forged;
+    }
+
+    public void setForged(boolean forged) {
+        this.forged = forged;
     }
 
 }

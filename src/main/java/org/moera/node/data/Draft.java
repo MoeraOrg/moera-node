@@ -69,12 +69,6 @@ public class Draft {
     private String acceptedReactionsNegative = "";
 
     @NotNull
-    private boolean reactionsVisible = true;
-
-    @NotNull
-    private boolean reactionTotalsVisible = true;
-
-    @NotNull
     private String bodySrc = "";
 
     @NotNull
@@ -223,22 +217,6 @@ public class Draft {
 
     public void setAcceptedReactionsNegative(String acceptedReactionsNegative) {
         this.acceptedReactionsNegative = acceptedReactionsNegative;
-    }
-
-    public boolean isReactionsVisible() {
-        return reactionsVisible;
-    }
-
-    public void setReactionsVisible(boolean reactionsVisible) {
-        this.reactionsVisible = reactionsVisible;
-    }
-
-    public boolean isReactionTotalsVisible() {
-        return reactionTotalsVisible;
-    }
-
-    public void setReactionTotalsVisible(boolean reactionTotalsVisible) {
-        this.reactionTotalsVisible = reactionTotalsVisible;
     }
 
     public String getBodySrc() {

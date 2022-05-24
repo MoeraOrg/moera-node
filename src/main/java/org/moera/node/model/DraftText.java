@@ -54,10 +54,6 @@ public class DraftText {
     @Valid
     private AcceptedReactions acceptedReactions;
 
-    private Boolean reactionsVisible;
-
-    private Boolean reactionTotalsVisible;
-
     private String bodySrc;
 
     private SourceFormat bodySrcFormat;
@@ -143,22 +139,6 @@ public class DraftText {
         this.acceptedReactions = acceptedReactions;
     }
 
-    public Boolean getReactionsVisible() {
-        return reactionsVisible;
-    }
-
-    public void setReactionsVisible(Boolean reactionsVisible) {
-        this.reactionsVisible = reactionsVisible;
-    }
-
-    public Boolean getReactionTotalsVisible() {
-        return reactionTotalsVisible;
-    }
-
-    public void setReactionTotalsVisible(Boolean reactionTotalsVisible) {
-        this.reactionTotalsVisible = reactionTotalsVisible;
-    }
-
     public String getBodySrc() {
         return bodySrc;
     }
@@ -231,13 +211,6 @@ public class DraftText {
                 draft.setAcceptedReactionsNegative(acceptedReactions.getNegative());
             }
         }
-        if (reactionsVisible != null) {
-            draft.setReactionsVisible(reactionsVisible);
-        }
-        if (reactionTotalsVisible != null) {
-            draft.setReactionTotalsVisible(reactionTotalsVisible);
-        }
-
         if (bodySrcFormat != null) {
             draft.setBodySrcFormat(bodySrcFormat);
         }

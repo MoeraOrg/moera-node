@@ -159,8 +159,10 @@ public class PostingReactionController {
         if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!posting.isReactionsVisible() && !requestContext.isAdmin()
-                && !requestContext.isClient(posting.getOwnerName())) {
+        if (!requestContext.isPrincipal(posting.getViewReactionsPrincipalAbsolute())) {
+            return ReactionsSliceInfo.EMPTY;
+        }
+        if (negative && !requestContext.isPrincipal(posting.getViewNegativeReactionsPrincipalAbsolute())) {
             return ReactionsSliceInfo.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
@@ -183,14 +185,18 @@ public class PostingReactionController {
         if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!posting.isReactionsVisible() && !requestContext.isAdmin()
-                && !requestContext.isClient(posting.getOwnerName())) {
-            return ReactionInfo.ofPosting(postingId);
+        if (!requestContext.isPrincipal(posting.getViewReactionsPrincipalAbsolute())) {
+            return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
 
-        return reaction != null ? new ReactionInfo(reaction) : ReactionInfo.ofPosting(postingId);
+        if (reaction == null || reaction.isNegative()
+                && !requestContext.isPrincipal(posting.getViewNegativeReactionsPrincipalAbsolute())) {
+            return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
+        }
+
+        return new ReactionInfo(reaction);
     }
 
     @DeleteMapping

@@ -8,6 +8,8 @@ import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryAttachment;
@@ -67,15 +69,15 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         this.id = id.toString();
     }
 
-    public CommentInfo(Comment comment, boolean isAdminOrOwner) {
-        this(comment, comment.getCurrentRevision(), false, isAdminOrOwner);
+    public CommentInfo(Comment comment, AccessChecker accessChecker) {
+        this(comment, comment.getCurrentRevision(), false, accessChecker);
     }
 
-    public CommentInfo(Comment comment, boolean includeSource, boolean isAdminOrOwner) {
-        this(comment, comment.getCurrentRevision(), includeSource, isAdminOrOwner);
+    public CommentInfo(Comment comment, boolean includeSource, AccessChecker accessChecker) {
+        this(comment, comment.getCurrentRevision(), includeSource, accessChecker);
     }
 
-    public CommentInfo(Comment comment, EntryRevision revision, boolean includeSource, boolean isAdminOrOwner) {
+    public CommentInfo(Comment comment, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {
         id = comment.getId().toString();
         ownerName = comment.getOwnerName();
         ownerFullName = comment.getOwnerFullName();
@@ -114,16 +116,22 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         operations = new HashMap<>();
         operations.put("edit", Principal.OWNER);
         operations.put("delete", Principal.PRIVATE);
-        operations.put("reactions", comment.isReactionsVisible() ? Principal.PUBLIC : Principal.PRIVATE);
+        operations.put("viewReactions", comment.getViewReactionsPrincipal());
+        operations.put("viewNegativeReactions", comment.getViewNegativeReactionsPrincipal());
+        operations.put("viewReactionTotals", comment.getViewReactionTotalsPrincipal());
+        operations.put("viewNegativeReactionTotals", comment.getViewNegativeReactionTotalsPrincipal());
+        operations.put("viewReactionRatios", comment.getViewReactionRatiosPrincipal());
+        operations.put("viewNegativeReactionRatios", comment.getViewNegativeReactionRatiosPrincipal());
+        operations.put("addReaction", comment.getAddReactionPrincipal());
+        operations.put("addNegativeReaction", comment.getAddNegativeReactionPrincipal());
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(comment.getAcceptedReactionsNegative());
-        reactions = new ReactionTotalsInfo(comment.getReactionTotals(),
-                isAdminOrOwner && comment.isOriginal() || comment.isReactionTotalsVisible());
+        reactions = new ReactionTotalsInfo(comment.getReactionTotals(), comment, accessChecker);
     }
 
     public static CommentInfo forUi(Comment comment) {
-        CommentInfo info = new CommentInfo(comment, false);
+        CommentInfo info = new CommentInfo(comment, AccessCheckers.PUBLIC);
         String saneBodyPreview = comment.getCurrentRevision().getSaneBodyPreview();
         info.setSaneBodyPreview(saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());
         String saneBody = comment.getCurrentRevision().getSaneBody();

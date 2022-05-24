@@ -67,6 +67,7 @@ import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -86,6 +87,31 @@ public class PostingController {
     private static final Logger log = LoggerFactory.getLogger(PostingController.class);
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
+
+    private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
+        Pair.of("view",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE),
+        Pair.of("viewComments",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("addComment",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("viewReactions",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("viewNegativeReactions",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("viewReactionTotals",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("viewNegativeReactionTotals",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("viewReactionRatios",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("viewNegativeReactionRatios",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+        Pair.of("addReaction",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE),
+        Pair.of("addNegativeReaction",
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE)
+    );
 
     @Inject
     private RequestContext requestContext;
@@ -296,22 +322,11 @@ public class PostingController {
     }
 
     private void validateOperations(Function<String, Principal> getPrincipal, String errorCode) {
-        Principal principal = getPrincipal.apply("view");
-        if (principal != null
-                && !principal.isOneOf(PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)) {
-            throw new ValidationFailure(errorCode);
-        }
-        principal = getPrincipal.apply("viewComments");
-        if (principal != null
-                && !principal.isOneOf(
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
-            throw new ValidationFailure(errorCode);
-        }
-        principal = getPrincipal.apply("addComment");
-        if (principal != null
-                && !principal.isOneOf(
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE)) {
-            throw new ValidationFailure(errorCode);
+        for (var desc : OPERATION_PRINCIPALS) {
+            Principal principal = getPrincipal.apply(desc.getFirst());
+            if (principal != null && !principal.isOneOf(desc.getSecond())) {
+                throw new ValidationFailure(errorCode);
+            }
         }
     }
 
