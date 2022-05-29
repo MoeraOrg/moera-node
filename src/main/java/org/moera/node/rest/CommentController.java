@@ -22,7 +22,6 @@ import javax.validation.Valid;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.principal.Principal;
@@ -576,7 +575,6 @@ public class CommentController {
     }
 
     @PutMapping("/{commentId}/operations")
-    @Admin
     @Transactional
     public Map<String, Principal> putOperations(@PathVariable UUID postingId, @PathVariable UUID commentId,
                                                 @Valid @RequestBody Map<String, Principal> operations) {
@@ -597,6 +595,9 @@ public class CommentController {
         }
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
             throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!requestContext.isPrincipal(Principal.OWNER.withOwner(comment.getOwnerName()))) {
+            throw new AuthenticationException();
         }
 
         validateOperations(operations::get, "comment-operations.wrong-principal");
