@@ -277,38 +277,40 @@ public class PostingText {
                 entry.setOwnerAvatarShape(ownerAvatar.getShape());
             }
         }
-        if (getPrincipal("view") != null) {
-            entry.setViewPrincipal(getPrincipal("view"));
-        }
-        if (getPrincipal("viewComments") != null) {
-            entry.setViewCommentsPrincipal(getPrincipal("viewComments"));
-        }
-        if (getPrincipal("addComment") != null) {
-            entry.setAddCommentPrincipal(getPrincipal("addComment"));
-        }
-        if (getPrincipal("viewReactions") != null) {
-            entry.setViewReactionsPrincipal(getPrincipal("viewReactions"));
-        }
-        if (getPrincipal("viewNegativeReactions") != null) {
-            entry.setViewNegativeReactionsPrincipal(getPrincipal("viewNegativeReactions"));
-        }
-        if (getPrincipal("viewReactionTotals") != null) {
-            entry.setViewReactionTotalsPrincipal(getPrincipal("viewReactionTotals"));
-        }
-        if (getPrincipal("viewNegativeReactionTotals") != null) {
-            entry.setViewNegativeReactionTotalsPrincipal(getPrincipal("viewNegativeReactionTotals"));
-        }
-        if (getPrincipal("viewReactionRatios") != null) {
-            entry.setViewReactionRatiosPrincipal(getPrincipal("viewReactionRatios"));
-        }
-        if (getPrincipal("viewNegativeReactionRatios") != null) {
-            entry.setViewNegativeReactionRatiosPrincipal(getPrincipal("viewNegativeReactionRatios"));
-        }
-        if (getPrincipal("addReaction") != null) {
-            entry.setAddReactionPrincipal(getPrincipal("addReaction"));
-        }
-        if (getPrincipal("addNegativeReaction") != null) {
-            entry.setAddNegativeReactionPrincipal(getPrincipal("addNegativeReaction"));
+        if (entry.getParentMedia() == null) {
+            if (getPrincipal("view") != null) {
+                entry.setViewPrincipal(getPrincipal("view"));
+            }
+            if (getPrincipal("viewComments") != null) {
+                entry.setViewCommentsPrincipal(getPrincipal("viewComments"));
+            }
+            if (getPrincipal("addComment") != null) {
+                entry.setAddCommentPrincipal(getPrincipal("addComment"));
+            }
+            if (getPrincipal("viewReactions") != null) {
+                entry.setViewReactionsPrincipal(getPrincipal("viewReactions"));
+            }
+            if (getPrincipal("viewNegativeReactions") != null) {
+                entry.setViewNegativeReactionsPrincipal(getPrincipal("viewNegativeReactions"));
+            }
+            if (getPrincipal("viewReactionTotals") != null) {
+                entry.setViewReactionTotalsPrincipal(getPrincipal("viewReactionTotals"));
+            }
+            if (getPrincipal("viewNegativeReactionTotals") != null) {
+                entry.setViewNegativeReactionTotalsPrincipal(getPrincipal("viewNegativeReactionTotals"));
+            }
+            if (getPrincipal("viewReactionRatios") != null) {
+                entry.setViewReactionRatiosPrincipal(getPrincipal("viewReactionRatios"));
+            }
+            if (getPrincipal("viewNegativeReactionRatios") != null) {
+                entry.setViewNegativeReactionRatiosPrincipal(getPrincipal("viewNegativeReactionRatios"));
+            }
+            if (getPrincipal("addReaction") != null) {
+                entry.setAddReactionPrincipal(getPrincipal("addReaction"));
+            }
+            if (getPrincipal("addNegativeReaction") != null) {
+                entry.setAddNegativeReactionPrincipal(getPrincipal("addNegativeReaction"));
+            }
         }
     }
 

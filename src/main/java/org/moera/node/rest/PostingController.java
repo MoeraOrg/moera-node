@@ -401,6 +401,9 @@ public class PostingController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         Principal latestView = posting.getViewPrincipalAbsolute();
 
+        if (posting.getParentMedia() != null) {
+            throw new ValidationFailure("posting-operations.attached-to-media");
+        }
         validateOperations(operations::get, "posting-operations.wrong-principal");
 
         posting.setEditedAt(Util.now());
