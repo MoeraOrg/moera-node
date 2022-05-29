@@ -19,7 +19,6 @@ import javax.validation.Valid;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.principal.Principal;
@@ -359,7 +358,6 @@ public class PostingController {
     }
 
     @DeleteMapping("/{id}")
-    @Admin
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
@@ -367,6 +365,9 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         EntryRevision latest = posting.getCurrentRevision();
+        if (!requestContext.isPrincipal(posting.getDeletePrincipalAbsolute())) {
+            throw new AuthenticationException();
+        }
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingOperations.deletePosting(posting, true);
         storyOperations.unpublish(posting.getId());
@@ -391,7 +392,6 @@ public class PostingController {
     }
 
     @PutMapping("/{id}/operations")
-    @Admin
     @Transactional
     public Map<String, Principal> putOperations(@PathVariable UUID id,
                                                 @Valid @RequestBody Map<String, Principal> operations) {
@@ -400,6 +400,9 @@ public class PostingController {
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         Principal latestView = posting.getViewPrincipalAbsolute();
+        if (!requestContext.isPrincipal(posting.getEditPrincipalAbsolute())) {
+            throw new AuthenticationException();
+        }
 
         if (posting.getParentMedia() != null) {
             throw new ValidationFailure("posting-operations.attached-to-media");

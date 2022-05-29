@@ -532,9 +532,7 @@ public class CommentController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!requestContext.isAdmin()
-                && !requestContext.isClient(comment.getPosting().getOwnerName())
-                && !requestContext.isClient(comment.getOwnerName())) {
+        if (!requestContext.isPrincipal(comment.getDeletePrincipalAbsolute())) {
             throw new AuthenticationException();
         }
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
@@ -596,7 +594,7 @@ public class CommentController {
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(Principal.OWNER.withOwner(comment.getOwnerName()))) {
+        if (!requestContext.isPrincipal(comment.getEditPrincipalAbsolute())) {
             throw new AuthenticationException();
         }
 

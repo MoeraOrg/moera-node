@@ -156,8 +156,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         }
         operations = new HashMap<>();
         operations.put("view", posting.getViewPrincipal());
-        operations.put("edit", receiverName == null ? Principal.OWNER : Principal.NONE);
-        operations.put("delete", receiverName == null ? Principal.PRIVATE : Principal.ADMIN);
+        operations.put("edit", posting.getEditPrincipal());
+        operations.put("delete", posting.getDeletePrincipal());
         operations.put("viewComments", posting.getViewCommentsPrincipal());
         operations.put("addComment", posting.getAddCommentPrincipal());
         operations.put("viewReactions", posting.getViewReactionsPrincipal());

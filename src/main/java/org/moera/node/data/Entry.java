@@ -579,6 +579,22 @@ public class Entry {
         this.receiverViewPrincipal = receiverViewPrincipal;
     }
 
+    public Principal getEditPrincipal() {
+        return receiverName == null ? Principal.OWNER : Principal.NONE;
+    }
+
+    public Principal getEditPrincipalAbsolute() {
+        return toAbsolute(getEditPrincipal());
+    }
+
+    public Principal getDeletePrincipal() {
+        return receiverName == null ? Principal.PRIVATE : Principal.ADMIN;
+    }
+
+    public Principal getDeletePrincipalAbsolute() {
+        return toAbsolute(getDeletePrincipal());
+    }
+
     public Principal getReceiverEditPrincipal() {
         return receiverEditPrincipal;
     }
