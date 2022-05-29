@@ -22,8 +22,11 @@ import javax.validation.Valid;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -64,6 +67,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -83,6 +87,27 @@ public class CommentController {
     private static final Logger log = LoggerFactory.getLogger(CommentController.class);
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
+
+    private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
+            Pair.of("view",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE),
+            Pair.of("viewReactions",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+            Pair.of("viewNegativeReactions",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+            Pair.of("viewReactionTotals",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+            Pair.of("viewNegativeReactionTotals",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+            Pair.of("viewReactionRatios",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+            Pair.of("viewNegativeReactionRatios",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+            Pair.of("addReaction",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE),
+            Pair.of("addNegativeReaction",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE)
+    );
 
     @Inject
     private RequestContext requestContext;
@@ -138,6 +163,9 @@ public class CommentController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
         if (posting.getCurrentRevision().getSignature() == null) {
             throw new ValidationFailure("posting.not-signed");
         }
@@ -145,7 +173,8 @@ public class CommentController {
         if (commentText.getRepliedToId() != null) {
             repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentText.getRepliedToId())
                     .orElse(null);
-            if (repliedTo == null || !repliedTo.getPosting().getId().equals(posting.getId())) {
+            if (repliedTo == null || !repliedTo.getPosting().getId().equals(posting.getId())
+                    || !requestContext.isPrincipal(repliedTo.getViewPrincipalAbsolute())) {
                 throw new ObjectNotFoundFailure("commentText.repliedToId.not-found");
             }
         }
@@ -153,9 +182,6 @@ public class CommentController {
         byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName(), repliedToDigest);
         if (commentText.getSignature() != null) {
             requestContext.authenticatedWithSignature(commentText.getOwnerName());
-        }
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (!requestContext.isPrincipal(posting.getViewCommentsPrincipalAbsolute())) {
             throw new AuthenticationException();
@@ -213,6 +239,10 @@ public class CommentController {
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
+        Principal latestView = comment.getViewPrincipalAbsolute();
+        if (!requestContext.isPrincipal(comment.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -226,7 +256,7 @@ public class CommentController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
-            throw new AuthenticationException();
+            throw new ObjectNotFoundFailure("comment.not-found");
         }
         mediaOperations.validateAvatar(
                 commentText.getOwnerAvatar(),
@@ -252,7 +282,7 @@ public class CommentController {
             throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
         }
 
-        requestContext.send(new CommentUpdatedLiberin(comment, latest));
+        requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
 
         return withSeniorReaction(withClientReaction(new CommentInfo(comment, requestContext)),
                 comment.getPosting().getOwnerName());
@@ -304,7 +334,17 @@ public class CommentController {
                 throw new ValidationFailure("commentText.createdAt.out-of-range");
             }
         }
+        validateOperations(commentText::getPrincipal, "commentText.operations.wrong-principal");
         return digest;
+    }
+
+    private void validateOperations(Function<String, Principal> getPrincipal, String errorCode) {
+        for (var desc : OPERATION_PRINCIPALS) {
+            Principal principal = getPrincipal.apply(desc.getFirst());
+            if (principal != null && !principal.isOneOf(desc.getSecond())) {
+                throw new ValidationFailure(errorCode);
+            }
+        }
     }
 
     private byte[] mediaDigest(UUID id) {
@@ -358,32 +398,40 @@ public class CommentController {
     }
 
     private CommentsSliceInfo getCommentsBefore(Posting posting, long before, int limit) {
-        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
-                SafeInteger.MIN_VALUE, before,
-                PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
         sliceInfo.setBefore(before);
-        if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setAfter(SafeInteger.MIN_VALUE);
-        } else {
-            sliceInfo.setAfter(page.getContent().get(limit).getMoment());
-        }
-        fillSlice(sliceInfo, posting, limit);
+        long sliceBefore = before;
+        do {
+            Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
+                    SafeInteger.MIN_VALUE, before,
+                    PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+            if (page.getNumberOfElements() < limit + 1) {
+                sliceInfo.setAfter(SafeInteger.MIN_VALUE);
+            } else {
+                sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+            }
+            fillSlice(sliceInfo, posting, limit);
+            sliceBefore = sliceInfo.getAfter();
+        } while (sliceBefore > SafeInteger.MIN_VALUE && sliceInfo.getComments().size() < limit / 2);
         return sliceInfo;
     }
 
     private CommentsSliceInfo getCommentsAfter(Posting posting, long after, int limit) {
-        Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
-                after, SafeInteger.MAX_VALUE,
-                PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
         sliceInfo.setAfter(after);
-        if (page.getNumberOfElements() < limit + 1) {
-            sliceInfo.setBefore(SafeInteger.MAX_VALUE);
-        } else {
-            sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
-        }
-        fillSlice(sliceInfo, posting, limit);
+        long sliceAfter = after;
+        do {
+            Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
+                    after, SafeInteger.MAX_VALUE,
+                    PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
+            if (page.getNumberOfElements() < limit + 1) {
+                sliceInfo.setBefore(SafeInteger.MAX_VALUE);
+            } else {
+                sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
+            }
+            fillSlice(sliceInfo, posting, limit);
+            sliceAfter = sliceInfo.getBefore();
+        } while (sliceAfter < SafeInteger.MAX_VALUE && sliceInfo.getComments().size() < limit / 2);
         return sliceInfo;
     }
 
@@ -391,6 +439,7 @@ public class CommentController {
         List<CommentInfo> comments = commentRepository.findInRange(
                 requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore())
                 .stream()
+                .filter(c -> requestContext.isPrincipal(c.getViewPrincipalAbsolute()))
                 .map(c -> new CommentInfo(c, requestContext))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
@@ -445,6 +494,9 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        if (!requestContext.isPrincipal(comment.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -469,6 +521,9 @@ public class CommentController {
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
+        if (!requestContext.isPrincipal(comment.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -496,6 +551,63 @@ public class CommentController {
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());
     }
 
+    @GetMapping("/{commentId}/operations")
+    @Transactional
+    public Map<String, Principal> getOperations(@PathVariable UUID postingId, @PathVariable UUID commentId) {
+        log.info("GET /postings/{postingId}/comments/{commentId}/operations, (postingId = {}, commentId = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId));
+
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        if (!requestContext.isPrincipal(comment.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!comment.getPosting().getId().equals(postingId)) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
+        }
+
+        return new CommentInfo(comment, requestContext).getOperations();
+    }
+
+    @PutMapping("/{commentId}/operations")
+    @Admin
+    @Transactional
+    public Map<String, Principal> putOperations(@PathVariable UUID postingId, @PathVariable UUID commentId,
+                                                @Valid @RequestBody Map<String, Principal> operations) {
+        log.info("PUT /postings/{postingId}/comments/{commentId}/operations, (postingId = {}, commentId = {})",
+                LogUtil.format(postingId), LogUtil.format(commentId));
+
+        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Principal latestView = comment.getViewPrincipalAbsolute();
+        if (!requestContext.isPrincipal(comment.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!comment.getPosting().getId().equals(postingId)) {
+            throw new ObjectNotFoundFailure("comment.wrong-posting");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+
+        validateOperations(operations::get, "comment-operations.wrong-principal");
+
+        comment.setEditedAt(Util.now());
+
+        requestContext.send(new CommentUpdatedLiberin(comment, comment.getCurrentRevision(), latestView));
+
+        return new CommentInfo(comment, requestContext).getOperations();
+    }
+
     @GetMapping("/{commentId}/attached")
     @Transactional
     public List<PostingInfo> getAttached(@PathVariable UUID postingId, @PathVariable UUID commentId) {
@@ -504,6 +616,9 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        if (!requestContext.isPrincipal(comment.getViewPrincipalAbsolute())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
         if (!requestContext.isPrincipal(comment.getPosting().getViewPrincipalAbsolute())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }

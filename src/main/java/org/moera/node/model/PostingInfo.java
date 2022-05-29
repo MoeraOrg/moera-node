@@ -189,9 +189,10 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         sources = posting.getSources() != null
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
                 : Collections.emptyList();
-        totalComments = accessChecker.isPrincipal(posting.getViewCommentsPrincipalAbsolute())
-                ? posting.getTotalChildren()
-                : 0;
+        Principal viewComments = posting.isOriginal()
+                ? posting.getViewCommentsPrincipalAbsolute()
+                : posting.getReceiverViewCommentsPrincipalAbsolute();
+        totalComments = accessChecker.isPrincipal(viewComments) ? posting.getTotalChildren() : 0;
         subscriptions = PostingSubscriptionsInfo.fromSubscribers(posting.getSubscribers());
     }
 

@@ -1,6 +1,7 @@
 package org.moera.node.liberin.receptor;
 
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Reaction;
@@ -55,31 +56,34 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                             addedReaction.isNegative(), addedReaction.getEmoji()));
         }
 
-        send(liberin, new CommentReactionsChangedEvent(comment, visibilityFilter(comment, null)));
+        send(liberin, new CommentReactionsChangedEvent(comment, generalVisibilityFilter(comment)));
     }
 
     @LiberinMapping
     public void deletedAll(CommentReactionsDeletedAllLiberin liberin) {
         Comment comment = liberin.getComment();
 
-        send(Directions.single(liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment, null)),
+        send(Directions.single(liberin.getNodeId(), comment.getOwnerName(), generalVisibilityFilter(comment)),
                 new CommentReactionDeletedAllNotification(comment.getPosting().getId(), comment.getId()));
-        send(liberin, new CommentReactionsChangedEvent(comment, visibilityFilter(comment, null)));
+        send(liberin, new CommentReactionsChangedEvent(comment, generalVisibilityFilter(comment)));
     }
 
     @LiberinMapping
     public void totalsUpdated(CommentReactionTotalsUpdatedLiberin liberin) {
         send(liberin, new CommentReactionsChangedEvent(liberin.getComment(),
-                visibilityFilter(liberin.getComment(), null)));
+                generalVisibilityFilter(liberin.getComment())));
+    }
+
+    private PrincipalExpression generalVisibilityFilter(Comment comment) {
+        return comment.getViewPrincipalAbsolute().a()
+                .and(comment.getPosting().getViewPrincipalAbsolute())
+                .and(comment.getPosting().getViewCommentsPrincipalAbsolute());
     }
 
     private PrincipalFilter visibilityFilter(Comment comment, Reaction reaction) {
-        return comment.getPosting().getViewPrincipalAbsolute().a()
-                .and(comment.getPosting().getViewCommentsPrincipalAbsolute())
+        return generalVisibilityFilter(comment)
                 .and(comment.getViewReactionsPrincipalAbsolute())
-                .and(reaction != null && reaction.isNegative()
-                        ? comment.getViewNegativeReactionsPrincipalAbsolute()
-                        : Principal.PUBLIC);
+                .and(reaction.isNegative() ? comment.getViewNegativeReactionsPrincipalAbsolute() : Principal.PUBLIC);
     }
 
 }

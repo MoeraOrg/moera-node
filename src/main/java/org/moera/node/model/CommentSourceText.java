@@ -1,11 +1,14 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.SourceFormat;
 
@@ -30,6 +33,8 @@ public class CommentSourceText {
     private AcceptedReactions acceptedReactions;
 
     private UUID repliedToId;
+
+    private Map<String, Principal> operations = new HashMap<>();
 
     public CommentSourceText() {
     }
@@ -88,6 +93,14 @@ public class CommentSourceText {
 
     public void setRepliedToId(UUID repliedToId) {
         this.repliedToId = repliedToId;
+    }
+
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
     }
 
 }

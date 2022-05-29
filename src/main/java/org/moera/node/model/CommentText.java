@@ -2,11 +2,14 @@ package org.moera.node.model;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
@@ -58,6 +61,8 @@ public class CommentText {
 
     private short signatureVersion;
 
+    private Map<String, Principal> operations;
+
     public CommentText() {
     }
 
@@ -87,6 +92,7 @@ public class CommentText {
             body = new Body(bodySrc).getEncoded();
             bodyFormat = BodyFormat.APPLICATION.getValue();
         }
+        operations = sourceText.getOperations();
     }
 
     public void initAcceptedReactionsDefaults() {
@@ -221,6 +227,18 @@ public class CommentText {
         this.signatureVersion = signatureVersion;
     }
 
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
+    }
+
+    public Principal getPrincipal(String operationName) {
+        return operations != null ? operations.get(operationName) : null;
+    }
+
     public void toEntry(Entry entry) {
         if (sameAsEntry(entry)) {
             return;
@@ -246,6 +264,33 @@ public class CommentText {
                 entry.setOwnerAvatarShape(ownerAvatar.getShape());
             }
         }
+        if (getPrincipal("view") != null) {
+            entry.setViewPrincipal(getPrincipal("view"));
+        }
+        if (getPrincipal("viewReactions") != null) {
+            entry.setViewReactionsPrincipal(getPrincipal("viewReactions"));
+        }
+        if (getPrincipal("viewNegativeReactions") != null) {
+            entry.setViewNegativeReactionsPrincipal(getPrincipal("viewNegativeReactions"));
+        }
+        if (getPrincipal("viewReactionTotals") != null) {
+            entry.setViewReactionTotalsPrincipal(getPrincipal("viewReactionTotals"));
+        }
+        if (getPrincipal("viewNegativeReactionTotals") != null) {
+            entry.setViewNegativeReactionTotalsPrincipal(getPrincipal("viewNegativeReactionTotals"));
+        }
+        if (getPrincipal("viewReactionRatios") != null) {
+            entry.setViewReactionRatiosPrincipal(getPrincipal("viewReactionRatios"));
+        }
+        if (getPrincipal("viewNegativeReactionRatios") != null) {
+            entry.setViewNegativeReactionRatiosPrincipal(getPrincipal("viewNegativeReactionRatios"));
+        }
+        if (getPrincipal("addReaction") != null) {
+            entry.setAddReactionPrincipal(getPrincipal("addReaction"));
+        }
+        if (getPrincipal("addNegativeReaction") != null) {
+            entry.setAddNegativeReactionPrincipal(getPrincipal("addNegativeReaction"));
+        }
     }
 
     public boolean sameAsEntry(Entry entry) {
@@ -257,7 +302,31 @@ public class CommentText {
                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()))
                && (ownerAvatarMediaFile == null
                     || entry.getOwnerAvatarMediaFile() != null
-                        && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()));
+                        && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()))
+               && (getPrincipal("view") == null
+                    || Objects.equals(getPrincipal("view"), entry.getViewPrincipal()))
+               && (getPrincipal("viewReactions") == null
+                    || Objects.equals(getPrincipal("viewReactions"), entry.getViewReactionsPrincipal()))
+               && (getPrincipal("viewNegativeReactions") == null
+                    || Objects.equals(getPrincipal("viewNegativeReactions"),
+                                      entry.getViewNegativeReactionsPrincipal()))
+               && (getPrincipal("viewReactionTotals") == null
+                    || Objects.equals(getPrincipal("viewReactionTotals"),
+                                      entry.getViewReactionTotalsPrincipal()))
+               && (getPrincipal("viewNegativeReactionTotals") == null
+                    || Objects.equals(getPrincipal("viewNegativeReactionTotals"),
+                                      entry.getViewNegativeReactionTotalsPrincipal()))
+               && (getPrincipal("viewReactionRatios") == null
+                    || Objects.equals(getPrincipal("viewReactionRatios"),
+                                      entry.getViewReactionRatiosPrincipal()))
+               && (getPrincipal("viewNegativeReactionRatios") == null
+                    || Objects.equals(getPrincipal("viewNegativeReactionRatios"),
+                                      entry.getViewNegativeReactionRatiosPrincipal()))
+               && (getPrincipal("addReaction") == null
+                    || Objects.equals(getPrincipal("addReaction"), entry.getAddReactionPrincipal()))
+               && (getPrincipal("addNegativeReaction") == null
+                    || Objects.equals(getPrincipal("addNegativeReaction"),
+                                      entry.getAddNegativeReactionPrincipal()));
     }
 
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter,

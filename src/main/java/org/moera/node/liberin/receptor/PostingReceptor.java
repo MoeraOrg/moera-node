@@ -4,9 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 import org.moera.node.auth.principal.Principal;
@@ -16,7 +14,6 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -52,7 +49,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
+            notifyMentioned(posting, posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
                     null, Principal.PUBLIC, posting.getOwnerName());
         }
         send(liberin, new PostingAddedEvent(posting, posting.getViewPrincipalAbsolute()));
@@ -63,7 +60,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
+            notifyMentioned(posting, posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
                     liberin.getLatestRevision(), liberin.getLatestViewPrincipal(), posting.getOwnerName());
         }
 
@@ -98,7 +95,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(liberin, posting.getId(), null, Principal.PUBLIC, liberin.getLatestRevision(),
+            notifyMentioned(posting, null, Principal.PUBLIC, liberin.getLatestRevision(),
                     posting.getViewPrincipalAbsolute(), posting.getOwnerName());
         }
         send(liberin, new PostingDeletedEvent(posting, posting.getViewPrincipalAbsolute()));
@@ -111,7 +108,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(liberin, posting.getId(), posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
+            notifyMentioned(posting, posting.getCurrentRevision(), posting.getViewPrincipalAbsolute(),
                     null, Principal.PUBLIC, posting.getOwnerName());
         }
         send(liberin, new PostingRestoredEvent(posting, posting.getViewPrincipalAbsolute()));
@@ -119,8 +116,8 @@ public class PostingReceptor extends LiberinReceptorBase {
                 new PostingUpdatedNotification(posting.getId()));
     }
 
-    private void notifyMentioned(Liberin liberin, UUID postingId, EntryRevision current, Principal currentView,
-                                 EntryRevision latest, Principal latestView, String ownerName) {
+    private void notifyMentioned(Posting posting, EntryRevision current, Principal currentView, EntryRevision latest,
+                                 Principal latestView, String ownerName) {
         String currentHeading = current != null ? current.getHeading() : null;
         Set<String> currentMentions = current != null
                 ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
@@ -130,12 +127,12 @@ public class PostingReceptor extends LiberinReceptorBase {
                 : Collections.emptySet();
         currentMentions.stream()
                 .filter(m -> !latestMentions.contains(m))
-                .map(m -> Directions.single(liberin.getNodeId(), m))
-                .forEach(d -> send(d, new MentionPostingAddedNotification(postingId, currentHeading)));
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d -> send(d, new MentionPostingAddedNotification(posting.getId(), currentHeading)));
         latestMentions.stream()
                 .filter(m -> !currentMentions.contains(m))
-                .map(m -> Directions.single(liberin.getNodeId(), m))
-                .forEach(d -> send(d, new MentionPostingDeletedNotification(postingId)));
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d -> send(d, new MentionPostingDeletedNotification(posting.getId())));
     }
 
     private Set<String> filterMentions(Set<String> mentions, String ownerName, Principal view) {

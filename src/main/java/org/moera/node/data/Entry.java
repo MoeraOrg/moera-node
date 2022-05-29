@@ -548,12 +548,23 @@ public class Entry {
         this.repliedToDigest = repliedToDigest;
     }
 
+    private Principal toAbsolute(Principal principal) {
+        String parentOwnerName = getParent() != null ? getParent().getOwnerName() : null;
+        return principal.withOwner(getOwnerName(), parentOwnerName);
+    }
+
+    private Principal toReceiverAbsolute(Principal principal) {
+        return principal != null && getReceiverName() != null
+                ? principal.withOwner(getReceiverName())
+                : Principal.PUBLIC;
+    }
+
     public Principal getViewPrincipal() {
         return viewPrincipal;
     }
 
     public Principal getViewPrincipalAbsolute() {
-        return getViewPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewPrincipal());
     }
 
     public void setViewPrincipal(Principal viewPrincipal) {
@@ -589,7 +600,7 @@ public class Entry {
     }
 
     public Principal getViewCommentsPrincipalAbsolute() {
-        return getViewCommentsPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewCommentsPrincipal());
     }
 
     public void setViewCommentsPrincipal(Principal viewCommentsPrincipal) {
@@ -598,6 +609,10 @@ public class Entry {
 
     public Principal getReceiverViewCommentsPrincipal() {
         return receiverViewCommentsPrincipal;
+    }
+
+    public Principal getReceiverViewCommentsPrincipalAbsolute() {
+        return toReceiverAbsolute(getReceiverViewCommentsPrincipal());
     }
 
     public void setReceiverViewCommentsPrincipal(Principal receiverViewCommentsPrincipal) {
@@ -609,7 +624,7 @@ public class Entry {
     }
 
     public Principal getAddCommentPrincipalAbsolute() {
-        return getAddCommentPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getAddCommentPrincipal());
     }
 
     public void setAddCommentPrincipal(Principal addCommentPrincipal) {
@@ -629,7 +644,7 @@ public class Entry {
     }
 
     public Principal getViewReactionsPrincipalAbsolute() {
-        return getViewReactionsPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewReactionsPrincipal());
     }
 
     public void setViewReactionsPrincipal(Principal viewReactionsPrincipal) {
@@ -641,9 +656,7 @@ public class Entry {
     }
 
     public Principal getReceiverViewReactionsPrincipalAbsolute() {
-        return getReceiverViewReactionsPrincipal() != null && getReceiverName() != null
-                ? getReceiverViewReactionsPrincipal().withOwner(getReceiverName())
-                : Principal.PUBLIC;
+        return toReceiverAbsolute(getReceiverViewReactionsPrincipal());
     }
 
     public void setReceiverViewReactionsPrincipal(Principal receiverViewReactionsPrincipal) {
@@ -655,7 +668,7 @@ public class Entry {
     }
 
     public Principal getViewNegativeReactionsPrincipalAbsolute() {
-        return getViewNegativeReactionsPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewNegativeReactionsPrincipal());
     }
 
     public void setViewNegativeReactionsPrincipal(Principal viewNegativeReactionsPrincipal) {
@@ -667,9 +680,7 @@ public class Entry {
     }
 
     public Principal getReceiverViewNegativeReactionsPrincipalAbsolute() {
-        return getReceiverViewNegativeReactionsPrincipal() != null && getReceiverName() != null
-                ? getReceiverViewNegativeReactionsPrincipal().withOwner(getReceiverName())
-                : Principal.PUBLIC;
+        return toReceiverAbsolute(getReceiverViewNegativeReactionsPrincipal());
     }
 
     public void setReceiverViewNegativeReactionsPrincipal(Principal receiverViewNegativeReactionsPrincipal) {
@@ -681,7 +692,7 @@ public class Entry {
     }
 
     public Principal getViewReactionTotalsPrincipalAbsolute() {
-        return getViewReactionTotalsPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewReactionTotalsPrincipal());
     }
 
     public void setViewReactionTotalsPrincipal(Principal viewReactionTotalsPrincipal) {
@@ -693,9 +704,7 @@ public class Entry {
     }
 
     public Principal getReceiverViewReactionTotalsPrincipalAbsolute() {
-        return getReceiverViewReactionTotalsPrincipal() != null && getReceiverName() != null
-                ? getReceiverViewReactionTotalsPrincipal().withOwner(getReceiverName())
-                : Principal.PUBLIC;
+        return toReceiverAbsolute(getReceiverViewReactionTotalsPrincipal());
     }
 
     public void setReceiverViewReactionTotalsPrincipal(Principal receiverViewReactionTotalsPrincipal) {
@@ -707,7 +716,7 @@ public class Entry {
     }
 
     public Principal getViewNegativeReactionTotalsPrincipalAbsolute() {
-        return getViewNegativeReactionTotalsPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewNegativeReactionTotalsPrincipal());
     }
 
     public void setViewNegativeReactionTotalsPrincipal(Principal viewNegativeReactionTotalsPrincipal) {
@@ -719,9 +728,7 @@ public class Entry {
     }
 
     public Principal getReceiverViewNegativeReactionTotalsPrincipalAbsolute() {
-        return getReceiverViewNegativeReactionTotalsPrincipal() != null && getReceiverName() != null
-                ? getReceiverViewNegativeReactionTotalsPrincipal().withOwner(getReceiverName())
-                : Principal.PUBLIC;
+        return toReceiverAbsolute(getReceiverViewNegativeReactionTotalsPrincipal());
     }
 
     public void setReceiverViewNegativeReactionTotalsPrincipal(Principal receiverViewNegativeReactionTotalsPrincipal) {
@@ -733,7 +740,7 @@ public class Entry {
     }
 
     public Principal getViewReactionRatiosPrincipalAbsolute() {
-        return getViewReactionRatiosPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewReactionRatiosPrincipal());
     }
 
     public void setViewReactionRatiosPrincipal(Principal viewReactionRatiosPrincipal) {
@@ -745,9 +752,7 @@ public class Entry {
     }
 
     public Principal getReceiverViewReactionRatiosPrincipalAbsolute() {
-        return getReceiverViewReactionRatiosPrincipal() != null && getReceiverName() != null
-                ? getReceiverViewReactionRatiosPrincipal().withOwner(getReceiverName())
-                : Principal.PUBLIC;
+        return toReceiverAbsolute(getReceiverViewReactionRatiosPrincipal());
     }
 
     public void setReceiverViewReactionRatiosPrincipal(Principal receiverViewReactionRatiosPrincipal) {
@@ -759,7 +764,7 @@ public class Entry {
     }
 
     public Principal getViewNegativeReactionRatiosPrincipalAbsolute() {
-        return getViewNegativeReactionRatiosPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getViewNegativeReactionRatiosPrincipal());
     }
 
     public void setViewNegativeReactionRatiosPrincipal(Principal viewNegativeReactionRatiosPrincipal) {
@@ -771,9 +776,7 @@ public class Entry {
     }
 
     public Principal getReceiverViewNegativeReactionRatiosPrincipalAbsolute() {
-        return getReceiverViewNegativeReactionRatiosPrincipal() != null && getReceiverName() != null
-                ? getReceiverViewNegativeReactionRatiosPrincipal().withOwner(getReceiverName())
-                : Principal.PUBLIC;
+        return toReceiverAbsolute(getReceiverViewNegativeReactionRatiosPrincipal());
     }
 
     public void setReceiverViewNegativeReactionRatiosPrincipal(Principal receiverViewNegativeReactionRatiosPrincipal) {
@@ -785,7 +788,7 @@ public class Entry {
     }
 
     public Principal getAddReactionPrincipalAbsolute() {
-        return getAddReactionPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getAddReactionPrincipal());
     }
 
     public void setAddReactionPrincipal(Principal addReactionPrincipal) {
@@ -805,7 +808,7 @@ public class Entry {
     }
 
     public Principal getAddNegativeReactionPrincipalAbsolute() {
-        return getAddNegativeReactionPrincipal().withOwner(getOwnerName());
+        return toAbsolute(getAddNegativeReactionPrincipal());
     }
 
     public void setAddNegativeReactionPrincipal(Principal addNegativeReactionPrincipal) {

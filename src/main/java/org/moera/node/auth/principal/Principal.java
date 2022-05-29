@@ -27,12 +27,25 @@ public class Principal implements Cloneable, PrincipalFilter {
         this.value = value;
     }
 
-    public static Principal ofNode(String nodeName) {
-        return new Principal("node:" + nodeName);
+    public static Principal ofNode(String... nodeNames) {
+        return new Principal("node:" + joinNotNull(",", nodeNames));
     }
 
-    public static Principal ofOnly(String nodeName) {
-        return new Principal("only:" + nodeName);
+    public static Principal ofOnly(String... nodeNames) {
+        return new Principal("only:" + joinNotNull(",", nodeNames));
+    }
+
+    private static String joinNotNull(String delimiter, String[] names) {
+        StringBuilder result = new StringBuilder();
+        for (String name : names) {
+            if (name != null) {
+                if (result.length() > 0) {
+                    result.append(delimiter);
+                }
+                result.append(name);
+            }
+        }
+        return result.toString();
     }
 
     public String getValue() {
@@ -71,11 +84,11 @@ public class Principal implements Cloneable, PrincipalFilter {
         return value.startsWith("only:");
     }
 
-    public String getNodeName() {
-        return isNode() || isOnly() ? value.substring(5) : null;
+    public String[] getNodeNames() {
+        return isNode() || isOnly() ? value.substring(5).split(",") : new String[0];
     }
 
-    public Principal withOwner(String ownerName) {
+    public Principal withOwner(String... ownerName) {
         if (isOwner()) {
             return Principal.ofOnly(ownerName);
         }
@@ -122,7 +135,7 @@ public class Principal implements Cloneable, PrincipalFilter {
             return false;
         }
         if (isOnly()) {
-            return Objects.equals(nodeName, getNodeName());
+            return includes(getNodeNames(), nodeName);
         }
         if (admin) {
             return true;
@@ -134,9 +147,21 @@ public class Principal implements Cloneable, PrincipalFilter {
             return nodeName != null;
         }
         if (isNode()) {
-            return Objects.equals(nodeName, getNodeName());
+            return includes(getNodeNames(), nodeName);
         }
         throw new UnresolvedPrincipalException(this);
+    }
+
+    private static boolean includes(String[] names, String name) {
+        if (names == null || names.length == 0 || name == null) {
+            return false;
+        }
+        for (String s : names) {
+            if (Objects.equals(s, name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isOneOf(int flags) {

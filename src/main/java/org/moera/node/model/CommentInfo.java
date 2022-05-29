@@ -114,6 +114,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         operations = new HashMap<>();
+        operations.put("view", comment.getViewPrincipal());
         operations.put("edit", Principal.OWNER);
         operations.put("delete", Principal.PRIVATE);
         operations.put("viewReactions", comment.getViewReactionsPrincipal());

@@ -306,6 +306,14 @@ public class MediaOperations {
         return mediaFileOwnerRepository.save(mediaFileOwner);
     }
 
+    private Principal entryViewPrincipal(Entry entry) {
+        Principal view = entry.getViewPrincipal();
+        if (entry.getParent() != null) {
+            view = view.union(entry.getParent().getViewPrincipal().union(entry.getParent().getViewCommentsPrincipal()));
+        }
+        return view;
+    }
+
     public void updatePermissions(MediaFileOwner mediaFileOwner) {
         if (mediaFileOwner == null) {
             return;
@@ -314,7 +322,7 @@ public class MediaOperations {
         Collection<Entry> entries =
                 entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
         Principal view = entries.stream()
-                .map(Entry::getViewPrincipal)
+                .map(this::entryViewPrincipal)
                 .reduce(Principal.PRIVATE, Principal::union);
         mediaFileOwner.setViewPrincipal(view);
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
@@ -325,7 +333,7 @@ public class MediaOperations {
             list.forEach(e -> posting.setAcceptedReactionsPositive(e.getAcceptedReactionsPositive()));
             list.forEach(e -> posting.setAcceptedReactionsNegative(e.getAcceptedReactionsNegative()));
             Principal principal = list.stream()
-                    .map(Entry::getViewPrincipal)
+                    .map(this::entryViewPrincipal)
                     .reduce(Principal.PRIVATE, Principal::union);
             posting.setViewPrincipal(principal);
             principal = list.stream()

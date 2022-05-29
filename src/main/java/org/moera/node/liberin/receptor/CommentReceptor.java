@@ -4,8 +4,11 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
@@ -46,13 +49,12 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                comment.getCurrentRevision(), null);
+        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewPrincipalAbsolute(), null,
+                Principal.PUBLIC);
 
-        send(liberin, new CommentAddedEvent(comment, visibilityFilter(posting)));
-        send(liberin, new PostingCommentsChangedEvent(posting, visibilityFilter(posting)));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), visibilityFilter(posting)),
+        send(liberin, new CommentAddedEvent(comment, visibilityFilter(posting, comment)));
+        send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
+        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
                 new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
     }
 
@@ -63,11 +65,10 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                comment.getCurrentRevision(), liberin.getLatestRevision());
+        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewPrincipalAbsolute(),
+                liberin.getLatestRevision(), liberin.getLatestViewPrincipal());
 
-        send(liberin, new CommentUpdatedEvent(comment, visibilityFilter(posting)));
+        send(liberin, new CommentUpdatedEvent(comment, visibilityFilter(posting, comment)));
     }
 
     @LiberinMapping
@@ -77,30 +78,27 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         commentInstants.deleted(comment);
         notifyReplyDeleted(posting, comment);
-        notifyMentioned(posting, comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()), null,
-                liberin.getLatestRevision());
+        notifyMentioned(posting, comment, null, Principal.PUBLIC, liberin.getLatestRevision(),
+                comment.getViewPrincipalAbsolute());
 
-        send(Directions.postingSubscribers(comment.getNodeId(), posting.getId(), visibilityFilter(posting)),
+        send(Directions.postingSubscribers(comment.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
                 new PostingCommentsUpdatedNotification(
                         posting.getId(), posting.getTotalChildren()));
-        send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId(), visibilityFilter(posting)),
+        send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId(),
+                        visibilityFilter(posting, comment)),
                 new PostingCommentDeletedNotification(posting.getId(), comment.getId(), comment.getOwnerName(),
                         comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
 
-        send(liberin, new CommentDeletedEvent(comment, visibilityFilter(posting)));
-        send(liberin, new PostingCommentsChangedEvent(posting, visibilityFilter(posting)));
-    }
-
-    private PrincipalFilter visibilityFilter(Posting posting) {
-        return posting.getViewPrincipalAbsolute().a().and(posting.getViewCommentsPrincipalAbsolute());
+        send(liberin, new CommentDeletedEvent(comment, visibilityFilter(posting, comment)));
+        send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
     }
 
     private void notifySubscribersCommentAdded(Posting posting, Comment comment) {
         if (comment.getCurrentRevision().getSignature() != null) {
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), visibilityFilter(posting)),
+            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(),
+                            visibilityFilter(posting, comment)),
                     new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
                             comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
                             new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
@@ -114,7 +112,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 || comment.getRevisions().size() > 1) {
             return;
         }
-        send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting)),
+        send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
                 new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
                         posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
@@ -125,38 +123,55 @@ public class CommentReceptor extends LiberinReceptorBase {
         if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null) {
             return;
         }
-        send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting)),
+        send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
                 new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
                         comment.getOwnerName(), comment.getOwnerFullName(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
     }
 
-    private void notifyMentioned(Posting posting, UUID commentId, String ownerName, String ownerFullName,
-                                 AvatarImage ownerAvatar, EntryRevision current, EntryRevision latest) {
+    private void notifyMentioned(Posting posting, Comment comment, EntryRevision current, Principal currentView,
+                                 EntryRevision latest, Principal latestView) {
         // TODO it is better to do this only for signed revisions. But it this case 'latest' should be the latest
         // signed revision
+        String ownerName = comment.getOwnerName();
+        String ownerFullName = comment.getOwnerFullName();
+        AvatarImage ownerAvatar = new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape());
         String currentHeading = current != null ? current.getHeading() : null;
         Set<String> currentMentions = current != null
-                ? MentionsExtractor.extract(new Body(current.getBody()))
+                ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
                 : Collections.emptySet();
         Set<String> latestMentions = latest != null
-                ? MentionsExtractor.extract(new Body(latest.getBody()))
+                ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
                 : Collections.emptySet();
         currentMentions.stream()
-                .filter(m -> !Objects.equals(ownerName, m))
-                .filter(m -> !m.equals(":"))
                 .filter(m -> !latestMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m, visibilityFilter(posting)))
+                .map(m -> Directions.single(posting.getNodeId(), m))
                 .forEach(d -> send(d,
-                        new MentionCommentAddedNotification(posting.getId(), commentId,
+                        new MentionCommentAddedNotification(posting.getId(), comment.getId(),
                                 posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, ownerAvatar,
                                 currentHeading)));
         latestMentions.stream()
+                .filter(m -> !currentMentions.contains(m))
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d -> send(d, new MentionCommentDeletedNotification(posting.getId(), comment.getId())));
+    }
+
+    private Set<String> filterMentions(Set<String> mentions, String ownerName, Principal view) {
+        return mentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
-                .filter(m -> !currentMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m, visibilityFilter(posting)))
-                .forEach(d -> send(d, new MentionCommentDeletedNotification(posting.getId(), commentId)));
+                .filter(m -> view.includes(false, m))
+                .collect(Collectors.toSet());
+    }
+
+    private PrincipalExpression generalVisibilityFilter(Posting posting) {
+        return posting.getViewPrincipalAbsolute().a()
+                .and(posting.getViewCommentsPrincipalAbsolute());
+    }
+
+    private PrincipalFilter visibilityFilter(Posting posting, Comment comment) {
+        return generalVisibilityFilter(posting)
+                .and(comment.getViewPrincipalAbsolute());
     }
 
 }
