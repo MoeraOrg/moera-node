@@ -75,15 +75,15 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalExpression generalVisibilityFilter(Comment comment) {
-        return comment.getViewPrincipalAbsolute().a()
-                .and(comment.getPosting().getViewPrincipalAbsolute())
-                .and(comment.getPosting().getViewCommentsPrincipalAbsolute());
+        return comment.getViewE().a()
+                .and(comment.getPosting().getViewE())
+                .and(comment.getPosting().getViewCommentsE());
     }
 
     private PrincipalFilter visibilityFilter(Comment comment, Reaction reaction) {
         return generalVisibilityFilter(comment)
-                .and(comment.getViewReactionsPrincipalAbsolute())
-                .and(reaction.isNegative() ? comment.getViewNegativeReactionsPrincipalAbsolute() : Principal.PUBLIC);
+                .and(comment.getViewReactionsE())
+                .and(reaction.isNegative() ? comment.getViewNegativeReactionsE() : Principal.PUBLIC);
     }
 
 }

@@ -85,7 +85,7 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (posting.getCurrentRevision().getSignature() == null) {
@@ -156,13 +156,13 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewReactionsPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewReactionsE())) {
             return ReactionsSliceInfo.EMPTY;
         }
-        if (negative && !requestContext.isPrincipal(posting.getViewNegativeReactionsPrincipalAbsolute())) {
+        if (negative && !requestContext.isPrincipal(posting.getViewNegativeReactionsE())) {
             return ReactionsSliceInfo.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
@@ -182,17 +182,17 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewReactionsPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewReactionsE())) {
             return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
 
         if (reaction == null || reaction.isNegative()
-                && !requestContext.isPrincipal(posting.getViewNegativeReactionsPrincipalAbsolute())) {
+                && !requestContext.isPrincipal(posting.getViewNegativeReactionsE())) {
             return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 
@@ -207,7 +207,7 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
@@ -231,7 +231,7 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 

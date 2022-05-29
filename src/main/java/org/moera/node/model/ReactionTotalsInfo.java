@@ -52,39 +52,39 @@ public class ReactionTotalsInfo {
 
     private static boolean isTotalsVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
-            return accessChecker.isPrincipal(entry.getViewReactionsPrincipalAbsolute().a()
-                    .or(entry.getViewReactionTotalsPrincipalAbsolute()));
+            return accessChecker.isPrincipal(entry.getViewReactionsE().a()
+                    .or(entry.getViewReactionTotalsE()));
         } else {
-            return accessChecker.isPrincipal(entry.getReceiverViewReactionsPrincipalAbsolute().a()
-                    .or(entry.getReceiverViewReactionTotalsPrincipalAbsolute()));
+            return accessChecker.isPrincipal(entry.getReceiverViewReactionsE().a()
+                    .or(entry.getReceiverViewReactionTotalsE()));
         }
     }
 
     private static boolean isNegativeTotalsVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
-            return accessChecker.isPrincipal(entry.getViewReactionsPrincipalAbsolute().a()
-                    .or(entry.getViewNegativeReactionsPrincipalAbsolute()))
-                    || accessChecker.isPrincipal(entry.getViewNegativeReactionTotalsPrincipalAbsolute());
+            return accessChecker.isPrincipal(entry.getViewReactionsE().a()
+                    .or(entry.getViewNegativeReactionsE()))
+                    || accessChecker.isPrincipal(entry.getViewNegativeReactionTotalsE());
         } else {
-            return accessChecker.isPrincipal(entry.getReceiverViewReactionsPrincipalAbsolute().a()
-                    .or(entry.getReceiverViewNegativeReactionsPrincipalAbsolute()))
-                    || accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionTotalsPrincipalAbsolute());
+            return accessChecker.isPrincipal(entry.getReceiverViewReactionsE().a()
+                    .or(entry.getReceiverViewNegativeReactionsE()))
+                    || accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionTotalsE());
         }
     }
 
     private static boolean isRatiosVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
-            return accessChecker.isPrincipal(entry.getViewReactionRatiosPrincipalAbsolute());
+            return accessChecker.isPrincipal(entry.getViewReactionRatiosE());
         } else {
-            return accessChecker.isPrincipal(entry.getReceiverViewReactionRatiosPrincipalAbsolute());
+            return accessChecker.isPrincipal(entry.getReceiverViewReactionRatiosE());
         }
     }
 
     private static boolean isNegativeRatiosVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
-            return accessChecker.isPrincipal(entry.getViewNegativeReactionRatiosPrincipalAbsolute());
+            return accessChecker.isPrincipal(entry.getViewNegativeReactionRatiosE());
         } else {
-            return accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionRatiosPrincipalAbsolute());
+            return accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionRatiosE());
         }
     }
 

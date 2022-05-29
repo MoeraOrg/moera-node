@@ -176,10 +176,10 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalFilter visibilityFilter(Posting posting, Reaction reaction) {
-        return posting.getViewPrincipalAbsolute().a()
-                .and(posting.getViewReactionsPrincipalAbsolute())
+        return posting.getViewE().a()
+                .and(posting.getViewReactionsE())
                 .and(reaction != null && reaction.isNegative()
-                        ? posting.getViewNegativeReactionsPrincipalAbsolute()
+                        ? posting.getViewNegativeReactionsE()
                         : Principal.PUBLIC);
     }
 

@@ -40,7 +40,7 @@ public class PostingRevisionController extends PostingRevisionControllerBase {
 
     @Override
     protected Liberin getRestorationLiberin(Posting posting, EntryRevision latest) {
-        return new PostingUpdatedLiberin(posting, latest, posting.getViewPrincipalAbsolute());
+        return new PostingUpdatedLiberin(posting, latest, posting.getViewE());
     }
 
 }

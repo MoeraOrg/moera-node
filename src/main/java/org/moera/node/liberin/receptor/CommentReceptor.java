@@ -49,7 +49,7 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewPrincipalAbsolute(), null,
+        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewE(), null,
                 Principal.PUBLIC);
 
         send(liberin, new CommentAddedEvent(comment, visibilityFilter(posting, comment)));
@@ -65,7 +65,7 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewPrincipalAbsolute(),
+        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewE(),
                 liberin.getLatestRevision(), liberin.getLatestViewPrincipal());
 
         send(liberin, new CommentUpdatedEvent(comment, visibilityFilter(posting, comment)));
@@ -79,7 +79,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         commentInstants.deleted(comment);
         notifyReplyDeleted(posting, comment);
         notifyMentioned(posting, comment, null, Principal.PUBLIC, liberin.getLatestRevision(),
-                comment.getViewPrincipalAbsolute());
+                comment.getViewE());
 
         send(Directions.postingSubscribers(comment.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
                 new PostingCommentsUpdatedNotification(
@@ -165,13 +165,13 @@ public class CommentReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalExpression generalVisibilityFilter(Posting posting) {
-        return posting.getViewPrincipalAbsolute().a()
-                .and(posting.getViewCommentsPrincipalAbsolute());
+        return posting.getViewE().a()
+                .and(posting.getViewCommentsE());
     }
 
     private PrincipalFilter visibilityFilter(Posting posting, Comment comment) {
         return generalVisibilityFilter(posting)
-                .and(comment.getViewPrincipalAbsolute());
+                .and(comment.getViewE());
     }
 
 }

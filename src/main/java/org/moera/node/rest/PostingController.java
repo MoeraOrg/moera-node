@@ -225,7 +225,7 @@ public class PostingController {
         if (!posting.isOriginal()) {
             throw new ValidationFailure("posting.not-original");
         }
-        Principal latestView = posting.getViewPrincipalAbsolute();
+        Principal latestView = posting.getViewE();
         EntryRevision latest = posting.getCurrentRevision();
         mediaOperations.validateAvatar(
                 postingText.getOwnerAvatar(),
@@ -235,7 +235,7 @@ public class PostingController {
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
         }
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
@@ -349,7 +349,7 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
@@ -365,7 +365,7 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         EntryRevision latest = posting.getCurrentRevision();
-        if (!requestContext.isPrincipal(posting.getDeletePrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getDeleteE())) {
             throw new AuthenticationException();
         }
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
@@ -384,7 +384,7 @@ public class PostingController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
@@ -399,8 +399,8 @@ public class PostingController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        Principal latestView = posting.getViewPrincipalAbsolute();
-        if (!requestContext.isPrincipal(posting.getEditPrincipalAbsolute())) {
+        Principal latestView = posting.getViewE();
+        if (!requestContext.isPrincipal(posting.getEditE())) {
             throw new AuthenticationException();
         }
 
@@ -423,7 +423,7 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         List<Posting> attached = posting.isOriginal()

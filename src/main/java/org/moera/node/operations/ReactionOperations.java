@@ -108,11 +108,11 @@ public class ReactionOperations {
         }
 
         if (entry.isOriginal()) {
-            if (!requestContext.isPrincipal(entry.getAddReactionPrincipalAbsolute())) {
+            if (!requestContext.isPrincipal(entry.getAddReactionE())) {
                 throw new AuthenticationException();
             }
             if (reactionDescription.isNegative()
-                    && !requestContext.isPrincipal(entry.getAddNegativeReactionPrincipalAbsolute())) {
+                    && !requestContext.isPrincipal(entry.getAddNegativeReactionE())) {
                 throw new AuthenticationException();
             }
         }

@@ -236,7 +236,7 @@ public class MediaController {
     private MediaFileOwner getMediaFileOwner(UUID id) {
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
-        if (!requestContext.isPrincipal(mediaFileOwner.getViewPrincipalAbsolute(requestContext.nodeName()))) {
+        if (!requestContext.isPrincipal(mediaFileOwner.getViewE(requestContext.nodeName()))) {
             throw new ObjectNotFoundFailure("media.not-found");
         }
         return mediaFileOwner;

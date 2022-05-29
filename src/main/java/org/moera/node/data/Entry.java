@@ -563,7 +563,7 @@ public class Entry {
         return viewPrincipal;
     }
 
-    public Principal getViewPrincipalAbsolute() {
+    public Principal getViewE() {
         return toAbsolute(getViewPrincipal());
     }
 
@@ -583,7 +583,7 @@ public class Entry {
         return receiverName == null ? Principal.OWNER : Principal.NONE;
     }
 
-    public Principal getEditPrincipalAbsolute() {
+    public Principal getEditE() {
         return toAbsolute(getEditPrincipal());
     }
 
@@ -591,7 +591,7 @@ public class Entry {
         return receiverName == null ? Principal.PRIVATE : Principal.ADMIN;
     }
 
-    public Principal getDeletePrincipalAbsolute() {
+    public Principal getDeleteE() {
         return toAbsolute(getDeletePrincipal());
     }
 
@@ -615,7 +615,7 @@ public class Entry {
         return viewCommentsPrincipal;
     }
 
-    public Principal getViewCommentsPrincipalAbsolute() {
+    public Principal getViewCommentsE() {
         return toAbsolute(getViewCommentsPrincipal());
     }
 
@@ -627,7 +627,7 @@ public class Entry {
         return receiverViewCommentsPrincipal;
     }
 
-    public Principal getReceiverViewCommentsPrincipalAbsolute() {
+    public Principal getReceiverViewCommentsE() {
         return toReceiverAbsolute(getReceiverViewCommentsPrincipal());
     }
 
@@ -639,7 +639,7 @@ public class Entry {
         return addCommentPrincipal;
     }
 
-    public Principal getAddCommentPrincipalAbsolute() {
+    public Principal getAddCommentE() {
         return toAbsolute(getAddCommentPrincipal());
     }
 
@@ -659,7 +659,7 @@ public class Entry {
         return viewReactionsPrincipal;
     }
 
-    public Principal getViewReactionsPrincipalAbsolute() {
+    public Principal getViewReactionsE() {
         return toAbsolute(getViewReactionsPrincipal());
     }
 
@@ -671,7 +671,7 @@ public class Entry {
         return receiverViewReactionsPrincipal;
     }
 
-    public Principal getReceiverViewReactionsPrincipalAbsolute() {
+    public Principal getReceiverViewReactionsE() {
         return toReceiverAbsolute(getReceiverViewReactionsPrincipal());
     }
 
@@ -683,7 +683,7 @@ public class Entry {
         return viewNegativeReactionsPrincipal;
     }
 
-    public Principal getViewNegativeReactionsPrincipalAbsolute() {
+    public Principal getViewNegativeReactionsE() {
         return toAbsolute(getViewNegativeReactionsPrincipal());
     }
 
@@ -695,7 +695,7 @@ public class Entry {
         return receiverViewNegativeReactionsPrincipal;
     }
 
-    public Principal getReceiverViewNegativeReactionsPrincipalAbsolute() {
+    public Principal getReceiverViewNegativeReactionsE() {
         return toReceiverAbsolute(getReceiverViewNegativeReactionsPrincipal());
     }
 
@@ -707,7 +707,7 @@ public class Entry {
         return viewReactionTotalsPrincipal;
     }
 
-    public Principal getViewReactionTotalsPrincipalAbsolute() {
+    public Principal getViewReactionTotalsE() {
         return toAbsolute(getViewReactionTotalsPrincipal());
     }
 
@@ -719,7 +719,7 @@ public class Entry {
         return receiverViewReactionTotalsPrincipal;
     }
 
-    public Principal getReceiverViewReactionTotalsPrincipalAbsolute() {
+    public Principal getReceiverViewReactionTotalsE() {
         return toReceiverAbsolute(getReceiverViewReactionTotalsPrincipal());
     }
 
@@ -731,7 +731,7 @@ public class Entry {
         return viewNegativeReactionTotalsPrincipal;
     }
 
-    public Principal getViewNegativeReactionTotalsPrincipalAbsolute() {
+    public Principal getViewNegativeReactionTotalsE() {
         return toAbsolute(getViewNegativeReactionTotalsPrincipal());
     }
 
@@ -743,7 +743,7 @@ public class Entry {
         return receiverViewNegativeReactionTotalsPrincipal;
     }
 
-    public Principal getReceiverViewNegativeReactionTotalsPrincipalAbsolute() {
+    public Principal getReceiverViewNegativeReactionTotalsE() {
         return toReceiverAbsolute(getReceiverViewNegativeReactionTotalsPrincipal());
     }
 
@@ -755,7 +755,7 @@ public class Entry {
         return viewReactionRatiosPrincipal;
     }
 
-    public Principal getViewReactionRatiosPrincipalAbsolute() {
+    public Principal getViewReactionRatiosE() {
         return toAbsolute(getViewReactionRatiosPrincipal());
     }
 
@@ -767,7 +767,7 @@ public class Entry {
         return receiverViewReactionRatiosPrincipal;
     }
 
-    public Principal getReceiverViewReactionRatiosPrincipalAbsolute() {
+    public Principal getReceiverViewReactionRatiosE() {
         return toReceiverAbsolute(getReceiverViewReactionRatiosPrincipal());
     }
 
@@ -779,7 +779,7 @@ public class Entry {
         return viewNegativeReactionRatiosPrincipal;
     }
 
-    public Principal getViewNegativeReactionRatiosPrincipalAbsolute() {
+    public Principal getViewNegativeReactionRatiosE() {
         return toAbsolute(getViewNegativeReactionRatiosPrincipal());
     }
 
@@ -791,7 +791,7 @@ public class Entry {
         return receiverViewNegativeReactionRatiosPrincipal;
     }
 
-    public Principal getReceiverViewNegativeReactionRatiosPrincipalAbsolute() {
+    public Principal getReceiverViewNegativeReactionRatiosE() {
         return toReceiverAbsolute(getReceiverViewNegativeReactionRatiosPrincipal());
     }
 
@@ -803,7 +803,7 @@ public class Entry {
         return addReactionPrincipal;
     }
 
-    public Principal getAddReactionPrincipalAbsolute() {
+    public Principal getAddReactionE() {
         return toAbsolute(getAddReactionPrincipal());
     }
 
@@ -823,7 +823,7 @@ public class Entry {
         return addNegativeReactionPrincipal;
     }
 
-    public Principal getAddNegativeReactionPrincipalAbsolute() {
+    public Principal getAddNegativeReactionE() {
         return toAbsolute(getAddNegativeReactionPrincipal());
     }
 

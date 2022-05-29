@@ -208,7 +208,7 @@ public class Picker extends Task {
             liberins.add(new PostingAddedLiberin(posting).withNodeId(nodeId));
             publish(feedName, posting, liberins);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
-            Principal latestView = posting.getViewPrincipalAbsolute();
+            Principal latestView = posting.getViewE();
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             postingInfo.toPickedPosting(posting);
             EntryRevision latest = posting.getCurrentRevision();

@@ -276,7 +276,7 @@ public class CommentOperations {
                         comment.setCurrentRevision(revision);
                         comment.setTotalRevisions(comment.getTotalRevisions() - 1);
 
-                        liberins.add(new CommentUpdatedLiberin(comment, latest, comment.getViewPrincipalAbsolute())
+                        liberins.add(new CommentUpdatedLiberin(comment, latest, comment.getViewE())
                                 .withNodeId(posting.getNodeId()));
                     }
                 }

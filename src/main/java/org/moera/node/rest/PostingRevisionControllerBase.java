@@ -60,7 +60,7 @@ public abstract class PostingRevisionControllerBase {
     private Posting getPosting(UUID postingId) {
         Posting posting = findPosting(postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewPrincipalAbsolute())) {
+        if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         return posting;

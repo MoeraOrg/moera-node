@@ -372,10 +372,10 @@ public class Story {
         if (getEntry() == null) {
             return Principal.PUBLIC;
         }
-        Principal viewEntry = getEntry().getViewPrincipalAbsolute();
+        Principal viewEntry = getEntry().getViewE();
         return getEntry().getParent() != null
-                ? getEntry().getParent().getViewPrincipalAbsolute().a()
-                    .and(getEntry().getParent().getViewCommentsPrincipalAbsolute())
+                ? getEntry().getParent().getViewE().a()
+                    .and(getEntry().getParent().getViewCommentsE())
                     .and(viewEntry)
                 : viewEntry;
     }

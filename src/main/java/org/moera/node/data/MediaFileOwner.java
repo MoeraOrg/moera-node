@@ -146,7 +146,7 @@ public class MediaFileOwner {
         return viewPrincipal;
     }
 
-    public Principal getViewPrincipalAbsolute(String nodeName) {
+    public Principal getViewE(String nodeName) {
         return getViewPrincipal().withOwner(getOwnerName() != null ? getOwnerName() : nodeName);
     }
 

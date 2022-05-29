@@ -120,7 +120,7 @@ public class PostingProcessor {
         withValidPostingSubscription(notification, (subscription, posting) -> {
             EntryRevision latest = posting.getCurrentRevision();
             if (requestContext.getOptions().getBool("posting.picked.hide-on-delete")) {
-                Principal latestView = posting.getViewPrincipalAbsolute();
+                Principal latestView = posting.getViewE();
                 posting.setViewPrincipal(Principal.ADMIN);
                 posting.setEditedAt(Util.now());
                 posting.setReceiverDeletedAt(Util.now());
