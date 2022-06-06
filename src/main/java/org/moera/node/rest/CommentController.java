@@ -103,9 +103,9 @@ public class CommentController {
             Pair.of("viewNegativeReactionRatios",
                     PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("addReaction",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE),
+                    PrincipalFlag.SIGNED | PrincipalFlag.NONE),
             Pair.of("addNegativeReaction",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE)
+                    PrincipalFlag.SIGNED | PrincipalFlag.NONE)
     );
 
     @Inject
@@ -178,7 +178,8 @@ public class CommentController {
             }
         }
         byte[] repliedToDigest = repliedTo != null ? repliedTo.getCurrentRevision().getDigest() : null;
-        byte[] digest = validateCommentText(posting, commentText, commentText.getOwnerName(), repliedToDigest);
+        byte[] digest = validateCommentText(posting, null, commentText, commentText.getOwnerName(),
+                repliedToDigest);
         if (commentText.getSignature() != null) {
             requestContext.authenticatedWithSignature(commentText.getOwnerName());
         }
@@ -247,7 +248,8 @@ public class CommentController {
         }
         byte[] repliedToDigest = comment.getRepliedTo() != null
                 ? comment.getRepliedTo().getCurrentRevision().getDigest() : null;
-        byte[] digest = validateCommentText(comment.getPosting(), commentText, comment.getOwnerName(), repliedToDigest);
+        byte[] digest = validateCommentText(comment.getPosting(), comment, commentText, comment.getOwnerName(),
+                repliedToDigest);
         if (commentText.getSignature() != null) {
             requestContext.authenticatedWithSignature(commentText.getOwnerName());
         }
@@ -287,7 +289,7 @@ public class CommentController {
                 comment.getPosting().getOwnerName());
     }
 
-    private byte[] validateCommentText(Posting posting, CommentText commentText, String ownerName,
+    private byte[] validateCommentText(Posting posting, Comment comment, CommentText commentText, String ownerName,
                                        byte[] repliedToDigest) {
 
         byte[] digest = null;
@@ -301,10 +303,11 @@ public class CommentController {
             }
             commentText.setOwnerName(clientName);
 
-            if (ObjectUtils.isEmpty(commentText.getBodySrc()) && ObjectUtils.isEmpty(commentText.getMedia())) {
+            if (comment == null && ObjectUtils.isEmpty(commentText.getBodySrc())
+                    && ObjectUtils.isEmpty(commentText.getMedia())) {
                 throw new ValidationFailure("commentText.bodySrc.blank");
             }
-            if (commentText.getBodySrc().length() > getMaxCommentSize()) {
+            if (commentText.getBodySrc() != null && commentText.getBodySrc().length() > getMaxCommentSize()) {
                 throw new ValidationFailure("commentText.bodySrc.wrong-size");
             }
         } else {
@@ -546,65 +549,6 @@ public class CommentController {
         requestContext.send(new CommentDeletedLiberin(comment, latest));
 
         return new CommentTotalInfo(comment.getPosting().getTotalChildren());
-    }
-
-    @GetMapping("/{commentId}/operations")
-    @Transactional
-    public Map<String, Principal> getOperations(@PathVariable UUID postingId, @PathVariable UUID commentId) {
-        log.info("GET /postings/{postingId}/comments/{commentId}/operations, (postingId = {}, commentId = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId));
-
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!comment.getPosting().getId().equals(postingId)) {
-            throw new ObjectNotFoundFailure("comment.wrong-posting");
-        }
-
-        return new CommentInfo(comment, requestContext).getOperations();
-    }
-
-    @PutMapping("/{commentId}/operations")
-    @Transactional
-    public Map<String, Principal> putOperations(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                                                @Valid @RequestBody Map<String, Principal> operations) {
-        log.info("PUT /postings/{postingId}/comments/{commentId}/operations, (postingId = {}, commentId = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId));
-
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        Principal latestView = comment.getViewE();
-        if (!requestContext.isPrincipal(comment.getViewE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!comment.getPosting().getId().equals(postingId)) {
-            throw new ObjectNotFoundFailure("comment.wrong-posting");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getEditE())) {
-            throw new AuthenticationException();
-        }
-
-        validateOperations(operations::get, "comment-operations.wrong-principal");
-
-        comment.setEditedAt(Util.now());
-
-        requestContext.send(new CommentUpdatedLiberin(comment, comment.getCurrentRevision(), latestView));
-
-        return new CommentInfo(comment, requestContext).getOperations();
     }
 
     @GetMapping("/{commentId}/attached")

@@ -16,6 +16,7 @@ public class Principal implements Cloneable, PrincipalFilter {
     public static final Principal PRIVATE = new Principal("private");
     public static final Principal OWNER = new Principal("owner");
     public static final Principal PUBLIC = new Principal("public");
+    public static final Principal UNSET = new Principal("unset");
 
     private final String value;
 
@@ -76,6 +77,10 @@ public class Principal implements Cloneable, PrincipalFilter {
         return value.equals(PUBLIC.value);
     }
 
+    public boolean isUnset() {
+        return value.equals(UNSET.value);
+    }
+
     public boolean isNode() {
         return value.startsWith("node:");
     }
@@ -88,7 +93,7 @@ public class Principal implements Cloneable, PrincipalFilter {
         return isNode() || isOnly() ? value.substring(5).split(",") : new String[0];
     }
 
-    public Principal withOwner(String... ownerName) {
+    public Principal withOwner(String ownerName) {
         if (isOwner()) {
             return Principal.ofOnly(ownerName);
         }
@@ -96,6 +101,20 @@ public class Principal implements Cloneable, PrincipalFilter {
             return Principal.ofNode(ownerName);
         }
         return this;
+    }
+
+    public Principal withOwner(String ownerName, String seniorName) {
+        if (isOwner()) {
+            return Principal.ofOnly(ownerName, seniorName);
+        }
+        if (isPrivate()) {
+            return Principal.ofNode(ownerName, seniorName);
+        }
+        return this;
+    }
+
+    public Principal withSubordinate(Principal principal) {
+        return isUnset() ? principal : this;
     }
 
     @Override
@@ -183,6 +202,9 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isPublic()) {
             return (flags & PrincipalFlag.PUBLIC) != 0;
         }
+        if (isUnset()) {
+            return (flags & PrincipalFlag.UNSET) != 0;
+        }
         if (isNode()) {
             return (flags & PrincipalFlag.NODE) != 0;
         }
@@ -193,6 +215,9 @@ public class Principal implements Cloneable, PrincipalFilter {
     }
 
     public Principal union(Principal principal) {
+        if (isUnset()) {
+            return principal;
+        }
         if (isPublic() || principal.isPublic()) {
             return Principal.PUBLIC;
         }

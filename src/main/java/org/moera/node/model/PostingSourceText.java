@@ -33,6 +33,8 @@ public class PostingSourceText {
 
     private Map<String, Principal> operations = new HashMap<>();
 
+    private Map<String, Principal> commentOperations = new HashMap<>();
+
     public PostingSourceText() {
     }
 
@@ -90,6 +92,14 @@ public class PostingSourceText {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Map<String, Principal> getCommentOperations() {
+        return commentOperations;
+    }
+
+    public void setCommentOperations(Map<String, Principal> commentOperations) {
+        this.commentOperations = commentOperations;
     }
 
 }

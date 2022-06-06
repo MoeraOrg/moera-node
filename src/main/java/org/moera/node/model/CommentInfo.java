@@ -57,6 +57,8 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private byte[] signature;
     private Short signatureVersion;
     private Map<String, Principal> operations;
+    private Map<String, Principal> ownerOperations;
+    private Map<String, Principal> seniorOperations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ClientReactionInfo seniorReaction;
@@ -114,21 +116,87 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         operations = new HashMap<>();
-        operations.put("view", comment.getViewPrincipal());
-        operations.put("edit", comment.getEditPrincipal());
-        operations.put("delete", comment.getDeletePrincipal());
-        operations.put("viewReactions", comment.getViewReactionsPrincipal());
-        operations.put("viewNegativeReactions", comment.getViewNegativeReactionsPrincipal());
-        operations.put("viewReactionTotals", comment.getViewReactionTotalsPrincipal());
-        operations.put("viewNegativeReactionTotals", comment.getViewNegativeReactionTotalsPrincipal());
-        operations.put("viewReactionRatios", comment.getViewReactionRatiosPrincipal());
-        operations.put("viewNegativeReactionRatios", comment.getViewNegativeReactionRatiosPrincipal());
-        operations.put("addReaction", comment.getAddReactionPrincipal());
-        operations.put("addNegativeReaction", comment.getAddNegativeReactionPrincipal());
+        putOperation(operations, "view",
+                comment.getViewCompound(), Principal.PUBLIC);
+        putOperation(operations, "edit",
+                comment.getEditCompound(), Principal.OWNER);
+        putOperation(operations, "delete",
+                comment.getDeleteCompound(), Principal.PRIVATE);
+        putOperation(operations, "viewReactions",
+                comment.getViewReactionsCompound(), Principal.PUBLIC);
+        putOperation(operations, "viewNegativeReactions",
+                comment.getViewNegativeReactionsCompound(), Principal.PUBLIC);
+        putOperation(operations, "viewReactionTotals",
+                comment.getViewReactionTotalsCompound(), Principal.PUBLIC);
+        putOperation(operations, "viewNegativeReactionTotals",
+                comment.getViewNegativeReactionTotalsCompound(), Principal.PUBLIC);
+        putOperation(operations, "viewReactionRatios",
+                comment.getViewReactionRatiosCompound(), Principal.PUBLIC);
+        putOperation(operations, "viewNegativeReactionRatios",
+                comment.getViewNegativeReactionRatiosCompound(), Principal.PUBLIC);
+        putOperation(operations, "addReaction",
+                comment.getAddReactionCompound(), Principal.SIGNED);
+        putOperation(operations, "addNegativeReaction",
+                comment.getAddNegativeReactionCompound(), Principal.SIGNED);
+        if (accessChecker.isPrincipal(comment.getViewOperationsE())) {
+            ownerOperations = new HashMap<>();
+            putOperation(ownerOperations, "view",
+                    comment.getViewPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "edit",
+                    comment.getEditPrincipal(), Principal.OWNER);
+            putOperation(ownerOperations, "delete",
+                    comment.getDeletePrincipal(), Principal.PRIVATE);
+            putOperation(ownerOperations, "viewReactions",
+                    comment.getViewReactionsPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "viewNegativeReactions",
+                    comment.getViewNegativeReactionsPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "viewReactionTotals",
+                    comment.getViewReactionTotalsPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "viewNegativeReactionTotals",
+                    comment.getViewNegativeReactionTotalsPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "viewReactionRatios",
+                    comment.getViewReactionRatiosPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "viewNegativeReactionRatios",
+                    comment.getViewNegativeReactionRatiosPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "addReaction",
+                    comment.getAddReactionPrincipal(), Principal.SIGNED);
+            putOperation(ownerOperations, "addNegativeReaction",
+                    comment.getAddNegativeReactionPrincipal(), Principal.SIGNED);
+            seniorOperations = new HashMap<>();
+            putOperation(seniorOperations, "view",
+                    comment.getParentViewPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "edit",
+                    comment.getParentEditPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "delete",
+                    comment.getParentDeletePrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "viewReactions",
+                    comment.getParentViewReactionsPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "viewNegativeReactions",
+                    comment.getParentViewNegativeReactionsPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "viewReactionTotals",
+                    comment.getParentViewReactionTotalsPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "viewNegativeReactionTotals",
+                    comment.getParentViewNegativeReactionTotalsPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "viewReactionRatios",
+                    comment.getParentViewReactionRatiosPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "viewNegativeReactionRatios",
+                    comment.getParentViewNegativeReactionRatiosPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "addReaction",
+                    comment.getParentAddReactionPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "addNegativeReaction",
+                    comment.getParentAddNegativeReactionPrincipal(), Principal.UNSET);
+        }
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(comment.getAcceptedReactionsNegative());
         reactions = new ReactionTotalsInfo(comment.getReactionTotals(), comment, accessChecker);
+    }
+
+    private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
+                                     Principal defaultValue) {
+        if (value != null && !value.equals(defaultValue)) {
+            operations.put(operationName, value);
+        }
     }
 
     public static CommentInfo forUi(Comment comment) {
@@ -398,6 +466,22 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Map<String, Principal> getOwnerOperations() {
+        return ownerOperations;
+    }
+
+    public void setOwnerOperations(Map<String, Principal> ownerOperations) {
+        this.ownerOperations = ownerOperations;
+    }
+
+    public Map<String, Principal> getSeniorOperations() {
+        return seniorOperations;
+    }
+
+    public void setSeniorOperations(Map<String, Principal> seniorOperations) {
+        this.seniorOperations = seniorOperations;
     }
 
     public AcceptedReactions getAcceptedReactions() {

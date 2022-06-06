@@ -31,6 +31,7 @@ import org.moera.node.util.Util;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "entryType", discriminatorType = DiscriminatorType.INTEGER)
 @TypeDef(name = "Principal", typeClass = PrincipalType.class, defaultForType = Principal.class)
+@TypeDef(name = "ChildOperations", typeClass = ChildOperationsType.class, defaultForType = ChildOperations.class)
 public class Entry {
 
     @Id
@@ -141,51 +142,79 @@ public class Entry {
 
     private Principal viewPrincipal = Principal.PUBLIC;
 
+    private Principal parentViewPrincipal = Principal.UNSET;
+
     private Principal receiverViewPrincipal;
 
+    private Principal parentEditPrincipal = Principal.UNSET;
+
     private Principal receiverEditPrincipal;
+
+    private Principal parentDeletePrincipal = Principal.UNSET;
 
     private Principal receiverDeletePrincipal;
 
     private Principal viewCommentsPrincipal = Principal.PUBLIC;
 
+    private Principal parentViewCommentsPrincipal = Principal.UNSET;
+
     private Principal receiverViewCommentsPrincipal;
 
-    private Principal addCommentPrincipal = Principal.PUBLIC;
+    private Principal addCommentPrincipal = Principal.SIGNED;
+
+    private Principal parentAddCommentPrincipal = Principal.UNSET;
 
     private Principal receiverAddCommentPrincipal;
 
     private Principal viewReactionsPrincipal = Principal.PUBLIC;
 
+    private Principal parentViewReactionsPrincipal = Principal.UNSET;
+
     private Principal receiverViewReactionsPrincipal;
 
     private Principal viewNegativeReactionsPrincipal = Principal.PUBLIC;
+
+    private Principal parentViewNegativeReactionsPrincipal = Principal.UNSET;
 
     private Principal receiverViewNegativeReactionsPrincipal;
 
     private Principal viewReactionTotalsPrincipal = Principal.PUBLIC;
 
+    private Principal parentViewReactionTotalsPrincipal = Principal.UNSET;
+
     private Principal receiverViewReactionTotalsPrincipal;
 
     private Principal viewNegativeReactionTotalsPrincipal = Principal.PUBLIC;
+
+    private Principal parentViewNegativeReactionTotalsPrincipal = Principal.UNSET;
 
     private Principal receiverViewNegativeReactionTotalsPrincipal;
 
     private Principal viewReactionRatiosPrincipal = Principal.PUBLIC;
 
+    private Principal parentViewReactionRatiosPrincipal = Principal.UNSET;
+
     private Principal receiverViewReactionRatiosPrincipal;
 
     private Principal viewNegativeReactionRatiosPrincipal = Principal.PUBLIC;
 
+    private Principal parentViewNegativeReactionRatiosPrincipal = Principal.UNSET;
+
     private Principal receiverViewNegativeReactionRatiosPrincipal;
 
-    private Principal addReactionPrincipal = Principal.PUBLIC;
+    private Principal addReactionPrincipal = Principal.SIGNED;
+
+    private Principal parentAddReactionPrincipal = Principal.UNSET;
 
     private Principal receiverAddReactionPrincipal;
 
-    private Principal addNegativeReactionPrincipal = Principal.PUBLIC;
+    private Principal addNegativeReactionPrincipal = Principal.SIGNED;
+
+    private Principal parentAddNegativeReactionPrincipal = Principal.UNSET;
 
     private Principal receiverAddNegativeReactionPrincipal;
+
+    private ChildOperations childOperations = new ChildOperations();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
@@ -563,12 +592,24 @@ public class Entry {
         return viewPrincipal;
     }
 
-    public Principal getViewE() {
-        return toAbsolute(getViewPrincipal());
-    }
-
     public void setViewPrincipal(Principal viewPrincipal) {
         this.viewPrincipal = viewPrincipal;
+    }
+
+    public Principal getParentViewPrincipal() {
+        return parentViewPrincipal;
+    }
+
+    public void setParentViewPrincipal(Principal parentViewPrincipal) {
+        this.parentViewPrincipal = parentViewPrincipal;
+    }
+
+    public Principal getViewCompound() {
+        return getParentViewPrincipal().withSubordinate(getViewPrincipal());
+    }
+
+    public Principal getViewE() {
+        return toAbsolute(getViewCompound());
     }
 
     public Principal getReceiverViewPrincipal() {
@@ -583,16 +624,20 @@ public class Entry {
         return receiverName == null ? Principal.OWNER : Principal.NONE;
     }
 
+    public Principal getParentEditPrincipal() {
+        return parentEditPrincipal;
+    }
+
+    public void setParentEditPrincipal(Principal parentEditPrincipal) {
+        this.parentEditPrincipal = parentEditPrincipal;
+    }
+
+    public Principal getEditCompound() {
+        return getParentEditPrincipal().withSubordinate(getEditPrincipal());
+    }
+
     public Principal getEditE() {
-        return toAbsolute(getEditPrincipal());
-    }
-
-    public Principal getDeletePrincipal() {
-        return receiverName == null ? Principal.PRIVATE : Principal.ADMIN;
-    }
-
-    public Principal getDeleteE() {
-        return toAbsolute(getDeletePrincipal());
+        return toAbsolute(getEditCompound());
     }
 
     public Principal getReceiverEditPrincipal() {
@@ -601,6 +646,26 @@ public class Entry {
 
     public void setReceiverEditPrincipal(Principal receiverEditPrincipal) {
         this.receiverEditPrincipal = receiverEditPrincipal;
+    }
+
+    public Principal getDeletePrincipal() {
+        return receiverName == null ? Principal.PRIVATE : Principal.ADMIN;
+    }
+
+    public Principal getParentDeletePrincipal() {
+        return parentDeletePrincipal;
+    }
+
+    public void setParentDeletePrincipal(Principal parentDeletePrincipal) {
+        this.parentDeletePrincipal = parentDeletePrincipal;
+    }
+
+    public Principal getDeleteCompound() {
+        return getParentDeletePrincipal().withSubordinate(getDeletePrincipal());
+    }
+
+    public Principal getDeleteE() {
+        return toAbsolute(getDeleteCompound());
     }
 
     public Principal getReceiverDeletePrincipal() {
@@ -615,12 +680,24 @@ public class Entry {
         return viewCommentsPrincipal;
     }
 
-    public Principal getViewCommentsE() {
-        return toAbsolute(getViewCommentsPrincipal());
-    }
-
     public void setViewCommentsPrincipal(Principal viewCommentsPrincipal) {
         this.viewCommentsPrincipal = viewCommentsPrincipal;
+    }
+
+    public Principal getParentViewCommentsPrincipal() {
+        return parentViewCommentsPrincipal;
+    }
+
+    public void setParentViewCommentsPrincipal(Principal parentViewCommentsPrincipal) {
+        this.parentViewCommentsPrincipal = parentViewCommentsPrincipal;
+    }
+
+    public Principal getViewCommentsCompound() {
+        return getParentViewCommentsPrincipal().withSubordinate(getViewCommentsPrincipal());
+    }
+
+    public Principal getViewCommentsE() {
+        return toAbsolute(getViewCommentsCompound());
     }
 
     public Principal getReceiverViewCommentsPrincipal() {
@@ -639,12 +716,24 @@ public class Entry {
         return addCommentPrincipal;
     }
 
-    public Principal getAddCommentE() {
-        return toAbsolute(getAddCommentPrincipal());
-    }
-
     public void setAddCommentPrincipal(Principal addCommentPrincipal) {
         this.addCommentPrincipal = addCommentPrincipal;
+    }
+
+    public Principal getParentAddCommentPrincipal() {
+        return parentAddCommentPrincipal;
+    }
+
+    public void setParentAddCommentPrincipal(Principal parentAddCommentPrincipal) {
+        this.parentAddCommentPrincipal = parentAddCommentPrincipal;
+    }
+
+    public Principal getAddCommentCompound() {
+        return getParentAddCommentPrincipal().withSubordinate(getAddCommentPrincipal());
+    }
+
+    public Principal getAddCommentE() {
+        return toAbsolute(getAddCommentCompound());
     }
 
     public Principal getReceiverAddCommentPrincipal() {
@@ -659,156 +748,240 @@ public class Entry {
         return viewReactionsPrincipal;
     }
 
-    public Principal getViewReactionsE() {
-        return toAbsolute(getViewReactionsPrincipal());
-    }
-
     public void setViewReactionsPrincipal(Principal viewReactionsPrincipal) {
         this.viewReactionsPrincipal = viewReactionsPrincipal;
+    }
+
+    public Principal getParentViewReactionsPrincipal() {
+        return parentViewReactionsPrincipal;
+    }
+
+    public void setParentViewReactionsPrincipal(Principal parentViewReactionsPrincipal) {
+        this.parentViewReactionsPrincipal = parentViewReactionsPrincipal;
+    }
+
+    public Principal getViewReactionsCompound() {
+        return getParentViewReactionsPrincipal().withSubordinate(getViewReactionsPrincipal());
+    }
+
+    public Principal getViewReactionsE() {
+        return toAbsolute(getViewReactionsCompound());
     }
 
     public Principal getReceiverViewReactionsPrincipal() {
         return receiverViewReactionsPrincipal;
     }
 
-    public Principal getReceiverViewReactionsE() {
-        return toReceiverAbsolute(getReceiverViewReactionsPrincipal());
-    }
-
     public void setReceiverViewReactionsPrincipal(Principal receiverViewReactionsPrincipal) {
         this.receiverViewReactionsPrincipal = receiverViewReactionsPrincipal;
+    }
+
+    public Principal getReceiverViewReactionsE() {
+        return toReceiverAbsolute(getReceiverViewReactionsPrincipal());
     }
 
     public Principal getViewNegativeReactionsPrincipal() {
         return viewNegativeReactionsPrincipal;
     }
 
-    public Principal getViewNegativeReactionsE() {
-        return toAbsolute(getViewNegativeReactionsPrincipal());
-    }
-
     public void setViewNegativeReactionsPrincipal(Principal viewNegativeReactionsPrincipal) {
         this.viewNegativeReactionsPrincipal = viewNegativeReactionsPrincipal;
+    }
+
+    public Principal getParentViewNegativeReactionsPrincipal() {
+        return parentViewNegativeReactionsPrincipal;
+    }
+
+    public void setParentViewNegativeReactionsPrincipal(Principal parentViewNegativeReactionsPrincipal) {
+        this.parentViewNegativeReactionsPrincipal = parentViewNegativeReactionsPrincipal;
+    }
+
+    public Principal getViewNegativeReactionsCompound() {
+        return getParentViewNegativeReactionsPrincipal().withSubordinate(getViewNegativeReactionsPrincipal());
+    }
+
+    public Principal getViewNegativeReactionsE() {
+        return toAbsolute(getViewNegativeReactionsCompound());
     }
 
     public Principal getReceiverViewNegativeReactionsPrincipal() {
         return receiverViewNegativeReactionsPrincipal;
     }
 
-    public Principal getReceiverViewNegativeReactionsE() {
-        return toReceiverAbsolute(getReceiverViewNegativeReactionsPrincipal());
-    }
-
     public void setReceiverViewNegativeReactionsPrincipal(Principal receiverViewNegativeReactionsPrincipal) {
         this.receiverViewNegativeReactionsPrincipal = receiverViewNegativeReactionsPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionsE() {
+        return toReceiverAbsolute(getReceiverViewNegativeReactionsPrincipal());
     }
 
     public Principal getViewReactionTotalsPrincipal() {
         return viewReactionTotalsPrincipal;
     }
 
-    public Principal getViewReactionTotalsE() {
-        return toAbsolute(getViewReactionTotalsPrincipal());
-    }
-
     public void setViewReactionTotalsPrincipal(Principal viewReactionTotalsPrincipal) {
         this.viewReactionTotalsPrincipal = viewReactionTotalsPrincipal;
+    }
+
+    public Principal getParentViewReactionTotalsPrincipal() {
+        return parentViewReactionTotalsPrincipal;
+    }
+
+    public void setParentViewReactionTotalsPrincipal(Principal parentViewReactionTotalsPrincipal) {
+        this.parentViewReactionTotalsPrincipal = parentViewReactionTotalsPrincipal;
+    }
+
+    public Principal getViewReactionTotalsCompound() {
+        return getParentViewReactionTotalsPrincipal().withSubordinate(getViewReactionTotalsPrincipal());
+    }
+
+    public Principal getViewReactionTotalsE() {
+        return toAbsolute(getViewReactionTotalsCompound());
     }
 
     public Principal getReceiverViewReactionTotalsPrincipal() {
         return receiverViewReactionTotalsPrincipal;
     }
 
-    public Principal getReceiverViewReactionTotalsE() {
-        return toReceiverAbsolute(getReceiverViewReactionTotalsPrincipal());
-    }
-
     public void setReceiverViewReactionTotalsPrincipal(Principal receiverViewReactionTotalsPrincipal) {
         this.receiverViewReactionTotalsPrincipal = receiverViewReactionTotalsPrincipal;
+    }
+
+    public Principal getReceiverViewReactionTotalsE() {
+        return toReceiverAbsolute(getReceiverViewReactionTotalsPrincipal());
     }
 
     public Principal getViewNegativeReactionTotalsPrincipal() {
         return viewNegativeReactionTotalsPrincipal;
     }
 
-    public Principal getViewNegativeReactionTotalsE() {
-        return toAbsolute(getViewNegativeReactionTotalsPrincipal());
-    }
-
     public void setViewNegativeReactionTotalsPrincipal(Principal viewNegativeReactionTotalsPrincipal) {
         this.viewNegativeReactionTotalsPrincipal = viewNegativeReactionTotalsPrincipal;
+    }
+
+    public Principal getParentViewNegativeReactionTotalsPrincipal() {
+        return parentViewNegativeReactionTotalsPrincipal;
+    }
+
+    public void setParentViewNegativeReactionTotalsPrincipal(Principal parentViewNegativeReactionTotalsPrincipal) {
+        this.parentViewNegativeReactionTotalsPrincipal = parentViewNegativeReactionTotalsPrincipal;
+    }
+
+    public Principal getViewNegativeReactionTotalsCompound() {
+        return getParentViewNegativeReactionTotalsPrincipal().withSubordinate(getViewNegativeReactionTotalsPrincipal());
+    }
+
+    public Principal getViewNegativeReactionTotalsE() {
+        return toAbsolute(getViewNegativeReactionTotalsCompound());
     }
 
     public Principal getReceiverViewNegativeReactionTotalsPrincipal() {
         return receiverViewNegativeReactionTotalsPrincipal;
     }
 
-    public Principal getReceiverViewNegativeReactionTotalsE() {
-        return toReceiverAbsolute(getReceiverViewNegativeReactionTotalsPrincipal());
-    }
-
     public void setReceiverViewNegativeReactionTotalsPrincipal(Principal receiverViewNegativeReactionTotalsPrincipal) {
         this.receiverViewNegativeReactionTotalsPrincipal = receiverViewNegativeReactionTotalsPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionTotalsE() {
+        return toReceiverAbsolute(getReceiverViewNegativeReactionTotalsPrincipal());
     }
 
     public Principal getViewReactionRatiosPrincipal() {
         return viewReactionRatiosPrincipal;
     }
 
-    public Principal getViewReactionRatiosE() {
-        return toAbsolute(getViewReactionRatiosPrincipal());
-    }
-
     public void setViewReactionRatiosPrincipal(Principal viewReactionRatiosPrincipal) {
         this.viewReactionRatiosPrincipal = viewReactionRatiosPrincipal;
+    }
+
+    public Principal getParentViewReactionRatiosPrincipal() {
+        return parentViewReactionRatiosPrincipal;
+    }
+
+    public void setParentViewReactionRatiosPrincipal(Principal parentViewReactionRatiosPrincipal) {
+        this.parentViewReactionRatiosPrincipal = parentViewReactionRatiosPrincipal;
+    }
+
+    public Principal getViewReactionRatiosCompound() {
+        return getParentViewReactionRatiosPrincipal().withSubordinate(getViewReactionRatiosPrincipal());
+    }
+
+    public Principal getViewReactionRatiosE() {
+        return toAbsolute(getViewReactionRatiosCompound());
     }
 
     public Principal getReceiverViewReactionRatiosPrincipal() {
         return receiverViewReactionRatiosPrincipal;
     }
 
-    public Principal getReceiverViewReactionRatiosE() {
-        return toReceiverAbsolute(getReceiverViewReactionRatiosPrincipal());
-    }
-
     public void setReceiverViewReactionRatiosPrincipal(Principal receiverViewReactionRatiosPrincipal) {
         this.receiverViewReactionRatiosPrincipal = receiverViewReactionRatiosPrincipal;
+    }
+
+    public Principal getReceiverViewReactionRatiosE() {
+        return toReceiverAbsolute(getReceiverViewReactionRatiosPrincipal());
     }
 
     public Principal getViewNegativeReactionRatiosPrincipal() {
         return viewNegativeReactionRatiosPrincipal;
     }
 
-    public Principal getViewNegativeReactionRatiosE() {
-        return toAbsolute(getViewNegativeReactionRatiosPrincipal());
-    }
-
     public void setViewNegativeReactionRatiosPrincipal(Principal viewNegativeReactionRatiosPrincipal) {
         this.viewNegativeReactionRatiosPrincipal = viewNegativeReactionRatiosPrincipal;
+    }
+
+    public Principal getParentViewNegativeReactionRatiosPrincipal() {
+        return parentViewNegativeReactionRatiosPrincipal;
+    }
+
+    public void setParentViewNegativeReactionRatiosPrincipal(Principal parentViewNegativeReactionRatiosPrincipal) {
+        this.parentViewNegativeReactionRatiosPrincipal = parentViewNegativeReactionRatiosPrincipal;
+    }
+
+    public Principal getViewNegativeReactionRatiosCompound() {
+        return getParentViewNegativeReactionRatiosPrincipal().withSubordinate(getViewNegativeReactionRatiosPrincipal());
+    }
+
+    public Principal getViewNegativeReactionRatiosE() {
+        return toAbsolute(getViewNegativeReactionRatiosCompound());
     }
 
     public Principal getReceiverViewNegativeReactionRatiosPrincipal() {
         return receiverViewNegativeReactionRatiosPrincipal;
     }
 
-    public Principal getReceiverViewNegativeReactionRatiosE() {
-        return toReceiverAbsolute(getReceiverViewNegativeReactionRatiosPrincipal());
-    }
-
     public void setReceiverViewNegativeReactionRatiosPrincipal(Principal receiverViewNegativeReactionRatiosPrincipal) {
         this.receiverViewNegativeReactionRatiosPrincipal = receiverViewNegativeReactionRatiosPrincipal;
+    }
+
+    public Principal getReceiverViewNegativeReactionRatiosE() {
+        return toReceiverAbsolute(getReceiverViewNegativeReactionRatiosPrincipal());
     }
 
     public Principal getAddReactionPrincipal() {
         return addReactionPrincipal;
     }
 
-    public Principal getAddReactionE() {
-        return toAbsolute(getAddReactionPrincipal());
-    }
-
     public void setAddReactionPrincipal(Principal addReactionPrincipal) {
         this.addReactionPrincipal = addReactionPrincipal;
+    }
+
+    public Principal getParentAddReactionPrincipal() {
+        return parentAddReactionPrincipal;
+    }
+
+    public void setParentAddReactionPrincipal(Principal parentAddReactionPrincipal) {
+        this.parentAddReactionPrincipal = parentAddReactionPrincipal;
+    }
+
+    public Principal getAddReactionCompound() {
+        return getParentAddReactionPrincipal().withSubordinate(getAddReactionPrincipal());
+    }
+
+    public Principal getAddReactionE() {
+        return toAbsolute(getAddReactionCompound());
     }
 
     public Principal getReceiverAddReactionPrincipal() {
@@ -823,12 +996,24 @@ public class Entry {
         return addNegativeReactionPrincipal;
     }
 
-    public Principal getAddNegativeReactionE() {
-        return toAbsolute(getAddNegativeReactionPrincipal());
-    }
-
     public void setAddNegativeReactionPrincipal(Principal addNegativeReactionPrincipal) {
         this.addNegativeReactionPrincipal = addNegativeReactionPrincipal;
+    }
+
+    public Principal getParentAddNegativeReactionPrincipal() {
+        return parentAddNegativeReactionPrincipal;
+    }
+
+    public void setParentAddNegativeReactionPrincipal(Principal parentAddNegativeReactionPrincipal) {
+        this.parentAddNegativeReactionPrincipal = parentAddNegativeReactionPrincipal;
+    }
+
+    public Principal getAddNegativeReactionCompound() {
+        return getParentAddNegativeReactionPrincipal().withSubordinate(getAddNegativeReactionPrincipal());
+    }
+
+    public Principal getAddNegativeReactionE() {
+        return toAbsolute(getAddNegativeReactionCompound());
     }
 
     public Principal getReceiverAddNegativeReactionPrincipal() {
@@ -837,6 +1022,22 @@ public class Entry {
 
     public void setReceiverAddNegativeReactionPrincipal(Principal receiverAddNegativeReactionPrincipal) {
         this.receiverAddNegativeReactionPrincipal = receiverAddNegativeReactionPrincipal;
+    }
+
+    public Principal getViewOperationsPrincipal() {
+        return Principal.PRIVATE;
+    }
+
+    public Principal getViewOperationsE() {
+        return toAbsolute(getViewOperationsPrincipal());
+    }
+
+    public ChildOperations getChildOperations() {
+        return childOperations;
+    }
+
+    public void setChildOperations(ChildOperations childOperations) {
+        this.childOperations = childOperations;
     }
 
     public Set<Story> getStories() {

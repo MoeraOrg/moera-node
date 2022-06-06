@@ -16,6 +16,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -104,6 +105,22 @@ public class CommentOperations {
             comment.setRepliedToHeading(repliedTo.getCurrentRevision().getHeading());
             comment.setRepliedToDigest(repliedTo.getCurrentRevision().getDigest());
         }
+
+        comment.setParentViewPrincipal(orUnset(posting.getChildOperations().getView()));
+        comment.setParentEditPrincipal(orUnset(posting.getChildOperations().getEdit()));
+        comment.setParentDeletePrincipal(orUnset(posting.getChildOperations().getDelete()));
+        comment.setParentViewReactionsPrincipal(orUnset(posting.getChildOperations().getViewReactions()));
+        comment.setParentViewNegativeReactionsPrincipal(
+                orUnset(posting.getChildOperations().getViewNegativeReactions()));
+        comment.setParentViewReactionTotalsPrincipal(orUnset(posting.getChildOperations().getViewReactionTotals()));
+        comment.setParentViewNegativeReactionTotalsPrincipal(
+                orUnset(posting.getChildOperations().getViewNegativeReactionTotals()));
+        comment.setParentViewReactionRatiosPrincipal(orUnset(posting.getChildOperations().getViewReactionRatios()));
+        comment.setParentViewNegativeReactionRatiosPrincipal(
+                orUnset(posting.getChildOperations().getViewNegativeReactionRatios()));
+        comment.setParentAddReactionPrincipal(orUnset(posting.getChildOperations().getAddReaction()));
+        comment.setParentAddNegativeReactionPrincipal(orUnset(posting.getChildOperations().getAddNegativeReaction()));
+
         commentText.toEntry(comment);
         comment.setMoment(momentFinder.find(
                 moment -> commentRepository.countMoments(posting.getId(), moment) == 0,
@@ -116,6 +133,10 @@ public class CommentOperations {
         posting.setTotalChildren(posting.getTotalChildren() + 1);
 
         return commentRepository.save(comment);
+    }
+
+    private Principal orUnset(Principal principal) {
+        return principal != null ? principal : Principal.UNSET;
     }
 
     public Comment createOrUpdateComment(Posting posting, Comment comment, EntryRevision revision,

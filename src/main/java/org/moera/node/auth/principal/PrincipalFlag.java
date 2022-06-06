@@ -10,5 +10,6 @@ public class PrincipalFlag {
     public static final int PUBLIC = 0x0020;
     public static final int NODE = 0x0040;
     public static final int ONLY = 0x0080;
+    public static final int UNSET = 0x0100;
 
 }

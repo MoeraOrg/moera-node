@@ -4,7 +4,6 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -93,7 +92,7 @@ public class PostingController {
         Pair.of("viewComments",
                 PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
         Pair.of("addComment",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
         Pair.of("viewReactions",
                 PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
         Pair.of("viewNegativeReactions",
@@ -107,9 +106,41 @@ public class PostingController {
         Pair.of("viewNegativeReactionRatios",
                 PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
         Pair.of("addReaction",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE),
+                PrincipalFlag.SIGNED | PrincipalFlag.NONE),
         Pair.of("addNegativeReaction",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.NONE)
+                PrincipalFlag.SIGNED | PrincipalFlag.NONE)
+    );
+
+    private static final List<Pair<String, Integer>> CHILD_OPERATION_PRINCIPALS = List.of(
+            Pair.of("view",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.UNSET),
+            Pair.of("edit",
+                    PrincipalFlag.OWNER | PrincipalFlag.NONE | PrincipalFlag.UNSET),
+            Pair.of("delete",
+                    PrincipalFlag.PRIVATE /*| TODO PrincipalFlag.SENIOR */| PrincipalFlag.ADMIN | PrincipalFlag.NONE
+                    | PrincipalFlag.UNSET),
+            Pair.of("viewReactions",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+                    | PrincipalFlag.UNSET),
+            Pair.of("viewNegativeReactions",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+                    | PrincipalFlag.UNSET),
+            Pair.of("viewReactionTotals",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+                    | PrincipalFlag.UNSET),
+            Pair.of("viewNegativeReactionTotals",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+                    | PrincipalFlag.UNSET),
+            Pair.of("viewReactionRatios",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+                    | PrincipalFlag.UNSET),
+            Pair.of("viewNegativeReactionRatios",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+                    | PrincipalFlag.UNSET),
+            Pair.of("addReaction",
+                    PrincipalFlag.SIGNED | PrincipalFlag.NONE | PrincipalFlag.UNSET),
+            Pair.of("addNegativeReaction",
+                    PrincipalFlag.SIGNED | PrincipalFlag.NONE | PrincipalFlag.UNSET)
     );
 
     @Inject
@@ -284,10 +315,11 @@ public class PostingController {
                 postingText.setOwnerName(requestContext.nodeName());
             }
 
-            if (ObjectUtils.isEmpty(postingText.getBodySrc()) && ObjectUtils.isEmpty(postingText.getMedia())) {
+            if (posting == null && ObjectUtils.isEmpty(postingText.getBodySrc())
+                    && ObjectUtils.isEmpty(postingText.getMedia())) {
                 throw new ValidationFailure("postingText.bodySrc.blank");
             }
-            if (postingText.getBodySrc().length() > getMaxPostingSize()) {
+            if (postingText.getBodySrc() != null && postingText.getBodySrc().length() > getMaxPostingSize()) {
                 throw new ValidationFailure("postingText.bodySrc.wrong-size");
             }
         } else {
@@ -317,12 +349,22 @@ public class PostingController {
             }
         }
         validateOperations(postingText::getPrincipal, "postingText.operations.wrong-principal");
+        validateChildOperations(postingText::getCommentPrincipal, "postingText.childOperations.wrong-principal");
         return digest;
     }
 
     private void validateOperations(Function<String, Principal> getPrincipal, String errorCode) {
         for (var desc : OPERATION_PRINCIPALS) {
             Principal principal = getPrincipal.apply(desc.getFirst());
+            if (principal != null && !principal.isOneOf(desc.getSecond())) {
+                throw new ValidationFailure(errorCode);
+            }
+        }
+    }
+
+    private void validateChildOperations(Function<String, Principal> getChildPrincipal, String errorCode) {
+        for (var desc : CHILD_OPERATION_PRINCIPALS) {
+            Principal principal = getChildPrincipal.apply(desc.getFirst());
             if (principal != null && !principal.isOneOf(desc.getSecond())) {
                 throw new ValidationFailure(errorCode);
             }
@@ -375,45 +417,6 @@ public class PostingController {
         requestContext.send(new PostingDeletedLiberin(posting, latest));
 
         return Result.OK;
-    }
-
-    @GetMapping("/{id}/operations")
-    @Transactional
-    public Map<String, Principal> getOperations(@PathVariable UUID id) {
-        log.info("GET /postings/{id}/operations, (id = {})", LogUtil.format(id));
-
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
-
-        return new PostingInfo(posting, requestContext).getOperations();
-    }
-
-    @PutMapping("/{id}/operations")
-    @Transactional
-    public Map<String, Principal> putOperations(@PathVariable UUID id,
-                                                @Valid @RequestBody Map<String, Principal> operations) {
-        log.info("PUT /postings/{id}/operations, (id = {})", LogUtil.format(id));
-
-        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        Principal latestView = posting.getViewE();
-        if (!requestContext.isPrincipal(posting.getEditE())) {
-            throw new AuthenticationException();
-        }
-
-        if (posting.getParentMedia() != null) {
-            throw new ValidationFailure("posting-operations.attached-to-media");
-        }
-        validateOperations(operations::get, "posting-operations.wrong-principal");
-
-        posting.setEditedAt(Util.now());
-
-        requestContext.send(new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), latestView));
-
-        return new PostingInfo(posting, requestContext).getOperations();
     }
 
     @GetMapping("/{id}/attached")

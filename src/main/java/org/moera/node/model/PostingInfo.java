@@ -74,6 +74,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private List<FeedReference> feedReferences;
     private Map<String, Principal> operations;
     private Map<String, Principal> receiverOperations;
+    private Map<String, Principal> commentOperations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -154,37 +155,93 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         if (stories != null && !stories.isEmpty()) {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
+
         operations = new HashMap<>();
-        operations.put("view", posting.getViewPrincipal());
-        operations.put("edit", posting.getEditPrincipal());
-        operations.put("delete", posting.getDeletePrincipal());
-        operations.put("viewComments", posting.getViewCommentsPrincipal());
-        operations.put("addComment", posting.getAddCommentPrincipal());
-        operations.put("viewReactions", posting.getViewReactionsPrincipal());
-        operations.put("viewNegativeReactions", posting.getViewNegativeReactionsPrincipal());
-        operations.put("viewReactionTotals", posting.getViewReactionTotalsPrincipal());
-        operations.put("viewNegativeReactionTotals", posting.getViewNegativeReactionTotalsPrincipal());
-        operations.put("viewReactionRatios", posting.getViewReactionRatiosPrincipal());
-        operations.put("viewNegativeReactionRatios", posting.getViewNegativeReactionRatiosPrincipal());
-        operations.put("addReaction", posting.getAddReactionPrincipal());
-        operations.put("addNegativeReaction", posting.getAddNegativeReactionPrincipal());
-        receiverOperations = new HashMap<>();
-        receiverOperations.put("view", posting.getReceiverViewPrincipal());
-        receiverOperations.put("edit", posting.getReceiverEditPrincipal());
-        receiverOperations.put("delete", posting.getReceiverDeletePrincipal());
-        receiverOperations.put("viewComments", posting.getReceiverViewCommentsPrincipal());
-        receiverOperations.put("addComment", posting.getReceiverAddCommentPrincipal());
-        receiverOperations.put("viewReactions", posting.getReceiverViewReactionsPrincipal());
-        receiverOperations.put("viewNegativeReactions", posting.getReceiverViewNegativeReactionsPrincipal());
-        receiverOperations.put("viewReactionTotals", posting.getReceiverViewReactionTotalsPrincipal());
-        receiverOperations.put("viewNegativeReactionTotals", posting.getReceiverViewNegativeReactionTotalsPrincipal());
-        receiverOperations.put("viewReactionRatios", posting.getReceiverViewReactionRatiosPrincipal());
-        receiverOperations.put("viewNegativeReactionRatios", posting.getReceiverViewNegativeReactionRatiosPrincipal());
-        receiverOperations.put("addReaction", posting.getReceiverAddReactionPrincipal());
-        receiverOperations.put("addNegativeReaction", posting.getReceiverAddNegativeReactionPrincipal());
+        putOperation(operations, "view",
+                posting.getViewPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "edit",
+                posting.getEditPrincipal(), Principal.OWNER);
+        putOperation(operations, "delete",
+                posting.getDeletePrincipal(), Principal.PRIVATE);
+        putOperation(operations, "viewComments",
+                posting.getViewCommentsPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "addComment",
+                posting.getAddCommentPrincipal(), Principal.SIGNED);
+        putOperation(operations, "viewReactions",
+                posting.getViewReactionsPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "viewNegativeReactions",
+                posting.getViewNegativeReactionsPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "viewReactionTotals",
+                posting.getViewReactionTotalsPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "viewNegativeReactionTotals",
+                posting.getViewNegativeReactionTotalsPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "viewReactionRatios",
+                posting.getViewReactionRatiosPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "viewNegativeReactionRatios",
+                posting.getViewNegativeReactionRatiosPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "addReaction",
+                posting.getAddReactionPrincipal(), Principal.SIGNED);
+        putOperation(operations, "addNegativeReaction",
+                posting.getAddNegativeReactionPrincipal(), Principal.SIGNED);
+
+        if (!posting.isOriginal()) {
+            receiverOperations = new HashMap<>();
+            putOperation(receiverOperations, "view",
+                    posting.getReceiverViewPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "edit",
+                    posting.getReceiverEditPrincipal(), Principal.OWNER);
+            putOperation(receiverOperations, "delete",
+                    posting.getReceiverDeletePrincipal(), Principal.PRIVATE);
+            putOperation(receiverOperations, "viewComments",
+                    posting.getReceiverViewCommentsPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "addComment",
+                    posting.getReceiverAddCommentPrincipal(), Principal.SIGNED);
+            putOperation(receiverOperations, "viewReactions",
+                    posting.getReceiverViewReactionsPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "viewNegativeReactions",
+                    posting.getReceiverViewNegativeReactionsPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "viewReactionTotals",
+                    posting.getReceiverViewReactionTotalsPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "viewNegativeReactionTotals",
+                    posting.getReceiverViewNegativeReactionTotalsPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "viewReactionRatios",
+                    posting.getReceiverViewReactionRatiosPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "viewNegativeReactionRatios",
+                    posting.getReceiverViewNegativeReactionRatiosPrincipal(), Principal.PUBLIC);
+            putOperation(receiverOperations, "addReaction",
+                    posting.getReceiverAddReactionPrincipal(), Principal.SIGNED);
+            putOperation(receiverOperations, "addNegativeReaction",
+                    posting.getReceiverAddNegativeReactionPrincipal(), Principal.SIGNED);
+        }
+
+        commentOperations = new HashMap<>();
+        putOperation(commentOperations, "view",
+                posting.getChildOperations().getView(), Principal.UNSET);
+        putOperation(commentOperations, "edit",
+                posting.getChildOperations().getEdit(), Principal.UNSET);
+        putOperation(commentOperations, "delete",
+                posting.getChildOperations().getDelete(), Principal.UNSET);
+        putOperation(commentOperations, "viewReactions",
+                posting.getChildOperations().getViewReactions(), Principal.UNSET);
+        putOperation(commentOperations, "viewNegativeReactions",
+                posting.getChildOperations().getViewNegativeReactions(), Principal.UNSET);
+        putOperation(commentOperations, "viewReactionTotals",
+                posting.getChildOperations().getViewReactionTotals(), Principal.UNSET);
+        putOperation(commentOperations, "viewNegativeReactionTotals",
+                posting.getChildOperations().getViewNegativeReactionTotals(), Principal.UNSET);
+        putOperation(commentOperations, "viewReactionRatios",
+                posting.getChildOperations().getViewReactionRatios(), Principal.UNSET);
+        putOperation(commentOperations, "viewNegativeReactionRatios",
+                posting.getChildOperations().getViewNegativeReactionRatios(), Principal.UNSET);
+        putOperation(commentOperations, "addReaction",
+                posting.getChildOperations().getAddReaction(), Principal.UNSET);
+        putOperation(commentOperations, "addNegativeReaction",
+                posting.getChildOperations().getAddNegativeReaction(), Principal.UNSET);
+
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
+
         reactions = new ReactionTotalsInfo(posting.getReactionTotals(), posting, accessChecker);
         sources = posting.getSources() != null
                 ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
@@ -194,6 +251,13 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 : posting.getReceiverViewCommentsE();
         totalComments = accessChecker.isPrincipal(viewComments) ? posting.getTotalChildren() : 0;
         subscriptions = PostingSubscriptionsInfo.fromSubscribers(posting.getSubscribers());
+    }
+
+    private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
+                                     Principal defaultValue) {
+        if (value != null && !value.equals(defaultValue)) {
+            operations.put(operationName, value);
+        }
     }
 
     public static PostingInfo forUi(Posting posting) {
@@ -545,6 +609,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setReceiverOperations(Map<String, Principal> receiverOperations) {
         this.receiverOperations = receiverOperations;
+    }
+
+    public Map<String, Principal> getCommentOperations() {
+        return commentOperations;
+    }
+
+    public void setCommentOperations(Map<String, Principal> commentOperations) {
+        this.commentOperations = commentOperations;
     }
 
     public AcceptedReactions getAcceptedReactions() {
