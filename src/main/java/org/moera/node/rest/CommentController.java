@@ -272,15 +272,20 @@ public class CommentController {
                 comment.getOwnerName());
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
-        commentText.toEntry(comment);
-        try {
-            comment = commentOperations.createOrUpdateComment(comment.getPosting(), comment,
-                    comment.getCurrentRevision(), media, commentText::sameAsRevision,
-                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
-                    commentText::toEntry);
-        } catch (BodyMappingException e) {
-            String field = e.getField() != null ? e.getField() : "bodySrc";
-            throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
+        if (requestContext.isPrincipal(comment.getEditE())) {
+            commentText.toEntry(comment);
+            try {
+                comment = commentOperations.createOrUpdateComment(comment.getPosting(), comment,
+                        comment.getCurrentRevision(), media, commentText::sameAsRevision,
+                        revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
+                        commentText::toEntry);
+            } catch (BodyMappingException e) {
+                String field = e.getField() != null ? e.getField() : "bodySrc";
+                throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
+            }
+        } else {
+            // senior, but not owner
+            commentText.toEntrySenior(comment);
         }
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
@@ -292,6 +297,8 @@ public class CommentController {
     private byte[] validateCommentText(Posting posting, Comment comment, CommentText commentText, String ownerName,
                                        byte[] repliedToDigest) {
 
+        boolean isSenior = requestContext.isPrincipal(posting.getEditE());
+
         byte[] digest = null;
         if (commentText.getSignature() == null) {
             String clientName = requestContext.getClientName();
@@ -299,7 +306,10 @@ public class CommentController {
                 throw new AuthenticationException();
             }
             if (!ObjectUtils.isEmpty(ownerName) && !ownerName.equals(clientName)) {
-                throw new AuthenticationException();
+                // posting owner may change seniorOperations
+                if (comment == null || !isSenior) {
+                    throw new AuthenticationException();
+                }
             }
             commentText.setOwnerName(clientName);
 
@@ -337,6 +347,11 @@ public class CommentController {
             }
         }
         validateOperations(commentText::getPrincipal, "commentText.operations.wrong-principal");
+        if (commentText.getSeniorOperations() != null && !commentText.getSeniorOperations().isEmpty() && !isSenior) {
+            throw new AuthenticationException();
+        }
+        validateOperations(commentText::getSeniorPrincipal, "commentText.seniorOperations.wrong-principal");
+
         return digest;
     }
 

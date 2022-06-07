@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -31,9 +30,9 @@ public class PostingSourceText {
     @Valid
     private AcceptedReactions acceptedReactions;
 
-    private Map<String, Principal> operations = new HashMap<>();
+    private Map<String, Principal> operations;
 
-    private Map<String, Principal> commentOperations = new HashMap<>();
+    private Map<String, Principal> commentOperations;
 
     public PostingSourceText() {
     }

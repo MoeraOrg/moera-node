@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import javax.validation.Valid;
@@ -34,7 +33,9 @@ public class CommentSourceText {
 
     private UUID repliedToId;
 
-    private Map<String, Principal> operations = new HashMap<>();
+    private Map<String, Principal> operations;
+
+    private Map<String, Principal> seniorOperations;
 
     public CommentSourceText() {
     }
@@ -101,6 +102,14 @@ public class CommentSourceText {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Map<String, Principal> getSeniorOperations() {
+        return seniorOperations;
+    }
+
+    public void setSeniorOperations(Map<String, Principal> seniorOperations) {
+        this.seniorOperations = seniorOperations;
     }
 
 }

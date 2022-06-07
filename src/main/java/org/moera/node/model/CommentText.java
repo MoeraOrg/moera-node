@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Consumer;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
@@ -63,6 +64,8 @@ public class CommentText {
 
     private Map<String, Principal> operations;
 
+    private Map<String, Principal> seniorOperations;
+
     public CommentText() {
     }
 
@@ -93,6 +96,7 @@ public class CommentText {
             bodyFormat = BodyFormat.APPLICATION.getValue();
         }
         operations = sourceText.getOperations();
+        seniorOperations = sourceText.getSeniorOperations();
     }
 
     public void initAcceptedReactionsDefaults() {
@@ -239,6 +243,18 @@ public class CommentText {
         return operations != null ? operations.get(operationName) : null;
     }
 
+    public Map<String, Principal> getSeniorOperations() {
+        return seniorOperations;
+    }
+
+    public void setSeniorOperations(Map<String, Principal> seniorOperations) {
+        this.seniorOperations = seniorOperations;
+    }
+
+    public Principal getSeniorPrincipal(String operationName) {
+        return seniorOperations != null ? seniorOperations.get(operationName) : null;
+    }
+
     public void toEntry(Entry entry) {
         if (sameAsEntry(entry)) {
             return;
@@ -264,32 +280,43 @@ public class CommentText {
                 entry.setOwnerAvatarShape(ownerAvatar.getShape());
             }
         }
-        if (getPrincipal("view") != null) {
-            entry.setViewPrincipal(getPrincipal("view"));
+
+        toPrincipal("view", entry::setViewPrincipal);
+        toPrincipal("viewReactions", entry::setViewReactionsPrincipal);
+        toPrincipal("viewNegativeReactions", entry::setViewNegativeReactionsPrincipal);
+        toPrincipal("viewReactionTotals", entry::setViewReactionTotalsPrincipal);
+        toPrincipal("viewNegativeReactionTotals", entry::setViewNegativeReactionTotalsPrincipal);
+        toPrincipal("viewReactionRatios", entry::setViewReactionRatiosPrincipal);
+        toPrincipal("viewNegativeReactionRatios", entry::setViewNegativeReactionRatiosPrincipal);
+        toPrincipal("addReaction", entry::setAddReactionPrincipal);
+        toPrincipal("addNegativeReaction", entry::setAddNegativeReactionPrincipal);
+
+        toEntrySenior(entry);
+    }
+
+    public void toEntrySenior(Entry entry) {
+        toSeniorPrincipal("view", entry::setParentViewPrincipal);
+        toSeniorPrincipal("viewReactions", entry::setParentViewReactionsPrincipal);
+        toSeniorPrincipal("viewNegativeReactions", entry::setParentViewNegativeReactionsPrincipal);
+        toSeniorPrincipal("viewReactionTotals", entry::setParentViewReactionTotalsPrincipal);
+        toSeniorPrincipal("viewNegativeReactionTotals", entry::setParentViewNegativeReactionTotalsPrincipal);
+        toSeniorPrincipal("viewReactionRatios", entry::setParentViewReactionRatiosPrincipal);
+        toSeniorPrincipal("viewNegativeReactionRatios", entry::setParentViewNegativeReactionRatiosPrincipal);
+        toSeniorPrincipal("addReaction", entry::setParentAddReactionPrincipal);
+        toSeniorPrincipal("addNegativeReaction", entry::setParentAddNegativeReactionPrincipal);
+    }
+
+    private void toPrincipal(String operationName, Consumer<Principal> setPrincipal) {
+        Principal value = getPrincipal(operationName);
+        if (value != null) {
+            setPrincipal.accept(value);
         }
-        if (getPrincipal("viewReactions") != null) {
-            entry.setViewReactionsPrincipal(getPrincipal("viewReactions"));
-        }
-        if (getPrincipal("viewNegativeReactions") != null) {
-            entry.setViewNegativeReactionsPrincipal(getPrincipal("viewNegativeReactions"));
-        }
-        if (getPrincipal("viewReactionTotals") != null) {
-            entry.setViewReactionTotalsPrincipal(getPrincipal("viewReactionTotals"));
-        }
-        if (getPrincipal("viewNegativeReactionTotals") != null) {
-            entry.setViewNegativeReactionTotalsPrincipal(getPrincipal("viewNegativeReactionTotals"));
-        }
-        if (getPrincipal("viewReactionRatios") != null) {
-            entry.setViewReactionRatiosPrincipal(getPrincipal("viewReactionRatios"));
-        }
-        if (getPrincipal("viewNegativeReactionRatios") != null) {
-            entry.setViewNegativeReactionRatiosPrincipal(getPrincipal("viewNegativeReactionRatios"));
-        }
-        if (getPrincipal("addReaction") != null) {
-            entry.setAddReactionPrincipal(getPrincipal("addReaction"));
-        }
-        if (getPrincipal("addNegativeReaction") != null) {
-            entry.setAddNegativeReactionPrincipal(getPrincipal("addNegativeReaction"));
+    }
+
+    private void toSeniorPrincipal(String operationName, Consumer<Principal> setPrincipal) {
+        Principal value = getSeniorPrincipal(operationName);
+        if (value != null) {
+            setPrincipal.accept(!value.isUnset() ? value : null);
         }
     }
 
@@ -303,30 +330,36 @@ public class CommentText {
                && (ownerAvatarMediaFile == null
                     || entry.getOwnerAvatarMediaFile() != null
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()))
-               && (getPrincipal("view") == null
-                    || Objects.equals(getPrincipal("view"), entry.getViewPrincipal()))
-               && (getPrincipal("viewReactions") == null
-                    || Objects.equals(getPrincipal("viewReactions"), entry.getViewReactionsPrincipal()))
-               && (getPrincipal("viewNegativeReactions") == null
-                    || Objects.equals(getPrincipal("viewNegativeReactions"),
-                                      entry.getViewNegativeReactionsPrincipal()))
-               && (getPrincipal("viewReactionTotals") == null
-                    || Objects.equals(getPrincipal("viewReactionTotals"),
-                                      entry.getViewReactionTotalsPrincipal()))
-               && (getPrincipal("viewNegativeReactionTotals") == null
-                    || Objects.equals(getPrincipal("viewNegativeReactionTotals"),
-                                      entry.getViewNegativeReactionTotalsPrincipal()))
-               && (getPrincipal("viewReactionRatios") == null
-                    || Objects.equals(getPrincipal("viewReactionRatios"),
-                                      entry.getViewReactionRatiosPrincipal()))
-               && (getPrincipal("viewNegativeReactionRatios") == null
-                    || Objects.equals(getPrincipal("viewNegativeReactionRatios"),
-                                      entry.getViewNegativeReactionRatiosPrincipal()))
-               && (getPrincipal("addReaction") == null
-                    || Objects.equals(getPrincipal("addReaction"), entry.getAddReactionPrincipal()))
-               && (getPrincipal("addNegativeReaction") == null
-                    || Objects.equals(getPrincipal("addNegativeReaction"),
-                                      entry.getAddNegativeReactionPrincipal()));
+               && samePrincipalAs("view", entry.getViewPrincipal())
+               && samePrincipalAs("viewReactions", entry.getViewReactionsPrincipal())
+               && samePrincipalAs("viewNegativeReactions", entry.getViewNegativeReactionsPrincipal())
+               && samePrincipalAs("viewReactionTotals", entry.getViewReactionTotalsPrincipal())
+               && samePrincipalAs("viewNegativeReactionTotals", entry.getViewNegativeReactionTotalsPrincipal())
+               && samePrincipalAs("viewReactionRatios", entry.getViewReactionRatiosPrincipal())
+               && samePrincipalAs("viewNegativeReactionRatios", entry.getViewNegativeReactionRatiosPrincipal())
+               && samePrincipalAs("addReaction", entry.getAddReactionPrincipal())
+               && samePrincipalAs("addNegativeReaction", entry.getAddNegativeReactionPrincipal())
+               && sameSeniorPrincipalAs("view", entry.getParentViewPrincipal())
+               && sameSeniorPrincipalAs("viewReactions", entry.getParentViewReactionsPrincipal())
+               && sameSeniorPrincipalAs("viewNegativeReactions", entry.getParentViewNegativeReactionsPrincipal())
+               && sameSeniorPrincipalAs("viewReactionTotals", entry.getParentViewReactionTotalsPrincipal())
+               && sameSeniorPrincipalAs("viewNegativeReactionTotals",
+                                        entry.getParentViewNegativeReactionTotalsPrincipal())
+               && sameSeniorPrincipalAs("viewReactionRatios", entry.getParentViewReactionRatiosPrincipal())
+               && sameSeniorPrincipalAs("viewNegativeReactionRatios",
+                                        entry.getParentViewNegativeReactionRatiosPrincipal())
+               && sameSeniorPrincipalAs("addReaction", entry.getParentAddReactionPrincipal())
+               && sameSeniorPrincipalAs("addNegativeReaction", entry.getParentAddNegativeReactionPrincipal());
+    }
+
+    private boolean samePrincipalAs(String operationName, Principal principal) {
+        Principal value = getPrincipal(operationName);
+        return value == null || Objects.equals(value, principal);
+    }
+
+    private boolean sameSeniorPrincipalAs(String operationName, Principal principal) {
+        Principal value = getSeniorPrincipal(operationName);
+        return value == null || principal == null && value.isUnset() || Objects.equals(value, principal);
     }
 
     public void toEntryRevision(EntryRevision revision, byte[] digest, TextConverter textConverter,
