@@ -348,23 +348,17 @@ public class PostingController {
                 throw new ValidationFailure("postingText.createdAt.out-of-range");
             }
         }
-        validateOperations(postingText::getPrincipal, "postingText.operations.wrong-principal");
-        validateChildOperations(postingText::getCommentPrincipal, "postingText.childOperations.wrong-principal");
+        validateOperations(postingText::getPrincipal, OPERATION_PRINCIPALS,
+                "postingText.operations.wrong-principal");
+        validateOperations(postingText::getCommentPrincipal, CHILD_OPERATION_PRINCIPALS,
+                "postingText.childOperations.wrong-principal");
         return digest;
     }
 
-    private void validateOperations(Function<String, Principal> getPrincipal, String errorCode) {
-        for (var desc : OPERATION_PRINCIPALS) {
+    private void validateOperations(Function<String, Principal> getPrincipal, List<Pair<String, Integer>> description,
+                                    String errorCode) {
+        for (var desc : description) {
             Principal principal = getPrincipal.apply(desc.getFirst());
-            if (principal != null && !principal.isOneOf(desc.getSecond())) {
-                throw new ValidationFailure(errorCode);
-            }
-        }
-    }
-
-    private void validateChildOperations(Function<String, Principal> getChildPrincipal, String errorCode) {
-        for (var desc : CHILD_OPERATION_PRINCIPALS) {
-            Principal principal = getChildPrincipal.apply(desc.getFirst());
             if (principal != null && !principal.isOneOf(desc.getSecond())) {
                 throw new ValidationFailure(errorCode);
             }

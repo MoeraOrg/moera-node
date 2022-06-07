@@ -346,19 +346,21 @@ public class CommentController {
                 throw new ValidationFailure("commentText.createdAt.out-of-range");
             }
         }
-        validateOperations(commentText::getPrincipal, "commentText.operations.wrong-principal");
+        validateOperations(commentText::getPrincipal, false,
+                "commentText.operations.wrong-principal");
         if (commentText.getSeniorOperations() != null && !commentText.getSeniorOperations().isEmpty() && !isSenior) {
             throw new AuthenticationException();
         }
-        validateOperations(commentText::getSeniorPrincipal, "commentText.seniorOperations.wrong-principal");
+        validateOperations(commentText::getSeniorPrincipal, true,
+                "commentText.seniorOperations.wrong-principal");
 
         return digest;
     }
 
-    private void validateOperations(Function<String, Principal> getPrincipal, String errorCode) {
+    private void validateOperations(Function<String, Principal> getPrincipal, boolean includeUnset, String errorCode) {
         for (var desc : OPERATION_PRINCIPALS) {
             Principal principal = getPrincipal.apply(desc.getFirst());
-            if (principal != null && !principal.isOneOf(desc.getSecond())) {
+            if (principal != null && !principal.isOneOf(desc.getSecond()) && (!includeUnset || !principal.isUnset())) {
                 throw new ValidationFailure(errorCode);
             }
         }

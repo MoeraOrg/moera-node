@@ -316,7 +316,7 @@ public class CommentText {
     private void toSeniorPrincipal(String operationName, Consumer<Principal> setPrincipal) {
         Principal value = getSeniorPrincipal(operationName);
         if (value != null) {
-            setPrincipal.accept(!value.isUnset() ? value : null);
+            setPrincipal.accept(value);
         }
     }
 
