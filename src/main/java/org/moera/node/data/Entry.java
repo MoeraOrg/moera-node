@@ -166,6 +166,10 @@ public class Entry {
 
     private Principal receiverAddCommentPrincipal;
 
+    private Principal parentOverrideCommentPrincipal = Principal.UNSET;
+
+    private Principal receiverOverrideCommentPrincipal;
+
     private Principal viewReactionsPrincipal = Principal.PUBLIC;
 
     private Principal parentViewReactionsPrincipal = Principal.UNSET;
@@ -742,6 +746,34 @@ public class Entry {
 
     public void setReceiverAddCommentPrincipal(Principal receiverAddCommentPrincipal) {
         this.receiverAddCommentPrincipal = receiverAddCommentPrincipal;
+    }
+
+    public Principal getOverrideCommentPrincipal() {
+        return receiverName == null ? Principal.OWNER : Principal.NONE;
+    }
+
+    public Principal getParentOverrideCommentPrincipal() {
+        return parentOverrideCommentPrincipal;
+    }
+
+    public void setParentOverrideCommentPrincipal(Principal parentOverrideCommentPrincipal) {
+        this.parentOverrideCommentPrincipal = parentOverrideCommentPrincipal;
+    }
+
+    public Principal getOverrideCommentCompound() {
+        return getParentOverrideCommentPrincipal().withSubordinate(getOverrideCommentPrincipal());
+    }
+
+    public Principal getOverrideCommentE() {
+        return toAbsolute(getOverrideCommentCompound());
+    }
+
+    public Principal getReceiverOverrideCommentPrincipal() {
+        return receiverOverrideCommentPrincipal;
+    }
+
+    public void setReceiverOverrideCommentPrincipal(Principal receiverOverrideCommentPrincipal) {
+        this.receiverOverrideCommentPrincipal = receiverOverrideCommentPrincipal;
     }
 
     public Principal getViewReactionsPrincipal() {

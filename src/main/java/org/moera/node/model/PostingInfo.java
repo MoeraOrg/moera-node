@@ -167,6 +167,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 posting.getViewCommentsPrincipal(), Principal.PUBLIC);
         putOperation(operations, "addComment",
                 posting.getAddCommentPrincipal(), Principal.SIGNED);
+        putOperation(operations, "overrideComment",
+                posting.getOverrideCommentPrincipal(), Principal.OWNER);
         putOperation(operations, "viewReactions",
                 posting.getViewReactionsPrincipal(), Principal.PUBLIC);
         putOperation(operations, "viewNegativeReactions",
@@ -196,6 +198,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                     posting.getReceiverViewCommentsPrincipal(), Principal.PUBLIC);
             putOperation(receiverOperations, "addComment",
                     posting.getReceiverAddCommentPrincipal(), Principal.SIGNED);
+            putOperation(receiverOperations, "overrideComment",
+                    posting.getReceiverOverrideCommentPrincipal(), Principal.OWNER);
             putOperation(receiverOperations, "viewReactions",
                     posting.getReceiverViewReactionsPrincipal(), Principal.PUBLIC);
             putOperation(receiverOperations, "viewNegativeReactions",
@@ -688,16 +692,18 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setReceiverViewPrincipal(principal);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
-        principal = getOperations().getOrDefault("edit", Principal.PRIVATE);
+        principal = getOperations().getOrDefault("edit", Principal.OWNER);
         posting.setReceiverEditPrincipal(principal);
         principal = getOperations().getOrDefault("delete", Principal.PRIVATE);
         posting.setReceiverDeletePrincipal(principal);
         principal = getOperations().getOrDefault("viewComments", Principal.PUBLIC);
         posting.setViewCommentsPrincipal(Principal.NONE);
         posting.setReceiverViewCommentsPrincipal(principal);
-        principal = getOperations().getOrDefault("addComment", Principal.PUBLIC);
+        principal = getOperations().getOrDefault("addComment", Principal.SIGNED);
         posting.setAddCommentPrincipal(Principal.NONE);
         posting.setReceiverAddCommentPrincipal(principal);
+        principal = getOperations().getOrDefault("overrideComment", Principal.OWNER);
+        posting.setReceiverOverrideCommentPrincipal(principal);
         principal = getOperations().getOrDefault("viewReactions", Principal.PUBLIC);
         posting.setViewReactionsPrincipal(Principal.NONE);
         posting.setReceiverViewReactionsPrincipal(principal);
@@ -716,10 +722,10 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         principal = getOperations().getOrDefault("viewNegativeReactionRatios", Principal.PUBLIC);
         posting.setViewNegativeReactionRatiosPrincipal(principal);
         posting.setReceiverViewNegativeReactionRatiosPrincipal(principal);
-        principal = getOperations().getOrDefault("addReaction", Principal.PUBLIC);
+        principal = getOperations().getOrDefault("addReaction", Principal.SIGNED);
         posting.setAddReactionPrincipal(Principal.NONE);
         posting.setReceiverAddReactionPrincipal(principal);
-        principal = getOperations().getOrDefault("addNegativeReaction", Principal.PUBLIC);
+        principal = getOperations().getOrDefault("addNegativeReaction", Principal.SIGNED);
         posting.setAddNegativeReactionPrincipal(Principal.NONE);
         posting.setReceiverAddNegativeReactionPrincipal(principal);
     }

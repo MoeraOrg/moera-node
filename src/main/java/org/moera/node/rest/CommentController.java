@@ -297,7 +297,7 @@ public class CommentController {
     private byte[] validateCommentText(Posting posting, Comment comment, CommentText commentText, String ownerName,
                                        byte[] repliedToDigest) {
 
-        boolean isSenior = requestContext.isPrincipal(posting.getEditE());
+        boolean isSenior = requestContext.isPrincipal(posting.getOverrideCommentE());
 
         byte[] digest = null;
         if (commentText.getSignature() == null) {
