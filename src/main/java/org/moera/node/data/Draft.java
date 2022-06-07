@@ -96,6 +96,9 @@ public class Draft {
     @NotNull
     private String operations = "{}";
 
+    @NotNull
+    private String childOperations = "{}";
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "draft")
     private Set<EntryAttachment> attachments = new HashSet<>();
 
@@ -289,6 +292,14 @@ public class Draft {
 
     public void setOperations(String operations) {
         this.operations = operations;
+    }
+
+    public String getChildOperations() {
+        return childOperations;
+    }
+
+    public void setChildOperations(String childOperations) {
+        this.childOperations = childOperations;
     }
 
     public Set<EntryAttachment> getAttachments() {

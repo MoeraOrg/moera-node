@@ -240,9 +240,6 @@ public class CommentController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
         Principal latestView = comment.getViewE();
-        if (!requestContext.isPrincipal(comment.getViewE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
@@ -257,6 +254,9 @@ public class CommentController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+            throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (!requestContext.isPrincipal(comment.getViewE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         mediaOperations.validateAvatar(

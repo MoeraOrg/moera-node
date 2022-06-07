@@ -86,15 +86,17 @@ public class RemoteCommentPostTask extends Task {
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName),
                     sourceText.getOwnerAvatarMediaFile());
 
-            prevCommentInfo = commentId != null ? nodeApi.getComment(targetNodeName, postingId, commentId) : null;
+            prevCommentInfo = commentId != null
+                    ? nodeApi.getComment(targetNodeName, generateCarte(targetNodeName), postingId, commentId)
+                    : null;
             String repliedToId = null;
             String repliedToRevisionId = null;
             if (prevCommentInfo != null) {
                 repliedToId = prevCommentInfo.getRepliedToId();
                 repliedToRevisionId = prevCommentInfo.getRepliedToRevisionId();
             } else if (sourceText.getRepliedToId() != null) {
-                CommentInfo repliedToCommentInfo =
-                        nodeApi.getComment(targetNodeName, postingId, sourceText.getRepliedToId().toString());
+                CommentInfo repliedToCommentInfo = nodeApi.getComment(targetNodeName, generateCarte(targetNodeName),
+                        postingId, sourceText.getRepliedToId().toString());
                 if (repliedToCommentInfo != null) {
                     repliedToId = repliedToCommentInfo.getId();
                     repliedToRevisionId = repliedToCommentInfo.getRevisionId();

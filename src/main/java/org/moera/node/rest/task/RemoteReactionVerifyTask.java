@@ -64,7 +64,8 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             } else {
                 ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, remotePostingId,
                         data.getCommentId(), data.getOwnerName());
-                CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, remotePostingId, data.getCommentId());
+                CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, generateCarte(remoteNodeName),
+                        remotePostingId, data.getCommentId());
                 try {
                     CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName,
                             remotePostingId, data.getCommentId(), reactionInfo.getCommentRevisionId());

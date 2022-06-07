@@ -310,10 +310,11 @@ public class NodeApi {
                 FeedSliceInfo.class);
     }
 
-    public CommentInfo getComment(String nodeName, String postingId, String commentId) throws NodeApiException {
+    public CommentInfo getComment(String nodeName, String carte, String postingId,
+                                  String commentId) throws NodeApiException {
         return call("GET", nodeName,
-                String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)), null,
-                CommentInfo.class);
+                String.format("/postings/%s/comments/%s", Util.ue(postingId), Util.ue(commentId)),
+                auth("carte", carte), CommentInfo.class);
     }
 
     public CommentRevisionInfo getCommentRevision(String nodeName, String postingId, String commentId,

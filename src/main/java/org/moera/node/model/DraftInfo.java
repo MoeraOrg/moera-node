@@ -42,6 +42,7 @@ public class DraftInfo {
     private Long publishAt;
     private UpdateInfo updateInfo;
     private Map<String, Principal> operations;
+    private Map<String, Principal> commentOperations;
 
     public DraftInfo() {
     }
@@ -80,6 +81,11 @@ public class DraftInfo {
             operations = new ObjectMapper().readValue(draft.getOperations(), Map.class);
         } catch (JsonProcessingException e) {
             log.error("Error deserializing Draft.operations", e);
+        }
+        try {
+            commentOperations = new ObjectMapper().readValue(draft.getChildOperations(), Map.class);
+        } catch (JsonProcessingException e) {
+            log.error("Error deserializing Draft.childOperations", e);
         }
     }
 
@@ -249,6 +255,14 @@ public class DraftInfo {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Map<String, Principal> getCommentOperations() {
+        return commentOperations;
+    }
+
+    public void setCommentOperations(Map<String, Principal> commentOperations) {
+        this.commentOperations = commentOperations;
     }
 
 }

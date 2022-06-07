@@ -67,6 +67,8 @@ public class DraftText {
 
     private Map<String, Principal> operations;
 
+    private Map<String, Principal> commentOperations;
+
     public DraftType getDraftType() {
         return draftType;
     }
@@ -187,6 +189,14 @@ public class DraftText {
         this.operations = operations;
     }
 
+    public Map<String, Principal> getCommentOperations() {
+        return commentOperations;
+    }
+
+    public void setCommentOperations(Map<String, Principal> commentOperations) {
+        this.commentOperations = commentOperations;
+    }
+
     public void toDraft(Draft draft, TextConverter textConverter) {
         draft.setDraftType(draftType);
         draft.setEditedAt(Util.now());
@@ -247,6 +257,14 @@ public class DraftText {
                 draft.setOperations(new ObjectMapper().writeValueAsString(operations));
             } catch (JsonProcessingException e) {
                 log.error("Error serializing DraftText.operations", e);
+            }
+        }
+
+        if (commentOperations != null) {
+            try {
+                draft.setChildOperations(new ObjectMapper().writeValueAsString(commentOperations));
+            } catch (JsonProcessingException e) {
+                log.error("Error serializing DraftText.commentOperations", e);
             }
         }
     }
