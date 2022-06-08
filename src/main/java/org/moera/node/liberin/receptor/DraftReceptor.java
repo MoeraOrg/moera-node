@@ -1,5 +1,6 @@
 package org.moera.node.liberin.receptor;
 
+import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.DraftAddedLiberin;
@@ -12,14 +13,17 @@ import org.moera.node.model.event.DraftUpdatedEvent;
 @LiberinReceptor
 public class DraftReceptor extends LiberinReceptorBase {
 
+    @LiberinMapping
     public void added(DraftAddedLiberin liberin) {
         send(liberin, new DraftAddedEvent(liberin.getDraft()));
     }
 
+    @LiberinMapping
     public void updated(DraftUpdatedLiberin liberin) {
         send(liberin, new DraftUpdatedEvent(liberin.getDraft()));
     }
 
+    @LiberinMapping
     public void deleted(DraftDeletedLiberin liberin) {
         send(liberin, new DraftDeletedEvent(liberin.getDraft()));
     }
