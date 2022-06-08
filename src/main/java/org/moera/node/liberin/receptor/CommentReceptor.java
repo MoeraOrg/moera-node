@@ -66,7 +66,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
         notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewE(),
-                liberin.getLatestRevision(), liberin.getLatestViewPrincipal());
+                liberin.getLatestRevision(), liberin.getLatestViewE());
 
         send(liberin, new CommentUpdatedEvent(comment, visibilityFilter(posting, comment)));
     }
@@ -165,13 +165,11 @@ public class CommentReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalExpression generalVisibilityFilter(Posting posting) {
-        return posting.getViewE().a()
-                .and(posting.getViewCommentsE());
+        return posting.getViewE().a().and(posting.getViewCommentsE());
     }
 
     private PrincipalFilter visibilityFilter(Posting posting, Comment comment) {
-        return generalVisibilityFilter(posting)
-                .and(comment.getViewE());
+        return generalVisibilityFilter(posting).and(comment.getViewE());
     }
 
 }

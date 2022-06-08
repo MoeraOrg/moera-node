@@ -48,11 +48,13 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentMassAttributes;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.CommentTotalInfo;
 import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
@@ -86,6 +88,7 @@ public class CommentController {
     private static final Logger log = LoggerFactory.getLogger(CommentController.class);
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
+    private static final int MASS_UPDATE_PAGE_SIZE = 100;
 
     private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
             Pair.of("view",
@@ -369,6 +372,43 @@ public class CommentController {
     private byte[] mediaDigest(UUID id) {
         MediaFileOwner media = mediaFileOwnerRepository.findById(id).orElse(null);
         return media != null ? media.getMediaFile().getDigest() : null;
+    }
+
+    @PutMapping
+    @Transactional
+    public Result putAll(@PathVariable UUID postingId, @Valid @RequestBody CommentMassAttributes commentMassAttributes) {
+        log.info("PUT /postings/{postingId}/comments (postingId = {})", LogUtil.format(postingId));
+
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewE())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (!requestContext.isPrincipal(posting.getOverrideCommentE())) {
+            throw new AuthenticationException();
+        }
+        validateOperations(commentMassAttributes::getSeniorPrincipal, true,
+                "commentMassAttributes.seniorOperations.wrong-principal");
+
+        Page<Comment> page;
+        int n = 0;
+        do {
+            // TODO despite pagination, objects and liberins may still take a lot of memory
+            // It is possible to perform the update in a single query, making a backup of the previous state
+            // Then, use the backup to generate liberins
+            page = commentRepository.findByNodeIdAndParentId(requestContext.nodeId(), postingId,
+                    PageRequest.of(n++, MASS_UPDATE_PAGE_SIZE));
+            for (Comment comment : page.getContent()) {
+                if (!commentMassAttributes.sameAsEntry(comment)) {
+                    Principal latestView = comment.getViewE();
+                    commentMassAttributes.toEntry(comment);
+                    requestContext.send(new CommentUpdatedLiberin(comment, comment.getCurrentRevision(), latestView));
+                }
+            }
+            commentRepository.flush();
+        } while (!page.isLast());
+
+        return Result.OK;
     }
 
     @GetMapping

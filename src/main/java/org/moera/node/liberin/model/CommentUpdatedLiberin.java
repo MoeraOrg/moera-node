@@ -9,12 +9,12 @@ public class CommentUpdatedLiberin extends Liberin {
 
     private Comment comment;
     private EntryRevision latestRevision;
-    private Principal latestViewPrincipal;
+    private Principal latestViewE;
 
-    public CommentUpdatedLiberin(Comment comment, EntryRevision latestRevision, Principal latestViewPrincipal) {
+    public CommentUpdatedLiberin(Comment comment, EntryRevision latestRevision, Principal latestViewE) {
         this.comment = comment;
         this.latestRevision = latestRevision;
-        this.latestViewPrincipal = latestViewPrincipal;
+        this.latestViewE = latestViewE;
     }
 
     public Comment getComment() {
@@ -33,12 +33,12 @@ public class CommentUpdatedLiberin extends Liberin {
         this.latestRevision = latestRevision;
     }
 
-    public Principal getLatestViewPrincipal() {
-        return latestViewPrincipal;
+    public Principal getLatestViewE() {
+        return latestViewE;
     }
 
-    public void setLatestViewPrincipal(Principal latestViewPrincipal) {
-        this.latestViewPrincipal = latestViewPrincipal;
+    public void setLatestViewE(Principal latestViewE) {
+        this.latestViewE = latestViewE;
     }
 
 }

@@ -34,6 +34,12 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
             + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4 and c.deletedAt is null")
     Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, Pageable pageable);
 
+    @Query(value = "select c from Comment c join fetch c.currentRevision"
+            + " where c.nodeId = ?1 and c.parent.id = ?2 and c.deletedAt is null",
+           countQuery = "select count(c) from Comment c"
+            + " where c.nodeId = ?1 and c.parent.id = ?2 and c.deletedAt is null")
+    Page<Comment> findByNodeIdAndParentId(UUID nodeId, UUID parentId, Pageable pageable);
+
     @Query("select count(*) from Comment c where c.nodeId = ?1 and c.parent.id = ?2"
             + " and c.moment > ?3 and c.moment <= ?4")
     int countInRange(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment);
