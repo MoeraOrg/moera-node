@@ -40,6 +40,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
+import org.moera.node.global.NoClientId;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
@@ -376,6 +377,7 @@ public class CommentController {
 
     @PutMapping
     @Transactional
+    @NoClientId
     public Result putAll(@PathVariable UUID postingId, @Valid @RequestBody CommentMassAttributes commentMassAttributes) {
         log.info("PUT /postings/{postingId}/comments (postingId = {})", LogUtil.format(postingId));
 
