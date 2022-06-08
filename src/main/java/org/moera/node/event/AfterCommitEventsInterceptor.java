@@ -24,8 +24,9 @@ public class AfterCommitEventsInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
         if (ex == null) {
-            HandlerMethod handlerMethod = (HandlerMethod) handler;
-            String clientId = handlerMethod.hasMethodAnnotation(NoClientId.class) ? null : requestContext.getClientId();
+            boolean noClientId = handler instanceof HandlerMethod
+                    && ((HandlerMethod) handler).hasMethodAnnotation(NoClientId.class);
+            String clientId = noClientId ? null : requestContext.getClientId();
             requestContext.getAfterCommitLiberins().forEach(liberin -> {
                 liberin.setNodeId(requestContext.nodeId());
                 liberin.setClientId(clientId);
