@@ -10,6 +10,17 @@ import com.fasterxml.jackson.databind.util.StdConverter;
 @JsonDeserialize(converter = Principal.FromStringConverter.class)
 public class Principal implements Cloneable, PrincipalFilter {
 
+    /*
+     *   admin   post   object
+     *     +      +       +      private and wider
+     *     -      -       +      owner
+     *     +      -       -      admin
+     *
+     *   admin   post   comment   object
+     *     +      +        +        +      private and wider
+     *     -      -        -        +      owner
+     *     +      -        -        -      admin
+     */
     public static final Principal NONE = new Principal("none");
     public static final Principal ADMIN = new Principal("admin");
     public static final Principal SIGNED = new Principal("signed");
