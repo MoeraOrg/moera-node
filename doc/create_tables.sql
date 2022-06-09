@@ -454,7 +454,8 @@ CREATE TABLE public.drafts (
     update_description character varying(128) DEFAULT ''::character varying NOT NULL,
     publish_at timestamp without time zone,
     replied_to_id character varying(40),
-    operations text DEFAULT '{}'::text NOT NULL
+    operations text DEFAULT '{}'::text NOT NULL,
+    child_operations text DEFAULT '{}'::text NOT NULL
 );
 
 
@@ -505,7 +506,7 @@ CREATE TABLE public.entries (
     receiver_deleted_at timestamp without time zone,
     view_comments_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_comments_principal character varying(70),
-    add_comment_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    add_comment_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
     receiver_add_comment_principal character varying(70),
     view_reactions_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_reactions_principal character varying(70),
@@ -515,16 +516,32 @@ CREATE TABLE public.entries (
     receiver_view_reaction_totals_principal character varying(70),
     view_negative_reaction_totals_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_negative_reaction_totals_principal character varying(70),
-    add_reaction_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    add_reaction_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
     receiver_add_reaction_principal character varying(70),
-    add_negative_reaction_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    add_negative_reaction_principal character varying(70) DEFAULT 'signed'::character varying NOT NULL,
     receiver_add_negative_reaction_principal character varying(70),
     view_reaction_ratios_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_reaction_ratios_principal character varying(70),
     view_negative_reaction_ratios_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     receiver_view_negative_reaction_ratios_principal character varying(70),
     receiver_edit_principal character varying(70),
-    receiver_delete_principal character varying(70)
+    receiver_delete_principal character varying(70),
+    parent_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_edit_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_view_comments_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_add_comment_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_view_reactions_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_view_negative_reactions_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_view_reaction_totals_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_view_negative_reaction_totals_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_view_reaction_ratios_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_view_negative_reaction_ratios_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_add_reaction_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    parent_add_negative_reaction_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    child_operations text DEFAULT '{}'::text NOT NULL,
+    parent_override_comment_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    receiver_override_comment_principal character varying(70)
 );
 
 
