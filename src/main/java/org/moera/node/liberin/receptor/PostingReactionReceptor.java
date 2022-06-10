@@ -7,6 +7,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
@@ -146,11 +147,11 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
 
         if (posting.getParentMedia() == null) {
             if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
-                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting, null)),
+                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), generalVisibilityFilter(posting)),
                         new PostingReactionDeletedAllNotification(null, null, null,
                                 posting.getId()));
             } else {
-                if (visibilityFilter(posting, null).includes(true, posting.getOwnerName())) {
+                if (generalVisibilityFilter(posting).includes(true, posting.getOwnerName())) {
                     postingReactionInstants.deletedAll(posting.getId());
                 }
             }
@@ -159,7 +160,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
             for (Entry entry : entries) {
                 UUID parentPostingId = entry instanceof Comment ? ((Comment) entry).getPosting().getId() : entry.getId();
                 UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
-                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), visibilityFilter(posting, null)),
+                send(Directions.single(liberin.getNodeId(), posting.getOwnerName(), generalVisibilityFilter(posting)),
                         new PostingReactionDeletedAllNotification(parentPostingId, parentCommentId,
                                 posting.getParentMedia().getId(), posting.getId()));
             }
@@ -175,12 +176,15 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                 new PostingReactionsUpdatedNotification(posting.getId(), liberin.getTotals()));
     }
 
-    private PrincipalFilter visibilityFilter(Posting posting, Reaction reaction) {
+    private PrincipalExpression generalVisibilityFilter(Posting posting) {
         return posting.getViewE().a()
-                .and(posting.getViewReactionsE())
-                .and(reaction != null && reaction.isNegative()
-                        ? posting.getViewNegativeReactionsE()
-                        : Principal.PUBLIC);
+                .and(posting.getViewReactionsE());
+    }
+
+    private PrincipalFilter visibilityFilter(Posting posting, Reaction reaction) {
+        return generalVisibilityFilter(posting)
+                .and(reaction.isNegative() ? posting.getViewNegativeReactionsE() : Principal.PUBLIC)
+                .and(reaction.getViewE());
     }
 
 }

@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Reaction;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,8 +13,8 @@ public class ReactionCreated {
     public ReactionCreated() {
     }
 
-    public ReactionCreated(Reaction reaction, ReactionTotalsInfo totals) {
-        this.reaction = reaction != null ? new ReactionInfo(reaction) : null;
+    public ReactionCreated(Reaction reaction, ReactionTotalsInfo totals, AccessChecker accessChecker) {
+        this.reaction = reaction != null ? new ReactionInfo(reaction, accessChecker) : null;
         this.totals = totals;
     }
 

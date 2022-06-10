@@ -8,7 +8,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Reaction;
@@ -109,7 +108,7 @@ public class CommentReactionController {
         return ResponseEntity.created(
                 URI.create(String.format("/postings/%s/comments/%s/reactions/%s",
                         postingId, comment.getId(), reaction.getId())))
-                .body(new ReactionCreated(reaction, totalsInfo.getClientInfo()));
+                .body(new ReactionCreated(reaction, totalsInfo.getClientInfo(), requestContext));
     }
 
     @GetMapping
@@ -183,12 +182,13 @@ public class CommentReactionController {
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentId, ownerName);
 
-        if (reaction == null || reaction.isNegative()
-                && !requestContext.isPrincipal(comment.getViewNegativeReactionsE())) {
+        if (reaction == null
+                || !requestContext.isPrincipal(reaction.getViewE())
+                || reaction.isNegative() && !requestContext.isPrincipal(comment.getViewNegativeReactionsE())) {
             return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
         }
 
-        return new ReactionInfo(reaction);
+        return new ReactionInfo(reaction, requestContext);
     }
 
     @DeleteMapping
@@ -229,10 +229,6 @@ public class CommentReactionController {
         log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
                         + " (postingId = {}, commentId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
-
-        if (!requestContext.isAdmin() && !requestContext.isClient(ownerName)) {
-            throw new AuthenticationException();
-        }
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));

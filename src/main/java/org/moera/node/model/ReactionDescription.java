@@ -1,8 +1,10 @@
 package org.moera.node.model;
 
+import java.util.Map;
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.Reaction;
@@ -27,6 +29,8 @@ public class ReactionDescription {
 
     private short signatureVersion;
 
+    private Map<String, Principal> operations;
+
     public ReactionDescription() {
     }
 
@@ -37,6 +41,7 @@ public class ReactionDescription {
         this.ownerAvatar = ownerAvatar != null ? new AvatarDescription(ownerAvatar) : null;
         negative = attributes.isNegative();
         emoji = attributes.getEmoji();
+        operations = attributes.getOperations();
     }
 
     public String getOwnerName() {
@@ -103,6 +108,14 @@ public class ReactionDescription {
         this.signatureVersion = signatureVersion;
     }
 
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
+    }
+
     public void toReaction(Reaction reaction) {
         reaction.setOwnerName(ownerName);
         reaction.setOwnerFullName(ownerFullName);
@@ -118,6 +131,11 @@ public class ReactionDescription {
         reaction.setEmoji(emoji);
         reaction.setSignature(signature);
         reaction.setSignatureVersion(signatureVersion);
+        if (operations != null) {
+            if (operations.get("view") != null) {
+                reaction.setViewPrincipal(operations.get("view"));
+            }
+        }
     }
 
 }

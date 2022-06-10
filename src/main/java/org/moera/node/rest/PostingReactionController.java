@@ -114,7 +114,7 @@ public class PostingReactionController {
         requestContext.send(liberin);
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
-                .body(new ReactionCreated(reaction, totalsInfo.getClientInfo()));
+                .body(new ReactionCreated(reaction, totalsInfo.getClientInfo(), requestContext));
     }
 
     private ResponseEntity<ReactionCreated> postToPickedAtHome(ReactionDescription reactionDescription,
@@ -127,7 +127,7 @@ public class PostingReactionController {
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
-                .body(new ReactionCreated(null, totalsInfo.getClientInfo()));
+                .body(new ReactionCreated(null, totalsInfo.getClientInfo(), requestContext));
     }
 
     private ResponseEntity<ReactionCreated> postToPicked(ReactionDescription reactionDescription, Posting posting) {
@@ -136,7 +136,7 @@ public class PostingReactionController {
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
-                .body(new ReactionCreated(null, totalsInfo.getClientInfo()));
+                .body(new ReactionCreated(null, totalsInfo.getClientInfo(), requestContext));
     }
 
     @GetMapping
@@ -191,12 +191,13 @@ public class PostingReactionController {
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
 
-        if (reaction == null || reaction.isNegative()
-                && !requestContext.isPrincipal(posting.getViewNegativeReactionsE())) {
+        if (reaction == null
+                || !requestContext.isPrincipal(reaction.getViewE())
+                || reaction.isNegative() && !requestContext.isPrincipal(posting.getViewNegativeReactionsE())) {
             return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 
-        return new ReactionInfo(reaction);
+        return new ReactionInfo(reaction, requestContext);
     }
 
     @DeleteMapping
@@ -224,10 +225,6 @@ public class PostingReactionController {
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) {
         log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
-
-        if (!requestContext.isAdmin() && !requestContext.isClient(ownerName)) {
-            throw new AuthenticationException();
-        }
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
@@ -257,6 +254,10 @@ public class PostingReactionController {
     }
 
     private void deleteFromPickedAtHome(Posting posting) {
+        if (!requestContext.isAdmin()) {
+            throw new AuthenticationException();
+        }
+
         Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
                 posting.getReceiverName(), posting.getReceiverEntryId());
         ownReaction.ifPresent(r -> reactionTotalOperations.changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));

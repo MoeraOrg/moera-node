@@ -83,7 +83,8 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
     private PrincipalFilter visibilityFilter(Comment comment, Reaction reaction) {
         return generalVisibilityFilter(comment)
                 .and(comment.getViewReactionsE())
-                .and(reaction.isNegative() ? comment.getViewNegativeReactionsE() : Principal.PUBLIC);
+                .and(reaction.isNegative() ? comment.getViewNegativeReactionsE() : Principal.PUBLIC)
+                .and(reaction.getViewE());
     }
 
 }

@@ -57,6 +57,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private byte[] signature;
     private Short signatureVersion;
     private Map<String, Principal> operations;
+    private Map<String, Principal> reactionOperations;
     private Map<String, Principal> ownerOperations;
     private Map<String, Principal> seniorOperations;
     private AcceptedReactions acceptedReactions;
@@ -115,6 +116,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
+
         operations = new HashMap<>();
         putOperation(operations, "view",
                 comment.getViewCompound(), Principal.PUBLIC);
@@ -138,6 +140,13 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
                 comment.getAddReactionCompound(), Principal.SIGNED);
         putOperation(operations, "addNegativeReaction",
                 comment.getAddNegativeReactionCompound(), Principal.SIGNED);
+
+        reactionOperations = new HashMap<>();
+        putOperation(reactionOperations, "view",
+                comment.getReactionOperations().getView(), Principal.UNSET);
+        putOperation(reactionOperations, "delete",
+                comment.getReactionOperations().getDelete(), Principal.UNSET);
+
         if (accessChecker.isPrincipal(comment.getViewOperationsE())) {
             ownerOperations = new HashMap<>();
             putOperation(ownerOperations, "view",
@@ -162,6 +171,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
                     comment.getAddReactionPrincipal(), Principal.SIGNED);
             putOperation(ownerOperations, "addNegativeReaction",
                     comment.getAddNegativeReactionPrincipal(), Principal.SIGNED);
+
             seniorOperations = new HashMap<>();
             putOperation(seniorOperations, "view",
                     comment.getParentViewPrincipal(), Principal.UNSET);
@@ -186,6 +196,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
             putOperation(seniorOperations, "addNegativeReaction",
                     comment.getParentAddNegativeReactionPrincipal(), Principal.UNSET);
         }
+
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(comment.getAcceptedReactionsNegative());
@@ -466,6 +477,14 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Map<String, Principal> getReactionOperations() {
+        return reactionOperations;
+    }
+
+    public void setReactionOperations(Map<String, Principal> reactionOperations) {
+        this.reactionOperations = reactionOperations;
     }
 
     public Map<String, Principal> getOwnerOperations() {

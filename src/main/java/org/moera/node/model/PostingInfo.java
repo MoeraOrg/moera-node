@@ -75,6 +75,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Map<String, Principal> operations;
     private Map<String, Principal> receiverOperations;
     private Map<String, Principal> commentOperations;
+    private Map<String, Principal> reactionOperations;
+    private Map<String, Principal> commentReactionOperations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -241,6 +243,18 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 posting.getChildOperations().getAddReaction(), Principal.UNSET);
         putOperation(commentOperations, "addNegativeReaction",
                 posting.getChildOperations().getAddNegativeReaction(), Principal.UNSET);
+
+        reactionOperations = new HashMap<>();
+        putOperation(reactionOperations, "view",
+                posting.getReactionOperations().getView(), Principal.UNSET);
+        putOperation(reactionOperations, "delete",
+                posting.getReactionOperations().getDelete(), Principal.UNSET);
+
+        commentReactionOperations = new HashMap<>();
+        putOperation(commentReactionOperations, "view",
+                posting.getChildReactionOperations().getView(), Principal.UNSET);
+        putOperation(commentReactionOperations, "delete",
+                posting.getChildReactionOperations().getDelete(), Principal.UNSET);
 
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
@@ -621,6 +635,22 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setCommentOperations(Map<String, Principal> commentOperations) {
         this.commentOperations = commentOperations;
+    }
+
+    public Map<String, Principal> getReactionOperations() {
+        return reactionOperations;
+    }
+
+    public void setReactionOperations(Map<String, Principal> reactionOperations) {
+        this.reactionOperations = reactionOperations;
+    }
+
+    public Map<String, Principal> getCommentReactionOperations() {
+        return commentReactionOperations;
+    }
+
+    public void setCommentReactionOperations(Map<String, Principal> commentReactionOperations) {
+        this.commentReactionOperations = commentReactionOperations;
     }
 
     public AcceptedReactions getAcceptedReactions() {

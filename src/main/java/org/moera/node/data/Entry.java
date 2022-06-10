@@ -220,6 +220,10 @@ public class Entry {
 
     private ChildOperations childOperations = new ChildOperations();
 
+    private ChildOperations reactionOperations = new ChildOperations();
+
+    private ChildOperations childReactionOperations = new ChildOperations();
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -582,8 +586,11 @@ public class Entry {
     }
 
     private Principal toAbsolute(Principal principal) {
-        String parentOwnerName = getParent() != null ? getParent().getOwnerName() : null;
-        return principal.withOwner(getOwnerName(), parentOwnerName);
+        if (getParent() == null) {
+            return principal.withOwner(getOwnerName());
+        } else {
+            return principal.withOwner(getOwnerName(), getParent().getOwnerName());
+        }
     }
 
     private Principal toReceiverAbsolute(Principal principal) {
@@ -1070,6 +1077,22 @@ public class Entry {
 
     public void setChildOperations(ChildOperations childOperations) {
         this.childOperations = childOperations;
+    }
+
+    public ChildOperations getReactionOperations() {
+        return reactionOperations;
+    }
+
+    public void setReactionOperations(ChildOperations reactionOperations) {
+        this.reactionOperations = reactionOperations;
+    }
+
+    public ChildOperations getChildReactionOperations() {
+        return childReactionOperations;
+    }
+
+    public void setChildReactionOperations(ChildOperations childReactionOperations) {
+        this.childReactionOperations = childReactionOperations;
     }
 
     public Set<Story> getStories() {

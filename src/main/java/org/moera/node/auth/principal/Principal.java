@@ -116,10 +116,20 @@ public class Principal implements Cloneable, PrincipalFilter {
 
     public Principal withOwner(String ownerName, String seniorName) {
         if (isOwner()) {
-            return Principal.ofOnly(ownerName, seniorName);
+            return Principal.ofOnly(ownerName);
         }
         if (isPrivate()) {
             return Principal.ofNode(ownerName, seniorName);
+        }
+        return this;
+    }
+
+    public Principal withOwner(String ownerName, String seniorName, String majorName) {
+        if (isOwner()) {
+            return Principal.ofOnly(ownerName);
+        }
+        if (isPrivate()) {
+            return Principal.ofNode(ownerName, seniorName, majorName);
         }
         return this;
     }

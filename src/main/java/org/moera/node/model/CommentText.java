@@ -6,12 +6,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BodyFormat;
+import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
@@ -63,6 +65,8 @@ public class CommentText {
     private short signatureVersion;
 
     private Map<String, Principal> operations;
+
+    private Map<String, Principal> reactionOperations;
 
     private Map<String, Principal> seniorOperations;
 
@@ -243,6 +247,18 @@ public class CommentText {
         return operations != null ? operations.get(operationName) : null;
     }
 
+    public Map<String, Principal> getReactionOperations() {
+        return reactionOperations;
+    }
+
+    public void setReactionOperations(Map<String, Principal> reactionOperations) {
+        this.reactionOperations = reactionOperations;
+    }
+
+    public Principal getReactionPrincipal(String operationName) {
+        return reactionOperations != null ? reactionOperations.get(operationName) : null;
+    }
+
     public Map<String, Principal> getSeniorOperations() {
         return seniorOperations;
     }
@@ -281,40 +297,40 @@ public class CommentText {
             }
         }
 
-        toPrincipal("view", entry::setViewPrincipal);
-        toPrincipal("viewReactions", entry::setViewReactionsPrincipal);
-        toPrincipal("viewNegativeReactions", entry::setViewNegativeReactionsPrincipal);
-        toPrincipal("viewReactionTotals", entry::setViewReactionTotalsPrincipal);
-        toPrincipal("viewNegativeReactionTotals", entry::setViewNegativeReactionTotalsPrincipal);
-        toPrincipal("viewReactionRatios", entry::setViewReactionRatiosPrincipal);
-        toPrincipal("viewNegativeReactionRatios", entry::setViewNegativeReactionRatiosPrincipal);
-        toPrincipal("addReaction", entry::setAddReactionPrincipal);
-        toPrincipal("addNegativeReaction", entry::setAddNegativeReactionPrincipal);
+        toPrincipal(this::getPrincipal, "view", entry::setViewPrincipal);
+        toPrincipal(this::getPrincipal, "viewReactions", entry::setViewReactionsPrincipal);
+        toPrincipal(this::getPrincipal, "viewNegativeReactions", entry::setViewNegativeReactionsPrincipal);
+        toPrincipal(this::getPrincipal, "viewReactionTotals", entry::setViewReactionTotalsPrincipal);
+        toPrincipal(this::getPrincipal, "viewNegativeReactionTotals", entry::setViewNegativeReactionTotalsPrincipal);
+        toPrincipal(this::getPrincipal, "viewReactionRatios", entry::setViewReactionRatiosPrincipal);
+        toPrincipal(this::getPrincipal, "viewNegativeReactionRatios", entry::setViewNegativeReactionRatiosPrincipal);
+        toPrincipal(this::getPrincipal, "addReaction", entry::setAddReactionPrincipal);
+        toPrincipal(this::getPrincipal, "addNegativeReaction", entry::setAddNegativeReactionPrincipal);
+
+        ChildOperations ops = entry.getReactionOperations();
+        toPrincipal(this::getReactionPrincipal, "view", ops::setView);
+        toPrincipal(this::getReactionPrincipal, "delete", ops::setDelete);
 
         toEntrySenior(entry);
     }
 
     public void toEntrySenior(Entry entry) {
-        toSeniorPrincipal("view", entry::setParentViewPrincipal);
-        toSeniorPrincipal("viewReactions", entry::setParentViewReactionsPrincipal);
-        toSeniorPrincipal("viewNegativeReactions", entry::setParentViewNegativeReactionsPrincipal);
-        toSeniorPrincipal("viewReactionTotals", entry::setParentViewReactionTotalsPrincipal);
-        toSeniorPrincipal("viewNegativeReactionTotals", entry::setParentViewNegativeReactionTotalsPrincipal);
-        toSeniorPrincipal("viewReactionRatios", entry::setParentViewReactionRatiosPrincipal);
-        toSeniorPrincipal("viewNegativeReactionRatios", entry::setParentViewNegativeReactionRatiosPrincipal);
-        toSeniorPrincipal("addReaction", entry::setParentAddReactionPrincipal);
-        toSeniorPrincipal("addNegativeReaction", entry::setParentAddNegativeReactionPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "view", entry::setParentViewPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "viewReactions", entry::setParentViewReactionsPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "viewNegativeReactions", entry::setParentViewNegativeReactionsPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "viewReactionTotals", entry::setParentViewReactionTotalsPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "viewNegativeReactionTotals",
+                entry::setParentViewNegativeReactionTotalsPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "viewReactionRatios", entry::setParentViewReactionRatiosPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "viewNegativeReactionRatios",
+                entry::setParentViewNegativeReactionRatiosPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "addReaction", entry::setParentAddReactionPrincipal);
+        toPrincipal(this::getSeniorPrincipal, "addNegativeReaction", entry::setParentAddNegativeReactionPrincipal);
     }
 
-    private void toPrincipal(String operationName, Consumer<Principal> setPrincipal) {
-        Principal value = getPrincipal(operationName);
-        if (value != null) {
-            setPrincipal.accept(value);
-        }
-    }
-
-    private void toSeniorPrincipal(String operationName, Consumer<Principal> setPrincipal) {
-        Principal value = getSeniorPrincipal(operationName);
+    private void toPrincipal(Function<String, Principal> getPrincipal, String operationName,
+                             Consumer<Principal> setPrincipal) {
+        Principal value = getPrincipal.apply(operationName);
         if (value != null) {
             setPrincipal.accept(value);
         }
@@ -339,6 +355,8 @@ public class CommentText {
                && samePrincipalAs("viewNegativeReactionRatios", entry.getViewNegativeReactionRatiosPrincipal())
                && samePrincipalAs("addReaction", entry.getAddReactionPrincipal())
                && samePrincipalAs("addNegativeReaction", entry.getAddNegativeReactionPrincipal())
+               && sameReactionPrincipalAs("view", entry.getReactionOperations().getView())
+               && sameReactionPrincipalAs("delete", entry.getReactionOperations().getDelete())
                && sameSeniorPrincipalAs("view", entry.getParentViewPrincipal())
                && sameSeniorPrincipalAs("viewReactions", entry.getParentViewReactionsPrincipal())
                && sameSeniorPrincipalAs("viewNegativeReactions", entry.getParentViewNegativeReactionsPrincipal())
@@ -355,6 +373,11 @@ public class CommentText {
     private boolean samePrincipalAs(String operationName, Principal principal) {
         Principal value = getPrincipal(operationName);
         return value == null || Objects.equals(value, principal);
+    }
+
+    private boolean sameReactionPrincipalAs(String operationName, Principal principal) {
+        Principal value = getReactionPrincipal(operationName);
+        return value == null || principal == null && value.isUnset() || Objects.equals(value, principal);
     }
 
     private boolean sameSeniorPrincipalAs(String operationName, Principal principal) {

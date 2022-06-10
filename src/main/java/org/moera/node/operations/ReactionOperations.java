@@ -196,13 +196,20 @@ public class ReactionOperations {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
         sliceInfo.setTotal((int) page.getTotalElements());
-        sliceInfo.setReactions(page.stream().map(ReactionInfo::new).collect(Collectors.toList()));
+        sliceInfo.setReactions(page.stream()
+                .filter(r -> requestContext.isPrincipal(r.getViewE()))
+                .map(r -> new ReactionInfo(r, requestContext))
+                .collect(Collectors.toList()));
         return sliceInfo;
     }
 
     public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), ownerName);
         if (reaction != null) {
+            if (!requestContext.isPrincipal(reaction.getDeleteE())) {
+                throw new AuthenticationException();
+            }
+
             log.debug("Deleting reaction {}", LogUtil.format(reaction.getId()));
             reactionTotalOperations.changeTotals(entry, reaction, -1);
             reaction.setDeletedAt(Util.now());

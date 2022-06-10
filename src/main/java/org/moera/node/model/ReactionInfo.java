@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
@@ -31,11 +32,14 @@ public class ReactionInfo {
     private byte[] signature;
     private Short signatureVersion;
     private Map<String, Principal> operations;
+    private Map<String, Principal> ownerOperations;
+    private Map<String, Principal> seniorOperations;
+    private Map<String, Principal> majorOperations;
 
     public ReactionInfo() {
     }
 
-    public ReactionInfo(Reaction reaction) {
+    public ReactionInfo(Reaction reaction, AccessChecker accessChecker) {
         ownerName = reaction.getOwnerName();
         ownerFullName = reaction.getOwnerFullName();
         if (reaction.getOwnerAvatarMediaFile() != null) {
@@ -59,7 +63,26 @@ public class ReactionInfo {
         signature = reaction.getSignature();
         signatureVersion = reaction.getSignatureVersion();
         operations = new HashMap<>();
-        operations.put("delete", Principal.PRIVATE);
+        putOperation(operations, "view", reaction.getViewCompound(), Principal.PUBLIC);
+        putOperation(operations, "delete", reaction.getDeleteCompound(), Principal.PRIVATE);
+        if (accessChecker.isPrincipal(reaction.getViewOperationsE())) {
+            ownerOperations = new HashMap<>();
+            putOperation(ownerOperations, "view", reaction.getViewPrincipal(), Principal.UNSET);
+            putOperation(ownerOperations, "delete", reaction.getDeletePrincipal(), Principal.UNSET);
+            seniorOperations = new HashMap<>();
+            putOperation(seniorOperations, "view", reaction.getViewPrincipal(), Principal.UNSET);
+            putOperation(seniorOperations, "delete", reaction.getDeletePrincipal(), Principal.UNSET);
+            majorOperations = new HashMap<>();
+            putOperation(majorOperations, "view", reaction.getViewPrincipal(), Principal.UNSET);
+            putOperation(majorOperations, "delete", reaction.getDeletePrincipal(), Principal.UNSET);
+        }
+    }
+
+    private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
+                                     Principal defaultValue) {
+        if (value != null && !value.equals(defaultValue)) {
+            operations.put(operationName, value);
+        }
     }
 
     public static ReactionInfo ofPosting(UUID postingId) {
@@ -192,6 +215,30 @@ public class ReactionInfo {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Map<String, Principal> getOwnerOperations() {
+        return ownerOperations;
+    }
+
+    public void setOwnerOperations(Map<String, Principal> ownerOperations) {
+        this.ownerOperations = ownerOperations;
+    }
+
+    public Map<String, Principal> getSeniorOperations() {
+        return seniorOperations;
+    }
+
+    public void setSeniorOperations(Map<String, Principal> seniorOperations) {
+        this.seniorOperations = seniorOperations;
+    }
+
+    public Map<String, Principal> getMajorOperations() {
+        return majorOperations;
+    }
+
+    public void setMajorOperations(Map<String, Principal> majorOperations) {
+        this.majorOperations = majorOperations;
     }
 
     public void toOwnReaction(OwnReaction ownReaction) {

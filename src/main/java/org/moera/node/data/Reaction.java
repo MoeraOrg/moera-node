@@ -9,6 +9,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.util.Util;
 
 @Entity
@@ -56,6 +57,16 @@ public class Reaction {
     private byte[] signature;
 
     private short signatureVersion;
+
+    private Principal viewPrincipal = Principal.PUBLIC;
+
+    private Principal postingViewPrincipal = Principal.UNSET;
+
+    private Principal commentViewPrincipal = Principal.UNSET;
+
+    private Principal postingDeletePrincipal = Principal.UNSET;
+
+    private Principal commentDeletePrincipal = Principal.UNSET;
 
     public UUID getId() {
         return id;
@@ -175,6 +186,84 @@ public class Reaction {
 
     public void setSignatureVersion(short signatureVersion) {
         this.signatureVersion = signatureVersion;
+    }
+
+    private Principal toAbsolute(Principal principal) {
+        Entry entry = getEntryRevision().getEntry();
+        if (entry.getParent() == null) {
+            return principal.withOwner(getOwnerName(), entry.getOwnerName());
+        } else {
+            return principal.withOwner(getOwnerName(), entry.getOwnerName(), entry.getParent().getOwnerName());
+        }
+    }
+
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
+    }
+
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
+    }
+
+    public Principal getPostingViewPrincipal() {
+        return postingViewPrincipal;
+    }
+
+    public void setPostingViewPrincipal(Principal postingViewPrincipal) {
+        this.postingViewPrincipal = postingViewPrincipal;
+    }
+
+    public Principal getCommentViewPrincipal() {
+        return commentViewPrincipal;
+    }
+
+    public void setCommentViewPrincipal(Principal commentViewPrincipal) {
+        this.commentViewPrincipal = commentViewPrincipal;
+    }
+
+    public Principal getViewCompound() {
+        return getPostingViewPrincipal().withSubordinate(getCommentViewPrincipal().withSubordinate(getViewPrincipal()));
+    }
+
+    public Principal getViewE() {
+        return toAbsolute(getViewCompound());
+    }
+
+    public Principal getDeletePrincipal() {
+        return Principal.PRIVATE;
+    }
+
+    public Principal getPostingDeletePrincipal() {
+        return postingDeletePrincipal;
+    }
+
+    public void setPostingDeletePrincipal(Principal postingDeletePrincipal) {
+        this.postingDeletePrincipal = postingDeletePrincipal;
+    }
+
+    public Principal getCommentDeletePrincipal() {
+        return commentDeletePrincipal;
+    }
+
+    public void setCommentDeletePrincipal(Principal commentDeletePrincipal) {
+        this.commentDeletePrincipal = commentDeletePrincipal;
+    }
+
+    public Principal getDeleteCompound() {
+        return getPostingDeletePrincipal()
+                .withSubordinate(getCommentDeletePrincipal().withSubordinate(getDeletePrincipal()));
+    }
+
+    public Principal getDeleteE() {
+        return toAbsolute(getDeleteCompound());
+    }
+
+    public Principal getViewOperationsPrincipal() {
+        return Principal.PRIVATE;
+    }
+
+    public Principal getViewOperationsE() {
+        return toAbsolute(getViewOperationsPrincipal());
     }
 
 }
