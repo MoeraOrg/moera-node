@@ -24,6 +24,8 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
+import org.moera.node.data.ReactionTotal;
+import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.LiberinManager;
@@ -65,6 +67,9 @@ public class ReactionOperations {
 
     @Inject
     private ReactionRepository reactionRepository;
+
+    @Inject
+    private ReactionTotalRepository reactionTotalRepository;
 
     @Inject
     private NamingCache namingCache;
@@ -215,12 +220,23 @@ public class ReactionOperations {
         } else {
             sliceInfo.setAfter(page.getContent().get(limit).getMoment());
         }
-        sliceInfo.setTotal((int) page.getTotalElements());
+        sliceInfo.setTotal(getTotal(entryId, negative, emoji));
         sliceInfo.setReactions(page.stream()
                 .filter(r -> requestContext.isPrincipal(r.getViewE()))
                 .map(r -> new ReactionInfo(r, requestContext))
                 .collect(Collectors.toList()));
         return sliceInfo;
+    }
+
+    private int getTotal(UUID entryId, boolean negative, Integer emoji) {
+        if (emoji == null) {
+            return reactionTotalRepository.findAllByEntryId(entryId).stream()
+                    .map(ReactionTotal::getTotal)
+                    .reduce(0, Integer::sum);
+        } else {
+            ReactionTotal total = reactionTotalRepository.findByEntryId(entryId, negative, emoji);
+            return total != null ? total.getTotal() : 0;
+        }
     }
 
     public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
