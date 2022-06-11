@@ -1,8 +1,10 @@
 package org.moera.node.rest;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -10,6 +12,8 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -27,6 +31,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.ReactionOverride;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
@@ -37,11 +42,13 @@ import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,6 +58,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class PostingReactionController {
 
     private static final Logger log = LoggerFactory.getLogger(PostingReactionController.class);
+
+    private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
+            Pair.of("view",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.ADMIN
+                    | PrincipalFlag.NONE),
+            Pair.of("delete",
+                    PrincipalFlag.PRIVATE | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE)
+    );
 
     @Inject
     private RequestContext requestContext;
@@ -137,6 +152,49 @@ public class PostingReactionController {
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
                 .body(new ReactionCreated(null, totalsInfo.getClientInfo(), requestContext));
+    }
+
+    @PutMapping("/{ownerName}")
+    @Transactional
+    public ReactionInfo put(@PathVariable UUID postingId, @PathVariable String ownerName,
+                            @Valid @RequestBody ReactionOverride reactionOverride) {
+        log.info("PUT /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
+                LogUtil.format(postingId), LogUtil.format(ownerName));
+
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isPrincipal(posting.getViewE())) {
+            throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
+                && !requestContext.isClient(ownerName)) {
+            throw new AuthenticationException();
+        }
+        validateOperations(reactionOverride::getPrincipal, false,
+                "reactionOverride.operations.wrong-principal");
+        if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
+                && !requestContext.isPrincipal(posting.getOverrideReactionE())) {
+            throw new AuthenticationException();
+        }
+        validateOperations(reactionOverride::getSeniorPrincipal, true,
+                "reactionOverride.seniorOperations.wrong-principal");
+        Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(), ownerName);
+        if (reaction == null) {
+            throw new ObjectNotFoundFailure("reaction.not-found");
+        }
+
+        reactionOverride.toPostingReaction(reaction);
+
+        return new ReactionInfo(reaction, requestContext);
+    }
+
+    private void validateOperations(Function<String, Principal> getPrincipal, boolean includeUnset, String errorCode) {
+        for (var desc : OPERATION_PRINCIPALS) {
+            Principal principal = getPrincipal.apply(desc.getFirst());
+            if (principal != null && !principal.isOneOf(desc.getSecond()) && (!includeUnset || !principal.isUnset())) {
+                throw new ValidationFailure(errorCode);
+            }
+        }
     }
 
     @GetMapping

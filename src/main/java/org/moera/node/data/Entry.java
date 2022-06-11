@@ -218,6 +218,14 @@ public class Entry {
 
     private Principal receiverAddNegativeReactionPrincipal;
 
+    private Principal parentOverrideReactionPrincipal = Principal.UNSET;
+
+    private Principal receiverOverrideReactionPrincipal;
+
+    private Principal parentOverrideCommentReactionPrincipal = Principal.UNSET;
+
+    private Principal receiverOverrideCommentReactionPrincipal;
+
     private ChildOperations childOperations = new ChildOperations();
 
     private ChildOperations reactionOperations = new ChildOperations();
@@ -1061,6 +1069,62 @@ public class Entry {
 
     public void setReceiverAddNegativeReactionPrincipal(Principal receiverAddNegativeReactionPrincipal) {
         this.receiverAddNegativeReactionPrincipal = receiverAddNegativeReactionPrincipal;
+    }
+
+    public Principal getOverrideReactionPrincipal() {
+        return receiverName == null ? Principal.OWNER : Principal.NONE;
+    }
+
+    public Principal getParentOverrideReactionPrincipal() {
+        return parentOverrideReactionPrincipal;
+    }
+
+    public void setParentOverrideReactionPrincipal(Principal parentOverrideReactionPrincipal) {
+        this.parentOverrideReactionPrincipal = parentOverrideReactionPrincipal;
+    }
+
+    public Principal getOverrideReactionCompound() {
+        return getParentOverrideReactionPrincipal().withSubordinate(getOverrideReactionPrincipal());
+    }
+
+    public Principal getOverrideReactionE() {
+        return toAbsolute(getOverrideReactionCompound());
+    }
+
+    public Principal getReceiverOverrideReactionPrincipal() {
+        return receiverOverrideReactionPrincipal;
+    }
+
+    public void setReceiverOverrideReactionPrincipal(Principal receiverOverrideReactionPrincipal) {
+        this.receiverOverrideReactionPrincipal = receiverOverrideReactionPrincipal;
+    }
+
+    public Principal getOverrideCommentReactionPrincipal() {
+        return receiverName == null ? Principal.OWNER : Principal.NONE;
+    }
+
+    public Principal getParentOverrideCommentReactionPrincipal() {
+        return parentOverrideCommentReactionPrincipal;
+    }
+
+    public void setParentOverrideCommentReactionPrincipal(Principal parentOverrideCommentReactionPrincipal) {
+        this.parentOverrideCommentReactionPrincipal = parentOverrideCommentReactionPrincipal;
+    }
+
+    public Principal getOverrideCommentReactionCompound() {
+        return getParentOverrideCommentReactionPrincipal().withSubordinate(getOverrideCommentReactionPrincipal());
+    }
+
+    public Principal getOverrideCommentReactionE() {
+        return toAbsolute(getOverrideCommentReactionCompound());
+    }
+
+    public Principal getReceiverOverrideCommentReactionPrincipal() {
+        return receiverOverrideCommentReactionPrincipal;
+    }
+
+    public void setReceiverOverrideCommentReactionPrincipal(Principal receiverOverrideCommentReactionPrincipal) {
+        this.receiverOverrideCommentReactionPrincipal = receiverOverrideCommentReactionPrincipal;
     }
 
     public Principal getViewOperationsPrincipal() {

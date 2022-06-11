@@ -140,7 +140,9 @@ public class PostingController {
             Pair.of("addReaction",
                     PrincipalFlag.SIGNED | PrincipalFlag.NONE | PrincipalFlag.UNSET),
             Pair.of("addNegativeReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.NONE | PrincipalFlag.UNSET)
+                    PrincipalFlag.SIGNED | PrincipalFlag.NONE | PrincipalFlag.UNSET),
+            Pair.of("overrideReaction",
+                    PrincipalFlag.OWNER | PrincipalFlag.NONE | PrincipalFlag.UNSET)
     );
 
     @Inject

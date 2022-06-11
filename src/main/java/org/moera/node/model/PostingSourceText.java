@@ -34,6 +34,10 @@ public class PostingSourceText {
 
     private Map<String, Principal> commentOperations;
 
+    private Map<String, Principal> reactionOperations;
+
+    private Map<String, Principal> commentReactionOperations;
+
     public PostingSourceText() {
     }
 
@@ -101,4 +105,19 @@ public class PostingSourceText {
         this.commentOperations = commentOperations;
     }
 
+    public Map<String, Principal> getReactionOperations() {
+        return reactionOperations;
+    }
+
+    public void setReactionOperations(Map<String, Principal> reactionOperations) {
+        this.reactionOperations = reactionOperations;
+    }
+
+    public Map<String, Principal> getCommentReactionOperations() {
+        return commentReactionOperations;
+    }
+
+    public void setCommentReactionOperations(Map<String, Principal> commentReactionOperations) {
+        this.commentReactionOperations = commentReactionOperations;
+    }
 }

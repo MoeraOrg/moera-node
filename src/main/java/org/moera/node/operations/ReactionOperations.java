@@ -17,6 +17,8 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.Posting;
@@ -159,6 +161,18 @@ public class ReactionOperations {
             reaction = new Reaction();
             reaction.setId(UUID.randomUUID());
             reaction.setEntryRevision(entry.getCurrentRevision());
+            if (entry.getParent() == null) {
+                ChildOperations ops = entry.getChildOperations();
+                toReaction(ops.getView(), reaction::setPostingViewPrincipal);
+                toReaction(ops.getDelete(), reaction::setPostingDeletePrincipal);
+            } else {
+                ChildOperations ops = entry.getChildOperations();
+                toReaction(ops.getView(), reaction::setCommentViewPrincipal);
+                toReaction(ops.getDelete(), reaction::setCommentDeletePrincipal);
+                ops = entry.getParent().getChildOperations();
+                toReaction(ops.getView(), reaction::setPostingViewPrincipal);
+                toReaction(ops.getDelete(), reaction::setPostingDeletePrincipal);
+            }
             reactionDescription.toReaction(reaction);
             if (reactionDescription.getSignature() == null) {
                 reaction.setDeadline(Timestamp.from(Instant.now().plus(ReactionOperations.UNSIGNED_TTL)));
@@ -179,6 +193,12 @@ public class ReactionOperations {
         reactionRepository.flush();
 
         return reaction;
+    }
+
+    private void toReaction(Principal value, Consumer<Principal> setPrincipal) {
+        if (value != null && !value.isUnset()) {
+            setPrincipal.accept(value);
+        }
     }
 
     public ReactionsSliceInfo getBefore(UUID entryId, boolean negative, Integer emoji, long before, int limit) {

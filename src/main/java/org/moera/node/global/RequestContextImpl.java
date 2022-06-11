@@ -147,7 +147,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isClient(String name) {
-        return Objects.equals(this.clientName, name);
+        return Objects.equals(getClientName(), name);
     }
 
     @Override

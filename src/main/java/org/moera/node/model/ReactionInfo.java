@@ -67,14 +67,20 @@ public class ReactionInfo {
         putOperation(operations, "delete", reaction.getDeleteCompound(), Principal.PRIVATE);
         if (accessChecker.isPrincipal(reaction.getViewOperationsE())) {
             ownerOperations = new HashMap<>();
-            putOperation(ownerOperations, "view", reaction.getViewPrincipal(), Principal.UNSET);
-            putOperation(ownerOperations, "delete", reaction.getDeletePrincipal(), Principal.UNSET);
-            seniorOperations = new HashMap<>();
-            putOperation(seniorOperations, "view", reaction.getViewPrincipal(), Principal.UNSET);
-            putOperation(seniorOperations, "delete", reaction.getDeletePrincipal(), Principal.UNSET);
-            majorOperations = new HashMap<>();
-            putOperation(majorOperations, "view", reaction.getViewPrincipal(), Principal.UNSET);
-            putOperation(majorOperations, "delete", reaction.getDeletePrincipal(), Principal.UNSET);
+            putOperation(ownerOperations, "view", reaction.getViewPrincipal(), Principal.PUBLIC);
+            putOperation(ownerOperations, "delete", reaction.getDeletePrincipal(), Principal.PRIVATE);
+            if (reaction.getEntryRevision().getEntry().getParent() == null) {
+                seniorOperations = new HashMap<>();
+                putOperation(seniorOperations, "view", reaction.getPostingViewPrincipal(), Principal.UNSET);
+                putOperation(seniorOperations, "delete", reaction.getPostingViewPrincipal(), Principal.UNSET);
+            } else {
+                seniorOperations = new HashMap<>();
+                putOperation(seniorOperations, "view", reaction.getCommentViewPrincipal(), Principal.UNSET);
+                putOperation(seniorOperations, "delete", reaction.getCommentDeletePrincipal(), Principal.UNSET);
+                majorOperations = new HashMap<>();
+                putOperation(majorOperations, "view", reaction.getPostingViewPrincipal(), Principal.UNSET);
+                putOperation(majorOperations, "delete", reaction.getPostingDeletePrincipal(), Principal.UNSET);
+            }
         }
     }
 

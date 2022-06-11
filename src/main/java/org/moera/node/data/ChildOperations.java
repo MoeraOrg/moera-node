@@ -22,6 +22,7 @@ public class ChildOperations implements Cloneable {
     private Principal viewNegativeReactionRatios;
     private Principal addReaction;
     private Principal addNegativeReaction;
+    private Principal overrideReaction;
 
     public static ChildOperations decode(String encoded) throws IOException {
         return encoded != null ? new ObjectMapper().readValue(encoded, ChildOperations.class) : null;
@@ -119,6 +120,14 @@ public class ChildOperations implements Cloneable {
         this.addNegativeReaction = addNegativeReaction;
     }
 
+    public Principal getOverrideReaction() {
+        return overrideReaction;
+    }
+
+    public void setOverrideReaction(Principal overrideReaction) {
+        this.overrideReaction = overrideReaction;
+    }
+
     @Override
     public boolean equals(Object peer) {
         if (this == peer) {
@@ -138,14 +147,15 @@ public class ChildOperations implements Cloneable {
                 && Objects.equals(viewReactionRatios, that.viewReactionRatios)
                 && Objects.equals(viewNegativeReactionRatios, that.viewNegativeReactionRatios)
                 && Objects.equals(addReaction, that.addReaction)
-                && Objects.equals(addNegativeReaction, that.addNegativeReaction);
+                && Objects.equals(addNegativeReaction, that.addNegativeReaction)
+                && Objects.equals(overrideReaction, that.overrideReaction);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(view, edit, delete, viewReactions, viewNegativeReactions, viewReactionTotals,
                 viewNegativeReactionTotals, viewReactionRatios, viewNegativeReactionRatios, addReaction,
-                addNegativeReaction);
+                addNegativeReaction, overrideReaction);
     }
 
     @Override

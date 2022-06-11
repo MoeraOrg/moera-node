@@ -94,6 +94,10 @@ public class CommentController {
     private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
             Pair.of("view",
                     PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE),
+            Pair.of("edit",
+                    PrincipalFlag.OWNER | PrincipalFlag.NONE),
+            Pair.of("delete",
+                    PrincipalFlag.PRIVATE | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE),
             Pair.of("viewReactions",
                     PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("viewNegativeReactions",

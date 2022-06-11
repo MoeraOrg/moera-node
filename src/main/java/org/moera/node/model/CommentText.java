@@ -100,6 +100,7 @@ public class CommentText {
             bodyFormat = BodyFormat.APPLICATION.getValue();
         }
         operations = sourceText.getOperations();
+        reactionOperations = sourceText.getReactionOperations();
         seniorOperations = sourceText.getSeniorOperations();
     }
 

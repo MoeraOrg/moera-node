@@ -187,6 +187,10 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 posting.getAddReactionPrincipal(), Principal.SIGNED);
         putOperation(operations, "addNegativeReaction",
                 posting.getAddNegativeReactionPrincipal(), Principal.SIGNED);
+        putOperation(operations, "overrideReaction",
+                posting.getOverrideReactionPrincipal(), Principal.OWNER);
+        putOperation(operations, "overrideCommentReaction",
+                posting.getOverrideCommentReactionPrincipal(), Principal.OWNER);
 
         if (!posting.isOriginal()) {
             receiverOperations = new HashMap<>();
@@ -218,6 +222,10 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                     posting.getReceiverAddReactionPrincipal(), Principal.SIGNED);
             putOperation(receiverOperations, "addNegativeReaction",
                     posting.getReceiverAddNegativeReactionPrincipal(), Principal.SIGNED);
+            putOperation(receiverOperations, "overrideReaction",
+                    posting.getReceiverOverrideReactionPrincipal(), Principal.OWNER);
+            putOperation(receiverOperations, "overrideCommentReaction",
+                    posting.getReceiverOverrideCommentReactionPrincipal(), Principal.OWNER);
         }
 
         commentOperations = new HashMap<>();
@@ -758,6 +766,10 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         principal = getOperations().getOrDefault("addNegativeReaction", Principal.SIGNED);
         posting.setAddNegativeReactionPrincipal(Principal.NONE);
         posting.setReceiverAddNegativeReactionPrincipal(principal);
+        principal = getOperations().getOrDefault("overrideReaction", Principal.OWNER);
+        posting.setReceiverOverrideReactionPrincipal(principal);
+        principal = getOperations().getOrDefault("overrideCommentReaction", Principal.OWNER);
+        posting.setReceiverOverrideCommentReactionPrincipal(principal);
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {

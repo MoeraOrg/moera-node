@@ -105,6 +105,8 @@ public class PostingText {
         }
         operations = sourceText.getOperations();
         commentOperations = sourceText.getCommentOperations();
+        reactionOperations = sourceText.getReactionOperations();
+        commentReactionOperations = sourceText.getCommentReactionOperations();
     }
 
     public void initAcceptedReactionsDefaults() {
@@ -348,6 +350,7 @@ public class PostingText {
             toPrincipal(this::getCommentPrincipal, "viewNegativeReactionRatios", ops::setViewNegativeReactionRatios);
             toPrincipal(this::getCommentPrincipal, "addReaction", ops::setAddReaction);
             toPrincipal(this::getCommentPrincipal, "addNegativeReaction", ops::setAddNegativeReaction);
+            toPrincipal(this::getCommentPrincipal, "overrideReaction", ops::setOverrideReaction);
 
             ops = entry.getReactionOperations();
             toPrincipal(this::getReactionPrincipal, "view", ops::setView);
@@ -402,6 +405,7 @@ public class PostingText {
                                          entry.getChildOperations().getViewNegativeReactionRatios())
                && sameCommentPrincipalAs("addReaction", entry.getChildOperations().getAddReaction())
                && sameCommentPrincipalAs("addNegativeReaction", entry.getChildOperations().getAddNegativeReaction())
+               && sameCommentPrincipalAs("overrideReaction", entry.getChildOperations().getOverrideReaction())
                && sameReactionPrincipalAs("view", entry.getReactionOperations().getView())
                && sameReactionPrincipalAs("delete", entry.getReactionOperations().getDelete())
                && sameCommentReactionPrincipalAs("view", entry.getChildReactionOperations().getView())

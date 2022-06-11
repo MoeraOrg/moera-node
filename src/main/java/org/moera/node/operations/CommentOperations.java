@@ -120,6 +120,7 @@ public class CommentOperations {
                 orUnset(posting.getChildOperations().getViewNegativeReactionRatios()));
         comment.setParentAddReactionPrincipal(orUnset(posting.getChildOperations().getAddReaction()));
         comment.setParentAddNegativeReactionPrincipal(orUnset(posting.getChildOperations().getAddNegativeReaction()));
+        comment.setParentOverrideReactionPrincipal(orUnset(posting.getChildOperations().getOverrideReaction()));
 
         commentText.toEntry(comment);
         comment.setMoment(momentFinder.find(
