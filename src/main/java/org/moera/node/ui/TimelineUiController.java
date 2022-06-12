@@ -134,7 +134,7 @@ public class TimelineUiController {
         model.addAttribute("canonicalUrl", canonicalUrl);
         model.addAttribute("openComments", commentId != null || before != null);
         model.addAttribute("openMediaPostingId", id.toString());
-        model.addAttribute("openMediaCommentId", commentId != null ? commentId.toString() : null);
+        model.addAttribute("openMediaCommentId", Objects.toString(commentId, null));
         model.addAttribute("openMediaId", Objects.toString(mediaId, null));
 
         Comment comment = commentId != null && posting.isOriginal()

@@ -1,6 +1,7 @@
 package org.moera.node.model.notification;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.moera.commons.util.LogUtil;
@@ -25,9 +26,9 @@ public abstract class PostingReactionNotification extends ReactionNotification {
                                        UUID parentMediaId, UUID postingId, String ownerName, String ownerFullName,
                                        AvatarImage ownerAvatar, boolean negative) {
         super(type, ownerName, ownerFullName, ownerAvatar, negative);
-        this.parentPostingId = parentPostingId != null ? parentPostingId.toString() : null;
-        this.parentCommentId = parentCommentId != null ? parentCommentId.toString() : null;
-        this.parentMediaId = parentMediaId != null ? parentMediaId.toString() : null;
+        this.parentPostingId = Objects.toString(parentPostingId, null);
+        this.parentCommentId = Objects.toString(parentCommentId, null);
+        this.parentMediaId = Objects.toString(parentMediaId, null);
         this.postingId = postingId.toString();
     }
 

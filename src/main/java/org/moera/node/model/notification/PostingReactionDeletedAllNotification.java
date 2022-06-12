@@ -1,6 +1,7 @@
 package org.moera.node.model.notification;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.moera.commons.util.LogUtil;
@@ -23,9 +24,9 @@ public class PostingReactionDeletedAllNotification extends Notification {
     public PostingReactionDeletedAllNotification(UUID parentPostingId, UUID parentCommentId, UUID parentMediaId,
                                                  UUID postingId) {
         super(NotificationType.POSTING_REACTION_DELETED_ALL);
-        this.parentPostingId = parentPostingId != null ? parentPostingId.toString() : null;
-        this.parentCommentId = parentCommentId != null ? parentCommentId.toString() : null;
-        this.parentMediaId = parentMediaId != null ? parentMediaId.toString() : null;
+        this.parentPostingId = Objects.toString(parentPostingId, null);
+        this.parentCommentId = Objects.toString(parentCommentId, null);
+        this.parentMediaId = Objects.toString(parentMediaId, null);
         this.postingId = postingId.toString();
     }
 
