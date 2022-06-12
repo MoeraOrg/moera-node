@@ -63,8 +63,9 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             if (data.getRevisionId() == null) {
                 verify(postingInfo, commentInfo);
             } else {
-                CommentRevisionInfo revisionInfo = nodeApi.getCommentRevision(data.getNodeName(), data.getPostingId(),
-                        data.getCommentId(), data.getRevisionId());
+                CommentRevisionInfo revisionInfo = nodeApi.getCommentRevision(data.getNodeName(),
+                        generateCarte(data.getNodeName()), data.getPostingId(), data.getCommentId(),
+                        data.getRevisionId());
                 verify(postingInfo, commentInfo, revisionInfo);
             }
         } catch (Exception e) {

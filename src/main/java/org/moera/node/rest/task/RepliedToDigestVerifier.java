@@ -67,7 +67,8 @@ public class RepliedToDigestVerifier {
         CommentRevisionInfo commentRevisionInfo = commentRevisions.get(revisionId);
         if (commentRevisionInfo == null) {
             try {
-                commentRevisionInfo = nodeApi.getCommentRevision(targetNodeName, postingInfo.getId(), id, revisionId);
+                commentRevisionInfo = nodeApi.getCommentRevision(targetNodeName, generateCarte.apply(targetNodeName),
+                        postingInfo.getId(), id, revisionId);
             } catch (NodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }

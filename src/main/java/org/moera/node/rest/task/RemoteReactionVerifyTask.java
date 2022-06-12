@@ -52,8 +52,8 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName), remotePostingId);
             }
             if (data.getCommentId() == null) {
-                ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, remotePostingId,
-                        data.getOwnerName());
+                ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, generateCarte(remoteNodeName),
+                        remotePostingId, data.getOwnerName());
                 try {
                     PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
                             generateCarte(remoteNodeName), remotePostingId, reactionInfo.getPostingRevisionId());
@@ -62,13 +62,14 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                     succeeded(false);
                 }
             } else {
-                ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, remotePostingId,
-                        data.getCommentId(), data.getOwnerName());
+                ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, generateCarte(remoteNodeName),
+                        remotePostingId, data.getCommentId(), data.getOwnerName());
                 CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, generateCarte(remoteNodeName),
                         remotePostingId, data.getCommentId());
                 try {
                     CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName,
-                            remotePostingId, data.getCommentId(), reactionInfo.getCommentRevisionId());
+                            generateCarte(remoteNodeName), remotePostingId, data.getCommentId(),
+                            reactionInfo.getCommentRevisionId());
                     PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
                             generateCarte(remoteNodeName), remotePostingId, commentInfo.getPostingRevisionId());
                     verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);

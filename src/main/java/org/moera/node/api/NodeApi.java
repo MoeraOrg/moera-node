@@ -273,12 +273,12 @@ public class NodeApi {
                 reactionDescription, ReactionCreated.class);
     }
 
-    public ReactionInfo getPostingReaction(String nodeName, String postingId, String reactionOwnerName)
+    public ReactionInfo getPostingReaction(String nodeName, String carte, String postingId, String reactionOwnerName)
             throws NodeApiException {
 
         return call("GET", nodeName,
-                String.format("/postings/%s/reactions/%s", Util.ue(postingId), Util.ue(reactionOwnerName)), null,
-                ReactionInfo.class);
+                String.format("/postings/%s/reactions/%s", Util.ue(postingId), Util.ue(reactionOwnerName)),
+                auth("carte", carte), ReactionInfo.class);
     }
 
     public ReactionCreated postCommentReaction(String nodeName, String postingId, String commentId,
@@ -317,11 +317,11 @@ public class NodeApi {
                 auth("carte", carte), CommentInfo.class);
     }
 
-    public CommentRevisionInfo getCommentRevision(String nodeName, String postingId, String commentId,
+    public CommentRevisionInfo getCommentRevision(String nodeName, String carte, String postingId, String commentId,
                                                   String revisionId) throws NodeApiException {
         return call("GET", nodeName,
                 String.format("/postings/%s/comments/%s/revisions/%s",
-                        Util.ue(postingId), Util.ue(commentId), Util.ue(revisionId)), null,
+                        Util.ue(postingId), Util.ue(commentId), Util.ue(revisionId)), auth("carte", carte),
                 CommentRevisionInfo.class);
     }
 
@@ -340,11 +340,11 @@ public class NodeApi {
                 commentText, CommentInfo.class);
     }
 
-    public ReactionInfo getCommentReaction(String nodeName, String postingId, String commentId,
+    public ReactionInfo getCommentReaction(String nodeName, String carte, String postingId, String commentId,
                                            String reactionOwnerName) throws NodeApiException {
         return call("GET", nodeName,
                 String.format("/postings/%s/comments/%s/reactions/%s",
-                        Util.ue(postingId), Util.ue(commentId), Util.ue(reactionOwnerName)), null,
+                        Util.ue(postingId), Util.ue(commentId), Util.ue(reactionOwnerName)), auth("carte", carte),
                 ReactionInfo.class);
     }
 
