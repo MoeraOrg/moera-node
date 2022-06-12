@@ -119,6 +119,8 @@ public class PostingReactionController {
                 }
 
                 reactionOperations.validate(reactionDescription, posting);
+                validateOperations(reactionDescription::getPrincipal, false,
+                        "reactionDescription.operations.wrong-principal");
 
                 if (posting.isOriginal()) {
                     return postToOriginal(reactionDescription, posting);

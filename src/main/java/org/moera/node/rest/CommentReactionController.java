@@ -123,8 +123,10 @@ public class CommentReactionController {
                 if (comment.getCurrentRevision().getSignature() == null) {
                     throw new ValidationFailure("comment.not-signed");
                 }
-
                 reactionOperations.validate(reactionDescription, comment);
+                validateOperations(reactionDescription::getPrincipal, false,
+                        "reactionDescription.operations.wrong-principal");
+
                 var liberin = new CommentReactionAddedLiberin(comment);
                 Reaction reaction = reactionOperations.post(reactionDescription, comment, liberin::setDeletedReaction,
                         liberin::setAddedReaction);

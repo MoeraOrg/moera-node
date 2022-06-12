@@ -116,6 +116,10 @@ public class ReactionDescription {
         this.operations = operations;
     }
 
+    public Principal getPrincipal(String operationName) {
+        return operations != null ? operations.get(operationName) : null;
+    }
+
     public void toReaction(Reaction reaction) {
         reaction.setOwnerName(ownerName);
         reaction.setOwnerFullName(ownerFullName);
@@ -131,10 +135,8 @@ public class ReactionDescription {
         reaction.setEmoji(emoji);
         reaction.setSignature(signature);
         reaction.setSignatureVersion(signatureVersion);
-        if (operations != null) {
-            if (operations.get("view") != null) {
-                reaction.setViewPrincipal(operations.get("view"));
-            }
+        if (getPrincipal("view") != null) {
+            reaction.setViewPrincipal(getPrincipal("view"));
         }
     }
 
