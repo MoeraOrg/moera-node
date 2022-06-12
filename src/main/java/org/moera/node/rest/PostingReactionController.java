@@ -38,12 +38,15 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
+import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.SafeInteger;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -88,33 +91,45 @@ public class PostingReactionController {
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
 
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    private final ParametrizedLock<UUID> lock = new ParametrizedLock<>();
+
     @PostMapping
-    @Transactional
     public ResponseEntity<ReactionCreated> post(
-            @PathVariable UUID postingId, @Valid @RequestBody ReactionDescription reactionDescription) {
+            @PathVariable UUID postingId,
+            @Valid @RequestBody ReactionDescription reactionDescription) throws Throwable {
 
         log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {})",
                 LogUtil.format(postingId),
                 LogUtil.format(reactionDescription.isNegative()),
                 LogUtil.format(reactionDescription.getEmoji()));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
-        if (posting.getCurrentRevision().getSignature() == null) {
-            throw new ValidationFailure("posting.not-signed");
-        }
+        lock.lock(postingId);
+        try {
+            return Transaction.execute(txManager, () -> {
+                Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                        .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+                if (!requestContext.isPrincipal(posting.getViewE())) {
+                    throw new ObjectNotFoundFailure("posting.not-found");
+                }
+                if (posting.getCurrentRevision().getSignature() == null) {
+                    throw new ValidationFailure("posting.not-signed");
+                }
 
-        reactionOperations.validate(reactionDescription, posting);
+                reactionOperations.validate(reactionDescription, posting);
 
-        if (posting.isOriginal()) {
-            return postToOriginal(reactionDescription, posting);
-        } else if (requestContext.isAdmin()) {
-            return postToPickedAtHome(reactionDescription, posting);
-        } else {
-            return postToPicked(reactionDescription, posting);
+                if (posting.isOriginal()) {
+                    return postToOriginal(reactionDescription, posting);
+                } else if (requestContext.isAdmin()) {
+                    return postToPickedAtHome(reactionDescription, posting);
+                } else {
+                    return postToPicked(reactionDescription, posting);
+                }
+            });
+        } finally {
+            lock.unlock(postingId);
         }
     }
 
@@ -279,24 +294,30 @@ public class PostingReactionController {
     }
 
     @DeleteMapping("/{ownerName}")
-    @Transactional
-    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) {
+    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) throws Throwable {
         log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
+        lock.lock(postingId);
+        try {
+            Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            if (!requestContext.isPrincipal(posting.getViewE())) {
+                throw new ObjectNotFoundFailure("posting.not-found");
+            }
 
-        if (posting.isOriginal()) {
-            return deleteFromOriginal(ownerName, posting);
-        } else if (requestContext.isAdmin()) {
-            deleteFromPickedAtHome(posting);
+            ReactionTotalsInfo info = Transaction.execute(txManager, () -> {
+                if (posting.isOriginal()) {
+                    return deleteFromOriginal(ownerName, posting);
+                } else if (requestContext.isAdmin()) {
+                    deleteFromPickedAtHome(posting);
+                }
+                return null;
+            });
+            return info != null ? info : reactionTotalOperations.getInfo(posting).getClientInfo();
+        } finally {
+            lock.unlock(postingId);
         }
-
-        return reactionTotalOperations.getInfo(posting).getClientInfo();
     }
 
     private ReactionTotalsInfo deleteFromOriginal(String ownerName, Posting posting) {

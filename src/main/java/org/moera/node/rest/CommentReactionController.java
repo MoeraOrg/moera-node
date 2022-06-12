@@ -35,12 +35,15 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
+import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.SafeInteger;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -83,11 +86,15 @@ public class CommentReactionController {
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
 
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    private final ParametrizedLock<UUID> lock = new ParametrizedLock<>();
+
     @PostMapping
-    @Transactional
     public ResponseEntity<ReactionCreated> post(
             @PathVariable UUID postingId, @PathVariable UUID commentId,
-            @Valid @RequestBody ReactionDescription reactionDescription) {
+            @Valid @RequestBody ReactionDescription reactionDescription) throws Throwable {
 
         log.info("POST /postings/{postingId}/comments/{commentId}/reactions"
                         + " (postingId = {}, commentId = {}, negative = {}, emoji = {})",
@@ -96,35 +103,42 @@ public class CommentReactionController {
                 LogUtil.format(reactionDescription.isNegative()),
                 LogUtil.format(reactionDescription.getEmoji()));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!comment.getPosting().getId().equals(postingId)) {
-            throw new ObjectNotFoundFailure("comment.wrong-posting");
-        }
-        if (comment.getCurrentRevision().getSignature() == null) {
-            throw new ValidationFailure("comment.not-signed");
-        }
+        lock.lock(postingId);
+        try {
+            return Transaction.execute(txManager, () -> {
+                Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                        .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+                if (!requestContext.isPrincipal(comment.getViewE())) {
+                    throw new ObjectNotFoundFailure("comment.not-found");
+                }
+                if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+                    throw new ObjectNotFoundFailure("posting.not-found");
+                }
+                if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+                    throw new ObjectNotFoundFailure("comment.not-found");
+                }
+                if (!comment.getPosting().getId().equals(postingId)) {
+                    throw new ObjectNotFoundFailure("comment.wrong-posting");
+                }
+                if (comment.getCurrentRevision().getSignature() == null) {
+                    throw new ValidationFailure("comment.not-signed");
+                }
 
-        reactionOperations.validate(reactionDescription, comment);
-        var liberin = new CommentReactionAddedLiberin(comment);
-        Reaction reaction = reactionOperations.post(reactionDescription, comment, liberin::setDeletedReaction,
-                liberin::setAddedReaction);
-        requestContext.send(liberin);
+                reactionOperations.validate(reactionDescription, comment);
+                var liberin = new CommentReactionAddedLiberin(comment);
+                Reaction reaction = reactionOperations.post(reactionDescription, comment, liberin::setDeletedReaction,
+                        liberin::setAddedReaction);
+                requestContext.send(liberin);
 
-        var totalsInfo = reactionTotalOperations.getInfo(comment);
-        return ResponseEntity.created(
-                URI.create(String.format("/postings/%s/comments/%s/reactions/%s",
-                        postingId, comment.getId(), reaction.getId())))
-                .body(new ReactionCreated(reaction, totalsInfo.getClientInfo(), requestContext));
+                var totalsInfo = reactionTotalOperations.getInfo(comment);
+                return ResponseEntity.created(
+                        URI.create(String.format("/postings/%s/comments/%s/reactions/%s",
+                                postingId, comment.getId(), reaction.getId())))
+                        .body(new ReactionCreated(reaction, totalsInfo.getClientInfo(), requestContext));
+                    });
+        } finally {
+            lock.unlock(postingId);
+        }
     }
 
     @PutMapping("/{ownerName}")
@@ -297,34 +311,40 @@ public class CommentReactionController {
     }
 
     @DeleteMapping("/{ownerName}")
-    @Transactional
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                                     @PathVariable String ownerName) {
+                                     @PathVariable String ownerName) throws Throwable {
 
         log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
                         + " (postingId = {}, commentId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
 
-        Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
-            throw new ObjectNotFoundFailure("posting.not-found");
-        }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
-            throw new ObjectNotFoundFailure("comment.not-found");
-        }
-        if (!comment.getPosting().getId().equals(postingId)) {
-            throw new ObjectNotFoundFailure("comment.wrong-posting");
-        }
+        lock.lock(postingId);
+        try {
+            return Transaction.execute(txManager, () -> {
+                Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                        .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+                if (!requestContext.isPrincipal(comment.getViewE())) {
+                    throw new ObjectNotFoundFailure("comment.not-found");
+                }
+                if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+                    throw new ObjectNotFoundFailure("posting.not-found");
+                }
+                if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+                    throw new ObjectNotFoundFailure("comment.not-found");
+                }
+                if (!comment.getPosting().getId().equals(postingId)) {
+                    throw new ObjectNotFoundFailure("comment.wrong-posting");
+                }
 
-        var liberin = new CommentReactionDeletedLiberin(comment);
-        reactionOperations.delete(ownerName, comment, liberin::setReaction);
-        requestContext.send(liberin);
+                var liberin = new CommentReactionDeletedLiberin(comment);
+                reactionOperations.delete(ownerName, comment, liberin::setReaction);
+                requestContext.send(liberin);
 
-        return reactionTotalOperations.getInfo(comment).getClientInfo();
+                return reactionTotalOperations.getInfo(comment).getClientInfo();
+            });
+        } finally {
+            lock.unlock(postingId);
+        }
     }
 
 }
