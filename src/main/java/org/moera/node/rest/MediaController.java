@@ -10,7 +10,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
@@ -52,7 +51,6 @@ import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
@@ -134,12 +132,6 @@ public class MediaController {
         return MediaOperations.transfer(in, out, contentLength, maxSize);
     }
 
-    private Optional<MediaFileOwner> findMediaFileOwnerByFile(String id) {
-        return requestContext.isAdmin()
-                ? mediaFileOwnerRepository.findByAdminFile(requestContext.nodeId(), id)
-                : mediaFileOwnerRepository.findByFile(requestContext.nodeId(), requestContext.getClientName(), id);
-    }
-
     @PostMapping("/public")
     @Transactional
     public PublicMediaFileInfo postPublic(@RequestHeader("Content-Type") MediaType mediaType,
@@ -184,34 +176,19 @@ public class MediaController {
             throw new AuthenticationException();
         }
 
-        String id = null;
         var tmp = mediaOperations.tmpFile();
         try {
             DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
-            id = out.getHash();
-            MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
-            if (mediaFileOwner != null) {
-                return new PrivateMediaFileInfo(mediaFileOwner, null);
-            }
+            String id = out.getHash();
+            byte[] digest = out.getDigest();
 
-            MediaFile mediaFile = mediaOperations.putInPlace(
-                    id, toContentType(mediaType), tmp.getPath(), out.getDigest());
+            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath(), digest);
             mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
-            mediaFileOwner = mediaOperations.own(mediaFile,
+            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile,
                     requestContext.isAdmin() ? null : requestContext.getClientName());
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
             return new PrivateMediaFileInfo(mediaFileOwner, null);
-        } catch (DataIntegrityViolationException e) {
-            // already created in another thread
-            if (id != null) {
-                MediaFileOwner mediaFileOwner = findMediaFileOwnerByFile(id).orElse(null);
-                if (mediaFileOwner != null) {
-                    return new PrivateMediaFileInfo(mediaFileOwner, null);
-                }
-            }
-            // should not happen
-            throw e;
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {

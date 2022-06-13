@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -193,11 +194,11 @@ public class MediaManager {
 
     private MediaFileOwner findAttachedMedia(String mediaFileId, UUID entryId) {
         if (entryId != null) {
-            MediaFileOwner mediaFileOwner = mediaFileOwnerRepository
-                    .findByAdminFile(universalContext.nodeId(), mediaFileId).orElse(null);
-            if (mediaFileOwner != null) {
-                int count = entryAttachmentRepository.countByEntryIdAndMedia(universalContext.nodeId(), entryId,
-                        mediaFileOwner.getId());
+            Collection<MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository
+                    .findByAdminFile(universalContext.nodeId(), mediaFileId);
+            for (MediaFileOwner mediaFileOwner : mediaFileOwners) {
+                int count = entryAttachmentRepository.countByEntryIdAndMedia(
+                        universalContext.nodeId(), entryId, mediaFileOwner.getId());
                 if (count > 0) {
                     return mediaFileOwner;
                 }
@@ -254,15 +255,11 @@ public class MediaManager {
                     }
                     cacheRemoteMedia(null, nodeName, id, mediaFile.getDigest(), mediaFile);
                 }
-                // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use
-                // our MediaFileOwner, if exists
-                mediaFileOwner = mediaFileOwnerRepository
-                        .findByAdminFile(universalContext.nodeId(), mediaFileId).orElse(null);
-                if (mediaFileOwner == null) {
-                    // entity is detached after putInPlace() transaction closed
-                    mediaFile = entityManager.merge(mediaFile);
-                    mediaFileOwner = mediaOperations.own(mediaFile, null);
-                }
+                // Now we are sure that the remote node owns the file with mediaFileId hash, so we can use it
+                // for MediaFileOwner
+
+                mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
+                mediaFileOwner = mediaOperations.own(mediaFile, null);
 
                 return mediaFileOwner;
             } catch (IOException e) {
