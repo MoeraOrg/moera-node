@@ -19,6 +19,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.CommentReactionAddedLiberin;
 import org.moera.node.liberin.model.CommentReactionDeletedLiberin;
+import org.moera.node.liberin.model.CommentReactionOperationsUpdatedLiberin;
 import org.moera.node.liberin.model.CommentReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
@@ -180,7 +181,9 @@ public class CommentReactionController {
             throw new ObjectNotFoundFailure("reaction.not-found");
         }
 
-        reactionOverride.toPostingReaction(reaction);
+        requestContext.send(new CommentReactionOperationsUpdatedLiberin(comment, reaction));
+
+        reactionOverride.toCommentReaction(reaction);
 
         return new ReactionInfo(reaction, requestContext);
     }

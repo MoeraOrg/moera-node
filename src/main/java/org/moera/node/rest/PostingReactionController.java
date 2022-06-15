@@ -22,6 +22,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.PostingReactionAddedLiberin;
 import org.moera.node.liberin.model.PostingReactionDeletedLiberin;
+import org.moera.node.liberin.model.PostingReactionOperationsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreated;
@@ -192,6 +193,8 @@ public class PostingReactionController {
         }
 
         reactionOverride.toPostingReaction(reaction);
+
+        requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
 
         return new ReactionInfo(reaction, requestContext);
     }
