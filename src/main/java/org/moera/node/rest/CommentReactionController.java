@@ -1,9 +1,7 @@
 package org.moera.node.rest;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -11,8 +9,6 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Reaction;
@@ -33,6 +29,7 @@ import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.util.ParametrizedLock;
@@ -41,7 +38,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -59,14 +55,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class CommentReactionController {
 
     private static final Logger log = LoggerFactory.getLogger(CommentReactionController.class);
-
-    private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
-            Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.ADMIN
-                    | PrincipalFlag.NONE),
-            Pair.of("delete",
-                    PrincipalFlag.PRIVATE | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE)
-    );
 
     @Inject
     private RequestContext requestContext;
@@ -124,7 +112,8 @@ public class CommentReactionController {
                     throw new ValidationFailure("comment.not-signed");
                 }
                 reactionOperations.validate(reactionDescription, comment);
-                validateOperations(reactionDescription::getPrincipal, false,
+                OperationsValidator.validateOperations(reactionDescription::getPrincipal,
+                        OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
                         "reactionDescription.operations.wrong-principal");
 
                 var liberin = new CommentReactionAddedLiberin(comment);
@@ -169,19 +158,22 @@ public class CommentReactionController {
                 && !requestContext.isClient(ownerName)) {
             throw new AuthenticationException();
         }
-        validateOperations(reactionOverride::getPrincipal, false,
+        OperationsValidator.validateOperations(reactionOverride::getPrincipal,
+                OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
                 "reactionOverride.operations.wrong-principal");
         if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
                 && !requestContext.isPrincipal(comment.getOverrideReactionE())) {
             throw new AuthenticationException();
         }
-        validateOperations(reactionOverride::getSeniorPrincipal, true,
+        OperationsValidator.validateOperations(reactionOverride::getSeniorPrincipal,
+                OperationsValidator.COMMENT_REACTION_OPERATIONS, true,
                 "reactionOverride.seniorOperations.wrong-principal");
         if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
                 && !requestContext.isPrincipal(comment.getPosting().getOverrideCommentReactionE())) {
             throw new AuthenticationException();
         }
-        validateOperations(reactionOverride::getMajorPrincipal, true,
+        OperationsValidator.validateOperations(reactionOverride::getMajorPrincipal,
+                OperationsValidator.COMMENT_REACTION_OPERATIONS, true,
                 "reactionOverride.majorOperations.wrong-principal");
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(comment.getId(), ownerName);
         if (reaction == null) {
@@ -191,15 +183,6 @@ public class CommentReactionController {
         reactionOverride.toPostingReaction(reaction);
 
         return new ReactionInfo(reaction, requestContext);
-    }
-
-    private void validateOperations(Function<String, Principal> getPrincipal, boolean includeUnset, String errorCode) {
-        for (var desc : OPERATION_PRINCIPALS) {
-            Principal principal = getPrincipal.apply(desc.getFirst());
-            if (principal != null && !principal.isOneOf(desc.getSecond()) && (!includeUnset || !principal.isUnset())) {
-                throw new ValidationFailure(errorCode);
-            }
-        }
     }
 
     @GetMapping

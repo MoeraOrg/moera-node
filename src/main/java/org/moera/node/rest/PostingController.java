@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -21,7 +20,6 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
@@ -59,13 +57,13 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -85,65 +83,6 @@ public class PostingController {
     private static final Logger log = LoggerFactory.getLogger(PostingController.class);
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
-
-    private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
-        Pair.of("view",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE),
-        Pair.of("viewComments",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("addComment",
-                PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("viewReactions",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("viewNegativeReactions",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("viewReactionTotals",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("viewNegativeReactionTotals",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("viewReactionRatios",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("viewNegativeReactionRatios",
-                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-        Pair.of("addReaction",
-                PrincipalFlag.SIGNED | PrincipalFlag.NONE),
-        Pair.of("addNegativeReaction",
-                PrincipalFlag.SIGNED | PrincipalFlag.NONE)
-    );
-
-    private static final List<Pair<String, Integer>> CHILD_OPERATION_PRINCIPALS = List.of(
-            Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.UNSET),
-            Pair.of("edit",
-                    PrincipalFlag.OWNER | PrincipalFlag.NONE | PrincipalFlag.UNSET),
-            Pair.of("delete",
-                    PrincipalFlag.PRIVATE /*| TODO PrincipalFlag.SENIOR */| PrincipalFlag.ADMIN | PrincipalFlag.NONE
-                    | PrincipalFlag.UNSET),
-            Pair.of("viewReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
-                    | PrincipalFlag.UNSET),
-            Pair.of("viewNegativeReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
-                    | PrincipalFlag.UNSET),
-            Pair.of("viewReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
-                    | PrincipalFlag.UNSET),
-            Pair.of("viewNegativeReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
-                    | PrincipalFlag.UNSET),
-            Pair.of("viewReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
-                    | PrincipalFlag.UNSET),
-            Pair.of("viewNegativeReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
-                    | PrincipalFlag.UNSET),
-            Pair.of("addReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.NONE | PrincipalFlag.UNSET),
-            Pair.of("addNegativeReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.NONE | PrincipalFlag.UNSET),
-            Pair.of("overrideReaction",
-                    PrincipalFlag.OWNER | PrincipalFlag.NONE | PrincipalFlag.UNSET)
-    );
 
     @Inject
     private RequestContext requestContext;
@@ -354,21 +293,17 @@ public class PostingController {
                 throw new ValidationFailure("postingText.createdAt.out-of-range");
             }
         }
-        validateOperations(postingText::getPrincipal, OPERATION_PRINCIPALS,
-                "postingText.operations.wrong-principal");
-        validateOperations(postingText::getCommentPrincipal, CHILD_OPERATION_PRINCIPALS,
-                "postingText.childOperations.wrong-principal");
+        OperationsValidator.validateOperations(postingText::getPrincipal, OperationsValidator.POSTING_OPERATIONS,
+                false, "postingText.operations.wrong-principal");
+        OperationsValidator.validateOperations(postingText::getCommentPrincipal, OperationsValidator.COMMENT_OPERATIONS,
+                true, "postingText.commentOperations.wrong-principal");
+        OperationsValidator.validateOperations(postingText::getReactionPrincipal,
+                OperationsValidator.POSTING_REACTION_OPERATIONS, true,
+                "postingText.reactionOperations.wrong-principal");
+        OperationsValidator.validateOperations(postingText::getCommentReactionPrincipal,
+                OperationsValidator.COMMENT_REACTION_OPERATIONS, true,
+                "postingText.commentReactionOperations.wrong-principal");
         return digest;
-    }
-
-    private void validateOperations(Function<String, Principal> getPrincipal, List<Pair<String, Integer>> description,
-                                    String errorCode) {
-        for (var desc : description) {
-            Principal principal = getPrincipal.apply(desc.getFirst());
-            if (principal != null && !principal.isOneOf(desc.getSecond())) {
-                throw new ValidationFailure(errorCode);
-            }
-        }
     }
 
     private byte[] parentMediaDigest(Posting posting) {

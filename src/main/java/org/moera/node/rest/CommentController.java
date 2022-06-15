@@ -25,7 +25,6 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -61,6 +60,7 @@ import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.OperationsValidator;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
@@ -69,7 +69,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -90,31 +89,6 @@ public class CommentController {
 
     private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
     private static final int MASS_UPDATE_PAGE_SIZE = 100;
-
-    private static final List<Pair<String, Integer>> OPERATION_PRINCIPALS = List.of(
-            Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE),
-            Pair.of("edit",
-                    PrincipalFlag.OWNER | PrincipalFlag.NONE),
-            Pair.of("delete",
-                    PrincipalFlag.PRIVATE | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE),
-            Pair.of("viewReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-            Pair.of("viewNegativeReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-            Pair.of("viewReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-            Pair.of("viewNegativeReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-            Pair.of("viewReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-            Pair.of("viewNegativeReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
-            Pair.of("addReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.NONE),
-            Pair.of("addNegativeReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.NONE)
-    );
 
     @Inject
     private RequestContext requestContext;
@@ -354,24 +328,18 @@ public class CommentController {
                 throw new ValidationFailure("commentText.createdAt.out-of-range");
             }
         }
-        validateOperations(commentText::getPrincipal, false,
-                "commentText.operations.wrong-principal");
+        OperationsValidator.validateOperations(commentText::getPrincipal, OperationsValidator.COMMENT_OPERATIONS,
+                false, "commentText.operations.wrong-principal");
         if (commentText.getSeniorOperations() != null && !commentText.getSeniorOperations().isEmpty() && !isSenior) {
             throw new AuthenticationException();
         }
-        validateOperations(commentText::getSeniorPrincipal, true,
-                "commentText.seniorOperations.wrong-principal");
+        OperationsValidator.validateOperations(commentText::getSeniorPrincipal, OperationsValidator.COMMENT_OPERATIONS,
+                true, "commentText.seniorOperations.wrong-principal");
+        OperationsValidator.validateOperations(commentText::getPrincipal,
+                OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
+                "commentText.reactionOperations.wrong-principal");
 
         return digest;
-    }
-
-    private void validateOperations(Function<String, Principal> getPrincipal, boolean includeUnset, String errorCode) {
-        for (var desc : OPERATION_PRINCIPALS) {
-            Principal principal = getPrincipal.apply(desc.getFirst());
-            if (principal != null && !principal.isOneOf(desc.getSecond()) && (!includeUnset || !principal.isUnset())) {
-                throw new ValidationFailure(errorCode);
-            }
-        }
     }
 
     private byte[] mediaDigest(UUID id) {
@@ -393,7 +361,8 @@ public class CommentController {
         if (!requestContext.isPrincipal(posting.getOverrideCommentE())) {
             throw new AuthenticationException();
         }
-        validateOperations(commentMassAttributes::getSeniorPrincipal, true,
+        OperationsValidator.validateOperations(commentMassAttributes::getSeniorPrincipal,
+                OperationsValidator.COMMENT_OPERATIONS, true,
                 "commentMassAttributes.seniorOperations.wrong-principal");
 
         Page<Comment> page;
