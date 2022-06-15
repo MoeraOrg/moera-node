@@ -161,7 +161,9 @@ public class PostingOperations {
         EntryRevision latest = posting.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
-                return postingRepository.saveAndFlush(posting);
+                posting = postingRepository.saveAndFlush(posting);
+                updateRelatedObjects(posting);
+                return posting;
             }
             if (latest.getSignature() == null) {
                 posting.removeRevision(latest);
@@ -197,16 +199,10 @@ public class PostingOperations {
         posting.setEditedAt(Util.now());
         posting = postingRepository.saveAndFlush(posting);
         signIfOwned(posting);
-        mediaOperations.updatePermissions(posting);
 
         storyOperations.publish(posting, publications);
 
-        if (posting.getViewPrincipal().isPublic()) {
-            Story timelineStory = posting.getStory(Feed.TIMELINE);
-            if (timelineStory != null) {
-                timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
-            }
-        }
+        updateRelatedObjects(posting);
 
         return posting;
     }
@@ -222,6 +218,17 @@ public class PostingOperations {
                 current.setSignatureVersion(PostingFingerprint.VERSION);
             } else {
                 current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
+            }
+        }
+    }
+
+    private void updateRelatedObjects(Posting posting) {
+        mediaOperations.updatePermissions(posting);
+
+        if (posting.getViewCompound().isPublic()) {
+            Story timelineStory = posting.getStory(Feed.TIMELINE);
+            if (timelineStory != null) {
+                timelinePublicPageOperations.updatePublicPages(timelineStory.getMoment());
             }
         }
     }

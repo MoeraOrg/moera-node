@@ -83,7 +83,7 @@ public class TimelineUiController {
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
                     .filter(t -> t.getEntry().isMessage())
-                    .filter(t -> t.getEntry().getViewPrincipal().isPublic())
+                    .filter(t -> t.getEntry().getViewCompound().isPublic())
                     .map(s -> StoryInfo.build(s, false, t -> PostingInfo.forUi((Posting) t.getEntry())))
                     .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                     .collect(Collectors.toList());
@@ -123,7 +123,7 @@ public class TimelineUiController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null || !posting.isMessage() || posting.getParentMedia() != null
-                || !posting.getViewPrincipal().isPublic()) {
+                || !posting.getViewCompound().isPublic()) {
             throw new PageNotFoundException();
         }
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
@@ -145,12 +145,12 @@ public class TimelineUiController {
             before = before != null ? before : Long.MIN_VALUE + 1;
             List<CommentInfo> comments = Collections.emptyList();
             PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
-            if (publicPage != null && posting.getViewCommentsPrincipal().isPublic()) {
+            if (publicPage != null && posting.getViewCommentsCompound().isPublic()) {
                 comments = commentRepository.findInRange(
                         requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                         .stream()
                         .filter(Comment::isMessage)
-                        .filter(c -> c.getViewPrincipal().isPublic())
+                        .filter(c -> c.getViewCompound().isPublic())
                         .map(CommentInfo::forUi)
                         .sorted(Comparator.comparing(CommentInfo::getMoment))
                         .collect(Collectors.toList());

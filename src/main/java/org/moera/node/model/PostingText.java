@@ -412,6 +412,11 @@ public class PostingText {
                && sameCommentReactionPrincipalAs("delete", entry.getChildReactionOperations().getDelete());
     }
 
+    public boolean sameViewComments(Entry entry) {
+        return samePrincipalAs("view", entry.getViewPrincipal())
+                && samePrincipalAs("viewComments", entry.getViewCommentsPrincipal());
+    }
+
     private boolean samePrincipalAs(String operationName, Principal principal) {
         Principal value = getPrincipal(operationName);
         return value == null || Objects.equals(value, principal);
@@ -461,14 +466,11 @@ public class PostingText {
                 && (ObjectUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
-                && Arrays.equals(
-                        media != null ? media : new UUID[0],
-                        revision.getAttachments().stream().map(EntryAttachment::getMediaFileOwner).toArray())
-                && (revision.getSignature() != null || signature == null)
-                && (updateInfo != null ? updateInfo.getImportant() : false) == revision.isUpdateImportant()
-                && Objects.equals(
-                        updateInfo != null && updateInfo.getDescription() != null ? updateInfo.getDescription() : "",
-                        revision.getUpdateDescription());
+                && (media == null
+                    || Arrays.equals(
+                        media,
+                        revision.getAttachments().stream().map(EntryAttachment::getMediaFileOwner).toArray()))
+                && !(revision.getSignature() == null && signature != null);
     }
 
 }

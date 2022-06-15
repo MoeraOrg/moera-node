@@ -32,6 +32,7 @@ import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.body.Body;
 import org.moera.node.text.MediaExtractor;
@@ -67,6 +68,9 @@ public class CommentOperations {
 
     @Inject
     private CommentPublicPageOperations commentPublicPageOperations;
+
+    @Inject
+    private MediaOperations mediaOperations;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -147,7 +151,9 @@ public class CommentOperations {
         EntryRevision latest = comment.getCurrentRevision();
         if (latest != null) {
             if (isNothingChanged != null && isNothingChanged.test(latest)) {
-                return commentRepository.saveAndFlush(comment);
+                comment = commentRepository.saveAndFlush(comment);
+                updateRelatedObjects(comment);
+                return comment;
             }
             if (latest.getSignature() == null) {
                 comment.removeRevision(latest);
@@ -185,7 +191,7 @@ public class CommentOperations {
         comment = commentRepository.saveAndFlush(comment);
         signIfOwned(comment);
 
-        commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
+        updateRelatedObjects(comment);
 
         return comment;
     }
@@ -240,6 +246,16 @@ public class CommentOperations {
             } else {
                 current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
             }
+        }
+    }
+
+    private void updateRelatedObjects(Comment comment) {
+        mediaOperations.updatePermissions(comment);
+
+        if (comment.getPosting().getViewCompound().isPublic()
+                && comment.getPosting().getViewCommentsCompound().isPublic()
+                && comment.getViewCompound().isPublic()) {
+            commentPublicPageOperations.updatePublicPages(comment.getPosting().getId(), comment.getMoment());
         }
     }
 

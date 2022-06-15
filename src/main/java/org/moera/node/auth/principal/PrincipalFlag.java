@@ -11,5 +11,9 @@ public class PrincipalFlag {
     public static final int NODE = 0x0040;
     public static final int ONLY = 0x0080;
     public static final int UNSET = 0x0100;
+    public static final int SECRET = 0x0200;
+    public static final int SENIOR = 0x0400;
+    public static final int ENIGMA = 0x0800;
+    public static final int MAJOR = 0x1000;
 
 }

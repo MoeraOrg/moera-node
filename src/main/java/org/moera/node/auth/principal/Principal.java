@@ -1,5 +1,6 @@
 package org.moera.node.auth.principal;
 
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -11,13 +12,30 @@ import com.fasterxml.jackson.databind.util.StdConverter;
 public class Principal implements Cloneable, PrincipalFilter {
 
     /*
+     *   admin   object
+     *     +       +      private and wider
+     *     +       +      secret
+     *     +       -      senior
+     *     +       +      enigma
+     *     +       -      major
+     *     -       +      owner
+     *     +       -      admin
+     *
      *   admin   post   object
      *     +      +       +      private and wider
+     *     +      -       +      secret
+     *     +      +       -      senior
+     *     +      -       +      enigma
+     *     +      -       -      major
      *     -      -       +      owner
      *     +      -       -      admin
      *
      *   admin   post   comment   object
      *     +      +        +        +      private and wider
+     *     +      +        -        +      secret
+     *     +      +        +        -      senior
+     *     +      -        -        +      enigma
+     *     +      +        -        -      major
      *     -      -        -        +      owner
      *     +      -        -        -      admin
      */
@@ -25,9 +43,24 @@ public class Principal implements Cloneable, PrincipalFilter {
     public static final Principal ADMIN = new Principal("admin");
     public static final Principal SIGNED = new Principal("signed");
     public static final Principal PRIVATE = new Principal("private");
+    public static final Principal SECRET = new Principal("secret");
+    public static final Principal SENIOR = new Principal("senior");
+    public static final Principal ENIGMA = new Principal("enigma");
+    public static final Principal MAJOR = new Principal("major");
     public static final Principal OWNER = new Principal("owner");
     public static final Principal PUBLIC = new Principal("public");
     public static final Principal UNSET = new Principal("unset");
+
+    private static final Map<Principal, Integer> PRINCIPAL_MASKS = Map.of(
+            Principal.PRIVATE, 0xf,
+            Principal.SECRET, 0xd,
+            Principal.SENIOR, 0xe,
+            Principal.ENIGMA, 0x9,
+            Principal.MAJOR, 0xc,
+            Principal.OWNER, 0x1,
+            Principal.ADMIN, 0x8,
+            Principal.NONE, 0x0
+    );
 
     private final String value;
 
@@ -80,6 +113,22 @@ public class Principal implements Cloneable, PrincipalFilter {
         return value.equals(PRIVATE.value);
     }
 
+    public boolean isSecret() {
+        return value.equals(SECRET.value);
+    }
+
+    public boolean isSenior() {
+        return value.equals(SENIOR.value);
+    }
+
+    public boolean isEnigma() {
+        return value.equals(ENIGMA.value);
+    }
+
+    public boolean isMajor() {
+        return value.equals(MAJOR.value);
+    }
+
     public boolean isOwner() {
         return value.equals(OWNER.value);
     }
@@ -108,8 +157,11 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isOwner()) {
             return Principal.ofOnly(ownerName);
         }
-        if (isPrivate()) {
+        if (isPrivate() | isSecret() | isEnigma()) {
             return Principal.ofNode(ownerName);
+        }
+        if (isSenior() | isMajor()) {
+            return Principal.ADMIN;
         }
         return this;
     }
@@ -121,6 +173,15 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isPrivate()) {
             return Principal.ofNode(ownerName, seniorName);
         }
+        if (isSecret() | isEnigma()) {
+            return Principal.ofNode(ownerName);
+        }
+        if (isSenior()) {
+            return Principal.ofNode(seniorName);
+        }
+        if (isMajor()) {
+            return Principal.ADMIN;
+        }
         return this;
     }
 
@@ -130,6 +191,18 @@ public class Principal implements Cloneable, PrincipalFilter {
         }
         if (isPrivate()) {
             return Principal.ofNode(ownerName, seniorName, majorName);
+        }
+        if (isSecret()) {
+            return Principal.ofNode(ownerName, majorName);
+        }
+        if (isSenior()) {
+            return Principal.ofNode(seniorName, majorName);
+        }
+        if (isEnigma()) {
+            return Principal.ofNode(ownerName);
+        }
+        if (isMajor()) {
+            return Principal.ofNode(majorName);
         }
         return this;
     }
@@ -217,6 +290,18 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isPrivate()) {
             return (flags & PrincipalFlag.PRIVATE) != 0;
         }
+        if (isSecret()) {
+            return (flags & PrincipalFlag.SECRET) != 0;
+        }
+        if (isSenior()) {
+            return (flags & PrincipalFlag.SENIOR) != 0;
+        }
+        if (isEnigma()) {
+            return (flags & PrincipalFlag.ENIGMA) != 0;
+        }
+        if (isMajor()) {
+            return (flags & PrincipalFlag.MAJOR) != 0;
+        }
         if (isOwner()) {
             return (flags & PrincipalFlag.OWNER) != 0;
         }
@@ -245,19 +330,45 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isSigned() || principal.isSigned()) {
             return Principal.SIGNED;
         }
-        if (isPrivate() || principal.isPrivate()) {
-            return Principal.PRIVATE;
+
+        Integer mask = PRINCIPAL_MASKS.get(this);
+        Integer principalMask = PRINCIPAL_MASKS.get(principal);
+        return mask != null && principalMask != null ? closeToMask(mask | principalMask) : Principal.NONE;
+    }
+
+    public Principal intersect(Principal principal) {
+        if (isUnset()) {
+            return principal;
         }
-        if (isAdmin() && principal.isOwner() || isOwner() && principal.isAdmin()) {
-            return Principal.PRIVATE;
+        if (isPublic()) {
+            return principal;
         }
-        if (isOwner() || principal.isOwner()) {
-            return Principal.OWNER;
+        if (principal.isPublic()) {
+            return this;
         }
-        if (isAdmin() || principal.isAdmin()) {
-            return Principal.ADMIN;
+        if (isSigned()) {
+            return principal;
         }
-        return Principal.NONE;
+        if (principal.isSigned()) {
+            return this;
+        }
+
+        Integer mask = PRINCIPAL_MASKS.get(this);
+        Integer principalMask = PRINCIPAL_MASKS.get(principal);
+        return mask != null && principalMask != null ? closeToMask(mask & principalMask) : Principal.NONE;
+    }
+
+    private Principal closeToMask(int mask) {
+        Principal closest = null;
+        int closeness = 256;
+        for (var entry : PRINCIPAL_MASKS.entrySet()) {
+            int c = Integer.bitCount(entry.getValue() ^ mask);
+            if (c < closeness) {
+                closest = entry.getKey();
+                closeness = c;
+            }
+        }
+        return closest;
     }
 
     @Override

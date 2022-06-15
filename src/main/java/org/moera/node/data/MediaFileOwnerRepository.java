@@ -36,4 +36,14 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
     @Query("select mo from MediaFileOwner mo where mo.usageUpdatedAt > mo.permissionsUpdatedAt")
     Collection<MediaFileOwner> findOutdatedPermissions();
 
+    @Query("update MediaFileOwner mo"
+            + " set mo.usageUpdatedAt = ?3"
+            + " where mo.id in ("
+            + "select ca.mediaFileOwner.id"
+            + " from Comment c full join c.revisions cr full join cr.attachments ca"
+            + " where c.nodeId = ?1 and c.parent.id = ?2 and cr.deletedAt is null and c.deletedAt is null"
+            + ")")
+    @Modifying
+    void updateUsageOfCommentAttachments(UUID nodeId, UUID postingId, Timestamp now);
+
 }

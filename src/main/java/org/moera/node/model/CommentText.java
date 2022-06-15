@@ -406,10 +406,11 @@ public class CommentText {
                 && (ObjectUtils.isEmpty(bodySrc)
                     || (revision.getBodySrcFormat() != SourceFormat.APPLICATION
                         ? bodySrc.equals(revision.getBodySrc()) : bodySrc.equals(revision.getBody())))
-                && Arrays.equals(
-                        media != null ? media : new UUID[0],
-                        revision.getAttachments().stream().map(EntryAttachment::getMediaFileOwner).toArray())
-                && (revision.getSignature() != null || signature == null);
+                && (media == null
+                    || Arrays.equals(
+                        media,
+                        revision.getAttachments().stream().map(EntryAttachment::getMediaFileOwner).toArray()))
+                && !(revision.getSignature() == null && signature != null);
     }
 
 }

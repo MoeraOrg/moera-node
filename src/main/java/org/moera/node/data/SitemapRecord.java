@@ -49,13 +49,13 @@ public class SitemapRecord {
         createdAt = posting.getCreatedAt();
         modifiedAt = posting.getEditedAt();
         totalUpdates = Math.max(posting.getTotalRevisions(), 1);
-        visible = posting.getViewPrincipal().isPublic();
+        visible = posting.getViewCompound().isPublic();
     }
 
     public void update(Posting posting) {
         modifiedAt = posting.getEditedAt();
         totalUpdates = totalUpdates + 1;
-        visible = posting.getViewPrincipal().isPublic();
+        visible = posting.getViewCompound().isPublic();
     }
 
     public UUID getId() {

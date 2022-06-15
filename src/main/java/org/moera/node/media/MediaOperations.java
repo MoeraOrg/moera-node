@@ -307,9 +307,10 @@ public class MediaOperations {
     }
 
     private Principal entryViewPrincipal(Entry entry) {
-        Principal view = entry.getViewPrincipal();
+        Principal view = entry.getViewCompound();
         if (entry.getParent() != null) {
-            view = view.union(entry.getParent().getViewPrincipal().union(entry.getParent().getViewCommentsPrincipal()));
+            view = view.intersect(
+                    entry.getParent().getViewCompound().intersect(entry.getParent().getViewCommentsCompound()));
         }
         return view;
     }
@@ -323,7 +324,7 @@ public class MediaOperations {
                 entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
         Principal view = entries.stream()
                 .map(this::entryViewPrincipal)
-                .reduce(Principal.PRIVATE, Principal::union);
+                .reduce(Principal.NONE, Principal::union);
         mediaFileOwner.setViewPrincipal(view);
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
         for (Posting posting : mediaFileOwner.getPostings()) {
@@ -334,47 +335,47 @@ public class MediaOperations {
             list.forEach(e -> posting.setAcceptedReactionsNegative(e.getAcceptedReactionsNegative()));
             Principal principal = list.stream()
                     .map(this::entryViewPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getViewCommentsPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewCommentsPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getAddCommentPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setAddCommentPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getViewReactionsPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewReactionsPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getViewNegativeReactionsPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewNegativeReactionsPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getViewReactionTotalsPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewReactionTotalsPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getViewNegativeReactionTotalsPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewNegativeReactionTotalsPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getViewReactionRatiosPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewReactionRatiosPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getViewNegativeReactionRatiosPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setViewNegativeReactionTotalsPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getAddReactionPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setAddReactionPrincipal(principal);
             principal = list.stream()
                     .map(Entry::getAddNegativeReactionPrincipal)
-                    .reduce(Principal.PRIVATE, Principal::union);
+                    .reduce(Principal.NONE, Principal::union);
             posting.setAddNegativeReactionPrincipal(principal);
         }
     }

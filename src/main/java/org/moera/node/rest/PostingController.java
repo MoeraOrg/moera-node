@@ -282,6 +282,7 @@ public class PostingController {
                 requestContext.getClientName());
 
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
+        boolean sameViewComments = postingText.sameViewComments(posting);
         postingText.toEntry(posting);
         try {
             posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media,
@@ -292,7 +293,10 @@ public class PostingController {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
         }
-
+        if (!sameViewComments) {
+            mediaFileOwnerRepository.updateUsageOfCommentAttachments(
+                    requestContext.nodeId(), posting.getId(), Util.now());
+        }
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, requestContext))));
