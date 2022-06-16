@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,7 +29,8 @@ public class ProfileInfo {
         Options options = requestContext.getOptions();
         fullName = requestContext.fullName();
         gender = options.getString("profile.gender");
-        if (requestContext.isAdmin()) {
+        Principal viewEmail = options.getPrincipal("profile.email.view");
+        if (requestContext.isPrincipal(viewEmail)) {
             email = options.getString("profile.email");
         }
         title = options.getString("profile.title");
@@ -43,7 +43,10 @@ public class ProfileInfo {
             this.avatar = new AvatarInfo(requestContext.getAvatar());
         }
         fundraisers = FundraiserInfo.deserializeValue(options.getString("profile.fundraisers"));
-        operations = Collections.singletonMap("edit", Principal.ADMIN);
+        operations = Map.of(
+                "edit", Principal.ADMIN,
+                "viewEmail", viewEmail
+        );
     }
 
     public String getFullName() {

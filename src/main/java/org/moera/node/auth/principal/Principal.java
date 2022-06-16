@@ -64,7 +64,7 @@ public class Principal implements Cloneable, PrincipalFilter {
 
     private final String value;
 
-    Principal(String value) {
+    public Principal(String value) {
         if (value == null) {
             throw new IllegalArgumentException("Principal cannot be null");
         }

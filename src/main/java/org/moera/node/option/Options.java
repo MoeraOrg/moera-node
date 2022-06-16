@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
 import org.moera.node.option.exception.DeserializeOptionValueException;
@@ -120,10 +122,10 @@ public class Options {
         unlockWrite();
     }
 
-    public void runInTransaction(OptionsOperation operation) {
+    public void runInTransaction(Consumer<Options> operation) {
         beginTransaction();
         try {
-            operation.run(this);
+            operation.accept(this);
         } catch (Throwable t) {
             rollback();
             throw t;
@@ -228,6 +230,10 @@ public class Options {
         return forName(name, (value, optionType) -> optionType.getTimestamp(value));
     }
 
+    public Principal getPrincipal(String name) {
+        return forName(name, (value, optionType) -> optionType.getPrincipal(value));
+    }
+
     // Returns only committed values of non-internal options
     public void forEach(OptionConsumer consumer) {
         lockRead();
@@ -274,7 +280,8 @@ public class Options {
         lockWrite();
         try {
             optionRepository.deleteByNodeIdAndName(nodeId, name);
-            transactionalPut(name, optionsMetadata.getDescriptor(name).getDefaultValue());
+            OptionDescriptor desc = optionsMetadata.getDescriptor(name);
+            transactionalPut(name, deserializeValue(desc.getType(), desc.getDefaultValue()));
         } finally {
             unlockWrite();
         }

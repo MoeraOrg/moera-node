@@ -71,6 +71,16 @@
   type: string
   internal: true
 
+- name: profile.email.view
+  type: Principal
+  defaultValue: admin
+  modifiers:
+    values:
+      - admin
+      - signed
+      - public
+  internal: true
+
 - name: profile.title
   type: string
   internal: true

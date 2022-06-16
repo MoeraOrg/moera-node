@@ -10,6 +10,11 @@ import org.springframework.data.util.Pair;
 
 public class OperationsValidator {
 
+    public static final List<Pair<String, Integer>> PROFILE_OPERATIONS = List.of(
+            Pair.of("viewEmail",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.ADMIN)
+    );
+
     public static final List<Pair<String, Integer>> POSTING_OPERATIONS = List.of(
             Pair.of("view",
                     PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE),

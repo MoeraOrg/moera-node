@@ -8,6 +8,7 @@ public class OptionTypeModifiers {
     private String multiline;
     private String never;
     private String always;
+    private String[] values;
 
     public String getFormat() {
         return format;
@@ -55,6 +56,14 @@ public class OptionTypeModifiers {
 
     public void setAlways(String always) {
         this.always = always;
+    }
+
+    public String[] getValues() {
+        return values;
+    }
+
+    public void setValues(String[] values) {
+        this.values = values;
     }
 
 }

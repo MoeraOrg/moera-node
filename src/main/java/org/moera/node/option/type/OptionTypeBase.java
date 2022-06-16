@@ -5,6 +5,7 @@ import java.security.PublicKey;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.InvalidOptionTypeConversionException;
 import org.moera.node.option.exception.UnsuitableOptionTypeException;
@@ -66,6 +67,10 @@ public abstract class OptionTypeBase {
 
     public Timestamp getTimestamp(Object value) {
         throw new InvalidOptionTypeConversionException(getTypeName(), Timestamp.class);
+    }
+
+    public Principal getPrincipal(Object value) {
+        throw new InvalidOptionTypeConversionException(getTypeName(), Principal.class);
     }
 
     public Object accept(Object value, Object typeModifiers) {

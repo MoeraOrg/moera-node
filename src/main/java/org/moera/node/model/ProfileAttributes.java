@@ -1,9 +1,11 @@
 package org.moera.node.model;
 
+import java.util.Map;
 import javax.transaction.Transactional;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.constraint.Uuid;
 import org.moera.node.option.Options;
@@ -34,6 +36,8 @@ public class ProfileAttributes {
     private String avatarId; // not UUID type, because empty string is allowed
 
     private FundraiserInfo[] fundraisers;
+
+    private Map<String, Principal> operations;
 
     public ProfileAttributes() {
     }
@@ -102,6 +106,18 @@ public class ProfileAttributes {
         this.fundraisers = fundraisers;
     }
 
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
+    }
+
+    public Principal getPrincipal(String operationName) {
+        return operations != null ? operations.get(operationName) : null;
+    }
+
     @Transactional
     public void toOptions(Options options, TextConverter textConverter) {
         String bioHtml;
@@ -114,6 +130,7 @@ public class ProfileAttributes {
             toOption("profile.full-name", getFullName(), opt);
             toOption("profile.gender", getGender(), opt);
             toOption("profile.email", getEmail(), opt);
+            toOption("profile.email.view", getPrincipal("viewEmail"), opt);
             toOption("profile.title", getTitle(), opt);
             toOption("profile.bio.src", getBioSrc(), opt);
             toOption("profile.bio.src.format", getBioSrcFormat().getValue(), opt);
@@ -126,6 +143,16 @@ public class ProfileAttributes {
     private void toOption(String name, String value, Options options) {
         if (value != null) {
             if (!value.isEmpty()) {
+                options.set(name, value);
+            } else {
+                options.reset(name);
+            }
+        }
+    }
+
+    private void toOption(String name, Principal value, Options options) {
+        if (value != null) {
+            if (!value.isUnset()) {
                 options.set(name, value);
             } else {
                 options.reset(name);

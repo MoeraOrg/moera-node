@@ -13,6 +13,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.model.ProfileAttributes;
 import org.moera.node.model.ProfileInfo;
+import org.moera.node.operations.OperationsValidator;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -50,6 +51,9 @@ public class ProfileController {
     @Transactional
     public ProfileInfo put(@Valid @RequestBody ProfileAttributes profileAttributes) {
         log.info("PUT /profile");
+
+        OperationsValidator.validateOperations(profileAttributes::getPrincipal, OperationsValidator.PROFILE_OPERATIONS,
+                true, "profileAttributes.operations.wrong-principal");
 
         String oldEmail = requestContext.getOptions().getString("profile.email");
         profileAttributes.toOptions(requestContext.getOptions(), textConverter);
