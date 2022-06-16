@@ -75,10 +75,10 @@
   type: Principal
   defaultValue: admin
   modifiers:
-    values:
-      - admin
-      - signed
+    principals:
       - public
+      - signed
+      - admin
   internal: true
 
 - name: profile.title

@@ -36,8 +36,8 @@ public class PrincipalOptionType extends OptionTypeBase {
     }
 
     private Principal acceptString(String value, OptionTypeModifiers typeModifiers) {
-        if (typeModifiers != null && typeModifiers.getValues() != null
-                && Arrays.stream(typeModifiers.getValues()).noneMatch(v -> v.equals(value))) {
+        if (typeModifiers != null && typeModifiers.getPrincipals() != null
+                && Arrays.stream(typeModifiers.getPrincipals()).noneMatch(v -> v.equals(value))) {
             throw new UnsuitableOptionValueException(value);
         }
         return new Principal(value);

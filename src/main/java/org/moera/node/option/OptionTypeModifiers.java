@@ -8,7 +8,7 @@ public class OptionTypeModifiers {
     private String multiline;
     private String never;
     private String always;
-    private String[] values;
+    private String[] principals;
 
     public String getFormat() {
         return format;
@@ -58,12 +58,12 @@ public class OptionTypeModifiers {
         this.always = always;
     }
 
-    public String[] getValues() {
-        return values;
+    public String[] getPrincipals() {
+        return principals;
     }
 
-    public void setValues(String[] values) {
-        this.values = values;
+    public void setPrincipals(String[] principals) {
+        this.principals = principals;
     }
 
 }
