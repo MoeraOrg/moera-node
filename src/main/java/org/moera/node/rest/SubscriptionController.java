@@ -12,6 +12,7 @@ import javax.validation.Valid;
 import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QSubscription;
 import org.moera.node.data.Subscription;
@@ -81,6 +82,10 @@ public class SubscriptionController {
                                          @RequestParam(required = false) SubscriptionType type) {
         log.info("GET /people/subscriptions (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
+
+        if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("subscriptions.view"))) {
+            throw new AuthenticationException();
+        }
 
         QSubscription subscription = QSubscription.subscription;
         BooleanBuilder where = new BooleanBuilder();

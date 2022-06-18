@@ -119,6 +119,26 @@
   defaultValue: "[]"
   internal: true
 
+- name: subscribers.view
+  type: Principal
+  defaultValue: public
+  title: "List of subscribers visible to"
+  modifiers:
+    principals:
+      - public
+      - signed
+      - admin
+
+- name: subscriptions.view
+  type: Principal
+  defaultValue: public
+  title: "List of subscriptions visible to"
+  modifiers:
+    principals:
+      - public
+      - signed
+      - admin
+
 - name: webmaster.name
   type: string
   defaultValue:

@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.util.Util;
 
 @Entity
@@ -126,6 +127,22 @@ public class Subscriber {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Principal getViewDetailsPrincipal() {
+        return Principal.PRIVATE;
+    }
+
+    public Principal getViewDetailsE() {
+        return getViewDetailsPrincipal().withOwner(getRemoteNodeName());
+    }
+
+    public Principal getDeletePrincipal() {
+        return Principal.PRIVATE;
+    }
+
+    public Principal getDeleteE() {
+        return getDeletePrincipal().withOwner(getRemoteNodeName());
     }
 
 }

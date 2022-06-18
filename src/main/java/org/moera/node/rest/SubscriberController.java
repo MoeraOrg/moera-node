@@ -80,6 +80,10 @@ public class SubscriberController {
         log.info("GET /people/subscribers (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
+        if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("subscribers.view"))) {
+            throw new AuthenticationException();
+        }
+
         QSubscriber subscriber = QSubscriber.subscriber;
         BooleanBuilder where = new BooleanBuilder();
         where.and(subscriber.nodeId.eq(requestContext.nodeId()));
@@ -102,9 +106,7 @@ public class SubscriberController {
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
-        String ownerName = requestContext.getClientName();
-        if (!requestContext.isAdmin()
-                && (ObjectUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
+        if (!requestContext.isPrincipal(subscriber.getViewDetailsE())) {
             throw new AuthenticationException();
         }
 
@@ -217,16 +219,14 @@ public class SubscriberController {
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
-        String ownerName = requestContext.getClientName();
-        if (!requestContext.isAdmin()
-                && (ObjectUtils.isEmpty(ownerName) || !ownerName.equals(subscriber.getRemoteNodeName()))) {
+        if (!requestContext.isPrincipal(subscriber.getDeleteE())) {
             throw new AuthenticationException();
         }
 
         subscriberRepository.delete(subscriber);
 
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            var profileTask = new RemoteProfileSubscriptionTask(ownerName);
+            var profileTask = new RemoteProfileSubscriptionTask(requestContext.getClientName());
             taskAutowire.autowire(profileTask);
             taskExecutor.execute(profileTask);
         }

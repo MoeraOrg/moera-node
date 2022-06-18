@@ -1,6 +1,9 @@
 package org.moera.node.model;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.util.Util;
 
@@ -13,6 +16,7 @@ public class SettingTypeModifiers {
     private Boolean multiline;
     private Boolean never;
     private Boolean always;
+    private Principal[] principals;
 
     public SettingTypeModifiers() {
     }
@@ -24,6 +28,9 @@ public class SettingTypeModifiers {
         multiline = Util.toBoolean(modifiers.getMultiline());
         never = Util.toBoolean(modifiers.getNever());
         always = Util.toBoolean(modifiers.getAlways());
+        if (modifiers.getPrincipals() != null) {
+            principals = Arrays.stream(modifiers.getPrincipals()).map(Principal::new).toArray(Principal[]::new);
+        }
     }
 
     public String getFormat() {
@@ -72,6 +79,14 @@ public class SettingTypeModifiers {
 
     public void setAlways(Boolean always) {
         this.always = always;
+    }
+
+    public Principal[] getPrincipals() {
+        return principals;
+    }
+
+    public void setPrincipals(Principal[] principals) {
+        this.principals = principals;
     }
 
 }
