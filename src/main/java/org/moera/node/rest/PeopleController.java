@@ -39,7 +39,7 @@ public class PeopleController {
         int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
 
-        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, requestContext.getOptions());
+        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, requestContext.getOptions(), requestContext);
     }
 
 }

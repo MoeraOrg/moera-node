@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.option.Options;
 
@@ -17,12 +18,22 @@ public class PeopleGeneralInfo {
     public PeopleGeneralInfo() {
     }
 
-    public PeopleGeneralInfo(Integer feedSubscribersTotal, Integer feedSubscriptionsTotal, Options options) {
-        this.feedSubscribersTotal = feedSubscribersTotal;
-        this.feedSubscriptionsTotal = feedSubscriptionsTotal;
+    public PeopleGeneralInfo(Integer feedSubscribersTotal, Integer feedSubscriptionsTotal, Options options,
+                             AccessChecker accessChecker) {
+        Principal viewSubscribers = options.getPrincipal("subscribers.view");
+        Principal viewSubscriptions = options.getPrincipal("subscriptions.view");
+        Principal viewSubscribersTotal = options.getPrincipal("subscribers.view-total");
+        Principal viewSubscriptionsTotal = options.getPrincipal("subscriptions.view-total");
+
+        this.feedSubscribersTotal = accessChecker.isPrincipal(viewSubscribers)
+                || accessChecker.isPrincipal(viewSubscribersTotal) ? feedSubscribersTotal : null;
+        this.feedSubscriptionsTotal = accessChecker.isPrincipal(viewSubscriptions)
+                || accessChecker.isPrincipal(viewSubscriptionsTotal) ? feedSubscriptionsTotal : null;
         operations = new HashMap<>();
-        putOperation(operations, "viewSubscribers", options.getPrincipal("subscribers.view"), Principal.PUBLIC);
-        putOperation(operations, "viewSubscriptions", options.getPrincipal("subscriptions.view"), Principal.PUBLIC);
+        putOperation(operations, "viewSubscribers", viewSubscribers, Principal.PUBLIC);
+        putOperation(operations, "viewSubscriptions", viewSubscriptions, Principal.PUBLIC);
+        putOperation(operations, "viewSubscribersTotal", viewSubscribersTotal, Principal.PUBLIC);
+        putOperation(operations, "viewSubscriptionsTotal", viewSubscriptionsTotal, Principal.PUBLIC);
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,

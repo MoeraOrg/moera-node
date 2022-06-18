@@ -129,10 +129,30 @@
       - signed
       - admin
 
+- name: subscribers.view-total
+  type: Principal
+  defaultValue: public
+  title: "Number of subscribers visible to"
+  modifiers:
+    principals:
+      - public
+      - signed
+      - admin
+
 - name: subscriptions.view
   type: Principal
   defaultValue: public
   title: "List of subscriptions visible to"
+  modifiers:
+    principals:
+      - public
+      - signed
+      - admin
+
+- name: subscriptions.view-total
+  type: Principal
+  defaultValue: public
+  title: "Number of subscriptions visible to"
   modifiers:
     principals:
       - public
