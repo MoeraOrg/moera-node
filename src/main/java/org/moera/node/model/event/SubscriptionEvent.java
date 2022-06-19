@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.model.AvatarImage;
@@ -28,8 +29,8 @@ public class SubscriptionEvent extends Event {
         super(type);
     }
 
-    public SubscriptionEvent(EventType type, Subscription subscription) {
-        super(type);
+    public SubscriptionEvent(EventType type, Subscription subscription, PrincipalFilter filter) {
+        super(type, filter);
         id = subscription.getId().toString();
         subscriptionType = subscription.getSubscriptionType();
         feedName = subscription.getFeedName();

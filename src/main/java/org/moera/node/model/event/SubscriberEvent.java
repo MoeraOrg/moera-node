@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.model.AvatarImage;
@@ -26,8 +27,8 @@ public class SubscriberEvent extends Event {
         super(type);
     }
 
-    public SubscriberEvent(EventType type, Subscriber subscriber) {
-        super(type);
+    public SubscriberEvent(EventType type, Subscriber subscriber, PrincipalFilter filter) {
+        super(type, filter);
 
         id = subscriber.getId().toString();
         subscriptionType = subscriber.getSubscriptionType();

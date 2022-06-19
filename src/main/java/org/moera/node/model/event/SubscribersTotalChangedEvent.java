@@ -3,21 +3,24 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.springframework.data.util.Pair;
 
-public class PeopleChangedEvent extends Event {
+public class SubscribersTotalChangedEvent extends Event {
 
     private int feedSubscribersTotal;
-    private int feedSubscriptionsTotal;
 
-    public PeopleChangedEvent() {
-        super(EventType.PEOPLE_CHANGED);
+    public SubscribersTotalChangedEvent() {
+        super(EventType.SUBSCRIBERS_TOTAL_CHANGED);
     }
 
-    public PeopleChangedEvent(int feedSubscribersTotal, int feedSubscriptionsTotal) {
-        this();
+    public SubscribersTotalChangedEvent(PrincipalFilter filter) {
+        super(EventType.SUBSCRIBERS_TOTAL_CHANGED, filter);
+    }
+
+    public SubscribersTotalChangedEvent(int feedSubscribersTotal, PrincipalFilter filter) {
+        this(filter);
         this.feedSubscribersTotal = feedSubscribersTotal;
-        this.feedSubscriptionsTotal = feedSubscriptionsTotal;
     }
 
     public int getFeedSubscribersTotal() {
@@ -28,19 +31,10 @@ public class PeopleChangedEvent extends Event {
         this.feedSubscribersTotal = feedSubscribersTotal;
     }
 
-    public int getFeedSubscriptionsTotal() {
-        return feedSubscriptionsTotal;
-    }
-
-    public void setFeedSubscriptionsTotal(int feedSubscriptionsTotal) {
-        this.feedSubscriptionsTotal = feedSubscriptionsTotal;
-    }
-
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
         parameters.add(Pair.of("feedSubscribersTotal", LogUtil.format(feedSubscribersTotal)));
-        parameters.add(Pair.of("feedSubscriptionsTotal", LogUtil.format(feedSubscriptionsTotal)));
     }
 
 }
