@@ -1,6 +1,11 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.util.Util;
@@ -16,11 +21,14 @@ public class SubscriberInfo {
     private String fullName;
     private AvatarImage avatar;
     private Long createdAt;
+    private Map<String, Principal> operations;
+    private Map<String, Principal> ownerOperations;
+    private Map<String, Principal> adminOperations;
 
     public SubscriberInfo() {
     }
 
-    public SubscriberInfo(Subscriber subscriber) {
+    public SubscriberInfo(Subscriber subscriber, AccessChecker accessChecker) {
         id = subscriber.getId().toString();
         type = subscriber.getSubscriptionType();
         feedName = subscriber.getFeedName();
@@ -31,6 +39,25 @@ public class SubscriberInfo {
             avatar = new AvatarImage(subscriber.getRemoteAvatarMediaFile(), subscriber.getRemoteAvatarShape());
         }
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
+
+        operations = new HashMap<>();
+        putOperation(operations, "view", subscriber.getViewCompound(), Principal.PUBLIC);
+        putOperation(operations, "delete", subscriber.getDeletePrincipal(), Principal.PRIVATE);
+
+        if (accessChecker.isPrincipal(subscriber.getViewOperationsE())) {
+            ownerOperations = new HashMap<>();
+            putOperation(ownerOperations, "view", subscriber.getViewPrincipal(), Principal.PUBLIC);
+
+            adminOperations = new HashMap<>();
+            putOperation(adminOperations, "view", subscriber.getAdminViewPrincipal(), Principal.UNSET);
+        }
+    }
+
+    private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
+                                     Principal defaultValue) {
+        if (value != null && !value.equals(defaultValue)) {
+            operations.put(operationName, value);
+        }
     }
 
     public String getId() {
@@ -95,6 +122,30 @@ public class SubscriberInfo {
 
     public void setCreatedAt(Long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
+    }
+
+    public Map<String, Principal> getOwnerOperations() {
+        return ownerOperations;
+    }
+
+    public void setOwnerOperations(Map<String, Principal> ownerOperations) {
+        this.ownerOperations = ownerOperations;
+    }
+
+    public Map<String, Principal> getAdminOperations() {
+        return adminOperations;
+    }
+
+    public void setAdminOperations(Map<String, Principal> adminOperations) {
+        this.adminOperations = adminOperations;
     }
 
 }

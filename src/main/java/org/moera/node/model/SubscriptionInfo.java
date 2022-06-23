@@ -1,6 +1,10 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
@@ -20,6 +24,7 @@ public class SubscriptionInfo {
     private String remotePostingId;
     private Long createdAt;
     private SubscriptionReason reason;
+    private Map<String, Principal> operations;
 
     public SubscriptionInfo() {
     }
@@ -38,6 +43,16 @@ public class SubscriptionInfo {
         remotePostingId = subscription.getRemoteEntryId();
         createdAt = Util.toEpochSecond(subscription.getCreatedAt());
         reason = subscription.getReason();
+
+        operations = new HashMap<>();
+        putOperation(operations, "view", subscription.getViewPrincipal(), Principal.PUBLIC);
+    }
+
+    private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
+                                     Principal defaultValue) {
+        if (value != null && !value.equals(defaultValue)) {
+            operations.put(operationName, value);
+        }
     }
 
     public String getId() {
@@ -126,6 +141,14 @@ public class SubscriptionInfo {
 
     public void setReason(SubscriptionReason reason) {
         this.reason = reason;
+    }
+
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
     }
 
 }

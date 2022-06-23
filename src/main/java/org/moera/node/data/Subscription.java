@@ -11,7 +11,9 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.model.RemotePosting;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @Entity
@@ -60,6 +62,8 @@ public class Subscription {
     @NotNull
     @Enumerated
     private SubscriptionReason reason = SubscriptionReason.USER;
+
+    private Principal viewPrincipal = Principal.PUBLIC;
 
     public UUID getId() {
         return id;
@@ -163,6 +167,38 @@ public class Subscription {
 
     public void setReason(SubscriptionReason reason) {
         this.reason = reason;
+    }
+
+    private Principal toAbsolute(Principal principal) {
+        return principal.withOwner(getRemoteNodeName());
+    }
+
+    public static Principal getViewAllPrincipal(Options options) {
+        return options.getPrincipal("subscriptions.view");
+    }
+
+    public static Principal getViewAllE(Options options) {
+        return getViewAllPrincipal(options);
+    }
+
+    public static Principal getViewTotalPrincipal(Options options) {
+        return options.getPrincipal("subscriptions.view-total");
+    }
+
+    public static Principal getViewTotalE(Options options) {
+        return getViewTotalPrincipal(options);
+    }
+
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
+    }
+
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
+    }
+
+    public Principal getViewE() {
+        return toAbsolute(getViewPrincipal());
     }
 
     @Transient

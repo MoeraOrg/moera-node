@@ -80,7 +80,7 @@ public class SubscriberController {
         log.info("GET /people/subscribers (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
-        if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("subscribers.view"))) {
+        if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))) {
             throw new AuthenticationException();
         }
 
@@ -95,7 +95,8 @@ public class SubscriberController {
         }
 
         return StreamSupport.stream(subscriberRepository.findAll(where).spliterator(), false)
-                .map(SubscriberInfo::new)
+                .filter(s -> requestContext.isPrincipal(s.getViewE()))
+                .map(s -> new SubscriberInfo(s, requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -106,11 +107,13 @@ public class SubscriberController {
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
-        if (!requestContext.isPrincipal(subscriber.getViewDetailsE())) {
+        if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))
+                && !requestContext.isClient(subscriber.getRemoteNodeName())
+                || !requestContext.isPrincipal(subscriber.getViewE())) {
             throw new AuthenticationException();
         }
 
-        return new SubscriberInfo(subscriber);
+        return new SubscriberInfo(subscriber, requestContext);
     }
 
     @PostMapping
@@ -164,7 +167,7 @@ public class SubscriberController {
 
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
 
-        return new SubscriberInfo(subscriber);
+        return new SubscriberInfo(subscriber, requestContext);
     }
 
     private boolean similarExists(SubscriberDescription description) {

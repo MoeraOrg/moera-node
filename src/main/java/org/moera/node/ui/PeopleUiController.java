@@ -51,7 +51,7 @@ public class PeopleUiController {
         List<SubscriberInfo> subscribers =
                 subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
                         .sorted(comparator)
-                        .map(SubscriberInfo::new)
+                        .map(s -> new SubscriberInfo(s, requestContext))
                         .collect(Collectors.toList());
 
         model.addAttribute("pageTitle", titleBuilder.build("Subscribers"));

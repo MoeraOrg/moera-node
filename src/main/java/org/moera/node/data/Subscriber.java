@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @Entity
@@ -48,6 +49,10 @@ public class Subscriber {
 
     @NotNull
     private Timestamp createdAt = Util.now();
+
+    private Principal viewPrincipal = Principal.PUBLIC;
+
+    private Principal adminViewPrincipal = Principal.UNSET;
 
     public UUID getId() {
         return id;
@@ -129,12 +134,56 @@ public class Subscriber {
         this.createdAt = createdAt;
     }
 
-    public Principal getViewDetailsPrincipal() {
+    private Principal toAbsolute(Principal principal) {
+        return principal.withOwner(getRemoteNodeName());
+    }
+
+    public static Principal getViewAllPrincipal(Options options) {
+        return options.getPrincipal("subscribers.view");
+    }
+
+    public static Principal getViewAllE(Options options) {
+        return getViewAllPrincipal(options);
+    }
+
+    public static Principal getViewTotalPrincipal(Options options) {
+        return options.getPrincipal("subscribers.view-total");
+    }
+
+    public static Principal getViewTotalE(Options options) {
+        return getViewTotalPrincipal(options);
+    }
+
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
+    }
+
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
+    }
+
+    public Principal getAdminViewPrincipal() {
+        return adminViewPrincipal;
+    }
+
+    public void setAdminViewPrincipal(Principal adminViewPrincipal) {
+        this.adminViewPrincipal = adminViewPrincipal;
+    }
+
+    public Principal getViewCompound() {
+        return getAdminViewPrincipal().withSubordinate(getViewPrincipal());
+    }
+
+    public Principal getViewE() {
+        return toAbsolute(getViewCompound());
+    }
+
+    public Principal getViewOperationsPrincipal() {
         return Principal.PRIVATE;
     }
 
-    public Principal getViewDetailsE() {
-        return getViewDetailsPrincipal().withOwner(getRemoteNodeName());
+    public Principal getViewOperationsE() {
+        return toAbsolute(getViewOperationsPrincipal());
     }
 
     public Principal getDeletePrincipal() {
@@ -142,7 +191,7 @@ public class Subscriber {
     }
 
     public Principal getDeleteE() {
-        return getDeletePrincipal().withOwner(getRemoteNodeName());
+        return toAbsolute(getDeletePrincipal());
     }
 
 }

@@ -83,7 +83,7 @@ public class SubscriptionController {
         log.info("GET /people/subscriptions (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
-        if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("subscriptions.view"))) {
+        if (!requestContext.isPrincipal(Subscription.getViewAllE(requestContext.getOptions()))) {
             throw new AuthenticationException();
         }
 

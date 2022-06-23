@@ -3,6 +3,7 @@ package org.moera.node.liberin.receptor;
 import javax.inject.Inject;
 
 import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.liberin.Liberin;
@@ -43,12 +44,12 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalFilter visibilityFilter(Options options) {
-        return options.getPrincipal("subscriptions.view");
+        return Subscription.getViewAllE(options);
     }
 
     private PrincipalFilter totalVisibilityFilter(Options options) {
-        return options.getPrincipal("subscriptions.view").a()
-                .or(options.getPrincipal("subscriptions.view-total"));
+        return Subscription.getViewAllE(options).a()
+                .or(Subscription.getViewTotalE(options));
     }
 
 }

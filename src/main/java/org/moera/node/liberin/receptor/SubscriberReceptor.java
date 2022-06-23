@@ -62,12 +62,12 @@ public class SubscriberReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalFilter visibilityFilter(Options options) {
-        return options.getPrincipal("subscribers.view");
+        return Subscriber.getViewAllE(options);
     }
 
     private PrincipalFilter totalVisibilityFilter(Options options) {
-        return options.getPrincipal("subscribers.view").a()
-                .or(options.getPrincipal("subscribers.view-total"));
+        return Subscriber.getViewAllE(options).a()
+                .or(Subscriber.getViewTotalE(options));
     }
 
 }
