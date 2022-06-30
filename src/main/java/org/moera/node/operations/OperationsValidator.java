@@ -98,6 +98,16 @@ public class OperationsValidator {
                     | PrincipalFlag.MAJOR | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE)
     );
 
+    public static final List<Pair<String, Integer>> SUBSCRIBER_OPERATIONS = List.of(
+            Pair.of("view",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)
+    );
+
+    public static final List<Pair<String, Integer>> SUBSCRIPTION_OPERATIONS = List.of(
+            Pair.of("view",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)
+    );
+
     public static void validateOperations(Function<String, Principal> getPrincipal,
                                           List<Pair<String, Integer>> description,
                                           boolean includeUnset,

@@ -30,7 +30,9 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.SubscriberOverride;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.OperationsValidator;
 import org.moera.node.rest.task.RemoteAvatarDownloadTask;
 import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
 import org.moera.node.task.TaskAutowire;
@@ -43,6 +45,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -213,6 +216,39 @@ public class SubscriberController {
             case PROFILE:
                 break;
         }
+
+        OperationsValidator.validateOperations(description::getPrincipal,
+                OperationsValidator.SUBSCRIBER_OPERATIONS, false,
+                "subscriberDescription.operations.wrong-principal");
+    }
+
+    @PutMapping("/{id}")
+    @Transactional
+    public SubscriberInfo put(@PathVariable UUID id, @Valid @RequestBody SubscriberOverride subscriberOverride) {
+        log.info("PUT /people/subscribers/{id} (id = {})", LogUtil.format(id));
+
+        Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
+        if (subscriberOverride.getOperations() != null && !subscriberOverride.getOperations().isEmpty()
+                && !requestContext.isClient(subscriber.getRemoteNodeName())) {
+            throw new AuthenticationException();
+        }
+        OperationsValidator.validateOperations(subscriberOverride::getPrincipal,
+                OperationsValidator.SUBSCRIBER_OPERATIONS, false,
+                "subscriberOverride.operations.wrong-principal");
+        if (subscriberOverride.getAdminOperations() != null && !subscriberOverride.getAdminOperations().isEmpty()
+                && !requestContext.isPrincipal(Subscriber.getOverrideE())) {
+            throw new AuthenticationException();
+        }
+        OperationsValidator.validateOperations(subscriberOverride::getAdminPrincipal,
+                OperationsValidator.SUBSCRIBER_OPERATIONS, true,
+                "subscriberOverride.adminOperations.wrong-principal");
+
+        subscriberOverride.toSubscriber(subscriber);
+
+//        requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
+
+        return new SubscriberInfo(subscriber, requestContext);
     }
 
     @DeleteMapping("/{id}")

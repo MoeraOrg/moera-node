@@ -1,9 +1,11 @@
 package org.moera.node.model;
 
+import java.util.Map;
 import java.util.UUID;
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
@@ -25,6 +27,8 @@ public class SubscriberDescription {
     private MediaFile ownerAvatarMediaFile;
 
     private Long lastUpdatedAt;
+
+    private Map<String, Principal> operations;
 
     public SubscriptionType getType() {
         return type;
@@ -82,6 +86,18 @@ public class SubscriberDescription {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
+    }
+
+    public Principal getPrincipal(String operationName) {
+        return operations != null ? operations.get(operationName) : null;
+    }
+
     public void toSubscriber(Subscriber subscriber) {
         subscriber.setSubscriptionType(type);
         subscriber.setRemoteFullName(ownerFullName);
@@ -94,6 +110,9 @@ public class SubscriberDescription {
             }
         }
         subscriber.setFeedName(feedName);
+        if (getPrincipal("view") != null) {
+            subscriber.setViewPrincipal(getPrincipal("view"));
+        }
     }
 
 }

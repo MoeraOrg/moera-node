@@ -32,8 +32,10 @@ import org.moera.node.model.Result;
 import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfo;
+import org.moera.node.model.SubscriptionOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.OperationsValidator;
 import org.moera.node.rest.task.RemoteAvatarDownloadTask;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
 import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
@@ -46,6 +48,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -135,6 +138,10 @@ public class SubscriptionController {
                 subscriptionDescription::setRemoteAvatarMediaFile,
                 () -> new ValidationFailure("subscriptionDescription.remoteAvatar.mediaId.not-found"));
 
+        OperationsValidator.validateOperations(subscriptionDescription::getPrincipal,
+                OperationsValidator.SUBSCRIPTION_OPERATIONS, false,
+                "subscriptionDescription.operations.wrong-principal");
+
         boolean exists = subscriptionRepository.countBySubscriber(
                 requestContext.nodeId(),
                 subscriptionDescription.getType(),
@@ -175,6 +182,34 @@ public class SubscriptionController {
             taskAutowire.autowire(avatarTask);
             taskExecutor.execute(avatarTask);
         }
+
+        return new SubscriptionInfo(subscription);
+    }
+
+    @PutMapping
+    @Transactional
+    public SubscriptionInfo put(
+            @RequestParam("nodeName") String remoteNodeName,
+            @RequestParam("subscriberId") String remoteSubscriberId,
+            @Valid @RequestBody SubscriptionOverride subscriptionOverride) {
+
+        log.info("PUT /people/subscriptions (remoteSubscriberId = {}, remoteNodeName = {})",
+                LogUtil.format(remoteSubscriberId),
+                LogUtil.format(remoteNodeName));
+
+        Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
+                        remoteSubscriberId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        if (!requestContext.isPrincipal(subscription.getEditOperationsE())) {
+            throw new AuthenticationException();
+        }
+        OperationsValidator.validateOperations(subscriptionOverride::getPrincipal,
+                OperationsValidator.SUBSCRIBER_OPERATIONS, false,
+                "subscriptionOverride.operations.wrong-principal");
+
+        subscriptionOverride.toSubscription(subscription);
+
+//        requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
 
         return new SubscriptionInfo(subscription);
     }

@@ -1,7 +1,9 @@
 package org.moera.node.model;
 
 import java.time.Instant;
+import java.util.Map;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.SubscriptionType;
 
@@ -13,6 +15,7 @@ public class SubscriberDescriptionQ {
     private String ownerFullName;
     private AvatarDescription ownerAvatar;
     private Long lastUpdatedAt;
+    private Map<String, Principal> operations;
 
     public SubscriberDescriptionQ() {
     }
@@ -80,6 +83,14 @@ public class SubscriberDescriptionQ {
 
     public void setLastUpdatedAt(Long lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
     }
 
 }

@@ -201,6 +201,14 @@ public class Subscription {
         return toAbsolute(getViewPrincipal());
     }
 
+    public Principal getEditOperationsPrincipal() {
+        return Principal.PRIVATE;
+    }
+
+    public Principal getEditOperationsE() {
+        return toAbsolute(getEditOperationsPrincipal());
+    }
+
     @Transient
     public RemotePosting getRemotePosting() {
         RemotePosting remotePosting = new RemotePosting();

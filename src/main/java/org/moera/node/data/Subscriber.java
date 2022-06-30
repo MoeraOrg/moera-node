@@ -154,6 +154,14 @@ public class Subscriber {
         return getViewTotalPrincipal(options);
     }
 
+    public static Principal getOverridePrincipal() {
+        return Principal.ADMIN;
+    }
+
+    public static Principal getOverrideE() {
+        return getOverridePrincipal();
+    }
+
     public Principal getViewPrincipal() {
         return viewPrincipal;
     }
