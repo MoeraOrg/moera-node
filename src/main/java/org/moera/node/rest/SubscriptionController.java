@@ -101,6 +101,7 @@ public class SubscriptionController {
         }
 
         return StreamSupport.stream(subscriptionRepository.findAll(where).spliterator(), false)
+                .filter(s -> requestContext.isPrincipal(s.getViewE()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
     }
