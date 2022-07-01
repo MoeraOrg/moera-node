@@ -88,8 +88,14 @@ public class SubscriptionController {
         log.info("GET /people/subscriptions (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
-        if (!requestContext.isPrincipal(Subscription.getViewAllE(requestContext.getOptions()))) {
-            throw new AuthenticationException();
+        if (type == SubscriptionType.FEED) {
+            if (!requestContext.isPrincipal(Subscription.getViewAllE(requestContext.getOptions()))) {
+                throw new AuthenticationException();
+            }
+        } else {
+            if (ObjectUtils.isEmpty(nodeName) || !requestContext.isClient(nodeName)) {
+                throw new AuthenticationException();
+            }
         }
 
         QSubscription subscription = QSubscription.subscription;
@@ -204,6 +210,9 @@ public class SubscriptionController {
                         remoteSubscriberId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         Principal latestView = subscription.getViewE();
+        if (subscription.getSubscriptionType() != SubscriptionType.FEED) {
+            throw new ObjectNotFoundFailure("not-supported");
+        }
         if (!requestContext.isPrincipal(subscription.getEditOperationsE())) {
             throw new AuthenticationException();
         }

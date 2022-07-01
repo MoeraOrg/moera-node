@@ -85,8 +85,14 @@ public class SubscriberController {
         log.info("GET /people/subscribers (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
-        if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))) {
-            throw new AuthenticationException();
+        if (type == SubscriptionType.FEED) {
+            if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))) {
+                throw new AuthenticationException();
+            }
+        } else {
+            if (ObjectUtils.isEmpty(nodeName) || !requestContext.isClient(nodeName)) {
+                throw new AuthenticationException();
+            }
         }
 
         QSubscriber subscriber = QSubscriber.subscriber;
@@ -112,10 +118,16 @@ public class SubscriberController {
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
-        if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))
-                && !requestContext.isClient(subscriber.getRemoteNodeName())
-                || !requestContext.isPrincipal(subscriber.getViewE())) {
-            throw new AuthenticationException();
+        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
+            if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))
+                    && !requestContext.isClient(subscriber.getRemoteNodeName())
+                    || !requestContext.isPrincipal(subscriber.getViewE())) {
+                throw new AuthenticationException();
+            }
+        } else {
+            if (!requestContext.isClient(subscriber.getRemoteNodeName())) {
+                throw new AuthenticationException();
+            }
         }
 
         return new SubscriberInfo(subscriber, requestContext);
@@ -232,6 +244,9 @@ public class SubscriberController {
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         Principal latestView = subscriber.getViewE();
+        if (subscriber.getSubscriptionType() != SubscriptionType.FEED) {
+            throw new ObjectNotFoundFailure("not-supported");
+        }
         if (subscriberOverride.getOperations() != null && !subscriberOverride.getOperations().isEmpty()
                 && !requestContext.isClient(subscriber.getRemoteNodeName())) {
             throw new AuthenticationException();
