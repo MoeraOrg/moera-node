@@ -1,7 +1,7 @@
 package org.moera.node.model.event;
 
 import org.moera.node.auth.principal.PrincipalFilter;
-import org.moera.node.data.Subscriber;
+import org.moera.node.model.SubscriberInfo;
 
 public class SubscriberAddedEvent extends SubscriberEvent {
 
@@ -9,7 +9,7 @@ public class SubscriberAddedEvent extends SubscriberEvent {
         super(EventType.SUBSCRIBER_ADDED);
     }
 
-    public SubscriberAddedEvent(Subscriber subscriber, PrincipalFilter filter) {
+    public SubscriberAddedEvent(SubscriberInfo subscriber, PrincipalFilter filter) {
         super(EventType.SUBSCRIBER_ADDED, subscriber, filter);
     }
 

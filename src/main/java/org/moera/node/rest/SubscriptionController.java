@@ -13,6 +13,7 @@ import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QSubscription;
 import org.moera.node.data.Subscription;
@@ -24,6 +25,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
+import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -201,6 +203,7 @@ public class SubscriptionController {
         Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
                         remoteSubscriberId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        Principal latestView = subscription.getViewE();
         if (!requestContext.isPrincipal(subscription.getEditOperationsE())) {
             throw new AuthenticationException();
         }
@@ -210,7 +213,7 @@ public class SubscriptionController {
 
         subscriptionOverride.toSubscription(subscription);
 
-//        requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
+        requestContext.send(new SubscriptionOperationsUpdatedLiberin(subscription, latestView));
 
         return new SubscriptionInfo(subscription);
     }

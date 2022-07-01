@@ -11,6 +11,7 @@ import javax.validation.Valid;
 import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -24,6 +25,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriberAddedLiberin;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
+import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -229,6 +231,7 @@ public class SubscriberController {
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
+        Principal latestView = subscriber.getViewE();
         if (subscriberOverride.getOperations() != null && !subscriberOverride.getOperations().isEmpty()
                 && !requestContext.isClient(subscriber.getRemoteNodeName())) {
             throw new AuthenticationException();
@@ -246,7 +249,7 @@ public class SubscriberController {
 
         subscriberOverride.toSubscriber(subscriber);
 
-//        requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
+        requestContext.send(new SubscriberOperationsUpdatedLiberin(subscriber, latestView));
 
         return new SubscriberInfo(subscriber, requestContext);
     }
