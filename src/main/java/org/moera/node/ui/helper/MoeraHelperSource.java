@@ -7,6 +7,7 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
@@ -128,11 +129,11 @@ public class MoeraHelperSource {
 
     public CharSequence reactions(ReactionsInfo reactionsInfo) {
         ReactionTotalsInfo totalsInfo = reactionsInfo.getReactions();
-        boolean totalsVisible = reactionsInfo.getOperations().get("viewReactions").isPublic()
-                || reactionsInfo.getOperations().get("viewReactionTotals").isPublic();
-        boolean negativeTotalsVisible = reactionsInfo.getOperations().get("viewReactions").isPublic()
-                && reactionsInfo.getOperations().get("viewNegativeReactions").isPublic()
-                || reactionsInfo.getOperations().get("viewNegativeReactionTotals").isPublic();
+        boolean totalsVisible = reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
+                || reactionsInfo.getPrincipal("viewReactionTotals", Principal.PUBLIC).isPublic();
+        boolean negativeTotalsVisible = reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
+                && reactionsInfo.getPrincipal("viewNegativeReactions", Principal.PUBLIC).isPublic()
+                || reactionsInfo.getPrincipal("viewNegativeReactionTotals", Principal.PUBLIC).isPublic();
 
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");

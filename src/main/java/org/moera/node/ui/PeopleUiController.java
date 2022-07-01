@@ -1,5 +1,6 @@
 package org.moera.node.ui;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
+import org.moera.node.model.PeopleGeneralInfo;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.naming.NodeName;
@@ -44,20 +46,22 @@ public class PeopleUiController {
     @VirtualPage
     @Transactional
     public String subscribers(Model model) {
-        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
-        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        PeopleGeneralInfo totals = getTotals();
         Comparator<Subscriber> comparator = Comparator.comparing(
                 sr -> sr.getRemoteFullName() != null ? sr.getRemoteFullName() : NodeName.shorten(sr.getRemoteNodeName()));
-        List<SubscriberInfo> subscribers =
-                subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
-                        .sorted(comparator)
-                        .map(s -> new SubscriberInfo(s, requestContext))
-                        .collect(Collectors.toList());
+        List<SubscriberInfo> subscribers = Collections.emptyList();
+        if (Subscriber.getViewAllE(requestContext.getOptions()).isPublic()) {
+            subscribers = subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
+                    .sorted(comparator)
+                    .filter(s -> requestContext.isPrincipal(s.getViewE()))
+                    .map(s -> new SubscriberInfo(s, requestContext))
+                    .collect(Collectors.toList());
+        }
 
         model.addAttribute("pageTitle", titleBuilder.build("Subscribers"));
         model.addAttribute("menuIndex", "people");
-        model.addAttribute("subscribersTotal", subscribersTotal);
-        model.addAttribute("subscriptionsTotal", subscriptionsTotal);
+        model.addAttribute("subscribersTotal", totals.getFeedSubscribersTotal());
+        model.addAttribute("subscriptionsTotal", totals.getFeedSubscriptionsTotal());
         model.addAttribute("subscribers", subscribers);
 
         model.addAttribute("ogUrl", requestContext.getSiteUrl() + "/people/subscribers");
@@ -70,26 +74,34 @@ public class PeopleUiController {
     @VirtualPage
     @Transactional
     public String subscriptions(Model model) {
-        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
-        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        PeopleGeneralInfo totals = getTotals();
         Comparator<Subscription> comparator = Comparator.comparing(
                 sr -> sr.getRemoteFullName() != null ? sr.getRemoteFullName() : NodeName.shorten(sr.getRemoteNodeName()));
-        List<SubscriptionInfo> subscriptions =
-                subscriptionRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
-                        .sorted(comparator)
-                        .map(SubscriptionInfo::new)
-                        .collect(Collectors.toList());
+        List<SubscriptionInfo> subscriptions = Collections.emptyList();
+        if (Subscription.getViewAllE(requestContext.getOptions()).isPublic()) {
+            subscriptions = subscriptionRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
+                    .sorted(comparator)
+                    .filter(s -> requestContext.isPrincipal(s.getViewE()))
+                    .map(SubscriptionInfo::new)
+                    .collect(Collectors.toList());
+        }
 
         model.addAttribute("pageTitle", titleBuilder.build("Subscriptions"));
         model.addAttribute("menuIndex", "people");
-        model.addAttribute("subscribersTotal", subscribersTotal);
-        model.addAttribute("subscriptionsTotal", subscriptionsTotal);
+        model.addAttribute("subscribersTotal", totals.getFeedSubscribersTotal());
+        model.addAttribute("subscriptionsTotal", totals.getFeedSubscriptionsTotal());
         model.addAttribute("subscriptions", subscriptions);
 
         model.addAttribute("ogUrl", requestContext.getSiteUrl() + "/people/subscriptions");
         model.addAttribute("ogTitle", "Subscriptions");
 
         return "subscriptions";
+    }
+
+    private PeopleGeneralInfo getTotals() {
+        int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, requestContext.getOptions(), requestContext);
     }
 
 }

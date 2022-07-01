@@ -10,4 +10,8 @@ public interface ReactionsInfo {
 
     Map<String, Principal> getOperations();
 
+    default Principal getPrincipal(String operationName, Principal defaultValue) {
+        return getOperations() != null ? getOperations().getOrDefault(operationName, defaultValue) : defaultValue;
+    }
+
 }
