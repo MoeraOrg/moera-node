@@ -2,6 +2,7 @@ package org.moera.node.liberin.receptor;
 
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Subscription;
@@ -40,17 +41,17 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
     public void operationsUpdated(SubscriptionOperationsUpdatedLiberin liberin) {
         Subscription subscription = liberin.getSubscription();
 
-        PrincipalExpression addedFilter = generalVisibilityFilter(universalContext.getOptions()).a()
+        PrincipalExpression addedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
                 .and(subscription.getViewE())
                 .andNot(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionAddedEvent(new SubscriptionInfo(subscription), addedFilter));
 
-        PrincipalExpression updatedFilter = generalVisibilityFilter(universalContext.getOptions()).a()
+        PrincipalExpression updatedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
                 .and(subscription.getViewE())
                 .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionUpdatedEvent(new SubscriptionInfo(subscription), updatedFilter));
 
-        PrincipalExpression deletedFilter = generalVisibilityFilter(universalContext.getOptions()).a()
+        PrincipalExpression deletedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
                 .andNot(subscription.getViewE())
                 .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionDeletedEvent(new SubscriptionInfo(subscription), deletedFilter));
@@ -71,12 +72,14 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
                 totalVisibilityFilter(universalContext.getOptions())));
     }
 
-    private PrincipalFilter generalVisibilityFilter(Options options) {
-        return Subscription.getViewAllE(options);
+    private PrincipalFilter generalVisibilityFilter(Options options, Subscription subscription) {
+        return subscription.getSubscriptionType() == SubscriptionType.FEED
+                ? Subscription.getViewAllE(options)
+                : Principal.ofNode(subscription.getRemoteNodeName());
     }
 
     private PrincipalExpression visibilityFilter(Options options, Subscription subscription) {
-        return generalVisibilityFilter(options).a().and(subscription.getViewE());
+        return generalVisibilityFilter(options, subscription).a().and(subscription.getViewE());
     }
 
     private PrincipalFilter totalVisibilityFilter(Options options) {

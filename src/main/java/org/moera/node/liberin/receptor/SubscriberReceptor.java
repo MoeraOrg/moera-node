@@ -105,7 +105,9 @@ public class SubscriberReceptor extends LiberinReceptorBase {
     }
 
     private PrincipalExpression generalVisibilityFilter(Options options, Subscriber subscriber) {
-        return Subscriber.getViewAllE(options).a().andNot(Principal.ofNode(subscriber.getRemoteNodeName()));
+        return subscriber.getSubscriptionType() == SubscriptionType.FEED
+                ? Subscriber.getViewAllE(options).a().andNot(Principal.ofNode(subscriber.getRemoteNodeName()))
+                : Principal.ADMIN.a();
     }
 
     private PrincipalExpression visibilityFilter(Options options, Subscriber subscriber) {
