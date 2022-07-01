@@ -141,27 +141,31 @@ public class TimelineUiController {
                 ? commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId).orElse(null)
                 : null;
         if (posting.isOriginal()) {
-            before = comment != null ? comment.getMoment() : before;
-            before = before != null ? before : Long.MIN_VALUE + 1;
-            List<CommentInfo> comments = Collections.emptyList();
-            PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
-            if (publicPage != null && posting.getViewCommentsCompound().isPublic()) {
-                comments = commentRepository.findInRange(
-                        requestContext.nodeId(), id, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
-                        .stream()
-                        .filter(Comment::isMessage)
-                        .filter(c -> c.getViewCompound().isPublic())
-                        .map(CommentInfo::forUi)
-                        .sorted(Comparator.comparing(CommentInfo::getMoment))
-                        .collect(Collectors.toList());
-            }
+            if (posting.getViewCommentsCompound().isPublic()) {
+                before = comment != null ? comment.getMoment() : before;
+                before = before != null ? before : Long.MIN_VALUE + 1;
+                List<CommentInfo> comments = Collections.emptyList();
+                PublicPage publicPage = publicPageRepository.findContainingForEntry(requestContext.nodeId(), id, before);
+                if (publicPage != null && posting.getViewCommentsCompound().isPublic()) {
+                    comments = commentRepository.findInRange(requestContext.nodeId(), id,
+                                    publicPage.getAfterMoment(), publicPage.getBeforeMoment())
+                            .stream()
+                            .filter(Comment::isMessage)
+                            .filter(c -> c.getViewCompound().isPublic())
+                            .map(CommentInfo::forUi)
+                            .sorted(Comparator.comparing(CommentInfo::getMoment))
+                            .collect(Collectors.toList());
+                }
 
-            if (commentId != null) {
-                model.addAttribute("anchor", "comment-" + commentId);
+                if (commentId != null) {
+                    model.addAttribute("anchor", "comment-" + commentId);
+                }
+                model.addAttribute("comments", comments);
+                model.addAttribute("commentId", Objects.toString(commentId, null));
+                model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
+            } else {
+                model.addAttribute("comments", Collections.emptyList());
             }
-            model.addAttribute("comments", comments);
-            model.addAttribute("commentId", Objects.toString(commentId, null));
-            model.addAttribute("pagination", commentPublicPageOperations.createPagination(publicPage));
         } else {
             model.addAttribute("originalHref", NamingCache.getRedirector(posting.getReceiverName(),
                     entryLocation(posting.getReceiverEntryId(), null)));
