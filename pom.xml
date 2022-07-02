@@ -193,6 +193,11 @@
             <artifactId>thumbnailator</artifactId>
             <version>0.4.17</version>
         </dependency>
+        <dependency>
+            <groupId>com.drewnoakes</groupId>
+            <artifactId>metadata-extractor</artifactId>
+            <version>2.18.0</version>
+        </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>

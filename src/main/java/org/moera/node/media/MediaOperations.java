@@ -6,6 +6,7 @@ import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +36,8 @@ import javax.imageio.stream.ImageInputStream;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import com.drew.imaging.FileType;
+import com.drew.imaging.FileTypeDetector;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
@@ -168,6 +171,9 @@ public class MediaOperations {
             if (digest == null) {
                 digest = digest(tmpPath);
             }
+            if (contentType.startsWith("image/")) {
+                contentType = detectContentType(tmpPath, contentType);
+            }
 
             Path mediaPath = FileSystems.getDefault().getPath(
                     config.getMedia().getPath(), MimeUtils.fileName(id, contentType));
@@ -184,6 +190,11 @@ public class MediaOperations {
             mediaFile = mediaFileRepository.save(mediaFile);
         }
         return mediaFile;
+    }
+
+    private String detectContentType(Path path, String defaultContentType) throws IOException {
+        FileType fileType = FileTypeDetector.detectFileType(new BufferedInputStream(new FileInputStream(path.toFile())));
+        return fileType != null ? fileType.getMimeType() : defaultContentType;
     }
 
     public byte[] digest(MediaFile mediaFile) throws IOException {
