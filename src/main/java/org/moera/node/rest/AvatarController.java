@@ -84,7 +84,7 @@ public class AvatarController {
             throw new ValidationFailure("avatar.media-unsupported");
         }
 
-        rotateClip(avatarAttributes, mediaFile);
+        rotateClipToOrientation(avatarAttributes, mediaFile);
         if (avatarAttributes.getClipX() + avatarAttributes.getClipSize() > mediaFile.getSizeX()) {
             throw new ValidationFailure("avatarAttributes.clipX.out-of-range");
         }
@@ -151,7 +151,7 @@ public class AvatarController {
         return orientation;
     }
 
-    private void rotateClip(AvatarAttributes avatarAttributes, MediaFile mediaFile) {
+    private void rotateClipToOrientation(AvatarAttributes avatarAttributes, MediaFile mediaFile) {
         int orientation = getImageOrientation(mediaOperations.getPath(mediaFile));
         int clipX = avatarAttributes.getClipX();
         int clipY = avatarAttributes.getClipY();
