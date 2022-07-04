@@ -93,6 +93,7 @@ public class ProxyController {
         Document document;
         try {
             document = Jsoup.connect(url)
+                    .header("User-Agent", "curl/7.68.0")
                     .followRedirects(true)
                     .timeout((int) REQUEST_TIMEOUT.toMillis())
                     .get();
@@ -103,9 +104,12 @@ public class ProxyController {
         LinkPreviewInfo linkPreviewInfo = new LinkPreviewInfo();
         linkPreviewInfo.setUrl(url);
 
-        Elements elements = document.select("head meta");
+        Elements elements = document.select("meta");
         for (Element element : elements) {
             String property = element.attr("property");
+            if (ObjectUtils.isEmpty(property)) {
+                property = element.attr("name");
+            }
             String content = element.attr("content");
             switch (property) {
                 case "og:site_name":
@@ -122,6 +126,16 @@ public class ProxyController {
                     break;
                 case "og:image":
                     linkPreviewInfo.setImageUrl(content);
+                    break;
+                case "title":
+                    if (ObjectUtils.isEmpty(linkPreviewInfo.getTitle())) {
+                        linkPreviewInfo.setTitle(content);
+                    }
+                    break;
+                case "description":
+                    if (ObjectUtils.isEmpty(linkPreviewInfo.getDescription())) {
+                        linkPreviewInfo.setDescription(content);
+                    }
                     break;
                 default:
                     // ignore
