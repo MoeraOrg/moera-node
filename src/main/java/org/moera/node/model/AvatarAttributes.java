@@ -10,10 +10,8 @@ public class AvatarAttributes {
     @NotBlank
     private String mediaId;
 
-    @Min(value = 0)
     private int clipX;
 
-    @Min(value = 0)
     private int clipY;
 
     @Min(value = 100)

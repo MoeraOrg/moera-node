@@ -85,10 +85,12 @@ public class AvatarController {
         }
 
         rotateClipToOrientation(avatarAttributes, mediaFile);
-        if (avatarAttributes.getClipX() + avatarAttributes.getClipSize() > mediaFile.getSizeX()) {
+        if (avatarAttributes.getClipX() < 0
+                || avatarAttributes.getClipX() + avatarAttributes.getClipSize() > mediaFile.getSizeX()) {
             throw new ValidationFailure("avatarAttributes.clipX.out-of-range");
         }
-        if (avatarAttributes.getClipY() + avatarAttributes.getClipSize() > mediaFile.getSizeY()) {
+        if (avatarAttributes.getClipY() < 0
+                || avatarAttributes.getClipY() + avatarAttributes.getClipSize() > mediaFile.getSizeY()) {
             throw new ValidationFailure("avatarAttributes.clipY.out-of-range");
         }
 
@@ -143,8 +145,12 @@ public class AvatarController {
         int orientation = 1;
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(imagePath.toFile());
-            Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
-            orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+            if (metadata != null) {
+                Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+                if (directory != null) {
+                    orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+                }
+            }
         } catch (MetadataException | IOException | ImageProcessingException e) {
             // Could not get orientation, use default
         }
