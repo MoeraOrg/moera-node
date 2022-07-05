@@ -787,7 +787,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         entryRevision.setBody(body.getEncoded());
         entryRevision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
         entryRevision.setHeading(heading);
-        entryRevision.setDescription(HeadingExtractor.extractDescription(body));
+        entryRevision.setDescription(HeadingExtractor.extractDescription(body, false));
         if (deletedAt != null) {
             entryRevision.setDeletedAt(Util.now());
         }

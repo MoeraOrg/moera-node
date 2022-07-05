@@ -38,11 +38,12 @@ public class HeadingExtractor {
         return heading;
     }
 
-    public static String extractDescription(Body body) {
+    public static String extractDescription(Body body, boolean collapseQuotations) {
         if (ObjectUtils.isEmpty(body.getText())) {
             return "";
         }
-        return extract(body.getText(), DESCRIPTION_LENGTH, false);
+        String text = URL.matcher(body.getText()).replaceAll(EMOJI_CHAIN);
+        return extract(text, DESCRIPTION_LENGTH, collapseQuotations);
     }
 
     private static String extract(String html, int len, boolean collapseQuotations) {
