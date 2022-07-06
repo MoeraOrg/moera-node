@@ -23,7 +23,7 @@ public class HeadingExtractor {
 
     private static final Pattern URL = Pattern.compile(
             "https?://[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9]{1,6}"
-                    + "\\b(?:[-a-zA-Z0-9()!@:%_+.~#?&/=]*[-a-zA-Z0-9@:%_+~#&/=])?",
+                    + "\\b(?:[-a-zA-Z0-9()!@:%_+,.~#?&/=]*[-a-zA-Z0-9@:%_+~#&/=])?",
             Pattern.CASE_INSENSITIVE);
 
     public static String extractHeading(Body body, boolean hasGallery, boolean collapseQuotations) {
