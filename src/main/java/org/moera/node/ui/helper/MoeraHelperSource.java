@@ -177,38 +177,10 @@ public class MoeraHelperSource {
         buf.append("</span>");
     }
 
-    private boolean isAddonSupported() {
-        switch (requestContext.getUserAgent()) {
-            default:
-            case UNKNOWN:
-            case OPERA:
-            case DOLPHIN:
-                return false;
-            case FIREFOX:
-            case CHROME:
-                return requestContext.getUserAgentOs() == UserAgentOs.UNKNOWN;
-            case YANDEX:
-            case BRAVE:
-            case VIVALDI:
-                return true;
-        }
-    }
-
     public CharSequence invitation() {
         StringBuilder buf = new StringBuilder();
         buf.append("This site participates in <a href=\"http://moera.org/\">Moera</a> Network. ");
         buf.append("To unlock all features, ");
-        if (isAddonSupported()) {
-            buf.append("install ");
-            if (requestContext.getUserAgent() == UserAgent.FIREFOX) {
-                buf.append("<a href=\"https://addons.mozilla.org/en-US/firefox/addon/moera/\">"
-                        + "the Moera add-on for Firefox</a>");
-            } else {
-                buf.append("<a href=\"https://chrome.google.com/webstore/detail/moera/"
-                        + "endpkknmpgamhhlojbgifimfcleeeghb\">the Moera add-on for Chrome</a>");
-            }
-            buf.append(" or ");
-        }
         if (requestContext.getUserAgentOs() == UserAgentOs.ANDROID) {
             buf.append("<a href=\"https://play.google.com/store/apps/details"
                     + "?id=org.moera.web.twa&pcampaignid=invitation-node\">"
