@@ -2,6 +2,7 @@ package org.moera.node.ui.helper;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -9,7 +10,6 @@ import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;
-import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.global.WebClient;
 import org.moera.node.model.AvatarImage;
@@ -159,12 +159,17 @@ public class MoeraHelperSource {
 
     private long sum(List<ReactionTotalInfo> totals) {
         return totals.stream()
-                .collect(Collectors.summarizingInt(ReactionTotalInfo::getTotal))
+                .map(ReactionTotalInfo::getTotal)
+                .filter(Objects::nonNull)
+                .collect(Collectors.summarizingInt(Integer::intValue))
                 .getSum();
     }
 
     private void appendEmojis(StringBuilder buf, List<ReactionTotalInfo> totals) {
-        totals.sort(Comparator.comparingInt(ReactionTotalInfo::getTotal).reversed());
+        totals = totals.stream()
+                .filter(rt -> rt.getTotal() != null)
+                .sorted(Comparator.comparingInt(ReactionTotalInfo::getTotal).reversed())
+                .collect(Collectors.toList());
         buf.append("<span class=\"emojis\">");
         for (int i = 0; i < 3 && i < totals.size(); i++) {
             buf.append(String.format("&#%d;", totals.get(i).getEmoji()));
