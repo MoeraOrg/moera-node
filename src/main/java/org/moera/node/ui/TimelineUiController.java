@@ -30,7 +30,6 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
-import org.moera.node.model.body.Body;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
@@ -176,8 +175,8 @@ public class TimelineUiController {
         model.addAttribute("ogUrl", requestContext.getSiteUrl() + entryLocation(posting.getId(), commentId));
         model.addAttribute("ogType", "article");
         Entry entry = comment != null ? comment : posting;
-        String subject = new Body(entry.getCurrentRevision().getBody()).getSubject();
-        model.addAttribute("ogTitle", !ObjectUtils.isEmpty(subject) ? subject : "(no title)");
+        String heading = entry.getCurrentRevision().getHeading();
+        model.addAttribute("ogTitle", !ObjectUtils.isEmpty(heading) ? heading : "(no title)");
         EntryAttachment attachment = entry.getCurrentRevision().getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
                 .filter(ea -> mediaId == null || ea.getMediaFileOwner().getId().equals(mediaId))

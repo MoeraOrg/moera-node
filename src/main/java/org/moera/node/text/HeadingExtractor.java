@@ -38,12 +38,24 @@ public class HeadingExtractor {
         return heading;
     }
 
-    public static String extractDescription(Body body, boolean collapseQuotations) {
+    public static String extractDescription(Body body, boolean collapseQuotations, String heading) {
         if (ObjectUtils.isEmpty(body.getText())) {
             return "";
         }
+        int beginning = getDescriptionBeginning(body, heading);
         String text = URL.matcher(body.getText()).replaceAll(EMOJI_CHAIN);
-        return extract(text, DESCRIPTION_LENGTH, collapseQuotations);
+        String description = extract(text, DESCRIPTION_LENGTH + beginning, collapseQuotations).substring(beginning);
+        if (beginning != 0) {
+            description = '\u2026' + description;
+        }
+        return description;
+    }
+
+    private static int getDescriptionBeginning(Body body, String heading) {
+        if (!ObjectUtils.isEmpty(body.getSubject()) || ObjectUtils.isEmpty(heading)) {
+            return 0;
+        }
+        return heading.endsWith("\u2026") ? heading.length() - 1 : heading.length();
     }
 
     private static String extract(String html, int len, boolean collapseQuotations) {
