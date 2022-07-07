@@ -127,14 +127,21 @@ public class ProxyController {
                 case "og:image":
                     linkPreviewInfo.setImageUrl(content);
                     break;
+                case "twitter:title":
                 case "title":
                     if (ObjectUtils.isEmpty(linkPreviewInfo.getTitle())) {
                         linkPreviewInfo.setTitle(content);
                     }
                     break;
+                case "twitter:description":
                 case "description":
                     if (ObjectUtils.isEmpty(linkPreviewInfo.getDescription())) {
                         linkPreviewInfo.setDescription(content);
+                    }
+                    break;
+                case "twitter:image":
+                    if (ObjectUtils.isEmpty(linkPreviewInfo.getImageUrl())) {
+                        linkPreviewInfo.setImageUrl(content);
                     }
                     break;
                 default:
