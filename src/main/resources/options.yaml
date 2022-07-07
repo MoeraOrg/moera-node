@@ -301,6 +301,11 @@
   defaultValue: true
   title: "Enable Web UI"
 
+- name: webui.allow-indexing
+  type: bool
+  defaultValue: true
+  title: "Allow search engines to index the blog"
+
 - name: webui.head.top.html
   type: string
   defaultValue: ""

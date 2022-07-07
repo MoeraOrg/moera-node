@@ -43,12 +43,17 @@ public class IndexUiController {
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseBody
     public String robots() {
-        return String.format(
-                "User-agent: *\n"
-                + "Disallow: /registrar\n"
-                + "\n"
-                + "Sitemap: %s/sitemaps\n",
-                requestContext.getSiteUrl());
+        if (requestContext.getOptions().getBool("webui.allow-indexing")) {
+            return String.format(
+                    "User-agent: *\n"
+                    + "Disallow: /registrar\n"
+                    + "\n"
+                    + "Sitemap: %s/sitemaps\n",
+                    requestContext.getSiteUrl());
+        } else {
+            return "User-agent: *\n"
+                    + "Disallow: /\n";
+        }
     }
 
 }
