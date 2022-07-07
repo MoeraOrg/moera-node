@@ -51,7 +51,16 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
     }
 
     private boolean isAutoClient() {
-        if (!requestContext.getOptions().getBool("webui.redirect-to-client")) {
+        Boolean webUiEnabled = requestContext.getOptions().getBool("webui.enabled");
+        Boolean redirectToClient = requestContext.getOptions().getBool("webui.redirect-to-client");
+        if (!webUiEnabled) {
+            if (redirectToClient) {
+                return true;
+            } else {
+                throw new PageNotFoundException();
+            }
+        }
+        if (!redirectToClient) {
             return false;
         }
         switch (requestContext.getUserAgent()) {

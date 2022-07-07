@@ -296,6 +296,11 @@
     max: 2000d
     never: true
 
+- name: webui.enabled
+  type: bool
+  defaultValue: true
+  title: "Enable Web UI"
+
 - name: webui.head.top.html
   type: string
   defaultValue: ""
