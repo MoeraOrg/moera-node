@@ -1,6 +1,10 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 
@@ -16,6 +20,7 @@ public class PrivateMediaFileInfo {
     private long size;
     private String postingId;
     private MediaFilePreviewInfo[] previews;
+    private Map<String, Principal> operations;
 
     public PrivateMediaFileInfo() {
     }
@@ -34,6 +39,16 @@ public class PrivateMediaFileInfo {
                 .filter(pw -> pw.getMediaFile() != null)
                 .map(MediaFilePreviewInfo::new)
                 .toArray(MediaFilePreviewInfo[]::new);
+        operations = new HashMap<>();
+        putOperation(operations, "view",
+                mediaFileOwner.getViewPrincipal(), Principal.PUBLIC);
+    }
+
+    private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
+                                     Principal defaultValue) {
+        if (value != null && !value.equals(defaultValue)) {
+            operations.put(operationName, value);
+        }
     }
 
     public String getId() {
@@ -116,6 +131,14 @@ public class PrivateMediaFileInfo {
             }
         }
         return larger;
+    }
+
+    public Map<String, Principal> getOperations() {
+        return operations;
+    }
+
+    public void setOperations(Map<String, Principal> operations) {
+        this.operations = operations;
     }
 
 }
