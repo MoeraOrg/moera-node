@@ -279,6 +279,16 @@
   defaultValue: false
   title: Do not delete Newsfeed posts when original is deleted
 
+- name: posting.revealed.notification.age
+  type: Duration
+  defaultValue: 30d
+  title: Notify subscribers about opening a closed post, if it is newer than
+  modifiers:
+    min: 1d
+    max: 2000d
+    always: true
+    never: true
+
 - name: feed.width
   type: int
   defaultValue: 900

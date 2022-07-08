@@ -1,5 +1,6 @@
 package org.moera.node.liberin.receptor;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +38,7 @@ import org.moera.node.model.notification.PostingImportantUpdateNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.text.MentionsExtractor;
+import org.moera.node.util.ExtendedDuration;
 
 @LiberinReceptor
 public class PostingReceptor extends LiberinReceptorBase {
@@ -67,10 +69,12 @@ public class PostingReceptor extends LiberinReceptorBase {
         PrincipalExpression addedFilter = posting.getViewE().a()
                 .andNot(liberin.getLatestViewPrincipal());
         send(liberin, new PostingAddedEvent(posting, addedFilter));
-        List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
-        stories.forEach(story ->
-                send(Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
-                        new FeedPostingAddedNotification(story.getFeedName(), posting.getId())));
+        if (isNotifyWhenRevealed(posting)) {
+            List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
+            stories.forEach(story ->
+                    send(Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
+                            new FeedPostingAddedNotification(story.getFeedName(), posting.getId())));
+        }
 
         PrincipalExpression updatedFilter = posting.getViewE().a()
                 .and(liberin.getLatestViewPrincipal());
@@ -88,6 +92,17 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(liberin, new PostingDeletedEvent(posting, deletedFilter));
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), deletedFilter),
                 new PostingDeletedNotification(posting.getId()));
+    }
+
+    private boolean isNotifyWhenRevealed(Posting posting) {
+        ExtendedDuration duration = universalContext.getOptions().getDuration("posting.revealed.notification.age");
+        if (duration.isAlways()) {
+            return true;
+        }
+        if (duration.isNever()) {
+            return false;
+        }
+        return posting.getCreatedAt().toInstant().plus(duration.getDuration()).isAfter(Instant.now());
     }
 
     @LiberinMapping
