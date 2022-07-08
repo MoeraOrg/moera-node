@@ -4,11 +4,13 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Option;
@@ -32,11 +34,14 @@ public class Options {
     private final UUID nodeId;
     private final OptionsMetadata optionsMetadata;
     private final OptionRepository optionRepository;
+    private final OptionHookManager optionHookManager;
 
-    public Options(UUID nodeId, OptionsMetadata optionsMetadata, OptionRepository optionRepository) {
+    public Options(UUID nodeId, OptionsMetadata optionsMetadata, OptionRepository optionRepository,
+                   OptionHookManager optionHookManager) {
         this.nodeId = nodeId;
         this.optionsMetadata = optionsMetadata;
         this.optionRepository = optionRepository;
+        this.optionHookManager = optionHookManager;
 
         load();
     }
@@ -103,10 +108,19 @@ public class Options {
             transactionDepth.set(transactionDepth.get() - 1);
             return;
         }
+
+        List<OptionValueChange> changes = transaction.get().entrySet().stream()
+                .map(update ->
+                        new OptionValueChange(nodeId, update.getKey(), values.get(update.getKey()), update.getValue()))
+                .filter(OptionValueChange::isTangible)
+                .collect(Collectors.toList());
+
         values.putAll(transaction.get());
         transaction.remove();
         transactionDepth.remove();
         unlockWrite();
+
+        changes.forEach(optionHookManager::invoke);
     }
 
     private void rollback() {

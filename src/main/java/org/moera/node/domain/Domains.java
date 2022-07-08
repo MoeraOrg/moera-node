@@ -12,12 +12,14 @@ import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
 import org.moera.node.data.OptionRepository;
 import org.moera.node.model.DomainInfo;
+import org.moera.node.option.OptionHookManager;
 import org.moera.node.option.Options;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.option.OptionsMetadataConfiguredEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +45,10 @@ public class Domains {
 
     @Inject
     private OptionRepository optionRepository;
+
+    @Lazy
+    @Inject
+    private OptionHookManager optionHookManager;
 
     @EventListener(OptionsMetadataConfiguredEvent.class)
     public void load() {
@@ -74,7 +80,7 @@ public class Domains {
 
     private void configureDomain(Domain domain) {
         domains.put(domain.getNodeId(), new DomainInfo(domain));
-        Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository);
+        Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository, optionHookManager);
         domainOptions.put(domain.getName(), options);
     }
 
