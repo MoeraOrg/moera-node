@@ -116,7 +116,7 @@ public class FeedController {
         String clientName = requestContext.getClientName();
         if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
             Map<String, UUID> subscriberIds =
-                subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
+                subscriberRepository.findByNameAndType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
                         .stream()
                         .collect(Collectors.toMap(Subscriber::getFeedName, Subscriber::getId, (id1, id2) -> id1));
             feeds.forEach(feedInfo -> {
@@ -146,7 +146,7 @@ public class FeedController {
 
         String clientName = requestContext.getClientName();
         if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
-            subscriberRepository.findByType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
+            subscriberRepository.findByNameAndType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
                     .stream()
                     .filter(s -> s.getFeedName().equals(feedName))
                     .findFirst()
