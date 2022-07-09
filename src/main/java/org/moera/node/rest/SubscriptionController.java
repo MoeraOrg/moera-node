@@ -38,6 +38,9 @@ import org.moera.node.model.SubscriptionOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
+import org.moera.node.option.OptionHook;
+import org.moera.node.option.OptionValueChange;
+import org.moera.node.rest.task.AllRemoteSubscribersUpdateTask;
 import org.moera.node.rest.task.RemoteAvatarDownloadTask;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
 import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
@@ -279,6 +282,16 @@ public class SubscriptionController {
                 .filter(r -> filter.getPostings().contains(r.getRemotePosting()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
+    }
+
+    @OptionHook("subscriptions.view")
+    public void subscriptionVisibilityChanged(OptionValueChange change) {
+        Principal ourView = (Principal) change.getNewValue();
+        Principal theirView = ourView.isAdmin() ? Principal.PRIVATE : ourView;
+
+        var task = new AllRemoteSubscribersUpdateTask(change.getNodeId(), theirView);
+        taskAutowire.autowire(task);
+        taskExecutor.execute(task);
     }
 
 }

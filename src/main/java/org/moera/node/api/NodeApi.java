@@ -25,7 +25,6 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
 import org.moera.node.media.TemporaryMediaFile;
 import org.moera.node.media.ThresholdReachedException;
-import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
@@ -42,7 +41,9 @@ import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.SubscriberOverride;
 import org.moera.node.model.WhoAmI;
+import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.notification.NotificationPacket;
@@ -383,6 +384,12 @@ public class NodeApi {
         } catch (NodeApiNotFoundException e) {
             return null;
         }
+    }
+
+    public SubscriberInfo putSubscriber(String nodeName, String carte, String id,
+                                        SubscriberOverride subscriberOverride) throws NodeApiException {
+        return call("PUT", nodeName, String.format("/people/subscribers/%s", Util.ue(id)),
+                auth("carte", carte), subscriberOverride, SubscriberInfo.class);
     }
 
 }
