@@ -100,14 +100,13 @@ public class PostingReactionController {
             return Transaction.execute(txManager, () -> {
                 Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-                if (!requestContext.isPrincipal(posting.getViewE())) {
-                    throw new ObjectNotFoundFailure("posting.not-found");
-                }
                 if (posting.getCurrentRevision().getSignature() == null) {
                     throw new ValidationFailure("posting.not-signed");
                 }
-
                 reactionOperations.validate(reactionDescription, posting);
+                if (!requestContext.isPrincipal(posting.getViewE())) {
+                    throw new ObjectNotFoundFailure("posting.not-found");
+                }
                 OperationsValidator.validateOperations(reactionDescription::getPrincipal,
                         OperationsValidator.POSTING_REACTION_OPERATIONS, false,
                         "reactionDescription.operations.wrong-principal");

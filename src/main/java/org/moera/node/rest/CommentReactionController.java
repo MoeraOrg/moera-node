@@ -97,6 +97,13 @@ public class CommentReactionController {
             return Transaction.execute(txManager, () -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+                if (!comment.getPosting().getId().equals(postingId)) {
+                    throw new ObjectNotFoundFailure("comment.wrong-posting");
+                }
+                if (comment.getCurrentRevision().getSignature() == null) {
+                    throw new ValidationFailure("comment.not-signed");
+                }
+                reactionOperations.validate(reactionDescription, comment);
                 if (!requestContext.isPrincipal(comment.getViewE())) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
@@ -106,13 +113,6 @@ public class CommentReactionController {
                 if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
-                if (!comment.getPosting().getId().equals(postingId)) {
-                    throw new ObjectNotFoundFailure("comment.wrong-posting");
-                }
-                if (comment.getCurrentRevision().getSignature() == null) {
-                    throw new ValidationFailure("comment.not-signed");
-                }
-                reactionOperations.validate(reactionDescription, comment);
                 OperationsValidator.validateOperations(reactionDescription::getPrincipal,
                         OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
                         "reactionDescription.operations.wrong-principal");
