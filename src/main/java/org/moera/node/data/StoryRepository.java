@@ -11,8 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
-public interface StoryRepository extends JpaRepository<Story, UUID> {
+public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPredicateExecutor<Story> {
 
     @Query("select s from Story s left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
             + " where s.nodeId = ?1 and s.id = ?2")
@@ -62,9 +63,6 @@ public interface StoryRepository extends JpaRepository<Story, UUID> {
             + " left join fetch e.ownerAvatarMediaFile"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
     Set<Story> findInRange(UUID nodeId, String feedName, long afterMoment, long beforeMoment);
-
-    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
-    Page<Story> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, Pageable pageable);
 
     @Query("select count(*) from Story s where s.nodeId = ?1 and s.feedName = ?2")
     int countInFeed(UUID nodeId, String feedName);

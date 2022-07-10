@@ -17,6 +17,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
@@ -25,6 +26,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
+import org.moera.node.data.QStory;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -271,8 +273,8 @@ public class FeedController {
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
-            Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE,
-                    sliceBefore, PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+            Page<Story> page = findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE, sliceBefore,
+                    limit + 1, Sort.Direction.DESC);
             if (page.getNumberOfElements() < limit + 1) {
                 sliceInfo.setAfter(SafeInteger.MIN_VALUE);
             } else {
@@ -289,8 +291,8 @@ public class FeedController {
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
-            Page<Story> page = storyRepository.findSlice(requestContext.nodeId(), feedName, sliceAfter,
-                    SafeInteger.MAX_VALUE, PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
+            Page<Story> page = findSlice(requestContext.nodeId(), feedName, sliceAfter, SafeInteger.MAX_VALUE,
+                    limit + 1, Sort.Direction.ASC);
             if (page.getNumberOfElements() < limit + 1) {
                 sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             } else {
@@ -300,6 +302,30 @@ public class FeedController {
             sliceAfter = sliceInfo.getBefore();
         } while (sliceAfter < SafeInteger.MAX_VALUE && sliceInfo.getStories().size() < limit / 2);
         return sliceInfo;
+    }
+
+    private Page<Story> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
+                                  Sort.Direction direction) {
+        QStory story = QStory.story;
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(story.nodeId.eq(nodeId))
+                .and(story.feedName.eq(feedName))
+                .and(story.moment.gt(afterMoment))
+                .and(story.moment.loe(beforeMoment));
+        if (!requestContext.isAdmin()) {
+            var viewPrincipal = story.entry.viewPrincipal;
+            BooleanBuilder visibility = new BooleanBuilder();
+            visibility.or(viewPrincipal.eq(Principal.PUBLIC));
+            if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+                visibility.or(viewPrincipal.eq(Principal.SIGNED));
+                BooleanBuilder priv = new BooleanBuilder();
+                priv.and(viewPrincipal.eq(Principal.PRIVATE));
+                priv.and(story.entry.ownerName.eq(requestContext.getClientName()));
+                visibility.or(priv);
+            }
+            where.and(visibility);
+        }
+        return storyRepository.findAll(where, PageRequest.of(0, limit + 1, direction, "moment"));
     }
 
     private void fillSlice(FeedSliceInfo sliceInfo, String feedName, int limit) {
