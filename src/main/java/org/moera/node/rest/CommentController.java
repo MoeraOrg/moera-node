@@ -19,6 +19,7 @@ import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
@@ -33,6 +34,7 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.QComment;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
@@ -436,9 +438,8 @@ public class CommentController {
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
-            Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
-                    SafeInteger.MIN_VALUE, before,
-                    PageRequest.of(0, limit + 1, Sort.Direction.DESC, "moment"));
+            Page<Comment> page = findSlice(requestContext.nodeId(), posting.getId(), SafeInteger.MIN_VALUE, sliceBefore,
+                    limit + 1, Sort.Direction.DESC);
             if (page.getNumberOfElements() < limit + 1) {
                 sliceInfo.setAfter(SafeInteger.MIN_VALUE);
             } else {
@@ -455,9 +456,8 @@ public class CommentController {
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
-            Page<Comment> page = commentRepository.findSlice(requestContext.nodeId(), posting.getId(),
-                    after, SafeInteger.MAX_VALUE,
-                    PageRequest.of(0, limit + 1, Sort.Direction.ASC, "moment"));
+            Page<Comment> page = findSlice(requestContext.nodeId(), posting.getId(), sliceAfter, SafeInteger.MAX_VALUE,
+                    limit + 1, Sort.Direction.ASC);
             if (page.getNumberOfElements() < limit + 1) {
                 sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             } else {
@@ -467,6 +467,35 @@ public class CommentController {
             sliceAfter = sliceInfo.getBefore();
         } while (sliceAfter < SafeInteger.MAX_VALUE && sliceInfo.getComments().size() < limit / 2);
         return sliceInfo;
+    }
+
+    private Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
+                                  Sort.Direction direction) {
+        QComment comment = QComment.comment;
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(comment.nodeId.eq(nodeId))
+                .and(comment.parent.id.eq(parentId))
+                .and(comment.moment.gt(afterMoment))
+                .and(comment.moment.loe(beforeMoment))
+                .and(comment.deletedAt.isNotNull());
+        if (!requestContext.isAdmin()) {
+            var viewPrincipal = comment.viewPrincipal;
+            BooleanBuilder visibility = new BooleanBuilder();
+            visibility.or(viewPrincipal.eq(Principal.PUBLIC));
+            if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+                visibility.or(viewPrincipal.eq(Principal.SIGNED));
+                BooleanBuilder secret = new BooleanBuilder();
+                secret.and(viewPrincipal.eq(Principal.SECRET));
+                secret.and(comment.parent.ownerName.eq(requestContext.getClientName()));
+                visibility.or(secret);
+                BooleanBuilder priv = new BooleanBuilder();
+                priv.and(viewPrincipal.eq(Principal.PRIVATE));
+                priv.and(comment.ownerName.eq(requestContext.getClientName()));
+                visibility.or(priv);
+            }
+            where.and(visibility);
+        }
+        return commentRepository.findAll(where, PageRequest.of(0, limit + 1, direction, "moment"));
     }
 
     private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit) {

@@ -10,8 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
-public interface CommentRepository extends JpaRepository<Comment, UUID> {
+public interface CommentRepository extends JpaRepository<Comment, UUID>, QuerydslPredicateExecutor<Comment> {
 
     @Query("select c from Comment c"
             + " join fetch c.currentRevision cr left join fetch c.ownerAvatarMediaFile"
@@ -29,10 +30,6 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
             + " left join fetch mfo.mediaFile mf left join fetch mf.previews"
             + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4 and c.deletedAt is null")
     Set<Comment> findInRange(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment);
-
-    @Query("select c from Comment c"
-            + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4 and c.deletedAt is null")
-    Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, Pageable pageable);
 
     @Query(value = "select c from Comment c join fetch c.currentRevision"
             + " where c.nodeId = ?1 and c.parent.id = ?2 and c.deletedAt is null",
