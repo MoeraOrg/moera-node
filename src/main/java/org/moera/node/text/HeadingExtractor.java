@@ -42,10 +42,11 @@ public class HeadingExtractor {
         if (ObjectUtils.isEmpty(body.getText())) {
             return "";
         }
-        int beginning = getDescriptionBeginning(body, heading);
         String text = URL.matcher(body.getText()).replaceAll(EMOJI_CHAIN);
-        String description = extract(text, DESCRIPTION_LENGTH + beginning, collapseQuotations).substring(beginning);
-        if (beginning != 0) {
+        int beginning = getDescriptionBeginning(body, heading);
+        String description = extract(text, DESCRIPTION_LENGTH + beginning, collapseQuotations);
+        description = beginning < description.length() - 1 ? description.substring(beginning) : "";
+        if (beginning != 0 && !ObjectUtils.isEmpty(description)) {
             description = '\u2026' + description;
         }
         return description;
