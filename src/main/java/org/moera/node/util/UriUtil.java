@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -48,8 +49,16 @@ public class UriUtil {
 
     public static InetAddress remoteAddress(HttpServletRequest request) throws UnknownHostException {
         String forwardedAddress = request.getHeader("X-Forwarded-For");
-        return InetAddress.getByName(
-                !ObjectUtils.isEmpty(forwardedAddress) ? forwardedAddress : request.getRemoteAddr());
+        return InetAddress.getByName(!ObjectUtils.isEmpty(forwardedAddress)
+                ? forwardedAddress
+                : request.getRemoteAddr());
+    }
+
+    public static InetAddress remoteAddress(ServerHttpRequest request) throws UnknownHostException {
+        String forwardedAddress = request.getHeaders().getFirst("X-Forwarded-For");
+        return InetAddress.getByName(!ObjectUtils.isEmpty(forwardedAddress)
+                ? forwardedAddress
+                : request.getRemoteAddress().getAddress().getHostAddress());
     }
 
     public static String siteUrl(String host, int port) {
