@@ -8,7 +8,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.moera.node.auth.AuthenticationInterceptor;
 import org.moera.node.config.Config;
 import org.moera.node.domain.DomainInterceptor;
-import org.moera.node.event.AfterCommitEventsInterceptor;
+import org.moera.node.liberin.AfterCommitLiberinsInterceptor;
 import org.moera.node.global.CacheControlInterceptor;
 import org.moera.node.global.ClientIdInterceptor;
 import org.moera.node.global.EntitledInterceptor;
@@ -60,7 +60,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     private ClientIdInterceptor clientIdInterceptor;
 
     @Inject
-    private AfterCommitEventsInterceptor afterCommitEventsInterceptor;
+    private AfterCommitLiberinsInterceptor afterCommitLiberinsInterceptor;
 
     @Inject
     private EntitledInterceptor entitledInterceptor;
@@ -88,7 +88,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         registry.addInterceptor(networkLatencyInterceptor);
         registry.addInterceptor(cacheControlInterceptor);
         registry.addInterceptor(clientIdInterceptor);
-        registry.addInterceptor(afterCommitEventsInterceptor);
+        registry.addInterceptor(afterCommitLiberinsInterceptor);
         registry.addInterceptor(entitledInterceptor);
     }
 

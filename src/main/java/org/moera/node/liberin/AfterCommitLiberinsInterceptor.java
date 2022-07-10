@@ -1,4 +1,4 @@
-package org.moera.node.event;
+package org.moera.node.liberin;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -6,13 +6,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.global.NoClientId;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.LiberinManager;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class AfterCommitEventsInterceptor implements HandlerInterceptor {
+public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
 
     @Inject
     private RequestContext requestContext;
