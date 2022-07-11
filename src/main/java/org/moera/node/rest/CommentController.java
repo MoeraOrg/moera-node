@@ -477,7 +477,7 @@ public class CommentController {
                 .and(comment.parent.id.eq(parentId))
                 .and(comment.moment.gt(afterMoment))
                 .and(comment.moment.loe(beforeMoment))
-                .and(comment.deletedAt.isNotNull());
+                .and(comment.deletedAt.isNull());
         if (!requestContext.isAdmin()) {
             var viewPrincipal = comment.viewPrincipal;
             BooleanBuilder visibility = new BooleanBuilder();
