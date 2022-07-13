@@ -1,5 +1,6 @@
 package org.moera.node.option;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class OptionValueChange {
@@ -49,7 +50,7 @@ public class OptionValueChange {
     }
 
     public boolean isTangible() {
-        return !previousValue.equals(newValue);
+        return !Objects.equals(previousValue, newValue);
     }
 
 }
