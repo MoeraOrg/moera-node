@@ -244,7 +244,7 @@ public class PostingReactionController {
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewReactionsE())) {
+        if (!requestContext.isPrincipal(posting.getViewReactionsE()) && !requestContext.isClient(ownerName)) {
             return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 

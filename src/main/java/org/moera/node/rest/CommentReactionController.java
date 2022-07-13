@@ -253,7 +253,7 @@ public class CommentReactionController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!requestContext.isPrincipal(comment.getViewReactionsE())) {
+        if (!requestContext.isPrincipal(comment.getViewReactionsE()) && !requestContext.isClient(ownerName)) {
             return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
         }
 
