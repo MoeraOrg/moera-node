@@ -60,33 +60,28 @@ public class Domains {
         applicationEventPublisher.publishEvent(new DomainsConfiguredEvent(this));
     }
 
-    private AutoCloseable lockRead() {
+    public AutoCloseable lockRead() {
         lock.readLock().lock();
         return this::unlockRead;
     }
 
-    private void unlockRead() {
+    public void unlockRead() {
         lock.readLock().unlock();
     }
 
-    private AutoCloseable lockWrite() {
+    public AutoCloseable lockWrite() {
         lock.writeLock().lock();
         return this::unlockWrite;
     }
 
-    private void unlockWrite() {
+    public void unlockWrite() {
         lock.writeLock().unlock();
     }
 
     private void configureDomain(Domain domain) {
-        lockWrite();
-        try {
-            domains.put(domain.getNodeId(), new DomainInfo(domain));
-            Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository, optionHookManager);
-            domainOptions.put(domain.getName(), options);
-        } finally {
-            unlockWrite();
-        }
+        domains.put(domain.getNodeId(), new DomainInfo(domain));
+        Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository, optionHookManager);
+        domainOptions.put(domain.getName(), options);
     }
 
     public boolean isDomainDefined(String name) {
