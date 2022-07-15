@@ -49,14 +49,14 @@ public class DomainInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if (handler instanceof HandlerMethod && ((HandlerMethod) handler).hasMethodAnnotation(ProviderApi.class)) {
-            return true;
-        }
-
         if (host == null || domains.isDomainDefined(host) || config.getMulti() == MultiHost.NONE) {
             MDC.put("domain", domains.getDomainEffectiveName(host));
             requestContext.setOptions(domains.getDomainOptions(host));
             requestContext.setSiteUrl(UriUtil.siteUrl(host, uriComponents.getPort()));
+            return true;
+        }
+
+        if (handler instanceof HandlerMethod && ((HandlerMethod) handler).hasMethodAnnotation(ProviderApi.class)) {
             return true;
         }
 
