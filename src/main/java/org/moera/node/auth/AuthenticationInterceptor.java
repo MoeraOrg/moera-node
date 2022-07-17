@@ -132,12 +132,15 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         AuthSecrets secrets = extractSecrets(request);
         if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {
             requestContext.setRootAdmin(true);
+            requestContext.setAdmin(true);
+            requestContext.setAuthCategory(AuthCategory.ALL);
             MDC.put("auth", "!");
+        } else {
+            Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
+            requestContext.setAdmin(token != null);
+            requestContext.setAuthCategory(token != null ? token.getAuthCategory() : AuthCategory.ALL);
+            MDC.put("auth", requestContext.isAdmin() ? "#" : "$");
         }
-        Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
-        requestContext.setAdmin(token != null);
-        requestContext.setAuthCategory(token != null ? token.getAuthCategory() : AuthCategory.ALL);
-        MDC.put("auth", requestContext.isAdmin() ? "#" : "$");
         try {
             CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, UriUtil.remoteAddress(request));
             if (carteAuthInfo != null) {
