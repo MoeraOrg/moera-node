@@ -15,6 +15,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingNotAvailableException;
 import org.moera.node.option.exception.OptionValueException;
+import org.moera.node.plugin.PluginInvocationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -45,6 +46,14 @@ public class ExceptionsControllerAdvice {
         log.error("Exception in controller", e);
 
         String errorCode = "server.misconfiguration";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message + ": " + e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result exception(PluginInvocationException e) {
+        String errorCode = "plugin.invocation-error";
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
         return new Result(errorCode, message + ": " + e.getMessage());
     }

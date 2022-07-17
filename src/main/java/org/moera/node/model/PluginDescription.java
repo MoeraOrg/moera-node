@@ -9,6 +9,8 @@ public class PluginDescription {
     @NotBlank
     private String name;
 
+    private String location;
+
     public String getName() {
         return name;
     }
@@ -17,8 +19,17 @@ public class PluginDescription {
         this.name = name;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public void toDescriptor(PluginDescriptor descriptor) {
         descriptor.setName(name);
+        descriptor.setLocation(location);
     }
 
 }

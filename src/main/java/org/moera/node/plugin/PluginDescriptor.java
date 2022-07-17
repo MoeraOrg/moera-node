@@ -6,6 +6,7 @@ public class PluginDescriptor {
 
     private UUID nodeId;
     private String name;
+    private String location;
 
     public PluginDescriptor(UUID nodeId) {
         this.nodeId = nodeId;
@@ -25,6 +26,14 @@ public class PluginDescriptor {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
 }
