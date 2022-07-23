@@ -40,6 +40,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -98,16 +99,7 @@ public class PluginController {
 
         log.info("{} /plugins/{pluginName}/... (pluginName = {})", method.name(), LogUtil.format(pluginName));
 
-        PluginDescriptor descriptor = null;
-        if (requestContext.nodeId() != null) {
-            descriptor = plugins.get(requestContext.nodeId(), pluginName);
-        }
-        if (descriptor == null) {
-            descriptor = plugins.get(null, pluginName);
-        }
-        if (descriptor == null) {
-            throw new ObjectNotFoundFailure("plugin.unknown");
-        }
+        PluginDescriptor descriptor = getPluginDescriptor(pluginName);
         if (ObjectUtils.isEmpty(descriptor.getLocation())) {
             throw new ObjectNotFoundFailure("not-supported");
         }
@@ -206,6 +198,37 @@ public class PluginController {
         HttpHeaders responseHeaders = new HttpHeaders();
         headers.map().forEach(responseHeaders::addAll);
         return responseHeaders;
+    }
+
+    @ProviderApi
+    @DeleteMapping("/{pluginName}")
+    public Result delete(@PathVariable String pluginName) {
+        log.info("DELETE /plugins/{pluginName} (pluginName = {})", LogUtil.format(pluginName));
+
+        PluginDescriptor descriptor = getPluginDescriptor(pluginName);
+        plugins.remove(descriptor);
+
+        return Result.OK;
+    }
+
+    private PluginDescriptor getPluginDescriptor(String pluginName) {
+        PluginDescriptor descriptor = null;
+        if (requestContext.nodeId() != null) {
+            descriptor = plugins.get(requestContext.nodeId(), pluginName);
+        }
+        if (descriptor == null) {
+            descriptor = plugins.get(null, pluginName);
+        }
+        if (descriptor == null) {
+            throw new ObjectNotFoundFailure("plugin.unknown");
+        }
+        if (descriptor.getNodeId() == null && !requestContext.isRootAdmin()) {
+            throw new AuthenticationException();
+        }
+        if (!requestContext.isAdmin()) {
+            throw new AuthenticationException();
+        }
+        return descriptor;
     }
 
 }

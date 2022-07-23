@@ -54,6 +54,10 @@ public class Plugins {
         }
     }
 
+    public void remove(PluginDescriptor descriptor) {
+        remove(descriptor.getNodeId(), descriptor.getName());
+    }
+
     public PluginDescriptor get(UUID nodeId, String name) {
         lockRead();
         try {
