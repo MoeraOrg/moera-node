@@ -202,6 +202,11 @@
             <artifactId>metadata-extractor</artifactId>
             <version>2.18.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>31.1-jre</version>
+        </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>

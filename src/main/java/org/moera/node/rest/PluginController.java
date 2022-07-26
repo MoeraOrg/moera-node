@@ -33,18 +33,24 @@ import org.moera.node.plugin.DuplicatePluginException;
 import org.moera.node.plugin.PluginDescriptor;
 import org.moera.node.plugin.PluginInvocationException;
 import org.moera.node.plugin.Plugins;
+import org.moera.node.sse.StreamEmitter;
+import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -65,6 +71,9 @@ public class PluginController {
 
     @Inject
     private Plugins plugins;
+
+    @Inject
+    private TaskAutowire taskAutowire;
 
     @ProviderApi
     @PostMapping
@@ -198,6 +207,28 @@ public class PluginController {
         HttpHeaders responseHeaders = new HttpHeaders();
         headers.map().forEach(responseHeaders::addAll);
         return responseHeaders;
+    }
+
+    @ProviderApi
+    @GetMapping(value = "/{pluginName}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public StreamEmitter get(@PathVariable String pluginName,
+                             @RequestParam(name = "after", required = false) Long after,
+                             @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
+            throws Throwable {
+
+        log.info("GET /plugins/{pluginName}/events (pluginName = {}, after = {}, Last-Event-ID = {})",
+                LogUtil.format(pluginName), LogUtil.format(after), LogUtil.format(lastEventId));
+
+        long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
+
+        PluginDescriptor descriptor = getPluginDescriptor(pluginName);
+
+        StreamEmitter emitter = new StreamEmitter();
+        emitter.send(StreamEmitter.event().comment("ברוך הבא")); // To send HTTP headers immediately
+
+        descriptor.replaceEventsSender(emitter, taskAutowire, lastSeenMoment);
+
+        return emitter;
     }
 
     @ProviderApi
