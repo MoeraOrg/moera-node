@@ -1,8 +1,12 @@
 package org.moera.node.liberin;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class Liberin {
+
+    private static final Map<String, String> TYPE_NAMES = new HashMap<>();
 
     private UUID nodeId;
     private String clientId;
@@ -29,6 +33,37 @@ public class Liberin {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    private String getTypeName() {
+        String className = getClass().getSimpleName();
+        String typeName = TYPE_NAMES.get(className);
+        if (typeName != null) {
+            return typeName;
+        }
+
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < className.length() - 7; i++) { // "Liberin" suffix excluded
+            char c = className.charAt(i);
+            if (i != 0 && Character.isUpperCase(c)) {
+                buf.append('-');
+            }
+            buf.append(Character.toLowerCase(c));
+        }
+        typeName = buf.toString();
+
+        TYPE_NAMES.put(className, typeName);
+        return typeName;
+    }
+
+    public final Map<String, Object> getModel() {
+        Map<String, Object> model = new HashMap<>();
+        model.put("type", getTypeName());
+        toModel(model);
+        return model;
+    }
+
+    protected void toModel(Map<String, Object> model) {
     }
 
 }

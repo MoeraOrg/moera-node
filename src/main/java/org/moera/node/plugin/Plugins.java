@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.moera.node.liberin.Liberin;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -62,6 +63,19 @@ public class Plugins {
         lockRead();
         try {
             return descriptors.get(new PluginKey(nodeId, name));
+        } finally {
+            unlockRead();
+        }
+    }
+
+    public void send(Liberin liberin) {
+        lockRead();
+        try {
+            for (PluginDescriptor descriptor : descriptors.values()) {
+                if (descriptor.getNodeId() == null || descriptor.getNodeId().equals(liberin.getNodeId())) {
+                    descriptor.sendEvent(liberin);
+                }
+            }
         } finally {
             unlockRead();
         }

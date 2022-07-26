@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.node.global.UniversalContext;
+import org.moera.node.plugin.Plugins;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,9 @@ public class LiberinManager implements Runnable {
 
     @Inject
     private UniversalContext universalContext;
+
+    @Inject
+    private Plugins plugins;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -87,6 +91,8 @@ public class LiberinManager implements Runnable {
             if (liberin == null) {
                 continue;
             }
+
+            plugins.send(liberin);
 
             universalContext.associate(liberin.getNodeId());
             log.debug("Delivering liberin {}", liberin.getClass().getSimpleName());

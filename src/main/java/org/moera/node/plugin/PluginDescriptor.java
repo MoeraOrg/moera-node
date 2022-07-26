@@ -5,13 +5,21 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
+import org.moera.node.liberin.Liberin;
 import org.moera.node.sse.SsePacket;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @SuppressWarnings("UnstableApiUsage")
 public class PluginDescriptor {
+
+    private static final Logger log = LoggerFactory.getLogger(PluginDescriptor.class);
 
     private static final int BUFFER_SIZE = 128;
 
@@ -23,6 +31,8 @@ public class PluginDescriptor {
     private final Queue<SsePacket> eventsBuffer = EvictingQueue.create(BUFFER_SIZE);
     private final Object eventsBufferLock = new Object();
     private long lastEventMoment;
+    private long lastMoment;
+    private final Object lastMomentLock = new Object();
 
     public PluginDescriptor(UUID nodeId) {
         this.nodeId = nodeId;
@@ -87,6 +97,28 @@ public class PluginDescriptor {
         if (eventsSender != null) {
             eventsSender.offer(packet);
         }
+    }
+
+    public void sendEvent(Liberin liberin) {
+        try {
+            sendEvent(buildEventPacket(new ObjectMapper().writeValueAsString(liberin.getModel())));
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing {}", liberin.getClass().getSimpleName(), e);
+        }
+    }
+
+    private SsePacket buildEventPacket(String content) {
+        long moment = Util.currentMoment();
+        synchronized (lastMomentLock) {
+            if (lastEventMoment < moment) {
+                lastMoment = moment;
+            } else {
+                lastMoment++;
+                moment = lastMoment;
+            }
+        }
+
+        return new SsePacket(moment, content);
     }
 
     public List<SsePacket> getEventsTill(long lastMoment) {
