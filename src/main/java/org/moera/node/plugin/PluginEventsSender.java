@@ -34,7 +34,7 @@ public class PluginEventsSender extends SseTask {
 
     @Override
     protected void emitterClosed() {
-        pluginDescriptor.removeEventsSender();
+        pluginDescriptor.dropEventsSender();
     }
 
 }

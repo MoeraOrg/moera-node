@@ -237,6 +237,7 @@ public class PluginController {
         log.info("DELETE /plugins/{pluginName} (pluginName = {})", LogUtil.format(pluginName));
 
         PluginDescriptor descriptor = getPluginDescriptor(pluginName);
+        descriptor.cancelEventsSender();
         plugins.remove(descriptor);
 
         return Result.OK;

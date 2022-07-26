@@ -64,8 +64,17 @@ public class PluginDescriptor {
         }
     }
 
-    public void removeEventsSender() {
+    public void dropEventsSender() {
         synchronized (eventsSenderLock) {
+            eventsSender = null;
+        }
+    }
+
+    public void cancelEventsSender() {
+        synchronized (eventsSenderLock) {
+            if (eventsSender != null) {
+                eventsSender.complete();
+            }
             eventsSender = null;
         }
     }
