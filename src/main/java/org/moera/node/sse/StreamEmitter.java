@@ -1,4 +1,4 @@
-package org.moera.node.push;
+package org.moera.node.sse;
 
 import java.nio.charset.StandardCharsets;
 
@@ -7,9 +7,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-public class PushEmitter extends SseEmitter {
+public class StreamEmitter extends SseEmitter {
 
-    public PushEmitter() {
+    public StreamEmitter() {
         super(Long.MAX_VALUE);
     }
 

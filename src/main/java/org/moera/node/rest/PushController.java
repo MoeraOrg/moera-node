@@ -22,7 +22,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.push.PushEmitter;
+import org.moera.node.sse.StreamEmitter;
 import org.moera.node.push.PushService;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -68,9 +68,9 @@ public class PushController {
 
     @GetMapping(value = "/{clientId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Admin
-    public PushEmitter get(@PathVariable String clientId,
-                           @RequestParam(name = "after", required = false) Long after,
-                           @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
+    public StreamEmitter get(@PathVariable String clientId,
+                             @RequestParam(name = "after", required = false) Long after,
+                             @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
             throws Throwable {
 
         log.info("GET /push/{clientId} (clientId = {}, after = {}, Last-Event-ID = {})",
@@ -88,8 +88,8 @@ public class PushController {
         PushClient client = getClient(clientId);
         updateLastSeenAt(client);
 
-        PushEmitter emitter = new PushEmitter();
-        emitter.send(PushEmitter.event().comment("ברוך הבא")); // To send HTTP headers immediately
+        StreamEmitter emitter = new StreamEmitter();
+        emitter.send(StreamEmitter.event().comment("ברוך הבא")); // To send HTTP headers immediately
         entityManager.detach(client);
         pushService.register(requestContext.nodeId(), client, emitter, lastSeenMoment);
         return emitter;
