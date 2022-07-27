@@ -1,10 +1,12 @@
 package org.moera.node.plugin;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import org.moera.node.liberin.Liberin;
 import org.springframework.stereotype.Service;
@@ -63,6 +65,18 @@ public class Plugins {
         lockRead();
         try {
             return descriptors.get(new PluginKey(nodeId, name));
+        } finally {
+            unlockRead();
+        }
+    }
+
+    public List<String> getNames(UUID nodeId) {
+        lockRead();
+        try {
+            return descriptors.values().stream()
+                    .filter(pd -> pd.getNodeId() == null || pd.getNodeId().equals(nodeId))
+                    .map(PluginDescriptor::getName)
+                    .collect(Collectors.toList());
         } finally {
             unlockRead();
         }
