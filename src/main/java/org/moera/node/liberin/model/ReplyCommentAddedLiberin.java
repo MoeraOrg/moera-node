@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
 
@@ -120,6 +122,22 @@ public class ReplyCommentAddedLiberin extends Liberin {
 
     public void setCommentOwnerAvatar(AvatarImage commentOwnerAvatar) {
         this.commentOwnerAvatar = commentOwnerAvatar;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("nodeName", nodeName);
+        model.put("fullName", fullName);
+        model.put("avatar", avatar);
+        model.put("postingId", postingId);
+        model.put("postingHeading", postingHeading);
+        model.put("commentId", commentId);
+        model.put("repliedToId", repliedToId);
+        model.put("repliedToHeading", repliedToHeading);
+        model.put("commentOwnerName", commentOwnerName);
+        model.put("commentOwnerFullName", commentOwnerFullName);
+        model.put("commentOwnerAvatar", commentOwnerAvatar);
     }
 
 }

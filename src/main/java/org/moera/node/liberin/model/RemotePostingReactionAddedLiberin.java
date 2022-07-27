@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.ReactionInfo;
 
@@ -37,6 +39,14 @@ public class RemotePostingReactionAddedLiberin extends Liberin {
 
     public void setReactionInfo(ReactionInfo reactionInfo) {
         this.reactionInfo = reactionInfo;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("nodeName", nodeName);
+        model.put("postingId", postingId);
+        model.put("reaction", reactionInfo);
     }
 
 }

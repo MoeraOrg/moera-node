@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.liberin.Liberin;
 
 public class ReplyCommentDeletedLiberin extends Liberin {
@@ -46,6 +48,15 @@ public class ReplyCommentDeletedLiberin extends Liberin {
 
     public void setCommentOwnerName(String commentOwnerName) {
         this.commentOwnerName = commentOwnerName;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("nodeName", nodeName);
+        model.put("postingId", postingId);
+        model.put("commentId", commentId);
+        model.put("commentOwnerName", commentOwnerName);
     }
 
 }

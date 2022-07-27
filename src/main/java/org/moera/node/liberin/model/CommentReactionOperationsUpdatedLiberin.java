@@ -1,8 +1,13 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.ReactionInfo;
 
 public class CommentReactionOperationsUpdatedLiberin extends Liberin {
 
@@ -28,6 +33,13 @@ public class CommentReactionOperationsUpdatedLiberin extends Liberin {
 
     public void setReaction(Reaction reaction) {
         this.reaction = reaction;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
+        model.put("reaction", new ReactionInfo(reaction, AccessCheckers.ADMIN));
     }
 
 }

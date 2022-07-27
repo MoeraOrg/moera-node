@@ -1,5 +1,6 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.moera.node.auth.principal.PrincipalFilter;
@@ -71,6 +72,16 @@ public class StoryDeletedLiberin extends Liberin {
 
     public void setViewFilter(PrincipalFilter viewFilter) {
         this.viewFilter = viewFilter;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("id", id);
+        model.put("storyType", storyType);
+        model.put("feedName", feedName);
+        model.put("moment", moment);
+        model.put("postingId", postingId);
     }
 
 }

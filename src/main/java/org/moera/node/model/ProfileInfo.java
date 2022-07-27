@@ -49,6 +49,22 @@ public class ProfileInfo {
         );
     }
 
+    public ProfileInfo(Options options) {
+        fullName = options.getString("profile.full-name");
+        gender = options.getString("profile.gender");
+        Principal viewEmail = options.getPrincipal("profile.email.view");
+        email = options.getString("profile.email");
+        title = options.getString("profile.title");
+        bioSrc = options.getString("profile.bio.src");
+        bioSrcFormat = SourceFormat.forValue(options.getString("profile.bio.src.format"));
+        bioHtml = options.getString("profile.bio.html");
+        fundraisers = FundraiserInfo.deserializeValue(options.getString("profile.fundraisers"));
+        operations = Map.of(
+                "edit", Principal.ADMIN,
+                "viewEmail", viewEmail
+        );
+    }
+
     public String getFullName() {
         return fullName;
     }

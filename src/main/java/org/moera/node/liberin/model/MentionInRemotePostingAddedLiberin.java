@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
 
@@ -58,6 +60,16 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
 
     public void setPostingHeading(String postingHeading) {
         this.postingHeading = postingHeading;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("nodeName", nodeName);
+        model.put("fullName", fullName);
+        model.put("avatar", avatar);
+        model.put("postingId", postingId);
+        model.put("postingHeading", postingHeading);
     }
 
 }

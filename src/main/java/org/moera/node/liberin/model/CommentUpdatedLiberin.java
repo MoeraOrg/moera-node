@@ -1,9 +1,14 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentRevisionInfo;
 
 public class CommentUpdatedLiberin extends Liberin {
 
@@ -39,6 +44,14 @@ public class CommentUpdatedLiberin extends Liberin {
 
     public void setLatestViewE(Principal latestViewE) {
         this.latestViewE = latestViewE;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
+        model.put("latestRevision", new CommentRevisionInfo(comment, latestRevision, AccessCheckers.ADMIN));
+        model.put("latestViewPrincipal", latestViewE);
     }
 
 }

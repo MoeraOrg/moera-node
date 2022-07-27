@@ -1,8 +1,12 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.model.CommentInfo;
 
 public class CommentDeletedLiberin extends Liberin {
 
@@ -28,6 +32,12 @@ public class CommentDeletedLiberin extends Liberin {
 
     public void setLatestRevision(EntryRevision latestRevision) {
         this.latestRevision = latestRevision;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
     }
 
 }

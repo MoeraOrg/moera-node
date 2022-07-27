@@ -1,7 +1,11 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Subscriber;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.model.SubscriberInfo;
 
 public class SubscriberAddedLiberin extends Liberin {
 
@@ -27,6 +31,13 @@ public class SubscriberAddedLiberin extends Liberin {
 
     public void setSubscriberLastUpdatedAt(Long subscriberLastUpdatedAt) {
         this.subscriberLastUpdatedAt = subscriberLastUpdatedAt;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("subscriber", new SubscriberInfo(subscriber, AccessCheckers.ADMIN));
+        model.put("subscriberLastUpdatedAt", subscriberLastUpdatedAt);
     }
 
 }

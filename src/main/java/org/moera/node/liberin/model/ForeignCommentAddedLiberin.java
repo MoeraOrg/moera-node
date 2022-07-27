@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
@@ -121,6 +123,22 @@ public class ForeignCommentAddedLiberin extends Liberin {
 
     public void setReason(SubscriptionReason reason) {
         this.reason = reason;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("nodeName", nodeName);
+        model.put("fullName", fullName);
+        model.put("avatar", avatar);
+        model.put("postingId", postingId);
+        model.put("postingHeading", postingHeading);
+        model.put("ownerName", ownerName);
+        model.put("ownerFullName", ownerFullName);
+        model.put("ownerAvatar", ownerAvatar);
+        model.put("commentId", commentId);
+        model.put("commentHeading", commentHeading);
+        model.put("reason", reason);
     }
 
 }

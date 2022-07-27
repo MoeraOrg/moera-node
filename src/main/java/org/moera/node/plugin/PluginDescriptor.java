@@ -5,7 +5,6 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
 import org.moera.node.liberin.Liberin;
@@ -102,7 +101,7 @@ public class PluginDescriptor {
     public void sendEvent(Liberin liberin) {
         try {
             sendEvent(buildEventPacket(new ObjectMapper().writeValueAsString(liberin.getModel())));
-        } catch (JsonProcessingException e) {
+        } catch (Throwable e) { // any exception in getModel() should end here
             log.error("Error serializing {}", liberin.getClass().getSimpleName(), e);
         }
     }

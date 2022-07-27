@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
 
@@ -27,6 +29,13 @@ public class RemoteNodeAvatarChangedLiberin extends Liberin {
 
     public void setAvatar(AvatarImage avatar) {
         this.avatar = avatar;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("nodeName", nodeName);
+        model.put("avatar", avatar);
     }
 
 }

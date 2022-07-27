@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarInfo;
 
@@ -17,6 +19,12 @@ public class AvatarAddedLiberin extends Liberin {
 
     public void setAvatar(AvatarInfo avatar) {
         this.avatar = avatar;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("avatar", avatar);
     }
 
 }

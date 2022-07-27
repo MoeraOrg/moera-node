@@ -1,5 +1,7 @@
 package org.moera.node.liberin.model;
 
+import java.util.Map;
+
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
@@ -49,6 +51,15 @@ public class RemoteCommentMediaReactionAddingFailedLiberin extends Liberin {
 
     public void setParentCommentInfo(CommentInfo parentCommentInfo) {
         this.parentCommentInfo = parentCommentInfo;
+    }
+
+    @Override
+    protected void toModel(Map<String, Object> model) {
+        super.toModel(model);
+        model.put("postingId", postingId);
+        model.put("parentMediaId", parentMediaId);
+        model.put("parentPosting", parentPostingInfo);
+        model.put("parentComment", parentCommentInfo);
     }
 
 }
