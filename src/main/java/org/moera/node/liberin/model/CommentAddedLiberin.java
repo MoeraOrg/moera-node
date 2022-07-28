@@ -2,6 +2,8 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
@@ -36,8 +38,10 @@ public class CommentAddedLiberin extends Liberin {
     }
 
     @Override
-    protected void toModel(Map<String, Object> model) {
+    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
+        posting = entityManager.merge(posting);
+        comment = entityManager.merge(comment);
         model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
         model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
     }
