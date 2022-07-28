@@ -19,9 +19,6 @@ public abstract class LiberinReceptorBase {
     protected UniversalContext universalContext;
 
     @Inject
-    private LiberinManager liberinManager;
-
-    @Inject
     private EventManager eventManager;
 
     @Inject
@@ -34,7 +31,7 @@ public abstract class LiberinReceptorBase {
     private PushService pushService;
 
     protected void send(Liberin subLiberin) {
-        liberinManager.send(subLiberin.withNodeId(universalContext.nodeId()));
+        universalContext.send(subLiberin);
     }
 
     protected void send(Liberin liberin, Event event) {

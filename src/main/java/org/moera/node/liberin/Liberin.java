@@ -5,12 +5,17 @@ import java.util.Map;
 import java.util.UUID;
 import javax.persistence.EntityManager;
 
+import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
+import org.moera.node.plugin.PluginContext;
+
 public class Liberin {
 
     private static final Map<String, String> TYPE_NAMES = new HashMap<>();
 
     private UUID nodeId;
     private String clientId;
+    private PluginContext pluginContext;
 
     public Liberin() {
     }
@@ -34,6 +39,32 @@ public class Liberin {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public PluginContext getPluginContext() {
+        return pluginContext;
+    }
+
+    public void setPluginContext(PluginContext pluginContext) {
+        this.pluginContext = pluginContext;
+    }
+
+    public void setPluginContext(RequestContext requestContext) {
+        setPluginContext(new PluginContext(requestContext));
+    }
+
+    public void setPluginContext(UniversalContext universalContext) {
+        setPluginContext(new PluginContext(universalContext));
+    }
+
+    public Liberin withPluginContext(RequestContext requestContext) {
+        setPluginContext(requestContext);
+        return this;
+    }
+
+    public Liberin withPluginContext(UniversalContext universalContext) {
+        setPluginContext(universalContext);
+        return this;
     }
 
     public String getTypeName() {
@@ -60,6 +91,8 @@ public class Liberin {
     public final Map<String, Object> getModel(EntityManager entityManager) {
         Map<String, Object> model = new HashMap<>();
         model.put("type", getTypeName());
+        model.put("nodeId", nodeId);
+        model.put("context", pluginContext);
         toModel(model, entityManager);
         return model;
     }

@@ -1,25 +1,19 @@
 package org.moera.node.rest;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -30,6 +24,7 @@ import org.moera.node.model.PluginDescription;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.plugin.DuplicatePluginException;
+import org.moera.node.plugin.PluginContext;
 import org.moera.node.plugin.PluginDescriptor;
 import org.moera.node.plugin.PluginInvocationException;
 import org.moera.node.plugin.Plugins;
@@ -171,36 +166,8 @@ public class PluginController {
                         requestBuilder.header(name, value));
             }
         });
-        addContextHeaders(request, requestBuilder);
+        new PluginContext(requestContext).addContextHeaders(requestBuilder);
         return requestBuilder.build();
-    }
-
-    private void addContextHeaders(HttpServletRequest request, HttpRequest.Builder requestBuilder) {
-        var vars = Map.<String, Object>of(
-                "root-admin", requestContext.isRootAdmin(),
-                "admin", requestContext.isAdmin(),
-                "auth-category", String.join(",", AuthCategory.toStrings(requestContext.getAuthCategory())),
-                "client-name", Optional.ofNullable(requestContext.getClientName()).orElse(""),
-                "remote-address", getRemoteAddress(request),
-                "user-agent", requestContext.getUserAgent().name().toLowerCase(),
-                "user-agent-os", requestContext.getUserAgentOs().name().toLowerCase(),
-                "node-id", requestContext.nodeId()
-        );
-        String headerValue = vars.entrySet().stream()
-                .map(v -> v.getKey() + "=" + v.getValue())
-                .collect(Collectors.joining(";"));
-        requestBuilder.header("X-Moera-Auth", headerValue);
-        requestBuilder.header("X-Moera-Origin", requestContext.getUrl());
-        requestBuilder.header("X-Moera-Root", requestContext.getSiteUrl());
-    }
-
-    private String getRemoteAddress(HttpServletRequest request) {
-        try {
-            InetAddress address = UriUtil.remoteAddress(request);
-            return address != null ? address.getHostAddress() : "";
-        } catch (UnknownHostException e) {
-            return "";
-        }
     }
 
     private HttpHeaders convertHeaders(java.net.http.HttpHeaders headers) {

@@ -97,6 +97,11 @@ public class Domains {
         return isDomainDefined(name) ? name : DEFAULT_DOMAIN;
     }
 
+    public String getDomainEffectiveName(UUID nodeId) {
+        String name = getDomainName(nodeId);
+        return name != null ? name : DEFAULT_DOMAIN;
+    }
+
     public UUID getDomainNodeId(String name) {
         Options options;
         lockRead();

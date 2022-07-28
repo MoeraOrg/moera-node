@@ -26,6 +26,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean rootAdmin;
     private boolean admin;
     private long authCategory;
+    private String domainName;
     private Options options;
     private Avatar avatar;
     private String url;
@@ -33,6 +34,7 @@ public class RequestContextImpl implements RequestContext {
     private String clientId;
     private String clientName;
     private InetAddress localAddr;
+    private InetAddress remoteAddr;
     private UserAgent userAgent = UserAgent.UNKNOWN;
     private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
     private final List<Liberin> afterCommitLiberins = new ArrayList<>();
@@ -93,6 +95,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setAuthCategory(long authCategory) {
         this.authCategory = authCategory;
+    }
+
+    @Override
+    public String getDomainName() {
+        return domainName;
+    }
+
+    @Override
+    public void setDomainName(String domainName) {
+        this.domainName = domainName;
     }
 
     @Override
@@ -158,6 +170,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setLocalAddr(InetAddress localAddr) {
         this.localAddr = localAddr;
+    }
+
+    @Override
+    public InetAddress getRemoteAddr() {
+        return remoteAddr;
+    }
+
+    @Override
+    public void setRemoteAddr(InetAddress remoteAddr) {
+        this.remoteAddr = remoteAddr;
     }
 
     @Override

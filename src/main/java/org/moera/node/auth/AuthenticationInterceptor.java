@@ -128,6 +128,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     private void processAuthParameters(HttpServletRequest request) throws InvalidTokenException, UnknownHostException {
         requestContext.setLocalAddr(InetAddress.getByName(request.getLocalAddr()));
+        requestContext.setRemoteAddr(UriUtil.remoteAddress(request));
         requestContext.setBrowserExtension(request.getHeader("X-Accept-Moera") != null);
         AuthSecrets secrets = extractSecrets(request);
         if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {

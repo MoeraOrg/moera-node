@@ -143,8 +143,7 @@ public class PostingProcessor {
             if (!reactionTotalOperations.isSame(reactionTotals, notification.getTotals())) {
                 reactionTotalOperations.replaceAll(posting, notification.getTotals());
 
-                requestContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals())
-                        .withNodeId(posting.getNodeId()));
+                requestContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals()));
             }
         });
     }
@@ -158,8 +157,7 @@ public class PostingProcessor {
                         LogUtil.format(posting.getId()), LogUtil.format(notification.getTotal()));
                 posting.setTotalChildren(notification.getTotal());
 
-                requestContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal())
-                        .withNodeId(posting.getNodeId()));
+                requestContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal()));
             }
         });
     }

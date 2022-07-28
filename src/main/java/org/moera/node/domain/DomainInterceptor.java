@@ -51,6 +51,7 @@ public class DomainInterceptor implements HandlerInterceptor {
 
         if (host == null || domains.isDomainDefined(host) || config.getMulti() == MultiHost.NONE) {
             MDC.put("domain", domains.getDomainEffectiveName(host));
+            requestContext.setDomainName(domains.getDomainEffectiveName(host));
             requestContext.setOptions(domains.getDomainOptions(host));
             requestContext.setSiteUrl(UriUtil.siteUrl(host, uriComponents.getPort()));
             return true;

@@ -1,0 +1,164 @@
+package org.moera.node.plugin;
+
+import java.net.http.HttpRequest;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.AuthCategory;
+import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class PluginContext {
+
+    private boolean rootAdmin;
+    private boolean admin;
+    private String[] authCategories;
+    private String clientName;
+    private String remoteAddress;
+    private String userAgent;
+    private String userAgentOs;
+    private UUID nodeId;
+    private String nodeName;
+    private String domainName;
+    private String originUrl;
+
+    public PluginContext() {
+    }
+
+    public PluginContext(RequestContext requestContext) {
+        rootAdmin = requestContext.isRootAdmin();
+        admin = requestContext.isAdmin();
+        authCategories = AuthCategory.toStrings(requestContext.getAuthCategory());
+        clientName = Optional.ofNullable(requestContext.getClientName()).orElse("");
+        remoteAddress = getRemoteAddress(requestContext);
+        userAgent = requestContext.getUserAgent().name().toLowerCase();
+        userAgentOs = requestContext.getUserAgentOs().name().toLowerCase();
+        nodeId = requestContext.nodeId();
+        nodeName = requestContext.nodeName();
+        domainName = requestContext.getDomainName();
+        originUrl = requestContext.getUrl();
+    }
+
+    public PluginContext(UniversalContext universalContext) {
+        nodeId = universalContext.nodeId();
+        nodeName = universalContext.nodeName();
+        domainName = universalContext.getDomainName();
+    }
+
+    private String getRemoteAddress(RequestContext requestContext) {
+        return requestContext.getRemoteAddr() != null ? requestContext.getRemoteAddr().getHostAddress() : "";
+    }
+
+    public boolean isRootAdmin() {
+        return rootAdmin;
+    }
+
+    public void setRootAdmin(boolean rootAdmin) {
+        this.rootAdmin = rootAdmin;
+    }
+
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
+    }
+
+    public String[] getAuthCategories() {
+        return authCategories;
+    }
+
+    public void setAuthCategories(String[] authCategories) {
+        this.authCategories = authCategories;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    public String getRemoteAddress() {
+        return remoteAddress;
+    }
+
+    public void setRemoteAddress(String remoteAddress) {
+        this.remoteAddress = remoteAddress;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    public String getUserAgentOs() {
+        return userAgentOs;
+    }
+
+    public void setUserAgentOs(String userAgentOs) {
+        this.userAgentOs = userAgentOs;
+    }
+
+    public UUID getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(UUID nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
+    }
+
+    public String getDomainName() {
+        return domainName;
+    }
+
+    public void setDomainName(String domainName) {
+        this.domainName = domainName;
+    }
+
+    public String getOriginUrl() {
+        return originUrl;
+    }
+
+    public void setOriginUrl(String originUrl) {
+        this.originUrl = originUrl;
+    }
+
+    public void addContextHeaders(HttpRequest.Builder requestBuilder) {
+        var vars = Map.<String, Object>of(
+                "root-admin", rootAdmin,
+                "admin", admin,
+                "auth-category", authCategories != null ? String.join(",", authCategories) : "",
+                "client-name", Optional.ofNullable(clientName).orElse(""),
+                "remote-address", Optional.ofNullable(remoteAddress).orElse(""),
+                "user-agent", Optional.ofNullable(userAgent).orElse("unknown"),
+                "user-agent-os", Optional.ofNullable(userAgentOs).orElse("unknown"),
+                "node-id", nodeId,
+                "node-name", Optional.ofNullable(nodeName).orElse(""),
+                "domain-name", Optional.ofNullable(domainName).orElse("")
+        );
+        String headerValue = vars.entrySet().stream()
+                .map(v -> v.getKey() + "=" + v.getValue())
+                .collect(Collectors.joining(";"));
+        requestBuilder.header("X-Moera-Auth", headerValue);
+        requestBuilder.header("X-Moera-Origin", originUrl);
+    }
+
+}

@@ -48,6 +48,10 @@ public class UniversalContext {
         return isBackground() ? getOptions().nodeName() : requestContext.nodeName();
     }
 
+    public String getDomainName() {
+        return isBackground() ? domains.getDomainEffectiveName(nodeId()) : requestContext.getDomainName();
+    }
+
     public Options getOptions() {
         return isBackground() ? domains.getDomainOptions(nodeId()) : requestContext.getOptions();
     }
@@ -86,8 +90,10 @@ public class UniversalContext {
     public void send(Liberin liberin) {
         if (isBackground()) {
             liberin.setNodeId(nodeId());
+            liberin.setPluginContext(this);
             liberinManager.send(liberin);
         } else {
+            liberin.setPluginContext(requestContext);
             requestContext.send(liberin);
         }
     }

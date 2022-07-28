@@ -33,6 +33,10 @@ public interface RequestContext extends AccessChecker {
 
     void setAuthCategory(long authCategory);
 
+    String getDomainName();
+
+    void setDomainName(String domainName);
+
     Options getOptions();
 
     void setOptions(Options options);
@@ -58,6 +62,10 @@ public interface RequestContext extends AccessChecker {
     InetAddress getLocalAddr();
 
     void setLocalAddr(InetAddress localAddr);
+
+    InetAddress getRemoteAddr();
+
+    void setRemoteAddr(InetAddress remoteAddr);
 
     UserAgent getUserAgent();
 

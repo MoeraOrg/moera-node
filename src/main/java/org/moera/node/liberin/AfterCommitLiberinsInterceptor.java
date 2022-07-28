@@ -29,6 +29,7 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
             requestContext.getAfterCommitLiberins().forEach(liberin -> {
                 liberin.setNodeId(requestContext.nodeId());
                 liberin.setClientId(clientId);
+                liberin.setPluginContext(requestContext);
             });
             liberinManager.send(requestContext.getAfterCommitLiberins());
         }

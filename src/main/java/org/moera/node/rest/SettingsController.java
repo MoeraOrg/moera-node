@@ -159,7 +159,9 @@ public class SettingsController {
                     .map(domains::getDomainOptions)
                     .forEach(options -> {
                         options.reload();
-                        liberinManager.send(new NodeSettingsMetadataChangedLiberin(options.nodeId()));
+                        liberinManager.send(new NodeSettingsMetadataChangedLiberin()
+                                .withNodeId(options.nodeId())
+                                .withPluginContext(requestContext));
                     });
         }
 

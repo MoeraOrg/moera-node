@@ -205,7 +205,7 @@ public class Picker extends Task {
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
                     posting.getReceiverEditedAt(), liberins);
-            liberins.add(new PostingAddedLiberin(posting).withNodeId(nodeId));
+            liberins.add(new PostingAddedLiberin(posting));
             publish(feedName, posting, liberins);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             Principal latestView = posting.getViewE();
@@ -216,11 +216,11 @@ public class Picker extends Task {
             downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
             if (posting.getDeletedAt() == null) {
-                liberins.add(new PostingUpdatedLiberin(posting, latest, latestView).withNodeId(posting.getNodeId()));
+                liberins.add(new PostingUpdatedLiberin(posting, latest, latestView));
             } else {
                 posting.setDeletedAt(null);
                 publish(feedName, posting, liberins);
-                liberins.add(new PostingRestoredLiberin(posting).withNodeId(posting.getNodeId()));
+                liberins.add(new PostingRestoredLiberin(posting));
             }
         }
         posting = postingRepository.saveAndFlush(posting);
@@ -325,7 +325,7 @@ public class Picker extends Task {
             }
             subscription.setRemoteEntryId(receiverPostingId);
             subscription = subscriptionRepository.save(subscription);
-            liberins.add(new SubscriptionAddedLiberin(subscription).withNodeId(nodeId));
+            liberins.add(new SubscriptionAddedLiberin(subscription));
         } catch (NodeApiErrorStatusException e) {
             if (!e.getResult().getErrorCode().equals("subscriber.already-exists")) {
                 throw e;
