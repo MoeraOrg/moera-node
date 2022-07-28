@@ -44,6 +44,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
+import org.moera.node.liberin.model.PostingReadLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfo;
@@ -329,6 +330,8 @@ public class PostingController {
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
+
+        requestContext.send(new PostingReadLiberin(id));
 
         return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
                 requestContext))));

@@ -10,6 +10,7 @@ import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.ProfileReadLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.model.ProfileAttributes;
 import org.moera.node.model.ProfileInfo;
@@ -42,6 +43,8 @@ public class ProfileController {
         log.info("GET /profile (include = {})", LogUtil.format(include));
 
         Set<String> includeSet = Util.setParam(include);
+
+        requestContext.send(new ProfileReadLiberin());
 
         return new ProfileInfo(requestContext, includeSet.contains("source"));
     }
