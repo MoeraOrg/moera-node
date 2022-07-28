@@ -3,6 +3,7 @@ package org.moera.node.liberin;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import javax.persistence.EntityManager;
 
 public class Liberin {
 
@@ -35,7 +36,7 @@ public class Liberin {
         this.clientId = clientId;
     }
 
-    private String getTypeName() {
+    public String getTypeName() {
         String className = getClass().getSimpleName();
         String typeName = TYPE_NAMES.get(className);
         if (typeName != null) {
@@ -56,11 +57,15 @@ public class Liberin {
         return typeName;
     }
 
-    public final Map<String, Object> getModel() {
+    public final Map<String, Object> getModel(EntityManager entityManager) {
         Map<String, Object> model = new HashMap<>();
         model.put("type", getTypeName());
-        toModel(model);
+        toModel(model, entityManager);
         return model;
+    }
+
+    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
+        toModel(model);
     }
 
     protected void toModel(Map<String, Object> model) {

@@ -8,6 +8,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+
 import org.moera.node.liberin.Liberin;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,9 @@ public class Plugins {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Map<PluginKey, PluginDescriptor> descriptors = new HashMap<>();
+
+    @Inject
+    private EntityManager entityManager;
 
     private AutoCloseable lockRead() {
         lock.readLock().lock();
@@ -87,7 +93,7 @@ public class Plugins {
         try {
             for (PluginDescriptor descriptor : descriptors.values()) {
                 if (descriptor.getNodeId() == null || descriptor.getNodeId().equals(liberin.getNodeId())) {
-                    descriptor.sendEvent(liberin);
+                    descriptor.sendEvent(liberin, entityManager);
                 }
             }
         } finally {

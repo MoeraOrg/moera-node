@@ -1,9 +1,13 @@
 package org.moera.node.plugin;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.EvictingQueue;
@@ -25,6 +29,7 @@ public class PluginDescriptor {
     private UUID nodeId;
     private String name;
     private String location;
+    private Set<String> acceptedEvents = Collections.emptySet();
     private PluginEventsSender eventsSender;
     private final Object eventsSenderLock = new Object();
     private final Queue<SsePacket> eventsBuffer = EvictingQueue.create(BUFFER_SIZE);
@@ -61,6 +66,14 @@ public class PluginDescriptor {
         this.location = location;
     }
 
+    public Set<String> getAcceptedEvents() {
+        return acceptedEvents;
+    }
+
+    public void setAcceptedEvents(Set<String> acceptedEvents) {
+        this.acceptedEvents = acceptedEvents;
+    }
+
     public void replaceEventsSender(SseEmitter emitter, TaskAutowire taskAutowire, long lastSeenMoment) {
         synchronized (eventsSenderLock) {
             if (eventsSender != null) {
@@ -88,7 +101,7 @@ public class PluginDescriptor {
         }
     }
 
-    public void sendEvent(SsePacket packet) {
+    private void sendEvent(SsePacket packet) {
         synchronized (eventsBufferLock) {
             eventsBuffer.add(packet);
             lastEventMoment = packet.getMoment();
@@ -98,9 +111,13 @@ public class PluginDescriptor {
         }
     }
 
-    public void sendEvent(Liberin liberin) {
+    public void sendEvent(Liberin liberin, EntityManager entityManager) {
+        if (!acceptedEvents.contains(liberin.getTypeName())) {
+            return;
+        }
+
         try {
-            sendEvent(buildEventPacket(new ObjectMapper().writeValueAsString(liberin.getModel())));
+            sendEvent(buildEventPacket(new ObjectMapper().writeValueAsString(liberin.getModel(entityManager))));
         } catch (Throwable e) { // any exception in getModel() should end here
             log.error("Error serializing {}", liberin.getClass().getSimpleName(), e);
         }
@@ -120,7 +137,7 @@ public class PluginDescriptor {
         return new SsePacket(moment, content);
     }
 
-    public List<SsePacket> getEventsTill(long lastMoment) {
+    List<SsePacket> getEventsTill(long lastMoment) {
         List<SsePacket> events;
         synchronized (eventsBufferLock) {
             events = eventsBuffer.stream().filter(p -> p.getMoment() <= lastMoment).collect(Collectors.toList());
@@ -128,7 +145,7 @@ public class PluginDescriptor {
         return events;
     }
 
-    public void removeEventsTill(long lastMoment) {
+    void removeEventsTill(long lastMoment) {
         synchronized (eventsBufferLock) {
             while (!eventsBuffer.isEmpty()) {
                 SsePacket packet = eventsBuffer.element();
@@ -140,7 +157,7 @@ public class PluginDescriptor {
         }
     }
 
-    public long getLastEventMoment() {
+    long getLastEventMoment() {
         return lastEventMoment;
     }
 

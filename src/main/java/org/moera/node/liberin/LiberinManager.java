@@ -92,8 +92,6 @@ public class LiberinManager implements Runnable {
                 continue;
             }
 
-            plugins.send(liberin);
-
             universalContext.associate(liberin.getNodeId());
             log.debug("Delivering liberin {}", liberin.getClass().getSimpleName());
             HandlerMethod handler = handlers.get(liberin.getClass());
@@ -104,6 +102,7 @@ public class LiberinManager implements Runnable {
             try {
                 Liberin lb = liberin;
                 Transaction.execute(txManager, () -> {
+                    plugins.send(lb);
                     handler.getMethod().invoke(handler.getBean(), lb);
                     return null;
                 });

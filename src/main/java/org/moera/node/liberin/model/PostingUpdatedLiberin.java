@@ -2,6 +2,8 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.EntryRevision;
@@ -47,8 +49,10 @@ public class PostingUpdatedLiberin extends Liberin {
     }
 
     @Override
-    protected void toModel(Map<String, Object> model) {
+    protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
+        posting = entityManager.merge(posting);
+        latestRevision = entityManager.merge(latestRevision);
         model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
         model.put("latestRevision",
                 new PostingRevisionInfo(posting, latestRevision, posting.getReceiverName(), AccessCheckers.ADMIN));
