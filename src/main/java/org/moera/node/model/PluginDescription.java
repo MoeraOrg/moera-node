@@ -3,13 +3,19 @@ package org.moera.node.model;
 import java.util.Arrays;
 import java.util.HashSet;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.plugin.PluginDescriptor;
 
 public class PluginDescription {
 
+    private static final String NAME_PATTERN = "^[a-z0-9-]+$";
+
     @NotBlank
+    @Size(max = 48)
+    @Pattern(regexp = NAME_PATTERN)
     private String name;
 
     private String location;
