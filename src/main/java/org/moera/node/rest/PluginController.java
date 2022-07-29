@@ -25,6 +25,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OptionsOperations;
 import org.moera.node.option.OptionsMetadata;
+import org.moera.node.option.exception.UnknownOptionTypeException;
 import org.moera.node.plugin.DuplicatePluginException;
 import org.moera.node.plugin.PluginContext;
 import org.moera.node.plugin.PluginDescriptor;
@@ -102,8 +103,11 @@ public class PluginController {
             }
         } catch (DuplicatePluginException e) {
             throw new ValidationFailure("plugin.already-exists");
+        } catch (UnknownOptionTypeException e) {
+            throw new ValidationFailure("pluginDescription.options.unknown-type");
         } catch (Throwable e) {
             plugins.remove(nodeId, descriptor.getName());
+            throw e;
         }
 
         return Result.OK;

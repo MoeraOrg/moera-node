@@ -2,7 +2,6 @@ package org.moera.node.option;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,16 +84,17 @@ public class OptionsMetadata {
     public void loadPlugin(PluginDescription pluginDescription) {
         String pluginPrefix = PLUGIN_PREFIX + pluginDescription.getName() + ".";
 
-        Arrays.stream(pluginDescription.getOptions()).forEach(desc -> desc.setName(pluginPrefix + desc.getName()));
-        Map<String, OptionDescriptor> descs = Arrays.stream(pluginDescription.getOptions())
-                .collect(Collectors.toMap(OptionDescriptor::getName, Function.identity()));
+        Map<String, OptionDescriptor> descs = new HashMap<>();
+        for (OptionDescriptor desc : pluginDescription.getOptions()) {
+            desc.setName(pluginPrefix + desc.getName());
+            descs.put(desc.getName(), desc);
+
+            OptionTypeBase type = getType(desc.getType());
+            if (desc.getModifiers() != null) {
+                typeModifiers.put(desc.getName(), type.parseTypeModifiers(desc.getModifiers()));
+            }
+        }
         pluginDescriptors.put(pluginDescription.getName(), descs);
-        Arrays.stream(pluginDescription.getOptions())
-                .filter(desc -> desc.getModifiers() != null)
-                .filter(desc -> types.get(desc.getType()) != null)
-                .forEach(desc -> typeModifiers.put(
-                        desc.getName(),
-                        types.get(desc.getType()).parseTypeModifiers(desc.getModifiers())));
 
         loadDefaults(name -> name.startsWith(pluginPrefix));
     }
