@@ -110,7 +110,7 @@ public class LiberinManager implements Runnable {
             log.debug("Delivering liberin {}", liberin.getClass().getSimpleName());
             HandlerMethod handler = handlers.get(liberin.getClass());
             if (handler == null) {
-                log.warn("Mapping for liberin {} not found, skipping", liberin.getClass().getSimpleName());
+                log.debug("Mapping for liberin {} not found, skipping", liberin.getClass().getSimpleName());
                 continue;
             }
             try {
