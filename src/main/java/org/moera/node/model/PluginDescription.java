@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import javax.validation.constraints.NotBlank;
 
+import org.moera.node.option.OptionDescriptor;
 import org.moera.node.plugin.PluginDescriptor;
 
 public class PluginDescription {
@@ -14,6 +15,8 @@ public class PluginDescription {
     private String location;
 
     private String[] acceptedEvents;
+
+    private OptionDescriptor[] options;
 
     public String getName() {
         return name;
@@ -37,6 +40,14 @@ public class PluginDescription {
 
     public void setAcceptedEvents(String[] acceptedEvents) {
         this.acceptedEvents = acceptedEvents;
+    }
+
+    public OptionDescriptor[] getOptions() {
+        return options;
+    }
+
+    public void setOptions(OptionDescriptor[] options) {
+        this.options = options;
     }
 
     public void toDescriptor(PluginDescriptor descriptor) {

@@ -20,14 +20,13 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.LiberinManager;
-import org.moera.node.liberin.model.NodeSettingsMetadataChangedLiberin;
 import org.moera.node.liberin.model.SettingsChangedLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SettingInfo;
 import org.moera.node.model.SettingMetaAttributes;
 import org.moera.node.model.SettingMetaInfo;
+import org.moera.node.operations.OptionsOperations;
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.option.type.OptionTypeBase;
@@ -61,10 +60,10 @@ public class SettingsController {
     private OptionDefaultRepository optionDefaultRepository;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private OptionsOperations optionsOperations;
 
     @Inject
-    private LiberinManager liberinManager;
+    private PlatformTransactionManager txManager;
 
     private List<SettingInfo> getOptions(Predicate<String> nameFilter) {
         List<SettingInfo> list = new ArrayList<>();
@@ -102,7 +101,7 @@ public class SettingsController {
     public List<SettingMetaInfo> getMetadata(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node/metadata");
 
-        return optionsMetadata.getDescriptors().values().stream()
+        return optionsMetadata.getDescriptorsForNode(requestContext.nodeId()).stream()
                 .filter(d -> !d.isInternal())
                 .filter(d -> prefix == null || d.getName().startsWith(prefix))
                 .map(SettingMetaInfo::new)
@@ -120,6 +119,12 @@ public class SettingsController {
             boolean changed = false;
 
             for (SettingMetaAttributes meta : metaAttributes) {
+                if (meta.getName() == null) {
+                    throw new OperationFailure("setting.unknown");
+                }
+                if (meta.getName().startsWith(OptionsMetadata.PLUGIN_PREFIX)) {
+                    throw new OperationFailure("setting.plugin");
+                }
                 OptionDescriptor descriptor = optionsMetadata.getDescriptor(meta.getName());
                 if (descriptor == null) {
                     throw new OperationFailure("setting.unknown");
@@ -155,14 +160,7 @@ public class SettingsController {
 
         if (metaChanged) {
             optionsMetadata.reload();
-            domains.getAllDomainNames().stream()
-                    .map(domains::getDomainOptions)
-                    .forEach(options -> {
-                        options.reload();
-                        liberinManager.send(new NodeSettingsMetadataChangedLiberin()
-                                .withNodeId(options.nodeId())
-                                .withPluginContext(requestContext));
-                    });
+            optionsOperations.reloadOptions();
         }
 
         return Result.OK;

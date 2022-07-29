@@ -23,6 +23,8 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PluginDescription;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.OptionsOperations;
+import org.moera.node.option.OptionsMetadata;
 import org.moera.node.plugin.DuplicatePluginException;
 import org.moera.node.plugin.PluginContext;
 import org.moera.node.plugin.PluginDescriptor;
@@ -68,6 +70,12 @@ public class PluginController {
     private Plugins plugins;
 
     @Inject
+    private OptionsMetadata optionsMetadata;
+
+    @Inject
+    private OptionsOperations optionsOperations;
+
+    @Inject
     private TaskAutowire taskAutowire;
 
     @ProviderApi
@@ -88,8 +96,14 @@ public class PluginController {
         pluginDescription.toDescriptor(descriptor);
         try {
             plugins.add(descriptor);
+            if (!ObjectUtils.isEmpty(pluginDescription.getOptions())) {
+                optionsMetadata.loadPlugin(pluginDescription);
+                optionsOperations.reloadOptions();
+            }
         } catch (DuplicatePluginException e) {
             throw new ValidationFailure("plugin.already-exists");
+        } catch (Throwable e) {
+            plugins.remove(nodeId, descriptor.getName());
         }
 
         return Result.OK;

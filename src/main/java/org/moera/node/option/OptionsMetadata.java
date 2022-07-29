@@ -1,10 +1,16 @@
 package org.moera.node.option;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -14,9 +20,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.moera.node.data.OptionDefault;
 import org.moera.node.data.OptionDefaultRepository;
+import org.moera.node.model.PluginDescription;
 import org.moera.node.option.exception.UnknownOptionTypeException;
 import org.moera.node.option.type.OptionType;
 import org.moera.node.option.type.OptionTypeBase;
+import org.moera.node.plugin.Plugins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -29,11 +37,13 @@ import org.springframework.stereotype.Component;
 public class OptionsMetadata {
 
     public static final String CLIENT_PREFIX = "client.";
+    public static final String PLUGIN_PREFIX = "plugin.";
 
     private static final Logger log = LoggerFactory.getLogger(OptionsMetadata.class);
 
     private Map<String, OptionTypeBase> types;
     private Map<String, OptionDescriptor> descriptors;
+    private final Map<String, Map<String, OptionDescriptor>> pluginDescriptors = new HashMap<>();
     private Map<String, Object> typeModifiers;
 
     @Inject
@@ -41,6 +51,9 @@ public class OptionsMetadata {
 
     @Inject
     private ApplicationContext applicationContext;
+
+    @Inject
+    private Plugins plugins;
 
     @Inject
     private OptionDefaultRepository optionDefaultRepository;
@@ -69,18 +82,37 @@ public class OptionsMetadata {
                         desc -> types.get(desc.getType()).parseTypeModifiers(desc.getModifiers())));
     }
 
+    public void loadPlugin(PluginDescription pluginDescription) {
+        String pluginPrefix = PLUGIN_PREFIX + pluginDescription.getName() + ".";
+
+        Arrays.stream(pluginDescription.getOptions()).forEach(desc -> desc.setName(pluginPrefix + desc.getName()));
+        Map<String, OptionDescriptor> descs = Arrays.stream(pluginDescription.getOptions())
+                .collect(Collectors.toMap(OptionDescriptor::getName, Function.identity()));
+        pluginDescriptors.put(pluginDescription.getName(), descs);
+        Arrays.stream(pluginDescription.getOptions())
+                .filter(desc -> desc.getModifiers() != null)
+                .filter(desc -> types.get(desc.getType()) != null)
+                .forEach(desc -> typeModifiers.put(
+                        desc.getName(),
+                        types.get(desc.getType()).parseTypeModifiers(desc.getModifiers())));
+
+        loadDefaults(name -> name.startsWith(pluginPrefix));
+    }
+
     @EventListener(ApplicationReadyEvent.class)
     public void initDefaults() {
-        loadDefaults();
+        loadDefaults(name -> !name.startsWith(PLUGIN_PREFIX));
         applicationEventPublisher.publishEvent(new OptionsMetadataConfiguredEvent(this));
     }
 
-    private void loadDefaults() {
+    private void loadDefaults(Predicate<String> filter) {
         Collection<OptionDefault> defaults = optionDefaultRepository.findAll();
         for (OptionDefault def : defaults) {
-            OptionDescriptor desc = descriptors.get(def.getName());
+            if (filter != null && !filter.test(def.getName())) {
+                continue;
+            }
+            OptionDescriptor desc = getDescriptor(def.getName());
             if (desc == null) {
-                log.warn("Unknown option: {}", def.getName());
                 continue;
             }
             desc.setDefaultValue(def.getValue());
@@ -92,7 +124,7 @@ public class OptionsMetadata {
 
     public void reload() throws IOException {
         load();
-        loadDefaults();
+        loadDefaults(name -> !name.startsWith(PLUGIN_PREFIX));
     }
 
     public OptionTypeBase getType(String type) {
@@ -114,7 +146,13 @@ public class OptionsMetadata {
         if (name.startsWith(CLIENT_PREFIX)) {
             return clientDescriptor(name);
         }
-        OptionDescriptor desc = descriptors.get(name);
+        OptionDescriptor desc;
+        String pluginName = getPluginName(name);
+        if (pluginName != null) {
+            desc = pluginDescriptors.getOrDefault(pluginName, Collections.emptyMap()).get(name);
+        } else {
+            desc = descriptors.get(name);
+        }
         if (desc == null) {
             log.warn("Unknown option: {}", name);
             return null;
@@ -134,12 +172,33 @@ public class OptionsMetadata {
         return getDescriptor(name).isPrivileged();
     }
 
-    public Map<String, OptionDescriptor> getDescriptors() {
+    private Map<String, OptionDescriptor> getDescriptors() {
         return descriptors;
+    }
+
+    private Map<String, OptionDescriptor> getPluginDescriptors(String pluginName) {
+        return pluginDescriptors.get(pluginName);
+    }
+
+    public List<OptionDescriptor> getDescriptorsForNode(UUID nodeId) {
+        List<OptionDescriptor> list = new ArrayList<>(getDescriptors().values());
+        plugins.getNames(nodeId).forEach(pluginName -> list.addAll(getPluginDescriptors(pluginName).values()));
+        return list;
     }
 
     public Object getOptionTypeModifiers(String name) {
         return typeModifiers.get(name);
+    }
+
+    private static String getPluginName(String optionName) {
+        if (!optionName.startsWith(PLUGIN_PREFIX)) {
+            return null;
+        }
+        int pos = optionName.indexOf('.', PLUGIN_PREFIX.length());
+        if (pos < 0) {
+            return null;
+        }
+        return optionName.substring(PLUGIN_PREFIX.length(), pos);
     }
 
 }

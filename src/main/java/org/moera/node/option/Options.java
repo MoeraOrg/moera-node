@@ -47,7 +47,7 @@ public class Options {
     }
 
     private void load() {
-        optionsMetadata.getDescriptors().values().stream()
+        optionsMetadata.getDescriptorsForNode(nodeId).stream()
                 .filter(desc -> desc.getDefaultValue() != null)
                 .forEach(desc -> putValue(desc.getName(), desc.getDefaultValue()));
         optionRepository.findAllByNodeId(nodeId).forEach(option -> putValue(option.getName(), option.getValue()));
