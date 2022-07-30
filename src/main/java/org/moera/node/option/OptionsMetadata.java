@@ -176,7 +176,7 @@ public class OptionsMetadata {
         return descriptors;
     }
 
-    private Map<String, OptionDescriptor> getPluginDescriptors(String pluginName) {
+    public Map<String, OptionDescriptor> getPluginDescriptors(String pluginName) {
         return pluginDescriptors.get(pluginName);
     }
 

@@ -6,9 +6,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -21,6 +23,7 @@ import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PluginDescription;
+import org.moera.node.model.PluginInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OptionsOperations;
@@ -81,7 +84,7 @@ public class PluginController {
 
     @ProviderApi
     @PostMapping
-    public Result post(@RequestBody @Valid PluginDescription pluginDescription) {
+    public PluginInfo post(@RequestBody @Valid PluginDescription pluginDescription) {
         log.info("POST /plugins (name = {})", LogUtil.format(pluginDescription.getName()));
 
         UUID nodeId;
@@ -110,7 +113,25 @@ public class PluginController {
             throw e;
         }
 
-        return Result.OK;
+        return new PluginInfo(descriptor, optionsMetadata);
+    }
+
+    @GetMapping
+    public List<PluginInfo> getAll() {
+        log.info("GET /plugins");
+
+        return plugins.getNames(requestContext.nodeId()).stream()
+                .map(name -> getPluginDescriptor(name, false))
+                .map(desc -> new PluginInfo(desc, optionsMetadata))
+                .collect(Collectors.toList());
+    }
+
+    @ProviderApi
+    @GetMapping("/{pluginName}")
+    public PluginInfo get(@PathVariable String pluginName) {
+        log.info("GET /plugins/{pluginName} (pluginName = {})", LogUtil.format(pluginName));
+
+        return new PluginInfo(getPluginDescriptor(pluginName, false), optionsMetadata);
     }
 
     @ProviderApi
@@ -121,7 +142,7 @@ public class PluginController {
 
         log.info("{} /plugins/{pluginName}/... (pluginName = {})", method.name(), LogUtil.format(pluginName));
 
-        PluginDescriptor descriptor = getPluginDescriptor(pluginName);
+        PluginDescriptor descriptor = getPluginDescriptor(pluginName, false);
         if (ObjectUtils.isEmpty(descriptor.getLocation())) {
             throw new ObjectNotFoundFailure("not-supported");
         }
@@ -196,9 +217,9 @@ public class PluginController {
 
     @ProviderApi
     @GetMapping(value = "/{pluginName}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public StreamEmitter get(@PathVariable String pluginName,
-                             @RequestParam(name = "after", required = false) Long after,
-                             @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
+    public StreamEmitter getEvents(@PathVariable String pluginName,
+                                   @RequestParam(name = "after", required = false) Long after,
+                                   @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
             throws Throwable {
 
         log.info("GET /plugins/{pluginName}/events (pluginName = {}, after = {}, Last-Event-ID = {})",
@@ -206,7 +227,7 @@ public class PluginController {
 
         long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
 
-        PluginDescriptor descriptor = getPluginDescriptor(pluginName);
+        PluginDescriptor descriptor = getPluginDescriptor(pluginName, true);
 
         StreamEmitter emitter = new StreamEmitter();
         emitter.send(StreamEmitter.event().comment("ברוך הבא")); // To send HTTP headers immediately
@@ -221,14 +242,14 @@ public class PluginController {
     public Result delete(@PathVariable String pluginName) {
         log.info("DELETE /plugins/{pluginName} (pluginName = {})", LogUtil.format(pluginName));
 
-        PluginDescriptor descriptor = getPluginDescriptor(pluginName);
+        PluginDescriptor descriptor = getPluginDescriptor(pluginName, true);
         descriptor.cancelEventsSender();
         plugins.remove(descriptor);
 
         return Result.OK;
     }
 
-    private PluginDescriptor getPluginDescriptor(String pluginName) {
+    private PluginDescriptor getPluginDescriptor(String pluginName, boolean admin) {
         PluginDescriptor descriptor = null;
         if (requestContext.nodeId() != null) {
             descriptor = plugins.get(requestContext.nodeId(), pluginName);
@@ -239,11 +260,13 @@ public class PluginController {
         if (descriptor == null) {
             throw new ObjectNotFoundFailure("plugin.unknown");
         }
-        if (descriptor.getNodeId() == null && !requestContext.isRootAdmin()) {
-            throw new AuthenticationException();
-        }
-        if (!requestContext.isAdmin()) {
-            throw new AuthenticationException();
+        if (admin) {
+            if (descriptor.getNodeId() == null && !requestContext.isRootAdmin()) {
+                throw new AuthenticationException();
+            }
+            if (!requestContext.isAdmin()) {
+                throw new AuthenticationException();
+            }
         }
         return descriptor;
     }

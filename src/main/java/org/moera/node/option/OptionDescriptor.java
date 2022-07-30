@@ -1,5 +1,8 @@
 package org.moera.node.option;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OptionDescriptor {
 
     private String name;
