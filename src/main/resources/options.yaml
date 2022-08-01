@@ -430,7 +430,7 @@
 - name: credentials-reset.token.lifetime
   type: Duration
   defaultValue: 6h
-  title: Invalidate code for resetting password after
+  title: Invalidate code for resetting a password after
   modifiers:
     min: 15m
     max: 30d
