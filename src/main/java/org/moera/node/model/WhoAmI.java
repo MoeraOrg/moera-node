@@ -1,11 +1,8 @@
 package org.moera.node.model;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.naming.rpc.OperationStatus;
 import org.moera.node.global.RequestContext;
-import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WhoAmI {
@@ -16,12 +13,11 @@ public class WhoAmI {
     private String gender;
     private String title;
     private AvatarImage avatar;
-    private List<String> plugins;
 
     public WhoAmI() {
     }
 
-    public WhoAmI(RequestContext requestContext, List<String> plugins) {
+    public WhoAmI(RequestContext requestContext) {
         nodeName = requestContext.nodeName();
         OperationStatus status = OperationStatus.forValue(
                 requestContext.getOptions().getString("naming.operation.status"));
@@ -33,9 +29,6 @@ public class WhoAmI {
         title = requestContext.getOptions().getString("profile.title");
         if (requestContext.getAvatar() != null) {
             avatar = new AvatarImage(requestContext.getAvatar());
-        }
-        if (!ObjectUtils.isEmpty(plugins)) {
-            this.plugins = plugins;
         }
     }
 
@@ -85,14 +78,6 @@ public class WhoAmI {
 
     public void setAvatar(AvatarImage avatar) {
         this.avatar = avatar;
-    }
-
-    public List<String> getPlugins() {
-        return plugins;
-    }
-
-    public void setPlugins(List<String> plugins) {
-        this.plugins = plugins;
     }
 
 }

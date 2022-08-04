@@ -50,7 +50,6 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.PostingText;
@@ -133,13 +132,6 @@ public class PostingController {
 
     private int getMaxPostingSize() {
         return requestContext.getOptions().getInt("posting.max-size");
-    }
-
-    @GetMapping("/features")
-    public PostingFeatures getFeatures() {
-        log.info("GET /postings/features");
-
-        return new PostingFeatures(requestContext.getOptions());
     }
 
     @PostMapping

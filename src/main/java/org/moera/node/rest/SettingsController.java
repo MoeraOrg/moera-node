@@ -16,10 +16,10 @@ import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.OptionDefault;
 import org.moera.node.data.OptionDefaultRepository;
-import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.liberin.model.SettingsChangedLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -30,6 +30,7 @@ import org.moera.node.operations.OptionsOperations;
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.option.type.OptionTypeBase;
+import org.moera.node.plugin.Plugins;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ public class SettingsController {
     private RequestContext requestContext;
 
     @Inject
-    private Domains domains;
+    private Plugins plugins;
 
     @Inject
     private OptionsMetadata optionsMetadata;
@@ -200,6 +201,9 @@ public class SettingsController {
         );
 
         requestContext.send(new SettingsChangedLiberin(nodeChanged.get(), clientChanged.get()));
+        if (nodeChanged.get()) {
+            requestContext.send(new FeaturesUpdatedLiberin(requestContext.getOptions(), plugins));
+        }
 
         return Result.OK;
     }

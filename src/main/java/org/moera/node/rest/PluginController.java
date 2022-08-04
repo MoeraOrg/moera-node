@@ -17,10 +17,12 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PluginDescription;
 import org.moera.node.model.PluginInfo;
@@ -71,6 +73,9 @@ public class PluginController {
     private RequestContext requestContext;
 
     @Inject
+    private Domains domains;
+
+    @Inject
     private Plugins plugins;
 
     @Inject
@@ -112,6 +117,8 @@ public class PluginController {
             plugins.remove(nodeId, descriptor.getName());
             throw e;
         }
+
+        featuresUpdated(descriptor.getNodeId());
 
         return new PluginInfo(descriptor, optionsMetadata);
     }
@@ -246,6 +253,8 @@ public class PluginController {
         descriptor.cancelEventsSender();
         plugins.remove(descriptor);
 
+        featuresUpdated(descriptor.getNodeId());
+
         return Result.OK;
     }
 
@@ -269,6 +278,15 @@ public class PluginController {
             }
         }
         return descriptor;
+    }
+
+    private void featuresUpdated(UUID pluginNodeId) {
+        if (pluginNodeId != null) {
+            requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(pluginNodeId), plugins));
+        } else {
+            domains.getAllDomainNames().forEach(domainName ->
+                    requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(domainName), plugins)));
+        }
     }
 
 }
