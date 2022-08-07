@@ -33,6 +33,10 @@ public interface RequestContext extends AccessChecker {
 
     void setAuthCategory(long authCategory);
 
+    UUID getTokenId();
+
+    void setTokenId(UUID tokenId);
+
     String getDomainName();
 
     void setDomainName(String domainName);

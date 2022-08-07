@@ -8,13 +8,19 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.vladmihalcea.hibernate.type.basic.Inet;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLInetType;
+import org.hibernate.annotations.TypeDef;
 import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "tokens")
+@TypeDef(name = "Inet", typeClass = PostgreSQLInetType.class, defaultForType = Inet.class)
 public class Token {
 
     @Id
+    private UUID id;
+
     @Size(max = 45)
     private String token;
 
@@ -27,11 +33,23 @@ public class Token {
     @NotNull
     private long authCategory;
 
+    private Inet ip;
+
+    @Size(max = 48)
+    private String pluginName;
+
     @NotNull
     private Timestamp createdAt = Util.now();
 
-    @NotNull
     private Timestamp deadline;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
 
     public String getToken() {
         return token;
@@ -63,6 +81,22 @@ public class Token {
 
     public void setAuthCategory(long authCategory) {
         this.authCategory = authCategory;
+    }
+
+    public Inet getIp() {
+        return ip;
+    }
+
+    public void setIp(Inet ip) {
+        this.ip = ip;
+    }
+
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    public void setPluginName(String pluginName) {
+        this.pluginName = pluginName;
     }
 
     public Timestamp getCreatedAt() {

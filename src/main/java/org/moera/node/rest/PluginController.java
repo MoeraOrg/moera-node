@@ -13,10 +13,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
+import com.vladmihalcea.hibernate.type.basic.Inet;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.data.Token;
+import org.moera.node.data.TokenRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -85,10 +89,14 @@ public class PluginController {
     private OptionsOperations optionsOperations;
 
     @Inject
+    private TokenRepository tokenRepository;
+
+    @Inject
     private TaskAutowire taskAutowire;
 
     @ProviderApi
     @PostMapping
+    @Transactional
     public PluginInfo post(@RequestBody @Valid PluginDescription pluginDescription) {
         log.info("POST /plugins (name = {})", LogUtil.format(pluginDescription.getName()));
 
@@ -116,6 +124,14 @@ public class PluginController {
         } catch (Throwable e) {
             plugins.remove(nodeId, descriptor.getName());
             throw e;
+        }
+
+        if (requestContext.getTokenId() != null) {
+            Token token = tokenRepository.findById(requestContext.getTokenId()).orElse(null);
+            if (token != null) {
+                token.setPluginName(descriptor.getName());
+                token.setIp(new Inet(requestContext.getRemoteAddr().getHostAddress()));
+            }
         }
 
         featuresUpdated(descriptor.getNodeId());

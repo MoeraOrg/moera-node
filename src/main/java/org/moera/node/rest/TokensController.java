@@ -3,21 +3,25 @@ package org.moera.node.rest;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Password;
+import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenAttributes;
-import org.moera.node.model.TokenCreated;
 import org.moera.node.model.TokenInfo;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
@@ -47,7 +51,7 @@ public class TokensController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<TokenCreated> post(@Valid @RequestBody TokenAttributes attributes) {
+    public ResponseEntity<TokenInfo> post(@Valid @RequestBody TokenAttributes attributes) {
         log.info("POST /tokens (login = '{}')", attributes.getLogin());
 
         Options options = requestContext.getOptions();
@@ -68,19 +72,30 @@ public class TokensController {
                 options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
 
-        return ResponseEntity.created(URI.create("/tokens/" + token.getToken())).body(new TokenCreated(token));
+        return ResponseEntity.created(URI.create("/tokens/" + token.getId())).body(new TokenInfo(token, true));
     }
 
-    @GetMapping("/{token}")
+    @GetMapping
+    @Admin
     @Transactional
-    public TokenInfo get(@PathVariable String token) {
-        log.info("GET /tokens/{}", token);
+    public List<TokenInfo> getAll() {
+        log.info("GET /tokens");
 
-        Token tokenData = tokenRepository.findById(token).orElse(null);
-        if (tokenData == null || !tokenData.getNodeId().equals(requestContext.nodeId())) {
-            return new TokenInfo(token, false);
+        List<Token> tokens = tokenRepository.findAllByNodeId(requestContext.nodeId(), Util.now());
+        return tokens.stream().map(td -> new TokenInfo(td, false)).collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}")
+    @Admin
+    @Transactional
+    public TokenInfo get(@PathVariable UUID id) {
+        log.info("GET /tokens/{}", id);
+
+        Token tokenData = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
+        if (tokenData == null) {
+            throw new ObjectNotFoundFailure("not-found");
         }
-        return new TokenInfo(tokenData);
+        return new TokenInfo(tokenData, false);
     }
 
     @Scheduled(fixedDelayString = "PT1H")

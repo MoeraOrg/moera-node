@@ -26,6 +26,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean rootAdmin;
     private boolean admin;
     private long authCategory;
+    private UUID tokenId;
     private String domainName;
     private Options options;
     private Avatar avatar;
@@ -95,6 +96,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setAuthCategory(long authCategory) {
         this.authCategory = authCategory;
+    }
+
+    @Override
+    public UUID getTokenId() {
+        return tokenId;
+    }
+
+    @Override
+    public void setTokenId(UUID tokenId) {
+        this.tokenId = tokenId;
     }
 
     @Override

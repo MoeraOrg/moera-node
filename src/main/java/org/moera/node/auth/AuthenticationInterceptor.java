@@ -140,6 +140,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
             requestContext.setAdmin(token != null);
             requestContext.setAuthCategory(token != null ? token.getAuthCategory() : AuthCategory.ALL);
+            requestContext.setTokenId(token != null ? token.getId() : null);
             MDC.put("auth", requestContext.isAdmin() ? "#" : "$");
         }
         try {

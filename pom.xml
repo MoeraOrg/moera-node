@@ -207,6 +207,11 @@
             <artifactId>guava</artifactId>
             <version>31.1-jre</version>
         </dependency>
+        <dependency>
+            <groupId>com.vladmihalcea</groupId>
+            <artifactId>hibernate-types-55</artifactId>
+            <version>2.17.3</version>
+        </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>

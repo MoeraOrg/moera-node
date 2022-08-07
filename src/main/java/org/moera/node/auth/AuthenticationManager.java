@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.hibernate.HibernateException;
 import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
@@ -40,21 +41,24 @@ public class AuthenticationManager {
     private NamingCache namingCache;
 
     public Token getToken(String tokenS, UUID nodeId) throws InvalidTokenException {
-        if (!ObjectUtils.isEmpty(tokenS)) {
-            Token token = tokenRepository.findById(tokenS).orElse(null);
-            if (token == null) {
-                log.info("Admin token provided is not found");
-                throw new InvalidTokenException();
-            }
-            if (!token.getNodeId().equals(nodeId)
-                    || token.getDeadline().before(Util.now())) {
-                log.info("Admin token is invalid (nodeId = {}, deadline = {})",
-                        LogUtil.format(token.getNodeId()), LogUtil.format(token.getDeadline()));
-                throw new InvalidTokenException();
-            }
-            return token;
+        if (ObjectUtils.isEmpty(tokenS)) {
+            return null;
         }
-        return null;
+        Token token = tokenRepository.findByToken(nodeId, tokenS, Util.now()).orElse(null);
+        if (token == null) {
+            log.info("Admin token provided is not found");
+            throw new InvalidTokenException();
+        }
+        try {
+            if (token.getIp() != null && !token.getIp().toInetAddress().equals(requestContext.getRemoteAddr())) {
+                log.info("Admin token is bound to a different IP address");
+                throw new InvalidTokenException();
+            }
+        } catch (HibernateException e) {
+            log.error("Cannot resolve token address {}", token.getIp(), e);
+            throw new InvalidTokenException();
+        }
+        return token;
     }
 
     public CarteAuthInfo getCarte(String carteS, InetAddress clientAddress) {
