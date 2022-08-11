@@ -65,6 +65,7 @@ public class TokensController {
         }
 
         Token token = new Token();
+        token.setId(UUID.randomUUID());
         token.setNodeId(options.nodeId());
         token.setToken(CryptoUtil.token());
         token.setAuthCategory(attributes.getAuthCategory() != null ? attributes.getAuthCategory() : AuthCategory.ALL);

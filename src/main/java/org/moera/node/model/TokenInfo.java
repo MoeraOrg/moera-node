@@ -10,6 +10,7 @@ public class TokenInfo {
 
     private String id;
     private String token;
+    private String name;
     private String[] permissions;
     private String pluginName;
     private Long createdAt;
@@ -20,8 +21,10 @@ public class TokenInfo {
 
     public TokenInfo(Token tokenData, boolean includeToken) {
         id = tokenData.getId().toString();
-        if (includeToken) {
-            token = tokenData.getToken();
+        token = tokenData.getToken();
+        name = tokenData.getName();
+        if (!includeToken) {
+            token = token.substring(0, 4) + '\u2026';
         }
         permissions = AuthCategory.toStrings(tokenData.getAuthCategory());
         pluginName = tokenData.getPluginName();
@@ -35,6 +38,14 @@ public class TokenInfo {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getToken() {
