@@ -12,6 +12,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Password;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Token;
@@ -21,8 +22,10 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.Result;
 import org.moera.node.model.TokenAttributes;
 import org.moera.node.model.TokenInfo;
+import org.moera.node.model.TokenName;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -30,9 +33,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -67,6 +72,7 @@ public class TokensController {
         Token token = new Token();
         token.setId(UUID.randomUUID());
         token.setNodeId(options.nodeId());
+        token.setName(attributes.getName());
         token.setToken(CryptoUtil.token());
         token.setAuthCategory(attributes.getAuthCategory() != null ? attributes.getAuthCategory() : AuthCategory.ALL);
         token.setDeadline(Timestamp.from(Instant.now().plus(
@@ -74,6 +80,36 @@ public class TokensController {
         tokenRepository.save(token);
 
         return ResponseEntity.created(URI.create("/tokens/" + token.getId())).body(new TokenInfo(token, true));
+    }
+
+    @PutMapping("/{id}")
+    @Admin
+    @Transactional
+    public TokenInfo put(@PathVariable UUID id, @Valid @RequestBody TokenName tokenName) {
+        log.info("PUT /tokens/{} (name = {})", id, LogUtil.format(tokenName.getName()));
+
+        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
+        if (token == null) {
+            throw new ObjectNotFoundFailure("not-found");
+        }
+        token.setName(tokenName.getName());
+
+        return new TokenInfo(token, false);
+    }
+
+    @DeleteMapping("/{id}")
+    @Admin
+    @Transactional
+    public Result delete(@PathVariable UUID id) {
+        log.info("DELETE /tokens/{}", id);
+
+        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
+        if (token == null) {
+            throw new ObjectNotFoundFailure("not-found");
+        }
+        tokenRepository.delete(token);
+
+        return Result.OK;
     }
 
     @GetMapping
@@ -92,11 +128,11 @@ public class TokensController {
     public TokenInfo get(@PathVariable UUID id) {
         log.info("GET /tokens/{}", id);
 
-        Token tokenData = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
-        if (tokenData == null) {
+        Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
+        if (token == null) {
             throw new ObjectNotFoundFailure("not-found");
         }
-        return new TokenInfo(tokenData, false);
+        return new TokenInfo(token, false);
     }
 
     @Scheduled(fixedDelayString = "PT1H")

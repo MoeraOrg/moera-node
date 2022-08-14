@@ -12,6 +12,8 @@ public class TokenAttributes {
 
     private Long authCategory;
 
+    private String name;
+
     public String getLogin() {
         return login;
     }
@@ -34,6 +36,14 @@ public class TokenAttributes {
 
     public void setAuthCategory(Long authCategory) {
         this.authCategory = authCategory;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
 }
