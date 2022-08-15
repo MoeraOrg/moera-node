@@ -1,11 +1,11 @@
 package org.moera.node.model;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.plugin.PluginDescriptor;
 
@@ -13,20 +13,33 @@ import org.moera.node.plugin.PluginDescriptor;
 public class PluginInfo {
 
     private String nodeId;
+    private Boolean local;
     private String name;
+    private String title;
+    private String description;
     private String location;
     private Set<String> acceptedEvents;
-    private Collection<OptionDescriptor> options;
+    private List<SettingMetaInfo> settings;
+    private String tokenId;
 
     public PluginInfo() {
     }
 
-    public PluginInfo(PluginDescriptor descriptor, OptionsMetadata optionsMetadata) {
-        nodeId = Objects.toString(descriptor.getNodeId(), null);
+    public PluginInfo(PluginDescriptor descriptor, OptionsMetadata optionsMetadata, boolean isRootAdmin) {
+        if (isRootAdmin) {
+            nodeId = Objects.toString(descriptor.getNodeId(), null);
+        } else {
+            local = descriptor.getNodeId() != null;
+        }
         name = descriptor.getName();
+        title = descriptor.getTitle();
+        description = descriptor.getDescription();
         location = descriptor.getLocation();
         acceptedEvents = descriptor.getAcceptedEvents();
-        options = optionsMetadata.getPluginDescriptors(descriptor.getName()).values();
+        settings = optionsMetadata.getPluginDescriptors(descriptor.getName()).values().stream()
+                .map(SettingMetaInfo::new)
+                .collect(Collectors.toList());
+        tokenId = Objects.toString(descriptor.getTokenId(), null);
     }
 
     public String getNodeId() {
@@ -37,12 +50,36 @@ public class PluginInfo {
         this.nodeId = nodeId;
     }
 
+    public Boolean getLocal() {
+        return local;
+    }
+
+    public void setLocal(Boolean local) {
+        this.local = local;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getLocation() {
@@ -61,12 +98,20 @@ public class PluginInfo {
         this.acceptedEvents = acceptedEvents;
     }
 
-    public Collection<OptionDescriptor> getOptions() {
-        return options;
+    public List<SettingMetaInfo> getSettings() {
+        return settings;
     }
 
-    public void setOptions(Collection<OptionDescriptor> options) {
-        this.options = options;
+    public void setSettings(List<SettingMetaInfo> settings) {
+        this.settings = settings;
+    }
+
+    public String getTokenId() {
+        return tokenId;
+    }
+
+    public void setTokenId(String tokenId) {
+        this.tokenId = tokenId;
     }
 
 }

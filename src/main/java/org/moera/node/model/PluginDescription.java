@@ -18,6 +18,12 @@ public class PluginDescription {
     @Pattern(regexp = NAME_PATTERN)
     private String name;
 
+    @Size(max = 80)
+    private String title;
+
+    @Size(max = 256)
+    private String description;
+
     private String location;
 
     private String[] acceptedEvents;
@@ -30,6 +36,22 @@ public class PluginDescription {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getLocation() {
@@ -58,6 +80,8 @@ public class PluginDescription {
 
     public void toDescriptor(PluginDescriptor descriptor) {
         descriptor.setName(name);
+        descriptor.setTitle(title);
+        descriptor.setDescription(description);
         descriptor.setLocation(location);
         if (acceptedEvents != null) {
             descriptor.setAcceptedEvents(new HashSet<>(Arrays.asList(acceptedEvents)));

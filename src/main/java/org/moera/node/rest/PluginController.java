@@ -132,11 +132,12 @@ public class PluginController {
                 token.setPluginName(descriptor.getName());
                 token.setIp(new Inet(requestContext.getRemoteAddr().getHostAddress()));
             }
+            descriptor.setTokenId(requestContext.getTokenId());
         }
 
         featuresUpdated(descriptor.getNodeId());
 
-        return new PluginInfo(descriptor, optionsMetadata);
+        return new PluginInfo(descriptor, optionsMetadata, requestContext.isRootAdmin());
     }
 
     @GetMapping
@@ -145,7 +146,7 @@ public class PluginController {
 
         return plugins.getNames(requestContext.nodeId()).stream()
                 .map(name -> getPluginDescriptor(name, false))
-                .map(desc -> new PluginInfo(desc, optionsMetadata))
+                .map(desc -> new PluginInfo(desc, optionsMetadata, requestContext.isRootAdmin()))
                 .collect(Collectors.toList());
     }
 
@@ -154,7 +155,8 @@ public class PluginController {
     public PluginInfo get(@PathVariable String pluginName) {
         log.info("GET /plugins/{pluginName} (pluginName = {})", LogUtil.format(pluginName));
 
-        return new PluginInfo(getPluginDescriptor(pluginName, false), optionsMetadata);
+        return new PluginInfo(getPluginDescriptor(pluginName, false), optionsMetadata,
+                requestContext.isRootAdmin());
     }
 
     @ProviderApi

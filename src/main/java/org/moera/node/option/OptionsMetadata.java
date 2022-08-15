@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -42,7 +44,7 @@ public class OptionsMetadata {
 
     private Map<String, OptionTypeBase> types;
     private Map<String, OptionDescriptor> descriptors;
-    private final Map<String, Map<String, OptionDescriptor>> pluginDescriptors = new HashMap<>();
+    private final Map<String, SortedMap<String, OptionDescriptor>> pluginDescriptors = new HashMap<>();
     private Map<String, Object> typeModifiers;
 
     @Inject
@@ -84,7 +86,7 @@ public class OptionsMetadata {
     public void loadPlugin(PluginDescription pluginDescription) {
         String pluginPrefix = PLUGIN_PREFIX + pluginDescription.getName() + ".";
 
-        Map<String, OptionDescriptor> descs = new HashMap<>();
+        SortedMap<String, OptionDescriptor> descs = new TreeMap<>();
         for (OptionDescriptor desc : pluginDescription.getOptions()) {
             desc.setName(pluginPrefix + desc.getName());
             descs.put(desc.getName(), desc);
@@ -149,7 +151,7 @@ public class OptionsMetadata {
         OptionDescriptor desc;
         String pluginName = getPluginName(name);
         if (pluginName != null) {
-            desc = pluginDescriptors.getOrDefault(pluginName, Collections.emptyMap()).get(name);
+            desc = pluginDescriptors.getOrDefault(pluginName, Collections.emptySortedMap()).get(name);
         } else {
             desc = descriptors.get(name);
         }

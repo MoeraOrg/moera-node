@@ -28,7 +28,10 @@ public class PluginDescriptor {
 
     private UUID nodeId;
     private String name;
+    private String title;
+    private String description;
     private String location;
+    private UUID tokenId;
     private Set<String> acceptedEvents = Collections.emptySet();
     private PluginEventsSender eventsSender;
     private final Object eventsSenderLock = new Object();
@@ -58,12 +61,36 @@ public class PluginDescriptor {
         this.name = name;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getLocation() {
         return location;
     }
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public UUID getTokenId() {
+        return tokenId;
+    }
+
+    public void setTokenId(UUID tokenId) {
+        this.tokenId = tokenId;
     }
 
     public Set<String> getAcceptedEvents() {
