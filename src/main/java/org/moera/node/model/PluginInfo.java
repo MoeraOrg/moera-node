@@ -25,6 +25,10 @@ public class PluginInfo {
     public PluginInfo() {
     }
 
+    public PluginInfo(PluginDescriptor descriptor) {
+        this(descriptor, null, false);
+    }
+
     public PluginInfo(PluginDescriptor descriptor, OptionsMetadata optionsMetadata, boolean isRootAdmin) {
         if (isRootAdmin) {
             nodeId = Objects.toString(descriptor.getNodeId(), null);
@@ -36,9 +40,11 @@ public class PluginInfo {
         description = descriptor.getDescription();
         location = descriptor.getLocation();
         acceptedEvents = descriptor.getAcceptedEvents();
-        settings = optionsMetadata.getPluginDescriptors(descriptor.getName()).values().stream()
-                .map(SettingMetaInfo::new)
-                .collect(Collectors.toList());
+        if (optionsMetadata != null) {
+            settings = optionsMetadata.getPluginDescriptors(descriptor.getName()).values().stream()
+                    .map(SettingMetaInfo::new)
+                    .collect(Collectors.toList());
+        }
         tokenId = Objects.toString(descriptor.getTokenId(), null);
     }
 

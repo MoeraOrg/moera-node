@@ -27,6 +27,8 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
+import org.moera.node.liberin.model.PluginAddedLiberin;
+import org.moera.node.liberin.model.PluginDeletedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PluginDescription;
 import org.moera.node.model.PluginInfo;
@@ -135,7 +137,7 @@ public class PluginController {
             descriptor.setTokenId(requestContext.getTokenId());
         }
 
-        featuresUpdated(descriptor.getNodeId());
+        pluginsUpdated(descriptor, false);
 
         return new PluginInfo(descriptor, optionsMetadata, requestContext.isRootAdmin());
     }
@@ -271,7 +273,7 @@ public class PluginController {
         descriptor.cancelEventsSender();
         plugins.remove(descriptor);
 
-        featuresUpdated(descriptor.getNodeId());
+        pluginsUpdated(descriptor, true);
 
         return Result.OK;
     }
@@ -298,12 +300,17 @@ public class PluginController {
         return descriptor;
     }
 
-    private void featuresUpdated(UUID pluginNodeId) {
-        if (pluginNodeId != null) {
-            requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(pluginNodeId), plugins));
+    private void pluginsUpdated(PluginDescriptor descriptor, boolean deleted) {
+        if (descriptor.getNodeId() != null) {
+            requestContext.send(!deleted ? new PluginAddedLiberin(descriptor) : new PluginDeletedLiberin(descriptor));
+            requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(descriptor.getNodeId()), plugins));
         } else {
-            domains.getAllDomainNames().forEach(domainName ->
-                    requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(domainName), plugins)));
+            domains.getAllDomainNames().forEach(domainName -> {
+                requestContext.send(!deleted
+                        ? new PluginAddedLiberin(descriptor)
+                        : new PluginDeletedLiberin(descriptor));
+                requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(domainName), plugins));
+            });
         }
     }
 

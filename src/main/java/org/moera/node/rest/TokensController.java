@@ -20,6 +20,9 @@ import org.moera.node.data.TokenRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.TokenAddedLiberin;
+import org.moera.node.liberin.model.TokenDeletedLiberin;
+import org.moera.node.liberin.model.TokenUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -79,6 +82,8 @@ public class TokensController {
                 options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
 
+        requestContext.send(new TokenAddedLiberin(token));
+
         return ResponseEntity.created(URI.create("/tokens/" + token.getId())).body(new TokenInfo(token, true));
     }
 
@@ -94,6 +99,8 @@ public class TokensController {
         }
         token.setName(tokenName.getName());
 
+        requestContext.send(new TokenUpdatedLiberin(token));
+
         return new TokenInfo(token, false);
     }
 
@@ -108,6 +115,8 @@ public class TokensController {
             throw new ObjectNotFoundFailure("not-found");
         }
         tokenRepository.delete(token);
+
+        requestContext.send(new TokenDeletedLiberin(token.getId()));
 
         return Result.OK;
     }
