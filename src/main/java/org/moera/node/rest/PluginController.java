@@ -29,6 +29,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.liberin.model.PluginAddedLiberin;
 import org.moera.node.liberin.model.PluginDeletedLiberin;
+import org.moera.node.liberin.model.TokenUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PluginDescription;
 import org.moera.node.model.PluginInfo;
@@ -130,9 +131,10 @@ public class PluginController {
 
         if (requestContext.getTokenId() != null) {
             Token token = tokenRepository.findById(requestContext.getTokenId()).orElse(null);
-            if (token != null) {
+            if (token != null && token.getPluginName() == null) {
                 token.setPluginName(descriptor.getName());
                 token.setIp(new Inet(requestContext.getRemoteAddr().getHostAddress()));
+                requestContext.send(new TokenUpdatedLiberin(token));
             }
             descriptor.setTokenId(requestContext.getTokenId());
         }

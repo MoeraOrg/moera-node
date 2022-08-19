@@ -57,6 +57,7 @@ public enum EventType {
     FEATURES_UPDATED,
     TOKEN_ADDED,
     TOKEN_UPDATED,
-    TOKEN_DELETED
+    TOKEN_DELETED,
+    PLUGINS_UPDATED
 
 }
