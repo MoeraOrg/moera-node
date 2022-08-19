@@ -1,6 +1,7 @@
 package org.moera.node.auth;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Locale;
@@ -107,7 +108,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE, wwwAuthHeader);
         response.setStatus(status.value());
         String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
-        objectMapper.writeValue(response.getWriter(), new Result(errorCode, message));
+        objectMapper.writeValue(new PrintWriter(response.getOutputStream()), new Result(errorCode, message));
     }
 
     private AuthSecrets extractSecrets(HttpServletRequest request) {
