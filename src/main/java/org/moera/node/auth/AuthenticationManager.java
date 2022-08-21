@@ -1,9 +1,13 @@
 package org.moera.node.auth;
 
 import java.net.InetAddress;
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 
 import org.hibernate.HibernateException;
 import org.moera.commons.crypto.CryptoException;
@@ -20,10 +24,12 @@ import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 
 @Component
@@ -39,6 +45,12 @@ public class AuthenticationManager {
 
     @Inject
     private NamingCache namingCache;
+
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    @Inject
+    private EntityManager entityManager;
 
     public Token getToken(String tokenS, UUID nodeId) throws InvalidTokenException {
         if (ObjectUtils.isEmpty(tokenS)) {
@@ -58,7 +70,23 @@ public class AuthenticationManager {
             log.error("Cannot resolve token address {}", token.getIp(), e);
             throw new InvalidTokenException();
         }
+        prolongToken(token);
         return token;
+    }
+
+    private void prolongToken(Token token) {
+        Duration lifetime = Duration.between(token.getCreatedAt().toInstant(), token.getDeadline().toInstant());
+        if (Instant.now().plus(lifetime).isAfter(token.getDeadline().toInstant().plus(1, ChronoUnit.HOURS))) {
+            try {
+                Transaction.execute(txManager, () -> {
+                    Token tk = entityManager.merge(token);
+                    tk.setDeadline(Timestamp.from(Instant.now().plus(lifetime)));
+                    return null;
+                });
+            } catch (Throwable e) {
+                log.error("Could not prolong token {}: {}", LogUtil.format(token.getId()), e.getMessage());
+            }
+        }
     }
 
     public CarteAuthInfo getCarte(String carteS, InetAddress clientAddress) {
