@@ -169,12 +169,16 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         } else if (userAgent.contains("Opera")) {
             requestContext.setUserAgent(UserAgent.OPERA);
         } else if (userAgent.contains("Chrome")) {
-            if (userAgent.contains("YaBrowser")) {
+            if (userAgent.contains("Googlebot")) {
+                requestContext.setUserAgent(UserAgent.GOOGLEBOT);
+            } else if (userAgent.contains("YaBrowser")) {
                 requestContext.setUserAgent(UserAgent.YANDEX);
             } else if (userAgent.contains("Brave")) {
                 requestContext.setUserAgent(UserAgent.BRAVE);
             } else if (userAgent.contains("Vivaldi")) {
                 requestContext.setUserAgent(UserAgent.VIVALDI);
+            } else if (userAgent.contains("PetalBot")) {
+                requestContext.setUserAgent(UserAgent.PETALBOT);
             } else {
                 requestContext.setUserAgent(UserAgent.CHROME);
             }
