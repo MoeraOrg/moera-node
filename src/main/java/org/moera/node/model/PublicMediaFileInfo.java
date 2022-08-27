@@ -10,6 +10,7 @@ public class PublicMediaFileInfo {
     private String path;
     private Integer width;
     private Integer height;
+    private short orientation;
     private long size;
 
     public PublicMediaFileInfo() {
@@ -20,6 +21,7 @@ public class PublicMediaFileInfo {
         path = "public/" + mediaFile.getFileName();
         width = mediaFile.getSizeX();
         height = mediaFile.getSizeY();
+        orientation = mediaFile.getOrientation();
         size = mediaFile.getFileSize();
     }
 
@@ -53,6 +55,14 @@ public class PublicMediaFileInfo {
 
     public void setHeight(Integer height) {
         this.height = height;
+    }
+
+    public short getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(short orientation) {
+        this.orientation = orientation;
     }
 
     public long getSize() {

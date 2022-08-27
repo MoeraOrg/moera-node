@@ -2,7 +2,6 @@ package org.moera.node.rest;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -10,12 +9,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import com.drew.imaging.ImageMetadataReader;
-import com.drew.imaging.ImageProcessingException;
-import com.drew.metadata.Directory;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.MetadataException;
-import com.drew.metadata.exif.ExifIFD0Directory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Avatar;
@@ -141,27 +134,10 @@ public class AvatarController {
         }
     }
 
-    private int getImageOrientation(Path imagePath) {
-        int orientation = 1;
-        try {
-            Metadata metadata = ImageMetadataReader.readMetadata(imagePath.toFile());
-            if (metadata != null) {
-                Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
-                if (directory != null) {
-                    orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
-                }
-            }
-        } catch (MetadataException | IOException | ImageProcessingException e) {
-            // Could not get orientation, use default
-        }
-        return orientation;
-    }
-
     private void rotateClipToOrientation(AvatarAttributes avatarAttributes, MediaFile mediaFile) {
-        int orientation = getImageOrientation(mediaOperations.getPath(mediaFile));
         int clipX = avatarAttributes.getClipX();
         int clipY = avatarAttributes.getClipY();
-        switch (orientation) {
+        switch (mediaFile.getOrientation()) {
             case 1:
                 break;
             case 2: // Flip X

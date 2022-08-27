@@ -17,6 +17,7 @@ public class PrivateMediaFileInfo {
     private String mimeType;
     private Integer width;
     private Integer height;
+    private short orientation;
     private long size;
     private String postingId;
     private MediaFilePreviewInfo[] previews;
@@ -32,6 +33,7 @@ public class PrivateMediaFileInfo {
         mimeType = mediaFileOwner.getMediaFile().getMimeType();
         width = mediaFileOwner.getMediaFile().getSizeX();
         height = mediaFileOwner.getMediaFile().getSizeY();
+        orientation = mediaFileOwner.getMediaFile().getOrientation();
         size = mediaFileOwner.getMediaFile().getFileSize();
         Posting posting = mediaFileOwner.getPosting(receiverName);
         postingId = posting != null ? posting.getId().toString() : null;
@@ -97,6 +99,14 @@ public class PrivateMediaFileInfo {
 
     public void setHeight(Integer height) {
         this.height = height;
+    }
+
+    public short getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(short orientation) {
+        this.orientation = orientation;
     }
 
     public long getSize() {

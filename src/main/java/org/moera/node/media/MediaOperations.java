@@ -38,6 +38,12 @@ import javax.transaction.Transactional;
 
 import com.drew.imaging.FileType;
 import com.drew.imaging.FileTypeDetector;
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
@@ -185,11 +191,28 @@ public class MediaOperations {
             if (contentType.startsWith("image/")) {
                 mediaFile.setDimension(getImageDimension(contentType, mediaPath));
             }
+            mediaFile.setOrientation(getImageOrientation(mediaPath));
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile.setDigest(digest);
             mediaFile = mediaFileRepository.save(mediaFile);
         }
         return mediaFile;
+    }
+
+    private short getImageOrientation(Path imagePath) {
+        short orientation = 1;
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(imagePath.toFile());
+            if (metadata != null) {
+                Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+                if (directory != null) {
+                    orientation = (short) directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+                }
+            }
+        } catch (MetadataException | IOException | ImageProcessingException e) {
+            // Could not get orientation, use default
+        }
+        return orientation;
     }
 
     private String detectContentType(Path path, String defaultContentType) throws IOException {

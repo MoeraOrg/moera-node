@@ -34,6 +34,9 @@ public class MediaFile {
     @Column(name="size_y")
     private Integer sizeY;
 
+    @NotNull
+    private short orientation = 1;
+
     private long fileSize;
 
     @NotNull
@@ -105,6 +108,14 @@ public class MediaFile {
             setSizeX(null);
             setSizeY(null);
         }
+    }
+
+    public short getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(short orientation) {
+        this.orientation = orientation;
     }
 
     public long getFileSize() {
