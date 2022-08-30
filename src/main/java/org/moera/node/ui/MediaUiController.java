@@ -48,12 +48,13 @@ public class MediaUiController {
     @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
-                                                  @RequestParam(required = false) Integer width) {
+                                                  @RequestParam(required = false) Integer width,
+                                                  @RequestParam(required = false) Boolean download) {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null || !mediaFile.isExposed()) {
             throw new PageNotFoundException();
         }
-        return mediaOperations.serve(mediaFile, width);
+        return mediaOperations.serve(mediaFile, width, download);
     }
 
     @GetMapping("/private/{id}.{ext}")
@@ -62,13 +63,14 @@ public class MediaUiController {
     @Transactional
     @ResponseBody
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
-                                                   @RequestParam(required = false) Integer width) {
+                                                   @RequestParam(required = false) Integer width,
+                                                   @RequestParam(required = false) Boolean download) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
         if (!requestContext.isPrincipal(mediaFileOwner.getViewE(requestContext.nodeName()))) {
             throw new PageNotFoundException();
         }
-        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width);
+        return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, download);
     }
 
     @GetMapping("/private/{id}/caption")

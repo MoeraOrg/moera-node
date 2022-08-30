@@ -68,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -418,9 +419,12 @@ public class MediaOperations {
         entry.getCurrentRevision().getAttachments().forEach(ea -> updatePermissions(ea.getMediaFileOwner()));
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile) {
+    public ResponseEntity<Resource> serve(MediaFile mediaFile, boolean download) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(mediaFile.getMimeType()));
+        if (download) {
+            headers.setContentDisposition(ContentDisposition.attachment().build());
+        }
 
         switch (config.getMedia().getServe().toLowerCase()) {
             default:
@@ -442,13 +446,14 @@ public class MediaOperations {
         }
     }
 
-    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width) {
+    public ResponseEntity<Resource> serve(MediaFile mediaFile, Integer width, Boolean download) {
+        download = download != null ? download : false;
         if (width == null) {
-            return serve(mediaFile);
+            return serve(mediaFile, download);
         }
 
         MediaFilePreview preview = mediaFile.findLargerPreview(width);
-        return serve(preview != null ? preview.getMediaFile() : mediaFile);
+        return serve(preview != null ? preview.getMediaFile() : mediaFile, download);
     }
 
     public void validateAvatar(AvatarDescription avatar, Consumer<MediaFile> found,

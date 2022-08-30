@@ -239,20 +239,22 @@ public class MediaController {
     @GetMapping("/public/{id}/data")
     @Transactional
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
-                                                  @RequestParam(required = false) Integer width) {
+                                                  @RequestParam(required = false) Integer width,
+                                                  @RequestParam(required = false) Boolean download) {
         log.info("GET /media/public/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFile(id), width);
+        return mediaOperations.serve(getMediaFile(id), width, download);
     }
 
     @GetMapping("/private/{id}/data")
     @AuthenticationCategory(AuthCategory.VIEW_MEDIA)
     @Transactional
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
-                                                   @RequestParam(required = false) Integer width) {
+                                                   @RequestParam(required = false) Integer width,
+                                                   @RequestParam(required = false) Boolean download) {
         log.info("GET /media/private/{id}/data (id = {})", LogUtil.format(id));
 
-        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), width);
+        return mediaOperations.serve(getMediaFileOwner(id).getMediaFile(), width, download);
     }
 
     @GetMapping("/private/{id}/parent")
