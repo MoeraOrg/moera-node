@@ -10,7 +10,6 @@ public class FeedInfo implements Cloneable {
 
     private String feedName;
     private String title;
-    private String subscriberId;
     private int total;
     private Long firstCreatedAt;
     private Long lastCreatedAt;
@@ -37,14 +36,6 @@ public class FeedInfo implements Cloneable {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public String getSubscriberId() {
-        return subscriberId;
-    }
-
-    public void setSubscriberId(String subscriberId) {
-        this.subscriberId = subscriberId;
     }
 
     public int getTotal() {

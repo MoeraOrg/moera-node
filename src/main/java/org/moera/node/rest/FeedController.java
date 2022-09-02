@@ -34,7 +34,6 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -110,29 +109,11 @@ public class FeedController {
     public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
 
-        Collection<FeedInfo> feeds = Feed.getAllStandard(requestContext.isAdmin())
+        return Feed.getAllStandard(requestContext.isAdmin())
                 .stream()
                 .map(FeedInfo::clone)
                 .peek(this::fillFeedTotals)
                 .collect(Collectors.toList());
-
-        String clientName = requestContext.getClientName();
-        if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
-            Map<String, UUID> subscriberIds =
-                subscriberRepository.findByNameAndType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
-                        .stream()
-                        .collect(Collectors.toMap(Subscriber::getFeedName, Subscriber::getId, (id1, id2) -> id1));
-            feeds.forEach(feedInfo -> {
-                int total = storyRepository.countInFeed(requestContext.nodeId(), feedInfo.getFeedName());
-                feedInfo.setTotal(total);
-                UUID subscriberId = subscriberIds.get(feedInfo.getFeedName());
-                if (subscriberId != null) {
-                    feedInfo.setSubscriberId(subscriberId.toString());
-                }
-            });
-        }
-
-        return feeds;
     }
 
     @GetMapping("/{feedName}")
@@ -146,15 +127,6 @@ public class FeedController {
 
         FeedInfo feedInfo = Feed.getStandard(feedName).clone();
         fillFeedTotals(feedInfo);
-
-        String clientName = requestContext.getClientName();
-        if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(clientName)) {
-            subscriberRepository.findByNameAndType(requestContext.nodeId(), clientName, SubscriptionType.FEED)
-                    .stream()
-                    .filter(s -> s.getFeedName().equals(feedName))
-                    .findFirst()
-                    .ifPresent(subscriber -> feedInfo.setSubscriberId(subscriber.getId().toString()));
-        }
 
         return feedInfo;
     }
