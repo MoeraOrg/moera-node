@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1)
+-- Dumped from database version 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1)
+-- Dumped by pg_dump version 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -154,6 +154,32 @@ $$;
 
 
 ALTER FUNCTION public.update_entity_remote_owner_avatar_media_file_id() OWNER TO moera;
+
+--
+-- Name: update_entity_remote_posting_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_entity_remote_posting_avatar_media_file_id() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_media_file_reference(OLD.remote_posting_avatar_media_file_id, NULL);
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_media_file_reference(OLD.remote_posting_avatar_media_file_id,
+                                                NEW.remote_posting_avatar_media_file_id);
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_media_file_reference(NULL, NEW.remote_posting_avatar_media_file_id);
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entity_remote_posting_avatar_media_file_id() OWNER TO postgres;
 
 --
 -- Name: update_entity_remote_replied_to_avatar_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
@@ -541,7 +567,13 @@ CREATE TABLE public.entries (
     parent_add_negative_reaction_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     child_operations text DEFAULT '{}'::text NOT NULL,
     parent_override_comment_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
-    receiver_override_comment_principal character varying(70)
+    receiver_override_comment_principal character varying(70),
+    reaction_operations text DEFAULT '{}'::text NOT NULL,
+    child_reaction_operations text DEFAULT '{}'::text NOT NULL,
+    parent_override_reaction_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    receiver_override_reaction_principal character varying(70),
+    parent_override_comment_reaction_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    receiver_override_comment_reaction_principal character varying(70)
 );
 
 
@@ -694,7 +726,8 @@ CREATE TABLE public.media_files (
     exposed boolean DEFAULT false NOT NULL,
     usage_count integer DEFAULT 0 NOT NULL,
     deadline timestamp without time zone,
-    digest bytea
+    digest bytea,
+    orientation smallint DEFAULT 1 NOT NULL
 );
 
 
@@ -923,7 +956,12 @@ CREATE TABLE public.reactions (
     owner_full_name character varying(96),
     owner_avatar_media_file_id character varying(40),
     owner_avatar_shape character varying(8),
-    replaced boolean DEFAULT false NOT NULL
+    replaced boolean DEFAULT false NOT NULL,
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    posting_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    posting_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    comment_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    comment_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL
 );
 
 
@@ -1022,7 +1060,7 @@ CREATE TABLE public.stories (
     entry_id uuid,
     published_at timestamp without time zone DEFAULT now() NOT NULL,
     pinned boolean DEFAULT false NOT NULL,
-    summary character varying(512) DEFAULT ''::character varying NOT NULL,
+    summary text DEFAULT ''::character varying NOT NULL,
     tracking_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     remote_node_name character varying(63),
     remote_posting_id character varying(40),
@@ -1040,7 +1078,11 @@ CREATE TABLE public.stories (
     remote_owner_avatar_shape character varying(8),
     remote_parent_posting_id character varying(40),
     remote_parent_comment_id character varying(40),
-    remote_parent_media_id character varying(40)
+    remote_parent_media_id character varying(40),
+    remote_posting_node_name character varying(63),
+    remote_posting_full_name character varying(96),
+    remote_posting_avatar_media_file_id character varying(40),
+    remote_posting_avatar_shape character varying(8)
 );
 
 
@@ -1060,7 +1102,9 @@ CREATE TABLE public.subscribers (
     created_at timestamp without time zone NOT NULL,
     remote_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8)
+    remote_avatar_shape character varying(8),
+    admin_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
 );
 
 
@@ -1083,7 +1127,8 @@ CREATE TABLE public.subscriptions (
     reason smallint DEFAULT 0 NOT NULL,
     remote_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8)
+    remote_avatar_shape character varying(8),
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
 );
 
 
@@ -1097,9 +1142,12 @@ CREATE TABLE public.tokens (
     token character varying(45) NOT NULL,
     name character varying(127),
     created_at timestamp without time zone NOT NULL,
-    deadline timestamp without time zone NOT NULL,
+    deadline timestamp without time zone,
     node_id uuid NOT NULL,
-    auth_category bigint DEFAULT 0 NOT NULL
+    auth_category bigint DEFAULT 0 NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    ip inet,
+    plugin_name character varying(48)
 );
 
 
@@ -1382,7 +1430,7 @@ ALTER TABLE ONLY public.subscriptions
 --
 
 ALTER TABLE ONLY public.tokens
-    ADD CONSTRAINT tokens_pkey PRIMARY KEY (token);
+    ADD CONSTRAINT tokens_pkey PRIMARY KEY (id);
 
 
 --
@@ -1397,6 +1445,13 @@ CREATE INDEX avatars_media_file_id_idx ON public.avatars USING btree (media_file
 --
 
 CREATE INDEX avatars_node_id_ordinal_created_at_idx ON public.avatars USING btree (node_id, ordinal, created_at);
+
+
+--
+-- Name: comments_slice_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX comments_slice_idx ON public.entries USING btree (node_id, parent_id, moment, view_principal, owner_name) WHERE (deleted_at IS NULL);
 
 
 --
@@ -1659,17 +1714,10 @@ CREATE INDEX media_file_owners_media_file_id_idx ON public.media_file_owners USI
 
 
 --
--- Name: media_file_owners_node_id_null_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE UNIQUE INDEX media_file_owners_node_id_null_media_file_id_idx ON public.media_file_owners USING btree (node_id, media_file_id) WHERE (owner_name IS NULL);
-
-
---
 -- Name: media_file_owners_node_id_owner_name_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE UNIQUE INDEX media_file_owners_node_id_owner_name_media_file_id_idx ON public.media_file_owners USING btree (node_id, owner_name, media_file_id);
+CREATE INDEX media_file_owners_node_id_owner_name_media_file_id_idx ON public.media_file_owners USING btree (node_id, owner_name, media_file_id);
 
 
 --
@@ -2065,6 +2113,13 @@ CREATE INDEX stories_remote_owner_avatar_media_file_id_idx ON public.stories USI
 
 
 --
+-- Name: stories_remote_posting_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX stories_remote_posting_avatar_media_file_id_idx ON public.stories USING btree (remote_posting_avatar_media_file_id);
+
+
+--
 -- Name: stories_tracking_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2104,6 +2159,13 @@ CREATE UNIQUE INDEX subscriptions_node_id_subscription_type_remote_node_name_re_
 --
 
 CREATE INDEX subscriptions_remote_avatar_media_file_id_idx ON public.subscriptions USING btree (remote_avatar_media_file_id);
+
+
+--
+-- Name: tokens_token_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX tokens_token_idx ON public.tokens USING btree (token);
 
 
 --
@@ -2244,6 +2306,13 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 --
 
 CREATE TRIGGER update_remote_owner_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_owner_avatar_media_file_id ON public.stories FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_owner_avatar_media_file_id();
+
+
+--
+-- Name: stories update_remote_posting_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_posting_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_posting_avatar_media_file_id ON public.stories FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_posting_avatar_media_file_id();
 
 
 --
@@ -2570,6 +2639,14 @@ ALTER TABLE ONLY public.stories
 
 ALTER TABLE ONLY public.stories
     ADD CONSTRAINT stories_remote_owner_avatar_media_file_id_fkey FOREIGN KEY (remote_owner_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: stories stories_remote_posting_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.stories
+    ADD CONSTRAINT stories_remote_posting_avatar_media_file_id_fkey FOREIGN KEY (remote_posting_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --

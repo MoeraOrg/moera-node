@@ -76,6 +76,18 @@ public class Story {
     private String remoteAvatarShape;
 
     @Size(max = 63)
+    private String remotePostingNodeName;
+
+    @Size(max = 96)
+    private String remotePostingFullName;
+
+    @ManyToOne
+    private MediaFile remotePostingAvatarMediaFile;
+
+    @Size(max = 8)
+    private String remotePostingAvatarShape;
+
+    @Size(max = 63)
     private String remoteOwnerName;
 
     @Size(max = 96)
@@ -261,6 +273,38 @@ public class Story {
 
     public void setRemoteAvatarShape(String remoteAvatarShape) {
         this.remoteAvatarShape = remoteAvatarShape;
+    }
+
+    public String getRemotePostingNodeName() {
+        return remotePostingNodeName;
+    }
+
+    public void setRemotePostingNodeName(String remotePostingNodeName) {
+        this.remotePostingNodeName = remotePostingNodeName;
+    }
+
+    public String getRemotePostingFullName() {
+        return remotePostingFullName;
+    }
+
+    public void setRemotePostingFullName(String remotePostingFullName) {
+        this.remotePostingFullName = remotePostingFullName;
+    }
+
+    public MediaFile getRemotePostingAvatarMediaFile() {
+        return remotePostingAvatarMediaFile;
+    }
+
+    public void setRemotePostingAvatarMediaFile(MediaFile remotePostingAvatarMediaFile) {
+        this.remotePostingAvatarMediaFile = remotePostingAvatarMediaFile;
+    }
+
+    public String getRemotePostingAvatarShape() {
+        return remotePostingAvatarShape;
+    }
+
+    public void setRemotePostingAvatarShape(String remotePostingAvatarShape) {
+        this.remotePostingAvatarShape = remotePostingAvatarShape;
     }
 
     public String getRemoteOwnerName() {

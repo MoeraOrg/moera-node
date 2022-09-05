@@ -1,5 +1,6 @@
 *.iml
 .*.swp
+.*.ods#
 *.log
 /.idea/
 /target/
