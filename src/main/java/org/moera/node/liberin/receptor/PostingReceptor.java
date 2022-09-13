@@ -23,6 +23,7 @@ import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.body.Body;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
@@ -82,8 +83,10 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
                 new PostingUpdatedNotification(posting.getId()));
         if (posting.getCurrentRevision().isUpdateImportant()) {
+            AvatarImage ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
             send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
-                    new PostingImportantUpdateNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
+                    new PostingImportantUpdateNotification(posting.getOwnerName(), posting.getOwnerFullName(),
+                            ownerAvatar, posting.getId(), posting.getCurrentRevision().getHeading(),
                             posting.getCurrentRevision().getUpdateDescription()));
         }
 
@@ -133,6 +136,7 @@ public class PostingReceptor extends LiberinReceptorBase {
 
     private void notifyMentioned(Posting posting, EntryRevision current, Principal currentView, EntryRevision latest,
                                  Principal latestView, String ownerName) {
+        AvatarImage ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
         String currentHeading = current != null ? current.getHeading() : null;
         Set<String> currentMentions = current != null
                 ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
@@ -143,7 +147,8 @@ public class PostingReceptor extends LiberinReceptorBase {
         currentMentions.stream()
                 .filter(m -> !latestMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))
-                .forEach(d -> send(d, new MentionPostingAddedNotification(posting.getId(), currentHeading)));
+                .forEach(d -> send(d, new MentionPostingAddedNotification(posting.getId(), posting.getOwnerName(),
+                        posting.getOwnerFullName(), ownerAvatar, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !currentMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))

@@ -110,7 +110,8 @@ public class RemoteCommentReactionPostTask extends Task {
                     commentId, postingId, targetNodeName, e.getMessage());
         }
 
-        send(new RemoteCommentReactionAddingFailedLiberin(postingId, postingInfo, commentId, commentInfo));
+        send(new RemoteCommentReactionAddingFailedLiberin(targetNodeName, postingId, postingInfo, commentId,
+                commentInfo));
     }
 
 }

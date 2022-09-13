@@ -8,8 +8,9 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.StorySummaryData;
+import org.moera.node.model.StorySummaryEntry;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,29 +22,30 @@ public class MentionPostingInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String remoteNodeName, String remoteFullName, AvatarImage remoteAvatar, String remotePostingId,
-                      String remotePostingHeading) {
-        Story story = findStory(remoteNodeName, remotePostingId);
+    public void added(String nodeName, String ownerName, String ownerFullName, AvatarImage ownerAvatar, String id,
+                      String heading) {
+        Story story = findStory(nodeName, id);
         if (story != null) {
             return;
         }
         story = new Story(UUID.randomUUID(), nodeId(), StoryType.MENTION_POSTING);
         story.setFeedName(Feed.INSTANT);
-        story.setRemoteNodeName(remoteNodeName);
-        story.setRemoteFullName(remoteFullName);
-        if (remoteAvatar != null) {
-            story.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
-            story.setRemoteAvatarShape(remoteAvatar.getShape());
+        story.setRemoteNodeName(nodeName);
+        story.setRemotePostingNodeName(ownerName);
+        story.setRemotePostingFullName(ownerFullName);
+        if (ownerAvatar != null) {
+            story.setRemotePostingAvatarMediaFile(ownerAvatar.getMediaFile());
+            story.setRemotePostingAvatarShape(ownerAvatar.getShape());
         }
-        story.setRemotePostingId(remotePostingId);
-        story.setSummary(buildSummary(story, remotePostingHeading));
+        story.setRemotePostingId(id);
+        story.setSummaryData(buildSummary(story, heading));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
     }
 
-    public void deleted(String remoteNodeName, String remotePostingId) {
-        Story story = findStory(remoteNodeName, remotePostingId);
+    public void deleted(String nodeName, String id) {
+        Story story = findStory(nodeName, id);
         if (story == null) {
             return;
         }
@@ -51,14 +53,16 @@ public class MentionPostingInstants extends InstantsCreator {
         storyDeleted(story);
     }
 
-    private Story findStory(String remoteNodeName, String remotePostingId) {
+    private Story findStory(String nodeName, String id) {
         return storyRepository.findByRemotePostingId(nodeId(), Feed.INSTANT, StoryType.MENTION_POSTING,
-                remoteNodeName, remotePostingId).stream().findFirst().orElse(null);
+                nodeName, id).stream().findFirst().orElse(null);
     }
 
-    private static String buildSummary(Story story, String remotePostingHeading) {
-        return String.format("%s mentioned you in a post \"%s\"",
-                formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()), Util.he(remotePostingHeading));
+    private static StorySummaryData buildSummary(Story story, String heading) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
+                heading));
+        return summaryData;
     }
 
 }

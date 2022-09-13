@@ -11,9 +11,7 @@ import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.FeedStatus;
-import org.moera.node.naming.NodeName;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.util.Util;
 
 public class InstantsCreator {
 
@@ -58,14 +56,6 @@ public class InstantsCreator {
 
     protected void updateMoment(Story story) {
         storyOperations.updateMoment(story, nodeId());
-    }
-
-    protected static String formatNodeName(String name, String fullName) {
-        return spanNodeName(name, fullName != null ? fullName : NodeName.shorten(name));
-    }
-
-    private static String spanNodeName(String nodeName, String text) {
-        return String.format("<span class=\"node-name\" data-nodename=\"%s\">%s</span>", Util.he(nodeName), text);
     }
 
 }

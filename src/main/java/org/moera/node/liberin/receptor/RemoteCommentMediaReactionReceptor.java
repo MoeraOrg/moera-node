@@ -19,10 +19,11 @@ public class RemoteCommentMediaReactionReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(RemoteCommentMediaReactionAddedLiberin liberin) {
-        commentMediaReactionInstants.added(liberin.getNodeName(), liberin.getFullName(), liberin.getAvatar(),
-                liberin.getPostingId(), liberin.getParentPostingId(), liberin.getParentCommentId(),
-                liberin.getParentMediaId(), liberin.getOwnerName(), liberin.getOwnerFullName(),
-                liberin.getOwnerAvatar(), liberin.getCommentHeading(), liberin.isNegative(), liberin.getEmoji());
+        commentMediaReactionInstants.added(liberin.getNodeName(), liberin.getParentPostingNodeName(),
+                liberin.getParentPostingFullName(), liberin.getParentPostingAvatar(), liberin.getMediaPostingId(),
+                liberin.getParentPostingId(), liberin.getParentCommentId(), liberin.getParentMediaId(),
+                liberin.getReactionNodeName(), liberin.getReactionFullName(), liberin.getReactionAvatar(),
+                liberin.getCommentHeading(), liberin.isReactionNegative(), liberin.getReactionEmoji());
     }
 
     @LiberinMapping
@@ -40,8 +41,9 @@ public class RemoteCommentMediaReactionReceptor extends LiberinReceptorBase {
     public void addingFailed(RemoteCommentMediaReactionAddingFailedLiberin liberin) {
         String parentPostingId = liberin.getParentCommentInfo().getPostingId();
         String parentCommentId = liberin.getParentCommentInfo().getId();
-        commentMediaReactionInstants.addingFailed(liberin.getPostingId(), parentPostingId, parentCommentId,
-                liberin.getParentMediaId(), liberin.getParentPostingInfo(), liberin.getParentCommentInfo());
+        commentMediaReactionInstants.addingFailed(liberin.getNodeName(), liberin.getMediaPostingId(), parentPostingId,
+                parentCommentId, liberin.getParentMediaId(), liberin.getParentPostingInfo(),
+                liberin.getParentCommentInfo());
     }
 
 }

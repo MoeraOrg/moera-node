@@ -30,7 +30,7 @@ public class RemotePostingReactionReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(RemotePostingReactionAddingFailedLiberin liberin) {
-        postingReactionInstants.addingFailed(liberin.getPostingId(), liberin.getPostingInfo());
+        postingReactionInstants.addingFailed(liberin.getNodeName(), liberin.getPostingId(), liberin.getPostingInfo());
     }
 
     @LiberinMapping

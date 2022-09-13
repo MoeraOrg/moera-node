@@ -99,12 +99,15 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     addedReaction.getOwnerAvatarShape());
             if (posting.getParentMedia() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
+                    AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
+                            posting.getOwnerAvatarShape());
                     send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
                                     visibilityFilter(posting, addedReaction)),
-                            new PostingReactionAddedNotification(null, null, null, null,
-                                    posting.getId(), posting.getCurrentRevision().getHeading(),
-                                    addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
-                                    ownerAvatar, addedReaction.isNegative(), addedReaction.getEmoji()));
+                            new PostingReactionAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
+                                    postingOwnerAvatar, null, null, null,
+                                    null, posting.getId(), posting.getCurrentRevision().getHeading(),
+                                    addedReaction.getOwnerName(), addedReaction.getOwnerFullName(), ownerAvatar,
+                                    addedReaction.isNegative(), addedReaction.getEmoji()));
                 } else {
                     if (visibilityFilter(posting, addedReaction).includes(true, posting.getOwnerName())) {
                         postingReactionInstants.added(posting, addedReaction.getOwnerName(),
@@ -115,17 +118,19 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
             } else {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
                 for (Entry entry : entries) {
-                    UUID parentPostingId = entry instanceof Comment
-                            ? ((Comment) entry).getPosting().getId()
-                            : entry.getId();
+                    Posting parentPosting = entry instanceof Comment ? ((Comment) entry).getPosting() : (Posting) entry;
+                    AvatarImage parentPostingAvatar = new AvatarImage(parentPosting.getOwnerAvatarMediaFile(),
+                            parentPosting.getOwnerAvatarShape());
                     UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
                     send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
                                     visibilityFilter(posting, addedReaction)),
-                            new PostingReactionAddedNotification(parentPostingId, parentCommentId,
-                                    posting.getParentMedia().getId(), entry.getCurrentRevision().getHeading(),
-                                    posting.getId(), posting.getCurrentRevision().getHeading(),
-                                    addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
-                                    ownerAvatar, addedReaction.isNegative(), addedReaction.getEmoji()));
+                            new PostingReactionAddedNotification(parentPosting.getOwnerName(),
+                                    parentPosting.getOwnerFullName(), parentPostingAvatar, parentPosting.getId(),
+                                    parentCommentId, posting.getParentMedia().getId(),
+                                    entry.getCurrentRevision().getHeading(), posting.getId(),
+                                    posting.getCurrentRevision().getHeading(), addedReaction.getOwnerName(),
+                                    addedReaction.getOwnerFullName(), ownerAvatar, addedReaction.isNegative(),
+                                    addedReaction.getEmoji()));
                 }
             }
         }

@@ -39,15 +39,16 @@ public class MentionPostingProcessor {
     @Transactional
     public void added(MentionPostingAddedNotification notification) {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar()},
+                new AvatarImage[] {notification.getOwnerAvatar()},
                 mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getOwnerAvatar() != null) {
+                        notification.getOwnerAvatar().setMediaFile(mediaFiles[0]);
                     }
                     universalContext.send(
                             new MentionInRemotePostingAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getSenderFullName(), notification.getSenderAvatar(),
-                                    notification.getPostingId(), notification.getHeading()));
+                                    notification.getOwnerName(), notification.getOwnerFullName(),
+                                    notification.getOwnerAvatar(), notification.getPostingId(),
+                                    notification.getHeading()));
                 });
         var task = new RemotePostingCommentsSubscribeTask(
                 notification.getSenderNodeName(), notification.getPostingId(), SubscriptionReason.MENTION);

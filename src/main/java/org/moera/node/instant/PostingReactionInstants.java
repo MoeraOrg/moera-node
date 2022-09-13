@@ -3,6 +3,7 @@ package org.moera.node.instant;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -17,6 +18,9 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.StorySummaryData;
+import org.moera.node.model.StorySummaryEntry;
+import org.moera.node.model.StorySummaryReaction;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -60,7 +64,7 @@ public class PostingReactionInstants extends InstantsCreator {
             substory.setRemoteOwnerAvatarMediaFile(ownerAvatar.getMediaFile());
             substory.setRemoteOwnerAvatarShape(ownerAvatar.getShape());
         }
-        substory.setSummary(buildSubstorySummary(ownerName, ownerFullName, emoji));
+        substory.setSummaryData(buildReactionSummary(emoji));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
@@ -68,8 +72,10 @@ public class PostingReactionInstants extends InstantsCreator {
         updated(story, isNewStory, true);
     }
 
-    private static String buildSubstorySummary(String ownerName, String ownerFullName, int emoji) {
-        return String.valueOf(Character.toChars(emoji)) + ' ' + formatNodeName(ownerName, ownerFullName);
+    private static StorySummaryData buildReactionSummary(int emoji) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setReaction(new StorySummaryReaction(null, null, emoji));
+        return summaryData;
     }
 
     public void deleted(UUID postingId, String ownerName, boolean negative) {
@@ -113,10 +119,11 @@ public class PostingReactionInstants extends InstantsCreator {
             return;
         }
 
-        story.setSummary(buildAddedSummary(story, stories));
+        story.setSummaryData(buildAddedSummary(story, stories));
+        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
+        story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
         story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
-        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
@@ -126,26 +133,23 @@ public class PostingReactionInstants extends InstantsCreator {
         storyAddedOrUpdated(story, isNew);
     }
 
-    private static String buildAddedSummary(Story story, List<Story> stories) {
-        StringBuilder buf = new StringBuilder();
-        buf.append(stories.get(0).getSummary());
-        if (stories.size() > 1) {
-            buf.append(stories.size() == 2 ? " and " : ", ");
-            buf.append(stories.get(1).getSummary());
+    private StorySummaryData buildAddedSummary(Story story, List<Story> stories) {
+        StorySummaryData summaryData = new StorySummaryData();
+        List<StorySummaryReaction> reactions = new ArrayList<>();
+        for (int i = 0; i < 2 && i < stories.size(); i++) {
+            Story substory = stories.get(i);
+            reactions.add(new StorySummaryReaction(substory.getRemoteOwnerName(), substory.getRemoteOwnerFullName(),
+                    substory.getSummaryData().getReaction().getEmoji()));
         }
-        if (stories.size() > 2) {
-            buf.append(" and ");
-            buf.append(stories.size() - 2);
-            buf.append(stories.size() == 3 ? " other" : " others");
-        }
-        buf.append(story.getStoryType() == StoryType.REACTION_ADDED_POSITIVE ? " supported" : " opposed");
-        buf.append(" your post \"");
-        buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));
-        buf.append('"');
-        return buf.toString();
+        summaryData.setReactions(reactions);
+        summaryData.setTotalReactions(stories.size());
+        summaryData.setComment(new StorySummaryEntry(null, null, story.getRemoteHeading()));
+        summaryData.setPosting(
+                new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(), null));
+        return summaryData;
     }
 
-    public void addingFailed(String postingId, PostingInfo postingInfo) {
+    public void addingFailed(String nodeName, String postingId, PostingInfo postingInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
@@ -153,23 +157,25 @@ public class PostingReactionInstants extends InstantsCreator {
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_REACTION_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
-        story.setRemoteNodeName(postingOwnerName);
-        story.setRemoteFullName(postingOwnerFullName);
+        story.setRemoteNodeName(nodeName);
+        story.setRemotePostingNodeName(postingOwnerName);
+        story.setRemotePostingFullName(postingOwnerFullName);
         if (postingOwnerAvatar != null) {
-            story.setRemoteOwnerAvatarMediaFile(postingOwnerAvatar.getMediaFile());
-            story.setRemoteOwnerAvatarShape(postingOwnerAvatar.getShape());
+            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
-        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
+        story.setSummaryData(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static String buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
-        return String.format("Failed to sign a reaction to %s post \"%s\"",
-                formatNodeName(nodeName, fullName), Util.he(postingHeading));
+    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, postingHeading));
+        return summaryData;
     }
 
 }

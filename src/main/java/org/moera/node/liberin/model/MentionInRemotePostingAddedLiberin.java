@@ -8,18 +8,20 @@ import org.moera.node.model.AvatarImage;
 public class MentionInRemotePostingAddedLiberin extends Liberin {
 
     private String nodeName;
-    private String fullName;
-    private AvatarImage avatar;
-    private String postingId;
-    private String postingHeading;
+    private String ownerName;
+    private String ownerFullName;
+    private AvatarImage ownerAvatar;
+    private String id;
+    private String heading;
 
-    public MentionInRemotePostingAddedLiberin(String nodeName, String fullName, AvatarImage avatar, String postingId,
-                                              String postingHeading) {
+    public MentionInRemotePostingAddedLiberin(String nodeName, String ownerName, String ownerFullName,
+                                              AvatarImage ownerAvatar, String id, String heading) {
         this.nodeName = nodeName;
-        this.fullName = fullName;
-        this.avatar = avatar;
-        this.postingId = postingId;
-        this.postingHeading = postingHeading;
+        this.ownerName = ownerName;
+        this.ownerFullName = ownerFullName;
+        this.ownerAvatar = ownerAvatar;
+        this.id = id;
+        this.heading = heading;
     }
 
     public String getNodeName() {
@@ -30,46 +32,55 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
         this.nodeName = nodeName;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getOwnerName() {
+        return ownerName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
-    public AvatarImage getAvatar() {
-        return avatar;
+    public String getOwnerFullName() {
+        return ownerFullName;
     }
 
-    public void setAvatar(AvatarImage avatar) {
-        this.avatar = avatar;
+    public void setOwnerFullName(String ownerFullName) {
+        this.ownerFullName = ownerFullName;
     }
 
-    public String getPostingId() {
-        return postingId;
+    public AvatarImage getOwnerAvatar() {
+        return ownerAvatar;
     }
 
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
+    public void setOwnerAvatar(AvatarImage ownerAvatar) {
+        this.ownerAvatar = ownerAvatar;
     }
 
-    public String getPostingHeading() {
-        return postingHeading;
+    public String getId() {
+        return id;
     }
 
-    public void setPostingHeading(String postingHeading) {
-        this.postingHeading = postingHeading;
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getHeading() {
+        return heading;
+    }
+
+    public void setHeading(String heading) {
+        this.heading = heading;
     }
 
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
-        model.put("fullName", fullName);
-        model.put("avatar", avatar);
-        model.put("postingId", postingId);
-        model.put("postingHeading", postingHeading);
+        model.put("ownerName", ownerName);
+        model.put("ownerFullName", ownerFullName);
+        model.put("ownerAvatar", ownerAvatar);
+        model.put("id", id);
+        model.put("heading", heading);
     }
 
 }

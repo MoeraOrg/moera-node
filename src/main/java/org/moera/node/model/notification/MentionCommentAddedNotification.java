@@ -11,6 +11,15 @@ import org.springframework.data.util.Pair;
 
 public class MentionCommentAddedNotification extends MentionCommentNotification {
 
+    @Size(max = 63)
+    private String postingOwnerName;
+
+    @Size(max = 96)
+    private String postingOwnerFullName;
+
+    @Valid
+    private AvatarImage postingOwnerAvatar;
+
     private String postingHeading;
 
     @Size(max = 63)
@@ -28,15 +37,43 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
         super(NotificationType.MENTION_COMMENT_ADDED);
     }
 
-    public MentionCommentAddedNotification(UUID postingId, UUID commentId, String postingHeading,
-                                           String commentOwnerName, String commentOwnerFullName,
+    public MentionCommentAddedNotification(String postingOwnerName, String postingOwnerFullName,
+                                           AvatarImage postingOwnerAvatar, UUID postingId, UUID commentId,
+                                           String postingHeading, String commentOwnerName, String commentOwnerFullName,
                                            AvatarImage commentOwnerAvatar, String commentHeading) {
         super(NotificationType.MENTION_COMMENT_ADDED, postingId, commentId);
+        this.postingOwnerName = postingOwnerName;
+        this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
         this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentHeading = commentHeading;
+    }
+
+    public String getPostingOwnerName() {
+        return postingOwnerName;
+    }
+
+    public void setPostingOwnerName(String postingOwnerName) {
+        this.postingOwnerName = postingOwnerName;
+    }
+
+    public String getPostingOwnerFullName() {
+        return postingOwnerFullName;
+    }
+
+    public void setPostingOwnerFullName(String postingOwnerFullName) {
+        this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public AvatarImage getPostingOwnerAvatar() {
+        return postingOwnerAvatar;
+    }
+
+    public void setPostingOwnerAvatar(AvatarImage postingOwnerAvatar) {
+        this.postingOwnerAvatar = postingOwnerAvatar;
     }
 
     public String getPostingHeading() {
@@ -82,6 +119,8 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
+        parameters.add(Pair.of("postingOwnerName", LogUtil.format(postingOwnerName)));
+        parameters.add(Pair.of("postingHeading", LogUtil.format(postingHeading)));
         parameters.add(Pair.of("commentOwnerName", LogUtil.format(commentOwnerName)));
         parameters.add(Pair.of("commentHeading", LogUtil.format(commentHeading)));
     }

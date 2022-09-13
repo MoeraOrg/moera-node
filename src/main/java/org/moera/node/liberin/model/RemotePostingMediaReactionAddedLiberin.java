@@ -8,34 +8,38 @@ import org.moera.node.model.AvatarImage;
 public class RemotePostingMediaReactionAddedLiberin extends Liberin {
 
     private String nodeName;
-    private String fullName;
-    private AvatarImage avatar;
+    private String parentPostingNodeName;
+    private String parentPostingFullName;
+    private AvatarImage parentPostingAvatar;
     private String postingId;
     private String parentPostingId;
     private String parentMediaId;
-    private String ownerName;
-    private String ownerFullName;
-    private AvatarImage ownerAvatar;
-    private String postingHeading;
-    private boolean negative;
-    private int emoji;
+    private String reactionNodeName;
+    private String reactionFullName;
+    private AvatarImage reactionAvatar;
+    private String parentPostingHeading;
+    private boolean reactionNegative;
+    private int reactionEmoji;
 
-    public RemotePostingMediaReactionAddedLiberin(String nodeName, String fullName, AvatarImage avatar,
+    public RemotePostingMediaReactionAddedLiberin(String nodeName, String parentPostingNodeName,
+                                                  String parentPostingFullName, AvatarImage parentPostingAvatar,
                                                   String postingId, String parentPostingId, String parentMediaId,
-                                                  String ownerName, String ownerFullName, AvatarImage ownerAvatar,
-                                                  String postingHeading, boolean negative, int emoji) {
+                                                  String reactionNodeName, String reactionFullName,
+                                                  AvatarImage reactionAvatar, String parentPostingHeading,
+                                                  boolean reactionNegative, int reactionEmoji) {
         this.nodeName = nodeName;
-        this.fullName = fullName;
-        this.avatar = avatar;
+        this.parentPostingNodeName = parentPostingNodeName;
+        this.parentPostingFullName = parentPostingFullName;
+        this.parentPostingAvatar = parentPostingAvatar;
         this.postingId = postingId;
         this.parentPostingId = parentPostingId;
         this.parentMediaId = parentMediaId;
-        this.ownerName = ownerName;
-        this.ownerFullName = ownerFullName;
-        this.ownerAvatar = ownerAvatar;
-        this.postingHeading = postingHeading;
-        this.negative = negative;
-        this.emoji = emoji;
+        this.reactionNodeName = reactionNodeName;
+        this.reactionFullName = reactionFullName;
+        this.reactionAvatar = reactionAvatar;
+        this.parentPostingHeading = parentPostingHeading;
+        this.reactionNegative = reactionNegative;
+        this.reactionEmoji = reactionEmoji;
     }
 
     public String getNodeName() {
@@ -46,20 +50,28 @@ public class RemotePostingMediaReactionAddedLiberin extends Liberin {
         this.nodeName = nodeName;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getParentPostingNodeName() {
+        return parentPostingNodeName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setParentPostingNodeName(String parentPostingNodeName) {
+        this.parentPostingNodeName = parentPostingNodeName;
     }
 
-    public AvatarImage getAvatar() {
-        return avatar;
+    public String getParentPostingFullName() {
+        return parentPostingFullName;
     }
 
-    public void setAvatar(AvatarImage avatar) {
-        this.avatar = avatar;
+    public void setParentPostingFullName(String parentPostingFullName) {
+        this.parentPostingFullName = parentPostingFullName;
+    }
+
+    public AvatarImage getParentPostingAvatar() {
+        return parentPostingAvatar;
+    }
+
+    public void setParentPostingAvatar(AvatarImage parentPostingAvatar) {
+        this.parentPostingAvatar = parentPostingAvatar;
     }
 
     public String getPostingId() {
@@ -86,69 +98,70 @@ public class RemotePostingMediaReactionAddedLiberin extends Liberin {
         this.parentMediaId = parentMediaId;
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getReactionNodeName() {
+        return reactionNodeName;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setReactionNodeName(String reactionNodeName) {
+        this.reactionNodeName = reactionNodeName;
     }
 
-    public String getOwnerFullName() {
-        return ownerFullName;
+    public String getReactionFullName() {
+        return reactionFullName;
     }
 
-    public void setOwnerFullName(String ownerFullName) {
-        this.ownerFullName = ownerFullName;
+    public void setReactionFullName(String reactionFullName) {
+        this.reactionFullName = reactionFullName;
     }
 
-    public AvatarImage getOwnerAvatar() {
-        return ownerAvatar;
+    public AvatarImage getReactionAvatar() {
+        return reactionAvatar;
     }
 
-    public void setOwnerAvatar(AvatarImage ownerAvatar) {
-        this.ownerAvatar = ownerAvatar;
+    public void setReactionAvatar(AvatarImage reactionAvatar) {
+        this.reactionAvatar = reactionAvatar;
     }
 
-    public String getPostingHeading() {
-        return postingHeading;
+    public String getParentPostingHeading() {
+        return parentPostingHeading;
     }
 
-    public void setPostingHeading(String postingHeading) {
-        this.postingHeading = postingHeading;
+    public void setParentPostingHeading(String parentPostingHeading) {
+        this.parentPostingHeading = parentPostingHeading;
     }
 
-    public boolean isNegative() {
-        return negative;
+    public boolean isReactionNegative() {
+        return reactionNegative;
     }
 
-    public void setNegative(boolean negative) {
-        this.negative = negative;
+    public void setReactionNegative(boolean reactionNegative) {
+        this.reactionNegative = reactionNegative;
     }
 
-    public int getEmoji() {
-        return emoji;
+    public int getReactionEmoji() {
+        return reactionEmoji;
     }
 
-    public void setEmoji(int emoji) {
-        this.emoji = emoji;
+    public void setReactionEmoji(int reactionEmoji) {
+        this.reactionEmoji = reactionEmoji;
     }
 
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
-        model.put("fullName", fullName);
-        model.put("avatar", avatar);
+        model.put("parentPostingNodeName", parentPostingNodeName);
+        model.put("parentPostingFullName", parentPostingFullName);
+        model.put("parentPostingAvatar", parentPostingAvatar);
         model.put("postingId", postingId);
         model.put("parentPostingId", parentPostingId);
         model.put("parentMediaId", parentMediaId);
-        model.put("ownerName", ownerName);
-        model.put("ownerFullName", ownerFullName);
-        model.put("ownerAvatar", ownerAvatar);
-        model.put("postingHeading", postingHeading);
-        model.put("negative", negative);
-        model.put("emoji", emoji);
+        model.put("reactionNodeName", reactionNodeName);
+        model.put("reactionFullName", reactionFullName);
+        model.put("reactionAvatar", reactionAvatar);
+        model.put("parentPostingHeading", parentPostingHeading);
+        model.put("reactionNegative", reactionNegative);
+        model.put("reactionEmoji", reactionEmoji);
     }
 
 }

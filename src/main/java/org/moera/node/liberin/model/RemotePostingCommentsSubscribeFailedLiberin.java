@@ -7,12 +7,22 @@ import org.moera.node.model.PostingInfo;
 
 public class RemotePostingCommentsSubscribeFailedLiberin extends Liberin {
 
+    private String nodeName;
     private String postingId;
     private PostingInfo postingInfo;
 
-    public RemotePostingCommentsSubscribeFailedLiberin(String postingId, PostingInfo postingInfo) {
+    public RemotePostingCommentsSubscribeFailedLiberin(String nodeName, String postingId, PostingInfo postingInfo) {
+        this.nodeName = nodeName;
         this.postingId = postingId;
         this.postingInfo = postingInfo;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
     public String getPostingId() {
@@ -34,6 +44,7 @@ public class RemotePostingCommentsSubscribeFailedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
+        model.put("nodeName", nodeName);
         model.put("postingId", postingId);
         model.put("posting", postingInfo);
     }

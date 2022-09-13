@@ -9,6 +9,8 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.model.StorySummaryData;
+import org.moera.node.model.StorySummaryNode;
 import org.moera.node.operations.StoryOperations;
 import org.springframework.stereotype.Component;
 
@@ -38,16 +40,17 @@ public class SubscriberInstants extends InstantsCreator {
         story.setRemoteFullName(subscriber.getRemoteFullName());
         story.setRemoteAvatarMediaFile(subscriber.getRemoteAvatarMediaFile());
         story.setRemoteAvatarShape(subscriber.getRemoteAvatarShape());
-        story.setSummary(buildAddedSummary(subscriber));
+        story.setSummaryData(buildSummary(subscriber));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
     }
 
-    private static String buildAddedSummary(Subscriber subscriber) {
-        return String.format("%s subscribed to your %s",
-                formatNodeName(subscriber.getRemoteNodeName(), subscriber.getRemoteFullName()),
-                Feed.getStandard(subscriber.getFeedName()).getTitle());
+    private static StorySummaryData buildSummary(Subscriber subscriber) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setNode(new StorySummaryNode(subscriber.getRemoteNodeName(), subscriber.getRemoteFullName()));
+        summaryData.setFeedName(subscriber.getFeedName());
+        return summaryData;
     }
 
     public void deleted(Subscriber subscriber) {
@@ -67,16 +70,10 @@ public class SubscriberInstants extends InstantsCreator {
         story.setRemoteFullName(subscriber.getRemoteFullName());
         story.setRemoteAvatarMediaFile(subscriber.getRemoteAvatarMediaFile());
         story.setRemoteAvatarShape(subscriber.getRemoteAvatarShape());
-        story.setSummary(buildDeletedSummary(subscriber));
+        story.setSummaryData(buildSummary(subscriber));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
-    }
-
-    private static String buildDeletedSummary(Subscriber subscriber) {
-        return String.format("%s unsubscribed from your %s",
-                formatNodeName(subscriber.getRemoteNodeName(), subscriber.getRemoteFullName()),
-                Feed.getStandard(subscriber.getFeedName()).getTitle());
     }
 
     private Story findAddedStory(String remoteNodeName) {

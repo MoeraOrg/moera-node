@@ -4,6 +4,7 @@ import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
+import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
@@ -45,10 +46,14 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
         }
 
         if (addedReaction != null && addedReaction.getSignature() != null) {
+            Posting posting = comment.getPosting();
+            AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
+                    posting.getOwnerAvatarShape());
             send(Directions.single(liberin.getNodeId(), comment.getOwnerName(),
                             visibilityFilter(comment, addedReaction)),
-                    new CommentReactionAddedNotification(comment.getPosting().getId(), comment.getId(),
-                            comment.getPosting().getCurrentRevision().getHeading(),
+                    new CommentReactionAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
+                            postingOwnerAvatar, posting.getId(), comment.getId(),
+                            posting.getCurrentRevision().getHeading(),
                             comment.getCurrentRevision().getHeading(), addedReaction.getOwnerName(),
                             addedReaction.getOwnerFullName(),
                             new AvatarImage(

@@ -8,27 +8,30 @@ import org.moera.node.model.AvatarImage;
 public class MentionInRemoteCommentAddedLiberin extends Liberin {
 
     private String nodeName;
-    private String fullName;
-    private AvatarImage avatar;
+    private String postingOwnerName;
+    private String postingOwnerFullName;
+    private AvatarImage postingOwnerAvatar;
     private String postingId;
     private String postingHeading;
-    private String ownerName;
-    private String ownerFullName;
-    private AvatarImage ownerAvatar;
+    private String commentOwnerName;
+    private String commentOwnerFullName;
+    private AvatarImage commentOwnerAvatar;
     private String commentId;
     private String commentHeading;
 
-    public MentionInRemoteCommentAddedLiberin(String nodeName, String fullName, AvatarImage avatar, String postingId,
-                                              String postingHeading, String ownerName, String ownerFullName,
-                                              AvatarImage ownerAvatar, String commentId, String commentHeading) {
+    public MentionInRemoteCommentAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
+                                              AvatarImage postingOwnerAvatar, String postingId, String postingHeading,
+                                              String commentOwnerName, String commentOwnerFullName,
+                                              AvatarImage commentOwnerAvatar, String commentId, String commentHeading) {
         this.nodeName = nodeName;
-        this.fullName = fullName;
-        this.avatar = avatar;
+        this.postingOwnerName = postingOwnerName;
+        this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingId = postingId;
         this.postingHeading = postingHeading;
-        this.ownerName = ownerName;
-        this.ownerFullName = ownerFullName;
-        this.ownerAvatar = ownerAvatar;
+        this.commentOwnerName = commentOwnerName;
+        this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentId = commentId;
         this.commentHeading = commentHeading;
     }
@@ -41,20 +44,28 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
         this.nodeName = nodeName;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getPostingOwnerName() {
+        return postingOwnerName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setPostingOwnerName(String postingOwnerName) {
+        this.postingOwnerName = postingOwnerName;
     }
 
-    public AvatarImage getAvatar() {
-        return avatar;
+    public String getPostingOwnerFullName() {
+        return postingOwnerFullName;
     }
 
-    public void setAvatar(AvatarImage avatar) {
-        this.avatar = avatar;
+    public void setPostingOwnerFullName(String postingOwnerFullName) {
+        this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public AvatarImage getPostingOwnerAvatar() {
+        return postingOwnerAvatar;
+    }
+
+    public void setPostingOwnerAvatar(AvatarImage postingOwnerAvatar) {
+        this.postingOwnerAvatar = postingOwnerAvatar;
     }
 
     public String getPostingId() {
@@ -73,28 +84,28 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
         this.postingHeading = postingHeading;
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getCommentOwnerName() {
+        return commentOwnerName;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setCommentOwnerName(String commentOwnerName) {
+        this.commentOwnerName = commentOwnerName;
     }
 
-    public String getOwnerFullName() {
-        return ownerFullName;
+    public String getCommentOwnerFullName() {
+        return commentOwnerFullName;
     }
 
-    public void setOwnerFullName(String ownerFullName) {
-        this.ownerFullName = ownerFullName;
+    public void setCommentOwnerFullName(String commentOwnerFullName) {
+        this.commentOwnerFullName = commentOwnerFullName;
     }
 
-    public AvatarImage getOwnerAvatar() {
-        return ownerAvatar;
+    public AvatarImage getCommentOwnerAvatar() {
+        return commentOwnerAvatar;
     }
 
-    public void setOwnerAvatar(AvatarImage ownerAvatar) {
-        this.ownerAvatar = ownerAvatar;
+    public void setCommentOwnerAvatar(AvatarImage commentOwnerAvatar) {
+        this.commentOwnerAvatar = commentOwnerAvatar;
     }
 
     public String getCommentId() {
@@ -117,13 +128,14 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
-        model.put("fullName", fullName);
-        model.put("avatar", avatar);
+        model.put("postingOwnerName", postingOwnerName);
+        model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingId", postingId);
         model.put("postingHeading", postingHeading);
-        model.put("ownerName", ownerName);
-        model.put("ownerFullName", ownerFullName);
-        model.put("ownerAvatar", ownerAvatar);
+        model.put("commentOwnerName", commentOwnerName);
+        model.put("commentOwnerFullName", commentOwnerFullName);
+        model.put("commentOwnerAvatar", commentOwnerAvatar);
         model.put("commentId", commentId);
         model.put("commentHeading", commentHeading);
     }

@@ -10,7 +10,6 @@ import org.springframework.data.util.Pair;
 public abstract class CommentReactionNotification extends ReactionNotification {
 
     private String postingId;
-
     private String commentId;
 
     protected CommentReactionNotification(NotificationType type) {

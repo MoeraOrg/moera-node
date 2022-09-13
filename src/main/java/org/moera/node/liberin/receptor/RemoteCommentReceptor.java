@@ -37,7 +37,8 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void addingFailed(RemoteCommentAddingFailedLiberin liberin) {
-        commentInstants.addingFailed(liberin.getPostingId(), liberin.getPostingInfo());
+        commentInstants.addingFailed(liberin.getRemoteNodeName(), liberin.getRemotePostingId(),
+                liberin.getPostingInfo());
     }
 
     @LiberinMapping
@@ -48,8 +49,8 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void updateFailed(RemoteCommentUpdateFailedLiberin liberin) {
-        commentInstants.updateFailed(liberin.getPostingId(), liberin.getPostingInfo(), liberin.getCommentId(),
-                liberin.getPrevCommentInfo());
+        commentInstants.updateFailed(liberin.getRemoteNodeName(), liberin.getRemotePostingId(),
+                liberin.getPostingInfo(), liberin.getRemoteCommentId(), liberin.getPrevCommentInfo());
     }
 
     @LiberinMapping
@@ -64,9 +65,10 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void mentionAdded(MentionInRemoteCommentAddedLiberin liberin) {
-        mentionCommentInstants.added(liberin.getNodeName(), liberin.getFullName(), liberin.getAvatar(),
-                liberin.getPostingId(), liberin.getPostingHeading(), liberin.getOwnerName(), liberin.getOwnerFullName(),
-                liberin.getOwnerAvatar(), liberin.getCommentId(), liberin.getCommentHeading());
+        mentionCommentInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerAvatar(), liberin.getPostingId(),
+                liberin.getPostingHeading(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
+                liberin.getCommentOwnerAvatar(), liberin.getCommentId(), liberin.getCommentHeading());
     }
 
     @LiberinMapping

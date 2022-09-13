@@ -9,6 +9,9 @@ import org.springframework.data.util.Pair;
 
 public class PostingReactionAddedNotification extends PostingReactionNotification {
 
+    private String parentPostingNodeName;
+    private String parentPostingFullName;
+    private AvatarImage parentPostingAvatar;
     private String parentHeading;
     private String postingHeading;
     private int emoji;
@@ -17,15 +20,43 @@ public class PostingReactionAddedNotification extends PostingReactionNotificatio
         super(NotificationType.POSTING_REACTION_ADDED);
     }
 
-    public PostingReactionAddedNotification(UUID parentPostingId, UUID parentCommentId, UUID parentMediaId,
-                                            String parentHeading, UUID postingId, String postingHeading,
-                                            String ownerName, String ownerFullName, AvatarImage ownerAvatar,
-                                            boolean negative, int emoji) {
+    public PostingReactionAddedNotification(String parentPostingNodeName, String parentPostingFullName,
+                                            AvatarImage parentPostingAvatar, UUID parentPostingId, UUID parentCommentId,
+                                            UUID parentMediaId, String parentHeading, UUID postingId,
+                                            String postingHeading, String ownerName, String ownerFullName,
+                                            AvatarImage ownerAvatar, boolean negative, int emoji) {
         super(NotificationType.POSTING_REACTION_ADDED, parentPostingId, parentCommentId, parentMediaId, postingId,
               ownerName, ownerFullName, ownerAvatar, negative);
+        this.parentPostingNodeName = parentPostingNodeName;
+        this.parentPostingFullName = parentPostingFullName;
+        this.parentPostingAvatar = parentPostingAvatar;
         this.parentHeading = parentHeading;
         this.postingHeading = postingHeading;
         this.emoji = emoji;
+    }
+
+    public String getParentPostingNodeName() {
+        return parentPostingNodeName;
+    }
+
+    public void setParentPostingNodeName(String parentPostingNodeName) {
+        this.parentPostingNodeName = parentPostingNodeName;
+    }
+
+    public String getParentPostingFullName() {
+        return parentPostingFullName;
+    }
+
+    public void setParentPostingFullName(String parentPostingFullName) {
+        this.parentPostingFullName = parentPostingFullName;
+    }
+
+    public AvatarImage getParentPostingAvatar() {
+        return parentPostingAvatar;
+    }
+
+    public void setParentPostingAvatar(AvatarImage parentPostingAvatar) {
+        this.parentPostingAvatar = parentPostingAvatar;
     }
 
     public String getParentHeading() {
@@ -55,6 +86,8 @@ public class PostingReactionAddedNotification extends PostingReactionNotificatio
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
+        parameters.add(Pair.of("parentPostingNodeName", LogUtil.format(parentPostingNodeName)));
+        parameters.add(Pair.of("parentPostingFullName", LogUtil.format(parentPostingFullName)));
         parameters.add(Pair.of("emoji", LogUtil.format(emoji)));
     }
 

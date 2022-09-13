@@ -218,9 +218,10 @@ public class RemoteCommentPostTask extends Task {
         }
 
         if (prevCommentInfo == null) {
-            send(new RemoteCommentAddingFailedLiberin(postingId, postingInfo));
+            send(new RemoteCommentAddingFailedLiberin(targetNodeName, postingId, postingInfo));
         } else {
-            send(new RemoteCommentUpdateFailedLiberin(postingId, postingInfo, commentId, prevCommentInfo));
+            send(new RemoteCommentUpdateFailedLiberin(targetNodeName, postingId, postingInfo, commentId,
+                    prevCommentInfo));
         }
     }
 

@@ -11,11 +11,8 @@ import org.springframework.data.util.Pair;
 public abstract class PostingReactionNotification extends ReactionNotification {
 
     private String parentPostingId;
-
     private String parentCommentId;
-
     private String parentMediaId;
-
     private String postingId;
 
     protected PostingReactionNotification(NotificationType type) {

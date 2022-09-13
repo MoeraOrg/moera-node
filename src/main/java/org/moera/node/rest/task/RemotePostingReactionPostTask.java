@@ -135,7 +135,7 @@ public class RemotePostingReactionPostTask extends Task {
         }
 
         if (postingInfo.getParentMediaId() == null) {
-            send(new RemotePostingReactionAddingFailedLiberin(postingId, postingInfo));
+            send(new RemotePostingReactionAddingFailedLiberin(targetNodeName, postingId, postingInfo));
         } else {
             PostingInfo parentPosting = null;
             CommentInfo parentComment = null;
@@ -173,11 +173,11 @@ public class RemotePostingReactionPostTask extends Task {
 
             if (parentComment == null) {
                 String parentPostingId = parentPosting != null ? parentPosting.getId() : null;
-                send(new RemotePostingMediaReactionAddingFailedLiberin(postingId, parentPostingId,
+                send(new RemotePostingMediaReactionAddingFailedLiberin(targetNodeName, postingId, parentPostingId,
                         postingInfo.getParentMediaId(), parentPosting));
             } else {
-                send(new RemoteCommentMediaReactionAddingFailedLiberin(postingId, postingInfo.getParentMediaId(),
-                        parentPosting, parentComment));
+                send(new RemoteCommentMediaReactionAddingFailedLiberin(targetNodeName, postingId,
+                        postingInfo.getParentMediaId(), parentPosting, parentComment));
             }
         }
     }

@@ -27,21 +27,21 @@ public class MentionCommentProcessor {
     @Transactional
     public void added(MentionCommentAddedNotification notification) {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
+                new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
                 mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getPostingOwnerAvatar() != null) {
+                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
                     }
                     if (notification.getCommentOwnerAvatar() != null) {
                         notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
                     }
                     universalContext.send(
                             new MentionInRemoteCommentAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getSenderFullName(), notification.getSenderAvatar(),
-                                    notification.getPostingId(), notification.getPostingHeading(),
-                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
-                                    notification.getCommentOwnerAvatar(), notification.getCommentId(),
-                                    notification.getCommentHeading()));
+                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                    notification.getPostingOwnerAvatar(), notification.getPostingId(),
+                                    notification.getPostingHeading(), notification.getCommentOwnerName(),
+                                    notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                                    notification.getCommentId(), notification.getCommentHeading()));
                 });
     }
 

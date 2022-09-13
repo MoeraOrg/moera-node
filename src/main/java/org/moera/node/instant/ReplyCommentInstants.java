@@ -3,9 +3,9 @@ package org.moera.node.instant;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -15,6 +15,8 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.StorySummaryData;
+import org.moera.node.model.StorySummaryEntry;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -30,9 +32,10 @@ public class ReplyCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String fullName, AvatarImage avatar, String postingId, String commentId,
-                      String repliedToId, String commentOwnerName, String commentOwnerFullName,
-                      AvatarImage commentOwnerAvatar, String postingHeading, String repliedToHeading) {
+    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName,
+                      AvatarImage postingOwnerAvatar, String postingHeading, String postingId, String commentOwnerName,
+                      String commentOwnerFullName, AvatarImage commentOwnerAvatar, String commentId,
+                      String repliedToHeading, String repliedToId) {
         if (commentOwnerName.equals(nodeName())) {
             return;
         }
@@ -51,10 +54,11 @@ public class ReplyCommentInstants extends InstantsCreator {
             story = new Story(UUID.randomUUID(), nodeId(), StoryType.REPLY_COMMENT);
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
-            story.setRemoteFullName(fullName);
-            if (avatar != null) {
-                story.setRemoteAvatarMediaFile(avatar.getMediaFile());
-                story.setRemoteAvatarShape(avatar.getShape());
+            story.setRemotePostingNodeName(postingOwnerName);
+            story.setRemotePostingFullName(postingOwnerFullName);
+            if (postingOwnerAvatar != null) {
+                story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+                story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
             story.setRemotePostingId(postingId);
             story.setRemoteHeading(postingHeading);
@@ -66,16 +70,11 @@ public class ReplyCommentInstants extends InstantsCreator {
 
         Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.REPLY_COMMENT);
         substory.setRemoteNodeName(nodeName);
-        substory.setRemoteFullName(fullName);
-        if (avatar != null) {
-            substory.setRemoteAvatarMediaFile(avatar.getMediaFile());
-            substory.setRemoteAvatarShape(avatar.getShape());
-        }
         substory.setRemotePostingId(postingId);
         substory.setRemoteCommentId(commentId);
         substory.setRemoteOwnerName(commentOwnerName);
         substory.setRemoteOwnerFullName(commentOwnerFullName);
-        if (avatar != null) {
+        if (commentOwnerAvatar != null) {
             substory.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
             substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
@@ -113,7 +112,7 @@ public class ReplyCommentInstants extends InstantsCreator {
             return;
         }
 
-        story.setSummary(buildAddedSummary(story, stories));
+        story.setSummaryData(buildAddedSummary(story, stories));
         story.setRemoteCommentId(stories.get(0).getRemoteCommentId());
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
@@ -128,39 +127,32 @@ public class ReplyCommentInstants extends InstantsCreator {
         storyAddedOrUpdated(story, isNew);
     }
 
-    private String buildAddedSummary(Story story, List<Story> stories) {
-        StringBuilder buf = new StringBuilder();
+    private StorySummaryData buildAddedSummary(Story story, List<Story> stories) {
+        StorySummaryData summaryData = new StorySummaryData();
+        List<StorySummaryEntry> comments = new ArrayList<>();
         Story firstStory = stories.get(0);
-        buf.append(formatNodeName(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName()));
+        comments.add(new StorySummaryEntry(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(), null));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
-                buf.append(names.size() == 2 ? " and " : ", ");
                 Story secondStory = stories.stream()
                         .filter(t -> !t.getRemoteOwnerName().equals(firstStory.getRemoteOwnerName()))
                         .findFirst()
                         .orElse(null);
                 if (secondStory != null) {
-                    buf.append(formatNodeName(secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName()));
+                    comments.add(new StorySummaryEntry(secondStory.getRemoteOwnerName(),
+                            secondStory.getRemoteOwnerFullName(), null));
                 }
             }
-            if (names.size() > 2) {
-                buf.append(" and ");
-                buf.append(names.size() - 2);
-                buf.append(names.size() == 3 ? " other" : " others");
-            }
-        }
-        buf.append(" replied to your comment \"");
-        buf.append(story.getRemoteRepliedToHeading());
-        buf.append("\" on ");
-        if (Objects.equals(story.getRemoteNodeName(), nodeName())) {
-            buf.append("your");
+            summaryData.setTotalComments(names.size());
         } else {
-            buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstStory.getRemoteOwnerName())
-                    ? "their" : formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()));
+            summaryData.setTotalComments(1);
         }
-        buf.append(" post");
-        return buf.toString();
+        summaryData.setComments(comments);
+        summaryData.setRepliedTo(new StorySummaryEntry(null, null, story.getRemoteRepliedToHeading()));
+        summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
+                story.getRemoteHeading()));
+        return summaryData;
     }
 
 }

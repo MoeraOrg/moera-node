@@ -97,11 +97,15 @@ public class CommentReceptor extends LiberinReceptorBase {
     private void notifySubscribersCommentAdded(Posting posting, Comment comment) {
         if (comment.getCurrentRevision().getSignature() != null) {
             UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
+            AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
+                    posting.getOwnerAvatarShape());
+            AvatarImage commentOwnerAvatar = new AvatarImage(comment.getOwnerAvatarMediaFile(),
+                    comment.getOwnerAvatarShape());
             send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(),
                             visibilityFilter(posting, comment)),
-                    new PostingCommentAddedNotification(posting.getId(), posting.getCurrentRevision().getHeading(),
-                            comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                            new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
+                    new PostingCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
+                            postingOwnerAvatar, posting.getId(), posting.getCurrentRevision().getHeading(),
+                            comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(), commentOwnerAvatar,
                             comment.getCurrentRevision().getHeading(), repliedToId));
             commentInstants.added(comment);
         }
@@ -112,11 +116,15 @@ public class CommentReceptor extends LiberinReceptorBase {
                 || comment.getRevisions().size() > 1) {
             return;
         }
+        AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
+                posting.getOwnerAvatarShape());
+        AvatarImage commentOwnerAvatar = new AvatarImage(comment.getOwnerAvatarMediaFile(),
+                comment.getOwnerAvatarShape());
         send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
-                new ReplyCommentAddedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
+                new ReplyCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
+                        postingOwnerAvatar, posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
                         posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
-                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape()),
-                        comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
+                        commentOwnerAvatar, comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
     }
 
     private void notifyReplyDeleted(Posting posting, Comment comment) {
@@ -133,6 +141,8 @@ public class CommentReceptor extends LiberinReceptorBase {
                                  EntryRevision latest, Principal latestView) {
         // TODO it is better to do this only for signed revisions. But it this case 'latest' should be the latest
         // signed revision
+        AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
+                posting.getOwnerAvatarShape());
         String ownerName = comment.getOwnerName();
         String ownerFullName = comment.getOwnerFullName();
         AvatarImage ownerAvatar = new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape());
@@ -147,7 +157,8 @@ public class CommentReceptor extends LiberinReceptorBase {
                 .filter(m -> !latestMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))
                 .forEach(d -> send(d,
-                        new MentionCommentAddedNotification(posting.getId(), comment.getId(),
+                        new MentionCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
+                                postingOwnerAvatar, posting.getId(), comment.getId(),
                                 posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, ownerAvatar,
                                 currentHeading)));
         latestMentions.stream()

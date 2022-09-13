@@ -8,25 +8,35 @@ import org.moera.node.model.PostingInfo;
 
 public class RemoteCommentMediaReactionAddingFailedLiberin extends Liberin {
 
-    private String postingId;
+    private String nodeName;
+    private String mediaPostingId;
     private String parentMediaId;
     private PostingInfo parentPostingInfo;
     private CommentInfo parentCommentInfo;
 
-    public RemoteCommentMediaReactionAddingFailedLiberin(String postingId, String parentMediaId,
+    public RemoteCommentMediaReactionAddingFailedLiberin(String nodeName, String mediaPostingId, String parentMediaId,
                                                          PostingInfo parentPostingInfo, CommentInfo parentCommentInfo) {
-        this.postingId = postingId;
+        this.nodeName = nodeName;
+        this.mediaPostingId = mediaPostingId;
         this.parentMediaId = parentMediaId;
         this.parentPostingInfo = parentPostingInfo;
         this.parentCommentInfo = parentCommentInfo;
     }
 
-    public String getPostingId() {
-        return postingId;
+    public String getNodeName() {
+        return nodeName;
     }
 
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
+    }
+
+    public String getMediaPostingId() {
+        return mediaPostingId;
+    }
+
+    public void setMediaPostingId(String mediaPostingId) {
+        this.mediaPostingId = mediaPostingId;
     }
 
     public String getParentMediaId() {
@@ -56,7 +66,8 @@ public class RemoteCommentMediaReactionAddingFailedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("postingId", postingId);
+        model.put("nodeName", nodeName);
+        model.put("mediaPostingId", mediaPostingId);
         model.put("parentMediaId", parentMediaId);
         model.put("parentPosting", parentPostingInfo);
         model.put("parentComment", parentCommentInfo);

@@ -7,20 +7,30 @@ import org.moera.node.model.PostingInfo;
 
 public class RemoteCommentAddingFailedLiberin extends Liberin {
 
-    private String postingId;
+    private String remoteNodeName;
+    private String remotePostingId;
     private PostingInfo postingInfo;
 
-    public RemoteCommentAddingFailedLiberin(String postingId, PostingInfo postingInfo) {
-        this.postingId = postingId;
+    public RemoteCommentAddingFailedLiberin(String remoteNodeName, String remotePostingId, PostingInfo postingInfo) {
+        this.remoteNodeName = remoteNodeName;
+        this.remotePostingId = remotePostingId;
         this.postingInfo = postingInfo;
     }
 
-    public String getPostingId() {
-        return postingId;
+    public String getRemoteNodeName() {
+        return remoteNodeName;
     }
 
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemotePostingId() {
+        return remotePostingId;
+    }
+
+    public void setRemotePostingId(String remotePostingId) {
+        this.remotePostingId = remotePostingId;
     }
 
     public PostingInfo getPostingInfo() {
@@ -34,7 +44,8 @@ public class RemoteCommentAddingFailedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("postingId", postingId);
+        model.put("remoteNodeName", remoteNodeName);
+        model.put("remotePostingId", remotePostingId);
         model.put("posting", postingInfo);
     }
 

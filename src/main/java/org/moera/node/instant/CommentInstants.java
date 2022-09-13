@@ -3,6 +3,7 @@ package org.moera.node.instant;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,8 @@ import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.StorySummaryData;
+import org.moera.node.model.StorySummaryEntry;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -93,11 +96,12 @@ public class CommentInstants extends InstantsCreator {
             return;
         }
 
-        story.setSummary(buildAddedSummary(story, stories));
+        story.setSummaryData(buildAddedSummary(story, stories));
         story.setRemoteCommentId(stories.get(0).getEntry().getId().toString());
+        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
+        story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
         story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
-        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
@@ -107,35 +111,31 @@ public class CommentInstants extends InstantsCreator {
         storyAddedOrUpdated(story, isNew);
     }
 
-    private static String buildAddedSummary(Story story, List<Story> stories) {
-        StringBuilder buf = new StringBuilder();
+    private static StorySummaryData buildAddedSummary(Story story, List<Story> stories) {
+        StorySummaryData summaryData = new StorySummaryData();
+        List<StorySummaryEntry> comments = new ArrayList<>();
+        summaryData.setComments(comments);
         Story firstStory = stories.get(0);
-        buf.append(formatNodeName(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName()));
+        comments.add(new StorySummaryEntry(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(), null));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
-            if (names.size() > 1) {
-                buf.append(names.size() == 2 ? " and " : ", ");
-                Story secondStory = stories.stream()
-                        .filter(t -> !t.getRemoteOwnerName().equals(firstStory.getRemoteOwnerName()))
-                        .findFirst()
-                        .orElse(null);
-                if (secondStory != null) {
-                    buf.append(formatNodeName(secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName()));
-                }
+            Story secondStory = stories.stream()
+                    .filter(t -> !t.getRemoteOwnerName().equals(firstStory.getRemoteOwnerName()))
+                    .findFirst()
+                    .orElse(null);
+            if (secondStory != null) {
+                comments.add(new StorySummaryEntry(
+                        secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(), null));
             }
-            if (names.size() > 2) {
-                buf.append(" and ");
-                buf.append(names.size() - 2);
-                buf.append(names.size() == 3 ? " other" : " others");
-            }
+            summaryData.setTotalComments(names.size());
+        } else {
+            summaryData.setTotalComments(1);
         }
-        buf.append(" commented on your post \"");
-        buf.append(Util.he(story.getEntry().getCurrentRevision().getHeading()));
-        buf.append('"');
-        return buf.toString();
+        summaryData.setPosting(new StorySummaryEntry(null, null, story.getEntry().getCurrentRevision().getHeading()));
+        return summaryData;
     }
 
-    public void addingFailed(String postingId, PostingInfo postingInfo) {
+    public void addingFailed(String remoteNodeName, String remotePostingId, PostingInfo postingInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
@@ -143,21 +143,23 @@ public class CommentInstants extends InstantsCreator {
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_POST_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
-        story.setRemoteNodeName(postingOwnerName);
-        story.setRemoteFullName(postingOwnerFullName);
+        story.setRemoteNodeName(remoteNodeName);
+        story.setRemotePostingNodeName(postingOwnerName);
+        story.setRemotePostingFullName(postingOwnerFullName);
         if (postingOwnerAvatar != null) {
-            story.setRemoteOwnerAvatarMediaFile(postingOwnerAvatar.getMediaFile());
-            story.setRemoteOwnerAvatarShape(postingOwnerAvatar.getShape());
+            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
-        story.setRemotePostingId(postingId);
-        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
+        story.setRemotePostingId(remotePostingId);
+        story.setSummaryData(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    public void updateFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
+    public void updateFailed(String remoteNodeName, String remotePostingId, PostingInfo postingInfo,
+                             String remoteCommentId, CommentInfo commentInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
@@ -166,15 +168,16 @@ public class CommentInstants extends InstantsCreator {
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_UPDATE_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
-        story.setRemoteNodeName(postingOwnerName);
-        story.setRemoteFullName(postingOwnerFullName);
+        story.setRemoteNodeName(remoteNodeName);
+        story.setRemotePostingNodeName(postingOwnerName);
+        story.setRemotePostingFullName(postingOwnerFullName);
         if (postingOwnerAvatar != null) {
-            story.setRemoteOwnerAvatarMediaFile(postingOwnerAvatar.getMediaFile());
-            story.setRemoteOwnerAvatarShape(postingOwnerAvatar.getShape());
+            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
-        story.setRemotePostingId(postingId);
-        story.setRemoteCommentId(commentId);
-        story.setSummary(
+        story.setRemotePostingId(remotePostingId);
+        story.setRemoteCommentId(remoteCommentId);
+        story.setSummaryData(
                 buildUpdateFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading, commentHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
@@ -182,15 +185,18 @@ public class CommentInstants extends InstantsCreator {
         storyAdded(story);
     }
 
-    private static String buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
-        return String.format("Failed to add a comment to %s post \"%s\"",
-                formatNodeName(nodeName, fullName), Util.he(postingHeading));
+    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, postingHeading));
+        return summaryData;
     }
 
-    private static String buildUpdateFailedSummary(String nodeName, String fullName, String postingHeading,
-                                                   String commentHeading) {
-        return String.format("Failed to sign the comment \"%s\" to %s post \"%s\"",
-                Util.he(commentHeading), formatNodeName(nodeName, fullName), Util.he(postingHeading));
+    private static StorySummaryData buildUpdateFailedSummary(String nodeName, String fullName, String postingHeading,
+                                                             String commentHeading) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, postingHeading));
+        summaryData.setComment(new StorySummaryEntry(null, null, commentHeading));
+        return summaryData;
     }
 
 }

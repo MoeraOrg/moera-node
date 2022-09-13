@@ -27,21 +27,22 @@ public class ReplyCommentProcessor {
     @Transactional
     public void added(ReplyCommentAddedNotification notification) {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
+                new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
                 mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getPostingOwnerAvatar() != null) {
+                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
                     }
                     if (notification.getCommentOwnerAvatar() != null) {
                         notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
                     }
                     universalContext.send(
                             new ReplyCommentAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getSenderFullName(), notification.getSenderAvatar(),
-                                    notification.getPostingId(), notification.getPostingHeading(),
-                                    notification.getCommentId(), notification.getRepliedToId(),
-                                    notification.getRepliedToHeading(), notification.getCommentOwnerName(),
-                                    notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar()));
+                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                    notification.getPostingOwnerAvatar(), notification.getPostingHeading(),
+                                    notification.getPostingId(), notification.getRepliedToHeading(),
+                                    notification.getRepliedToId(), notification.getCommentOwnerName(),
+                                    notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                                    notification.getCommentId()));
                 });
     }
 

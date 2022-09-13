@@ -26,6 +26,7 @@ public class StoryInfo {
     private String summaryFullName;
     private AvatarImage summaryAvatar;
     private String summary;
+    private StorySummaryData summaryData;
     private String trackingId;
     private PostingInfo posting;
     private CommentInfo comment;
@@ -52,7 +53,11 @@ public class StoryInfo {
             read = story.isRead();
             trackingId = story.getTrackingId().toString();
         }
-        summary = story.getSummary();
+        if (story.getSummary().startsWith("{")) {
+            summaryData = story.getSummaryData();
+        } else {
+            summary = story.getSummary();
+        }
         operations = new HashMap<>();
         operations.put("edit", Principal.ADMIN);
         operations.put("delete", Principal.ADMIN);
@@ -68,19 +73,34 @@ public class StoryInfo {
 
             case REACTION_ADDED_POSITIVE:
             case REACTION_ADDED_NEGATIVE:
-                info.setRemoteNodeName(story.getRemoteOwnerName());
-                info.setRemoteFullName(story.getRemoteOwnerFullName());
                 info.setPosting(new PostingInfo(story.getEntry().getId()));
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemoteOwnerAvatarMediaFile(),
+                                    story.getRemoteOwnerAvatarShape()));
                 }
                 break;
 
             case MENTION_POSTING:
+            case POSTING_SUBSCRIBE_TASK_FAILED:
             case POSTING_UPDATED:
+            case POSTING_REACTION_TASK_FAILED:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemoteFullName(story.getRemoteFullName());
+                info.setSummaryNodeName(story.getRemotePostingNodeName());
+                info.setSummaryFullName(story.getRemotePostingFullName());
+                if (story.getRemotePostingAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(
+                                    story.getRemotePostingAvatarMediaFile(),
+                                    story.getRemotePostingAvatarShape()));
+                }
+                info.setRemotePostingId(story.getRemotePostingId());
+                break;
+
             case POSTING_UPDATE_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
@@ -88,7 +108,9 @@ public class StoryInfo {
                 info.setSummaryFullName(story.getRemoteFullName());
                 if (story.getRemoteAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemoteAvatarMediaFile(),
+                                    story.getRemoteAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
                 break;
@@ -102,20 +124,22 @@ public class StoryInfo {
                 info.setSummaryFullName(story.getRemoteFullName());
                 if (story.getRemoteAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemoteAvatarMediaFile(),
+                                    story.getRemoteAvatarShape()));
                 }
                 break;
 
             case COMMENT_ADDED:
-                info.setRemoteNodeName(story.getRemoteOwnerName());
-                info.setRemoteFullName(story.getRemoteOwnerFullName());
                 info.setPosting(new PostingInfo(story.getEntry().getId()));
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemoteOwnerAvatarMediaFile(),
+                                    story.getRemoteOwnerAvatarShape()));
                 }
                 break;
 
@@ -131,7 +155,9 @@ public class StoryInfo {
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemoteOwnerAvatarMediaFile(),
+                                    story.getRemoteOwnerAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
@@ -139,27 +165,27 @@ public class StoryInfo {
 
             case COMMENT_UPDATE_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
-                info.setRemoteFullName(story.getRemoteFullName());
-                info.setSummaryNodeName(story.getRemoteNodeName());
-                info.setSummaryFullName(story.getRemoteFullName());
-                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                info.setSummaryNodeName(story.getRemotePostingNodeName());
+                info.setSummaryFullName(story.getRemotePostingFullName());
+                if (story.getRemotePostingAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemotePostingAvatarMediaFile(),
+                                    story.getRemotePostingAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 break;
 
             case COMMENT_POST_TASK_FAILED:
-            case POSTING_SUBSCRIBE_TASK_FAILED:
-            case POSTING_REACTION_TASK_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
-                info.setRemoteFullName(story.getRemoteFullName());
-                info.setSummaryNodeName(story.getRemoteNodeName());
-                info.setSummaryFullName(story.getRemoteFullName());
-                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                info.setSummaryNodeName(story.getRemotePostingNodeName());
+                info.setSummaryFullName(story.getRemotePostingFullName());
+                if (story.getRemotePostingAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemotePostingAvatarMediaFile(),
+                                    story.getRemotePostingAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemotePostingId());
                 break;
@@ -172,7 +198,9 @@ public class StoryInfo {
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemoteOwnerAvatarMediaFile(),
+                                    story.getRemoteOwnerAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemoteParentPostingId());
                 info.setRemoteMediaId(story.getRemoteParentMediaId());
@@ -180,13 +208,16 @@ public class StoryInfo {
 
             case COMMENT_MEDIA_REACTION_ADDED_POSITIVE:
             case COMMENT_MEDIA_REACTION_ADDED_NEGATIVE:
+            case COMMENT_MEDIA_REACTION_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteOwnerAvatarMediaFile(), story.getRemoteOwnerAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemoteOwnerAvatarMediaFile(),
+                                    story.getRemoteOwnerAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemoteParentPostingId());
                 info.setRemoteCommentId(story.getRemoteParentCommentId());
@@ -196,27 +227,15 @@ public class StoryInfo {
             case POSTING_MEDIA_REACTION_FAILED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
-                info.setSummaryNodeName(story.getRemoteNodeName());
-                info.setSummaryFullName(story.getRemoteFullName());
-                if (story.getRemoteAvatarMediaFile() != null) {
+                info.setSummaryNodeName(story.getRemotePostingNodeName());
+                info.setSummaryFullName(story.getRemotePostingFullName());
+                if (story.getRemotePostingAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                            new AvatarImage(
+                                    story.getRemotePostingAvatarMediaFile(),
+                                    story.getRemotePostingAvatarShape()));
                 }
                 info.setRemotePostingId(story.getRemoteParentPostingId());
-                info.setRemoteMediaId(story.getRemoteParentMediaId());
-                break;
-
-            case COMMENT_MEDIA_REACTION_FAILED:
-                info.setRemoteNodeName(story.getRemoteNodeName());
-                info.setRemoteFullName(story.getRemoteFullName());
-                info.setSummaryNodeName(story.getRemoteNodeName());
-                info.setSummaryFullName(story.getRemoteFullName());
-                if (story.getRemoteAvatarMediaFile() != null) {
-                    info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
-                }
-                info.setRemotePostingId(story.getRemoteParentPostingId());
-                info.setRemoteCommentId(story.getRemoteParentCommentId());
                 info.setRemoteMediaId(story.getRemoteParentMediaId());
                 break;
         }
@@ -325,6 +344,14 @@ public class StoryInfo {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public StorySummaryData getSummaryData() {
+        return summaryData;
+    }
+
+    public void setSummaryData(StorySummaryData summaryData) {
+        this.summaryData = summaryData;
     }
 
     public String getTrackingId() {

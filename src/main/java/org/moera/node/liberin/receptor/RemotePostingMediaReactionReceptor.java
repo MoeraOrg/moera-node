@@ -19,16 +19,17 @@ public class RemotePostingMediaReactionReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(RemotePostingMediaReactionAddedLiberin liberin) {
-        postingMediaReactionInstants.added(liberin.getNodeName(), liberin.getFullName(), liberin.getAvatar(),
-                liberin.getPostingId(), liberin.getParentPostingId(), liberin.getParentMediaId(),
-                liberin.getOwnerName(), liberin.getOwnerFullName(), liberin.getOwnerAvatar(),
-                liberin.getPostingHeading(), liberin.isNegative(), liberin.getEmoji());
+        postingMediaReactionInstants.added(liberin.getNodeName(), liberin.getParentPostingNodeName(),
+                liberin.getParentPostingFullName(), liberin.getParentPostingAvatar(), liberin.getPostingId(),
+                liberin.getParentPostingId(), liberin.getParentMediaId(), liberin.getReactionNodeName(),
+                liberin.getReactionFullName(), liberin.getReactionAvatar(), liberin.getParentPostingHeading(),
+                liberin.isReactionNegative(), liberin.getReactionEmoji());
     }
 
     @LiberinMapping
     public void addingFailed(RemotePostingMediaReactionAddingFailedLiberin liberin) {
-        postingMediaReactionInstants.addingFailed(liberin.getPostingId(), liberin.getParentPostingId(),
-                liberin.getParentMediaId(), liberin.getParentPostingInfo());
+        postingMediaReactionInstants.addingFailed(liberin.getNodeName(), liberin.getPostingId(),
+                liberin.getParentPostingId(), liberin.getParentMediaId(), liberin.getParentPostingInfo());
     }
 
     @LiberinMapping

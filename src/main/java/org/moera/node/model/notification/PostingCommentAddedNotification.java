@@ -10,6 +10,9 @@ import org.springframework.data.util.Pair;
 
 public class PostingCommentAddedNotification extends PostingCommentNotification {
 
+    private String postingOwnerName;
+    private String postingOwnerFullName;
+    private AvatarImage postingOwnerAvatar;
     private String postingHeading;
     private String commentHeading;
     private String commentRepliedTo;
@@ -18,15 +21,43 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
         super(NotificationType.POSTING_COMMENT_ADDED);
     }
 
-    public PostingCommentAddedNotification(UUID postingId, String postingHeading, UUID commentId,
-                                           String commentOwnerName, String commentOwnerFullName,
+    public PostingCommentAddedNotification(String postingOwnerName, String postingOwnerFullName,
+                                           AvatarImage postingOwnerAvatar, UUID postingId, String postingHeading,
+                                           UUID commentId, String commentOwnerName, String commentOwnerFullName,
                                            AvatarImage commentOwnerAvatar, String commentHeading,
                                            UUID commentRepliedTo) {
         super(NotificationType.POSTING_COMMENT_ADDED, postingId, commentId, commentOwnerName, commentOwnerFullName,
                 commentOwnerAvatar);
+        this.postingOwnerName = postingOwnerName;
+        this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
         this.commentHeading = commentHeading;
         this.commentRepliedTo = Objects.toString(commentRepliedTo, null);
+    }
+
+    public String getPostingOwnerName() {
+        return postingOwnerName;
+    }
+
+    public void setPostingOwnerName(String postingOwnerName) {
+        this.postingOwnerName = postingOwnerName;
+    }
+
+    public String getPostingOwnerFullName() {
+        return postingOwnerFullName;
+    }
+
+    public void setPostingOwnerFullName(String postingOwnerFullName) {
+        this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public AvatarImage getPostingOwnerAvatar() {
+        return postingOwnerAvatar;
+    }
+
+    public void setPostingOwnerAvatar(AvatarImage postingOwnerAvatar) {
+        this.postingOwnerAvatar = postingOwnerAvatar;
     }
 
     public String getPostingHeading() {

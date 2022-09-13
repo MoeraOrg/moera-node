@@ -3,6 +3,7 @@ package org.moera.node.instant;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -17,6 +18,9 @@ import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.StorySummaryData;
+import org.moera.node.model.StorySummaryEntry;
+import org.moera.node.model.StorySummaryReaction;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -32,14 +36,15 @@ public class CommentReactionInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String fullName, AvatarImage avatar, String postingId, String commentId,
-                      String ownerName, String ownerFullName, AvatarImage ownerAvatar, String commentHeading,
-                      boolean negative, int emoji) {
-        if (ownerName.equals(nodeName())) {
+    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName,
+                      AvatarImage postingOwnerAvatar, String postingId, String commentId, String reactionNodeName,
+                      String reactionFullName, AvatarImage reactionAvatar, String commentHeading,
+                      boolean reactionNegative, int reactionEmoji) {
+        if (reactionNodeName.equals(nodeName())) {
             return;
         }
 
-        StoryType storyType = negative ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
+        StoryType storyType = reactionNegative ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
                 : StoryType.COMMENT_REACTION_ADDED_POSITIVE;
 
         boolean isNewStory = false;
@@ -51,10 +56,11 @@ public class CommentReactionInstants extends InstantsCreator {
             story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
             story.setRemoteNodeName(nodeName);
-            story.setRemoteFullName(fullName);
-            if (avatar != null) {
-                story.setRemoteAvatarMediaFile(avatar.getMediaFile());
-                story.setRemoteAvatarShape(avatar.getShape());
+            story.setRemotePostingNodeName(postingOwnerName);
+            story.setRemotePostingFullName(postingOwnerFullName);
+            if (postingOwnerAvatar != null) {
+                story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+                story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
             story.setRemotePostingId(postingId);
             story.setRemoteCommentId(commentId);
@@ -64,21 +70,21 @@ public class CommentReactionInstants extends InstantsCreator {
         }
 
         Story substory = new Story(UUID.randomUUID(), nodeId(), storyType);
-        story.setRemoteNodeName(nodeName);
-        story.setRemoteFullName(fullName);
-        if (avatar != null) {
-            story.setRemoteAvatarMediaFile(avatar.getMediaFile());
-            story.setRemoteAvatarShape(avatar.getShape());
+        story.setRemotePostingNodeName(postingOwnerName);
+        story.setRemotePostingFullName(postingOwnerFullName);
+        if (postingOwnerAvatar != null) {
+            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
-        substory.setRemoteOwnerName(ownerName);
-        substory.setRemoteOwnerFullName(ownerFullName);
-        if (ownerAvatar != null) {
-            substory.setRemoteOwnerAvatarMediaFile(ownerAvatar.getMediaFile());
-            substory.setRemoteOwnerAvatarShape(ownerAvatar.getShape());
+        substory.setRemoteOwnerName(reactionNodeName);
+        substory.setRemoteOwnerFullName(reactionFullName);
+        if (reactionAvatar != null) {
+            substory.setRemoteOwnerAvatarMediaFile(reactionAvatar.getMediaFile());
+            substory.setRemoteOwnerAvatarShape(reactionAvatar.getShape());
         }
-        substory.setSummary(buildSummary(ownerName, ownerFullName, emoji));
+        substory.setSummaryData(buildReactionSummary(reactionEmoji));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
@@ -86,22 +92,25 @@ public class CommentReactionInstants extends InstantsCreator {
         updated(story, isNewStory, true);
     }
 
-    private static String buildSummary(String ownerName, String ownerFullName, int emoji) {
-        return String.valueOf(Character.toChars(emoji)) + ' ' + formatNodeName(ownerName, ownerFullName);
+    private static StorySummaryData buildReactionSummary(int emoji) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setReaction(new StorySummaryReaction(null, null, emoji));
+        return summaryData;
     }
 
-    public void deleted(String nodeName, String postingId, String commentId, String ownerName, boolean negative) {
-        if (ownerName.equals(nodeName())) {
+    public void deleted(String nodeName, String postingId, String commentId,
+                        String reactionOwnerName, boolean reactionNegative) {
+        if (reactionOwnerName.equals(nodeName())) {
             return;
         }
 
-        StoryType storyType = negative ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
+        StoryType storyType = reactionNegative ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
                 : StoryType.COMMENT_REACTION_ADDED_POSITIVE;
         List<Story> stories = storyRepository.findFullByRemotePostingAndCommentId(
                 nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId);
         for (Story story : stories) {
             Story substory = story.getSubstories().stream()
-                    .filter(t -> Objects.equals(t.getRemoteOwnerName(), ownerName))
+                    .filter(t -> Objects.equals(t.getRemoteOwnerName(), reactionOwnerName))
                     .findAny()
                     .orElse(null);
             if (substory != null) {
@@ -132,7 +141,7 @@ public class CommentReactionInstants extends InstantsCreator {
             return;
         }
 
-        story.setSummary(buildAddedSummary(story, stories));
+        story.setSummaryData(buildAddedSummary(story, stories));
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
@@ -146,35 +155,24 @@ public class CommentReactionInstants extends InstantsCreator {
         storyAddedOrUpdated(story, isNew);
     }
 
-    private String buildAddedSummary(Story story, List<Story> stories) {
-        StringBuilder buf = new StringBuilder();
-        String firstName = stories.get(0).getRemoteOwnerName();
-        buf.append(stories.get(0).getSummary());
-        if (stories.size() > 1) {
-            buf.append(stories.size() == 2 ? " and " : ", ");
-            buf.append(stories.get(1).getSummary());
+    private StorySummaryData buildAddedSummary(Story story, List<Story> stories) {
+        StorySummaryData summaryData = new StorySummaryData();
+        List<StorySummaryReaction> reactions = new ArrayList<>();
+        for (int i = 0; i < 2 && i < stories.size(); i++) {
+            Story substory = stories.get(i);
+            reactions.add(new StorySummaryReaction(substory.getRemoteOwnerName(), substory.getRemoteOwnerFullName(),
+                    substory.getSummaryData().getReaction().getEmoji()));
         }
-        if (stories.size() > 2) {
-            buf.append(" and ");
-            buf.append(stories.size() - 2);
-            buf.append(stories.size() == 3 ? " other" : " others");
-        }
-        buf.append(story.getStoryType() == StoryType.COMMENT_REACTION_ADDED_POSITIVE ? " supported" : " opposed");
-        buf.append(" your comment \"");
-        buf.append(Util.he(story.getRemoteHeading()));
-        buf.append("\" on ");
-        if (Objects.equals(story.getRemoteNodeName(), nodeName())) {
-            buf.append("your");
-        } else if (stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstName)) {
-            buf.append("their");
-        } else {
-            buf.append(formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()));
-        }
-        buf.append(" post");
-        return buf.toString();
+        summaryData.setReactions(reactions);
+        summaryData.setTotalReactions(stories.size());
+        summaryData.setComment(new StorySummaryEntry(null, null, story.getRemoteHeading()));
+        summaryData.setPosting(
+                new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(), null));
+        return summaryData;
     }
 
-    public void addingFailed(String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo) {
+    public void addingFailed(String nodeName, String postingId, PostingInfo postingInfo, String commentId,
+                             CommentInfo commentInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
@@ -186,11 +184,12 @@ public class CommentReactionInstants extends InstantsCreator {
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_REACTION_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
-        story.setRemoteNodeName(postingOwnerName);
-        story.setRemoteFullName(postingOwnerFullName);
+        story.setRemoteNodeName(nodeName);
+        story.setRemotePostingNodeName(postingOwnerName);
+        story.setRemotePostingFullName(postingOwnerFullName);
         if (postingOwnerAvatar != null) {
-            story.setRemoteAvatarMediaFile(postingOwnerAvatar.getMediaFile());
-            story.setRemoteAvatarShape(postingOwnerAvatar.getShape());
+            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
@@ -200,7 +199,7 @@ public class CommentReactionInstants extends InstantsCreator {
             story.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         story.setRemoteCommentId(commentId);
-        story.setSummary(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading,
+        story.setSummaryData(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading,
                 commentOwnerName, commentOwnerFullName, commentHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
@@ -208,13 +207,14 @@ public class CommentReactionInstants extends InstantsCreator {
         storyAdded(story);
     }
 
-    private static String buildAddingFailedSummary(String postingOwnerName, String postingOwnerFullName,
-                                                   String postingHeading,
-                                                   String commentOwnerName, String commentOwnerFullName,
-                                                   String commentHeading) {
-        return String.format("Failed to sign a reaction to %s comment \"%s\" to %s post \"%s\"",
-                formatNodeName(commentOwnerName, commentOwnerFullName), Util.he(commentHeading),
-                formatNodeName(postingOwnerName, postingOwnerFullName), Util.he(postingHeading));
+    private static StorySummaryData buildAddingFailedSummary(String postingOwnerName, String postingOwnerFullName,
+                                                             String postingHeading,
+                                                             String commentOwnerName, String commentOwnerFullName,
+                                                             String commentHeading) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setPosting(new StorySummaryEntry(postingOwnerName, postingOwnerFullName, postingHeading));
+        summaryData.setComment(new StorySummaryEntry(commentOwnerName, commentOwnerFullName, commentHeading));
+        return summaryData;
     }
 
 }

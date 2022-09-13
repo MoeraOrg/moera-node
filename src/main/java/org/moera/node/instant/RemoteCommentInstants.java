@@ -3,9 +3,9 @@ package org.moera.node.instant;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -16,6 +16,8 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.StorySummaryData;
+import org.moera.node.model.StorySummaryEntry;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -31,56 +33,52 @@ public class RemoteCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String remoteNodeName, String remoteFullName, AvatarImage remoteAvatar, String remotePostingId,
-                      String remotePostingHeading, String remoteOwnerName, String remoteOwnerFullName,
-                      AvatarImage remoteOwnerAvatar, String remoteCommentId, String remoteCommentHeading,
-                      SubscriptionReason reason) {
-        if (remoteOwnerName.equals(nodeName())) {
+    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName,
+                      AvatarImage postingOwnerAvatar, String postingId, String postingHeading, String commentOwnerName,
+                      String commentOwnerFullName, AvatarImage commentOwnerAvatar, String commentId,
+                      String commentHeading, SubscriptionReason reason) {
+        if (commentOwnerName.equals(nodeName())) {
             return;
         }
 
         boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(nodeId(),
-                StoryType.REMOTE_COMMENT_ADDED, remoteNodeName, remotePostingId, remoteCommentId).isEmpty();
+                StoryType.REMOTE_COMMENT_ADDED, nodeName, postingId, commentId).isEmpty();
         if (alreadyReported) {
             return;
         }
 
         boolean isNewStory = false;
         Story story = storyRepository.findFullByRemotePostingId(nodeId(), Feed.INSTANT, StoryType.REMOTE_COMMENT_ADDED,
-                remoteNodeName, remotePostingId).stream()
-                .findFirst().orElse(null);
+                nodeName, postingId).stream().findFirst().orElse(null);
         if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
             story.setFeedName(Feed.INSTANT);
-            story.setRemoteNodeName(remoteNodeName);
-            story.setRemoteFullName(remoteFullName);
-            if (remoteAvatar != null) {
-                story.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
-                story.setRemoteAvatarShape(remoteAvatar.getShape());
+            story.setRemoteNodeName(nodeName);
+            story.setRemotePostingNodeName(postingOwnerName);
+            story.setRemotePostingFullName(postingOwnerFullName);
+            if (postingOwnerAvatar != null) {
+                story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+                story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
-            story.setRemotePostingId(remotePostingId);
-            story.setRemoteHeading(remotePostingHeading);
+            story.setRemotePostingId(postingId);
+            story.setRemoteHeading(postingHeading);
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
 
         Story substory = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
-        substory.setRemoteNodeName(remoteNodeName);
-        substory.setRemoteFullName(remoteFullName);
-        if (remoteAvatar != null) {
-            substory.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
-            substory.setRemoteAvatarShape(remoteAvatar.getShape());
+        substory.setRemoteNodeName(nodeName);
+        substory.setRemotePostingId(postingId);
+        substory.setRemoteOwnerName(commentOwnerName);
+        substory.setRemoteOwnerFullName(commentOwnerFullName);
+        if (commentOwnerAvatar != null) {
+            substory.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
+            substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
-        substory.setRemotePostingId(remotePostingId);
-        substory.setRemoteOwnerName(remoteOwnerName);
-        substory.setRemoteOwnerFullName(remoteOwnerFullName);
-        if (remoteOwnerAvatar != null) {
-            substory.setRemoteOwnerAvatarMediaFile(remoteOwnerAvatar.getMediaFile());
-            substory.setRemoteOwnerAvatarShape(remoteOwnerAvatar.getShape());
-        }
-        substory.setRemoteCommentId(remoteCommentId);
-        substory.setRemoteHeading(remoteCommentHeading);
+        substory.setRemoteCommentId(commentId);
+        substory.setRemoteHeading(commentHeading);
+        substory.setSummaryData(buildCommentSummary(commentHeading));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
@@ -88,14 +86,20 @@ public class RemoteCommentInstants extends InstantsCreator {
         updated(story, reason, isNewStory, true);
     }
 
-    public void deleted(String remoteNodeName, String remotePostingId, String remoteOwnerName, String remoteCommentId,
+    private static StorySummaryData buildCommentSummary(String heading) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setComment(new StorySummaryEntry(null, null, heading));
+        return summaryData;
+    }
+
+    public void deleted(String nodeName, String postingId, String commentOwnerName, String commentId,
                         SubscriptionReason reason) {
-        if (remoteOwnerName.equals(nodeName())) {
+        if (commentOwnerName.equals(nodeName())) {
             return;
         }
 
         List<Story> stories = storyRepository.findSubsByRemotePostingAndCommentId(nodeId(),
-                StoryType.REMOTE_COMMENT_ADDED, remoteNodeName, remotePostingId, remoteCommentId);
+                StoryType.REMOTE_COMMENT_ADDED, nodeName, postingId, commentId);
         for (Story substory : stories) {
             Story story = substory.getParent();
             story.removeSubstory(substory);
@@ -116,7 +120,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             return;
         }
 
-        story.setSummary(buildAddedSummary(story, stories, reason));
+        story.setSummaryData(buildAddedSummary(story, stories, reason));
         story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
         story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
@@ -131,49 +135,33 @@ public class RemoteCommentInstants extends InstantsCreator {
         storyAddedOrUpdated(story, isNew);
     }
 
-    private static String buildAddedSummary(Story story, List<Story> stories, SubscriptionReason reason) {
-        StringBuilder buf = new StringBuilder();
+    private static StorySummaryData buildAddedSummary(Story story, List<Story> stories, SubscriptionReason reason) {
+        StorySummaryData summaryData = new StorySummaryData();
+        List<StorySummaryEntry> comments = new ArrayList<>();
         Story firstStory = stories.get(0);
-        buf.append(formatNodeName(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName()));
+        comments.add(new StorySummaryEntry(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(),
+                firstStory.getRemoteHeading()));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
-                buf.append(names.size() == 2 ? " and " : ", ");
                 Story secondStory = stories.stream()
                         .filter(t -> !t.getRemoteOwnerName().equals(firstStory.getRemoteOwnerName()))
                         .findFirst()
                         .orElse(null);
                 if (secondStory != null) {
-                    buf.append(formatNodeName(secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName()));
+                    comments.add(new StorySummaryEntry(secondStory.getRemoteOwnerName(),
+                            secondStory.getRemoteOwnerFullName(), secondStory.getRemoteHeading()));
                 }
             }
-            if (names.size() > 2) {
-                buf.append(" and ");
-                buf.append(names.size() - 2);
-                buf.append(names.size() == 3 ? " other" : " others");
-            }
+            summaryData.setTotalComments(names.size());
+        } else {
+            summaryData.setTotalComments(1);
         }
-        buf.append(" commented on ");
-        buf.append(stories.size() == 1 && Objects.equals(story.getRemoteNodeName(), firstStory.getRemoteOwnerName())
-                ? "their" : formatNodeName(story.getRemoteNodeName(), story.getRemoteFullName()));
-        buf.append(" post ");
-        buf.append(getReasonForHuman(reason));
-        buf.append(" \"");
-        buf.append(Util.he(story.getRemoteHeading()));
-        buf.append('"');
-        return buf.toString();
-    }
-
-    private static String getReasonForHuman(SubscriptionReason reason) {
-        switch (reason) {
-            default:
-            case USER:
-                return "you subscribed to";
-            case MENTION:
-                return "you have been mentioned in";
-            case COMMENT:
-                return "you commented";
-        }
+        summaryData.setComments(comments);
+        summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
+                story.getRemoteHeading()));
+        summaryData.setSubscriptionReason(reason);
+        return summaryData;
     }
 
 }

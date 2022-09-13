@@ -8,25 +8,35 @@ import org.moera.node.model.PostingInfo;
 
 public class RemoteCommentUpdateFailedLiberin extends Liberin {
 
-    private String postingId;
+    private String remoteNodeName;
+    private String remotePostingId;
     private PostingInfo postingInfo;
-    private String commentId;
+    private String remoteCommentId;
     private CommentInfo prevCommentInfo;
 
-    public RemoteCommentUpdateFailedLiberin(String postingId, PostingInfo postingInfo, String commentId,
-                                            CommentInfo prevCommentInfo) {
-        this.postingId = postingId;
+    public RemoteCommentUpdateFailedLiberin(String remoteNodeName, String remotePostingId, PostingInfo postingInfo,
+                                            String remoteCommentId, CommentInfo prevCommentInfo) {
+        this.remoteNodeName = remoteNodeName;
+        this.remotePostingId = remotePostingId;
         this.postingInfo = postingInfo;
-        this.commentId = commentId;
+        this.remoteCommentId = remoteCommentId;
         this.prevCommentInfo = prevCommentInfo;
     }
 
-    public String getPostingId() {
-        return postingId;
+    public String getRemoteNodeName() {
+        return remoteNodeName;
     }
 
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemotePostingId() {
+        return remotePostingId;
+    }
+
+    public void setRemotePostingId(String remotePostingId) {
+        this.remotePostingId = remotePostingId;
     }
 
     public PostingInfo getPostingInfo() {
@@ -37,12 +47,12 @@ public class RemoteCommentUpdateFailedLiberin extends Liberin {
         this.postingInfo = postingInfo;
     }
 
-    public String getCommentId() {
-        return commentId;
+    public String getRemoteCommentId() {
+        return remoteCommentId;
     }
 
-    public void setCommentId(String commentId) {
-        this.commentId = commentId;
+    public void setRemoteCommentId(String remoteCommentId) {
+        this.remoteCommentId = remoteCommentId;
     }
 
     public CommentInfo getPrevCommentInfo() {
@@ -56,9 +66,10 @@ public class RemoteCommentUpdateFailedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("postingId", postingId);
+        model.put("remoteNodeName", remoteNodeName);
+        model.put("postingId", remotePostingId);
         model.put("posting", postingInfo);
-        model.put("commentId", commentId);
+        model.put("commentId", remoteCommentId);
         model.put("prevComment", prevCommentInfo);
     }
 

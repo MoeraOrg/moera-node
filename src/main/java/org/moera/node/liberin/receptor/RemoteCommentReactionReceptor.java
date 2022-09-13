@@ -19,15 +19,17 @@ public class RemoteCommentReactionReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(RemoteCommentReactionAddedLiberin liberin) {
-        commentReactionInstants.added(liberin.getNodeName(), liberin.getFullName(), liberin.getAvatar(),
-                liberin.getPostingId(), liberin.getCommentId(), liberin.getOwnerName(), liberin.getOwnerFullName(),
-                liberin.getOwnerAvatar(), liberin.getCommentHeading(), liberin.isNegative(), liberin.getEmoji());
+        commentReactionInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerAvatar(), liberin.getPostingId(),
+                liberin.getCommentId(), liberin.getReactionNodeName(), liberin.getReactionFullName(),
+                liberin.getReactionAvatar(), liberin.getCommentHeading(), liberin.isReactionNegative(),
+                liberin.getReactionEmoji());
     }
 
     @LiberinMapping
     public void addingFailed(RemoteCommentReactionAddingFailedLiberin liberin) {
-        commentReactionInstants.addingFailed(liberin.getPostingId(), liberin.getPostingInfo(), liberin.getCommentId(),
-                liberin.getCommentInfo());
+        commentReactionInstants.addingFailed(liberin.getNodeName(), liberin.getPostingId(), liberin.getPostingInfo(),
+                liberin.getCommentId(), liberin.getCommentInfo());
     }
 
     @LiberinMapping

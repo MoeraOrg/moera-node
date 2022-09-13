@@ -59,21 +59,22 @@ public class RemotePostingProcessor {
             }
         }
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar(), notification.getCommentOwnerAvatar()},
+                new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
                 mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getPostingOwnerAvatar() != null) {
+                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
                     }
                     if (notification.getCommentOwnerAvatar() != null) {
                         notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
                     }
                     universalContext.send(
                             new ForeignCommentAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getSenderFullName(), notification.getSenderAvatar(),
-                                    notification.getPostingId(), notification.getPostingHeading(),
-                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
-                                    notification.getCommentOwnerAvatar(), notification.getCommentId(),
-                                    notification.getCommentHeading(), subscription.getReason()));
+                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                    notification.getPostingOwnerAvatar(), notification.getPostingId(),
+                                    notification.getPostingHeading(), notification.getCommentOwnerName(),
+                                    notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                                    notification.getCommentId(), notification.getCommentHeading(),
+                                    subscription.getReason()));
                 });
     }
 
@@ -91,16 +92,16 @@ public class RemotePostingProcessor {
     public void postingUpdated(PostingImportantUpdateNotification notification) {
         getSubscription(notification);
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar()},
+                new AvatarImage[] {notification.getPostingOwnerAvatar()},
                 mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getPostingOwnerAvatar() != null) {
+                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
                     }
                     universalContext.send(
                             new RemotePostingImportantUpdateLiberin(notification.getSenderNodeName(),
-                                    notification.getSenderFullName(), notification.getSenderAvatar(),
-                                    notification.getPostingId(), notification.getPostingHeading(),
-                                    notification.getDescription()));
+                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                    notification.getPostingOwnerAvatar(), notification.getPostingId(),
+                                    notification.getPostingHeading(), notification.getDescription()));
                 });
     }
 

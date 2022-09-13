@@ -100,7 +100,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
         } catch (Exception ex) {
             // ignore
         }
-        send(new RemotePostingCommentsSubscribeFailedLiberin(postingId, postingInfo));
+        send(new RemotePostingCommentsSubscribeFailedLiberin(targetNodeName, postingId, postingInfo));
     }
 
 }

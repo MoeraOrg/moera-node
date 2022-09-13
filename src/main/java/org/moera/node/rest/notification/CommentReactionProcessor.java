@@ -29,18 +29,18 @@ public class CommentReactionProcessor {
     @Transactional
     public void added(CommentReactionAddedNotification notification) {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar(), notification.getOwnerAvatar()},
+                new AvatarImage[] {notification.getPostingAvatar(), notification.getOwnerAvatar()},
                 mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getPostingAvatar() != null) {
+                        notification.getPostingAvatar().setMediaFile(mediaFiles[0]);
                     }
                     if (notification.getOwnerAvatar() != null) {
                         notification.getOwnerAvatar().setMediaFile(mediaFiles[1]);
                     }
                     universalContext.send(new RemoteCommentReactionAddedLiberin(notification.getSenderNodeName(),
-                            notification.getSenderFullName(), notification.getSenderAvatar(),
-                            notification.getPostingId(), notification.getCommentId(), notification.getOwnerName(),
-                            notification.getOwnerFullName(), notification.getOwnerAvatar(),
+                            notification.getPostingNodeName(), notification.getPostingFullName(),
+                            notification.getPostingAvatar(), notification.getPostingId(), notification.getCommentId(),
+                            notification.getOwnerName(), notification.getOwnerFullName(), notification.getOwnerAvatar(),
                             notification.getCommentHeading(), notification.isNegative(), notification.getEmoji()));
                 });
     }

@@ -8,32 +8,35 @@ import org.moera.node.model.AvatarImage;
 public class RemoteCommentReactionAddedLiberin extends Liberin {
 
     private String nodeName;
-    private String fullName;
-    private AvatarImage avatar;
+    private String postingOwnerName;
+    private String postingOwnerFullName;
+    private AvatarImage postingOwnerAvatar;
     private String postingId;
     private String commentId;
-    private String ownerName;
-    private String ownerFullName;
-    private AvatarImage ownerAvatar;
+    private String reactionNodeName;
+    private String reactionFullName;
+    private AvatarImage reactionAvatar;
     private String commentHeading;
-    private boolean negative;
-    private int emoji;
+    private boolean reactionNegative;
+    private int reactionEmoji;
 
-    public RemoteCommentReactionAddedLiberin(String nodeName, String fullName, AvatarImage avatar, String postingId,
-                                             String commentId, String ownerName, String ownerFullName,
-                                             AvatarImage ownerAvatar, String commentHeading, boolean negative,
-                                             int emoji) {
+    public RemoteCommentReactionAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
+                                             AvatarImage postingOwnerAvatar, String postingId, String commentId,
+                                             String reactionNodeName, String reactionFullName,
+                                             AvatarImage reactionAvatar, String commentHeading,
+                                             boolean reactionNegative, int reactionEmoji) {
         this.nodeName = nodeName;
-        this.fullName = fullName;
-        this.avatar = avatar;
+        this.postingOwnerName = postingOwnerName;
+        this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingId = postingId;
         this.commentId = commentId;
-        this.ownerName = ownerName;
-        this.ownerFullName = ownerFullName;
-        this.ownerAvatar = ownerAvatar;
+        this.reactionNodeName = reactionNodeName;
+        this.reactionFullName = reactionFullName;
+        this.reactionAvatar = reactionAvatar;
         this.commentHeading = commentHeading;
-        this.negative = negative;
-        this.emoji = emoji;
+        this.reactionNegative = reactionNegative;
+        this.reactionEmoji = reactionEmoji;
     }
 
     public String getNodeName() {
@@ -44,20 +47,28 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
         this.nodeName = nodeName;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getPostingOwnerName() {
+        return postingOwnerName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setPostingOwnerName(String postingOwnerName) {
+        this.postingOwnerName = postingOwnerName;
     }
 
-    public AvatarImage getAvatar() {
-        return avatar;
+    public String getPostingOwnerFullName() {
+        return postingOwnerFullName;
     }
 
-    public void setAvatar(AvatarImage avatar) {
-        this.avatar = avatar;
+    public void setPostingOwnerFullName(String postingOwnerFullName) {
+        this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public AvatarImage getPostingOwnerAvatar() {
+        return postingOwnerAvatar;
+    }
+
+    public void setPostingOwnerAvatar(AvatarImage postingOwnerAvatar) {
+        this.postingOwnerAvatar = postingOwnerAvatar;
     }
 
     public String getPostingId() {
@@ -76,28 +87,28 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
         this.commentId = commentId;
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getReactionNodeName() {
+        return reactionNodeName;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setReactionNodeName(String reactionNodeName) {
+        this.reactionNodeName = reactionNodeName;
     }
 
-    public String getOwnerFullName() {
-        return ownerFullName;
+    public String getReactionFullName() {
+        return reactionFullName;
     }
 
-    public void setOwnerFullName(String ownerFullName) {
-        this.ownerFullName = ownerFullName;
+    public void setReactionFullName(String reactionFullName) {
+        this.reactionFullName = reactionFullName;
     }
 
-    public AvatarImage getOwnerAvatar() {
-        return ownerAvatar;
+    public AvatarImage getReactionAvatar() {
+        return reactionAvatar;
     }
 
-    public void setOwnerAvatar(AvatarImage ownerAvatar) {
-        this.ownerAvatar = ownerAvatar;
+    public void setReactionAvatar(AvatarImage reactionAvatar) {
+        this.reactionAvatar = reactionAvatar;
     }
 
     public String getCommentHeading() {
@@ -108,36 +119,37 @@ public class RemoteCommentReactionAddedLiberin extends Liberin {
         this.commentHeading = commentHeading;
     }
 
-    public boolean isNegative() {
-        return negative;
+    public boolean isReactionNegative() {
+        return reactionNegative;
     }
 
-    public void setNegative(boolean negative) {
-        this.negative = negative;
+    public void setReactionNegative(boolean reactionNegative) {
+        this.reactionNegative = reactionNegative;
     }
 
-    public int getEmoji() {
-        return emoji;
+    public int getReactionEmoji() {
+        return reactionEmoji;
     }
 
-    public void setEmoji(int emoji) {
-        this.emoji = emoji;
+    public void setReactionEmoji(int reactionEmoji) {
+        this.reactionEmoji = reactionEmoji;
     }
 
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
-        model.put("fullName", fullName);
-        model.put("avatar", avatar);
+        model.put("postingOwnerName", postingOwnerName);
+        model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingId", postingId);
         model.put("commentId", commentId);
-        model.put("ownerName", ownerName);
-        model.put("ownerFullName", ownerFullName);
-        model.put("ownerAvatar", ownerAvatar);
+        model.put("reactionNodeName", reactionNodeName);
+        model.put("reactionFullName", reactionFullName);
+        model.put("reactionAvatar", reactionAvatar);
         model.put("commentHeading", commentHeading);
-        model.put("negative", negative);
-        model.put("emoji", emoji);
+        model.put("reactionNegative", reactionNegative);
+        model.put("reactionEmoji", reactionEmoji);
     }
 
 }

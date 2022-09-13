@@ -15,13 +15,20 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.node.model.StorySummaryData;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Entity
 @Table(name = "stories")
 public class Story {
+
+    private static final Logger log = LoggerFactory.getLogger(Story.class);
 
     @Id
     private UUID id;
@@ -233,6 +240,25 @@ public class Story {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    @Transient
+    public StorySummaryData getSummaryData() {
+        try {
+            return new ObjectMapper().readValue(getSummary(), StorySummaryData.class);
+        } catch (JsonProcessingException e) {
+            log.error("Cannot decode story summary data: {}", getSummary());
+            return null;
+        }
+    }
+
+    @Transient
+    public void setSummaryData(StorySummaryData summaryData) {
+        try {
+            setSummary(new ObjectMapper().writeValueAsString(summaryData));
+        } catch (JsonProcessingException e) {
+            log.error("Cannot encode story summary data: {}", summaryData);
+        }
     }
 
     public UUID getTrackingId() {

@@ -32,10 +32,13 @@ public class PostingReactionProcessor {
     @Transactional
     public void added(PostingReactionAddedNotification notification) {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar(), notification.getOwnerAvatar()},
+                new AvatarImage[] {
+                        notification.getParentPostingAvatar(),
+                        notification.getOwnerAvatar()
+                },
                 mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
+                    if (notification.getParentPostingAvatar() != null) {
+                        notification.getParentPostingAvatar().setMediaFile(mediaFiles[0]);
                     }
                     if (notification.getOwnerAvatar() != null) {
                         notification.getOwnerAvatar().setMediaFile(mediaFiles[1]);
@@ -53,7 +56,8 @@ public class PostingReactionProcessor {
     private void addedToPostingMedia(PostingReactionAddedNotification notification) {
         universalContext.send(
                 new RemotePostingMediaReactionAddedLiberin(notification.getSenderNodeName(),
-                        notification.getSenderFullName(), notification.getSenderAvatar(), notification.getPostingId(),
+                        notification.getParentPostingNodeName(), notification.getParentPostingFullName(),
+                        notification.getParentPostingAvatar(), notification.getPostingId(),
                         notification.getParentPostingId(), notification.getParentMediaId(), notification.getOwnerName(),
                         notification.getOwnerFullName(), notification.getOwnerAvatar(),
                         notification.getPostingHeading(), notification.isNegative(), notification.getEmoji()));
@@ -62,7 +66,8 @@ public class PostingReactionProcessor {
     private void addedToCommentMedia(PostingReactionAddedNotification notification) {
         universalContext.send(
                 new RemoteCommentMediaReactionAddedLiberin(notification.getSenderNodeName(),
-                        notification.getSenderFullName(), notification.getSenderAvatar(), notification.getPostingId(),
+                        notification.getParentPostingNodeName(), notification.getParentPostingFullName(),
+                        notification.getParentPostingAvatar(), notification.getPostingId(),
                         notification.getParentPostingId(), notification.getParentCommentId(),
                         notification.getParentMediaId(), notification.getOwnerName(), notification.getOwnerFullName(),
                         notification.getOwnerAvatar(), notification.getPostingHeading(), notification.isNegative(),
