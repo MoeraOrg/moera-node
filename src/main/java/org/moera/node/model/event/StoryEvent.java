@@ -11,6 +11,7 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.model.StorySummaryData;
 import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 
@@ -30,6 +31,7 @@ public class StoryEvent extends Event {
     private String summaryFullName;
     private AvatarImage summaryAvatar;
     private String summary;
+    private StorySummaryData summaryData;
     private String trackingId;
     private String remoteNodeName;
     private String remoteFullName;
@@ -63,7 +65,11 @@ public class StoryEvent extends Event {
         summaryNodeName = storyInfo.getSummaryNodeName();
         summaryFullName = storyInfo.getSummaryFullName();
         summaryAvatar = storyInfo.getSummaryAvatar();
-        summary = story.getSummary();
+        if (story.getSummary().startsWith("{")) {
+            summaryData = story.getSummaryData();
+        } else {
+            summary = story.getSummary();
+        }
         operations = new HashMap<>();
         operations.put("edit", Principal.ADMIN);
         operations.put("delete", Principal.ADMIN);
@@ -171,6 +177,14 @@ public class StoryEvent extends Event {
 
     public void setSummary(String summary) {
         this.summary = summary;
+    }
+
+    public StorySummaryData getSummaryData() {
+        return summaryData;
+    }
+
+    public void setSummaryData(StorySummaryData summaryData) {
+        this.summaryData = summaryData;
     }
 
     public String getTrackingId() {
