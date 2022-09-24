@@ -188,8 +188,10 @@ public class SettingsController {
                     throw new AuthenticationException();
                 }
                 if (setting.getValue() != null) {
+                    log.debug("Setting option {} to {}", setting.getName(), setting.getValue());
                     options.set(setting.getName(), setting.getValue());
                 } else {
+                    log.debug("Resetting option {} to default", setting.getName());
                     options.reset(setting.getName());
                 }
                 if (setting.getName().startsWith(OptionsMetadata.CLIENT_PREFIX)) {
