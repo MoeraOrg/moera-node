@@ -178,7 +178,7 @@ public class MediaOperations {
             if (digest == null) {
                 digest = digest(tmpPath);
             }
-            if (contentType.startsWith("image/")) {
+            if (contentType == null || contentType.startsWith("image/")) {
                 contentType = detectContentType(tmpPath, contentType);
             }
 
