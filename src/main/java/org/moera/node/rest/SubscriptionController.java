@@ -266,7 +266,7 @@ public class SubscriptionController {
     @Admin
     @Transactional
     public List<SubscriptionInfo> search(@Valid @RequestBody SubscriptionFilter filter) {
-        log.info("GET /people/subscriptions/search");
+        log.info("POST /people/subscriptions/search");
 
         if (filter.getPostings() == null || filter.getPostings().isEmpty()) {
             return Collections.emptyList();

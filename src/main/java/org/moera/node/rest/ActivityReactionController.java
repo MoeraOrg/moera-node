@@ -39,7 +39,7 @@ public class ActivityReactionController {
     @Admin
     @Transactional
     public List<ActivityReactionInfo> search(@Valid @RequestBody ActivityReactionFilter filter) {
-        log.info("GET /activity/reactions/search");
+        log.info("POST /activity/reactions/search");
 
         if (filter.getPostings() == null || filter.getPostings().isEmpty()) {
             return Collections.emptyList();
