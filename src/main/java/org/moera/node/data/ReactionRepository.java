@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -17,6 +18,11 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
             + " left join fetch r.ownerAvatarMediaFile"
             + " where r.entryRevision.entry.id = ?1 and r.ownerName = ?2 and r.deletedAt is null")
     Reaction findByEntryIdAndOwner(UUID entryId, String ownerName);
+
+    @Query("select r from Reaction r"
+            + " left join fetch r.ownerAvatarMediaFile"
+            + " where r.entryRevision.entry.id in (?1) and r.ownerName = ?2 and r.deletedAt is null")
+    List<Reaction> findByEntryIdsAndOwner(Collection<UUID> entryIds, String ownerName);
 
     @Query("select r from Reaction r where r.entryRevision.entry.id = ?1 and r.ownerName = ?2"
             + " and r.deletedAt is not null and r.replaced = true")

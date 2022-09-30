@@ -1,5 +1,8 @@
 package org.moera.node.operations;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,9 +64,9 @@ public class ReactionTotalOperations {
 
         private final RequestContext requestContext;
         private final Entry entry;
-        private final Set<ReactionTotal> totals;
+        private final Collection<ReactionTotal> totals;
 
-        ReactionTotalsData(RequestContext requestContext, Entry entry, Set<ReactionTotal> totals) {
+        ReactionTotalsData(RequestContext requestContext, Entry entry, Collection<ReactionTotal> totals) {
             this.requestContext = requestContext;
             this.entry = entry;
             this.totals = totals;
@@ -128,6 +131,19 @@ public class ReactionTotalOperations {
     public ReactionTotalsData getInfo(Entry entry) {
         Set<ReactionTotal> totals = reactionTotalRepository.findAllByEntryId(entry.getId());
         return new ReactionTotalsData(requestContext, entry, totals);
+    }
+
+    public List<ReactionTotalsData> getInfo(List<? extends Entry> entries) {
+        List<UUID> ids = entries.stream().map(Entry::getId).collect(Collectors.toList());
+        Map<UUID, List<ReactionTotal>> totals = new HashMap<>();
+        reactionTotalRepository.findAllByEntryIds(ids).forEach(rt -> {
+            List<ReactionTotal> list = totals.computeIfAbsent(rt.getEntry().getId(), id -> new ArrayList<>());
+            list.add(rt);
+        });
+        return entries.stream()
+                .filter(e -> totals.containsKey(e.getId()))
+                .map(e -> new ReactionTotalsData(requestContext, e, totals.get(e.getId())))
+                .collect(Collectors.toList());
     }
 
     private int realOrVirtualTotal(ReactionTotalInfo info) {

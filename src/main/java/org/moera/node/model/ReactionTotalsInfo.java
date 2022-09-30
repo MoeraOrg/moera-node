@@ -11,6 +11,7 @@ import org.moera.node.data.ReactionTotal;
 
 public class ReactionTotalsInfo {
 
+    private String entryId;
     private List<ReactionTotalInfo> positive = new ArrayList<>();
     private List<ReactionTotalInfo> negative = new ArrayList<>();
 
@@ -18,6 +19,8 @@ public class ReactionTotalsInfo {
     }
 
     public ReactionTotalsInfo(Collection<ReactionTotal> totals, Entry entry, AccessChecker accessChecker) {
+        entryId = entry.getId().toString();
+
         boolean forged = totals.stream().anyMatch(ReactionTotal::isForged);
         boolean totalsVisible = !forged && isTotalsVisible(entry, accessChecker);
         boolean negativeTotalsVisible = !forged && isNegativeTotalsVisible(entry, accessChecker);
@@ -86,6 +89,14 @@ public class ReactionTotalsInfo {
         } else {
             return accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionRatiosE());
         }
+    }
+
+    public String getEntryId() {
+        return entryId;
+    }
+
+    public void setEntryId(String entryId) {
+        this.entryId = entryId;
     }
 
     public List<ReactionTotalInfo> getPositive() {

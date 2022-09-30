@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,6 +15,9 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
 
     @Query("select p from Posting p where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
     Optional<Posting> findByNodeIdAndId(UUID nodeId, UUID id);
+
+    @Query("select p from Posting p where p.nodeId = ?1 and p.id in (?2) and p.deletedAt is null")
+    List<Posting> findByNodeIdAndIds(UUID nodeId, Collection<UUID> ids);
 
     @Query("select p from Posting p"
             + " left join fetch p.currentRevision cr left join fetch cr.attachments cra"

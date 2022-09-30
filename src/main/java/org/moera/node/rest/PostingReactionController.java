@@ -1,8 +1,13 @@
 package org.moera.node.rest;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -30,6 +35,7 @@ import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionOverride;
 import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.node.model.ReactionsFilter;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -44,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +61,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
-@RequestMapping("/moera/api/postings/{postingId}/reactions")
+@RequestMapping("/moera/api/postings")
 public class PostingReactionController {
 
     private static final Logger log = LoggerFactory.getLogger(PostingReactionController.class);
@@ -85,7 +92,7 @@ public class PostingReactionController {
 
     private final ParametrizedLock<UUID> lock = new ParametrizedLock<>();
 
-    @PostMapping
+    @PostMapping("/{postingId}/reactions")
     public ResponseEntity<ReactionCreated> post(
             @PathVariable UUID postingId,
             @Valid @RequestBody ReactionDescription reactionDescription) throws Throwable {
@@ -98,7 +105,7 @@ public class PostingReactionController {
         lock.lock(postingId);
         try {
             return Transaction.execute(txManager, () -> {
-                Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
                 if (posting.getCurrentRevision().getSignature() == null) {
                     throw new ValidationFailure("posting.not-signed");
@@ -160,14 +167,14 @@ public class PostingReactionController {
                 .body(new ReactionCreated(null, totalsInfo.getClientInfo(), requestContext));
     }
 
-    @PutMapping("/{ownerName}")
+    @PutMapping("/{postingId}/reactions/{ownerName}")
     @Transactional
     public ReactionInfo put(@PathVariable UUID postingId, @PathVariable String ownerName,
                             @Valid @RequestBody ReactionOverride reactionOverride) {
         log.info("PUT /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
@@ -198,7 +205,7 @@ public class PostingReactionController {
         return new ReactionInfo(reaction, requestContext);
     }
 
-    @GetMapping
+    @GetMapping("/{postingId}/reactions")
     @NoCache
     @Transactional
     public ReactionsSliceInfo getAll(
@@ -213,7 +220,7 @@ public class PostingReactionController {
                 LogUtil.format(postingId), LogUtil.format(negative), LogUtil.format(emoji), LogUtil.format(before),
                 LogUtil.format(limit));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
@@ -233,13 +240,13 @@ public class PostingReactionController {
         return reactionOperations.getBefore(postingId, negative, emoji, before, limit);
     }
 
-    @GetMapping("/{ownerName}")
+    @GetMapping("/{postingId}/reactions/{ownerName}")
     @Transactional
     public ReactionInfo get(@PathVariable UUID postingId, @PathVariable String ownerName) {
         log.info("GET /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
@@ -259,13 +266,39 @@ public class PostingReactionController {
         return new ReactionInfo(reaction, requestContext);
     }
 
-    @DeleteMapping
+    @PostMapping("/reactions/search")
+    @Transactional
+    public List<ReactionInfo> search(@Valid @RequestBody ReactionsFilter filter) {
+        log.info("POST /postings/reactions/search (ownerName = {})", LogUtil.format(filter.getOwnerName()));
+
+        if (ObjectUtils.isEmpty(filter.getOwnerName())
+                || filter.getPostings() == null || filter.getPostings().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        boolean own = requestContext.isClient(filter.getOwnerName());
+        Map<UUID, Posting> postings = postingRepository.findByNodeIdAndIds(requestContext.nodeId(), filter.getPostings())
+                .stream()
+                .filter(p -> requestContext.isPrincipal(p.getViewE()))
+                .filter(p -> requestContext.isPrincipal(p.getViewReactionsE()) || own)
+                .collect(Collectors.toMap(Posting::getId, Function.identity()));
+
+        return reactionRepository.findByEntryIdsAndOwner(postings.keySet(), filter.getOwnerName()).stream()
+                .filter(r -> requestContext.isPrincipal(r.getViewE()))
+                .filter(r -> !r.isNegative()
+                        || requestContext.isPrincipal(postings.get(r.getEntryRevision().getEntry().getId())
+                                                        .getViewNegativeReactionsE()))
+                .map(r -> new ReactionInfo(r, requestContext))
+                .collect(Collectors.toList());
+    }
+
+    @DeleteMapping("/{postingId}/reactions")
     @Admin
     @Transactional
     public Result deleteAll(@PathVariable UUID postingId) {
         log.info("DELETE /postings/{postingId}/reactions (postingId = {})", LogUtil.format(postingId));
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+        Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
@@ -279,14 +312,14 @@ public class PostingReactionController {
         return Result.OK;
     }
 
-    @DeleteMapping("/{ownerName}")
+    @DeleteMapping("/{postingId}/reactions/{ownerName}")
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) throws Throwable {
         log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
         lock.lock(postingId);
         try {
-            Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+            Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                     .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
             if (!requestContext.isPrincipal(posting.getViewE())) {
                 throw new ObjectNotFoundFailure("posting.not-found");

@@ -1,5 +1,6 @@
 package org.moera.node.data;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,6 +21,9 @@ public interface ReactionTotalRepository extends JpaRepository<ReactionTotal, UU
 
     @Query("select rt from ReactionTotal rt where rt.entry.id = ?1 and rt.total != 0")
     Set<ReactionTotal> findAllByEntryId(UUID entryId);
+
+    @Query("select rt from ReactionTotal rt where rt.entry.id in (?1) and rt.total != 0")
+    Set<ReactionTotal> findAllByEntryIds(Collection<UUID> entryIds);
 
     @Modifying
     @Query("delete from ReactionTotal rt where rt.entry.id = ?1"
