@@ -51,7 +51,7 @@ public class MediaFileOwner {
 
     @NotNull
     @Column(insertable = false, updatable = false)
-    private Timestamp usageUpdatedAt;
+    private Timestamp usageUpdatedAt = Util.now();
 
     @Column(insertable = false, updatable = false)
     private Timestamp deadline;
