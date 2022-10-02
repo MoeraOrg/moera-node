@@ -22,9 +22,10 @@ public interface ContactRepository extends JpaRepository<Contact, UUID>, Queryds
     @Query("select c from Contact c where c.updatedAt < ?1")
     Collection<Contact> findAllUpdatedBefore(Timestamp deadline);
 
-    @Query("update Contact c set c.remoteFullName = ?3 where c.nodeId = ?1 and c.remoteNodeName = ?2")
+    @Query("update Contact c set c.remoteFullName = ?3, c.remoteGender = ?4"
+            + " where c.nodeId = ?1 and c.remoteNodeName = ?2")
     @Modifying
-    void updateRemoteFullName(UUID nodeId, String remoteNodeName, String remoteFullName);
+    void updateRemoteFullNameAndGender(UUID nodeId, String remoteNodeName, String remoteFullName, String remoteGender);
 
     @Query("update Contact c set c.remoteAvatarMediaFile = ?3, c.remoteAvatarShape = ?4"
             + " where c.nodeId = ?1 and c.remoteNodeName = ?2")

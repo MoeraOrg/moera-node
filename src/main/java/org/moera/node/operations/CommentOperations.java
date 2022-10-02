@@ -88,6 +88,7 @@ public class CommentOperations {
         comment.setNodeId(requestContext.nodeId());
         comment.setOwnerName(commentText.getOwnerName());
         comment.setOwnerFullName(commentText.getOwnerFullName());
+        comment.setOwnerGender(commentText.getOwnerGender());
         if (commentText.getOwnerAvatar() != null) {
             if (commentText.getOwnerAvatarMediaFile() != null) {
                 comment.setOwnerAvatarMediaFile(commentText.getOwnerAvatarMediaFile());
@@ -102,6 +103,7 @@ public class CommentOperations {
             comment.setRepliedToRevision(repliedTo.getCurrentRevision());
             comment.setRepliedToName(repliedTo.getOwnerName());
             comment.setRepliedToFullName(repliedTo.getOwnerFullName());
+            comment.setRepliedToGender(repliedTo.getOwnerGender());
             if (repliedTo.getOwnerAvatarMediaFile() != null) {
                 comment.setRepliedToAvatarMediaFile(repliedTo.getOwnerAvatarMediaFile());
                 comment.setRepliedToAvatarShape(repliedTo.getOwnerAvatarShape());

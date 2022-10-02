@@ -29,6 +29,9 @@ public class SubscriptionDescription {
     @Size(max = 96)
     private String remoteFullName;
 
+    @Size(max = 31)
+    private String remoteGender;
+
     @Valid
     private AvatarDescription remoteAvatar;
 
@@ -83,6 +86,14 @@ public class SubscriptionDescription {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteGender() {
+        return remoteGender;
+    }
+
+    public void setRemoteGender(String remoteGender) {
+        this.remoteGender = remoteGender;
     }
 
     public AvatarDescription getRemoteAvatar() {
@@ -143,6 +154,7 @@ public class SubscriptionDescription {
         subscription.setRemoteSubscriberId(remoteSubscriberId);
         subscription.setRemoteNodeName(remoteNodeName);
         subscription.setRemoteFullName(remoteFullName);
+        subscription.setRemoteGender(remoteGender);
         if (remoteAvatar != null) {
             if (remoteAvatarMediaFile != null) {
                 subscription.setRemoteAvatarMediaFile(remoteAvatarMediaFile);

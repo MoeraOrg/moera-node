@@ -177,6 +177,8 @@ public class Picker extends Task {
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
         String receiverFullName = postingInfo.isOriginal()
                 ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
+        String receiverGender = postingInfo.isOriginal()
+                ? postingInfo.getOwnerGender() : postingInfo.getReceiverGender();
         MediaFile receiverAvatar = postingInfo.isOriginal()
                 ? ownerAvatar
                 : mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getReceiverAvatar());
@@ -197,14 +199,15 @@ public class Picker extends Task {
             posting.setParentMedia(parentMedia);
             posting.setReceiverName(receiverName);
             posting.setReceiverFullName(receiverFullName);
+            posting.setReceiverGender(receiverGender);
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             createRevision(posting, postingInfo);
             downloadMedia(postingInfo, null, posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
-            subscribe(receiverName, receiverFullName, receiverAvatar, receiverAvatarShape, receiverPostingId,
-                    posting.getReceiverEditedAt(), liberins);
+            subscribe(receiverName, receiverFullName, receiverGender, receiverAvatar, receiverAvatarShape,
+                    receiverPostingId, posting.getReceiverEditedAt(), liberins);
             liberins.add(new PostingAddedLiberin(posting));
             publish(feedName, posting, liberins);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
@@ -304,9 +307,9 @@ public class Picker extends Task {
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, liberins::add);
     }
 
-    private void subscribe(String receiverName, String receiverFullName, MediaFile receiverAvatar,
-                           String receiverAvatarShape, String receiverPostingId, Timestamp lastUpdatedAt,
-                           List<Liberin> liberins) throws NodeApiException {
+    private void subscribe(String receiverName, String receiverFullName, String receiverGender,
+                           MediaFile receiverAvatar, String receiverAvatarShape, String receiverPostingId,
+                           Timestamp lastUpdatedAt, List<Liberin> liberins) throws NodeApiException {
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
                 receiverPostingId, fullName(), getAvatar(), Util.toEpochSecond(lastUpdatedAt));
         try {
@@ -319,6 +322,7 @@ public class Picker extends Task {
             subscription.setRemoteSubscriberId(subscriberInfo.getId());
             subscription.setRemoteNodeName(receiverName);
             subscription.setRemoteFullName(receiverFullName);
+            subscription.setRemoteGender(receiverGender);
             if (receiverAvatar != null) {
                 subscription.setRemoteAvatarMediaFile(receiverAvatar);
                 subscription.setRemoteAvatarShape(receiverAvatarShape);

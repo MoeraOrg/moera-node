@@ -58,6 +58,10 @@ public abstract class Task implements Runnable {
         return universalContext.fullName();
     }
 
+    protected String gender() {
+        return universalContext.gender();
+    }
+
     protected Avatar getAvatar() {
         return universalContext.getAvatar();
     }

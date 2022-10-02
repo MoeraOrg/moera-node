@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.Map;
 import java.util.UUID;
 import javax.validation.Valid;
+import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.auth.principal.Principal;
@@ -14,11 +15,16 @@ public class SubscriberDescription {
 
     private SubscriptionType type;
 
+    @Size(max = 63)
     private String feedName;
 
     private UUID postingId;
 
+    @Size(max = 96)
     private String ownerFullName;
+
+    @Size(max = 31)
+    private String ownerGender;
 
     @Valid
     private AvatarDescription ownerAvatar;
@@ -62,6 +68,14 @@ public class SubscriberDescription {
         this.ownerFullName = ownerFullName;
     }
 
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
+    }
+
     public AvatarDescription getOwnerAvatar() {
         return ownerAvatar;
     }
@@ -101,6 +115,7 @@ public class SubscriberDescription {
     public void toSubscriber(Subscriber subscriber) {
         subscriber.setSubscriptionType(type);
         subscriber.setRemoteFullName(ownerFullName);
+        subscriber.setRemoteGender(ownerGender);
         if (ownerAvatar != null) {
             if (ownerAvatarMediaFile != null) {
                 subscriber.setRemoteAvatarMediaFile(ownerAvatarMediaFile);

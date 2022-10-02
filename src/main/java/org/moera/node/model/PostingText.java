@@ -34,6 +34,9 @@ public class PostingText {
     @Size(max = 96)
     private String ownerFullName;
 
+    @Size(max = 31)
+    private String ownerGender;
+
     @Valid
     private AvatarDescription ownerAvatar;
 
@@ -135,6 +138,14 @@ public class PostingText {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarDescription getOwnerAvatar() {
@@ -317,6 +328,9 @@ public class PostingText {
         if (ownerFullName != null) {
             entry.setOwnerFullName(ownerFullName);
         }
+        if (ownerGender != null) {
+            entry.setOwnerGender(ownerGender);
+        }
         if (ownerAvatar != null) {
             if (ownerAvatarMediaFile != null) {
                 entry.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
@@ -378,6 +392,7 @@ public class PostingText {
                         || acceptedReactions.getNegative().equals(entry.getAcceptedReactionsNegative())))
                && (ownerName == null || ownerName.equals(entry.getOwnerName()))
                && (ownerFullName == null || ownerFullName.equals(entry.getOwnerFullName()))
+               && (ownerGender == null || ownerGender.equals(entry.getOwnerGender()))
                && (ownerAvatarMediaFile == null
                     || entry.getOwnerAvatarMediaFile() != null
                         && ownerAvatarMediaFile.getId().equals(entry.getOwnerAvatarMediaFile().getId()))

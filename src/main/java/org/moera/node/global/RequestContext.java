@@ -87,6 +87,8 @@ public interface RequestContext extends AccessChecker {
 
     String fullName();
 
+    String gender();
+
     UUID avatarId();
 
     Avatar getAvatar();

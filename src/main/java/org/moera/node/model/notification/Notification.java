@@ -20,6 +20,9 @@ public abstract class Notification implements Cloneable {
     private String senderFullName;
 
     @JsonIgnore
+    private String senderGender;
+
+    @JsonIgnore
     private AvatarImage senderAvatar;
 
     @JsonIgnore
@@ -49,6 +52,14 @@ public abstract class Notification implements Cloneable {
 
     public void setSenderFullName(String senderFullName) {
         this.senderFullName = senderFullName;
+    }
+
+    public String getSenderGender() {
+        return senderGender;
+    }
+
+    public void setSenderGender(String senderGender) {
+        this.senderGender = senderGender;
     }
 
     public AvatarImage getSenderAvatar() {

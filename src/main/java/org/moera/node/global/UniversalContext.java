@@ -60,6 +60,10 @@ public class UniversalContext {
         return isBackground() ? getOptions().getString("profile.full-name") : requestContext.fullName();
     }
 
+    public String gender() {
+        return isBackground() ? getOptions().getString("profile.gender") : requestContext.gender();
+    }
+
     public UUID avatarId() {
         return isBackground() ? getOptions().getUuid("profile.avatar.id") : requestContext.avatarId();
     }

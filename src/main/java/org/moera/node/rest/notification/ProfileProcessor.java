@@ -59,12 +59,15 @@ public class ProfileProcessor {
         validateSubscription(notification);
         try {
             Transaction.execute(txManager, () -> {
-                subscriberRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
-                        notification.getSenderFullName());
-                subscriptionRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
-                        notification.getSenderFullName());
-                contactRepository.updateRemoteFullName(universalContext.nodeId(), notification.getSenderNodeName(),
-                        notification.getSenderFullName());
+                subscriberRepository.updateRemoteFullNameAndGender(
+                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getSenderFullName(),
+                        notification.getSenderGender());
+                subscriptionRepository.updateRemoteFullNameAndGender(
+                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getSenderFullName(),
+                        notification.getSenderGender());
+                contactRepository.updateRemoteFullNameAndGender(
+                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getSenderFullName(),
+                        notification.getSenderGender());
                 return null;
             });
         } catch (Throwable e) {

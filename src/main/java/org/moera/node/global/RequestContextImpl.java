@@ -240,6 +240,11 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public String gender() {
+        return options != null ? options.getString("profile.gender") : null;
+    }
+
+    @Override
     public UUID avatarId() {
         return options != null ? options.getUuid("profile.avatar.id") : null;
     }

@@ -3,7 +3,6 @@ package org.moera.node.rest.task;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiUnknownNameException;
@@ -15,16 +14,14 @@ import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UpgradeType;
-import org.moera.node.model.SubscriberDescriptionQ;
-import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AllRemoteProfilesSubscriptionTask extends Task {
+public class AllRemoteGendersDownloadTask extends Task {
 
-    private static final Logger log = LoggerFactory.getLogger(AllRemoteProfilesSubscriptionTask.class);
+    private static final Logger log = LoggerFactory.getLogger(AllRemoteGendersDownloadTask.class);
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
@@ -38,7 +35,7 @@ public class AllRemoteProfilesSubscriptionTask extends Task {
     @Inject
     private DomainUpgradeRepository domainUpgradeRepository;
 
-    public AllRemoteProfilesSubscriptionTask() {
+    public AllRemoteGendersDownloadTask() {
     }
 
     @Override
@@ -48,12 +45,7 @@ public class AllRemoteProfilesSubscriptionTask extends Task {
             Duration delay = Duration.ofSeconds(30);
             for (int i = 0; i < 5; i++) {
                 try {
-                    boolean subscribed = subscriptionRepository.countByTypeAndRemoteNode(
-                            nodeId, SubscriptionType.PROFILE, targetNodeName) > 0;
-                    if (subscribed) {
-                        break;
-                    }
-                    subscribe(targetNodeName);
+                    download(targetNodeName);
                     success(targetNodeName);
                     break;
                 } catch (Throwable e) {
@@ -68,7 +60,7 @@ public class AllRemoteProfilesSubscriptionTask extends Task {
         }
         try {
             inTransaction(() -> {
-                domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.PROFILE_SUBSCRIBE, nodeId);
+                domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.GENDER_DOWNLOAD, nodeId);
                 return null;
             });
         } catch (Throwable t) {
@@ -87,41 +79,32 @@ public class AllRemoteProfilesSubscriptionTask extends Task {
         return nodeNames;
     }
 
-    private void subscribe(String targetNodeName) throws Throwable {
+    private void download(String targetNodeName) throws Throwable {
         WhoAmI target = nodeApi.whoAmI(targetNodeName);
         String targetFullName = target.getFullName();
         String targetGender = target.getGender();
-        inTransaction(() -> {
-            subscriberRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName, targetFullName, targetGender);
-            subscriptionRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName, targetFullName, targetGender);
-            contactRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName, targetFullName, targetGender);
-            return null;
-        });
-
-        SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.PROFILE,
-                null, null, fullName(), getAvatar());
-        SubscriberInfo subscriberInfo =
-                nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
-        Subscription subscription = new Subscription();
-        subscription.setId(UUID.randomUUID());
-        subscription.setNodeId(nodeId);
-        subscription.setSubscriptionType(SubscriptionType.PROFILE);
-        subscription.setRemoteSubscriberId(subscriberInfo.getId());
-        subscription.setRemoteNodeName(targetNodeName);
-        subscription.setRemoteFullName(targetFullName);
-        subscription.setRemoteGender(targetGender);
-        subscriptionRepository.save(subscription);
+        if (targetGender != null) {
+            inTransaction(() -> {
+                subscriberRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName,
+                        targetFullName, targetGender);
+                subscriptionRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName,
+                        targetFullName, targetGender);
+                contactRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName,
+                        targetFullName, targetGender);
+                return null;
+            });
+        }
     }
 
     private void success(String targetNodeName) {
-        log.info("Succeeded to subscribe to profile of node {}", targetNodeName);
+        log.info("Succeeded to download gender of node {}", targetNodeName);
     }
 
     private void error(String targetNodeName, Throwable e) {
         if (e instanceof NodeApiUnknownNameException) {
             log.error("Cannot find a node {}", targetNodeName);
         } else {
-            log.error("Error subscribing to profile of node {}: {}", targetNodeName, e.getMessage());
+            log.error("Error downloading gender of node {}: {}", targetNodeName, e.getMessage());
         }
     }
 

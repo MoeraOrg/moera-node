@@ -17,6 +17,9 @@ public class NotificationPacket {
     @Size(max = 96)
     private String fullName;
 
+    @Size(max = 31)
+    private String gender;
+
     @Valid
     private AvatarImage avatar;
 
@@ -53,6 +56,14 @@ public class NotificationPacket {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     public AvatarImage getAvatar() {

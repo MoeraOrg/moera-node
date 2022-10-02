@@ -30,6 +30,7 @@ import org.moera.node.model.body.Body;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.AllRemoteAvatarsDownloadTask;
+import org.moera.node.rest.task.AllRemoteGendersDownloadTask;
 import org.moera.node.rest.task.AllRemoteProfilesSubscriptionTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
@@ -95,6 +96,7 @@ public class Updater {
     private void executeDomainUpgrades() {
         subscribeToProfiles();
         downloadAvatars();
+        downloadGenders();
     }
 
     private void subscribeToProfiles() {
@@ -110,6 +112,15 @@ public class Updater {
         Set<DomainUpgrade> upgrades = domainUpgradeRepository.findPending(UpgradeType.AVATAR_DOWNLOAD);
         for (DomainUpgrade upgrade : upgrades) {
             var task = new AllRemoteAvatarsDownloadTask();
+            taskAutowire.autowireWithoutRequest(task, upgrade.getNodeId());
+            taskExecutor.execute(task);
+        }
+    }
+
+    private void downloadGenders() {
+        Set<DomainUpgrade> upgrades = domainUpgradeRepository.findPending(UpgradeType.GENDER_DOWNLOAD);
+        for (DomainUpgrade upgrade : upgrades) {
+            var task = new AllRemoteGendersDownloadTask();
             taskAutowire.autowireWithoutRequest(task, upgrade.getNodeId());
             taskExecutor.execute(task);
         }

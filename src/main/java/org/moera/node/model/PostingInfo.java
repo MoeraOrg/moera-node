@@ -37,11 +37,13 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Integer totalRevisions;
     private String receiverName;
     private String receiverFullName;
+    private String receiverGender;
     private AvatarImage receiverAvatar;
     private String receiverPostingId;
     private String parentMediaId;
     private String ownerName;
     private String ownerFullName;
+    private String ownerGender;
     private AvatarImage ownerAvatar;
     private Body bodyPreview;
 
@@ -115,6 +117,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         totalRevisions = posting.getTotalRevisions();
         receiverName = posting.getReceiverName();
         receiverFullName = posting.getReceiverFullName();
+        receiverGender = posting.getReceiverGender();
         if (posting.getReceiverAvatarMediaFile() != null) {
             receiverAvatar = new AvatarImage(posting.getReceiverAvatarMediaFile(), posting.getReceiverAvatarShape());
         }
@@ -122,6 +125,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         parentMediaId = posting.getParentMedia() != null ? posting.getParentMedia().getId().toString() : null;
         ownerName = posting.getOwnerName();
         ownerFullName = posting.getOwnerFullName();
+        ownerGender = posting.getOwnerGender();
         if (posting.getOwnerAvatarMediaFile() != null) {
             ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
         }
@@ -353,6 +357,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         this.receiverFullName = receiverFullName;
     }
 
+    public String getReceiverGender() {
+        return receiverGender;
+    }
+
+    public void setReceiverGender(String receiverGender) {
+        this.receiverGender = receiverGender;
+    }
+
     public AvatarImage getReceiverAvatar() {
         return receiverAvatar;
     }
@@ -396,6 +408,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarImage getOwnerAvatar() {
@@ -715,6 +735,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
         posting.setOwnerName(ownerName);
         posting.setOwnerFullName(ownerFullName);
+        posting.setOwnerGender(ownerGender);
         if (ownerAvatar != null && ownerAvatar.getShape() != null) {
             posting.setOwnerAvatarShape(ownerAvatar.getShape());
         }

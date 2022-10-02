@@ -51,6 +51,9 @@ public class Entry {
     @Size(max = 96)
     private String receiverFullName;
 
+    @Size(max = 31)
+    private String receiverGender;
+
     @ManyToOne
     private MediaFile receiverAvatarMediaFile;
 
@@ -66,6 +69,9 @@ public class Entry {
 
     @Size(max = 96)
     private String ownerFullName;
+
+    @Size(max = 31)
+    private String ownerGender;
 
     @ManyToOne
     private MediaFile ownerAvatarMediaFile;
@@ -128,6 +134,9 @@ public class Entry {
 
     @Size(max = 96)
     private String repliedToFullName;
+
+    @Size(max = 31)
+    private String repliedToGender;
 
     @ManyToOne
     private MediaFile repliedToAvatarMediaFile;
@@ -291,6 +300,11 @@ public class Entry {
         this.receiverName = receiverName;
     }
 
+    @Transient
+    public boolean isOriginal() {
+        return getReceiverName() == null;
+    }
+
     public String getReceiverFullName() {
         return receiverFullName;
     }
@@ -299,9 +313,12 @@ public class Entry {
         this.receiverFullName = receiverFullName;
     }
 
-    @Transient
-    public boolean isOriginal() {
-        return getReceiverName() == null;
+    public String getReceiverGender() {
+        return receiverGender;
+    }
+
+    public void setReceiverGender(String receiverGender) {
+        this.receiverGender = receiverGender;
     }
 
     public MediaFile getReceiverAvatarMediaFile() {
@@ -342,6 +359,14 @@ public class Entry {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public MediaFile getOwnerAvatarMediaFile() {
@@ -559,6 +584,14 @@ public class Entry {
 
     public void setRepliedToFullName(String repliedToFullName) {
         this.repliedToFullName = repliedToFullName;
+    }
+
+    public String getRepliedToGender() {
+        return repliedToGender;
+    }
+
+    public void setRepliedToGender(String repliedToGender) {
+        this.repliedToGender = repliedToGender;
     }
 
     public MediaFile getRepliedToAvatarMediaFile() {

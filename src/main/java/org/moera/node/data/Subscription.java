@@ -44,6 +44,9 @@ public class Subscription {
     @Size(max = 96)
     private String remoteFullName;
 
+    @Size(max = 31)
+    private String remoteGender;
+
     @ManyToOne
     private MediaFile remoteAvatarMediaFile;
 
@@ -119,6 +122,14 @@ public class Subscription {
 
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteGender() {
+        return remoteGender;
+    }
+
+    public void setRemoteGender(String remoteGender) {
+        this.remoteGender = remoteGender;
     }
 
     public MediaFile getRemoteAvatarMediaFile() {

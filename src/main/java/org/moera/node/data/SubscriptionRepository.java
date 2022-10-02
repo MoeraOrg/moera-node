@@ -58,9 +58,10 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     Optional<Subscription> findByTypeAndRemoteNode(UUID nodeId, SubscriptionType subscriptionType,
                                                    String remoteNodeName);
 
-    @Query("update Subscription s set s.remoteFullName = ?3 where s.nodeId = ?1 and s.remoteNodeName = ?2")
+    @Query("update Subscription s set s.remoteFullName = ?3, s.remoteGender = ?4"
+            + " where s.nodeId = ?1 and s.remoteNodeName = ?2")
     @Modifying
-    void updateRemoteFullName(UUID nodeId, String remoteNodeName, String remoteFullName);
+    void updateRemoteFullNameAndGender(UUID nodeId, String remoteNodeName, String remoteFullName, String remoteGender);
 
     @Query("update Subscription s set s.remoteAvatarMediaFile = ?3, s.remoteAvatarShape = ?4"
             + " where s.nodeId = ?1 and s.remoteNodeName = ?2")

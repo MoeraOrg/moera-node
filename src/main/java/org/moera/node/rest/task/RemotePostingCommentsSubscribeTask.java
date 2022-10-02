@@ -64,6 +64,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             subscription.setRemoteSubscriberId(subscriberInfo.getId());
             subscription.setRemoteNodeName(targetNodeName);
             subscription.setRemoteFullName(target.getFullName());
+            subscription.setRemoteGender(target.getGender());
             if (targetAvatar != null) {
                 subscription.setRemoteAvatarMediaFile(targetAvatar);
                 subscription.setRemoteAvatarShape(target.getAvatar().getShape());

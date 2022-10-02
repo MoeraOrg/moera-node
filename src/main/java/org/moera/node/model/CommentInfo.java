@@ -25,6 +25,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private String id;
     private String ownerName;
     private String ownerFullName;
+    private String ownerGender;
     private AvatarImage ownerAvatar;
     private String postingId;
     private String postingRevisionId;
@@ -84,6 +85,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         id = comment.getId().toString();
         ownerName = comment.getOwnerName();
         ownerFullName = comment.getOwnerFullName();
+        ownerGender = comment.getOwnerGender();
         if (comment.getOwnerAvatarMediaFile() != null) {
             ownerAvatar = new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape());
         }
@@ -242,6 +244,14 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarImage getOwnerAvatar() {

@@ -42,20 +42,22 @@ public class ContactOperations {
     @Inject
     private CommentRepository commentRepository;
 
-    public void createOrUpdateCloseness(String remoteNodeName, String remoteFullName, MediaFile remoteAvatar,
-                                        String remoteAvatarShape, float delta) {
+    public void createOrUpdateCloseness(String remoteNodeName, String remoteFullName, String remoteGender,
+                                        MediaFile remoteAvatar, String remoteAvatarShape, float delta) {
         createOrUpdateCloseness(requestContext.nodeId(), requestContext.nodeName(), remoteNodeName, remoteFullName,
-                remoteAvatar, remoteAvatarShape, delta);
+                remoteGender, remoteAvatar, remoteAvatarShape, delta);
     }
 
     public void createOrUpdateCloseness(UUID nodeId, String nodeName, String remoteNodeName, String remoteFullName,
-                                        MediaFile remoteAvatar, String remoteAvatarShape, float delta) {
+                                        String remoteGender, MediaFile remoteAvatar, String remoteAvatarShape,
+                                        float delta) {
         if (remoteNodeName == null) {
             return;
         }
         Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
         if (contact != null) {
             contact.setRemoteFullName(remoteFullName);
+            contact.setRemoteGender(remoteGender);
             if (remoteAvatar != null) {
                 contact.setRemoteAvatarMediaFile(remoteAvatar);
                 contact.setRemoteAvatarShape(remoteAvatarShape);
@@ -68,6 +70,7 @@ public class ContactOperations {
         contact.setNodeId(nodeId);
         contact.setRemoteNodeName(remoteNodeName);
         contact.setRemoteFullName(remoteFullName);
+        contact.setRemoteGender(remoteGender);
         if (remoteAvatar != null) {
             contact.setRemoteAvatarMediaFile(remoteAvatar);
             contact.setRemoteAvatarShape(remoteAvatarShape);

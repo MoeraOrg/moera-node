@@ -41,6 +41,9 @@ public class Subscriber {
     @Size(max = 96)
     private String remoteFullName;
 
+    @Size(max = 31)
+    private String remoteGender;
+
     @ManyToOne
     private MediaFile remoteAvatarMediaFile;
 
@@ -106,6 +109,18 @@ public class Subscriber {
         return remoteFullName;
     }
 
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteGender() {
+        return remoteGender;
+    }
+
+    public void setRemoteGender(String remoteGender) {
+        this.remoteGender = remoteGender;
+    }
+
     public MediaFile getRemoteAvatarMediaFile() {
         return remoteAvatarMediaFile;
     }
@@ -120,10 +135,6 @@ public class Subscriber {
 
     public void setRemoteAvatarShape(String remoteAvatarShape) {
         this.remoteAvatarShape = remoteAvatarShape;
-    }
-
-    public void setRemoteFullName(String remoteFullName) {
-        this.remoteFullName = remoteFullName;
     }
 
     public Timestamp getCreatedAt() {
