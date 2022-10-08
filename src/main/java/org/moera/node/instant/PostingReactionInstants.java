@@ -36,8 +36,8 @@ public class PostingReactionInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(Posting posting, String ownerName, String ownerFullName, AvatarImage ownerAvatar,
-                      boolean negative, int emoji) {
+    public void added(Posting posting, String ownerName, String ownerFullName, String ownerGender,
+                      AvatarImage ownerAvatar, boolean negative, int emoji) {
         if (ownerName.equals(nodeName())) {
             return;
         }
@@ -64,7 +64,7 @@ public class PostingReactionInstants extends InstantsCreator {
             substory.setRemoteOwnerAvatarMediaFile(ownerAvatar.getMediaFile());
             substory.setRemoteOwnerAvatarShape(ownerAvatar.getShape());
         }
-        substory.setSummaryData(buildReactionSummary(emoji));
+        substory.setSummaryData(buildReactionSummary(ownerGender, emoji));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
@@ -72,9 +72,9 @@ public class PostingReactionInstants extends InstantsCreator {
         updated(story, isNewStory, true);
     }
 
-    private static StorySummaryData buildReactionSummary(int emoji) {
+    private static StorySummaryData buildReactionSummary(String gender, int emoji) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setReaction(new StorySummaryReaction(null, null, emoji));
+        summaryData.setReaction(new StorySummaryReaction(null, null, gender, emoji));
         return summaryData;
     }
 
@@ -138,20 +138,22 @@ public class PostingReactionInstants extends InstantsCreator {
         List<StorySummaryReaction> reactions = new ArrayList<>();
         for (int i = 0; i < 2 && i < stories.size(); i++) {
             Story substory = stories.get(i);
+            StorySummaryReaction reaction = substory.getSummaryData().getReaction();
             reactions.add(new StorySummaryReaction(substory.getRemoteOwnerName(), substory.getRemoteOwnerFullName(),
-                    substory.getSummaryData().getReaction().getEmoji()));
+                    reaction.getOwnerGender(), reaction.getEmoji()));
         }
         summaryData.setReactions(reactions);
         summaryData.setTotalReactions(stories.size());
-        summaryData.setComment(new StorySummaryEntry(null, null, story.getRemoteHeading()));
-        summaryData.setPosting(
-                new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(), null));
+        summaryData.setPosting(new StorySummaryEntry(
+                story.getRemotePostingNodeName(), story.getRemotePostingFullName(), story.getEntry().getOwnerGender(),
+                story.getEntry().getCurrentRevision().getHeading()));
         return summaryData;
     }
 
     public void addingFailed(String nodeName, String postingId, PostingInfo postingInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
@@ -165,16 +167,18 @@ public class PostingReactionInstants extends InstantsCreator {
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
-        story.setSummaryData(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
+        story.setSummaryData(buildAddingFailedSummary(
+                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
+    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String gender,
+                                                             String postingHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, postingHeading));
+        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, gender, postingHeading));
         return summaryData;
     }
 

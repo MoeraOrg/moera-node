@@ -10,6 +10,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
     private String nodeName;
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingHeading;
     private String postingId;
@@ -17,16 +18,19 @@ public class ReplyCommentAddedLiberin extends Liberin {
     private String repliedToId;
     private String commentOwnerName;
     private String commentOwnerFullName;
+    private String commentOwnerGender;
     private AvatarImage commentOwnerAvatar;
     private String commentId;
 
     public ReplyCommentAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
-                                    AvatarImage postingOwnerAvatar, String postingHeading, String postingId,
-                                    String repliedToHeading, String repliedToId, String commentOwnerName,
-                                    String commentOwnerFullName, AvatarImage commentOwnerAvatar, String commentId) {
+                                    String postingOwnerGender, AvatarImage postingOwnerAvatar, String postingHeading,
+                                    String postingId, String repliedToHeading, String repliedToId,
+                                    String commentOwnerName, String commentOwnerFullName, String commentOwnerGender,
+                                    AvatarImage commentOwnerAvatar, String commentId) {
         this.nodeName = nodeName;
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingId = postingId;
         this.postingHeading = postingHeading;
@@ -35,6 +39,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
         this.repliedToHeading = repliedToHeading;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
     }
 
@@ -60,6 +65,14 @@ public class ReplyCommentAddedLiberin extends Liberin {
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerGender() {
+        return postingOwnerGender;
+    }
+
+    public void setPostingOwnerGender(String postingOwnerGender) {
+        this.postingOwnerGender = postingOwnerGender;
     }
 
     public AvatarImage getPostingOwnerAvatar() {
@@ -118,6 +131,14 @@ public class ReplyCommentAddedLiberin extends Liberin {
         this.commentOwnerFullName = commentOwnerFullName;
     }
 
+    public String getCommentOwnerGender() {
+        return commentOwnerGender;
+    }
+
+    public void setCommentOwnerGender(String commentOwnerGender) {
+        this.commentOwnerGender = commentOwnerGender;
+    }
+
     public AvatarImage getCommentOwnerAvatar() {
         return commentOwnerAvatar;
     }
@@ -140,6 +161,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("postingOwnerName", postingOwnerName);
         model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerGender", postingOwnerGender);
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingHeading", postingHeading);
         model.put("postingId", postingId);
@@ -147,6 +169,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
         model.put("repliedToId", repliedToId);
         model.put("commentOwnerName", commentOwnerName);
         model.put("commentOwnerFullName", commentOwnerFullName);
+        model.put("commentOwnerGender", commentOwnerGender);
         model.put("commentOwnerAvatar", commentOwnerAvatar);
         model.put("commentId", commentId);
     }

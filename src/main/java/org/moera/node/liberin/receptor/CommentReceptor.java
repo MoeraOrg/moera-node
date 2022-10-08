@@ -87,7 +87,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId(),
                         visibilityFilter(posting, comment)),
                 new PostingCommentDeletedNotification(posting.getId(), comment.getId(), comment.getOwnerName(),
-                        comment.getOwnerFullName(),
+                        comment.getOwnerFullName(), comment.getOwnerGender(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
 
         send(liberin, new CommentDeletedEvent(comment, visibilityFilter(posting, comment)));
@@ -104,8 +104,9 @@ public class CommentReceptor extends LiberinReceptorBase {
             send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(),
                             visibilityFilter(posting, comment)),
                     new PostingCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                            postingOwnerAvatar, posting.getId(), posting.getCurrentRevision().getHeading(),
-                            comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(), commentOwnerAvatar,
+                            posting.getOwnerGender(), postingOwnerAvatar, posting.getId(),
+                            posting.getCurrentRevision().getHeading(), comment.getId(), comment.getOwnerName(),
+                            comment.getOwnerFullName(), comment.getOwnerGender(), commentOwnerAvatar,
                             comment.getCurrentRevision().getHeading(), repliedToId));
             commentInstants.added(comment);
         }
@@ -122,8 +123,9 @@ public class CommentReceptor extends LiberinReceptorBase {
                 comment.getOwnerAvatarShape());
         send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
                 new ReplyCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                        postingOwnerAvatar, posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        posting.getCurrentRevision().getHeading(), comment.getOwnerName(), comment.getOwnerFullName(),
+                        posting.getOwnerGender(), postingOwnerAvatar, posting.getId(), comment.getId(),
+                        comment.getRepliedTo().getId(), posting.getCurrentRevision().getHeading(),
+                        comment.getOwnerName(), comment.getOwnerFullName(), comment.getOwnerGender(),
                         commentOwnerAvatar, comment.getCurrentRevision().getHeading(), comment.getRepliedToHeading()));
     }
 
@@ -133,7 +135,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         }
         send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
                 new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        comment.getOwnerName(), comment.getOwnerFullName(),
+                        comment.getOwnerName(), comment.getOwnerFullName(), comment.getOwnerGender(),
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
     }
 
@@ -158,9 +160,9 @@ public class CommentReceptor extends LiberinReceptorBase {
                 .map(m -> Directions.single(posting.getNodeId(), m))
                 .forEach(d -> send(d,
                         new MentionCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                                postingOwnerAvatar, posting.getId(), comment.getId(),
-                                posting.getCurrentRevision().getHeading(), ownerName, ownerFullName, ownerAvatar,
-                                currentHeading)));
+                                posting.getOwnerGender(), postingOwnerAvatar, posting.getId(), comment.getId(),
+                                posting.getCurrentRevision().getHeading(), ownerName, ownerFullName,
+                                comment.getOwnerGender(), ownerAvatar, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !currentMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))

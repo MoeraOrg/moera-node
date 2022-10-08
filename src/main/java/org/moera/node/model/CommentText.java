@@ -76,10 +76,11 @@ public class CommentText {
     public CommentText() {
     }
 
-    public CommentText(String ownerName, String ownerFullName, CommentSourceText sourceText,
+    public CommentText(String ownerName, String ownerFullName, String ownerGender, CommentSourceText sourceText,
                        TextConverter textConverter) {
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerGender = ownerGender;
         ownerAvatar = sourceText.getOwnerAvatar();
         bodySrc = sourceText.getBodySrc();
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;

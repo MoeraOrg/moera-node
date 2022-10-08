@@ -130,7 +130,7 @@ public class RemoteCommentPostTask extends Task {
     }
 
     private CommentText buildComment(PostingInfo postingInfo, byte[] repliedToDigest) {
-        CommentText commentText = new CommentText(nodeName(), fullName(), sourceText, textConverter);
+        CommentText commentText = new CommentText(nodeName(), fullName(), gender(), sourceText, textConverter);
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         cacheMediaDigests(mediaDigests);
         byte[] parentMediaDigest = postingInfo.getParentMediaId() != null

@@ -91,7 +91,7 @@ public class RemotePostingPostTask extends Task {
     }
 
     private PostingText buildPosting() {
-        PostingText postingText = new PostingText(nodeName(), fullName(), sourceText, textConverter);
+        PostingText postingText = new PostingText(nodeName(), fullName(), gender(), sourceText, textConverter);
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         cacheMediaDigests(mediaDigests);
         byte[] parentMediaDigest = prevPostingInfo != null && prevPostingInfo.getParentMediaId() != null

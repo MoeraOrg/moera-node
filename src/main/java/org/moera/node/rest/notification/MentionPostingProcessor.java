@@ -47,8 +47,8 @@ public class MentionPostingProcessor {
                     universalContext.send(
                             new MentionInRemotePostingAddedLiberin(notification.getSenderNodeName(),
                                     notification.getOwnerName(), notification.getOwnerFullName(),
-                                    notification.getOwnerAvatar(), notification.getPostingId(),
-                                    notification.getHeading()));
+                                    notification.getOwnerGender(), notification.getOwnerAvatar(),
+                                    notification.getPostingId(), notification.getHeading()));
                 });
         var task = new RemotePostingCommentsSubscribeTask(
                 notification.getSenderNodeName(), notification.getPostingId(), SubscriptionReason.MENTION);

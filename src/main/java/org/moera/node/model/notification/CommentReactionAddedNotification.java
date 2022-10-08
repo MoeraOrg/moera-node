@@ -11,6 +11,7 @@ public class CommentReactionAddedNotification extends CommentReactionNotificatio
 
     private String postingNodeName;
     private String postingFullName;
+    private String postingGender;
     private AvatarImage postingAvatar;
     private String postingHeading;
     private String commentHeading;
@@ -20,14 +21,16 @@ public class CommentReactionAddedNotification extends CommentReactionNotificatio
         super(NotificationType.COMMENT_REACTION_ADDED);
     }
 
-    public CommentReactionAddedNotification(String postingNodeName, String postingFullName, AvatarImage postingAvatar,
-                                            UUID postingId, UUID commentId, String postingHeading,
-                                            String commentHeading, String ownerName, String ownerFullName,
-                                            AvatarImage ownerAvatar, boolean negative, int emoji) {
-        super(NotificationType.COMMENT_REACTION_ADDED, postingId, commentId, ownerName, ownerFullName, ownerAvatar,
-                negative);
+    public CommentReactionAddedNotification(String postingNodeName, String postingFullName, String postingGender,
+                                            AvatarImage postingAvatar, UUID postingId, UUID commentId,
+                                            String postingHeading, String commentHeading, String ownerName,
+                                            String ownerFullName, String ownerGender, AvatarImage ownerAvatar,
+                                            boolean negative, int emoji) {
+        super(NotificationType.COMMENT_REACTION_ADDED, postingId, commentId, ownerName, ownerFullName, ownerGender,
+                ownerAvatar, negative);
         this.postingNodeName = postingNodeName;
         this.postingFullName = postingFullName;
+        this.postingGender = postingGender;
         this.postingAvatar = postingAvatar;
         this.postingHeading = postingHeading;
         this.commentHeading = commentHeading;
@@ -48,6 +51,14 @@ public class CommentReactionAddedNotification extends CommentReactionNotificatio
 
     public void setPostingFullName(String postingFullName) {
         this.postingFullName = postingFullName;
+    }
+
+    public String getPostingGender() {
+        return postingGender;
+    }
+
+    public void setPostingGender(String postingGender) {
+        this.postingGender = postingGender;
     }
 
     public AvatarImage getPostingAvatar() {

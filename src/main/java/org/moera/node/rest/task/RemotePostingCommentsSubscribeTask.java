@@ -53,7 +53,7 @@ public class RemotePostingCommentsSubscribeTask extends Task {
             MediaFile targetAvatar = mediaManager.downloadPublicMedia(targetNodeName, target.getAvatar());
 
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING_COMMENTS,
-                    null, postingId, fullName(), getAvatar());
+                    null, postingId, fullName(), gender(), getAvatar());
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
 

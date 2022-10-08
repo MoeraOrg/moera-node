@@ -48,7 +48,8 @@ public class SubscriberInstants extends InstantsCreator {
 
     private static StorySummaryData buildSummary(Subscriber subscriber) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(subscriber.getRemoteNodeName(), subscriber.getRemoteFullName()));
+        summaryData.setNode(new StorySummaryNode(
+                subscriber.getRemoteNodeName(), subscriber.getRemoteFullName(), subscriber.getRemoteGender()));
         summaryData.setFeedName(subscriber.getFeedName());
         return summaryData;
     }

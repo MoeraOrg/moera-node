@@ -11,6 +11,7 @@ public class MentionPostingAddedNotification extends MentionPostingNotification 
 
     private String ownerName;
     private String ownerFullName;
+    private String ownerGender;
     private AvatarImage ownerAvatar;
     private String heading;
 
@@ -18,11 +19,12 @@ public class MentionPostingAddedNotification extends MentionPostingNotification 
         super(NotificationType.MENTION_POSTING_ADDED);
     }
 
-    public MentionPostingAddedNotification(UUID postingId, String ownerName, String ownerFullName,
+    public MentionPostingAddedNotification(UUID postingId, String ownerName, String ownerFullName, String ownerGender,
                                            AvatarImage ownerAvatar, String heading) {
         super(NotificationType.MENTION_POSTING_ADDED, postingId);
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerGender = ownerGender;
         this.ownerAvatar = ownerAvatar;
         this.heading = heading;
     }
@@ -41,6 +43,14 @@ public class MentionPostingAddedNotification extends MentionPostingNotification 
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarImage getOwnerAvatar() {

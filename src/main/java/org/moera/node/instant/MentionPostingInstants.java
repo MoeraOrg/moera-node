@@ -22,8 +22,8 @@ public class MentionPostingInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String ownerName, String ownerFullName, AvatarImage ownerAvatar, String id,
-                      String heading) {
+    public void added(String nodeName, String ownerName, String ownerFullName, String ownerGender,
+                      AvatarImage ownerAvatar, String id, String heading) {
         Story story = findStory(nodeName, id);
         if (story != null) {
             return;
@@ -38,7 +38,7 @@ public class MentionPostingInstants extends InstantsCreator {
             story.setRemotePostingAvatarShape(ownerAvatar.getShape());
         }
         story.setRemotePostingId(id);
-        story.setSummaryData(buildSummary(story, heading));
+        story.setSummaryData(buildSummary(story, ownerGender, heading));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
@@ -58,10 +58,10 @@ public class MentionPostingInstants extends InstantsCreator {
                 nodeName, id).stream().findFirst().orElse(null);
     }
 
-    private static StorySummaryData buildSummary(Story story, String heading) {
+    private static StorySummaryData buildSummary(Story story, String ownerGender, String heading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                heading));
+        summaryData.setPosting(new StorySummaryEntry(
+                story.getRemotePostingNodeName(), story.getRemotePostingFullName(), ownerGender, heading));
         return summaryData;
     }
 

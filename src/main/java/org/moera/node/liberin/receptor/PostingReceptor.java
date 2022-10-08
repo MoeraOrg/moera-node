@@ -86,7 +86,8 @@ public class PostingReceptor extends LiberinReceptorBase {
             AvatarImage ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
             send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
                     new PostingImportantUpdateNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                            ownerAvatar, posting.getId(), posting.getCurrentRevision().getHeading(),
+                            posting.getOwnerGender(), ownerAvatar, posting.getId(),
+                            posting.getCurrentRevision().getHeading(),
                             posting.getCurrentRevision().getUpdateDescription()));
         }
 
@@ -148,7 +149,7 @@ public class PostingReceptor extends LiberinReceptorBase {
                 .filter(m -> !latestMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))
                 .forEach(d -> send(d, new MentionPostingAddedNotification(posting.getId(), posting.getOwnerName(),
-                        posting.getOwnerFullName(), ownerAvatar, currentHeading)));
+                        posting.getOwnerFullName(), posting.getOwnerGender(), ownerAvatar, currentHeading)));
         latestMentions.stream()
                 .filter(m -> !currentMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))

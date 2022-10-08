@@ -22,9 +22,10 @@ public class MentionCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, AvatarImage postingAvatar,
-                      String postingId, String postingHeading, String commentOwnerName, String commentOwnerFullName,
-                      AvatarImage commentOwnerAvatar, String commentId, String commentHeading) {
+    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
+                      AvatarImage postingAvatar, String postingId, String postingHeading, String commentOwnerName,
+                      String commentOwnerFullName, String commentOwnerGender, AvatarImage commentOwnerAvatar,
+                      String commentId, String commentHeading) {
         Story story = findStory(nodeName, postingId, commentId);
         if (story != null) {
             return;
@@ -46,7 +47,8 @@ public class MentionCommentInstants extends InstantsCreator {
             story.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         story.setRemoteCommentId(commentId);
-        story.setSummaryData(buildSummary(story, postingHeading, commentHeading));
+        story.setSummaryData(buildSummary(
+                story, postingOwnerGender, postingHeading, commentOwnerGender, commentHeading));
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
@@ -66,12 +68,13 @@ public class MentionCommentInstants extends InstantsCreator {
                 nodeName, postingId, commentId).stream().findFirst().orElse(null);
     }
 
-    private StorySummaryData buildSummary(Story story, String postingHeading, String commentHeading) {
+    private StorySummaryData buildSummary(Story story, String postingOwnerGender, String postingHeading,
+                                          String commentOwnerGender, String commentHeading) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                postingHeading));
+                postingOwnerGender, postingHeading));
         summaryData.setComment(new StorySummaryEntry(story.getRemoteOwnerName(), story.getRemoteOwnerFullName(),
-                commentHeading));
+                commentOwnerGender, commentHeading));
         return summaryData;
     }
 

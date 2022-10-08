@@ -26,6 +26,9 @@ public class Reaction {
     @Size(max = 96)
     private String ownerFullName;
 
+    @Size(max = 31)
+    private String ownerGender;
+
     @ManyToOne
     private MediaFile ownerAvatarMediaFile;
 
@@ -90,6 +93,14 @@ public class Reaction {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public MediaFile getOwnerAvatarMediaFile() {

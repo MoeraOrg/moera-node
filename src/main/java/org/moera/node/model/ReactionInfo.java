@@ -19,6 +19,7 @@ public class ReactionInfo {
 
     private String ownerName;
     private String ownerFullName;
+    private String ownerGender;
     private AvatarImage ownerAvatar;
     private String postingId;
     private String postingRevisionId;
@@ -42,6 +43,7 @@ public class ReactionInfo {
     public ReactionInfo(Reaction reaction, AccessChecker accessChecker) {
         ownerName = reaction.getOwnerName();
         ownerFullName = reaction.getOwnerFullName();
+        ownerGender = reaction.getOwnerGender();
         if (reaction.getOwnerAvatarMediaFile() != null) {
             ownerAvatar = new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape());
         }
@@ -117,6 +119,14 @@ public class ReactionInfo {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarImage getOwnerAvatar() {

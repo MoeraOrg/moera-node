@@ -21,8 +21,8 @@ public abstract class PostingReactionNotification extends ReactionNotification {
 
     public PostingReactionNotification(NotificationType type, UUID parentPostingId, UUID parentCommentId,
                                        UUID parentMediaId, UUID postingId, String ownerName, String ownerFullName,
-                                       AvatarImage ownerAvatar, boolean negative) {
-        super(type, ownerName, ownerFullName, ownerAvatar, negative);
+                                       String ownerGender, AvatarImage ownerAvatar, boolean negative) {
+        super(type, ownerName, ownerFullName, ownerGender, ownerAvatar, negative);
         this.parentPostingId = Objects.toString(parentPostingId, null);
         this.parentCommentId = Objects.toString(parentCommentId, null);
         this.parentMediaId = Objects.toString(parentMediaId, null);

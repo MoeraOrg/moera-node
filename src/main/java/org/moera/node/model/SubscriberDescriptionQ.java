@@ -13,6 +13,7 @@ public class SubscriberDescriptionQ {
     private String feedName;
     private String postingId;
     private String ownerFullName;
+    private String ownerGender;
     private AvatarDescription ownerAvatar;
     private Long lastUpdatedAt;
     private Map<String, Principal> operations;
@@ -21,12 +22,12 @@ public class SubscriberDescriptionQ {
     }
 
     public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName,
-                                  Avatar ownerAvatar) {
-        this(type, feedName, postingId, ownerFullName, ownerAvatar, Instant.now().getEpochSecond());
+                                  String ownerGender, Avatar ownerAvatar) {
+        this(type, feedName, postingId, ownerFullName, ownerGender, ownerAvatar, Instant.now().getEpochSecond());
     }
 
     public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName,
-                                  Avatar ownerAvatar, Long lastUpdatedAt) {
+                                  String ownerGender, Avatar ownerAvatar, Long lastUpdatedAt) {
         this.type = type;
         this.feedName = feedName;
         this.postingId = postingId;
@@ -67,6 +68,14 @@ public class SubscriberDescriptionQ {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarDescription getOwnerAvatar() {

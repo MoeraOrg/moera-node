@@ -11,6 +11,7 @@ public class PostingImportantUpdateNotification extends PostingSubscriberNotific
 
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingHeading;
     private String description;
@@ -20,11 +21,12 @@ public class PostingImportantUpdateNotification extends PostingSubscriberNotific
     }
 
     public PostingImportantUpdateNotification(String postingOwnerName, String postingOwnerFullName,
-                                              AvatarImage postingOwnerAvatar, UUID postingId, String postingHeading,
-                                              String description) {
+                                              String postingOwnerGender, AvatarImage postingOwnerAvatar, UUID postingId,
+                                              String postingHeading, String description) {
         super(NotificationType.POSTING_IMPORTANT_UPDATE, postingId.toString());
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
         this.description = description;
@@ -44,6 +46,14 @@ public class PostingImportantUpdateNotification extends PostingSubscriberNotific
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerGender() {
+        return postingOwnerGender;
+    }
+
+    public void setPostingOwnerGender(String postingOwnerGender) {
+        this.postingOwnerGender = postingOwnerGender;
     }
 
     public AvatarImage getPostingOwnerAvatar() {

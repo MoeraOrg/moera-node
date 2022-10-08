@@ -16,6 +16,9 @@ public abstract class ReactionNotification extends Notification {
     @Size(max = 96)
     private String ownerFullName;
 
+    @Size(max = 31)
+    private String ownerGender;
+
     @Valid
     private AvatarImage ownerAvatar;
 
@@ -25,11 +28,12 @@ public abstract class ReactionNotification extends Notification {
         super(type);
     }
 
-    public ReactionNotification(NotificationType type, String ownerName, String ownerFullName, AvatarImage ownerAvatar,
-                                boolean negative) {
+    public ReactionNotification(NotificationType type, String ownerName, String ownerFullName, String ownerGender,
+                                AvatarImage ownerAvatar, boolean negative) {
         super(type);
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerGender = ownerGender;
         this.ownerAvatar = ownerAvatar;
         this.negative = negative;
     }
@@ -48,6 +52,14 @@ public abstract class ReactionNotification extends Notification {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarImage getOwnerAvatar() {

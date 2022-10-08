@@ -11,6 +11,7 @@ public class PostingReactionAddedNotification extends PostingReactionNotificatio
 
     private String parentPostingNodeName;
     private String parentPostingFullName;
+    private String parentPostingGender;
     private AvatarImage parentPostingAvatar;
     private String parentHeading;
     private String postingHeading;
@@ -21,14 +22,16 @@ public class PostingReactionAddedNotification extends PostingReactionNotificatio
     }
 
     public PostingReactionAddedNotification(String parentPostingNodeName, String parentPostingFullName,
-                                            AvatarImage parentPostingAvatar, UUID parentPostingId, UUID parentCommentId,
-                                            UUID parentMediaId, String parentHeading, UUID postingId,
-                                            String postingHeading, String ownerName, String ownerFullName,
+                                            String parentPostingGender, AvatarImage parentPostingAvatar,
+                                            UUID parentPostingId, UUID parentCommentId, UUID parentMediaId,
+                                            String parentHeading, UUID postingId, String postingHeading,
+                                            String ownerName, String ownerFullName, String ownerGender,
                                             AvatarImage ownerAvatar, boolean negative, int emoji) {
         super(NotificationType.POSTING_REACTION_ADDED, parentPostingId, parentCommentId, parentMediaId, postingId,
-              ownerName, ownerFullName, ownerAvatar, negative);
+              ownerName, ownerFullName, ownerGender, ownerAvatar, negative);
         this.parentPostingNodeName = parentPostingNodeName;
         this.parentPostingFullName = parentPostingFullName;
+        this.parentPostingGender = parentPostingGender;
         this.parentPostingAvatar = parentPostingAvatar;
         this.parentHeading = parentHeading;
         this.postingHeading = postingHeading;
@@ -49,6 +52,14 @@ public class PostingReactionAddedNotification extends PostingReactionNotificatio
 
     public void setParentPostingFullName(String parentPostingFullName) {
         this.parentPostingFullName = parentPostingFullName;
+    }
+
+    public String getParentPostingGender() {
+        return parentPostingGender;
+    }
+
+    public void setParentPostingGender(String parentPostingGender) {
+        this.parentPostingGender = parentPostingGender;
     }
 
     public AvatarImage getParentPostingAvatar() {

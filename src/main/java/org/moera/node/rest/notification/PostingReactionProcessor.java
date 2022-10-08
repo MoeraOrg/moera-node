@@ -57,21 +57,22 @@ public class PostingReactionProcessor {
         universalContext.send(
                 new RemotePostingMediaReactionAddedLiberin(notification.getSenderNodeName(),
                         notification.getParentPostingNodeName(), notification.getParentPostingFullName(),
-                        notification.getParentPostingAvatar(), notification.getPostingId(),
-                        notification.getParentPostingId(), notification.getParentMediaId(), notification.getOwnerName(),
-                        notification.getOwnerFullName(), notification.getOwnerAvatar(),
-                        notification.getPostingHeading(), notification.isNegative(), notification.getEmoji()));
+                        notification.getParentPostingGender(), notification.getParentPostingAvatar(),
+                        notification.getPostingId(), notification.getParentPostingId(), notification.getParentMediaId(),
+                        notification.getOwnerName(), notification.getOwnerFullName(), notification.getOwnerGender(),
+                        notification.getOwnerAvatar(), notification.getPostingHeading(), notification.isNegative(),
+                        notification.getEmoji()));
     }
 
     private void addedToCommentMedia(PostingReactionAddedNotification notification) {
         universalContext.send(
                 new RemoteCommentMediaReactionAddedLiberin(notification.getSenderNodeName(),
                         notification.getParentPostingNodeName(), notification.getParentPostingFullName(),
-                        notification.getParentPostingAvatar(), notification.getPostingId(),
-                        notification.getParentPostingId(), notification.getParentCommentId(),
-                        notification.getParentMediaId(), notification.getOwnerName(), notification.getOwnerFullName(),
-                        notification.getOwnerAvatar(), notification.getPostingHeading(), notification.isNegative(),
-                        notification.getEmoji()));
+                        notification.getParentPostingGender(), notification.getParentPostingAvatar(),
+                        notification.getPostingId(), notification.getParentPostingId(),
+                        notification.getParentCommentId(), notification.getParentMediaId(), notification.getOwnerName(),
+                        notification.getOwnerFullName(), notification.getOwnerGender(), notification.getOwnerAvatar(),
+                        notification.getPostingHeading(), notification.isNegative(), notification.getEmoji()));
     }
 
     @NotificationMapping(NotificationType.POSTING_REACTION_DELETED)

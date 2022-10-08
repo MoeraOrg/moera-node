@@ -14,6 +14,7 @@ public class StorySummaryData {
     private List<StorySummaryEntry> comments;
     private Integer totalComments;
     private StorySummaryEntry repliedTo;
+    private StorySummaryEntry parentPosting;
     private StorySummaryReaction reaction;
     private List<StorySummaryReaction> reactions;
     private Integer totalReactions;
@@ -67,6 +68,14 @@ public class StorySummaryData {
 
     public void setRepliedTo(StorySummaryEntry repliedTo) {
         this.repliedTo = repliedTo;
+    }
+
+    public StorySummaryEntry getParentPosting() {
+        return parentPosting;
+    }
+
+    public void setParentPosting(StorySummaryEntry parentPosting) {
+        this.parentPosting = parentPosting;
     }
 
     public StorySummaryReaction getReaction() {

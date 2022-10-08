@@ -67,7 +67,8 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void importantUpdate(RemotePostingImportantUpdateLiberin liberin) {
         postingInstants.updated(liberin.getNodeName(), liberin.getOwnerName(), liberin.getOwnerFullName(),
-                liberin.getOwnerAvatar(), liberin.getId(), liberin.getHeading(), liberin.getDescription());
+                liberin.getOwnerGender(), liberin.getOwnerAvatar(), liberin.getId(), liberin.getHeading(),
+                liberin.getDescription());
     }
 
     @LiberinMapping
@@ -94,7 +95,7 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void mentionAdded(MentionInRemotePostingAddedLiberin liberin) {
         mentionPostingInstants.added(liberin.getNodeName(), liberin.getOwnerName(), liberin.getOwnerFullName(),
-                liberin.getOwnerAvatar(), liberin.getId(), liberin.getHeading());
+                liberin.getOwnerGender(), liberin.getOwnerAvatar(), liberin.getId(), liberin.getHeading());
     }
 
     @LiberinMapping
@@ -105,10 +106,10 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void foreignCommentAdded(ForeignCommentAddedLiberin liberin) {
         remoteCommentInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
-                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerAvatar(), liberin.getPostingId(),
-                liberin.getPostingHeading(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
-                liberin.getCommentOwnerAvatar(), liberin.getCommentId(), liberin.getCommentHeading(),
-                liberin.getSubscriptionReason());
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerGender(), liberin.getPostingOwnerAvatar(),
+                liberin.getPostingId(), liberin.getPostingHeading(), liberin.getCommentOwnerName(),
+                liberin.getCommentOwnerFullName(), liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(),
+                liberin.getCommentId(), liberin.getCommentHeading(), liberin.getSubscriptionReason());
     }
 
     @LiberinMapping
@@ -120,10 +121,10 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void replyCommentAdded(ReplyCommentAddedLiberin liberin) {
         replyCommentInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
-                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerAvatar(), liberin.getPostingHeading(),
-                liberin.getPostingId(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
-                liberin.getCommentOwnerAvatar(), liberin.getCommentId(), liberin.getRepliedToHeading(),
-                liberin.getRepliedToId());
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerGender(), liberin.getPostingOwnerAvatar(),
+                liberin.getPostingHeading(), liberin.getPostingId(), liberin.getCommentOwnerName(),
+                liberin.getCommentOwnerFullName(), liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(),
+                liberin.getCommentId(), liberin.getRepliedToHeading(), liberin.getRepliedToId());
     }
 
     @LiberinMapping

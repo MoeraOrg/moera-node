@@ -66,9 +66,10 @@ public class RemoteCommentReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void mentionAdded(MentionInRemoteCommentAddedLiberin liberin) {
         mentionCommentInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
-                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerAvatar(), liberin.getPostingId(),
-                liberin.getPostingHeading(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
-                liberin.getCommentOwnerAvatar(), liberin.getCommentId(), liberin.getCommentHeading());
+                liberin.getPostingOwnerFullName(), liberin.getPostingOwnerGender(), liberin.getPostingOwnerAvatar(),
+                liberin.getPostingId(), liberin.getPostingHeading(), liberin.getCommentOwnerName(),
+                liberin.getCommentOwnerFullName(), liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(),
+                liberin.getCommentId(), liberin.getCommentHeading());
     }
 
     @LiberinMapping

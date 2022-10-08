@@ -15,6 +15,8 @@ public class ReactionDescription {
 
     private String ownerFullName;
 
+    private String ownerGender;
+
     @Valid
     private AvatarDescription ownerAvatar;
 
@@ -34,10 +36,11 @@ public class ReactionDescription {
     public ReactionDescription() {
     }
 
-    public ReactionDescription(String ownerName, String ownerFullName, Avatar ownerAvatar,
+    public ReactionDescription(String ownerName, String ownerFullName, String ownerGender, Avatar ownerAvatar,
                                ReactionAttributes attributes) {
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerGender = ownerGender;
         this.ownerAvatar = ownerAvatar != null ? new AvatarDescription(ownerAvatar) : null;
         negative = attributes.isNegative();
         emoji = attributes.getEmoji();
@@ -58,6 +61,14 @@ public class ReactionDescription {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
     public AvatarDescription getOwnerAvatar() {
@@ -123,6 +134,7 @@ public class ReactionDescription {
     public void toReaction(Reaction reaction) {
         reaction.setOwnerName(ownerName);
         reaction.setOwnerFullName(ownerFullName);
+        reaction.setOwnerGender(ownerGender);
         if (ownerAvatar != null) {
             if (ownerAvatarMediaFile != null) {
                 reaction.setOwnerAvatarMediaFile(ownerAvatarMediaFile);

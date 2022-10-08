@@ -38,9 +38,10 @@ public class MentionCommentProcessor {
                     universalContext.send(
                             new MentionInRemoteCommentAddedLiberin(notification.getSenderNodeName(),
                                     notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerAvatar(), notification.getPostingId(),
-                                    notification.getPostingHeading(), notification.getCommentOwnerName(),
-                                    notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                    notification.getPostingId(), notification.getPostingHeading(),
+                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                    notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
                                     notification.getCommentId(), notification.getCommentHeading()));
                 });
     }

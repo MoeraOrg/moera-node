@@ -311,7 +311,7 @@ public class Picker extends Task {
                            MediaFile receiverAvatar, String receiverAvatarShape, String receiverPostingId,
                            Timestamp lastUpdatedAt, List<Liberin> liberins) throws NodeApiException {
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
-                receiverPostingId, fullName(), getAvatar(), Util.toEpochSecond(lastUpdatedAt));
+                receiverPostingId, fullName(), gender(), getAvatar(), Util.toEpochSecond(lastUpdatedAt));
         try {
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(receiverName, generateCarte(receiverName), description);

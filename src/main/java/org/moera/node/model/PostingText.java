@@ -81,10 +81,11 @@ public class PostingText {
     public PostingText() {
     }
 
-    public PostingText(String ownerName, String ownerFullName, PostingSourceText sourceText,
+    public PostingText(String ownerName, String ownerFullName, String ownerGender, PostingSourceText sourceText,
                        TextConverter textConverter) {
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerGender = ownerGender;
         ownerAvatar = sourceText.getOwnerAvatar();
         bodySrc = sourceText.getBodySrc();
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;

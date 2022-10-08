@@ -32,10 +32,10 @@ public class ReplyCommentInstants extends InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
-    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName,
+    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
                       AvatarImage postingOwnerAvatar, String postingHeading, String postingId, String commentOwnerName,
-                      String commentOwnerFullName, AvatarImage commentOwnerAvatar, String commentId,
-                      String repliedToHeading, String repliedToId) {
+                      String commentOwnerFullName, String commentOwnerGender, AvatarImage commentOwnerAvatar,
+                      String commentId, String repliedToHeading, String repliedToId) {
         if (commentOwnerName.equals(nodeName())) {
             return;
         }
@@ -64,6 +64,7 @@ public class ReplyCommentInstants extends InstantsCreator {
             story.setRemoteHeading(postingHeading);
             story.setRemoteRepliedToId(repliedToId);
             story.setRemoteRepliedToHeading(repliedToHeading);
+            story.setSummaryData(buildPostingSummary(postingOwnerGender, postingHeading, repliedToHeading));
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
@@ -78,11 +79,25 @@ public class ReplyCommentInstants extends InstantsCreator {
             substory.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
             substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
+        substory.setSummaryData(buildCommentSummary(commentOwnerGender));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
 
         updated(story, isNewStory, true);
+    }
+
+    private static StorySummaryData buildPostingSummary(String gender, String heading, String repliedToHeading) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setPosting(new StorySummaryEntry(null, null, gender, heading));
+        summaryData.setRepliedTo(new StorySummaryEntry(null, null, null, repliedToHeading));
+        return summaryData;
+    }
+
+    private static StorySummaryData buildCommentSummary(String gender) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setComment(new StorySummaryEntry(null, null, gender, null));
+        return summaryData;
     }
 
     public void deleted(String nodeName, String postingId, String commentId, String commentOwnerName) {
@@ -131,7 +146,9 @@ public class ReplyCommentInstants extends InstantsCreator {
         StorySummaryData summaryData = new StorySummaryData();
         List<StorySummaryEntry> comments = new ArrayList<>();
         Story firstStory = stories.get(0);
-        comments.add(new StorySummaryEntry(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(), null));
+        comments.add(new StorySummaryEntry(
+                firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(),
+                firstStory.getSummaryData().getComment().getOwnerGender(), null));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
@@ -140,8 +157,9 @@ public class ReplyCommentInstants extends InstantsCreator {
                         .findFirst()
                         .orElse(null);
                 if (secondStory != null) {
-                    comments.add(new StorySummaryEntry(secondStory.getRemoteOwnerName(),
-                            secondStory.getRemoteOwnerFullName(), null));
+                    comments.add(new StorySummaryEntry(
+                            secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(),
+                            secondStory.getSummaryData().getComment().getOwnerGender(), null));
                 }
             }
             summaryData.setTotalComments(names.size());
@@ -149,9 +167,10 @@ public class ReplyCommentInstants extends InstantsCreator {
             summaryData.setTotalComments(1);
         }
         summaryData.setComments(comments);
-        summaryData.setRepliedTo(new StorySummaryEntry(null, null, story.getRemoteRepliedToHeading()));
-        summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                story.getRemoteHeading()));
+        summaryData.setRepliedTo(new StorySummaryEntry(null, null, null, story.getRemoteRepliedToHeading()));
+        summaryData.setPosting(new StorySummaryEntry(
+                story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
+                story.getSummaryData().getPosting().getOwnerGender(), story.getRemoteHeading()));
         return summaryData;
     }
 

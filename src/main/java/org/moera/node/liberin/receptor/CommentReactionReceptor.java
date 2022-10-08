@@ -40,6 +40,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                             visibilityFilter(comment, deletedReaction)),
                     new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
                             deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
+                            deletedReaction.getOwnerGender(),
                             new AvatarImage(
                                     deletedReaction.getOwnerAvatarMediaFile(), deletedReaction.getOwnerAvatarShape()),
                             deletedReaction.isNegative()));
@@ -52,10 +53,10 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
             send(Directions.single(liberin.getNodeId(), comment.getOwnerName(),
                             visibilityFilter(comment, addedReaction)),
                     new CommentReactionAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                            postingOwnerAvatar, posting.getId(), comment.getId(),
+                            posting.getOwnerGender(), postingOwnerAvatar, posting.getId(), comment.getId(),
                             posting.getCurrentRevision().getHeading(),
                             comment.getCurrentRevision().getHeading(), addedReaction.getOwnerName(),
-                            addedReaction.getOwnerFullName(),
+                            addedReaction.getOwnerFullName(), addedReaction.getOwnerGender(),
                             new AvatarImage(
                                     addedReaction.getOwnerAvatarMediaFile(), addedReaction.getOwnerAvatarShape()),
                             addedReaction.isNegative(), addedReaction.getEmoji()));

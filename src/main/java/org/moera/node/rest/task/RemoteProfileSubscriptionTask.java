@@ -68,7 +68,7 @@ public class RemoteProfileSubscriptionTask extends Task {
     private void subscribe() throws NodeApiException {
         mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
         SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.PROFILE,
-                null, null, fullName(), getAvatar());
+                null, null, fullName(), gender(), getAvatar());
         SubscriberInfo subscriberInfo =
                 nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
 

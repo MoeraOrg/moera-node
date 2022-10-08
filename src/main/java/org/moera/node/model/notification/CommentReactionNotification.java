@@ -17,8 +17,9 @@ public abstract class CommentReactionNotification extends ReactionNotification {
     }
 
     public CommentReactionNotification(NotificationType type, UUID postingId, UUID commentId, String ownerName,
-                                       String ownerFullName, AvatarImage ownerAvatar, boolean negative) {
-        super(type, ownerName, ownerFullName, ownerAvatar, negative);
+                                       String ownerFullName, String ownerGender, AvatarImage ownerAvatar,
+                                       boolean negative) {
+        super(type, ownerName, ownerFullName, ownerGender, ownerAvatar, negative);
         this.postingId = postingId.toString();
         this.commentId = commentId.toString();
     }

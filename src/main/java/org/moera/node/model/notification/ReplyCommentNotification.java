@@ -24,6 +24,9 @@ public abstract class ReplyCommentNotification extends Notification {
     @Size(max = 96)
     private String commentOwnerFullName;
 
+    @Size(max = 31)
+    private String commentOwnerGender;
+
     @Valid
     private AvatarImage commentOwnerAvatar;
 
@@ -32,7 +35,7 @@ public abstract class ReplyCommentNotification extends Notification {
     }
 
     public ReplyCommentNotification(NotificationType type, UUID postingId, UUID commentId, UUID repliedToId,
-                                    String commentOwnerName, String commentOwnerFullName,
+                                    String commentOwnerName, String commentOwnerFullName, String commentOwnerGender,
                                     AvatarImage commentOwnerAvatar) {
         super(type);
         this.postingId = postingId.toString();
@@ -40,6 +43,7 @@ public abstract class ReplyCommentNotification extends Notification {
         this.repliedToId = repliedToId.toString();
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
     }
 
@@ -81,6 +85,14 @@ public abstract class ReplyCommentNotification extends Notification {
 
     public void setCommentOwnerFullName(String commentOwnerFullName) {
         this.commentOwnerFullName = commentOwnerFullName;
+    }
+
+    public String getCommentOwnerGender() {
+        return commentOwnerGender;
+    }
+
+    public void setCommentOwnerGender(String commentOwnerGender) {
+        this.commentOwnerGender = commentOwnerGender;
     }
 
     public AvatarImage getCommentOwnerAvatar() {

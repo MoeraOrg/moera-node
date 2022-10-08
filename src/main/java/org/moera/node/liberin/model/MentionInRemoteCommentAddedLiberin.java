@@ -10,27 +10,32 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
     private String nodeName;
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingId;
     private String postingHeading;
     private String commentOwnerName;
     private String commentOwnerFullName;
+    private String commentOwnerGender;
     private AvatarImage commentOwnerAvatar;
     private String commentId;
     private String commentHeading;
 
     public MentionInRemoteCommentAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
-                                              AvatarImage postingOwnerAvatar, String postingId, String postingHeading,
-                                              String commentOwnerName, String commentOwnerFullName,
+                                              String postingOwnerGender, AvatarImage postingOwnerAvatar,
+                                              String postingId, String postingHeading, String commentOwnerName,
+                                              String commentOwnerFullName, String commentOwnerGender,
                                               AvatarImage commentOwnerAvatar, String commentId, String commentHeading) {
         this.nodeName = nodeName;
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingId = postingId;
         this.postingHeading = postingHeading;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentId = commentId;
         this.commentHeading = commentHeading;
@@ -58,6 +63,14 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerGender() {
+        return postingOwnerGender;
+    }
+
+    public void setPostingOwnerGender(String postingOwnerGender) {
+        this.postingOwnerGender = postingOwnerGender;
     }
 
     public AvatarImage getPostingOwnerAvatar() {
@@ -100,6 +113,14 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
         this.commentOwnerFullName = commentOwnerFullName;
     }
 
+    public String getCommentOwnerGender() {
+        return commentOwnerGender;
+    }
+
+    public void setCommentOwnerGender(String commentOwnerGender) {
+        this.commentOwnerGender = commentOwnerGender;
+    }
+
     public AvatarImage getCommentOwnerAvatar() {
         return commentOwnerAvatar;
     }
@@ -130,11 +151,13 @@ public class MentionInRemoteCommentAddedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("postingOwnerName", postingOwnerName);
         model.put("postingOwnerFullName", postingOwnerFullName);
+        model.put("postingOwnerGender", postingOwnerGender);
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingId", postingId);
         model.put("postingHeading", postingHeading);
         model.put("commentOwnerName", commentOwnerName);
         model.put("commentOwnerFullName", commentOwnerFullName);
+        model.put("commentOwnerGender", commentOwnerGender);
         model.put("commentOwnerAvatar", commentOwnerAvatar);
         model.put("commentId", commentId);
         model.put("commentHeading", commentHeading);

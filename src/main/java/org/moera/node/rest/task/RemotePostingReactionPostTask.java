@@ -87,7 +87,8 @@ public class RemotePostingReactionPostTask extends Task {
                         postingInfo,
                         parentMediaDigest,
                         pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte(targetNodeName), pmf)));
-        ReactionDescription description = new ReactionDescription(nodeName(), fullName(), getAvatar(), attributes);
+        ReactionDescription description = new ReactionDescription(
+                nodeName(), fullName(), gender(), getAvatar(), attributes);
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprint.VERSION);
         return description;

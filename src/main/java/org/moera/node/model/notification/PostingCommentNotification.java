@@ -19,6 +19,9 @@ public abstract class PostingCommentNotification extends PostingSubscriberNotifi
     @Size(max = 96)
     private String commentOwnerFullName;
 
+    @Size(max = 31)
+    private String commentOwnerGender;
+
     @Valid
     private AvatarImage commentOwnerAvatar;
 
@@ -27,12 +30,13 @@ public abstract class PostingCommentNotification extends PostingSubscriberNotifi
     }
 
     public PostingCommentNotification(NotificationType type, UUID postingId, UUID commentId,
-                                      String commentOwnerName, String commentOwnerFullName,
+                                      String commentOwnerName, String commentOwnerFullName, String commentOwnerGender,
                                       AvatarImage commentOwnerAvatar) {
         super(type, postingId.toString());
         this.commentId = commentId.toString();
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
     }
 
@@ -58,6 +62,14 @@ public abstract class PostingCommentNotification extends PostingSubscriberNotifi
 
     public void setCommentOwnerFullName(String commentOwnerFullName) {
         this.commentOwnerFullName = commentOwnerFullName;
+    }
+
+    public String getCommentOwnerGender() {
+        return commentOwnerGender;
+    }
+
+    public void setCommentOwnerGender(String commentOwnerGender) {
+        this.commentOwnerGender = commentOwnerGender;
     }
 
     public AvatarImage getCommentOwnerAvatar() {

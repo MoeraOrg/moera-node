@@ -17,6 +17,9 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     @Size(max = 96)
     private String postingOwnerFullName;
 
+    @Size(max = 31)
+    private String postingOwnerGender;
+
     @Valid
     private AvatarImage postingOwnerAvatar;
 
@@ -28,6 +31,9 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     @Size(max = 96)
     private String commentOwnerFullName;
 
+    @Size(max = 31)
+    private String commentOwnerGender;
+
     @Valid
     private AvatarImage commentOwnerAvatar;
 
@@ -38,16 +44,19 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     }
 
     public MentionCommentAddedNotification(String postingOwnerName, String postingOwnerFullName,
-                                           AvatarImage postingOwnerAvatar, UUID postingId, UUID commentId,
-                                           String postingHeading, String commentOwnerName, String commentOwnerFullName,
+                                           String postingOwnerGender, AvatarImage postingOwnerAvatar, UUID postingId,
+                                           UUID commentId, String postingHeading, String commentOwnerName,
+                                           String commentOwnerFullName, String commentOwnerGender,
                                            AvatarImage commentOwnerAvatar, String commentHeading) {
         super(NotificationType.MENTION_COMMENT_ADDED, postingId, commentId);
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
+        this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentHeading = commentHeading;
     }
@@ -66,6 +75,14 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerGender() {
+        return postingOwnerGender;
+    }
+
+    public void setPostingOwnerGender(String postingOwnerGender) {
+        this.postingOwnerGender = postingOwnerGender;
     }
 
     public AvatarImage getPostingOwnerAvatar() {
@@ -98,6 +115,14 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
 
     public void setCommentOwnerFullName(String commentOwnerFullName) {
         this.commentOwnerFullName = commentOwnerFullName;
+    }
+
+    public String getCommentOwnerGender() {
+        return commentOwnerGender;
+    }
+
+    public void setCommentOwnerGender(String commentOwnerGender) {
+        this.commentOwnerGender = commentOwnerGender;
     }
 
     public AvatarImage getCommentOwnerAvatar() {

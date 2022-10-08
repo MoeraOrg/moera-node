@@ -38,10 +38,11 @@ public class ReplyCommentProcessor {
                     universalContext.send(
                             new ReplyCommentAddedLiberin(notification.getSenderNodeName(),
                                     notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerAvatar(), notification.getPostingHeading(),
-                                    notification.getPostingId(), notification.getRepliedToHeading(),
-                                    notification.getRepliedToId(), notification.getCommentOwnerName(),
-                                    notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                    notification.getPostingHeading(), notification.getPostingId(),
+                                    notification.getRepliedToHeading(), notification.getRepliedToId(),
+                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                    notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
                                     notification.getCommentId()));
                 });
     }

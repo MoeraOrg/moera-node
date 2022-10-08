@@ -39,9 +39,11 @@ public class CommentReactionProcessor {
                     }
                     universalContext.send(new RemoteCommentReactionAddedLiberin(notification.getSenderNodeName(),
                             notification.getPostingNodeName(), notification.getPostingFullName(),
-                            notification.getPostingAvatar(), notification.getPostingId(), notification.getCommentId(),
-                            notification.getOwnerName(), notification.getOwnerFullName(), notification.getOwnerAvatar(),
-                            notification.getCommentHeading(), notification.isNegative(), notification.getEmoji()));
+                            notification.getPostingGender(), notification.getPostingAvatar(),
+                            notification.getPostingId(), notification.getCommentId(), notification.getOwnerName(),
+                            notification.getOwnerFullName(), notification.getOwnerGender(),
+                            notification.getOwnerAvatar(), notification.getCommentHeading(), notification.isNegative(),
+                            notification.getEmoji()));
                 });
     }
 

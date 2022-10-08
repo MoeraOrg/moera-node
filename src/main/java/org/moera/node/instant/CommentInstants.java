@@ -116,7 +116,9 @@ public class CommentInstants extends InstantsCreator {
         List<StorySummaryEntry> comments = new ArrayList<>();
         summaryData.setComments(comments);
         Story firstStory = stories.get(0);
-        comments.add(new StorySummaryEntry(firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(), null));
+        comments.add(new StorySummaryEntry(
+                firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(),
+                firstStory.getEntry().getOwnerGender(), null));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             Story secondStory = stories.stream()
@@ -125,19 +127,23 @@ public class CommentInstants extends InstantsCreator {
                     .orElse(null);
             if (secondStory != null) {
                 comments.add(new StorySummaryEntry(
-                        secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(), null));
+                        secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(),
+                        secondStory.getEntry().getOwnerGender(), null));
             }
             summaryData.setTotalComments(names.size());
         } else {
             summaryData.setTotalComments(1);
         }
-        summaryData.setPosting(new StorySummaryEntry(null, null, story.getEntry().getCurrentRevision().getHeading()));
+        summaryData.setPosting(new StorySummaryEntry(
+                null, null, null,
+                story.getEntry().getCurrentRevision().getHeading()));
         return summaryData;
     }
 
     public void addingFailed(String remoteNodeName, String remotePostingId, PostingInfo postingInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
@@ -151,7 +157,8 @@ public class CommentInstants extends InstantsCreator {
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(remotePostingId);
-        story.setSummaryData(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
+        story.setSummaryData(buildAddingFailedSummary(
+                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
@@ -162,6 +169,7 @@ public class CommentInstants extends InstantsCreator {
                              String remoteCommentId, CommentInfo commentInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
         String commentHeading = commentInfo != null ? commentInfo.getHeading() : "";
@@ -177,25 +185,26 @@ public class CommentInstants extends InstantsCreator {
         }
         story.setRemotePostingId(remotePostingId);
         story.setRemoteCommentId(remoteCommentId);
-        story.setSummaryData(
-                buildUpdateFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading, commentHeading));
+        story.setSummaryData(buildUpdateFailedSummary(
+                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading, commentHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String postingHeading) {
+    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String gender,
+                                                             String postingHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, postingHeading));
+        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, gender, postingHeading));
         return summaryData;
     }
 
-    private static StorySummaryData buildUpdateFailedSummary(String nodeName, String fullName, String postingHeading,
-                                                             String commentHeading) {
+    private static StorySummaryData buildUpdateFailedSummary(String nodeName, String fullName, String gender,
+                                                             String postingHeading, String commentHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, postingHeading));
-        summaryData.setComment(new StorySummaryEntry(null, null, commentHeading));
+        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, gender, postingHeading));
+        summaryData.setComment(new StorySummaryEntry(null, null, null, commentHeading));
         return summaryData;
     }
 

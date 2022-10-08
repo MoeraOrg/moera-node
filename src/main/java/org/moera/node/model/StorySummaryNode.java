@@ -7,13 +7,15 @@ public class StorySummaryNode {
 
     private String ownerName;
     private String ownerFullName;
+    private String ownerGender;
 
     public StorySummaryNode() {
     }
 
-    public StorySummaryNode(String ownerName, String ownerFullName) {
+    public StorySummaryNode(String ownerName, String ownerFullName, String ownerGender) {
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
+        this.ownerGender = ownerGender;
     }
 
     public String getOwnerName() {
@@ -30,6 +32,14 @@ public class StorySummaryNode {
 
     public void setOwnerFullName(String ownerFullName) {
         this.ownerFullName = ownerFullName;
+    }
+
+    public String getOwnerGender() {
+        return ownerGender;
+    }
+
+    public void setOwnerGender(String ownerGender) {
+        this.ownerGender = ownerGender;
     }
 
 }

@@ -12,9 +12,9 @@ public class PostingReactionDeletedNotification extends PostingReactionNotificat
 
     public PostingReactionDeletedNotification(UUID parentPostingId, UUID parentCommentId, UUID parentMediaId,
                                               UUID postingId, String ownerName, String ownerFullName,
-                                              AvatarImage ownerAvatar, boolean negative) {
+                                              String ownerGender, AvatarImage ownerAvatar, boolean negative) {
         super(NotificationType.POSTING_REACTION_DELETED, parentPostingId, parentCommentId, parentMediaId, postingId,
-              ownerName, ownerFullName, ownerAvatar, negative);
+              ownerName, ownerFullName, ownerGender, ownerAvatar, negative);
     }
 
 }

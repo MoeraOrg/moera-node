@@ -11,9 +11,10 @@ public class ReplyCommentDeletedNotification extends ReplyCommentNotification {
     }
 
     public ReplyCommentDeletedNotification(UUID postingId, UUID commentId, UUID repliedToId, String commentOwnerName,
-                                           String commentOwnerFullName, AvatarImage commentOwnerAvatar) {
+                                           String commentOwnerFullName, String commentOwnerGender,
+                                           AvatarImage commentOwnerAvatar) {
         super(NotificationType.REPLY_COMMENT_DELETED, postingId, commentId, repliedToId, commentOwnerName,
-                commentOwnerFullName, commentOwnerAvatar);
+                commentOwnerFullName, commentOwnerGender, commentOwnerAvatar);
     }
 
 }

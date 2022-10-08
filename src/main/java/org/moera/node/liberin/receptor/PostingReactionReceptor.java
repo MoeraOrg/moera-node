@@ -70,7 +70,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                     visibilityFilter(posting, deletedReaction)),
                             new PostingReactionDeletedNotification(null, null, null,
                                     posting.getId(), deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
-                                    ownerAvatar, deletedReaction.isNegative()));
+                                    deletedReaction.getOwnerGender(), ownerAvatar, deletedReaction.isNegative()));
                 } else {
                     if (visibilityFilter(posting, deletedReaction).includes(true, posting.getOwnerName())) {
                         postingReactionInstants.deleted(posting.getId(), deletedReaction.getOwnerName(),
@@ -88,7 +88,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                     visibilityFilter(posting, deletedReaction)),
                             new PostingReactionDeletedNotification(parentPostingId, parentCommentId,
                                     posting.getParentMedia().getId(), posting.getId(), deletedReaction.getOwnerName(),
-                                    deletedReaction.getOwnerFullName(),
+                                    deletedReaction.getOwnerFullName(), deletedReaction.getOwnerGender(),
                                     ownerAvatar, deletedReaction.isNegative()));
                 }
             }
@@ -104,15 +104,16 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
                                     visibilityFilter(posting, addedReaction)),
                             new PostingReactionAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                                    postingOwnerAvatar, null, null, null,
+                                    posting.getOwnerGender(), postingOwnerAvatar, null, null, null,
                                     null, posting.getId(), posting.getCurrentRevision().getHeading(),
-                                    addedReaction.getOwnerName(), addedReaction.getOwnerFullName(), ownerAvatar,
-                                    addedReaction.isNegative(), addedReaction.getEmoji()));
+                                    addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
+                                    addedReaction.getOwnerGender(), ownerAvatar, addedReaction.isNegative(),
+                                    addedReaction.getEmoji()));
                 } else {
                     if (visibilityFilter(posting, addedReaction).includes(true, posting.getOwnerName())) {
                         postingReactionInstants.added(posting, addedReaction.getOwnerName(),
-                                addedReaction.getOwnerFullName(), ownerAvatar, addedReaction.isNegative(),
-                                addedReaction.getEmoji());
+                                addedReaction.getOwnerFullName(), addedReaction.getOwnerGender(), ownerAvatar,
+                                addedReaction.isNegative(), addedReaction.getEmoji());
                     }
                 }
             } else {
@@ -125,11 +126,12 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                     send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
                                     visibilityFilter(posting, addedReaction)),
                             new PostingReactionAddedNotification(parentPosting.getOwnerName(),
-                                    parentPosting.getOwnerFullName(), parentPostingAvatar, parentPosting.getId(),
-                                    parentCommentId, posting.getParentMedia().getId(),
-                                    entry.getCurrentRevision().getHeading(), posting.getId(),
-                                    posting.getCurrentRevision().getHeading(), addedReaction.getOwnerName(),
-                                    addedReaction.getOwnerFullName(), ownerAvatar, addedReaction.isNegative(),
+                                    parentPosting.getOwnerFullName(), parentPosting.getOwnerGender(),
+                                    parentPostingAvatar, parentPosting.getId(), parentCommentId,
+                                    posting.getParentMedia().getId(), entry.getCurrentRevision().getHeading(),
+                                    posting.getId(), posting.getCurrentRevision().getHeading(),
+                                    addedReaction.getOwnerName(), addedReaction.getOwnerFullName(),
+                                    addedReaction.getOwnerGender(), ownerAvatar, addedReaction.isNegative(),
                                     addedReaction.getEmoji()));
                 }
             }

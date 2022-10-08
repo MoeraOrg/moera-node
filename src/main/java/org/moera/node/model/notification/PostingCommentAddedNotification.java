@@ -12,6 +12,7 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
 
     private String postingOwnerName;
     private String postingOwnerFullName;
+    private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingHeading;
     private String commentHeading;
@@ -22,14 +23,16 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
     }
 
     public PostingCommentAddedNotification(String postingOwnerName, String postingOwnerFullName,
-                                           AvatarImage postingOwnerAvatar, UUID postingId, String postingHeading,
-                                           UUID commentId, String commentOwnerName, String commentOwnerFullName,
+                                           String postingOwnerGender, AvatarImage postingOwnerAvatar, UUID postingId,
+                                           String postingHeading, UUID commentId, String commentOwnerName,
+                                           String commentOwnerFullName, String commentOwnerGender,
                                            AvatarImage commentOwnerAvatar, String commentHeading,
                                            UUID commentRepliedTo) {
         super(NotificationType.POSTING_COMMENT_ADDED, postingId, commentId, commentOwnerName, commentOwnerFullName,
-                commentOwnerAvatar);
+                commentOwnerGender, commentOwnerAvatar);
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
+        this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
         this.commentHeading = commentHeading;
@@ -50,6 +53,14 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
 
     public void setPostingOwnerFullName(String postingOwnerFullName) {
         this.postingOwnerFullName = postingOwnerFullName;
+    }
+
+    public String getPostingOwnerGender() {
+        return postingOwnerGender;
+    }
+
+    public void setPostingOwnerGender(String postingOwnerGender) {
+        this.postingOwnerGender = postingOwnerGender;
     }
 
     public AvatarImage getPostingOwnerAvatar() {

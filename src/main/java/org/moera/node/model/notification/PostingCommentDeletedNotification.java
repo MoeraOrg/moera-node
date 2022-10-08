@@ -11,9 +11,10 @@ public class PostingCommentDeletedNotification extends PostingCommentNotificatio
     }
 
     public PostingCommentDeletedNotification(UUID postingId, UUID commentId, String commentOwnerName,
-                                             String commentOwnerFullName, AvatarImage commentOwnerAvatar) {
+                                             String commentOwnerFullName, String commentOwnerGender,
+                                             AvatarImage commentOwnerAvatar) {
         super(NotificationType.POSTING_COMMENT_DELETED, postingId, commentId, commentOwnerName, commentOwnerFullName,
-                commentOwnerAvatar);
+                commentOwnerGender, commentOwnerAvatar);
     }
 
 }

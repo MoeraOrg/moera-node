@@ -10,6 +10,7 @@ public class RemoteCommentMediaReactionAddedLiberin extends Liberin {
     private String nodeName;
     private String parentPostingNodeName;
     private String parentPostingFullName;
+    private String parentPostingGender;
     private AvatarImage parentPostingAvatar;
     private String mediaPostingId;
     private String parentPostingId;
@@ -17,20 +18,23 @@ public class RemoteCommentMediaReactionAddedLiberin extends Liberin {
     private String parentMediaId;
     private String reactionNodeName;
     private String reactionFullName;
+    private String reactionGender;
     private AvatarImage reactionAvatar;
     private String commentHeading;
     private boolean reactionNegative;
     private int reactionEmoji;
 
     public RemoteCommentMediaReactionAddedLiberin(String nodeName, String parentPostingNodeName,
-                                                  String parentPostingFullName, AvatarImage parentPostingAvatar,
-                                                  String mediaPostingId, String parentPostingId, String parentCommentId,
-                                                  String parentMediaId, String reactionNodeName,
-                                                  String reactionFullName, AvatarImage reactionAvatar,
+                                                  String parentPostingFullName, String parentPostingGender,
+                                                  AvatarImage parentPostingAvatar, String mediaPostingId,
+                                                  String parentPostingId, String parentCommentId, String parentMediaId,
+                                                  String reactionNodeName, String reactionFullName,
+                                                  String reactionGender, AvatarImage reactionAvatar,
                                                   String commentHeading, boolean reactionNegative, int reactionEmoji) {
         this.nodeName = nodeName;
         this.parentPostingNodeName = parentPostingNodeName;
         this.parentPostingFullName = parentPostingFullName;
+        this.parentPostingGender = parentPostingGender;
         this.parentPostingAvatar = parentPostingAvatar;
         this.mediaPostingId = mediaPostingId;
         this.parentPostingId = parentPostingId;
@@ -38,6 +42,7 @@ public class RemoteCommentMediaReactionAddedLiberin extends Liberin {
         this.parentMediaId = parentMediaId;
         this.reactionNodeName = reactionNodeName;
         this.reactionFullName = reactionFullName;
+        this.reactionGender = reactionGender;
         this.reactionAvatar = reactionAvatar;
         this.commentHeading = commentHeading;
         this.reactionNegative = reactionNegative;
@@ -66,6 +71,14 @@ public class RemoteCommentMediaReactionAddedLiberin extends Liberin {
 
     public void setParentPostingFullName(String parentPostingFullName) {
         this.parentPostingFullName = parentPostingFullName;
+    }
+
+    public String getParentPostingGender() {
+        return parentPostingGender;
+    }
+
+    public void setParentPostingGender(String parentPostingGender) {
+        this.parentPostingGender = parentPostingGender;
     }
 
     public AvatarImage getParentPostingAvatar() {
@@ -124,6 +137,14 @@ public class RemoteCommentMediaReactionAddedLiberin extends Liberin {
         this.reactionFullName = reactionFullName;
     }
 
+    public String getReactionGender() {
+        return reactionGender;
+    }
+
+    public void setReactionGender(String reactionGender) {
+        this.reactionGender = reactionGender;
+    }
+
     public AvatarImage getReactionAvatar() {
         return reactionAvatar;
     }
@@ -162,6 +183,7 @@ public class RemoteCommentMediaReactionAddedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("parentPostingNodeName", parentPostingNodeName);
         model.put("parentPostingFullName", parentPostingFullName);
+        model.put("parentPostingGender", parentPostingGender);
         model.put("parentPostingAvatar", parentPostingAvatar);
         model.put("mediaPostingId", mediaPostingId);
         model.put("parentPostingId", parentPostingId);
@@ -169,6 +191,7 @@ public class RemoteCommentMediaReactionAddedLiberin extends Liberin {
         model.put("parentMediaId", parentMediaId);
         model.put("reactionNodeName", reactionNodeName);
         model.put("reactionFullName", reactionFullName);
+        model.put("reactionGender", reactionGender);
         model.put("reactionAvatar", reactionAvatar);
         model.put("commentHeading", commentHeading);
         model.put("reactionNegative", reactionNegative);

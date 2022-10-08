@@ -70,9 +70,10 @@ public class RemotePostingProcessor {
                     universalContext.send(
                             new ForeignCommentAddedLiberin(notification.getSenderNodeName(),
                                     notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerAvatar(), notification.getPostingId(),
-                                    notification.getPostingHeading(), notification.getCommentOwnerName(),
-                                    notification.getCommentOwnerFullName(), notification.getCommentOwnerAvatar(),
+                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                    notification.getPostingId(), notification.getPostingHeading(),
+                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                    notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
                                     notification.getCommentId(), notification.getCommentHeading(),
                                     subscription.getReason()));
                 });
@@ -100,8 +101,9 @@ public class RemotePostingProcessor {
                     universalContext.send(
                             new RemotePostingImportantUpdateLiberin(notification.getSenderNodeName(),
                                     notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerAvatar(), notification.getPostingId(),
-                                    notification.getPostingHeading(), notification.getDescription()));
+                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                    notification.getPostingId(), notification.getPostingHeading(),
+                                    notification.getDescription()));
                 });
     }
 

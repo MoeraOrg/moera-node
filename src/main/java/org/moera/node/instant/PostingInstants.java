@@ -25,6 +25,7 @@ public class PostingInstants extends InstantsCreator {
     public void subscribingToCommentsFailed(String nodeName, String postingId, PostingInfo postingInfo) {
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
+        String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
         AvatarImage postingOwnerAvatar = postingInfo != null ? postingInfo.getOwnerAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
@@ -38,23 +39,24 @@ public class PostingInstants extends InstantsCreator {
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
-        story.setSummaryData(
-                buildSubscribingToCommentsFailedSummary(postingOwnerName, postingOwnerFullName, postingHeading));
+        story.setSummaryData(buildSubscribingToCommentsFailedSummary(
+                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildSubscribingToCommentsFailedSummary(String ownerName, String ownerFullName,
-                                                                            String postingHeading) {
+    private static StorySummaryData buildSubscribingToCommentsFailedSummary(
+            String ownerName, String ownerFullName, String ownerGender, String postingHeading) {
+
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(ownerName, ownerFullName, postingHeading));
+        summaryData.setPosting(new StorySummaryEntry(ownerName, ownerFullName, ownerGender, postingHeading));
         return summaryData;
     }
 
-    public void updated(String nodeName, String ownerName, String ownerFullName, AvatarImage ownerAvatar, String id,
-                        String heading, String description) {
+    public void updated(String nodeName, String ownerName, String ownerFullName, String ownerGender,
+                        AvatarImage ownerAvatar, String id, String heading, String description) {
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_UPDATED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(nodeName);
@@ -66,17 +68,18 @@ public class PostingInstants extends InstantsCreator {
         }
         story.setRemotePostingId(id);
         story.setRemoteHeading(heading);
-        story.setSummaryData(buildPostingUpdatedSummary(ownerName, ownerFullName, heading, description));
+        story.setSummaryData(buildPostingUpdatedSummary(ownerName, ownerFullName, ownerGender, heading, description));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildPostingUpdatedSummary(String ownerName, String ownerFullName, String heading,
-                                                               String description) {
+    private static StorySummaryData buildPostingUpdatedSummary(
+            String ownerName, String ownerFullName, String ownerGender, String heading, String description) {
+
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(ownerName, ownerFullName, heading));
+        summaryData.setPosting(new StorySummaryEntry(ownerName, ownerFullName, ownerGender, heading));
         summaryData.setDescription(description);
         return summaryData;
     }
@@ -84,6 +87,7 @@ public class PostingInstants extends InstantsCreator {
     public void remoteAddingFailed(WhoAmI nodeInfo) {
         String remoteNodeName = nodeInfo != null ? nodeInfo.getNodeName() : "";
         String remoteFullName = nodeInfo != null ? nodeInfo.getFullName() : null;
+        String remoteGender = nodeInfo != null ? nodeInfo.getGender() : null;
         AvatarImage remoteAvatar = nodeInfo != null ? nodeInfo.getAvatar() : null;
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_POST_TASK_FAILED);
@@ -94,22 +98,23 @@ public class PostingInstants extends InstantsCreator {
             story.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
             story.setRemoteAvatarShape(remoteAvatar.getShape());
         }
-        story.setSummaryData(buildRemoteAddingFailedSummary(remoteNodeName, remoteFullName));
+        story.setSummaryData(buildRemoteAddingFailedSummary(remoteNodeName, remoteFullName, remoteGender));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildRemoteAddingFailedSummary(String nodeName, String fullName) {
+    private static StorySummaryData buildRemoteAddingFailedSummary(String nodeName, String fullName, String gender) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(nodeName, fullName));
+        summaryData.setNode(new StorySummaryNode(nodeName, fullName, gender));
         return summaryData;
     }
 
     public void remoteUpdateFailed(WhoAmI nodeInfo, String postingId, PostingInfo postingInfo) {
         String remoteNodeName = nodeInfo != null ? nodeInfo.getNodeName() : "";
         String remoteFullName = nodeInfo != null ? nodeInfo.getFullName() : null;
+        String remoteGender = nodeInfo != null ? nodeInfo.getGender() : null;
         AvatarImage remoteAvatar = nodeInfo != null ? nodeInfo.getAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
 
@@ -122,18 +127,20 @@ public class PostingInstants extends InstantsCreator {
             story.setRemoteAvatarShape(remoteAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
-        story.setSummaryData(buildRemoteUpdateFailedSummary(remoteNodeName, remoteFullName, postingHeading));
+        story.setSummaryData(buildRemoteUpdateFailedSummary(
+                remoteNodeName, remoteFullName, remoteGender, postingHeading));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildRemoteUpdateFailedSummary(String nodeName, String fullName,
-                                                                   String postingHeading) {
+    private static StorySummaryData buildRemoteUpdateFailedSummary(
+            String nodeName, String fullName, String gender, String postingHeading) {
+
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(nodeName, fullName));
-        summaryData.setPosting(new StorySummaryEntry(null, null, postingHeading));
+        summaryData.setNode(new StorySummaryNode(nodeName, fullName, gender));
+        summaryData.setPosting(new StorySummaryEntry(null, null, null, postingHeading));
         return summaryData;
     }
 
