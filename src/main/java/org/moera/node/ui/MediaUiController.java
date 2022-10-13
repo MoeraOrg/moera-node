@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.AuthenticationCategory;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -67,7 +68,11 @@ public class MediaUiController {
                                                    @RequestParam(required = false) Boolean download) {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
-        if (!requestContext.isPrincipal(mediaFileOwner.getViewE(requestContext.nodeName()))) {
+        Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
+        if (!requestContext.isPrincipal(viewPrincipal)
+                && !(viewPrincipal.isAdmin()) && requestContext.isClient(requestContext.nodeName())) {
+                // The exception above is made to allow to authenticate with a carte as admin to view admin-only
+                // media. This allows to avoid passing admin tokens in parameters
             throw new PageNotFoundException();
         }
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, download);
@@ -79,7 +84,12 @@ public class MediaUiController {
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
         Posting posting = mediaFileOwner.getPosting(null);
-        if (posting == null || !requestContext.isPrincipal(posting.getViewE())) {
+        if (posting == null) {
+            throw new PageNotFoundException();
+        }
+        if (!requestContext.isPrincipal(posting.getViewE())
+                && !(posting.getViewE().isAdmin()) && requestContext.isClient(requestContext.nodeName())) {
+                // See the comment above
             throw new PageNotFoundException();
         }
         String body = posting.getCurrentRevision().getSaneBody();
