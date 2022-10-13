@@ -482,7 +482,6 @@ public class MediaOperations {
 
         PostingFeatures features = new PostingFeatures(universalContext.getOptions());
         int recommendedSize = features.getImageRecommendedSize();
-        int recommendedPixels = features.getImageRecommendedPixels();
 
         List<MediaFileOwner> attached = new ArrayList<>();
         Set<UUID> usedIds = new HashSet<>();
@@ -501,14 +500,8 @@ public class MediaOperations {
                         && !mediaFileOwner.getOwnerName().equals(clientName)) {
                 throw notFound.get();
             }
-            if (notCompressed != null && !isAdmin) {
-                if (mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
-                    throw notCompressed.get();
-                }
-                if (mediaFileOwner.getMediaFile().getSizeX() > recommendedPixels
-                        || mediaFileOwner.getMediaFile().getSizeY() > recommendedPixels) {
-                    throw notCompressed.get();
-                }
+            if (notCompressed != null && !isAdmin && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
+                throw notCompressed.get();
             }
             attached.add(mediaFileOwner);
             usedIds.add(id);
