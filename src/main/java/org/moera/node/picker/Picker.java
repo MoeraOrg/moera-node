@@ -275,6 +275,7 @@ public class Picker extends Task {
             if (media != null) {
                 EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
                 attachment.setEmbedded(attach.isEmbedded());
+                attachment.setRemoteMediaId(attach.getMedia().getId());
                 attachment = entryAttachmentRepository.save(attachment);
                 revision.addAttachment(attachment);
 
