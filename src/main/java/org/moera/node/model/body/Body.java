@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.util.StdConverter;
+import org.springframework.util.ObjectUtils;
 
 @JsonSerialize(converter = Body.ToStringConverter.class)
 @JsonDeserialize(converter = Body.FromStringConverter.class)
@@ -92,6 +93,21 @@ public class Body implements Cloneable {
 
     void modified() {
         encoded = null;
+    }
+
+    public String getAllText() {
+        StringBuilder buf = new StringBuilder(getText());
+        for (LinkPreview linkPreview : getLinkPreviews()) {
+            if (!ObjectUtils.isEmpty(linkPreview.getTitle())) {
+                buf.append(' ');
+                buf.append(linkPreview.getTitle());
+            }
+            if (!ObjectUtils.isEmpty(linkPreview.getDescription())) {
+                buf.append(' ');
+                buf.append(linkPreview.getDescription());
+            }
+        }
+        return buf.toString();
     }
 
     @Override

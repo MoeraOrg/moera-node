@@ -20,6 +20,7 @@ public class HeadingExtractor {
     private static final String EMOJI_PICTURE = Character.toString(0x1f5bc);
     private static final String EMOJI_SCROLL = Character.toString(0x1f4dc);
     private static final String EMOJI_CHAIN = Character.toString(0x1f517);
+    private static final String EMOJI_MOVIE = Character.toString(0x1f4fd);
 
     private static final Pattern URL = Pattern.compile(
             "https?://[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9]{1,6}"
@@ -30,7 +31,7 @@ public class HeadingExtractor {
         if (!ObjectUtils.isEmpty(body.getSubject())) {
             return Util.ellipsize(body.getSubject(), HEADING_LENGTH);
         }
-        String text = URL.matcher(body.getText()).replaceAll(EMOJI_CHAIN);
+        String text = URL.matcher(body.getAllText()).replaceAll(EMOJI_CHAIN);
         String heading = extract(text, HEADING_LENGTH, collapseQuotations);
         if (heading.length() < HEADING_LENGTH && hasGallery) {
             heading += EMOJI_PICTURE;
@@ -39,10 +40,11 @@ public class HeadingExtractor {
     }
 
     public static String extractDescription(Body body, boolean collapseQuotations, String heading) {
-        if (ObjectUtils.isEmpty(body.getText())) {
+        String text = body.getAllText();
+        if (ObjectUtils.isEmpty(text)) {
             return "";
         }
-        String text = URL.matcher(body.getText()).replaceAll(EMOJI_CHAIN);
+        text = URL.matcher(text).replaceAll(EMOJI_CHAIN);
         int beginningLength = getDescriptionBeginningLength(body, heading);
         String description = extract(text, DESCRIPTION_LENGTH + beginningLength, collapseQuotations);
         description = beginningLength < description.length() - 1 ? description.substring(beginningLength) : "";
@@ -99,6 +101,11 @@ public class HeadingExtractor {
                     } else if (element.normalName().equals("blockquote") && collapseQuotations) {
                         text = EMOJI_SCROLL;
                         ignoreContent++;
+                    } else if (element.normalName().equals("iframe")
+                            || element.normalName().equals("object")
+                            || element.normalName().equals("video")) {
+                        text = EMOJI_MOVIE;
+                        ignoreContent++;
                     }
                 }
                 if (appendText(text)) {
@@ -131,7 +138,10 @@ public class HeadingExtractor {
             if (node instanceof Element) {
                 Element element = (Element) node;
                 if (element.normalName().equals("mr-spoiler")
-                        || element.normalName().equals("blockquote") && collapseQuotations) {
+                        || element.normalName().equals("blockquote") && collapseQuotations
+                        || element.normalName().equals("iframe")
+                        || element.normalName().equals("object")
+                        || element.normalName().equals("video")) {
                     ignoreContent--;
                 }
             }
