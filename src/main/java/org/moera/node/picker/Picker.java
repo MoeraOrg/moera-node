@@ -363,6 +363,7 @@ public class Picker extends Task {
 
     private void error(Throwable e) {
         log.error(e.getMessage());
+        log.debug("Error picking a post", e);
     }
 
     private void failed(Pick pick, Throwable e) {

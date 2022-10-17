@@ -96,14 +96,21 @@ public class Body implements Cloneable {
     }
 
     public String getAllText() {
-        StringBuilder buf = new StringBuilder(getText());
+        StringBuilder buf = new StringBuilder();
+        if (!ObjectUtils.isEmpty(getText())) {
+            buf.append(getText());
+        }
         for (LinkPreview linkPreview : getLinkPreviews()) {
             if (!ObjectUtils.isEmpty(linkPreview.getTitle())) {
-                buf.append(' ');
+                if (buf.length() != 0) {
+                    buf.append(' ');
+                }
                 buf.append(linkPreview.getTitle());
             }
             if (!ObjectUtils.isEmpty(linkPreview.getDescription())) {
-                buf.append(' ');
+                if (buf.length() != 0) {
+                    buf.append(' ');
+                }
                 buf.append(linkPreview.getDescription());
             }
         }
