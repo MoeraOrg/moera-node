@@ -25,6 +25,7 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -48,10 +49,12 @@ import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -335,6 +338,13 @@ public class DraftController {
         requestContext.send(new DraftDeletedLiberin(draft));
 
         return Result.OK;
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @EventListener(DomainsConfiguredEvent.class)
+    @Transactional
+    public void purgeExpired() {
+        draftRepository.deleteExpired(Util.now());
     }
 
 }

@@ -1,11 +1,13 @@
 package org.moera.node.data;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 public interface DraftRepository extends JpaRepository<Draft, UUID> {
@@ -40,5 +42,9 @@ public interface DraftRepository extends JpaRepository<Draft, UUID> {
 
     @Query("select d from Draft d where d.nodeId = ?1 and d.id = ?2")
     Optional<Draft> findById(UUID nodeId, UUID id);
+
+    @Query("delete from Draft d where d.deadline is not null and d.deadline < ?1")
+    @Modifying
+    void deleteExpired(Timestamp deadline);
 
 }
