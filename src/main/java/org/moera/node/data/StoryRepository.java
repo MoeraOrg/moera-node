@@ -88,6 +88,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     @Query("select min(s.moment) from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.viewed = false")
     Long findNotViewedMoment(UUID nodeId, String feedName);
 
+    @Query("select min(s.moment) from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.read = false")
+    Long findNotReadMoment(UUID nodeId, String feedName);
+
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.moment <= ?4 and s.viewed = ?3")
     Set<Story> findViewed(UUID nodeId, String feedName, boolean viewed, long beforeMoment);
 
@@ -100,6 +103,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     @Query("update Story s set s.read = ?3"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment <= ?4 and s.read = ?5")
     void updateRead(UUID nodeId, String feedName, boolean read, long beforeMoment, boolean currentRead);
+
+    @Query("select max(s.moment) from Story s where s.nodeId = ?1 and s.feedName = ?2")
+    Long findLastMoment(UUID nodeId, String feedName);
 
     @Query("select max(s.createdAt) from Story s where s.nodeId = ?1 and s.feedName = ?2")
     Timestamp findLastCreatedAt(UUID nodeId, String feedName);

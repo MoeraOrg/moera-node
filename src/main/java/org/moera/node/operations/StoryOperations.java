@@ -23,6 +23,7 @@ import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.util.MomentFinder;
+import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -90,15 +91,19 @@ public class StoryOperations {
     public FeedStatus getFeedStatus(String feedName, UUID nodeId, boolean isAdmin) {
         int total = storyRepository.countInFeed(nodeId, feedName);
         int totalPinned = storyRepository.countPinned(nodeId, feedName);
+        Long lastMoment = storyRepository.findLastMoment(nodeId, feedName);
 
         if (isAdmin) {
             int notViewed = storyRepository.countNotViewed(nodeId, feedName);
             int notRead = storyRepository.countNotRead(nodeId, feedName);
             Long notViewedMoment = storyRepository.findNotViewedMoment(nodeId, feedName);
+            notViewedMoment = notViewedMoment != null ? notViewedMoment : SafeInteger.MAX_VALUE;
+            Long notReadMoment = storyRepository.findNotReadMoment(nodeId, feedName);
+            notReadMoment = notReadMoment != null ? notReadMoment : SafeInteger.MAX_VALUE;
 
-            return new FeedStatus(total, totalPinned, notViewed, notRead, notViewedMoment);
+            return new FeedStatus(total, totalPinned, lastMoment, notViewed, notRead, notViewedMoment, notReadMoment);
         } else {
-            return new FeedStatus(total, totalPinned);
+            return new FeedStatus(total, totalPinned, lastMoment);
         }
     }
 

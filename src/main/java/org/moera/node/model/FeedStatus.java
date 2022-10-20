@@ -7,28 +7,34 @@ public class FeedStatus {
 
     private int total;
     private int totalPinned;
+    private Long lastMoment;
     private Integer notViewed;
     private Integer notRead;
     private Long notViewedMoment;
+    private Long notReadMoment;
 
     public FeedStatus() {
     }
 
-    public FeedStatus(int total, int totalPinned, int notViewed, int notRead, Long notViewedMoment) {
+    public FeedStatus(int total, int totalPinned, Long lastMoment, Integer notViewed, Integer notRead,
+                      Long notViewedMoment, Long notReadMoment) {
         this.total = total;
         this.totalPinned = totalPinned;
+        this.lastMoment = lastMoment;
         this.notViewed = notViewed;
         this.notRead = notRead;
         this.notViewedMoment = notViewedMoment;
+        this.notReadMoment = notReadMoment;
     }
 
-    public FeedStatus(int total, int totalPinned) {
+    public FeedStatus(int total, int totalPinned, Long lastMoment) {
         this.total = total;
         this.totalPinned = totalPinned;
+        this.lastMoment = lastMoment;
     }
 
     public FeedStatus notAdmin() {
-        return new FeedStatus(total, totalPinned);
+        return new FeedStatus(total, totalPinned, lastMoment);
     }
 
     public int getTotal() {
@@ -45,6 +51,14 @@ public class FeedStatus {
 
     public void setTotalPinned(int totalPinned) {
         this.totalPinned = totalPinned;
+    }
+
+    public Long getLastMoment() {
+        return lastMoment;
+    }
+
+    public void setLastMoment(Long lastMoment) {
+        this.lastMoment = lastMoment;
     }
 
     public Integer getNotViewed() {
@@ -69,6 +83,14 @@ public class FeedStatus {
 
     public void setNotViewedMoment(Long notViewedMoment) {
         this.notViewedMoment = notViewedMoment;
+    }
+
+    public Long getNotReadMoment() {
+        return notReadMoment;
+    }
+
+    public void setNotReadMoment(Long notReadMoment) {
+        this.notReadMoment = notReadMoment;
     }
 
 }
