@@ -70,10 +70,10 @@ public class MailService {
 
     public void send(UUID nodeId, Mail mail) {
         String domainName = domains.getDomainName(nodeId);
-
         MDC.put("domain", domainName);
 
-        mail.setDomainName(domainName);
+        String mailDomain = domainName.equals(Domains.DEFAULT_DOMAIN) ? config.getDomain() : domainName;
+        mail.setDomainName(mailDomain);
         mail.setEmail(domains.getDomainOptions(nodeId).getString("profile.email"));
         try {
             send(mail);

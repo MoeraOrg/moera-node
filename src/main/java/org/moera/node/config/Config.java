@@ -13,6 +13,7 @@ public class Config {
     private boolean mockNetworkLatency;
     private PoolsConfig pools = new PoolsConfig();
     private MultiHost multi = MultiHost.NONE;
+    private String domain;
     private RegistrarConfig registrar;
     private MailConfig mail = new MailConfig();
     private MediaConfig media = new MediaConfig();
@@ -55,6 +56,14 @@ public class Config {
 
     public void setMulti(MultiHost multi) {
         this.multi = multi;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
     }
 
     public RegistrarConfig getRegistrar() {
