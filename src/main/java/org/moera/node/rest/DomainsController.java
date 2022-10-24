@@ -20,6 +20,10 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.DomainAddedLiberin;
+import org.moera.node.liberin.model.DomainDeletedLiberin;
+import org.moera.node.liberin.model.DomainUpdatedLiberin;
 import org.moera.node.model.DomainAttributes;
 import org.moera.node.model.DomainAvailable;
 import org.moera.node.model.DomainInfo;
@@ -55,6 +59,9 @@ public class DomainsController {
 
     @Inject
     private Domains domains;
+
+    @Inject
+    private LiberinManager liberinManager;
 
     @ProviderApi
     @RootAdmin
@@ -113,6 +120,9 @@ public class DomainsController {
         } finally {
             domains.unlockWrite();
         }
+
+        liberinManager.send(new DomainAddedLiberin(name).withNodeId(nodeId));
+
         return ResponseEntity.created(URI.create("/domains/" + domain.getName())).body(new DomainInfo(domain));
     }
 
@@ -150,6 +160,9 @@ public class DomainsController {
         } finally {
             domains.unlockWrite();
         }
+
+        liberinManager.send(new DomainUpdatedLiberin(name, newName).withNodeId(domain.getNodeId()));
+
         return new DomainInfo(domain);
     }
 
@@ -174,6 +187,9 @@ public class DomainsController {
         } finally {
             domains.unlockWrite();
         }
+
+        liberinManager.send(new DomainDeletedLiberin(name));
+
         return Result.OK;
     }
 
