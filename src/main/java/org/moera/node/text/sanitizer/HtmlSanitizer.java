@@ -35,7 +35,7 @@ public class HtmlSanitizer {
     private static final Set<String> IFRAME_HOSTNAMES = Set.of(
             "c.simmer.io", "codepen.io", "docs.google.com", "itch.io", "odysee.com", "open.spotify.com", "peer.tube",
             "player.vimeo.com", "rumble.com", "www.facebook.com", "www.youtube-nocookie.com", "www.youtube.com",
-            "gifer.com"
+            "gifer.com", "giphy.com"
     );
     private static final PolicyFactory SAFE_HTML = BASIC_HTML
             .and(new HtmlPolicyBuilder()
