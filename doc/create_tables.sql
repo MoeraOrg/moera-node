@@ -420,7 +420,8 @@ CREATE TABLE public.contacts (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL,
     remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8)
+    remote_avatar_shape character varying(8),
+    remote_gender character varying(31)
 );
 
 
@@ -573,7 +574,10 @@ CREATE TABLE public.entries (
     parent_override_reaction_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     receiver_override_reaction_principal character varying(70),
     parent_override_comment_reaction_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
-    receiver_override_comment_reaction_principal character varying(70)
+    receiver_override_comment_reaction_principal character varying(70),
+    owner_gender character varying(31),
+    receiver_gender character varying(31),
+    replied_to_gender character varying(31)
 );
 
 
@@ -961,7 +965,8 @@ CREATE TABLE public.reactions (
     posting_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     posting_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     comment_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
-    comment_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL
+    comment_delete_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
+    owner_gender character varying(31)
 );
 
 
@@ -1104,7 +1109,8 @@ CREATE TABLE public.subscribers (
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
     admin_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
-    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    remote_gender character varying(31)
 );
 
 
@@ -1128,7 +1134,8 @@ CREATE TABLE public.subscriptions (
     remote_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
-    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    remote_gender character varying(31)
 );
 
 
