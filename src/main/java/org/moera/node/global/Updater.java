@@ -12,7 +12,6 @@ import javax.transaction.Transactional;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
-import org.moera.node.data.EntryRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionUpgrade;
 import org.moera.node.data.EntryRevisionUpgradeRepository;
@@ -68,9 +67,6 @@ public class Updater {
 
     @Inject
     private MediaFileOwnerRepository mediaFileOwnerRepository;
-
-    @Inject
-    private EntryRepository entryRepository;
 
     @Inject
     private MediaOperations mediaOperations;
