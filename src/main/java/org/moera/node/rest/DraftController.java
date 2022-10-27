@@ -344,7 +344,11 @@ public class DraftController {
     @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void purgeExpired() {
-        draftRepository.deleteExpired(Util.now());
+        try {
+            draftRepository.deleteExpired(Util.now());
+        } catch (Exception e) {
+            log.error("Error purging expired drafts", e);
+        }
     }
 
 }

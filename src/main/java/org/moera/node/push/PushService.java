@@ -80,19 +80,27 @@ public class PushService {
     @Scheduled(fixedDelayString = "PT1M")
     @Transactional
     public void updateLastSeenAt() {
-        nodeClients.values().forEach(PushClients::updateLastSeenAt);
+        try {
+            nodeClients.values().forEach(PushClients::updateLastSeenAt);
+        } catch (Exception e) {
+            log.error("Error updating last seen timestamp of push notifications", e);
+        }
     }
 
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void purgeUnsent() {
-        for (String domainName : domains.getAllDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            Duration ttl = domains.getDomainOptions(domainName)
-                    .getDuration("push.notification.lifetime").getDuration();
-            long lastMoment = Instant.now().minus(ttl).getEpochSecond() * 1000;
-            pushClientRepository.findAllByNodeId(nodeId)
-                    .forEach(client -> pushNotificationRepository.deleteTill(client.getId(), lastMoment));
+        try {
+            for (String domainName : domains.getAllDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                Duration ttl = domains.getDomainOptions(domainName)
+                        .getDuration("push.notification.lifetime").getDuration();
+                long lastMoment = Instant.now().minus(ttl).getEpochSecond() * 1000;
+                pushClientRepository.findAllByNodeId(nodeId)
+                        .forEach(client -> pushNotificationRepository.deleteTill(client.getId(), lastMoment));
+            }
+        } catch (Exception e) {
+            log.error("Error purging unsent push notifications", e);
         }
     }
 

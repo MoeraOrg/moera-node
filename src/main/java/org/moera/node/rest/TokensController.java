@@ -147,7 +147,11 @@ public class TokensController {
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void purgeExpired() {
-        tokenRepository.deleteExpired(Util.now());
+        try {
+            tokenRepository.deleteExpired(Util.now());
+        } catch (Exception e) {
+            log.error("Error purging expired tokens", e);
+        }
     }
 
 }

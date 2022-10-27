@@ -15,6 +15,8 @@ import javax.inject.Inject;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.TaskExecutor;
@@ -61,6 +63,8 @@ public class NamingCache {
         private Throwable error;
 
     }
+
+    private static final Logger log = LoggerFactory.getLogger(NamingCache.class);
 
     private static final Duration NORMAL_TTL = Duration.of(6, ChronoUnit.HOURS);
     private static final Duration ERROR_TTL = Duration.of(1, ChronoUnit.MINUTES);
@@ -199,29 +203,33 @@ public class NamingCache {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void purge() {
-        List<Key> remove;
-        cacheLock.readLock().lock();
         try {
-            remove = cache.entrySet().stream()
-                    .filter(e -> e.getValue().deadline != null && e.getValue().deadline.isBefore(Instant.now()))
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
-        } finally {
-            cacheLock.readLock().unlock();
-        }
-        if (remove.size() > 0) {
-            cacheLock.writeLock().lock();
+            List<Key> remove;
+            cacheLock.readLock().lock();
             try {
-                remove.forEach(key -> {
-                    if (cache.get(key).accessed.plus(NORMAL_TTL).isAfter(Instant.now())) {
-                        run(key);
-                    } else {
-                        cache.remove(key);
-                    }
-                });
+                remove = cache.entrySet().stream()
+                        .filter(e -> e.getValue().deadline != null && e.getValue().deadline.isBefore(Instant.now()))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toList());
             } finally {
-                cacheLock.writeLock().unlock();
+                cacheLock.readLock().unlock();
             }
+            if (remove.size() > 0) {
+                cacheLock.writeLock().lock();
+                try {
+                    remove.forEach(key -> {
+                        if (cache.get(key).accessed.plus(NORMAL_TTL).isAfter(Instant.now())) {
+                            run(key);
+                        } else {
+                            cache.remove(key);
+                        }
+                    });
+                } finally {
+                    cacheLock.writeLock().unlock();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error purging naming cache records", e);
         }
     }
 

@@ -37,8 +37,8 @@ public class PickerPool {
     // We create one picker per remote node to make sure there will not be two threads that download
     // the same posting and step on each other's toes.
     // This also makes possible in the future to implement fetching several postings in one query.
-    private ConcurrentMap<PickingDirection, Picker> pickers = new ConcurrentHashMap<>();
-    private ConcurrentMap<UUID, Pick> pending = new ConcurrentHashMap<>();
+    private final ConcurrentMap<PickingDirection, Picker> pickers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<UUID, Pick> pending = new ConcurrentHashMap<>();
 
     @Inject
     @Qualifier("pickerTaskExecutor")
@@ -96,10 +96,14 @@ public class PickerPool {
 
     @Scheduled(fixedDelayString = "PT10S")
     public void retry() {
-        pending.values().stream()
-                .filter(p -> !p.isRunning())
-                .filter(p -> p.getRetryAt() == null || p.getRetryAt().before(Util.now()))
-                .forEach(this::pick);
+        try {
+            pending.values().stream()
+                    .filter(p -> !p.isRunning())
+                    .filter(p -> p.getRetryAt() == null || p.getRetryAt().before(Util.now()))
+                    .forEach(this::pick);
+        } catch (Exception e) {
+            log.error("Error retrying picking", e);
+        }
     }
 
     private Picker createPicker(String nodeName, UUID nodeId) {

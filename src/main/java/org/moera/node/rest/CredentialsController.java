@@ -149,7 +149,11 @@ public class CredentialsController {
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void purgeExpired() {
-        passwordResetTokenRepository.deleteExpired(Util.now());
+        try {
+            passwordResetTokenRepository.deleteExpired(Util.now());
+        } catch (Exception e) {
+            log.error("Error purging password reset tokens", e);
+        }
     }
 
 }

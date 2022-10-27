@@ -234,13 +234,17 @@ public class NotificationSenderPool {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void resumeSenders() {
-        List<NotificationSender> resumed = pausedSenders.stream()
-                .filter(sender -> Instant.now().compareTo(sender.getPausedTill()) >= 0)
-                .collect(Collectors.toList());
-        resumed.forEach(sender -> {
-            resumeSender(sender);
-            taskExecutor.execute(sender);
-        });
+        try {
+            List<NotificationSender> resumed = pausedSenders.stream()
+                    .filter(sender -> Instant.now().compareTo(sender.getPausedTill()) >= 0)
+                    .collect(Collectors.toList());
+            resumed.forEach(sender -> {
+                resumeSender(sender);
+                taskExecutor.execute(sender);
+            });
+        } catch (Exception e) {
+            log.error("Error resuming notification senders", e);
+        }
     }
 
 }

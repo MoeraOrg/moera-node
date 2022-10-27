@@ -286,46 +286,50 @@ public class CommentOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Throwable {
-        List<Liberin> liberins = new ArrayList<>();
+    public void purgeExpired() {
+        try {
+            List<Liberin> liberins = new ArrayList<>();
 
-        Transaction.execute(txManager, () -> {
-            List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
-            comments.addAll(commentRepository.findExpired(Util.now()));
-            for (Comment comment : comments) {
-                EntryRevision latest = comment.getCurrentRevision();
-                Posting posting = comment.getPosting();
-                if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
-                    if (comment.getDeletedAt() == null) {
-                        log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
-                                LogUtil.format(posting.getId()),
-                                LogUtil.format(posting.getTotalChildren()),
-                                LogUtil.format(comment.getId()));
-                        posting.setTotalChildren(posting.getTotalChildren() - 1);
-                    }
-                    commentRepository.delete(comment);
+            Transaction.execute(txManager, () -> {
+                List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
+                comments.addAll(commentRepository.findExpired(Util.now()));
+                for (Comment comment : comments) {
+                    EntryRevision latest = comment.getCurrentRevision();
+                    Posting posting = comment.getPosting();
+                    if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
+                        if (comment.getDeletedAt() == null) {
+                            log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
+                                    LogUtil.format(posting.getId()),
+                                    LogUtil.format(posting.getTotalChildren()),
+                                    LogUtil.format(comment.getId()));
+                            posting.setTotalChildren(posting.getTotalChildren() - 1);
+                        }
+                        commentRepository.delete(comment);
 
-                    liberins.add(new CommentDeletedLiberin(comment, latest).withNodeId(posting.getNodeId()));
-                } else {
-                    EntryRevision revision = comment.getRevisions().stream()
-                            .min(Comparator.comparing(EntryRevision::getCreatedAt))
-                            .orElse(null);
-                    if (revision != null) { // always
-                        revision.setDeletedAt(null);
-                        entryRevisionRepository.delete(comment.getCurrentRevision());
-                        comment.setCurrentRevision(revision);
-                        comment.setTotalRevisions(comment.getTotalRevisions() - 1);
+                        liberins.add(new CommentDeletedLiberin(comment, latest).withNodeId(posting.getNodeId()));
+                    } else {
+                        EntryRevision revision = comment.getRevisions().stream()
+                                .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                                .orElse(null);
+                        if (revision != null) { // always
+                            revision.setDeletedAt(null);
+                            entryRevisionRepository.delete(comment.getCurrentRevision());
+                            comment.setCurrentRevision(revision);
+                            comment.setTotalRevisions(comment.getTotalRevisions() - 1);
 
-                        liberins.add(new CommentUpdatedLiberin(comment, latest, comment.getViewE())
-                                .withNodeId(posting.getNodeId()));
+                            liberins.add(new CommentUpdatedLiberin(comment, latest, comment.getViewE())
+                                    .withNodeId(posting.getNodeId()));
+                        }
                     }
                 }
-            }
 
-            return null;
-        });
+                return null;
+            });
 
-        liberins.forEach(liberinManager::send);
+            liberins.forEach(liberinManager::send);
+        } catch (Throwable e) {
+            log.error("Error purging expired comments", e);
+        }
     }
 
 }

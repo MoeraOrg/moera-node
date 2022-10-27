@@ -349,7 +349,11 @@ public class MediaManager {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void purgeExpiredRemoteMedia() {
-        remoteMediaCacheRepository.deleteExpired(Util.now());
+        try {
+            remoteMediaCacheRepository.deleteExpired(Util.now());
+        } catch (Exception e) {
+            log.error("Error deleting expired media cache records", e);
+        }
     }
 
 }

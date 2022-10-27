@@ -122,7 +122,11 @@ public class DeletedPostingController {
     @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void purgeExpired() {
-        postingRepository.deleteExpired(Util.now());
+        try {
+            postingRepository.deleteExpired(Util.now());
+        } catch (Exception e) {
+            log.error("Error purging expired deleted postings", e);
+        }
     }
 
 }

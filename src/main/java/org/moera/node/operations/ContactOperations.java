@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.UUID;
-
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -18,11 +17,15 @@ import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ContactOperations {
+
+    private static final Logger log = LoggerFactory.getLogger(ContactOperations.class);
 
     @Inject
     private RequestContext requestContext;
@@ -111,12 +114,16 @@ public class ContactOperations {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void closenessMaintenance() {
-        Collection<Contact> contacts = contactRepository.findAllUpdatedBefore(
-                Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS)));
-        for (Contact contact : contacts) {
-            contact.setCloseness(contact.getCloseness() - 0.2f * contact.getClosenessBase());
-            contact.setClosenessBase(contact.getCloseness());
-            contact.setUpdatedAt(Util.now());
+        try {
+            Collection<Contact> contacts = contactRepository.findAllUpdatedBefore(
+                    Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS)));
+            for (Contact contact : contacts) {
+                contact.setCloseness(contact.getCloseness() - 0.2f * contact.getClosenessBase());
+                contact.setClosenessBase(contact.getCloseness());
+                contact.setUpdatedAt(Util.now());
+            }
+        } catch (Exception e) {
+            log.error("Error processing contact closeness", e);
         }
     }
 

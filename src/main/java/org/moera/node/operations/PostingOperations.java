@@ -293,58 +293,66 @@ public class PostingOperations {
     }
 
     @Scheduled(fixedDelayString = "PT1H")
-    public void purgeUnlinked() throws Throwable {
-        for (String domainName : domains.getAllDomainNames()) {
-            Options options = domains.getDomainOptions(domainName);
-            List<Liberin> liberinList = new ArrayList<>();
-            Transaction.execute(txManager, () -> {
-                postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
-                    log.info("Deleting unlinked posting {}", posting.getId());
-                    EntryRevision latest = posting.getCurrentRevision();
-                    deletePosting(posting, true, options);
-                    liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
+    public void purgeUnlinked() {
+        try {
+            for (String domainName : domains.getAllDomainNames()) {
+                Options options = domains.getDomainOptions(domainName);
+                List<Liberin> liberinList = new ArrayList<>();
+                Transaction.execute(txManager, () -> {
+                    postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
+                        log.info("Deleting unlinked posting {}", posting.getId());
+                        EntryRevision latest = posting.getCurrentRevision();
+                        deletePosting(posting, true, options);
+                        liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
+                    });
+                    return null;
                 });
-                return null;
-            });
-            liberinList.forEach(liberinManager::send);
+                liberinList.forEach(liberinManager::send);
+            }
+        } catch (Throwable e) {
+            log.error("Error purging unlinked postings", e);
         }
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Throwable {
-        List<Liberin> liberins = new ArrayList<>();
+    public void purgeExpired() {
+        try {
+            List<Liberin> liberins = new ArrayList<>();
 
-        Transaction.execute(txManager, () -> {
-            List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
-            for (Posting posting : postings) {
-                universalContext.associate(posting.getNodeId());
-                EntryRevision latest = posting.getCurrentRevision();
-                if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
-                    log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
-                    storyOperations.unpublish(posting.getId(), posting.getNodeId(), liberins::add);
-                    postingRepository.delete(posting);
+            Transaction.execute(txManager, () -> {
+                List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
+                for (Posting posting : postings) {
+                    universalContext.associate(posting.getNodeId());
+                    EntryRevision latest = posting.getCurrentRevision();
+                    if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
+                        log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
+                        storyOperations.unpublish(posting.getId(), posting.getNodeId(), liberins::add);
+                        postingRepository.delete(posting);
 
-                    liberins.add(new PostingDeletedLiberin(posting, latest).withNodeId(posting.getNodeId()));
-                } else {
-                    EntryRevision revision = posting.getRevisions().stream()
-                            .min(Comparator.comparing(EntryRevision::getCreatedAt))
-                            .orElse(null);
-                    if (revision != null) { // always
-                        revision.setDeletedAt(null);
-                        entryRevisionRepository.delete(posting.getCurrentRevision());
-                        posting.setCurrentRevision(revision);
-                        posting.setTotalRevisions(posting.getTotalRevisions() - 1);
+                        liberins.add(new PostingDeletedLiberin(posting, latest).withNodeId(posting.getNodeId()));
+                    } else {
+                        EntryRevision revision = posting.getRevisions().stream()
+                                .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                                .orElse(null);
+                        if (revision != null) { // always
+                            revision.setDeletedAt(null);
+                            entryRevisionRepository.delete(posting.getCurrentRevision());
+                            posting.setCurrentRevision(revision);
+                            posting.setTotalRevisions(posting.getTotalRevisions() - 1);
 
-                        liberins.add(new PostingUpdatedLiberin(posting, latest, posting.getViewE())
-                                .withNodeId(posting.getNodeId()));
+                            liberins.add(new PostingUpdatedLiberin(posting, latest, posting.getViewE())
+                                    .withNodeId(posting.getNodeId()));
+                        }
                     }
                 }
-            }
 
-            return null;
-        });
+                return null;
+            });
 
-        liberins.forEach(liberinManager::send);
+            liberins.forEach(liberinManager::send);
+        } catch (Throwable e) {
+            log.error("Error purging expired unsigned postings", e);
+        }
     }
 
 }

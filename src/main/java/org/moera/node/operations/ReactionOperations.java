@@ -261,54 +261,58 @@ public class ReactionOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Throwable {
-        Set<Entry> changed = new HashSet<>();
-        Transaction.execute(txManager, () -> {
-            reactionRepository.findExpired(Util.now()).forEach(reaction -> {
-                log.debug("Purging reaction {}, deletedAt = {}",
-                        LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
-                Entry entry = reaction.getEntryRevision().getEntry();
-                if (reaction.getDeletedAt() == null) { // it's the current active reaction of the user to the entry
-                    List<Reaction> replaced = reactionRepository.findReplacedByEntryIdAndOwner(
-                            entry.getId(),
-                            reaction.getOwnerName(),
-                            PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
-                    if (replaced.size() > 0) {
-                        Reaction next = replaced.get(0);
-                        next.setDeletedAt(null);
-                        next.setReplaced(false);
-                        if (next.getSignature() != null) {
-                            next.setDeadline(null);
+    public void purgeExpired() {
+        try {
+            Set<Entry> changed = new HashSet<>();
+            Transaction.execute(txManager, () -> {
+                reactionRepository.findExpired(Util.now()).forEach(reaction -> {
+                    log.debug("Purging reaction {}, deletedAt = {}",
+                            LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
+                    Entry entry = reaction.getEntryRevision().getEntry();
+                    if (reaction.getDeletedAt() == null) { // it's the current active reaction of the user to the entry
+                        List<Reaction> replaced = reactionRepository.findReplacedByEntryIdAndOwner(
+                                entry.getId(),
+                                reaction.getOwnerName(),
+                                PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
+                        if (replaced.size() > 0) {
+                            Reaction next = replaced.get(0);
+                            next.setDeletedAt(null);
+                            next.setReplaced(false);
+                            if (next.getSignature() != null) {
+                                next.setDeadline(null);
+                            }
+                            log.debug("Restored reaction {}, deadline {}",
+                                    LogUtil.format(next.getId()), LogUtil.format(next.getDeadline()));
+                            reactionTotalOperations.changeTotals(entry, next, 1);
                         }
-                        log.debug("Restored reaction {}, deadline {}",
-                                LogUtil.format(next.getId()), LogUtil.format(next.getDeadline()));
-                        reactionTotalOperations.changeTotals(entry, next, 1);
+                        reactionTotalOperations.changeTotals(entry, reaction, -1);
+                        changed.add(entry);
                     }
-                    reactionTotalOperations.changeTotals(entry, reaction, -1);
-                    changed.add(entry);
-                }
-                reactionRepository.delete(reaction);
+                    reactionRepository.delete(reaction);
+                });
+                return null;
             });
-            return null;
-        });
-        for (Entry entry : changed) {
-            switch (entry.getEntryType()) {
-                case POSTING: {
-                    Posting posting = (Posting) entry;
-                    var totalsInfo = reactionTotalOperations.getInfo(posting);
-                    liberinManager.send(
-                            new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
-                                    .withNodeId(posting.getNodeId()));
-                    break;
-                }
+            for (Entry entry : changed) {
+                switch (entry.getEntryType()) {
+                    case POSTING: {
+                        Posting posting = (Posting) entry;
+                        var totalsInfo = reactionTotalOperations.getInfo(posting);
+                        liberinManager.send(
+                                new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
+                                        .withNodeId(posting.getNodeId()));
+                        break;
+                    }
 
-                case COMMENT: {
-                    Comment comment = (Comment) entry;
-                    liberinManager.send(
-                            new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId()));
-                    break;
+                    case COMMENT: {
+                        Comment comment = (Comment) entry;
+                        liberinManager.send(
+                                new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId()));
+                        break;
+                    }
                 }
             }
+        } catch (Throwable e) {
+            log.error("Error purging expired unsigned reactions", e);
         }
     }
 

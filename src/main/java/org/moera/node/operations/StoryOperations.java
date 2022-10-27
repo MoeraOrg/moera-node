@@ -26,12 +26,16 @@ import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class StoryOperations {
+
+    private static final Logger log = LoggerFactory.getLogger(StoryOperations.class);
 
     private static final Timestamp PINNED_TIME = Util.toTimestamp(9000000000000L); // 9E+12
 
@@ -119,13 +123,17 @@ public class StoryOperations {
     }
 
     @Scheduled(fixedDelayString = "P1D")
-    public void purgeExpired() throws Throwable {
-        for (String domainName : domains.getAllDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
-            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true, true);
-            purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", false,
-                    domains.getDomainOptions(nodeId).getBool("news.purge-pinned"));
+    public void purgeExpired() {
+        try {
+            for (String domainName : domains.getAllDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
+                purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true, true);
+                purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", false,
+                        domains.getDomainOptions(nodeId).getBool("news.purge-pinned"));
+            }
+        } catch (Throwable e) {
+            log.error("Error purging expired stories", e);
         }
     }
 

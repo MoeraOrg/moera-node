@@ -232,8 +232,12 @@ public class EventManager {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void everyMinute() {
-        retryDelivery();
-        pingAll();
+        try {
+            retryDelivery();
+            pingAll();
+        } catch (Exception e) {
+            log.error("Error retrying event delivery", e);
+        }
     }
 
     private void retryDelivery() {

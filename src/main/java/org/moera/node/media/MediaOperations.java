@@ -510,33 +510,41 @@ public class MediaOperations {
     }
 
     @Scheduled(fixedDelayString = "PT6H")
-    public void purgeUnused() throws Throwable {
-        Timestamp now = Util.now();
-        Transaction.execute(txManager, () -> {
-            mediaFileOwnerRepository.deleteUnused(now);
-            return null;
-        });
-        List<Path> fileNames = mediaFileRepository.findUnused(now).stream()
-                .map(this::getPath)
-                .collect(Collectors.toList());
-        Transaction.execute(txManager, () -> {
-            mediaFileRepository.deleteUnused(now);
-            return null;
-        });
-        for (Path path : fileNames) {
-            try {
-                Files.deleteIfExists(path);
-            } catch (IOException e) {
-                log.warn("Error deleting {}: {}", path, e.getMessage());
-                // ignore
+    public void purgeUnused() {
+        try {
+            Timestamp now = Util.now();
+            Transaction.execute(txManager, () -> {
+                mediaFileOwnerRepository.deleteUnused(now);
+                return null;
+            });
+            List<Path> fileNames = mediaFileRepository.findUnused(now).stream()
+                    .map(this::getPath)
+                    .collect(Collectors.toList());
+            Transaction.execute(txManager, () -> {
+                mediaFileRepository.deleteUnused(now);
+                return null;
+            });
+            for (Path path : fileNames) {
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e) {
+                    log.warn("Error deleting {}: {}", path, e.getMessage());
+                    // ignore
+                }
             }
+        } catch (Throwable e) {
+            log.error("Error purging unused media files", e);
         }
     }
 
     @Scheduled(fixedDelayString = "PT15M")
     @Transactional
     public void refreshPermissions() {
-        mediaFileOwnerRepository.findOutdatedPermissions().forEach(this::updatePermissions);
+        try {
+            mediaFileOwnerRepository.findOutdatedPermissions().forEach(this::updatePermissions);
+        } catch (Exception e) {
+            log.error("Error refreshing media file owner permissions", e);
+        }
     }
 
 }

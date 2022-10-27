@@ -33,12 +33,16 @@ public class EntryOperations {
     private PlatformTransactionManager txManager;
 
     @Scheduled(fixedDelayString = "P1D")
-    public void purgeOutdatedRevisions() throws Throwable {
-        for (String domainName : domains.getAllDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, true, "posting.revision.lifetime");
-            purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, false, "posting.picked.revision.lifetime");
-            purgeOutdatedRevisions(nodeId, domainName, EntryType.COMMENT, true, "comment.revision.lifetime");
+    public void purgeOutdatedRevisions() {
+        try {
+            for (String domainName : domains.getAllDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, true, "posting.revision.lifetime");
+                purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, false, "posting.picked.revision.lifetime");
+                purgeOutdatedRevisions(nodeId, domainName, EntryType.COMMENT, true, "comment.revision.lifetime");
+            }
+        } catch (Throwable e) {
+            log.error("Error purging outdated entry revisions", e);
         }
     }
 

@@ -73,7 +73,11 @@ public class AsyncOperationController {
     @Scheduled(fixedDelayString = "PT30M")
     @Transactional
     public void purgeExpiredVerifications() {
-        remoteVerificationRepository.deleteExpired(Util.now());
+        try {
+            remoteVerificationRepository.deleteExpired(Util.now());
+        } catch (Exception e) {
+            log.error("Error purging expired verifications", e);
+        }
     }
 
 }

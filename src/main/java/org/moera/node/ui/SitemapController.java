@@ -109,33 +109,37 @@ public class SitemapController {
     @Scheduled(fixedDelayString = "PT1M")
     @Transactional
     public void refresh() {
-        for (String domainName : domains.getAllDomainNames()) {
-            MDC.put("domain", domainName);
-            log.debug("Refreshing sitemap");
+        try {
+            for (String domainName : domains.getAllDomainNames()) {
+                MDC.put("domain", domainName);
+                log.debug("Refreshing sitemap");
 
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            Collection<Posting> postings = sitemapRecordRepository.findUpdated(nodeId);
-            if (postings.isEmpty()) {
-                return;
-            }
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                Collection<Posting> postings = sitemapRecordRepository.findUpdated(nodeId);
+                if (postings.isEmpty()) {
+                    return;
+                }
 
-            Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(nodeId);
-            Sitemap sitemap = findAvailableSitemap(sitemaps);
-            for (Posting posting : postings) {
-                if (posting.getSitemapRecord() != null) {
-                    posting.getSitemapRecord().update(posting);
-                    log.debug("Updated posting {}", posting.getId());
-                } else {
-                    SitemapRecord record = new SitemapRecord(sitemap.getId(), posting);
-                    sitemapRecordRepository.save(record);
-                    log.debug("Created record {} in sitemap {} for posting {}",
-                            record.getId(), record.getSitemapId(), posting.getId());
-                }
-                sitemap.setTotal(sitemap.getTotal() + 1);
-                if (sitemap.getTotal() >= MAX_SITEMAP_RECORD) {
-                    sitemap = findAvailableSitemap(sitemaps);
+                Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(nodeId);
+                Sitemap sitemap = findAvailableSitemap(sitemaps);
+                for (Posting posting : postings) {
+                    if (posting.getSitemapRecord() != null) {
+                        posting.getSitemapRecord().update(posting);
+                        log.debug("Updated posting {}", posting.getId());
+                    } else {
+                        SitemapRecord record = new SitemapRecord(sitemap.getId(), posting);
+                        sitemapRecordRepository.save(record);
+                        log.debug("Created record {} in sitemap {} for posting {}",
+                                record.getId(), record.getSitemapId(), posting.getId());
+                    }
+                    sitemap.setTotal(sitemap.getTotal() + 1);
+                    if (sitemap.getTotal() >= MAX_SITEMAP_RECORD) {
+                        sitemap = findAvailableSitemap(sitemaps);
+                    }
                 }
             }
+        } catch (IllegalArgumentException e) {
+            log.error("Error refreshing sitemaps", e);
         }
     }
 

@@ -146,15 +146,19 @@ public class PushController {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void purgeInactive() {
-        for (String domainName : domains.getAllDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            Duration ttl = domains.getDomainOptions(domainName).getDuration("push.client.lifetime").getDuration();
-            Timestamp lastSeenAt = Timestamp.from(Instant.now().minus(ttl));
-            Collection<PushClient> clients = pushClientRepository.findInactive(nodeId, lastSeenAt);
-            for (PushClient client : clients) {
-                pushService.delete(nodeId, client.getClientId());
-                pushClientRepository.delete(client);
+        try {
+            for (String domainName : domains.getAllDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                Duration ttl = domains.getDomainOptions(domainName).getDuration("push.client.lifetime").getDuration();
+                Timestamp lastSeenAt = Timestamp.from(Instant.now().minus(ttl));
+                Collection<PushClient> clients = pushClientRepository.findInactive(nodeId, lastSeenAt);
+                for (PushClient client : clients) {
+                    pushService.delete(nodeId, client.getClientId());
+                    pushClientRepository.delete(client);
+                }
             }
+        } catch (Exception e) {
+            log.error("Error purging inactive push notification channels", e);
         }
     }
 
