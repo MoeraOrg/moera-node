@@ -9,6 +9,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.option.Options;
+import org.moera.node.subscriptions.SubscriptionManager;
 import org.moera.node.task.Task;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,9 @@ public class UniversalContext {
 
     @Inject
     private LiberinManager liberinManager;
+
+    @Inject
+    private SubscriptionManager subscriptionManager;
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -99,6 +103,14 @@ public class UniversalContext {
         } else {
             liberin.setPluginContext(requestContext);
             requestContext.send(liberin);
+        }
+    }
+
+    public void subscriptionsUpdated() {
+        if (isBackground()) {
+            subscriptionManager.rescan();
+        } else {
+            requestContext.subscriptionsUpdated();
         }
     }
 

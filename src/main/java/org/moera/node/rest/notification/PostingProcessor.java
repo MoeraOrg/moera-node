@@ -1,5 +1,6 @@
 package org.moera.node.rest.notification;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -13,6 +14,8 @@ import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscription;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
@@ -57,6 +60,9 @@ public class PostingProcessor {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Inject
     private ReactionTotalRepository reactionTotalRepository;
 
     @Inject
@@ -81,12 +87,18 @@ public class PostingProcessor {
             throw new UnsubscribeFailure();
         }
 
-        Pick pick = new Pick();
-        pick.setRemoteNodeName(subscription.getRemoteNodeName());
-        pick.setRemoteFeedName(subscription.getRemoteFeedName());
-        pick.setRemotePostingId(notification.getPostingId());
-        pick.setFeedName(subscription.getFeedName());
-        pickerPool.pick(pick);
+        List<UserSubscription> userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
+                requestContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
+                subscription.getRemoteFeedName());
+
+        for (UserSubscription userSubscription : userSubscriptions) {
+            Pick pick = new Pick();
+            pick.setRemoteNodeName(userSubscription.getRemoteNodeName());
+            pick.setRemoteFeedName(userSubscription.getRemoteFeedName());
+            pick.setRemotePostingId(notification.getPostingId());
+            pick.setFeedName(userSubscription.getFeedName());
+            pickerPool.pick(pick);
+        }
     }
 
     private void withValidPostingSubscription(PostingSubscriberNotification notification,
@@ -127,7 +139,7 @@ public class PostingProcessor {
 
                 requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
             } else {
-                postingOperations.deletePosting(posting, false);
+                postingOperations.deletePosting(posting);
                 storyOperations.unpublish(posting.getId());
 
                 requestContext.send(new PostingDeletedLiberin(posting, latest));

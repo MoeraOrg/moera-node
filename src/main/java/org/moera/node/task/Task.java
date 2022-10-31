@@ -19,9 +19,13 @@ import org.moera.node.naming.RegisteredName;
 import org.moera.node.option.Options;
 import org.moera.node.util.Carte;
 import org.moera.node.util.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 
 public abstract class Task implements Runnable {
+
+    private static final Logger log = LoggerFactory.getLogger(Task.class);
 
     protected UUID nodeId;
     protected InetAddress localAddr;
@@ -83,7 +87,12 @@ public abstract class Task implements Runnable {
     }
 
     protected String generateCarte(String targetNodeName) {
-        return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, AuthCategory.ALL);
+        try {
+            return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, AuthCategory.ALL);
+        } catch (Exception e) {
+            log.info("Error generating carte by {} {}", nodeId, universalContext.nodeId());
+            throw e;
+        }
     }
 
     protected void send(Liberin liberin) {

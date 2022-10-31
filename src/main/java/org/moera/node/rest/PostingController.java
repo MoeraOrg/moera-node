@@ -33,9 +33,7 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
@@ -51,7 +49,6 @@ import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -341,7 +338,7 @@ public class PostingController {
             throw new AuthenticationException();
         }
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
-        postingOperations.deletePosting(posting, true);
+        postingOperations.deletePosting(posting);
         storyOperations.unpublish(posting.getId());
 
         requestContext.send(new PostingDeletedLiberin(posting, latest));
@@ -397,7 +394,7 @@ public class PostingController {
     }
 
     private PostingInfo withSubscribers(PostingInfo postingInfo) {
-        String clientName = requestContext.getClientName();
+        /* SUBSCR String clientName = requestContext.getClientName();
         if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
@@ -409,7 +406,7 @@ public class PostingController {
             List<Subscription> subscriptions = subscriptionRepository.findAllByNodeAndEntryId(
                     requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId());
             postingInfo.setSubscriptions(PostingSubscriptionsInfo.fromSubscriptions(subscriptions));
-        }
+        }*/
         return postingInfo;
     }
 

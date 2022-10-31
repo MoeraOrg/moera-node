@@ -32,7 +32,6 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -415,7 +414,7 @@ public class FeedController {
     }
 
     private void fillSubscriptions(List<PostingInfo> postings, List<String> remotePostingIds) {
-        List<Subscription> allSubscriptions = subscriptionRepository
+        /* SUBSCR List<Subscription> allSubscriptions = subscriptionRepository
                 .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds);
         Map<String, List<Subscription>> subscriptionMap = new HashMap<>();
         for (Subscription subscription : allSubscriptions) {
@@ -432,7 +431,7 @@ public class FeedController {
                         .collect(Collectors.toList());
             }
             posting.setSubscriptions(PostingSubscriptionsInfo.fromSubscriptions(subscriptions));
-        });
+        });*/
     }
 
     private StoryInfo buildStoryInfo(Story story) {

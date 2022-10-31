@@ -2,23 +2,23 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
-import org.moera.node.data.Subscription;
+import org.moera.node.data.UserSubscription;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.SubscriptionInfo;
 
 public class SubscriptionDeletedLiberin extends Liberin {
 
-    private Subscription subscription;
+    private UserSubscription subscription;
 
-    public SubscriptionDeletedLiberin(Subscription subscription) {
+    public SubscriptionDeletedLiberin(UserSubscription subscription) {
         this.subscription = subscription;
     }
 
-    public Subscription getSubscription() {
+    public UserSubscription getSubscription() {
         return subscription;
     }
 
-    public void setSubscription(Subscription subscription) {
+    public void setSubscription(UserSubscription subscription) {
         this.subscription = subscription;
     }
 

@@ -36,7 +36,6 @@ import org.moera.node.model.SubscriberOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.rest.task.RemoteAvatarDownloadTask;
-import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,18 +169,13 @@ public class SubscriberController {
         }
         subscriber = subscriberRepository.save(subscriber);
 
-        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            var profileTask = new RemoteProfileSubscriptionTask(ownerName);
-            taskAutowire.autowire(profileTask);
-            taskExecutor.execute(profileTask);
-        }
-
         if (subscriber.getRemoteAvatarMediaFile() == null) {
             var avatarTask = new RemoteAvatarDownloadTask(subscriber.getRemoteNodeName());
             taskAutowire.autowire(avatarTask);
             taskExecutor.execute(avatarTask);
         }
 
+        requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
 
         return new SubscriberInfo(subscriber, requestContext);
@@ -282,12 +276,7 @@ public class SubscriberController {
 
         subscriberRepository.delete(subscriber);
 
-        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            var profileTask = new RemoteProfileSubscriptionTask(requestContext.getClientName());
-            taskAutowire.autowire(profileTask);
-            taskExecutor.execute(profileTask);
-        }
-
+        requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
         return Result.OK;

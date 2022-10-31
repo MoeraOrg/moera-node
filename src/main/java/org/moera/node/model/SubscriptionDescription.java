@@ -8,19 +8,15 @@ import javax.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscription;
 
 public class SubscriptionDescription {
 
     private SubscriptionType type;
 
     private String feedName;
-
-    @NotBlank
-    @Size(max = 40)
-    private String remoteSubscriberId;
 
     @NotBlank
     @Size(max = 63)
@@ -62,14 +58,6 @@ public class SubscriptionDescription {
 
     public void setFeedName(String feedName) {
         this.feedName = feedName;
-    }
-
-    public String getRemoteSubscriberId() {
-        return remoteSubscriberId;
-    }
-
-    public void setRemoteSubscriberId(String remoteSubscriberId) {
-        this.remoteSubscriberId = remoteSubscriberId;
     }
 
     public String getRemoteNodeName() {
@@ -148,10 +136,9 @@ public class SubscriptionDescription {
         return operations != null ? operations.get(operationName) : null;
     }
 
-    public void toSubscription(Subscription subscription) {
+    public void toUserSubscription(UserSubscription subscription) {
         subscription.setSubscriptionType(type);
         subscription.setFeedName(feedName);
-        subscription.setRemoteSubscriberId(remoteSubscriberId);
         subscription.setRemoteNodeName(remoteNodeName);
         subscription.setRemoteFullName(remoteFullName);
         subscription.setRemoteGender(remoteGender);

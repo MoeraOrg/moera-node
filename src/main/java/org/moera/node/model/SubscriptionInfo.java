@@ -5,9 +5,9 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscription;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -16,7 +16,6 @@ public class SubscriptionInfo {
     private String id;
     private SubscriptionType type;
     private String feedName;
-    private String remoteSubscriberId;
     private String remoteNodeName;
     private String remoteFullName;
     private String remoteGender;
@@ -30,11 +29,10 @@ public class SubscriptionInfo {
     public SubscriptionInfo() {
     }
 
-    public SubscriptionInfo(Subscription subscription) {
+    public SubscriptionInfo(UserSubscription subscription) {
         id = subscription.getId().toString();
         type = subscription.getSubscriptionType();
         feedName = subscription.getFeedName();
-        remoteSubscriberId = subscription.getRemoteSubscriberId();
         remoteNodeName = subscription.getRemoteNodeName();
         remoteFullName = subscription.getRemoteFullName();
         remoteGender = subscription.getRemoteGender();
@@ -79,14 +77,6 @@ public class SubscriptionInfo {
 
     public void setFeedName(String feedName) {
         this.feedName = feedName;
-    }
-
-    public String getRemoteSubscriberId() {
-        return remoteSubscriberId;
-    }
-
-    public void setRemoteSubscriberId(String remoteSubscriberId) {
-        this.remoteSubscriberId = remoteSubscriberId;
     }
 
     public String getRemoteNodeName() {

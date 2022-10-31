@@ -28,8 +28,6 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
-import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
@@ -79,9 +77,6 @@ public class PostingOperations {
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
-
-    @Inject
-    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -269,11 +264,11 @@ public class PostingOperations {
         return revision;
     }
 
-    public void deletePosting(Posting posting, boolean unsubscribe) {
-        deletePosting(posting, unsubscribe, requestContext.getOptions());
+    public void deletePosting(Posting posting) {
+        deletePosting(posting, requestContext.getOptions());
     }
 
-    private void deletePosting(Posting posting, boolean unsubscribe, Options options) {
+    private void deletePosting(Posting posting, Options options) {
         posting.setDeletedAt(Util.now());
         ExtendedDuration postingTtl = options.getDuration("posting.deleted.lifetime");
         if (!postingTtl.isNever()) {
@@ -285,11 +280,6 @@ public class PostingOperations {
         }
         posting = postingRepository.saveAndFlush(posting);
         mediaOperations.updatePermissions(posting);
-
-        if (!posting.isOriginal() && unsubscribe) {
-            subscriptionRepository.deleteByTypeAndNodeAndEntryId(options.nodeId(), SubscriptionType.POSTING,
-                    posting.getReceiverName(), posting.getReceiverEntryId());
-        }
     }
 
     @Scheduled(fixedDelayString = "PT1H")
@@ -301,7 +291,7 @@ public class PostingOperations {
                 postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
                     log.info("Deleting unlinked posting {}", posting.getId());
                     EntryRevision latest = posting.getCurrentRevision();
-                    deletePosting(posting, true, options);
+                    deletePosting(posting, options);
                     liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
                 });
                 return null;

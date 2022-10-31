@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.Subscription;
+import org.moera.node.data.UserSubscription;
 
 public class SubscriptionOverride {
 
@@ -23,7 +23,7 @@ public class SubscriptionOverride {
         return operations != null ? operations.get(operationName) : null;
     }
 
-    public void toSubscription(Subscription subscription) {
+    public void toUserSubscription(UserSubscription subscription) {
         toPrincipal(this::getPrincipal, "view", subscription::setViewPrincipal);
     }
 

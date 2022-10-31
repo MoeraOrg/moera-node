@@ -2,18 +2,14 @@ package org.moera.node.data;
 
 import java.sql.Timestamp;
 import java.util.UUID;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.model.RemotePosting;
-import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @Entity
@@ -30,28 +26,12 @@ public class Subscription {
     @Enumerated
     private SubscriptionType subscriptionType;
 
-    @Size(max = 63)
-    private String feedName;
-
-    @NotNull
     @Size(max = 40)
     private String remoteSubscriberId;
 
     @NotNull
     @Size(max = 63)
     private String remoteNodeName;
-
-    @Size(max = 96)
-    private String remoteFullName;
-
-    @Size(max = 31)
-    private String remoteGender;
-
-    @ManyToOne
-    private MediaFile remoteAvatarMediaFile;
-
-    @Size(max = 8)
-    private String remoteAvatarShape;
 
     @Size(max = 63)
     private String remoteFeedName;
@@ -64,9 +44,13 @@ public class Subscription {
 
     @NotNull
     @Enumerated
-    private SubscriptionReason reason = SubscriptionReason.USER;
+    private SubscriptionStatus status;
 
-    private Principal viewPrincipal = Principal.PUBLIC;
+    private Timestamp retryAt;
+
+    @NotNull
+    @Column(insertable = false, updatable = false)
+    private int usageCount;
 
     public UUID getId() {
         return id;
@@ -92,14 +76,6 @@ public class Subscription {
         this.subscriptionType = subscriptionType;
     }
 
-    public String getFeedName() {
-        return feedName;
-    }
-
-    public void setFeedName(String feedName) {
-        this.feedName = feedName;
-    }
-
     public String getRemoteSubscriberId() {
         return remoteSubscriberId;
     }
@@ -114,38 +90,6 @@ public class Subscription {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
-    }
-
-    public String getRemoteFullName() {
-        return remoteFullName;
-    }
-
-    public void setRemoteFullName(String remoteFullName) {
-        this.remoteFullName = remoteFullName;
-    }
-
-    public String getRemoteGender() {
-        return remoteGender;
-    }
-
-    public void setRemoteGender(String remoteGender) {
-        this.remoteGender = remoteGender;
-    }
-
-    public MediaFile getRemoteAvatarMediaFile() {
-        return remoteAvatarMediaFile;
-    }
-
-    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
-        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
-    }
-
-    public String getRemoteAvatarShape() {
-        return remoteAvatarShape;
-    }
-
-    public void setRemoteAvatarShape(String remoteAvatarShape) {
-        this.remoteAvatarShape = remoteAvatarShape;
     }
 
     public String getRemoteFeedName() {
@@ -172,60 +116,24 @@ public class Subscription {
         this.createdAt = createdAt;
     }
 
-    public SubscriptionReason getReason() {
-        return reason;
+    public SubscriptionStatus getStatus() {
+        return status;
     }
 
-    public void setReason(SubscriptionReason reason) {
-        this.reason = reason;
+    public void setStatus(SubscriptionStatus status) {
+        this.status = status;
     }
 
-    private Principal toAbsolute(Principal principal) {
-        return principal.withOwner(getRemoteNodeName());
+    public Timestamp getRetryAt() {
+        return retryAt;
     }
 
-    public static Principal getViewAllPrincipal(Options options) {
-        return options.getPrincipal("subscriptions.view");
+    public void setRetryAt(Timestamp retryAt) {
+        this.retryAt = retryAt;
     }
 
-    public static Principal getViewAllE(Options options) {
-        return getViewAllPrincipal(options);
-    }
-
-    public static Principal getViewTotalPrincipal(Options options) {
-        return options.getPrincipal("subscriptions.view-total");
-    }
-
-    public static Principal getViewTotalE(Options options) {
-        return getViewTotalPrincipal(options);
-    }
-
-    public Principal getViewPrincipal() {
-        return viewPrincipal;
-    }
-
-    public void setViewPrincipal(Principal viewPrincipal) {
-        this.viewPrincipal = viewPrincipal;
-    }
-
-    public Principal getViewE() {
-        return toAbsolute(getViewPrincipal());
-    }
-
-    public Principal getEditOperationsPrincipal() {
-        return Principal.PRIVATE;
-    }
-
-    public Principal getEditOperationsE() {
-        return toAbsolute(getEditOperationsPrincipal());
-    }
-
-    @Transient
-    public RemotePosting getRemotePosting() {
-        RemotePosting remotePosting = new RemotePosting();
-        remotePosting.setNodeName(remoteNodeName);
-        remotePosting.setPostingId(remoteEntryId);
-        return remotePosting;
+    public int getUsageCount() {
+        return usageCount;
     }
 
 }

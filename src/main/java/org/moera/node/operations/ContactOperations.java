@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.UUID;
-
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
@@ -15,7 +14,7 @@ import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.data.OwnReactionRepository;
-import org.moera.node.data.SubscriptionRepository;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -31,7 +30,7 @@ public class ContactOperations {
     private ContactRepository contactRepository;
 
     @Inject
-    private SubscriptionRepository subscriptionRepository;
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private OwnCommentRepository ownCommentRepository;
@@ -76,7 +75,7 @@ public class ContactOperations {
             contact.setRemoteAvatarShape(remoteAvatarShape);
         }
         float closeness = 0;
-        closeness += subscriptionRepository.countByRemoteNode(nodeId, remoteNodeName);
+        closeness += userSubscriptionRepository.countByRemoteNode(nodeId, remoteNodeName);
         closeness += ownCommentRepository.countByRemoteNode(nodeId, remoteNodeName);
         closeness += ownReactionRepository.countByRemoteNode(nodeId, remoteNodeName) * 0.25;
         closeness += commentRepository.countByOwner(nodeId, remoteNodeName);

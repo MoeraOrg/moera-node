@@ -10,10 +10,10 @@ import org.moera.node.data.ContactRepository;
 import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.Subscription;
-import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UpgradeType;
+import org.moera.node.data.UserSubscription;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class AllRemoteGendersDownloadTask extends Task {
     private static final Logger log = LoggerFactory.getLogger(AllRemoteGendersDownloadTask.class);
 
     @Inject
-    private SubscriptionRepository subscriptionRepository;
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private SubscriberRepository subscriberRepository;
@@ -73,8 +73,8 @@ public class AllRemoteGendersDownloadTask extends Task {
         subscriberRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
                 .map(Subscriber::getRemoteNodeName)
                 .forEach(nodeNames::add);
-        subscriptionRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
-                .map(Subscription::getRemoteNodeName)
+        userSubscriptionRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
+                .map(UserSubscription::getRemoteNodeName)
                 .forEach(nodeNames::add);
         return nodeNames;
     }
@@ -87,7 +87,7 @@ public class AllRemoteGendersDownloadTask extends Task {
             inTransaction(() -> {
                 subscriberRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName,
                         targetFullName, targetGender);
-                subscriptionRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName,
+                userSubscriptionRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName,
                         targetFullName, targetGender);
                 contactRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName,
                         targetFullName, targetGender);

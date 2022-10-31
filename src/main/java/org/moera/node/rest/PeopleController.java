@@ -4,8 +4,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -29,7 +29,7 @@ public class PeopleController {
     private SubscriberRepository subscriberRepository;
 
     @Inject
-    private SubscriptionRepository subscriptionRepository;
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @GetMapping
     @Transactional
@@ -37,7 +37,7 @@ public class PeopleController {
         log.info("GET /people");
 
         int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
-        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscriptionsTotal = userSubscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
 
         return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, requestContext.getOptions(), requestContext);
     }

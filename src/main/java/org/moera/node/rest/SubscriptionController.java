@@ -15,26 +15,22 @@ import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
-import org.moera.node.data.QSubscription;
-import org.moera.node.data.Subscription;
+import org.moera.node.data.QUserSubscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscription;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
-import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
-import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RemotePosting;
-import org.moera.node.model.Result;
 import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfo;
-import org.moera.node.model.SubscriptionOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
@@ -43,17 +39,17 @@ import org.moera.node.option.OptionValueChange;
 import org.moera.node.rest.task.AllRemoteSubscribersUpdateTask;
 import org.moera.node.rest.task.RemoteAvatarDownloadTask;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
-import org.moera.node.rest.task.RemoteProfileSubscriptionTask;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -72,10 +68,16 @@ public class SubscriptionController {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Inject
     private ContactOperations contactOperations;
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private PlatformTransactionManager txManager;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -92,7 +94,7 @@ public class SubscriptionController {
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
         if (type == SubscriptionType.FEED) {
-            if (!requestContext.isPrincipal(Subscription.getViewAllE(requestContext.getOptions()))) {
+            if (!requestContext.isPrincipal(UserSubscription.getViewAllE(requestContext.getOptions()))) {
                 throw new AuthenticationException();
             }
         } else {
@@ -101,7 +103,7 @@ public class SubscriptionController {
             }
         }
 
-        QSubscription subscription = QSubscription.subscription;
+        QUserSubscription subscription = QUserSubscription.userSubscription;
         BooleanBuilder where = new BooleanBuilder();
         where.and(subscription.nodeId.eq(requestContext.nodeId()));
         if (!ObjectUtils.isEmpty(nodeName)) {
@@ -111,7 +113,7 @@ public class SubscriptionController {
             where.and(subscription.subscriptionType.eq(type));
         }
 
-        return StreamSupport.stream(subscriptionRepository.findAll(where).spliterator(), false)
+        return StreamSupport.stream(userSubscriptionRepository.findAll(where).spliterator(), false)
                 .filter(s -> requestContext.isPrincipal(s.getViewE()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
@@ -121,12 +123,10 @@ public class SubscriptionController {
     @Admin
     @Entitled
     @Transactional
-    public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) {
-        log.info("POST /people/subscriptions (type = {}, feedName = {}, remoteSubscriberId = {}, remoteNodeName = {},"
-                        + " remotePostingId = {})",
+    public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) throws Throwable {
+        log.info("POST /people/subscriptions (type = {}, feedName = {}, remoteNodeName = {}, remotePostingId = {})",
                 LogUtil.format(SubscriptionType.toValue(subscriptionDescription.getType())),
                 LogUtil.format(subscriptionDescription.getFeedName()),
-                LogUtil.format(subscriptionDescription.getRemoteSubscriberId()),
                 LogUtil.format(subscriptionDescription.getRemoteNodeName()),
                 LogUtil.format(subscriptionDescription.getRemotePostingId()));
 
@@ -145,37 +145,38 @@ public class SubscriptionController {
             }
         }
 
-        mediaOperations.validateAvatar(
-                subscriptionDescription.getRemoteAvatar(),
-                subscriptionDescription::setRemoteAvatarMediaFile,
-                () -> new ValidationFailure("subscriptionDescription.remoteAvatar.mediaId.not-found"));
+        UserSubscription subscription;
+        try {
+            subscription = Transaction.execute(txManager, () -> {
+                mediaOperations.validateAvatar(
+                        subscriptionDescription.getRemoteAvatar(),
+                        subscriptionDescription::setRemoteAvatarMediaFile,
+                        () -> new ValidationFailure("subscriptionDescription.remoteAvatar.mediaId.not-found"));
 
-        OperationsValidator.validateOperations(subscriptionDescription::getPrincipal,
-                OperationsValidator.SUBSCRIPTION_OPERATIONS, false,
-                "subscriptionDescription.operations.wrong-principal");
+                OperationsValidator.validateOperations(subscriptionDescription::getPrincipal,
+                        OperationsValidator.SUBSCRIPTION_OPERATIONS, false,
+                        "subscriptionDescription.operations.wrong-principal");
 
-        boolean exists = subscriptionRepository.countBySubscriber(
-                requestContext.nodeId(),
-                subscriptionDescription.getType(),
-                subscriptionDescription.getRemoteNodeName(),
-                subscriptionDescription.getRemoteSubscriberId()) > 0;
-        if (exists) {
+                UserSubscription userSubscription = new UserSubscription();
+                userSubscription.setId(UUID.randomUUID());
+                userSubscription.setNodeId(requestContext.nodeId());
+                subscriptionDescription.toUserSubscription(userSubscription);
+                userSubscription = userSubscriptionRepository.save(userSubscription);
+                if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
+                    contactOperations.createOrUpdateCloseness(userSubscription.getRemoteNodeName(),
+                            userSubscription.getRemoteFullName(), userSubscription.getRemoteGender(),
+                            userSubscription.getRemoteAvatarMediaFile(), userSubscription.getRemoteAvatarShape(), 1);
+                } else {
+                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
+                }
+
+                return userSubscription;
+            });
+        } catch (DataIntegrityViolationException e) {
             throw new OperationFailure("subscription.already-exists");
         }
 
-        Subscription subscription = new Subscription();
-        subscription.setId(UUID.randomUUID());
-        subscription.setNodeId(requestContext.nodeId());
-        subscriptionDescription.toSubscription(subscription);
-        subscription = subscriptionRepository.save(subscription);
-        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            contactOperations.createOrUpdateCloseness(subscription.getRemoteNodeName(),
-                    subscription.getRemoteFullName(), subscription.getRemoteGender(),
-                    subscription.getRemoteAvatarMediaFile(), subscription.getRemoteAvatarShape(), 1);
-        } else {
-            contactOperations.updateCloseness(subscription.getRemoteNodeName(), 1);
-        }
-
+        requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriptionAddedLiberin(subscription));
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
@@ -183,10 +184,6 @@ public class SubscriptionController {
                     subscription.getRemoteFeedName());
             taskAutowire.autowire(fetchTask);
             taskExecutor.execute(fetchTask);
-
-            var profileTask = new RemoteProfileSubscriptionTask(subscription.getRemoteNodeName());
-            taskAutowire.autowire(profileTask);
-            taskExecutor.execute(profileTask);
         }
 
         if (subscription.getRemoteAvatarMediaFile() == null) {
@@ -198,7 +195,7 @@ public class SubscriptionController {
         return new SubscriptionInfo(subscription);
     }
 
-    @PutMapping
+    /* SUBSCR @PutMapping
     @Transactional
     public SubscriptionInfo put(
             @RequestParam("nodeName") String remoteNodeName,
@@ -209,8 +206,8 @@ public class SubscriptionController {
                 LogUtil.format(remoteSubscriberId),
                 LogUtil.format(remoteNodeName));
 
-        Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
-                        remoteSubscriberId)
+        Subscription subscription = subscriptionRepository.findBySubscriber(
+                requestContext.nodeId(), remoteNodeName, remoteSubscriberId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         Principal latestView = subscription.getViewE();
         if (subscription.getSubscriptionType() != SubscriptionType.FEED) {
@@ -223,14 +220,14 @@ public class SubscriptionController {
                 OperationsValidator.SUBSCRIBER_OPERATIONS, false,
                 "subscriptionOverride.operations.wrong-principal");
 
-        subscriptionOverride.toSubscription(subscription);
+        subscriptionOverride.toUserSubscription(subscription);
 
         requestContext.send(new SubscriptionOperationsUpdatedLiberin(subscription, latestView));
 
         return new SubscriptionInfo(subscription);
-    }
+    }*/
 
-    @DeleteMapping
+    /* SUBSCR @DeleteMapping
     @Admin
     @Transactional
     public Result delete(
@@ -260,7 +257,7 @@ public class SubscriptionController {
         requestContext.send(new SubscriptionDeletedLiberin(subscription));
 
         return Result.OK;
-    }
+    }*/
 
     @PostMapping("/search")
     @Admin
@@ -275,7 +272,7 @@ public class SubscriptionController {
         List<String> remotePostingIds = filter.getPostings().stream()
                 .map(RemotePosting::getPostingId)
                 .collect(Collectors.toList());
-        List<Subscription> subscriptions = subscriptionRepository.findAllByRemotePostingIds(
+        List<UserSubscription> subscriptions = userSubscriptionRepository.findAllByRemotePostingIds(
                 requestContext.nodeId(), remotePostingIds);
 
         return subscriptions.stream()

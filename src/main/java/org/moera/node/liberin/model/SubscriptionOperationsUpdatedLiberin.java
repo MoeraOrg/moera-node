@@ -3,25 +3,25 @@ package org.moera.node.liberin.model;
 import java.util.Map;
 
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.Subscription;
+import org.moera.node.data.UserSubscription;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.SubscriptionInfo;
 
 public class SubscriptionOperationsUpdatedLiberin extends Liberin {
 
-    private Subscription subscription;
+    private UserSubscription subscription;
     private Principal latestViewPrincipal;
 
-    public SubscriptionOperationsUpdatedLiberin(Subscription subscription, Principal latestViewPrincipal) {
+    public SubscriptionOperationsUpdatedLiberin(UserSubscription subscription, Principal latestViewPrincipal) {
         this.subscription = subscription;
         this.latestViewPrincipal = latestViewPrincipal;
     }
 
-    public Subscription getSubscription() {
+    public UserSubscription getSubscription() {
         return subscription;
     }
 
-    public void setSubscription(Subscription subscription) {
+    public void setSubscription(UserSubscription subscription) {
         this.subscription = subscription;
     }
 

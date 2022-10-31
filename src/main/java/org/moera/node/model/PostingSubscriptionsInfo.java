@@ -7,6 +7,7 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionType;
 
+@Deprecated
 public class PostingSubscriptionsInfo {
 
     private String comments;
@@ -47,17 +48,6 @@ public class PostingSubscriptionsInfo {
                 .map(Subscription::getRemoteSubscriberId)
                 .findFirst()
                 .orElse(null);
-    }
-
-    public void setSubscriberId(SubscriptionType type, String id) {
-        switch (type) {
-            case POSTING_COMMENTS:
-                setComments(id);
-                break;
-            default:
-                throw new IllegalArgumentException(
-                        String.format("Subscription type %s is not allowed here", type.name()));
-        }
     }
 
     public String getComments() {

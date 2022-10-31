@@ -14,10 +14,7 @@ import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
-import org.moera.node.rest.task.RemotePostingCommentsSubscribeTask;
-import org.moera.node.task.TaskAutowire;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
+import org.moera.node.operations.SubscriptionOperations;
 
 @NotificationProcessor
 public class MentionPostingProcessor {
@@ -26,11 +23,7 @@ public class MentionPostingProcessor {
     private UniversalContext universalContext;
 
     @Inject
-    private TaskAutowire taskAutowire;
-
-    @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
+    private SubscriptionOperations subscriptionOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -50,10 +43,8 @@ public class MentionPostingProcessor {
                                     notification.getOwnerGender(), notification.getOwnerAvatar(),
                                     notification.getPostingId(), notification.getHeading()));
                 });
-        var task = new RemotePostingCommentsSubscribeTask(
-                notification.getSenderNodeName(), notification.getPostingId(), SubscriptionReason.MENTION);
-        taskAutowire.autowire(task);
-        taskExecutor.execute(task);
+        subscriptionOperations.subscribeToPostingComments(notification.getSenderNodeName(), notification.getPostingId(),
+                SubscriptionReason.MENTION);
     }
 
     @NotificationMapping(NotificationType.MENTION_POSTING_DELETED)

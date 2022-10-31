@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscriber;
-import org.moera.node.data.Subscription;
+import org.moera.node.data.UserSubscription;
 import org.moera.node.option.Options;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,9 +23,9 @@ public class PeopleGeneralInfo {
     public PeopleGeneralInfo(Integer feedSubscribersTotal, Integer feedSubscriptionsTotal, Options options,
                              AccessChecker accessChecker) {
         Principal viewSubscribers = Subscriber.getViewAllE(options);
-        Principal viewSubscriptions = Subscription.getViewAllE(options);
+        Principal viewSubscriptions = UserSubscription.getViewAllE(options);
         Principal viewSubscribersTotal = Subscriber.getViewTotalE(options);
-        Principal viewSubscriptionsTotal = Subscription.getViewTotalE(options);
+        Principal viewSubscriptionsTotal = UserSubscription.getViewTotalE(options);
 
         this.feedSubscribersTotal = accessChecker.isPrincipal(viewSubscribers)
                 || accessChecker.isPrincipal(viewSubscribersTotal) ? feedSubscribersTotal : null;

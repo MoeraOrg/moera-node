@@ -25,9 +25,9 @@ import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.rest.task.RemoteCommentPostTask;
 import org.moera.node.rest.task.RemoteCommentVerifyTask;
-import org.moera.node.rest.task.RemotePostingCommentsSubscribeTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +68,9 @@ public class RemoteCommentController {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private SubscriptionOperations subscriptionOperations;
 
     @PostMapping
     @Admin
@@ -115,9 +118,7 @@ public class RemoteCommentController {
         taskAutowire.autowire(postTask);
         taskExecutor.execute(postTask);
         if (!nodeName.equals(requestContext.nodeName())) {
-            var subscribeTask = new RemotePostingCommentsSubscribeTask(nodeName, postingId, SubscriptionReason.COMMENT);
-            taskAutowire.autowire(subscribeTask);
-            taskExecutor.execute(subscribeTask);
+            subscriptionOperations.subscribeToPostingComments(nodeName, postingId, SubscriptionReason.COMMENT);
         }
     }
 

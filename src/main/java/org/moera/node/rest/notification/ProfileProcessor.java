@@ -8,6 +8,7 @@ import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
 import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
@@ -35,6 +36,9 @@ public class ProfileProcessor {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
+    private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Inject
     private SubscriberRepository subscriberRepository;
 
     @Inject
@@ -57,29 +61,29 @@ public class ProfileProcessor {
     @NotificationMapping(NotificationType.PROFILE_UPDATED)
     public void profileUpdated(ProfileUpdatedNotification notification) {
         validateSubscription(notification);
+        updateProfileDetails(notification.getSenderNodeName(), notification.getSenderFullName(),
+                notification.getSenderGender(), notification.getSenderAvatar());
+    }
+
+    public void updateProfileDetails(String nodeName, String fullName, String gender, AvatarImage avatar) {
         try {
             Transaction.execute(txManager, () -> {
                 subscriberRepository.updateRemoteFullNameAndGender(
-                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getSenderFullName(),
-                        notification.getSenderGender());
-                subscriptionRepository.updateRemoteFullNameAndGender(
-                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getSenderFullName(),
-                        notification.getSenderGender());
+                        universalContext.nodeId(), nodeName, fullName, gender);
+                userSubscriptionRepository.updateRemoteFullNameAndGender(
+                        universalContext.nodeId(), nodeName, fullName, gender);
                 contactRepository.updateRemoteFullNameAndGender(
-                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getSenderFullName(),
-                        notification.getSenderGender());
+                        universalContext.nodeId(), nodeName, fullName, gender);
                 return null;
             });
         } catch (Throwable e) {
             log.error("Error saving the full name: {}", e.getMessage());
         }
-        universalContext.send(new RemoteNodeFullNameChangedLiberin(notification.getSenderNodeName(),
-                notification.getSenderFullName()));
+        universalContext.send(new RemoteNodeFullNameChangedLiberin(nodeName, fullName));
 
-        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {notification.getSenderAvatar()},
-                mediaFiles -> this.saveAvatar(notification.getSenderNodeName(), mediaFiles[0],
-                        notification.getSenderAvatar() != null ? notification.getSenderAvatar().getShape() : null));
+        mediaManager.asyncDownloadPublicMedia(nodeName,
+                new AvatarImage[] {avatar},
+                mediaFiles -> this.saveAvatar(nodeName, mediaFiles[0], avatar != null ? avatar.getShape() : null));
     }
 
     private void saveAvatar(String nodeName, MediaFile mediaFile, String shape) {
@@ -89,7 +93,7 @@ public class ProfileProcessor {
         try {
             Transaction.execute(txManager, () -> {
                 subscriberRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
-                subscriptionRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
+                userSubscriptionRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
                 contactRepository.updateRemoteAvatar(universalContext.nodeId(), nodeName, mediaFile, shape);
                 return null;
             });

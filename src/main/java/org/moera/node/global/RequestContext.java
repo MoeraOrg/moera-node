@@ -99,4 +99,8 @@ public interface RequestContext extends AccessChecker {
 
     void authenticatedWithSignature(String nodeName);
 
+    void subscriptionsUpdated();
+
+    boolean isSubscriptionsUpdated();
+
 }

@@ -11,10 +11,10 @@ import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.Subscription;
-import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UpgradeType;
+import org.moera.node.data.UserSubscription;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.task.Task;
@@ -26,7 +26,7 @@ public class AllRemoteAvatarsDownloadTask extends Task {
     private static final Logger log = LoggerFactory.getLogger(AllRemoteAvatarsDownloadTask.class);
 
     @Inject
-    private SubscriptionRepository subscriptionRepository;
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private SubscriberRepository subscriberRepository;
@@ -78,8 +78,8 @@ public class AllRemoteAvatarsDownloadTask extends Task {
         subscriberRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
                 .map(Subscriber::getRemoteNodeName)
                 .forEach(nodeNames::add);
-        subscriptionRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
-                .map(Subscription::getRemoteNodeName)
+        userSubscriptionRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
+                .map(UserSubscription::getRemoteNodeName)
                 .forEach(nodeNames::add);
         return nodeNames;
     }
@@ -90,7 +90,7 @@ public class AllRemoteAvatarsDownloadTask extends Task {
         if (mediaFile != null) {
             inTransaction(() -> {
                 subscriberRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
-                subscriptionRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile,
+                userSubscriptionRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile,
                         targetAvatar.getShape());
                 contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
                 return null;

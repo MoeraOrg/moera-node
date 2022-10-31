@@ -1,6 +1,5 @@
 package org.moera.node.picker;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +12,6 @@ import javax.inject.Inject;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
-import org.moera.node.api.NodeApiErrorStatusException;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.auth.principal.Principal;
@@ -31,22 +29,16 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.data.Subscription;
-import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
-import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
-import org.moera.node.model.SubscriberDescriptionQ;
-import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
@@ -82,9 +74,6 @@ public class Picker extends Task {
 
     @Inject
     private StoryRepository storyRepository;
-
-    @Inject
-    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private EntrySourceRepository entrySourceRepository;
@@ -200,14 +189,16 @@ public class Picker extends Task {
             posting.setReceiverName(receiverName);
             posting.setReceiverFullName(receiverFullName);
             posting.setReceiverGender(receiverGender);
+            posting.setReceiverAvatarMediaFile(receiverAvatar);
+            posting.setReceiverAvatarShape(receiverAvatarShape);
+            posting.setReceiverGender(receiverGender);
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             posting = postingRepository.save(posting);
             postingInfo.toPickedPosting(posting);
             createRevision(posting, postingInfo);
             downloadMedia(postingInfo, null, posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
-            subscribe(receiverName, receiverFullName, receiverGender, receiverAvatar, receiverAvatarShape,
-                    receiverPostingId, posting.getReceiverEditedAt(), liberins);
+            universalContext.subscriptionsUpdated();
             liberins.add(new PostingAddedLiberin(posting));
             publish(feedName, posting, liberins);
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
@@ -306,36 +297,6 @@ public class Picker extends Task {
         StoryAttributes publication = new StoryAttributes();
         publication.setFeedName(feedName);
         storyOperations.publish(posting, Collections.singletonList(publication), nodeId, liberins::add);
-    }
-
-    private void subscribe(String receiverName, String receiverFullName, String receiverGender,
-                           MediaFile receiverAvatar, String receiverAvatarShape, String receiverPostingId,
-                           Timestamp lastUpdatedAt, List<Liberin> liberins) throws NodeApiException {
-        SubscriberDescriptionQ description = new SubscriberDescriptionQ(SubscriptionType.POSTING, null,
-                receiverPostingId, fullName(), gender(), getAvatar(), Util.toEpochSecond(lastUpdatedAt));
-        try {
-            SubscriberInfo subscriberInfo =
-                    nodeApi.postSubscriber(receiverName, generateCarte(receiverName), description);
-            Subscription subscription = new Subscription();
-            subscription.setId(UUID.randomUUID());
-            subscription.setNodeId(nodeId);
-            subscription.setSubscriptionType(SubscriptionType.POSTING);
-            subscription.setRemoteSubscriberId(subscriberInfo.getId());
-            subscription.setRemoteNodeName(receiverName);
-            subscription.setRemoteFullName(receiverFullName);
-            subscription.setRemoteGender(receiverGender);
-            if (receiverAvatar != null) {
-                subscription.setRemoteAvatarMediaFile(receiverAvatar);
-                subscription.setRemoteAvatarShape(receiverAvatarShape);
-            }
-            subscription.setRemoteEntryId(receiverPostingId);
-            subscription = subscriptionRepository.save(subscription);
-            liberins.add(new SubscriptionAddedLiberin(subscription));
-        } catch (NodeApiErrorStatusException e) {
-            if (!e.getResult().getErrorCode().equals("subscriber.already-exists")) {
-                throw e;
-            }
-        }
     }
 
     private void saveSources(Posting posting, Pick pick) {

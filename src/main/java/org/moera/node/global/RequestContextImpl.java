@@ -39,6 +39,7 @@ public class RequestContextImpl implements RequestContext {
     private UserAgent userAgent = UserAgent.UNKNOWN;
     private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
     private final List<Liberin> afterCommitLiberins = new ArrayList<>();
+    private boolean subscriptionsUpdated;
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -280,6 +281,16 @@ public class RequestContextImpl implements RequestContext {
         setAdmin(Objects.equals(nodeName, nodeName()));
         setClientName(nodeName);
         setAuthCategory(AuthCategory.ALL);
+    }
+
+    @Override
+    public void subscriptionsUpdated() {
+        subscriptionsUpdated = true;
+    }
+
+    @Override
+    public boolean isSubscriptionsUpdated() {
+        return subscriptionsUpdated;
     }
 
 }

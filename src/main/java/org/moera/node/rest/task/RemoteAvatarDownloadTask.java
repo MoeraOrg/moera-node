@@ -6,7 +6,7 @@ import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionRepository;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
@@ -21,7 +21,7 @@ public class RemoteAvatarDownloadTask extends Task {
     private final String targetNodeName;
 
     @Inject
-    private SubscriptionRepository subscriptionRepository;
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private SubscriberRepository subscriberRepository;
@@ -44,7 +44,7 @@ public class RemoteAvatarDownloadTask extends Task {
             if (mediaFile != null) {
                 inTransaction(() -> {
                     subscriberRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
-                    subscriptionRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile,
+                    userSubscriptionRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile,
                             targetAvatar.getShape());
                     contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
                     return null;

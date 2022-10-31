@@ -35,7 +35,6 @@ public class SubscriptionEvent extends Event {
         super.logParameters(parameters);
         parameters.add(Pair.of("subscriptionType", LogUtil.format(subscription.getType().toString())));
         parameters.add(Pair.of("feedName", LogUtil.format(subscription.getFeedName())));
-        parameters.add(Pair.of("remoteSubscriberId", LogUtil.format(subscription.getRemoteSubscriberId())));
         parameters.add(Pair.of("remoteNodeName", LogUtil.format(subscription.getRemoteNodeName())));
         parameters.add(Pair.of("remoteFeedName", LogUtil.format(subscription.getRemoteFeedName())));
         parameters.add(Pair.of("remotePostingId", LogUtil.format(subscription.getRemotePostingId())));

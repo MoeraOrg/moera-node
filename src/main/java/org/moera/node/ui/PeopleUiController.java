@@ -9,9 +9,9 @@ import javax.transaction.Transactional;
 
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.Subscription;
-import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscription;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
@@ -35,7 +35,7 @@ public class PeopleUiController {
     private SubscriberRepository subscriberRepository;
 
     @Inject
-    private SubscriptionRepository subscriptionRepository;
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @GetMapping("/people")
     public String people() {
@@ -75,11 +75,12 @@ public class PeopleUiController {
     @Transactional
     public String subscriptions(Model model) {
         PeopleGeneralInfo totals = getTotals();
-        Comparator<Subscription> comparator = Comparator.comparing(
+        Comparator<UserSubscription> comparator = Comparator.comparing(
                 sr -> sr.getRemoteFullName() != null ? sr.getRemoteFullName() : NodeName.shorten(sr.getRemoteNodeName()));
         List<SubscriptionInfo> subscriptions = Collections.emptyList();
-        if (Subscription.getViewAllE(requestContext.getOptions()).isPublic()) {
-            subscriptions = subscriptionRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
+        if (UserSubscription.getViewAllE(requestContext.getOptions()).isPublic()) {
+            subscriptions = userSubscriptionRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED)
+                    .stream()
                     .sorted(comparator)
                     .filter(s -> requestContext.isPrincipal(s.getViewE()))
                     .map(SubscriptionInfo::new)
@@ -100,7 +101,7 @@ public class PeopleUiController {
 
     private PeopleGeneralInfo getTotals() {
         int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
-        int subscriptionsTotal = subscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
+        int subscriptionsTotal = userSubscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
         return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, requestContext.getOptions(), requestContext);
     }
 
