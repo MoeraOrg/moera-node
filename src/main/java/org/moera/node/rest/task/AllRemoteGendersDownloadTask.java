@@ -54,6 +54,7 @@ public class AllRemoteGendersDownloadTask extends Task {
                 try {
                     Thread.sleep(delay.toMillis());
                 } catch (InterruptedException e) {
+                    // ignore
                 }
                 delay = delay.multipliedBy(2);
             }
