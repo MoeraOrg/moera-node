@@ -5,6 +5,7 @@ import java.util.Map;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.PostingInfo;
 
+// Never sent
 public class RemotePostingCommentsSubscribeFailedLiberin extends Liberin {
 
     private String nodeName;
