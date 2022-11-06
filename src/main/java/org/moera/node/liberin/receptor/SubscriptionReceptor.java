@@ -32,14 +32,20 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
     public void added(SubscriptionAddedLiberin liberin) {
         UserSubscription subscription = liberin.getSubscription();
 
-        send(liberin, new SubscriptionAddedEvent(new SubscriptionInfo(subscription),
-                visibilityFilter(universalContext.getOptions(), subscription)));
-        sendPeopleChangedEvent(liberin);
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            send(liberin, new SubscriptionAddedEvent(new SubscriptionInfo(subscription),
+                    visibilityFilter(universalContext.getOptions(), subscription)));
+            sendPeopleChangedEvent(liberin);
+        }
     }
 
     @LiberinMapping
     public void operationsUpdated(SubscriptionOperationsUpdatedLiberin liberin) {
         UserSubscription subscription = liberin.getSubscription();
+
+        if (subscription.getSubscriptionType() != SubscriptionType.FEED) {
+            return;
+        }
 
         PrincipalExpression addedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
                 .and(subscription.getViewE())
@@ -61,9 +67,11 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
     public void deleted(SubscriptionDeletedLiberin liberin) {
         UserSubscription subscription = liberin.getSubscription();
 
-        send(liberin, new SubscriptionDeletedEvent(new SubscriptionInfo(subscription),
-                visibilityFilter(universalContext.getOptions(), subscription)));
-        sendPeopleChangedEvent(liberin);
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            send(liberin, new SubscriptionDeletedEvent(new SubscriptionInfo(subscription),
+                    visibilityFilter(universalContext.getOptions(), subscription)));
+            sendPeopleChangedEvent(liberin);
+        }
     }
 
     private void sendPeopleChangedEvent(Liberin liberin) {
