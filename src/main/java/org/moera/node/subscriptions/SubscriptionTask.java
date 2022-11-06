@@ -12,6 +12,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserSubscription;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
@@ -105,7 +106,7 @@ public class SubscriptionTask extends Task {
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(subscription.getSubscriptionType(),
                     subscription.getRemoteFeedName(), subscription.getRemoteEntryId(), fullName(), gender(),
-                    getAvatar(), lastEditedAt);
+                    getAvatar(), lastEditedAt, UserSubscription.getViewAllPrincipal(getOptions()).isPublic());
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());

@@ -1,6 +1,6 @@
 package org.moera.node.model;
 
-import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 
 import org.moera.node.auth.principal.Principal;
@@ -22,20 +22,17 @@ public class SubscriberDescriptionQ {
     }
 
     public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName,
-                                  String ownerGender, Avatar ownerAvatar) {
-        this(type, feedName, postingId, ownerFullName, ownerGender, ownerAvatar, Instant.now().getEpochSecond());
-    }
-
-    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, String ownerFullName,
-                                  String ownerGender, Avatar ownerAvatar, Long lastUpdatedAt) {
+                                  String ownerGender, Avatar ownerAvatar, Long lastUpdatedAt, boolean visible) {
         this.type = type;
         this.feedName = feedName;
         this.postingId = postingId;
         this.ownerFullName = ownerFullName;
+        this.ownerGender = ownerGender;
         if (ownerAvatar != null) {
             this.ownerAvatar = new AvatarDescription(ownerAvatar);
         }
         this.lastUpdatedAt = lastUpdatedAt;
+        operations = Collections.singletonMap("view", visible ? Principal.PUBLIC : Principal.PRIVATE);
     }
 
     public SubscriptionType getType() {
