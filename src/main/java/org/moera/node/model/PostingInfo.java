@@ -280,7 +280,6 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 ? posting.getViewCommentsE()
                 : posting.getReceiverViewCommentsE();
         totalComments = accessChecker.isPrincipal(viewComments) ? posting.getTotalChildren() : 0;
-        subscriptions = PostingSubscriptionsInfo.fromSubscribers(posting.getSubscribers());
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,

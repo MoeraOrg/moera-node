@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.model.RemoteFeed;
 import org.moera.node.model.RemotePosting;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
@@ -206,6 +207,14 @@ public class UserSubscription {
 
     public Principal getEditOperationsE() {
         return toAbsolute(getEditOperationsPrincipal());
+    }
+
+    @Transient
+    public RemoteFeed getRemoteFeed() {
+        RemoteFeed remoteFeed = new RemoteFeed();
+        remoteFeed.setNodeName(remoteNodeName);
+        remoteFeed.setFeedName(remoteFeedName);
+        return remoteFeed;
     }
 
     @Transient

@@ -28,7 +28,6 @@ import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
@@ -80,7 +79,9 @@ public class SubscriberController {
     @GetMapping
     @Transactional
     public List<SubscriberInfo> getAll(@RequestParam(required = false) String nodeName,
-                                       @RequestParam(required = false) SubscriptionType type) {
+                                       @RequestParam(required = false) SubscriptionType type,
+                                       @RequestParam(required = false) String feedName,
+                                       @RequestParam(required = false) UUID entryId) {
         log.info("GET /people/subscribers (nodeName = {}, type = {})",
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
@@ -102,6 +103,12 @@ public class SubscriberController {
         }
         if (type != null) {
             where.and(subscriber.subscriptionType.eq(type));
+        }
+        if (feedName != null) {
+            where.and(subscriber.feedName.eq(feedName));
+        }
+        if (entryId != null) {
+            where.and(subscriber.entry.id.eq(entryId));
         }
 
         return StreamSupport.stream(subscriberRepository.findAll(where).spliterator(), false)
@@ -148,9 +155,6 @@ public class SubscriberController {
         if (ObjectUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
-        if (similarExists(subscriberDescription)) {
-            throw new OperationFailure("subscriber.already-exists");
-        }
         validate(subscriberDescription);
 
         Subscriber subscriber = new Subscriber();
@@ -179,22 +183,6 @@ public class SubscriberController {
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
 
         return new SubscriberInfo(subscriber, requestContext);
-    }
-
-    private boolean similarExists(SubscriberDescription description) {
-        switch (description.getType()) {
-            case FEED:
-                return subscriberRepository.countByFeedName(requestContext.nodeId(), requestContext.getClientName(),
-                        description.getType(), description.getFeedName()) > 0;
-            case POSTING:
-            case POSTING_COMMENTS:
-                return subscriberRepository.countByEntryId(requestContext.nodeId(), requestContext.getClientName(),
-                        description.getType(), description.getPostingId()) > 0;
-            case PROFILE:
-                return subscriberRepository.countByType(requestContext.nodeId(), requestContext.getClientName(),
-                        description.getType()) > 0;
-        }
-        return false; // Should never be reached
     }
 
     private void validate(SubscriberDescription description) {

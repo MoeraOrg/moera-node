@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -16,7 +15,6 @@ import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QUserSubscription;
-import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
@@ -25,12 +23,18 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
+import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
+import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.model.RemoteFeed;
 import org.moera.node.model.RemotePosting;
+import org.moera.node.model.Result;
 import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfo;
+import org.moera.node.model.SubscriptionOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
@@ -48,8 +52,11 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,9 +70,6 @@ public class SubscriptionController {
 
     @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private SubscriptionRepository subscriptionRepository;
 
     @Inject
     private UserSubscriptionRepository userSubscriptionRepository;
@@ -195,19 +199,13 @@ public class SubscriptionController {
         return new SubscriptionInfo(subscription);
     }
 
-    /* SUBSCR @PutMapping
+    @PutMapping("/{id}")
     @Transactional
-    public SubscriptionInfo put(
-            @RequestParam("nodeName") String remoteNodeName,
-            @RequestParam("subscriberId") String remoteSubscriberId,
-            @Valid @RequestBody SubscriptionOverride subscriptionOverride) {
+    public SubscriptionInfo put(@PathVariable UUID id, @Valid @RequestBody SubscriptionOverride subscriptionOverride) {
+        log.info("PUT /people/subscriptions/{id} (id = {})", LogUtil.format(id));
 
-        log.info("PUT /people/subscriptions (remoteSubscriberId = {}, remoteNodeName = {})",
-                LogUtil.format(remoteSubscriberId),
-                LogUtil.format(remoteNodeName));
-
-        Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), remoteNodeName, remoteSubscriberId)
+        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
+                        requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         Principal latestView = subscription.getViewE();
         if (subscription.getSubscriptionType() != SubscriptionType.FEED) {
@@ -225,58 +223,63 @@ public class SubscriptionController {
         requestContext.send(new SubscriptionOperationsUpdatedLiberin(subscription, latestView));
 
         return new SubscriptionInfo(subscription);
-    }*/
+    }
 
-    /* SUBSCR @DeleteMapping
+    @DeleteMapping("/{id}")
     @Admin
     @Transactional
-    public Result delete(
-            @RequestParam("nodeName") String remoteNodeName,
-            @RequestParam("subscriberId") String remoteSubscriberId) {
+    public Result delete(@PathVariable UUID id) {
+        log.info("DELETE /people/subscriptions/{id} (id = {})", LogUtil.format(id));
 
-        log.info("DELETE /people/subscriptions (remoteSubscriberId = {}, remoteNodeName = {})",
-                LogUtil.format(remoteSubscriberId),
-                LogUtil.format(remoteNodeName));
-
-        Subscription subscription = subscriptionRepository.findBySubscriber(requestContext.nodeId(), remoteNodeName,
-                remoteSubscriberId)
+        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
+                        requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            int totalSubscriptions = subscriptionRepository.countByTypeAndRemoteNode(requestContext.nodeId(),
-                    SubscriptionType.FEED, remoteNodeName);
-            subscriptionRepository.delete(subscription);
+            int totalSubscriptions = userSubscriptionRepository.countByTypeAndRemoteNode(requestContext.nodeId(),
+                    SubscriptionType.FEED, subscription.getRemoteNodeName());
+            userSubscriptionRepository.delete(subscription);
             if (totalSubscriptions == 1) {
-                contactOperations.delete(remoteNodeName);
-
-                var profileTask = new RemoteProfileSubscriptionTask(remoteNodeName);
-                taskAutowire.autowire(profileTask);
-                taskExecutor.execute(profileTask);
+                contactOperations.delete(subscription.getRemoteNodeName());
             }
         }
 
+        requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriptionDeletedLiberin(subscription));
 
         return Result.OK;
-    }*/
+    }
 
     @PostMapping("/search")
-    @Admin
     @Transactional
     public List<SubscriptionInfo> search(@Valid @RequestBody SubscriptionFilter filter) {
         log.info("POST /people/subscriptions/search");
 
-        if (filter.getPostings() == null || filter.getPostings().isEmpty()) {
-            return Collections.emptyList();
+        if (ObjectUtils.isEmpty(filter.getFeeds()) && ObjectUtils.isEmpty(filter.getPostings())) {
+            throw new ValidationFailure("subscription.filter.incomplete");
         }
 
-        List<String> remotePostingIds = filter.getPostings().stream()
-                .map(RemotePosting::getPostingId)
-                .collect(Collectors.toList());
-        List<UserSubscription> subscriptions = userSubscriptionRepository.findAllByRemotePostingIds(
-                requestContext.nodeId(), remotePostingIds);
+        QUserSubscription subscription = QUserSubscription.userSubscription;
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(subscription.nodeId.eq(requestContext.nodeId()));
+        if (filter.getType() != null) {
+            where.and(subscription.subscriptionType.eq(filter.getType()));
+        }
+        if (filter.getFeeds() != null) {
+            List<String> remoteFeedNames = filter.getFeeds().stream()
+                    .map(RemoteFeed::getFeedName)
+                    .collect(Collectors.toList());
+            where.and(subscription.remoteFeedName.in(remoteFeedNames));
+        }
+        if (filter.getPostings() != null) {
+            List<String> remotePostingIds = filter.getPostings().stream()
+                    .map(RemotePosting::getPostingId)
+                    .collect(Collectors.toList());
+            where.and(subscription.remoteEntryId.in(remotePostingIds));
+        }
 
-        return subscriptions.stream()
-                .filter(r -> filter.getPostings().contains(r.getRemotePosting()))
+        return StreamSupport.stream(userSubscriptionRepository.findAll(where).spliterator(), false)
+                .filter(r -> filter.getFeeds() == null || filter.getFeeds().contains(r.getRemoteFeed()))
+                .filter(r -> filter.getPostings() == null || filter.getPostings().contains(r.getRemotePosting()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
     }

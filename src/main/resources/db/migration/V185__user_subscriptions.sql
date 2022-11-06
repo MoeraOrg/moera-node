@@ -26,6 +26,8 @@ CREATE UNIQUE INDEX subscriptions_node_id_type_remote_node_active_idx
     ON subscriptions(node_id, subscription_type, remote_node_name, coalesce(remote_feed_name, ''),
                      coalesce(remote_entry_id, ''))
     WHERE usage_count > 0;
+CREATE INDEX subscriptions_status_usage_count_idx
+    ON subscriptions(status, usage_count);
 
 INSERT INTO subscriptions(id, node_id, subscription_type, remote_subscriber_id, remote_node_name, remote_feed_name,
                           remote_entry_id, created_at)
@@ -76,7 +78,11 @@ CREATE OR REPLACE FUNCTION update_subscription_reference(s_node_id uuid, s_type 
     BEGIN
         IF s_node_id IS NULL
            OR s_type IS NULL
-           OR (old_node_name = new_node_name AND old_feed_name = new_feed_name AND old_entry_id = new_entry_id) THEN
+           OR (
+               old_node_name = new_node_name
+               AND (old_feed_name IS NULL AND new_feed_name IS NULL OR old_feed_name = new_feed_name)
+               AND (old_entry_id IS NULL AND new_entry_id IS NULL OR old_entry_id = new_entry_id)
+           ) THEN
             RETURN;
         END IF;
         IF old_node_name IS NOT NULL THEN
@@ -250,3 +256,8 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, receiver_name, deleted_at
 ON entries FOR EACH ROW
 EXECUTE FUNCTION update_entry_remote_node();
+
+DROP INDEX subscribers_node_id_feed_name_idx;
+CREATE INDEX subscribers_node_id_type_feed_name_idx ON subscribers(node_id, subscription_type, feed_name);
+CREATE INDEX subscribers_node_id_type_entry_id_idx ON subscribers(node_id, subscription_type, entry_id);
+CREATE INDEX subscribers_node_id_remote_node_name_idx ON subscribers(node_id, remote_node_name);

@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
 import org.moera.node.media.TemporaryMediaFile;
@@ -54,6 +55,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class NodeApi {
@@ -183,7 +185,8 @@ public class NodeApi {
             throws NodeApiErrorStatusException {
 
         String body = null;
-        switch (HttpStatus.valueOf(status)) {
+        HttpStatus httpStatus = HttpStatus.valueOf(status);
+        switch (httpStatus) {
             case NOT_FOUND:
                 throw new NodeApiNotFoundException(uri);
 
@@ -193,10 +196,16 @@ public class NodeApi {
                 break;
 
             case BAD_REQUEST:
+            case CONFLICT:
                 body = bodySupplier.get();
                 try {
                     Result answer = jsonParse(body, Result.class);
-                    throw new NodeApiValidationException(answer.getErrorCode());
+                    switch (httpStatus) {
+                        case BAD_REQUEST:
+                            throw new NodeApiValidationException(answer.getErrorCode());
+                        case CONFLICT:
+                            throw new NodeApiOperationException(answer.getErrorCode());
+                    }
                 } catch (BodyMappingException e) {
                     // fallthru
                 }
@@ -384,6 +393,25 @@ public class NodeApi {
         } catch (NodeApiNotFoundException e) {
             return null;
         }
+    }
+
+    public SubscriberInfo[] getSubscribers(String nodeName, String carte, String remoteNodeName, SubscriptionType type,
+                                           String feedName, String entryId) throws NodeApiException {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString("/people/subscribers");
+        if (remoteNodeName != null) {
+            builder = builder.queryParam("nodeName", remoteNodeName);
+        }
+        if (type != null) {
+            builder = builder.queryParam("type", type.getValue());
+        }
+        if (feedName != null) {
+            builder = builder.queryParam("feedName", feedName);
+        }
+        if (entryId != null) {
+            builder = builder.queryParam("entryId", entryId);
+        }
+        return call("GET", nodeName, builder.build().toUriString(), auth("carte", carte),
+                SubscriberInfo[].class);
     }
 
     public SubscriberInfo putSubscriber(String nodeName, String carte, String id,

@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
@@ -39,6 +40,9 @@ public class SubscriptionManager {
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
+
+    @Inject
+    private SubscriptionOperations subscriptionOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -141,6 +145,23 @@ public class SubscriptionManager {
             });
         } catch (Throwable e) {
             log.error("Error updating subscription retry timestamp", e);
+        }
+    }
+
+    void subscriptionInvalid(Subscription subscription) {
+        log.info("Subscription {} is invalid", subscription.getId());
+
+        synchronized (lock) {
+            running.remove(subscription.getId());
+        }
+        try {
+            inTransaction(() -> {
+                subscriptionOperations.deleteParents(subscription);
+                // The subscription itself becomes a pending unused subscription and will be removed by trigger
+                return null;
+            });
+        } catch (Throwable e) {
+            log.error("Error deleting invalid subscription", e);
         }
     }
 

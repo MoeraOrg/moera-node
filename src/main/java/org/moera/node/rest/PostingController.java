@@ -33,8 +33,8 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionRepository;
+import org.moera.node.data.UserSubscription;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -49,6 +49,7 @@ import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -97,10 +98,7 @@ public class PostingController {
     private OwnReactionRepository ownReactionRepository;
 
     @Inject
-    private SubscriberRepository subscriberRepository;
-
-    @Inject
-    private SubscriptionRepository subscriptionRepository;
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
@@ -394,19 +392,11 @@ public class PostingController {
     }
 
     private PostingInfo withSubscribers(PostingInfo postingInfo) {
-        /* SUBSCR String clientName = requestContext.getClientName();
-        if (ObjectUtils.isEmpty(clientName)) {
-            return postingInfo;
-        }
-        if (postingInfo.isOriginal()) {
-            Set<Subscriber> subscribers = subscriberRepository.findByEntryId(requestContext.nodeId(), clientName,
-                    UUID.fromString(postingInfo.getId()));
-            postingInfo.setSubscriptions(PostingSubscriptionsInfo.fromSubscribers(subscribers));
-        } else if (requestContext.isAdmin()) {
-            List<Subscription> subscriptions = subscriptionRepository.findAllByNodeAndEntryId(
+        if (requestContext.isAdmin()) {
+            List<UserSubscription> subscriptions = userSubscriptionRepository.findAllByNodeAndEntryId(
                     requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId());
-            postingInfo.setSubscriptions(PostingSubscriptionsInfo.fromSubscriptions(subscriptions));
-        }*/
+            postingInfo.setSubscriptions(new PostingSubscriptionsInfo(subscriptions));
+        }
         return postingInfo;
     }
 

@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.NodeApiValidationException;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
@@ -53,24 +54,29 @@ public class SubscriptionTask extends Task {
 
     @Override
     protected void execute() {
+        log.info("Establishing/closing subscription {}", subscriptionId);
         try {
             Subscription subscription = inTransaction(
                     () -> subscriptionRepository.findById(subscriptionId).orElse(null)
             );
             if (subscription == null) {
+                log.info("Subscription does not exist, ignoring");
                 subscriptionManager.noAction(subscriptionId);
                 return;
             }
+            boolean used = subscription.getUsageCount() > 0;
+            log.info("Subscription status is {}, {}",
+                    subscription.getStatus().name().toLowerCase(), used ? "used" : "not used");
             switch (subscription.getStatus()) {
                 case PENDING:
-                    if (subscription.getUsageCount() > 0) {
+                    if (used) {
                         subscribe(subscription);
                     } else {
                         subscriptionManager.succeededUnsubscribe(subscriptionId);
                     }
                     break;
                 case ESTABLISHED:
-                    if (subscription.getUsageCount() > 0) {
+                    if (used) {
                         subscriptionManager.noAction(subscriptionId);
                     } else {
                         unsubscribe(subscription);
@@ -105,7 +111,13 @@ public class SubscriptionTask extends Task {
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
         } catch (NodeApiException e) {
             error(true, e);
-            subscriptionManager.failed(subscriptionId, subscription.getCreatedAt().toInstant());
+            if (e instanceof NodeApiValidationException
+                    && ((NodeApiValidationException) e).getErrorCode()
+                            .equals("subscriberDescription.postingId.not-found")) {
+                subscriptionManager.subscriptionInvalid(subscription);
+            } else {
+                subscriptionManager.failed(subscriptionId, subscription.getCreatedAt().toInstant());
+            }
             return;
         }
 
