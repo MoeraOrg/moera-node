@@ -22,7 +22,11 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
 
         media = mediaFileOwners != null
                 ? mediaFileOwners.stream()
-                    .collect(Collectors.toMap(mfo -> mfo.getMediaFile().getId(), Function.identity()))
+                    .collect(Collectors.toMap(
+                            mfo -> mfo.getMediaFile().getId(),
+                            Function.identity(),
+                            (mfo1, mfo2) -> mfo1
+                    ))
                 : Collections.emptyMap();
     }
 
