@@ -10,6 +10,8 @@ import javax.inject.Inject;
 
 import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
+import org.moera.node.data.FriendGroup;
+import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.OptionRepository;
 import org.moera.node.model.DomainInfo;
 import org.moera.node.option.OptionHookManager;
@@ -45,6 +47,9 @@ public class Domains {
 
     @Inject
     private OptionRepository optionRepository;
+
+    @Inject
+    private FriendGroupRepository friendGroupRepository;
 
     @Lazy
     @Inject
@@ -159,8 +164,21 @@ public class Domains {
         Domain domain = new Domain(name, nodeId);
         domainRepository.saveAndFlush(domain);
         log.info("Created domain {} with id = {}", domain.getName(), domain.getNodeId());
+        initializeDomain(nodeId);
         configureDomain(domain);
         return domain;
+    }
+
+    private void initializeDomain(UUID nodeId) {
+        int totalGroups = friendGroupRepository.countByNodeId(nodeId);
+        if (totalGroups == 0) {
+            FriendGroup friendGroup = new FriendGroup();
+            friendGroup.setId(UUID.randomUUID());
+            friendGroup.setNodeId(nodeId);
+            friendGroup.setTitle(FriendGroup.FRIENDS);
+            friendGroup.setVisible(true);
+            friendGroupRepository.save(friendGroup);
+        }
     }
 
     public void deleteDomain(String name) {
