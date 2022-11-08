@@ -152,7 +152,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, UriUtil.remoteAddress(request));
             if (carteAuthInfo != null) {
                 requestContext.setClientName(carteAuthInfo.getClientName());
-                requestContext.setFriendsNames(friendsCache.getFriends(carteAuthInfo.getClientName()));
+                requestContext.setFriendGroups(friendsCache.getFriends(carteAuthInfo.getClientName()));
                 requestContext.setAuthCategory(carteAuthInfo.getAuthCategory());
             }
         } catch (UnknownHostException e) {

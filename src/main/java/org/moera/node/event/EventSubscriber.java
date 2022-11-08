@@ -9,7 +9,7 @@ public class EventSubscriber {
     private int lastEventSeen;
     private boolean admin;
     private String clientName;
-    private String[] friendsNames;
+    private String[] friendGroups;
     private boolean subscribed;
 
     public UUID getNodeId() {
@@ -52,12 +52,12 @@ public class EventSubscriber {
         this.clientName = clientName;
     }
 
-    public String[] getFriendsNames() {
-        return friendsNames;
+    public String[] getFriendGroups() {
+        return friendGroups;
     }
 
-    public void setFriendsNames(String[] friendsNames) {
-        this.friendsNames = friendsNames;
+    public void setFriendGroups(String[] friendGroups) {
+        this.friendGroups = friendGroups;
     }
 
     public boolean isSubscribed() {

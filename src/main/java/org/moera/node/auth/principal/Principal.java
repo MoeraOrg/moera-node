@@ -81,8 +81,8 @@ public class Principal implements Cloneable, PrincipalFilter {
         return new Principal("only:" + joinNotNull(",", nodeNames));
     }
 
-    public static Principal ofFriends(String friendsName) {
-        return new Principal("f:" + friendsName);
+    public static Principal ofFriendGroup(String friendGroupName) {
+        return new Principal("f:" + friendGroupName);
     }
 
     private static String joinNotNull(String delimiter, String[] names) {
@@ -162,7 +162,7 @@ public class Principal implements Cloneable, PrincipalFilter {
         return isNode() || isOnly() ? value.substring(5).split(",") : new String[0];
     }
 
-    public String getFriendsName() {
+    public String getFriendGroupId() {
         return isFriends() ? value.substring(2) : null;
     }
 
@@ -220,9 +220,9 @@ public class Principal implements Cloneable, PrincipalFilter {
         return this;
     }
 
-    public Principal withFriends(String friendsName) {
+    public Principal withFriendGroup(String friendGroupId) {
         if (isFriends()) {
-            return Principal.ofFriends(friendsName);
+            return Principal.ofFriendGroup(friendGroupId);
         }
         return this;
     }
@@ -260,7 +260,7 @@ public class Principal implements Cloneable, PrincipalFilter {
     }
 
     @Override
-    public boolean includes(boolean admin, String nodeName, String[] friendsNames) {
+    public boolean includes(boolean admin, String nodeName, String[] friendGroups) {
         if (isPublic()) {
             return true;
         }
@@ -283,13 +283,13 @@ public class Principal implements Cloneable, PrincipalFilter {
             return includes(getNodeNames(), nodeName);
         }
         if (isFriends()) {
-            return friendsNames != null && includes(friendsNames, getFriendsName());
+            return friendGroups != null && includes(friendGroups, getFriendGroupId());
         }
         throw new UnresolvedPrincipalException(this);
     }
 
-    public boolean includes(boolean admin, String nodeName, Supplier<String[]> friendsNames) {
-        return includes(admin, nodeName, isFriends() ? friendsNames.get() : null);
+    public boolean includes(boolean admin, String nodeName, Supplier<String[]> friendGroups) {
+        return includes(admin, nodeName, isFriends() ? friendGroups.get() : null);
     }
 
     private static boolean includes(String[] names, String name) {

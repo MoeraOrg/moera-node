@@ -26,7 +26,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean browserExtension;
     private boolean rootAdmin;
     private boolean admin;
-    private String[] friendsNames;
+    private String[] friendGroups;
     private long authCategory;
     private UUID tokenId;
     private String domainName;
@@ -95,13 +95,13 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public String[] getFriendsNames() {
-        return friendsNames;
+    public String[] getFriendGroups() {
+        return friendGroups;
     }
 
     @Override
-    public void setFriendsNames(String[] friendsNames) {
-        this.friendsNames = friendsNames;
+    public void setFriendGroups(String[] friendGroups) {
+        this.friendGroups = friendGroups;
     }
 
     @Override
@@ -278,7 +278,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(PrincipalFilter principal) {
-        return principal.includes(isAdmin(), getClientName(), getFriendsNames());
+        return principal.includes(isAdmin(), getClientName(), getFriendGroups());
     }
 
     @Override
@@ -295,7 +295,7 @@ public class RequestContextImpl implements RequestContext {
     public void authenticatedWithSignature(String nodeName) {
         setAdmin(Objects.equals(nodeName, nodeName()));
         setClientName(nodeName);
-        setFriendsNames(friendsCache.getFriends(nodeName));
+        setFriendGroups(friendsCache.getFriends(nodeName));
 
         setAuthCategory(AuthCategory.ALL);
     }

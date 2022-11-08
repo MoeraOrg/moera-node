@@ -29,9 +29,9 @@ public interface RequestContext extends AccessChecker {
 
     void setAdmin(boolean admin);
 
-    String[] getFriendsNames();
+    String[] getFriendGroups();
 
-    void setFriendsNames(String[] friendsNames);
+    void setFriendGroups(String[] friendGroups);
 
     long getAuthCategory();
 

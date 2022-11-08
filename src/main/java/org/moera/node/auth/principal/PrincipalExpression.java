@@ -80,9 +80,9 @@ public final class PrincipalExpression implements PrincipalFilter {
     }
 
     @Override
-    public boolean includes(boolean admin, String nodeName, String[] friendsNames) {
+    public boolean includes(boolean admin, String nodeName, String[] friendGroups) {
         if (principal != null) {
-            return inverse != principal.includes(admin, nodeName, friendsNames);
+            return inverse != principal.includes(admin, nodeName, friendGroups);
         }
         if (operation == Operation.OR) {
             if (left == null) {
@@ -92,7 +92,7 @@ public final class PrincipalExpression implements PrincipalFilter {
                 throw new InvalidPrincipalExpression("Right operand not set");
             }
             return inverse
-                    != (left.includes(admin, nodeName, friendsNames) || right.includes(admin, nodeName, friendsNames));
+                    != (left.includes(admin, nodeName, friendGroups) || right.includes(admin, nodeName, friendGroups));
         }
         if (operation == Operation.AND) {
             if (left == null) {
@@ -102,7 +102,7 @@ public final class PrincipalExpression implements PrincipalFilter {
                 throw new InvalidPrincipalExpression("Right operand not set");
             }
             return inverse
-                    != (left.includes(admin, nodeName, friendsNames) && right.includes(admin, nodeName, friendsNames));
+                    != (left.includes(admin, nodeName, friendGroups) && right.includes(admin, nodeName, friendGroups));
         }
         throw new InvalidPrincipalExpression("Operation not set");
     }

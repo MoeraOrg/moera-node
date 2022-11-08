@@ -42,7 +42,7 @@ public abstract class Event {
     }
 
     public boolean isPermitted(EventSubscriber subscriber) {
-        return filter.includes(subscriber.isAdmin(), subscriber.getClientName(), subscriber.getFriendsNames());
+        return filter.includes(subscriber.isAdmin(), subscriber.getClientName(), subscriber.getFriendGroups());
     }
 
     public final String toLogMessage() {
