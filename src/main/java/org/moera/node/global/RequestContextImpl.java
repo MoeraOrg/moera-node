@@ -11,6 +11,7 @@ import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
+import org.moera.node.friends.FriendsCache;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -25,6 +26,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean browserExtension;
     private boolean rootAdmin;
     private boolean admin;
+    private String[] friendsNames;
     private long authCategory;
     private UUID tokenId;
     private String domainName;
@@ -43,6 +45,9 @@ public class RequestContextImpl implements RequestContext {
 
     @Inject
     private AvatarRepository avatarRepository;
+
+    @Inject
+    private FriendsCache friendsCache;
 
     @Override
     public boolean isRegistrar() {
@@ -87,6 +92,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    @Override
+    public String[] getFriendsNames() {
+        return friendsNames;
+    }
+
+    @Override
+    public void setFriendsNames(String[] friendsNames) {
+        this.friendsNames = friendsNames;
     }
 
     @Override
@@ -263,7 +278,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(PrincipalFilter principal) {
-        return principal.includes(isAdmin(), getClientName());
+        return principal.includes(isAdmin(), getClientName(), getFriendsNames());
     }
 
     @Override
@@ -280,6 +295,8 @@ public class RequestContextImpl implements RequestContext {
     public void authenticatedWithSignature(String nodeName) {
         setAdmin(Objects.equals(nodeName, nodeName()));
         setClientName(nodeName);
+        setFriendsNames(friendsCache.getFriends(nodeName));
+
         setAuthCategory(AuthCategory.ALL);
     }
 

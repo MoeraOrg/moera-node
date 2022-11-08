@@ -15,5 +15,6 @@ public class PrincipalFlag {
     public static final int SENIOR = 0x0400;
     public static final int ENIGMA = 0x0800;
     public static final int MAJOR = 0x1000;
+    public static final int FRIENDS = 0x2000;
 
 }

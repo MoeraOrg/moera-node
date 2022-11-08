@@ -32,8 +32,8 @@ public class Direction {
         return principalFilter;
     }
 
-    public boolean isPermitted(boolean remoteIsSelf, String remoteNodeName) {
-        return principalFilter.includes(remoteIsSelf, remoteNodeName);
+    public boolean isPermitted(boolean remoteIsSelf, String remoteNodeName, String[] remoteFriendsNames) {
+        return principalFilter.includes(remoteIsSelf, remoteNodeName, remoteFriendsNames);
     }
 
     @Override

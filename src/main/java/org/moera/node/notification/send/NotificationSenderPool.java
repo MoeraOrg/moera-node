@@ -24,6 +24,7 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.friends.FriendsCache;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.model.notification.Notification;
@@ -64,6 +65,9 @@ public class NotificationSenderPool {
 
     @Inject
     private PendingNotificationRepository pendingNotificationRepository;
+
+    @Inject
+    private FriendsCache friendsCache;
 
     @Inject
     private LiberinManager liberinManager;
@@ -148,7 +152,11 @@ public class NotificationSenderPool {
 
     private void sendSingle(SingleDirection direction, Notification notification) {
         String nodeName = domains.getDomainOptions(direction.getNodeId()).nodeName();
-        if (!direction.isPermitted(Objects.equals(nodeName, direction.getNodeName()), direction.getNodeName())) {
+        if (!direction.isPermitted(
+                Objects.equals(nodeName, direction.getNodeName()),
+                direction.getNodeName(),
+                friendsCache.getFriends(direction.getNodeName()))
+        ) {
             return;
         }
 

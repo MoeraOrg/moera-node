@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.config.Config;
 import org.moera.node.data.Token;
+import org.moera.node.friends.FriendsCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
@@ -41,6 +42,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     @Inject
     private AuthenticationManager authenticationManager;
+
+    @Inject
+    private FriendsCache friendsCache;
 
     @Inject
     private RequestContext requestContext;
@@ -148,6 +152,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, UriUtil.remoteAddress(request));
             if (carteAuthInfo != null) {
                 requestContext.setClientName(carteAuthInfo.getClientName());
+                requestContext.setFriendsNames(friendsCache.getFriends(carteAuthInfo.getClientName()));
                 requestContext.setAuthCategory(carteAuthInfo.getAuthCategory());
             }
         } catch (UnknownHostException e) {

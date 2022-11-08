@@ -13,6 +13,7 @@ import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
+import org.moera.node.friends.FriendsCache;
 import org.moera.node.instant.PostingReactionInstants;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;
@@ -44,6 +45,9 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     @Inject
     private PostingReactionInstants postingReactionInstants;
 
+    @Inject
+    private FriendsCache friendsCache;
+
     @LiberinMapping
     public void added(PostingReactionAddedLiberin liberin) {
         Posting posting = liberin.getPosting();
@@ -72,7 +76,8 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                     posting.getId(), deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
                                     deletedReaction.getOwnerGender(), ownerAvatar, deletedReaction.isNegative()));
                 } else {
-                    if (visibilityFilter(posting, deletedReaction).includes(true, posting.getOwnerName())) {
+                    if (visibilityFilter(posting, deletedReaction).includes(
+                            true, posting.getOwnerName(), friendsCache.getFriends(posting.getOwnerName()))) {
                         postingReactionInstants.deleted(posting.getId(), deletedReaction.getOwnerName(),
                                 deletedReaction.isNegative());
                     }
@@ -110,7 +115,8 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                     addedReaction.getOwnerGender(), ownerAvatar, addedReaction.isNegative(),
                                     addedReaction.getEmoji()));
                 } else {
-                    if (visibilityFilter(posting, addedReaction).includes(true, posting.getOwnerName())) {
+                    if (visibilityFilter(posting, addedReaction).includes(
+                            true, posting.getOwnerName(), friendsCache.getFriends(posting.getOwnerName()))) {
                         postingReactionInstants.added(posting, addedReaction.getOwnerName(),
                                 addedReaction.getOwnerFullName(), addedReaction.getOwnerGender(), ownerAvatar,
                                 addedReaction.isNegative(), addedReaction.getEmoji());
@@ -157,7 +163,8 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                         new PostingReactionDeletedAllNotification(null, null, null,
                                 posting.getId()));
             } else {
-                if (generalVisibilityFilter(posting).includes(true, posting.getOwnerName())) {
+                if (generalVisibilityFilter(posting).includes(
+                        true, posting.getOwnerName(), friendsCache.getFriends(posting.getOwnerName()))) {
                     postingReactionInstants.deletedAll(posting.getId());
                 }
             }

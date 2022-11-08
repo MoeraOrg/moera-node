@@ -2,6 +2,7 @@ package org.moera.node.auth.principal;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -80,6 +81,10 @@ public class Principal implements Cloneable, PrincipalFilter {
         return new Principal("only:" + joinNotNull(",", nodeNames));
     }
 
+    public static Principal ofFriends(String friendsName) {
+        return new Principal("f:" + friendsName);
+    }
+
     private static String joinNotNull(String delimiter, String[] names) {
         StringBuilder result = new StringBuilder();
         for (String name : names) {
@@ -149,8 +154,16 @@ public class Principal implements Cloneable, PrincipalFilter {
         return value.startsWith("only:");
     }
 
+    public boolean isFriends() {
+        return value.startsWith("f:");
+    }
+
     public String[] getNodeNames() {
         return isNode() || isOnly() ? value.substring(5).split(",") : new String[0];
+    }
+
+    public String getFriendsName() {
+        return isFriends() ? value.substring(1) : null;
     }
 
     public Principal withOwner(String ownerName) {
@@ -207,6 +220,13 @@ public class Principal implements Cloneable, PrincipalFilter {
         return this;
     }
 
+    public Principal withFriends(String friendsName) {
+        if (isFriends()) {
+            return Principal.ofFriends(friendsName);
+        }
+        return this;
+    }
+
     public Principal withSubordinate(Principal principal) {
         return isUnset() ? principal : this;
     }
@@ -240,7 +260,7 @@ public class Principal implements Cloneable, PrincipalFilter {
     }
 
     @Override
-    public boolean includes(boolean admin, String nodeName) {
+    public boolean includes(boolean admin, String nodeName, String[] friendsNames) {
         if (isPublic()) {
             return true;
         }
@@ -262,7 +282,14 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isNode()) {
             return includes(getNodeNames(), nodeName);
         }
+        if (isFriends()) {
+            return friendsNames != null && includes(friendsNames, getFriendsName());
+        }
         throw new UnresolvedPrincipalException(this);
+    }
+
+    public boolean includes(boolean admin, String nodeName, Supplier<String[]> friendsNames) {
+        return includes(admin, nodeName, isFriends() ? friendsNames.get() : null);
     }
 
     private static boolean includes(String[] names, String name) {
@@ -317,6 +344,9 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isOnly()) {
             return (flags & PrincipalFlag.ONLY) != 0;
         }
+        if (isFriends()) {
+            return (flags & PrincipalFlag.FRIENDS) != 0;
+        }
         return false;
     }
 
@@ -329,6 +359,15 @@ public class Principal implements Cloneable, PrincipalFilter {
         }
         if (isSigned() || principal.isSigned()) {
             return Principal.SIGNED;
+        }
+        if (isFriends() && principal.isFriends()) {
+            return Principal.SIGNED; // FIXME too wide. Not so critical, because will almost never happen
+        }
+        if (isFriends()) {
+            return this;
+        }
+        if (principal.isFriends()) {
+            return principal;
         }
 
         Integer mask = PRINCIPAL_MASKS.get(this);
@@ -350,6 +389,12 @@ public class Principal implements Cloneable, PrincipalFilter {
             return principal;
         }
         if (principal.isSigned()) {
+            return this;
+        }
+        if (isFriends()) {
+            return principal; // FIXME too wide, if principal.isFriends(). But - see above
+        }
+        if (principal.isFriends()) {
             return this;
         }
 

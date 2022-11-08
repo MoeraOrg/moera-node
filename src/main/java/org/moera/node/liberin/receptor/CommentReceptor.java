@@ -13,6 +13,7 @@ import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
+import org.moera.node.friends.FriendsCache;
 import org.moera.node.instant.CommentInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
@@ -41,6 +42,9 @@ public class CommentReceptor extends LiberinReceptorBase {
 
     @Inject
     private CommentInstants commentInstants;
+
+    @Inject
+    private FriendsCache friendsCache;
 
     @LiberinMapping
     public void added(CommentAddedLiberin liberin) {
@@ -173,7 +177,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         return mentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
-                .filter(m -> view.includes(false, m))
+                .filter(m -> view.includes(false, m, () -> friendsCache.getFriends(m)))
                 .collect(Collectors.toSet());
     }
 

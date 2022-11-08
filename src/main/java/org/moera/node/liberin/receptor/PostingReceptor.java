@@ -15,6 +15,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
+import org.moera.node.friends.FriendsCache;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -46,6 +47,9 @@ public class PostingReceptor extends LiberinReceptorBase {
 
     @Inject
     private StoryRepository storyRepository;
+
+    @Inject
+    private FriendsCache friendsCache;
 
     @LiberinMapping
     public void added(PostingAddedLiberin liberin) {
@@ -160,7 +164,7 @@ public class PostingReceptor extends LiberinReceptorBase {
         return mentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
-                .filter(m -> view.includes(false, m))
+                .filter(m -> view.includes(false, m, () -> friendsCache.getFriends(m)))
                 .collect(Collectors.toSet());
     }
 

@@ -4,6 +4,6 @@ public interface PrincipalFilter {
 
     PrincipalExpression a();
 
-    boolean includes(boolean admin, String nodeName);
+    boolean includes(boolean admin, String nodeName, String[] friendsNames);
 
 }
