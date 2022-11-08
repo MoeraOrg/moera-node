@@ -163,7 +163,7 @@ public class Principal implements Cloneable, PrincipalFilter {
     }
 
     public String getFriendsName() {
-        return isFriends() ? value.substring(1) : null;
+        return isFriends() ? value.substring(2) : null;
     }
 
     public Principal withOwner(String ownerName) {
