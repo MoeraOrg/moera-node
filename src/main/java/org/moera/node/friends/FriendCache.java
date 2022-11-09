@@ -1,10 +1,12 @@
 package org.moera.node.friends;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.node.data.Friend;
@@ -106,6 +108,35 @@ public class FriendCache {
                     .map(UUID::toString)
                     .toArray(String[]::new)
                 : null;
+    }
+
+    public void invalidateNodeGroups(UUID nodeId) {
+        nodeGroups.remove(nodeId);
+    }
+
+    public void invalidateClientGroups(UUID nodeId) {
+        List<NodeClient> keys = clientGroups.keySet().stream()
+                .filter(key -> key.nodeId.equals(nodeId))
+                .collect(Collectors.toList());
+        keys.forEach(clientGroups::remove);
+    }
+
+    public void invalidateClientGroups(UUID nodeId, String clientName) {
+        clientGroups.remove(new NodeClient(nodeId, clientName));
+    }
+
+    public void invalidate(FriendCacheInvalidation invalidation) {
+        switch (invalidation.getPart()) {
+            case NODE_GROUPS:
+                invalidateNodeGroups(invalidation.getNodeId());
+                break;
+            case CLIENT_GROUPS_ALL:
+                invalidateClientGroups(invalidation.getNodeId());
+                break;
+            case CLIENT_GROUPS:
+                invalidateClientGroups(invalidation.getNodeId(), invalidation.getClientName());
+                break;
+        }
     }
 
 }

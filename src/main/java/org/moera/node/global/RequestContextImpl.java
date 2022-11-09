@@ -12,6 +12,8 @@ import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.friends.FriendCache;
+import org.moera.node.friends.FriendCacheInvalidation;
+import org.moera.node.friends.FriendCachePart;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -42,6 +44,7 @@ public class RequestContextImpl implements RequestContext {
     private UserAgentOs userAgentOs = UserAgentOs.UNKNOWN;
     private final List<Liberin> afterCommitLiberins = new ArrayList<>();
     private boolean subscriptionsUpdated;
+    private final List<FriendCacheInvalidation> friendCacheInvalidations = new ArrayList<>();
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -308,6 +311,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public boolean isSubscriptionsUpdated() {
         return subscriptionsUpdated;
+    }
+
+    @Override
+    public void invalidateFriendCache(FriendCachePart part, String clientName) {
+        friendCacheInvalidations.add(new FriendCacheInvalidation(part, nodeId(), clientName));
+    }
+
+    @Override
+    public List<FriendCacheInvalidation> getFriendCacheInvalidations() {
+        return friendCacheInvalidations;
     }
 
 }

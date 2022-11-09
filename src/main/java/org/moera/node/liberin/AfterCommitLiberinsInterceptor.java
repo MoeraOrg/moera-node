@@ -4,6 +4,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.moera.node.friends.FriendCache;
 import org.moera.node.global.NoClientId;
 import org.moera.node.global.RequestContext;
 import org.moera.node.subscriptions.SubscriptionManager;
@@ -23,6 +24,9 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     @Inject
     private SubscriptionManager subscriptionManager;
 
+    @Inject
+    private FriendCache friendCache;
+
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
@@ -39,6 +43,7 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
             if (requestContext.isSubscriptionsUpdated()) {
                 subscriptionManager.rescan();
             }
+            requestContext.getFriendCacheInvalidations().forEach(friendCache::invalidate);
         }
     }
 

@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Avatar;
+import org.moera.node.friends.FriendCacheInvalidation;
+import org.moera.node.friends.FriendCachePart;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 
@@ -106,5 +108,9 @@ public interface RequestContext extends AccessChecker {
     void subscriptionsUpdated();
 
     boolean isSubscriptionsUpdated();
+
+    void invalidateFriendCache(FriendCachePart part, String clientName);
+
+    List<FriendCacheInvalidation> getFriendCacheInvalidations();
 
 }

@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -11,6 +12,8 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
+import org.moera.node.friends.FriendCache;
+import org.moera.node.friends.FriendCachePart;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -41,12 +44,15 @@ public class FriendGroupController {
     @Inject
     private FriendGroupRepository friendGroupRepository;
 
+    @Inject
+    private FriendCache friendCache;
+
     @GetMapping
     @Transactional
     public List<FriendGroupInfo> getAll() {
         log.info("GET /people/friends/groups");
 
-        return friendGroupRepository.findAllByNodeId(requestContext.nodeId()).stream()
+        return Arrays.stream(friendCache.getNodeGroups())
                 .filter(fg -> requestContext.isAdmin() || fg.isVisible())
                 .map(fg -> new FriendGroupInfo(fg, requestContext.isAdmin()))
                 .collect(Collectors.toList());
@@ -57,7 +63,9 @@ public class FriendGroupController {
     public FriendGroupInfo get(@PathVariable UUID id) {
         log.info("GET /people/friends/groups/{id} (id = {})", LogUtil.format(id));
 
-        FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        FriendGroup friendGroup = Arrays.stream(friendCache.getNodeGroups())
+                .filter(fg -> fg.getId().equals(id))
+                .findFirst()
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         if (!requestContext.isAdmin() && !friendGroup.isVisible()) {
             throw new ObjectNotFoundFailure("friend-group.not-found");
@@ -75,8 +83,11 @@ public class FriendGroupController {
 
         FriendGroup friendGroup = new FriendGroup();
         friendGroup.setId(UUID.randomUUID());
+        friendGroup.setNodeId(requestContext.nodeId());
         friendGroupDescription.toFriendGroup(friendGroup);
         friendGroup = friendGroupRepository.save(friendGroup);
+
+        requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
 
         return new FriendGroupInfo(friendGroup, true);
     }
@@ -94,6 +105,9 @@ public class FriendGroupController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         friendGroupDescription.toFriendGroup(friendGroup);
 
+        requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
+        requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
+
         return new FriendGroupInfo(friendGroup, true);
     }
 
@@ -106,6 +120,9 @@ public class FriendGroupController {
         FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         friendGroupRepository.delete(friendGroup);
+
+        requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
+        requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
 
         return Result.OK;
     }

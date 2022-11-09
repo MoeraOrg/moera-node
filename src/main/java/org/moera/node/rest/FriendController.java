@@ -15,6 +15,7 @@ import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.FriendRepository;
+import org.moera.node.friends.FriendCachePart;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -127,6 +128,8 @@ public class FriendController {
                 }
                 friendInfo.getGroups().add(new FriendGroupDetails(friend));
             }
+
+            requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS, friendDescription.getNodeName());
         }
 
         return result;
