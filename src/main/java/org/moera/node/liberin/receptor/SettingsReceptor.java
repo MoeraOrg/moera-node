@@ -32,7 +32,7 @@ public class SettingsReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void featuresUpdated(FeaturesUpdatedLiberin liberin) {
-        send(liberin, new FeaturesUpdatedEvent(liberin.getFeatures()));
+        send(liberin, new FeaturesUpdatedEvent());
     }
 
 }

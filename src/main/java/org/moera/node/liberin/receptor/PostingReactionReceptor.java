@@ -77,7 +77,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                     deletedReaction.getOwnerGender(), ownerAvatar, deletedReaction.isNegative()));
                 } else {
                     if (visibilityFilter(posting, deletedReaction).includes(
-                            true, posting.getOwnerName(), friendCache.getFriends(posting.getOwnerName()))) {
+                            true, posting.getOwnerName(), friendCache.getClientGroupIds(posting.getOwnerName()))) {
                         postingReactionInstants.deleted(posting.getId(), deletedReaction.getOwnerName(),
                                 deletedReaction.isNegative());
                     }
@@ -116,7 +116,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                     addedReaction.getEmoji()));
                 } else {
                     if (visibilityFilter(posting, addedReaction).includes(
-                            true, posting.getOwnerName(), friendCache.getFriends(posting.getOwnerName()))) {
+                            true, posting.getOwnerName(), friendCache.getClientGroupIds(posting.getOwnerName()))) {
                         postingReactionInstants.added(posting, addedReaction.getOwnerName(),
                                 addedReaction.getOwnerFullName(), addedReaction.getOwnerGender(), ownerAvatar,
                                 addedReaction.isNegative(), addedReaction.getEmoji());
@@ -164,7 +164,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                                 posting.getId()));
             } else {
                 if (generalVisibilityFilter(posting).includes(
-                        true, posting.getOwnerName(), friendCache.getFriends(posting.getOwnerName()))) {
+                        true, posting.getOwnerName(), friendCache.getClientGroupIds(posting.getOwnerName()))) {
                     postingReactionInstants.deletedAll(posting.getId());
                 }
             }

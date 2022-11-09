@@ -177,7 +177,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         return mentions.stream()
                 .filter(m -> !Objects.equals(ownerName, m))
                 .filter(m -> !m.equals(":"))
-                .filter(m -> view.includes(false, m, () -> friendCache.getFriends(m)))
+                .filter(m -> view.includes(false, m, () -> friendCache.getClientGroupIds(m)))
                 .collect(Collectors.toSet());
     }
 

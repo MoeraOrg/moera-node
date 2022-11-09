@@ -9,16 +9,18 @@ public class FriendGroupInfo {
 
     private String id;
     private String title;
-    private boolean visible;
+    private Boolean visible;
     private Long createdAt;
 
     public FriendGroupInfo() {
     }
 
-    public FriendGroupInfo(FriendGroup friendGroup) {
+    public FriendGroupInfo(FriendGroup friendGroup, boolean admin) {
         id = friendGroup.getId().toString();
         title = friendGroup.getTitle();
-        visible = friendGroup.isVisible();
+        if (admin) {
+            visible = friendGroup.isVisible();
+        }
         createdAt = Util.toEpochSecond(friendGroup.getCreatedAt());
     }
 
@@ -38,11 +40,11 @@ public class FriendGroupInfo {
         this.title = title;
     }
 
-    public boolean isVisible() {
+    public Boolean getVisible() {
         return visible;
     }
 
-    public void setVisible(boolean visible) {
+    public void setVisible(Boolean visible) {
         this.visible = visible;
     }
 

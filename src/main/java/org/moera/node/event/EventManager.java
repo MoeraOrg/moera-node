@@ -115,7 +115,7 @@ public class EventManager {
         subscriber.setSessionId(accessor.getSessionId());
         subscriber.setAdmin(admin);
         subscriber.setClientName(clientName);
-        subscriber.setFriendGroups(friendCache.getFriends(clientName));
+        subscriber.setFriendGroups(friendCache.getClientGroupIds(clientName));
         subscribers.put(accessor.getSessionId(), subscriber);
     }
 

@@ -30,7 +30,6 @@ import org.moera.node.operations.OptionsOperations;
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.option.type.OptionTypeBase;
-import org.moera.node.plugin.Plugins;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,9 +49,6 @@ public class SettingsController {
 
     @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private Plugins plugins;
 
     @Inject
     private OptionsMetadata optionsMetadata;
@@ -204,7 +200,7 @@ public class SettingsController {
 
         requestContext.send(new SettingsChangedLiberin(nodeChanged.get(), clientChanged.get()));
         if (nodeChanged.get()) {
-            requestContext.send(new FeaturesUpdatedLiberin(requestContext.getOptions(), plugins));
+            requestContext.send(new FeaturesUpdatedLiberin());
         }
 
         return Result.OK;

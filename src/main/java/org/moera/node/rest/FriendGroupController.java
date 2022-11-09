@@ -47,8 +47,8 @@ public class FriendGroupController {
         log.info("GET /people/friends/groups");
 
         return friendGroupRepository.findAllByNodeId(requestContext.nodeId()).stream()
-                .filter(fr -> requestContext.isAdmin() || fr.isVisible())
-                .map(FriendGroupInfo::new)
+                .filter(fg -> requestContext.isAdmin() || fg.isVisible())
+                .map(fg -> new FriendGroupInfo(fg, requestContext.isAdmin()))
                 .collect(Collectors.toList());
     }
 
@@ -63,7 +63,7 @@ public class FriendGroupController {
             throw new ObjectNotFoundFailure("friend-group.not-found");
         }
 
-        return new FriendGroupInfo(friendGroup);
+        return new FriendGroupInfo(friendGroup, requestContext.isAdmin());
     }
 
     @PostMapping
@@ -78,7 +78,7 @@ public class FriendGroupController {
         friendGroupDescription.toFriendGroup(friendGroup);
         friendGroup = friendGroupRepository.save(friendGroup);
 
-        return new FriendGroupInfo(friendGroup);
+        return new FriendGroupInfo(friendGroup, true);
     }
 
     @PutMapping("/{id}")
@@ -94,7 +94,7 @@ public class FriendGroupController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         friendGroupDescription.toFriendGroup(friendGroup);
 
-        return new FriendGroupInfo(friendGroup);
+        return new FriendGroupInfo(friendGroup, true);
     }
 
     @DeleteMapping("/{id}")

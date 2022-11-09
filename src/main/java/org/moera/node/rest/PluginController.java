@@ -305,13 +305,13 @@ public class PluginController {
     private void pluginsUpdated(PluginDescriptor descriptor, boolean deleted) {
         if (descriptor.getNodeId() != null) {
             requestContext.send(!deleted ? new PluginAddedLiberin(descriptor) : new PluginDeletedLiberin(descriptor));
-            requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(descriptor.getNodeId()), plugins));
+            requestContext.send(new FeaturesUpdatedLiberin());
         } else {
             domains.getAllDomainNames().forEach(domainName -> {
                 requestContext.send(!deleted
                         ? new PluginAddedLiberin(descriptor)
                         : new PluginDeletedLiberin(descriptor));
-                requestContext.send(new FeaturesUpdatedLiberin(domains.getDomainOptions(domainName), plugins));
+                requestContext.send(new FeaturesUpdatedLiberin());
             });
         }
     }

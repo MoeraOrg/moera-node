@@ -295,7 +295,7 @@ public class RequestContextImpl implements RequestContext {
     public void authenticatedWithSignature(String nodeName) {
         setAdmin(Objects.equals(nodeName, nodeName()));
         setClientName(nodeName);
-        setFriendGroups(friendCache.getFriends(nodeName));
+        setFriendGroups(friendCache.getClientGroupIds(nodeName));
 
         setAuthCategory(AuthCategory.ALL);
     }

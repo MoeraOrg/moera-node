@@ -155,7 +155,7 @@ public class NotificationSenderPool {
         if (!direction.isPermitted(
                 Objects.equals(nodeName, direction.getNodeName()),
                 direction.getNodeName(),
-                friendCache.getFriends(direction.getNodeName()))
+                friendCache.getClientGroupIds(direction.getNodeName()))
         ) {
             return;
         }

@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import javax.inject.Inject;
 
+import org.moera.node.friends.FriendCache;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -25,11 +26,16 @@ public class FeaturesController {
     @Inject
     private Plugins plugins;
 
+    @Inject
+    private FriendCache friendCache;
+
     @GetMapping
     public Features get() {
         log.info("GET /features");
 
-        return new Features(requestContext.getOptions(), plugins.getNames(requestContext.nodeId()));
+        return new Features(requestContext.getOptions(), plugins.getNames(requestContext.nodeId()),
+                friendCache.getNodeGroups(), friendCache.getClientGroups(requestContext.getClientName()),
+                requestContext.isAdmin());
     }
 
 }
