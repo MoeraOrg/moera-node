@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class FriendInfo {
 
     private String nodeName;
-    private List<String> groups;
+    private List<FriendGroupDetails> groups;
 
     public String getNodeName() {
         return nodeName;
@@ -18,11 +18,11 @@ public class FriendInfo {
         this.nodeName = nodeName;
     }
 
-    public List<String> getGroups() {
+    public List<FriendGroupDetails> getGroups() {
         return groups;
     }
 
-    public void setGroups(List<String> groups) {
+    public void setGroups(List<FriendGroupDetails> groups) {
         this.groups = groups;
     }
 

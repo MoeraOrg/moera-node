@@ -19,6 +19,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.FriendDescription;
+import org.moera.node.model.FriendGroupDetails;
 import org.moera.node.model.FriendInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public class FriendController {
                 ? friendRepository.findAllByNodeId(requestContext.nodeId())
                 : friendRepository.findAllByNodeIdAndGroup(requestContext.nodeId(), groupId);
         List<FriendInfo> friendInfos = new ArrayList<>();
-        List<String> groups = null;
+        List<FriendGroupDetails> groups = null;
         UUID prevId = null;
         for (Friend friend : friends) {
             if (prevId != null && !prevId.equals(friend.getId())) {
@@ -71,7 +72,7 @@ public class FriendController {
                 prevId = friend.getId();
             }
             if (groups != null && (requestContext.isAdmin() || friend.getFriendGroup().isVisible())) {
-                groups.add(friend.getFriendGroup().getId().toString());
+                groups.add(new FriendGroupDetails(friend));
             }
         }
 
@@ -124,7 +125,7 @@ public class FriendController {
                     friendInfo.setGroups(new ArrayList<>());
                     result.add(friendInfo);
                 }
-                friendInfo.getGroups().add(friend.getFriendGroup().getId().toString());
+                friendInfo.getGroups().add(new FriendGroupDetails(friend));
             }
         }
 

@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.FriendGroup;
+import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FriendGroupInfo {
@@ -9,6 +10,7 @@ public class FriendGroupInfo {
     private String id;
     private String title;
     private boolean visible;
+    private Long createdAt;
 
     public FriendGroupInfo() {
     }
@@ -17,6 +19,7 @@ public class FriendGroupInfo {
         id = friendGroup.getId().toString();
         title = friendGroup.getTitle();
         visible = friendGroup.isVisible();
+        createdAt = Util.toEpochSecond(friendGroup.getCreatedAt());
     }
 
     public String getId() {
@@ -41,6 +44,14 @@ public class FriendGroupInfo {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
     }
 
 }
