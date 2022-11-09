@@ -65,8 +65,8 @@ public class NamingCache {
     private static final Duration NORMAL_TTL = Duration.of(6, ChronoUnit.HOURS);
     private static final Duration ERROR_TTL = Duration.of(1, ChronoUnit.MINUTES);
 
-    private ReadWriteLock cacheLock = new ReentrantReadWriteLock();
-    private Map<Key, Record> cache = new HashMap<>();
+    private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+    private final Map<Key, Record> cache = new HashMap<>();
     private final Object queryDone = new Object();
 
     @Inject
@@ -111,6 +111,7 @@ public class NamingCache {
                 try {
                     queryDone.wait();
                 } catch (InterruptedException e) {
+                    // ignore
                 }
             }
         }
