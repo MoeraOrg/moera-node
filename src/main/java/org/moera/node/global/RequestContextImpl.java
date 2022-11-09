@@ -11,7 +11,7 @@ import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
-import org.moera.node.friends.FriendsCache;
+import org.moera.node.friends.FriendCache;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -47,7 +47,7 @@ public class RequestContextImpl implements RequestContext {
     private AvatarRepository avatarRepository;
 
     @Inject
-    private FriendsCache friendsCache;
+    private FriendCache friendCache;
 
     @Override
     public boolean isRegistrar() {
@@ -295,7 +295,7 @@ public class RequestContextImpl implements RequestContext {
     public void authenticatedWithSignature(String nodeName) {
         setAdmin(Objects.equals(nodeName, nodeName()));
         setClientName(nodeName);
-        setFriendGroups(friendsCache.getFriends(nodeName));
+        setFriendGroups(friendCache.getFriends(nodeName));
 
         setAuthCategory(AuthCategory.ALL);
     }
