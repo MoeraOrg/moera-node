@@ -17,6 +17,7 @@ import org.moera.node.friends.FriendCachePart;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.model.FriendGroupDescription;
 import org.moera.node.model.FriendGroupInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -88,6 +89,7 @@ public class FriendGroupController {
         friendGroup = friendGroupRepository.save(friendGroup);
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
+        requestContext.send(new FeaturesUpdatedLiberin());
 
         return new FriendGroupInfo(friendGroup, true);
     }
@@ -107,6 +109,7 @@ public class FriendGroupController {
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
+        requestContext.send(new FeaturesUpdatedLiberin());
 
         return new FriendGroupInfo(friendGroup, true);
     }
@@ -123,6 +126,7 @@ public class FriendGroupController {
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
+        requestContext.send(new FeaturesUpdatedLiberin());
 
         return Result.OK;
     }
