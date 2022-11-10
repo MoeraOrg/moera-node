@@ -1,11 +1,14 @@
 package org.moera.node.friends;
 
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -50,10 +53,44 @@ public class FriendCache {
 
     }
 
-    private final ConcurrentMap<UUID, FriendGroup[]> nodeGroups = new ConcurrentHashMap<>();
+    private static class NodeClientUsage {
+
+        public NodeClient nodeClient;
+        public Instant usedAt = Instant.now();
+
+        NodeClientUsage(NodeClient nodeClient) {
+            this.nodeClient = nodeClient;
+        }
+
+        @Override
+        public boolean equals(Object peer) {
+            if (this == peer) {
+                return true;
+            }
+            if (peer == null || getClass() != peer.getClass()) {
+                return false;
+            }
+            NodeClientUsage nodeClientUsage = (NodeClientUsage) peer;
+            return nodeClient.equals(nodeClientUsage.nodeClient);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(nodeClient);
+        }
+
+    }
+
+    private static final int CLIENT_GROUPS_CACHE_SIZE_MIN = 16;
+    private static final int CLIENT_GROUPS_CACHE_SIZE_MAX = 1024; // TODO make configurable and find optimal value
+
+    private final Map<UUID, FriendGroup[]> nodeGroups = new ConcurrentHashMap<>();
     private final ParametrizedLock<UUID> nodeGroupsLock = new ParametrizedLock<>();
-    private final ConcurrentMap<NodeClient, FriendGroup[]> clientGroups = new ConcurrentHashMap<>();
+
+    private final Map<NodeClient, FriendGroup[]> clientGroups = new ConcurrentHashMap<>();
     private final ParametrizedLock<NodeClient> clientGroupsLock = new ParametrizedLock<>();
+    private final PriorityBlockingQueue<NodeClientUsage> clientUsageQueue = new PriorityBlockingQueue<>(
+            CLIENT_GROUPS_CACHE_SIZE_MIN, Comparator.comparing(u -> u.usedAt));
 
     @Inject
     private UniversalContext universalContext;
@@ -86,17 +123,30 @@ public class FriendCache {
 
         NodeClient nodeClient = new NodeClient(universalContext.nodeId(), clientName);
         FriendGroup[] groups = clientGroups.get(nodeClient);
-        if (groups != null) {
-            return groups;
+        if (groups == null) {
+            clientGroupsLock.lock(nodeClient);
+            try {
+                groups = clientGroups.computeIfAbsent(nodeClient,
+                        nid -> friendRepository.findAllByNodeIdAndName(universalContext.nodeId(), clientName).stream()
+                                .map(Friend::getFriendGroup)
+                                .toArray(FriendGroup[]::new));
+            } finally {
+                clientGroupsLock.unlock(nodeClient);
+            }
         }
-        clientGroupsLock.lock(nodeClient);
-        try {
-            return clientGroups.computeIfAbsent(nodeClient,
-                    nid -> friendRepository.findAllByNodeIdAndName(universalContext.nodeId(), clientName).stream()
-                            .map(Friend::getFriendGroup)
-                            .toArray(FriendGroup[]::new));
-        } finally {
-            clientGroupsLock.unlock(nodeClient);
+        updateUsage(nodeClient);
+
+        return groups;
+    }
+
+    private void updateUsage(NodeClient nodeClient) {
+        NodeClientUsage usage = new NodeClientUsage(nodeClient);
+        //noinspection ResultOfMethodCallIgnored
+        clientUsageQueue.remove(usage);
+        clientUsageQueue.add(usage);
+        while (clientUsageQueue.size() > CLIENT_GROUPS_CACHE_SIZE_MAX) {
+            usage = clientUsageQueue.poll();
+            invalidateClientGroups(usage.nodeClient.nodeId, usage.nodeClient.clientName);
         }
     }
 
@@ -122,7 +172,11 @@ public class FriendCache {
     }
 
     public void invalidateClientGroups(UUID nodeId, String clientName) {
-        clientGroups.remove(new NodeClient(nodeId, clientName));
+        NodeClient nodeClient = new NodeClient(nodeId, clientName);
+        NodeClientUsage usage = new NodeClientUsage(nodeClient);
+        //noinspection ResultOfMethodCallIgnored
+        clientUsageQueue.remove(usage);
+        clientGroups.remove(nodeClient);
     }
 
     public void invalidate(FriendCacheInvalidation invalidation) {
