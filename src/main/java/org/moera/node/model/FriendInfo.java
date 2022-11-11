@@ -10,6 +10,14 @@ public class FriendInfo {
     private String nodeName;
     private List<FriendGroupDetails> groups;
 
+    public FriendInfo() {
+    }
+
+    public FriendInfo(String nodeName, List<FriendGroupDetails> groups) {
+        this.nodeName = nodeName;
+        this.groups = groups;
+    }
+
     public String getNodeName() {
         return nodeName;
     }

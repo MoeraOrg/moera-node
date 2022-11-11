@@ -15,7 +15,7 @@ public class Features {
     private int feedWidth;
     private FriendGroupsFeatures friendGroups;
 
-    public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, FriendGroup[] clientGroups,
+    public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, FriendGroupDetails[] clientGroups,
                     boolean admin) {
         posting = new PostingFeatures(options);
         if (!ObjectUtils.isEmpty(plugins)) {

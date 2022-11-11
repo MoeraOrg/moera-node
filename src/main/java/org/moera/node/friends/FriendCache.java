@@ -6,17 +6,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
-import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.FriendRepository;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.model.FriendGroupDetails;
 import org.moera.node.util.ParametrizedLock;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -87,7 +88,7 @@ public class FriendCache {
     private final Map<UUID, FriendGroup[]> nodeGroups = new ConcurrentHashMap<>();
     private final ParametrizedLock<UUID> nodeGroupsLock = new ParametrizedLock<>();
 
-    private final Map<NodeClient, FriendGroup[]> clientGroups = new ConcurrentHashMap<>();
+    private final Map<NodeClient, FriendGroupDetails[]> clientGroups = new ConcurrentHashMap<>();
     private final ParametrizedLock<NodeClient> clientGroupsLock = new ParametrizedLock<>();
     private final PriorityBlockingQueue<NodeClientUsage> clientUsageQueue = new PriorityBlockingQueue<>(
             CLIENT_GROUPS_CACHE_SIZE_MIN, Comparator.comparing(u -> u.usedAt));
@@ -116,20 +117,26 @@ public class FriendCache {
         }
     }
 
-    public FriendGroup[] getClientGroups(String clientName) {
+    public Optional<FriendGroup> getNodeGroup(UUID id) {
+        return Arrays.stream(getNodeGroups())
+                .filter(fg -> fg.getId().equals(id))
+                .findFirst();
+    }
+
+    public FriendGroupDetails[] getClientGroups(String clientName) {
         if (ObjectUtils.isEmpty(clientName)) {
             return null;
         }
 
         NodeClient nodeClient = new NodeClient(universalContext.nodeId(), clientName);
-        FriendGroup[] groups = clientGroups.get(nodeClient);
+        FriendGroupDetails[] groups = clientGroups.get(nodeClient);
         if (groups == null) {
             clientGroupsLock.lock(nodeClient);
             try {
                 groups = clientGroups.computeIfAbsent(nodeClient,
                         nid -> friendRepository.findAllByNodeIdAndName(universalContext.nodeId(), clientName).stream()
-                                .map(Friend::getFriendGroup)
-                                .toArray(FriendGroup[]::new));
+                                .map(FriendGroupDetails::new)
+                                .toArray(FriendGroupDetails[]::new));
             } finally {
                 clientGroupsLock.unlock(nodeClient);
             }
@@ -151,11 +158,10 @@ public class FriendCache {
     }
 
     public String[] getClientGroupIds(String clientName) {
-        FriendGroup[] groups = getClientGroups(clientName);
+        FriendGroupDetails[] groups = getClientGroups(clientName);
         return groups != null
                 ? Arrays.stream(groups)
-                    .map(FriendGroup::getId)
-                    .map(UUID::toString)
+                    .map(FriendGroupDetails::getId)
                     .toArray(String[]::new)
                 : null;
     }

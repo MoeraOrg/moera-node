@@ -64,9 +64,7 @@ public class FriendGroupController {
     public FriendGroupInfo get(@PathVariable UUID id) {
         log.info("GET /people/friends/groups/{id} (id = {})", LogUtil.format(id));
 
-        FriendGroup friendGroup = Arrays.stream(friendCache.getNodeGroups())
-                .filter(fg -> fg.getId().equals(id))
-                .findFirst()
+        FriendGroup friendGroup = friendCache.getNodeGroup(id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         if (!requestContext.isAdmin() && !friendGroup.isVisible()) {
             throw new ObjectNotFoundFailure("friend-group.not-found");

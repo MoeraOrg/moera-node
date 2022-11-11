@@ -9,7 +9,7 @@ import org.moera.node.data.FriendGroup;
 public class FriendGroupsFeatures {
 
     private FriendGroupInfo[] available;
-    private FriendGroupInfo[] memberOf;
+    private FriendGroupDetails[] memberOf;
 
     public static FriendGroupsFeatures forAdmin(FriendGroup[] nodeGroups) {
         FriendGroupsFeatures features = new FriendGroupsFeatures();
@@ -19,17 +19,13 @@ public class FriendGroupsFeatures {
         return features;
     }
 
-    public static FriendGroupsFeatures forRegular(FriendGroup[] nodeGroups, FriendGroup[] clientGroups) {
+    public static FriendGroupsFeatures forRegular(FriendGroup[] nodeGroups, FriendGroupDetails[] clientGroups) {
         FriendGroupsFeatures features = new FriendGroupsFeatures();
         features.setAvailable(Arrays.stream(nodeGroups)
                 .filter(FriendGroup::isVisible)
                 .map(fg -> new FriendGroupInfo(fg, false))
                 .toArray(FriendGroupInfo[]::new));
-        if (clientGroups != null) {
-            features.setMemberOf(Arrays.stream(clientGroups)
-                    .map(fg -> new FriendGroupInfo(fg, false))
-                    .toArray(FriendGroupInfo[]::new));
-        }
+        features.setMemberOf(clientGroups);
         return features;
 
     }
@@ -42,11 +38,11 @@ public class FriendGroupsFeatures {
         this.available = available;
     }
 
-    public FriendGroupInfo[] getMemberOf() {
+    public FriendGroupDetails[] getMemberOf() {
         return memberOf;
     }
 
-    public void setMemberOf(FriendGroupInfo[] memberOf) {
+    public void setMemberOf(FriendGroupDetails[] memberOf) {
         this.memberOf = memberOf;
     }
 

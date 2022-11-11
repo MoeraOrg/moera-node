@@ -1,10 +1,12 @@
 package org.moera.node.rest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -15,6 +17,7 @@ import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.FriendRepository;
+import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.FriendCachePart;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -27,6 +30,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,10 +52,21 @@ public class FriendController {
     @Inject
     private FriendRepository friendRepository;
 
+    @Inject
+    private FriendCache friendCache;
+
     @GetMapping
     @Transactional
     public List<FriendInfo> getAll(@RequestParam(required = false, name = "group") UUID groupId) {
         log.info("GET /people/friends (group = {})", LogUtil.format(groupId));
+
+        if (groupId != null) {
+            FriendGroup group = friendCache.getNodeGroup(groupId)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
+            if (!requestContext.isAdmin() && !group.isVisible()) {
+                throw new ObjectNotFoundFailure("friend-group.not-found");
+            }
+        }
 
         List<Friend> friends = groupId == null
                 ? friendRepository.findAllByNodeId(requestContext.nodeId())
@@ -73,12 +88,29 @@ public class FriendController {
                 friendInfos.add(info);
                 prevId = friend.getId();
             }
-            if (groups != null && (requestContext.isAdmin() || friend.getFriendGroup().isVisible())) {
+            boolean visible = requestContext.isAdmin() || requestContext.isClient(friend.getNodeName())
+                    || friend.getFriendGroup().isVisible();
+            if (groups != null && visible) {
                 groups.add(new FriendGroupDetails(friend));
             }
         }
 
         return friendInfos;
+    }
+
+    @GetMapping("/{name}")
+    @Transactional
+    public FriendInfo get(@PathVariable("name") String nodeName) {
+        log.info("GET /people/friends/{name} (name = {})", LogUtil.format(nodeName));
+
+        boolean privileged = requestContext.isAdmin() || requestContext.isClient(nodeName);
+        Map<String, Boolean> visible = Arrays.stream(friendCache.getNodeGroups())
+                .collect(Collectors.toMap(fg -> fg.getId().toString(), FriendGroup::isVisible));
+        List<FriendGroupDetails> groups = Arrays.stream(friendCache.getClientGroups(nodeName))
+                .filter(fg -> visible.get(fg.getId()) || privileged)
+                .collect(Collectors.toList());
+
+        return new FriendInfo(nodeName, groups);
     }
 
     @PutMapping
