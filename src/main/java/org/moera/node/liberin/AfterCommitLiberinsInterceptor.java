@@ -31,6 +31,7 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
         if (ex == null) {
+            requestContext.getFriendCacheInvalidations().forEach(friendCache::invalidate);
             boolean noClientId = handler instanceof HandlerMethod
                     && ((HandlerMethod) handler).hasMethodAnnotation(NoClientId.class);
             String clientId = noClientId ? null : requestContext.getClientId();
@@ -43,7 +44,6 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
             if (requestContext.isSubscriptionsUpdated()) {
                 subscriptionManager.rescan();
             }
-            requestContext.getFriendCacheInvalidations().forEach(friendCache::invalidate);
         }
     }
 
