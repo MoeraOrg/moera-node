@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.Friend;
@@ -15,7 +16,7 @@ public class FriendGroupsFeatures {
     public static FriendGroupsFeatures forAdmin(FriendGroup[] nodeGroups) {
         FriendGroupsFeatures features = new FriendGroupsFeatures();
         features.setAvailable(Arrays.stream(nodeGroups)
-                .map(fg -> new FriendGroupInfo(fg, true))
+                .map(FriendGroupInfo::new)
                 .toArray(FriendGroupInfo[]::new));
         return features;
     }
@@ -23,13 +24,30 @@ public class FriendGroupsFeatures {
     public static FriendGroupsFeatures forRegular(FriendGroup[] nodeGroups, Friend[] clientGroups) {
         FriendGroupsFeatures features = new FriendGroupsFeatures();
         features.setAvailable(Arrays.stream(nodeGroups)
-                .filter(FriendGroup::isVisible)
-                .map(fg -> new FriendGroupInfo(fg, false))
+                .filter(fg -> isFriendGroupVisible(fg, clientGroups))
+                .map(FriendGroupInfo::new)
                 .toArray(FriendGroupInfo[]::new));
         features.setMemberOf(
-                Arrays.stream(clientGroups).map(FriendGroupDetails::new).toArray(FriendGroupDetails[]::new));
+                Arrays.stream(clientGroups)
+                        .map(fr -> new FriendGroupDetails(fr, false))
+                        .toArray(FriendGroupDetails[]::new)
+        );
         return features;
 
+    }
+
+    private static boolean isFriendGroupVisible(FriendGroup friendGroup, Friend[] clientGroups) {
+        return friendGroup.getViewPrincipal().isPublic()
+                || friendGroup.getViewPrincipal().isPrivate() && isMemberOf(friendGroup.getId(), clientGroups);
+    }
+
+    private static boolean isMemberOf(UUID friendGroupId, Friend[] clientGroups) {
+        for (Friend clientGroup : clientGroups) {
+            if (clientGroup.getFriendGroup().getId().equals(friendGroupId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public FriendGroupInfo[] getAvailable() {

@@ -8,6 +8,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
 import org.moera.node.data.FriendGroup;
@@ -176,7 +177,7 @@ public class Domains {
             friendGroup.setId(UUID.randomUUID());
             friendGroup.setNodeId(nodeId);
             friendGroup.setTitle(FriendGroup.FRIENDS);
-            friendGroup.setVisible(true);
+            friendGroup.setViewPrincipal(Principal.PUBLIC);
             friendGroupRepository.save(friendGroup);
         }
     }

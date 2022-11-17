@@ -72,8 +72,8 @@ public class FriendController {
         if (groupId != null) {
             FriendGroup group = friendCache.getNodeGroup(groupId)
                     .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
-            if (!requestContext.isAdmin() && !group.isVisible()) {
-                throw new ObjectNotFoundFailure("friend-group.not-found");
+            if (!requestContext.isAdmin() && !group.getViewPrincipal().isPublic()) {
+                throw new AuthenticationException();
             }
         }
 
@@ -100,9 +100,9 @@ public class FriendController {
             boolean visible = requestContext.isPrincipal(friend.getViewE())
                     && (requestContext.isAdmin()
                         || requestContext.isClient(friend.getNodeName())
-                        || friend.getFriendGroup().isVisible());
+                        || friend.getFriendGroup().getViewPrincipal().isPublic());
             if (groups != null && visible) {
-                groups.add(new FriendGroupDetails(friend));
+                groups.add(new FriendGroupDetails(friend, requestContext.isAdmin()));
             }
         }
 
@@ -120,12 +120,12 @@ public class FriendController {
         }
 
         boolean privileged = requestContext.isAdmin() || requestContext.isClient(nodeName);
-        Map<UUID, Boolean> visible = Arrays.stream(friendCache.getNodeGroups())
-                .collect(Collectors.toMap(FriendGroup::getId, FriendGroup::isVisible));
+        Map<UUID, Boolean> isPublic = Arrays.stream(friendCache.getNodeGroups())
+                .collect(Collectors.toMap(FriendGroup::getId, fg -> fg.getViewPrincipal().isPublic()));
         List<FriendGroupDetails> groups = Arrays.stream(friendCache.getClientGroups(nodeName))
-                .filter(fr -> visible.get(fr.getFriendGroup().getId()) || privileged)
+                .filter(fr -> isPublic.get(fr.getFriendGroup().getId()) || privileged)
                 .filter(fr -> requestContext.isPrincipal(fr.getViewE()))
-                .map(FriendGroupDetails::new)
+                .map(fr -> new FriendGroupDetails(fr, requestContext.isAdmin()))
                 .collect(Collectors.toList());
 
         return new FriendInfo(nodeName, groups);
@@ -185,7 +185,7 @@ public class FriendController {
                     friendInfo.setGroups(new ArrayList<>());
                     result.add(friendInfo);
                 }
-                friendInfo.getGroups().add(new FriendGroupDetails(friend));
+                friendInfo.getGroups().add(new FriendGroupDetails(friend, true));
             }
 
             requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS, friendDescription.getNodeName());

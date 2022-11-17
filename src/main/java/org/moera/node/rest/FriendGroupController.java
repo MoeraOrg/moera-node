@@ -10,6 +10,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.friends.FriendCache;
@@ -25,8 +26,10 @@ import org.moera.node.model.FriendGroupDescription;
 import org.moera.node.model.FriendGroupInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
+import org.moera.node.operations.OperationsValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,8 +60,8 @@ public class FriendGroupController {
         log.info("GET /people/friends/groups");
 
         return Arrays.stream(friendCache.getNodeGroups())
-                .filter(fg -> requestContext.isAdmin() || fg.isVisible())
-                .map(fg -> new FriendGroupInfo(fg, requestContext.isAdmin()))
+                .filter(this::isFriendGroupVisible)
+                .map(FriendGroupInfo::new)
                 .collect(Collectors.toList());
     }
 
@@ -69,19 +72,30 @@ public class FriendGroupController {
 
         FriendGroup friendGroup = friendCache.getNodeGroup(id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
-        if (!requestContext.isAdmin() && !friendGroup.isVisible()) {
-            throw new ObjectNotFoundFailure("friend-group.not-found");
+        if (!isFriendGroupVisible(friendGroup)) {
+            throw new AuthenticationException();
         }
 
-        return new FriendGroupInfo(friendGroup, requestContext.isAdmin());
+        return new FriendGroupInfo(friendGroup);
+    }
+
+    private boolean isFriendGroupVisible(FriendGroup friendGroup) {
+        return requestContext.isAdmin()
+                || friendGroup.getViewPrincipal().isPublic()
+                || friendGroup.getViewPrincipal().isPrivate() && requestContext.isMemberOf(friendGroup.getId());
     }
 
     @PostMapping
     @Admin
     @Transactional
     public FriendGroupInfo post(@Valid @RequestBody FriendGroupDescription friendGroupDescription) {
-        log.info("POST /people/friends/groups (title = {}, visible = {})",
-                LogUtil.format(friendGroupDescription.getTitle()), LogUtil.format(friendGroupDescription.getVisible()));
+        log.info("POST /people/friends/groups (title = {}, viewPrincipal = {})",
+                LogUtil.format(friendGroupDescription.getTitle()),
+                LogUtil.format(ObjectUtils.nullSafeToString(friendGroupDescription.getPrincipal("view"))));
+
+        OperationsValidator.validateOperations(friendGroupDescription::getPrincipal,
+                OperationsValidator.FRIEND_GROUP_OPERATIONS, false,
+                "friendGroupDescription.operations.wrong-principal");
 
         FriendGroup friendGroup = new FriendGroup();
         friendGroup.setId(UUID.randomUUID());
@@ -93,7 +107,7 @@ public class FriendGroupController {
         requestContext.send(new FriendGroupAddedLiberin(friendGroup));
         requestContext.send(new FeaturesUpdatedLiberin());
 
-        return new FriendGroupInfo(friendGroup, true);
+        return new FriendGroupInfo(friendGroup);
     }
 
     @PutMapping("/{id}")
@@ -101,9 +115,13 @@ public class FriendGroupController {
     @Transactional
     public FriendGroupInfo put(@PathVariable UUID id,
                                @Valid @RequestBody FriendGroupDescription friendGroupDescription) {
-        log.info("PUT /people/friends/groups/{id} (id = {}, title = {}, visible = {})",
+        log.info("PUT /people/friends/groups/{id} (id = {}, title = {}, viewPrincipal = {})",
                 LogUtil.format(id), LogUtil.format(friendGroupDescription.getTitle()),
-                LogUtil.format(friendGroupDescription.getVisible()));
+                LogUtil.format(ObjectUtils.nullSafeToString(friendGroupDescription.getPrincipal("view"))));
+
+        OperationsValidator.validateOperations(friendGroupDescription::getPrincipal,
+                OperationsValidator.FRIEND_GROUP_OPERATIONS, false,
+                "friendGroupDescription.operations.wrong-principal");
 
         FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
@@ -114,7 +132,7 @@ public class FriendGroupController {
         requestContext.send(new FriendGroupUpdatedLiberin(friendGroup));
         requestContext.send(new FeaturesUpdatedLiberin());
 
-        return new FriendGroupInfo(friendGroup, true);
+        return new FriendGroupInfo(friendGroup);
     }
 
     @DeleteMapping("/{id}")

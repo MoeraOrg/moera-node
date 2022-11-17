@@ -35,6 +35,8 @@ public interface RequestContext extends AccessChecker {
 
     void setFriendGroups(String[] friendGroups);
 
+    boolean isMemberOf(UUID friendGroupId);
+
     long getAuthCategory();
 
     void setAuthCategory(long authCategory);

@@ -25,7 +25,7 @@ public class FriendGroupUpdatedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("friendGroup", new FriendGroupInfo(friendGroup, true));
+        model.put("friendGroup", new FriendGroupInfo(friendGroup));
     }
 
 }

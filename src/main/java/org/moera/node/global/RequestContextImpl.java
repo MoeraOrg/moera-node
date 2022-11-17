@@ -108,6 +108,17 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public boolean isMemberOf(UUID friendGroupId) {
+        String targetId = friendGroupId.toString();
+        for (String id : friendGroups) {
+            if (id.equals(targetId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public long getAuthCategory() {
         return authCategory;
     }

@@ -8,6 +8,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.util.Util;
 
 @Entity
@@ -27,10 +28,9 @@ public class FriendGroup {
     private String title;
 
     @NotNull
-    private boolean visible;
-
-    @NotNull
     private Timestamp createdAt = Util.now();
+
+    private Principal viewPrincipal = Principal.PUBLIC;
 
     public UUID getId() {
         return id;
@@ -56,20 +56,20 @@ public class FriendGroup {
         this.title = title;
     }
 
-    public boolean isVisible() {
-        return visible;
-    }
-
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-    }
-
     public Timestamp getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
+    }
+
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
     }
 
 }
