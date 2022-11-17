@@ -108,6 +108,11 @@ public class OperationsValidator {
                     PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)
     );
 
+    public static final List<Pair<String, Integer>> FRIEND_OPERATIONS = List.of(
+            Pair.of("view",
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)
+    );
+
     public static void validateOperations(Function<String, Principal> getPrincipal,
                                           List<Pair<String, Integer>> description,
                                           boolean includeUnset,

@@ -9,6 +9,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @Entity
@@ -27,6 +29,8 @@ public class Friend {
 
     @NotNull
     private Timestamp createdAt = Util.now();
+
+    private Principal viewPrincipal = Principal.PUBLIC;
 
     public UUID getId() {
         return id;
@@ -58,6 +62,30 @@ public class Friend {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    private Principal toAbsolute(Principal principal) {
+        return principal.withOwner(getNodeName());
+    }
+
+    public static Principal getViewAllPrincipal(Options options) {
+        return options.getPrincipal("friends.view");
+    }
+
+    public static Principal getViewAllE(Options options) {
+        return getViewAllPrincipal(options);
+    }
+
+    public Principal getViewE() {
+        return toAbsolute(getViewPrincipal());
+    }
+
+    public Principal getViewPrincipal() {
+        return viewPrincipal;
+    }
+
+    public void setViewPrincipal(Principal viewPrincipal) {
+        this.viewPrincipal = viewPrincipal;
     }
 
 }

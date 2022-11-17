@@ -122,7 +122,7 @@
 - name: subscribers.view
   type: Principal
   defaultValue: public
-  title: "List of subscribers visible to"
+  title: "List of subscribers is visible to"
   modifiers:
     principals:
       - public
@@ -132,7 +132,7 @@
 - name: subscribers.view-total
   type: Principal
   defaultValue: public
-  title: "Number of subscribers visible to"
+  title: "Number of subscribers is visible to"
   modifiers:
     principals:
       - public
@@ -142,7 +142,7 @@
 - name: subscriptions.view
   type: Principal
   defaultValue: public
-  title: "List of subscriptions visible to"
+  title: "List of subscriptions is visible to"
   modifiers:
     principals:
       - public
@@ -152,7 +152,7 @@
 - name: subscriptions.view-total
   type: Principal
   defaultValue: public
-  title: "Number of subscriptions visible to"
+  title: "Number of subscriptions is visible to"
   modifiers:
     principals:
       - public
@@ -486,3 +486,13 @@
     format: size
     min: 1048576
     max: 104857600
+
+- name: friends.view
+  type: Principal
+  defaultValue: public
+  title: List of friends is visible to
+  modifiers:
+    principals:
+      - public
+      - signed
+      - admin

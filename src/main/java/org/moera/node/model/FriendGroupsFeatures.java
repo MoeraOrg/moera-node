@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,13 +20,14 @@ public class FriendGroupsFeatures {
         return features;
     }
 
-    public static FriendGroupsFeatures forRegular(FriendGroup[] nodeGroups, FriendGroupDetails[] clientGroups) {
+    public static FriendGroupsFeatures forRegular(FriendGroup[] nodeGroups, Friend[] clientGroups) {
         FriendGroupsFeatures features = new FriendGroupsFeatures();
         features.setAvailable(Arrays.stream(nodeGroups)
                 .filter(FriendGroup::isVisible)
                 .map(fg -> new FriendGroupInfo(fg, false))
                 .toArray(FriendGroupInfo[]::new));
-        features.setMemberOf(clientGroups);
+        features.setMemberOf(
+                Arrays.stream(clientGroups).map(FriendGroupDetails::new).toArray(FriendGroupDetails[]::new));
         return features;
 
     }

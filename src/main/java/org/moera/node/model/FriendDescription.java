@@ -1,7 +1,6 @@
 package org.moera.node.model;
 
 import java.util.List;
-import java.util.UUID;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -11,7 +10,7 @@ public class FriendDescription {
     @Size(max = 63)
     private String nodeName;
 
-    private List<UUID> groups;
+    private List<FriendGroupAssignment> groups;
 
     public String getNodeName() {
         return nodeName;
@@ -21,11 +20,11 @@ public class FriendDescription {
         this.nodeName = nodeName;
     }
 
-    public List<UUID> getGroups() {
+    public List<FriendGroupAssignment> getGroups() {
         return groups;
     }
 
-    public void setGroups(List<UUID> groups) {
+    public void setGroups(List<FriendGroupAssignment> groups) {
         this.groups = groups;
     }
 

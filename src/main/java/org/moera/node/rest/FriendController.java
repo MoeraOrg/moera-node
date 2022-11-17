@@ -13,6 +13,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
@@ -25,11 +26,14 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
 import org.moera.node.model.FriendDescription;
+import org.moera.node.model.FriendGroupAssignment;
 import org.moera.node.model.FriendGroupDetails;
 import org.moera.node.model.FriendInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.operations.OperationsValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -61,6 +65,10 @@ public class FriendController {
     public List<FriendInfo> getAll(@RequestParam(required = false, name = "group") UUID groupId) {
         log.info("GET /people/friends (group = {})", LogUtil.format(groupId));
 
+        if (!requestContext.isPrincipal(Friend.getViewAllE(requestContext.getOptions()))) {
+            throw new AuthenticationException();
+        }
+
         if (groupId != null) {
             FriendGroup group = friendCache.getNodeGroup(groupId)
                     .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
@@ -89,14 +97,16 @@ public class FriendController {
                 friendInfos.add(info);
                 prevId = friend.getId();
             }
-            boolean visible = requestContext.isAdmin() || requestContext.isClient(friend.getNodeName())
-                    || friend.getFriendGroup().isVisible();
+            boolean visible = requestContext.isPrincipal(friend.getViewE())
+                    && (requestContext.isAdmin()
+                        || requestContext.isClient(friend.getNodeName())
+                        || friend.getFriendGroup().isVisible());
             if (groups != null && visible) {
                 groups.add(new FriendGroupDetails(friend));
             }
         }
 
-        return friendInfos;
+        return friendInfos.stream().filter(fi -> !fi.getGroups().isEmpty()).collect(Collectors.toList());
     }
 
     @GetMapping("/{name}")
@@ -104,11 +114,18 @@ public class FriendController {
     public FriendInfo get(@PathVariable("name") String nodeName) {
         log.info("GET /people/friends/{name} (name = {})", LogUtil.format(nodeName));
 
+        if (!requestContext.isPrincipal(Friend.getViewAllE(requestContext.getOptions()))
+                && !requestContext.isClient(nodeName)) {
+            throw new AuthenticationException();
+        }
+
         boolean privileged = requestContext.isAdmin() || requestContext.isClient(nodeName);
-        Map<String, Boolean> visible = Arrays.stream(friendCache.getNodeGroups())
-                .collect(Collectors.toMap(fg -> fg.getId().toString(), FriendGroup::isVisible));
+        Map<UUID, Boolean> visible = Arrays.stream(friendCache.getNodeGroups())
+                .collect(Collectors.toMap(FriendGroup::getId, FriendGroup::isVisible));
         List<FriendGroupDetails> groups = Arrays.stream(friendCache.getClientGroups(nodeName))
-                .filter(fg -> visible.get(fg.getId()) || privileged)
+                .filter(fr -> visible.get(fr.getFriendGroup().getId()) || privileged)
+                .filter(fr -> requestContext.isPrincipal(fr.getViewE()))
+                .map(FriendGroupDetails::new)
                 .collect(Collectors.toList());
 
         return new FriendInfo(nodeName, groups);
@@ -124,16 +141,22 @@ public class FriendController {
 
         Map<UUID, FriendGroup> groups = new HashMap<>();
         for (FriendDescription friendDescription : friendDescriptions) {
-            Map<UUID, Friend> targetGroups = new HashMap<>();
+            Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
             if (friendDescription.getGroups() != null) {
-                friendDescription.getGroups().forEach(id -> targetGroups.put(id, new Friend()));
+                for (var ga : friendDescription.getGroups()) {
+                    OperationsValidator.validateOperations(ga::getPrincipal,
+                            OperationsValidator.FRIEND_OPERATIONS, false,
+                            "friendDescription.groups.wrong-principal");
+                    targetGroups.put(ga.getId(), Pair.of(ga, new Friend()));
+                }
             }
 
             List<Friend> friends = new ArrayList<>(friendRepository.findAllByNodeIdAndName(
                     requestContext.nodeId(), friendDescription.getNodeName()));
             for (Friend friend : friends) {
-                if (targetGroups.containsKey(friend.getFriendGroup().getId())) {
-                    targetGroups.put(friend.getFriendGroup().getId(), friend);
+                var target = targetGroups.get(friend.getFriendGroup().getId());
+                if (target != null) {
+                    targetGroups.put(friend.getFriendGroup().getId(), Pair.of(target.getFirst(), friend));
                 } else {
                     friendRepository.delete(friend);
                 }
@@ -141,9 +164,8 @@ public class FriendController {
 
             FriendInfo friendInfo = null;
             for (var target : targetGroups.entrySet()) {
-                Friend friend = target.getValue();
+                Friend friend = target.getValue().getSecond();
                 if (friend.getId() == null) {
-                    friend = new Friend();
                     friend.setId(UUID.randomUUID());
                     friend.setNodeName(friendDescription.getNodeName());
                     FriendGroup group = groups.computeIfAbsent(
@@ -152,7 +174,10 @@ public class FriendController {
                                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"))
                     );
                     friend.setFriendGroup(group);
+                    target.getValue().getFirst().toFriend(friend);
                     friend = friendRepository.save(friend);
+                } else {
+                    target.getValue().getFirst().toFriend(friend);
                 }
                 if (friendInfo == null) {
                     friendInfo = new FriendInfo();

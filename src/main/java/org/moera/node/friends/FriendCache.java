@@ -13,11 +13,11 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.FriendRepository;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.model.FriendGroupDetails;
 import org.moera.node.util.ParametrizedLock;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -88,7 +88,7 @@ public class FriendCache {
     private final Map<UUID, FriendGroup[]> nodeGroups = new ConcurrentHashMap<>();
     private final ParametrizedLock<UUID> nodeGroupsLock = new ParametrizedLock<>();
 
-    private final Map<NodeClient, FriendGroupDetails[]> clientGroups = new ConcurrentHashMap<>();
+    private final Map<NodeClient, Friend[]> clientGroups = new ConcurrentHashMap<>();
     private final ParametrizedLock<NodeClient> clientGroupsLock = new ParametrizedLock<>();
     private final PriorityBlockingQueue<NodeClientUsage> clientUsageQueue = new PriorityBlockingQueue<>(
             CLIENT_GROUPS_CACHE_SIZE_MIN, Comparator.comparing(u -> u.usedAt));
@@ -123,20 +123,19 @@ public class FriendCache {
                 .findFirst();
     }
 
-    public FriendGroupDetails[] getClientGroups(String clientName) {
+    public Friend[] getClientGroups(String clientName) {
         if (ObjectUtils.isEmpty(clientName)) {
             return null;
         }
 
         NodeClient nodeClient = new NodeClient(universalContext.nodeId(), clientName);
-        FriendGroupDetails[] groups = clientGroups.get(nodeClient);
+        Friend[] groups = clientGroups.get(nodeClient);
         if (groups == null) {
             clientGroupsLock.lock(nodeClient);
             try {
                 groups = clientGroups.computeIfAbsent(nodeClient,
-                        nid -> friendRepository.findAllByNodeIdAndName(universalContext.nodeId(), clientName).stream()
-                                .map(FriendGroupDetails::new)
-                                .toArray(FriendGroupDetails[]::new));
+                        nid -> friendRepository.findAllByNodeIdAndName(universalContext.nodeId(), clientName)
+                                .toArray(Friend[]::new));
             } finally {
                 clientGroupsLock.unlock(nodeClient);
             }
@@ -158,10 +157,11 @@ public class FriendCache {
     }
 
     public String[] getClientGroupIds(String clientName) {
-        FriendGroupDetails[] groups = getClientGroups(clientName);
+        Friend[] groups = getClientGroups(clientName);
         return groups != null
                 ? Arrays.stream(groups)
-                    .map(FriendGroupDetails::getId)
+                    .map(Friend::getId)
+                    .map(UUID::toString)
                     .toArray(String[]::new)
                 : null;
     }

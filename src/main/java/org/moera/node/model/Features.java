@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.option.Options;
 import org.springframework.util.ObjectUtils;
@@ -15,7 +16,7 @@ public class Features {
     private int feedWidth;
     private FriendGroupsFeatures friendGroups;
 
-    public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, FriendGroupDetails[] clientGroups,
+    public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, Friend[] clientGroups,
                     boolean admin) {
         posting = new PostingFeatures(options);
         if (!ObjectUtils.isEmpty(plugins)) {
