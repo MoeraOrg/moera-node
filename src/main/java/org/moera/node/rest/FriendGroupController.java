@@ -11,6 +11,7 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.friends.FriendCache;
@@ -125,11 +126,12 @@ public class FriendGroupController {
 
         FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
+        Principal latestViewPrincipal = friendGroup.getViewPrincipal();
         friendGroupDescription.toFriendGroup(friendGroup);
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
-        requestContext.send(new FriendGroupUpdatedLiberin(friendGroup));
+        requestContext.send(new FriendGroupUpdatedLiberin(friendGroup, latestViewPrincipal));
         requestContext.send(new FeaturesUpdatedLiberin());
 
         return new FriendGroupInfo(friendGroup);
@@ -143,11 +145,12 @@ public class FriendGroupController {
 
         FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
+        Principal latestViewPrincipal = friendGroup.getViewPrincipal();
         friendGroupRepository.delete(friendGroup);
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
-        requestContext.send(new FriendGroupDeletedLiberin(id));
+        requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal));
         requestContext.send(new FeaturesUpdatedLiberin());
 
         return Result.OK;
