@@ -189,7 +189,10 @@ public class FriendController {
             }
 
             requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS, friendDescription.getNodeName());
-            requestContext.send(new FriendshipUpdatedLiberin(friendDescription.getNodeName()));
+            requestContext.send(new FriendshipUpdatedLiberin(
+                    friendDescription.getNodeName(),
+                    friendInfo != null ? friendInfo.getGroups() : null
+            ));
             requestContext.send(new FeaturesUpdatedLiberin(friendDescription.getNodeName()));
         }
 
