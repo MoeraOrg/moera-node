@@ -13,7 +13,7 @@ public class FriendshipUpdatedEvent extends Event {
     private List<FriendGroupDetails> friendGroups;
 
     public FriendshipUpdatedEvent(String nodeName, List<FriendGroupDetails> friendGroups) {
-        super(EventType.FRIENDSHIP_UPDATED, Principal.ADMIN);
+        super(EventType.FRIENDSHIP_UPDATED, Principal.ADMIN.a().or(Principal.ofNode(nodeName)));
         this.nodeName = nodeName;
         this.friendGroups = friendGroups;
     }
