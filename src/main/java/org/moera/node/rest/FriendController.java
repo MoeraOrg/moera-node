@@ -23,7 +23,6 @@ import org.moera.node.friends.FriendCachePart;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
 import org.moera.node.model.FriendDescription;
 import org.moera.node.model.FriendGroupAssignment;
@@ -193,7 +192,6 @@ public class FriendController {
                     friendDescription.getNodeName(),
                     friendInfo != null ? friendInfo.getGroups() : null
             ));
-            requestContext.send(new FeaturesUpdatedLiberin(friendDescription.getNodeName()));
         }
 
         return result;

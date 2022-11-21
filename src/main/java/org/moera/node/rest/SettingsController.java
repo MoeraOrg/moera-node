@@ -19,7 +19,6 @@ import org.moera.node.data.OptionDefaultRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.liberin.model.SettingsChangedLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -199,9 +198,6 @@ public class SettingsController {
         );
 
         requestContext.send(new SettingsChangedLiberin(nodeChanged.get(), clientChanged.get()));
-        if (nodeChanged.get()) {
-            requestContext.send(new FeaturesUpdatedLiberin());
-        }
 
         return Result.OK;
     }

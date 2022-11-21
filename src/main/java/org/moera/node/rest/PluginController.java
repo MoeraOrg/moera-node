@@ -26,7 +26,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.ProviderApi;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.model.FeaturesUpdatedLiberin;
 import org.moera.node.liberin.model.PluginAddedLiberin;
 import org.moera.node.liberin.model.PluginDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
@@ -305,13 +304,11 @@ public class PluginController {
     private void pluginsUpdated(PluginDescriptor descriptor, boolean deleted) {
         if (descriptor.getNodeId() != null) {
             requestContext.send(!deleted ? new PluginAddedLiberin(descriptor) : new PluginDeletedLiberin(descriptor));
-            requestContext.send(new FeaturesUpdatedLiberin());
         } else {
             domains.getAllDomainNames().forEach(domainName -> {
                 requestContext.send(!deleted
                         ? new PluginAddedLiberin(descriptor)
                         : new PluginDeletedLiberin(descriptor));
-                requestContext.send(new FeaturesUpdatedLiberin());
             });
         }
     }
