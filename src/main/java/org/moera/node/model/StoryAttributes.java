@@ -10,6 +10,7 @@ public class StoryAttributes {
     private Boolean pinned;
     private Boolean viewed;
     private Boolean read;
+    private Boolean satisfied;
 
     public String getFeedName() {
         return feedName;
@@ -51,6 +52,14 @@ public class StoryAttributes {
         this.read = read;
     }
 
+    public Boolean getSatisfied() {
+        return satisfied;
+    }
+
+    public void setSatisfied(Boolean satisfied) {
+        this.satisfied = satisfied;
+    }
+
     public void toStory(Story story) {
         if (feedName != null) {
             story.setFeedName(feedName);
@@ -66,6 +75,9 @@ public class StoryAttributes {
         }
         if (read != null) {
             story.setRead(read);
+        }
+        if (satisfied != null) {
+            story.setSatisfied(satisfied);
         }
     }
 

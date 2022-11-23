@@ -22,6 +22,7 @@ public class StoryInfo {
     private Long moment;
     private Boolean viewed;
     private Boolean read;
+    private Boolean satisfied;
     private String summaryNodeName;
     private String summaryFullName;
     private AvatarImage summaryAvatar;
@@ -51,6 +52,7 @@ public class StoryInfo {
         if (isAdmin) {
             viewed = story.isViewed();
             read = story.isRead();
+            satisfied = story.isSatisfied();
             trackingId = story.getTrackingId().toString();
         }
         if (story.getSummary().startsWith("{")) {
@@ -312,6 +314,14 @@ public class StoryInfo {
 
     public void setRead(Boolean read) {
         this.read = read;
+    }
+
+    public Boolean getSatisfied() {
+        return satisfied;
+    }
+
+    public void setSatisfied(Boolean satisfied) {
+        this.satisfied = satisfied;
     }
 
     public String getSummaryNodeName() {

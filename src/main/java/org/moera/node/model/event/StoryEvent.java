@@ -27,6 +27,7 @@ public class StoryEvent extends Event {
     private String postingId;
     private Boolean viewed;
     private Boolean read;
+    private Boolean satisfied;
     private String summaryNodeName;
     private String summaryFullName;
     private AvatarImage summaryAvatar;
@@ -56,6 +57,7 @@ public class StoryEvent extends Event {
         if (isAdmin) {
             viewed = story.isViewed();
             read = story.isRead();
+            satisfied = story.isSatisfied();
             trackingId = story.getTrackingId().toString();
         }
         remoteNodeName = story.getRemoteNodeName();
@@ -145,6 +147,14 @@ public class StoryEvent extends Event {
 
     public void setRead(Boolean read) {
         this.read = read;
+    }
+
+    public Boolean getSatisfied() {
+        return satisfied;
+    }
+
+    public void setSatisfied(Boolean satisfied) {
+        this.satisfied = satisfied;
     }
 
     public String getSummaryNodeName() {
@@ -245,6 +255,7 @@ public class StoryEvent extends Event {
         parameters.add(Pair.of("postingId", LogUtil.format(postingId)));
         parameters.add(Pair.of("viewed", LogUtil.format(viewed)));
         parameters.add(Pair.of("read", LogUtil.format(read)));
+        parameters.add(Pair.of("satisfied", LogUtil.format(satisfied)));
         parameters.add(Pair.of("summary", LogUtil.format(summary)));
         parameters.add(Pair.of("trackingId", LogUtil.format(trackingId)));
         parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));

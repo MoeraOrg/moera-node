@@ -65,6 +65,9 @@ public class Story {
     private boolean read;
 
     @NotNull
+    private boolean satisfied;
+
+    @NotNull
     private String summary = "";
 
     @NotNull
@@ -232,6 +235,14 @@ public class Story {
 
     public void setRead(boolean read) {
         this.read = read;
+    }
+
+    public boolean isSatisfied() {
+        return satisfied;
+    }
+
+    public void setSatisfied(boolean satisfied) {
+        this.satisfied = satisfied;
     }
 
     public String getSummary() {
