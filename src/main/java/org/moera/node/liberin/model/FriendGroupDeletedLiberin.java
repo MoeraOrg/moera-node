@@ -10,10 +10,12 @@ public class FriendGroupDeletedLiberin extends Liberin {
 
     private UUID friendGroupId;
     private Principal latestViewPrincipal;
+    private String friendName; // null for admin
 
-    public FriendGroupDeletedLiberin(UUID friendGroupId, Principal latestViewPrincipal) {
+    public FriendGroupDeletedLiberin(UUID friendGroupId, Principal latestViewPrincipal, String friendName) {
         this.friendGroupId = friendGroupId;
         this.latestViewPrincipal = latestViewPrincipal;
+        this.friendName = friendName;
     }
 
     public UUID getFriendGroupId() {
@@ -32,11 +34,20 @@ public class FriendGroupDeletedLiberin extends Liberin {
         this.latestViewPrincipal = latestViewPrincipal;
     }
 
+    public String getFriendName() {
+        return friendName;
+    }
+
+    public void setFriendName(String friendName) {
+        this.friendName = friendName;
+    }
+
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("friendGroupId", friendGroupId);
         model.put("latestViewPrincipal", latestViewPrincipal);
+        model.put("friendName", friendName);
     }
 
 }

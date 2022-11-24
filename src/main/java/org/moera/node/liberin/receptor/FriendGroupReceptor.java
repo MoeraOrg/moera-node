@@ -36,8 +36,12 @@ public class FriendGroupReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void deleted(FriendGroupDeletedLiberin liberin) {
-        Principal latestFilter = visibilityFilter(liberin.getFriendGroupId(), liberin.getLatestViewPrincipal());
-        send(liberin, new FriendGroupDeletedEvent(liberin.getFriendGroupId().toString(), latestFilter));
+        if (liberin.getFriendName() == null) {
+            send(liberin, new FriendGroupDeletedEvent(liberin.getFriendGroupId().toString(), Principal.ADMIN));
+        } else if (!liberin.getLatestViewPrincipal().isAdmin()) {
+            send(liberin, new FriendGroupDeletedEvent(liberin.getFriendGroupId().toString(),
+                    Principal.ofNode(liberin.getFriendName())));
+        }
     }
 
     private Principal visibilityFilter(FriendGroup friendGroup) {

@@ -12,8 +12,10 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
+import org.moera.node.data.FriendRepository;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.FriendCachePart;
 import org.moera.node.global.ApiController;
@@ -50,6 +52,9 @@ public class FriendGroupController {
 
     @Inject
     private FriendGroupRepository friendGroupRepository;
+
+    @Inject
+    private FriendRepository friendRepository;
 
     @Inject
     private FriendCache friendCache;
@@ -143,11 +148,16 @@ public class FriendGroupController {
         FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         Principal latestViewPrincipal = friendGroup.getViewPrincipal();
+        List<Friend> members = friendRepository.findAllByNodeIdAndGroup(requestContext.nodeId(), id);
         friendGroupRepository.delete(friendGroup);
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
-        requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal));
+        // We send a liberin for admin and for every member of the group, because the group will not exist
+        // when the liberins will be processed
+        requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal, null));
+        members.forEach(member ->
+                requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal, member.getNodeName())));
 
         return Result.OK;
     }
