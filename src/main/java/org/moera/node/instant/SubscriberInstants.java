@@ -28,13 +28,7 @@ public class SubscriberInstants extends InstantsCreator {
             return;
         }
 
-        Story story = findDeletedStory(subscriber.getRemoteNodeName());
-        if (story != null && !story.isRead()) {
-            storyRepository.delete(story);
-            storyDeleted(story);
-        }
-
-        story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_ADDED);
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_ADDED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
         story.setRemoteFullName(subscriber.getRemoteFullName());
@@ -59,13 +53,7 @@ public class SubscriberInstants extends InstantsCreator {
             return;
         }
 
-        Story story = findAddedStory(subscriber.getRemoteNodeName());
-        if (story != null && !story.isRead()) {
-            storyRepository.delete(story);
-            storyDeleted(story);
-        }
-
-        story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_DELETED);
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_DELETED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
         story.setRemoteFullName(subscriber.getRemoteFullName());
@@ -75,16 +63,6 @@ public class SubscriberInstants extends InstantsCreator {
         storyOperations.updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
-    }
-
-    private Story findAddedStory(String remoteNodeName) {
-        return storyRepository.findByRemoteNodeName(nodeId(), Feed.INSTANT, StoryType.SUBSCRIBER_ADDED, remoteNodeName)
-                .stream().findFirst().orElse(null);
-    }
-
-    private Story findDeletedStory(String remoteNodeName) {
-        return storyRepository.findByRemoteNodeName(nodeId(), Feed.INSTANT, StoryType.SUBSCRIBER_DELETED, remoteNodeName)
-                .stream().findFirst().orElse(null);
     }
 
 }
