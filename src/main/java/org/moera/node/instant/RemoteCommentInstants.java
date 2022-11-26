@@ -18,7 +18,6 @@ import org.moera.node.data.SubscriptionReason;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.StorySummaryData;
 import org.moera.node.model.StorySummaryEntry;
-import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -29,9 +28,6 @@ public class RemoteCommentInstants extends InstantsCreator {
 
     @Inject
     private StoryRepository storyRepository;
-
-    @Inject
-    private StoryOperations storyOperations;
 
     public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
                       AvatarImage postingOwnerAvatar, String postingId, String postingHeading, String commentOwnerName,
@@ -138,7 +134,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             story.setRead(false);
             story.setViewed(false);
         }
-        storyOperations.updateMoment(story);
+        updateMoment(story);
         storyAddedOrUpdated(story, isNew);
     }
 

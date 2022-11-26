@@ -10,7 +10,6 @@ import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.StorySummaryData;
 import org.moera.node.model.StorySummaryEntry;
-import org.moera.node.operations.StoryOperations;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,9 +17,6 @@ public class MentionCommentInstants extends InstantsCreator {
 
     @Inject
     private StoryRepository storyRepository;
-
-    @Inject
-    private StoryOperations storyOperations;
 
     public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
                       AvatarImage postingAvatar, String postingId, String postingHeading, String commentOwnerName,
@@ -49,7 +45,7 @@ public class MentionCommentInstants extends InstantsCreator {
         story.setRemoteCommentId(commentId);
         story.setSummaryData(buildSummary(
                 story, postingOwnerGender, postingHeading, commentOwnerGender, commentHeading));
-        storyOperations.updateMoment(story);
+        updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
     }

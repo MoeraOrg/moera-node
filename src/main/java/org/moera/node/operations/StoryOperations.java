@@ -52,10 +52,6 @@ public class StoryOperations {
 
     private final MomentFinder momentFinder = new MomentFinder();
 
-    public void updateMoment(Story story) {
-        updateMoment(story, universalContext.nodeId());
-    }
-
     public void updateMoment(Story story, UUID nodeId) {
         story.setMoment(momentFinder.find(
                 moment -> storyRepository.countMoments(nodeId, story.getFeedName(), moment) == 0,

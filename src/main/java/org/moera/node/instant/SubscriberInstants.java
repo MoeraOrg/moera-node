@@ -11,7 +11,6 @@ import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.model.StorySummaryData;
 import org.moera.node.model.StorySummaryNode;
-import org.moera.node.operations.StoryOperations;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,9 +18,6 @@ public class SubscriberInstants extends InstantsCreator {
 
     @Inject
     private StoryRepository storyRepository;
-
-    @Inject
-    private StoryOperations storyOperations;
 
     public void added(Subscriber subscriber) {
         if (subscriber.getSubscriptionType() != SubscriptionType.FEED) {
@@ -35,7 +31,7 @@ public class SubscriberInstants extends InstantsCreator {
         story.setRemoteAvatarMediaFile(subscriber.getRemoteAvatarMediaFile());
         story.setRemoteAvatarShape(subscriber.getRemoteAvatarShape());
         story.setSummaryData(buildSummary(subscriber));
-        storyOperations.updateMoment(story);
+        updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
     }
@@ -52,7 +48,7 @@ public class SubscriberInstants extends InstantsCreator {
         story.setRemoteAvatarMediaFile(subscriber.getRemoteAvatarMediaFile());
         story.setRemoteAvatarShape(subscriber.getRemoteAvatarShape());
         story.setSummaryData(buildSummary(subscriber));
-        storyOperations.updateMoment(story);
+        updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
     }

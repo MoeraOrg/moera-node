@@ -90,7 +90,7 @@ public class StoryController {
             if (storyAttributes.getFeedName() != null
                     || storyAttributes.getPublishAt() != null
                     || storyAttributes.getPinned() != null) {
-                storyOperations.updateMoment(currentStory);
+                storyOperations.updateMoment(currentStory, requestContext.nodeId());
             }
             return currentStory;
         });

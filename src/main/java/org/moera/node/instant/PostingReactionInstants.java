@@ -21,7 +21,6 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StorySummaryData;
 import org.moera.node.model.StorySummaryEntry;
 import org.moera.node.model.StorySummaryReaction;
-import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -32,9 +31,6 @@ public class PostingReactionInstants extends InstantsCreator {
 
     @Inject
     private StoryRepository storyRepository;
-
-    @Inject
-    private StoryOperations storyOperations;
 
     public void added(Posting posting, String ownerName, String ownerFullName, String ownerGender,
                       AvatarImage ownerAvatar, boolean negative, int emoji) {
@@ -129,7 +125,7 @@ public class PostingReactionInstants extends InstantsCreator {
             story.setRead(false);
             story.setViewed(false);
         }
-        storyOperations.updateMoment(story);
+        updateMoment(story);
         storyAddedOrUpdated(story, isNew);
     }
 
