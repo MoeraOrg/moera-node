@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1)
--- Dumped by pg_dump version 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1)
+-- Dumped from database version 14.5 (Ubuntu 14.5-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.5 (Ubuntu 14.5-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -29,6 +29,37 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
+
+--
+-- Name: update_contact_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_contact_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_subscription_reference(
+                OLD.node_id, 3, OLD.remote_node_name, NULL, NULL, NULL, NULL, NULL
+            );
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, OLD.remote_node_name, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, NULL, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_contact_remote_node() OWNER TO moera;
 
 --
 -- Name: update_entity_media_file_id(); Type: FUNCTION; Schema: public; Owner: moera
@@ -280,6 +311,59 @@ $$;
 ALTER FUNCTION public.update_entry_media_file_owner_usage() OWNER TO moera;
 
 --
+-- Name: update_entry_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_entry_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            IF OLD.receiver_name IS NOT NULL AND OLD.deleted_at IS NULL THEN
+                PERFORM update_subscription_reference(
+                    OLD.node_id, 3, OLD.receiver_name, NULL, NULL, NULL, NULL, NULL
+                );
+            END IF;
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            DECLARE
+                old_receiver_name varchar(63) := CASE WHEN OLD.deleted_at IS NULL THEN OLD.receiver_name ELSE NULL END;
+                new_receiver_name varchar(63) := CASE WHEN NEW.deleted_at IS NULL THEN NEW.receiver_name ELSE NULL END;
+            BEGIN
+                IF old_receiver_name IS NULL AND new_receiver_name IS NULL OR old_receiver_name = new_receiver_name THEN
+                    RETURN NEW;
+                END IF;
+                IF new_receiver_name IS NULL THEN
+                    PERFORM update_subscription_reference(
+                        NEW.node_id, 3, old_receiver_name, NULL, NULL, NULL, NULL, NULL
+                    );
+                ELSIF old_receiver_name IS NULL THEN
+                    PERFORM update_subscription_reference(
+                        NEW.node_id, 3, NULL, NULL, NULL, new_receiver_name, NULL, NULL
+                    );
+                ELSE
+                    PERFORM update_subscription_reference(
+                        NEW.node_id, 3, old_receiver_name, NULL, NULL, new_receiver_name, NULL, NULL
+                    );
+                END IF;
+                RETURN NEW;
+            END;
+        ELSIF TG_OP = 'INSERT' THEN
+            IF NEW.receiver_name IS NOT NULL AND NEW.deleted_at IS NULL THEN
+                PERFORM update_subscription_reference(
+                    NEW.node_id, 3, NULL, NULL, NULL, NEW.receiver_name, NULL, NULL
+                );
+            END IF;
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_entry_remote_node() OWNER TO moera;
+
+--
 -- Name: update_media_file_deadline(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -385,6 +469,135 @@ $$;
 
 
 ALTER FUNCTION public.update_media_file_reference(old_id character varying, new_id character varying) OWNER TO moera;
+
+--
+-- Name: update_subscriber_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_subscriber_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            IF OLD.subscription_type = 0 THEN
+                PERFORM update_subscription_reference(
+                    OLD.node_id, 3, OLD.remote_node_name, NULL, NULL, NULL, NULL, NULL
+                );
+            END IF;
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            IF NEW.subscription_type = 0 THEN
+                PERFORM update_subscription_reference(
+                    NEW.node_id, 3, OLD.remote_node_name, NULL, NULL, NEW.remote_node_name, NULL, NULL
+                );
+            END IF;
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            IF NEW.subscription_type = 0 THEN
+                PERFORM update_subscription_reference(
+                    NEW.node_id, 3, NULL, NULL, NULL, NEW.remote_node_name, NULL, NULL
+                );
+            END IF;
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_subscriber_remote_node() OWNER TO moera;
+
+--
+-- Name: update_subscription_reference(uuid, integer, character varying, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_subscription_reference(s_node_id uuid, s_type integer, old_node_name character varying, old_feed_name character varying, old_entry_id character varying, new_node_name character varying, new_feed_name character varying, new_entry_id character varying) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF s_node_id IS NULL
+           OR s_type IS NULL
+           OR (
+               old_node_name = new_node_name
+               AND (old_feed_name IS NULL AND new_feed_name IS NULL OR old_feed_name = new_feed_name)
+               AND (old_entry_id IS NULL AND new_entry_id IS NULL OR old_entry_id = new_entry_id)
+           ) THEN
+            RETURN;
+        END IF;
+        IF old_node_name IS NOT NULL THEN
+            UPDATE subscriptions
+            SET usage_count = usage_count - 1
+            WHERE node_id = s_node_id AND subscription_type = s_type AND remote_node_name = old_node_name
+                  AND (remote_feed_name IS NULL OR remote_feed_name = old_feed_name)
+                  AND (remote_entry_id IS NULL OR remote_entry_id = old_entry_id) AND usage_count > 0;
+        END IF;
+        IF new_node_name IS NOT NULL THEN
+            INSERT INTO subscriptions AS s(id, node_id, subscription_type, remote_node_name, remote_feed_name,
+                                           remote_entry_id, created_at, status, usage_count)
+            VALUES (uuid_generate_v4(), s_node_id, s_type, new_node_name, new_feed_name, new_entry_id, now(), 1, 1)
+            ON CONFLICT (node_id, subscription_type, remote_node_name, coalesce(remote_feed_name, ''),
+                         coalesce(remote_entry_id, ''))
+            WHERE usage_count > 0
+            DO UPDATE
+            SET usage_count = s.usage_count + 1
+            WHERE s.node_id = s_node_id AND s.subscription_type = s_type AND s.remote_node_name = old_node_name
+                  AND (s.remote_feed_name IS NULL OR s.remote_feed_name = old_feed_name)
+                  AND (s.remote_entry_id IS NULL OR s.remote_entry_id = old_entry_id) AND s.usage_count > 0;
+        END IF;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_subscription_reference(s_node_id uuid, s_type integer, old_node_name character varying, old_feed_name character varying, old_entry_id character varying, new_node_name character varying, new_feed_name character varying, new_entry_id character varying) OWNER TO moera;
+
+--
+-- Name: update_user_subscription_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_user_subscription_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_subscription_reference(
+                OLD.node_id, OLD.subscription_type, OLD.remote_node_name, OLD.remote_feed_name, OLD.remote_entry_id,
+                NULL, NULL, NULL
+            );
+            IF OLD.subscription_type = 0 THEN
+                PERFORM update_subscription_reference(
+                    OLD.node_id, 3, OLD.remote_node_name, NULL, NULL, NULL, NULL, NULL
+                );
+            END IF;
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, NEW.subscription_type, OLD.remote_node_name, OLD.remote_feed_name, OLD.remote_entry_id,
+                NEW.remote_node_name, NEW.remote_feed_name, NEW.remote_entry_id
+            );
+            IF NEW.subscription_type = 0 THEN
+                PERFORM update_subscription_reference(
+                    NEW.node_id, 3, OLD.remote_node_name, NULL, NULL, NEW.remote_node_name, NULL, NULL
+                );
+            END IF;
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, NEW.subscription_type, NULL, NULL, NULL,
+                NEW.remote_node_name, NEW.remote_feed_name, NEW.remote_entry_id
+            );
+            IF NEW.subscription_type = 0 THEN
+                PERFORM update_subscription_reference(
+                    NEW.node_id, 3, NULL, NULL, NULL, NEW.remote_node_name, NULL, NULL
+                );
+            END IF;
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_user_subscription_remote_node() OWNER TO moera;
 
 SET default_tablespace = '';
 
@@ -667,6 +880,57 @@ CREATE TABLE public.entry_sources (
 
 
 ALTER TABLE public.entry_sources OWNER TO moera;
+
+--
+-- Name: friend_groups; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.friend_groups (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    title character varying(63) NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
+);
+
+
+ALTER TABLE public.friend_groups OWNER TO moera;
+
+--
+-- Name: friend_ofs; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.friend_ofs (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_full_name character varying(96),
+    remote_gender character varying(31),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8),
+    remote_group_id character varying(40) NOT NULL,
+    remote_group_title character varying(63),
+    remote_added_at timestamp without time zone NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.friend_ofs OWNER TO moera;
+
+--
+-- Name: friends; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.friends (
+    id uuid NOT NULL,
+    node_name character varying(63) NOT NULL,
+    friend_group_id uuid NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
+);
+
+
+ALTER TABLE public.friends OWNER TO moera;
 
 --
 -- Name: hibernate_sequence; Type: SEQUENCE; Schema: public; Owner: moera
@@ -1087,7 +1351,8 @@ CREATE TABLE public.stories (
     remote_posting_node_name character varying(63),
     remote_posting_full_name character varying(96),
     remote_posting_avatar_media_file_id character varying(40),
-    remote_posting_avatar_shape character varying(8)
+    remote_posting_avatar_shape character varying(8),
+    satisfied boolean DEFAULT false NOT NULL
 );
 
 
@@ -1124,18 +1389,14 @@ CREATE TABLE public.subscriptions (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     subscription_type smallint NOT NULL,
-    feed_name character varying(63),
-    remote_subscriber_id character varying(40) NOT NULL,
+    remote_subscriber_id character varying(40),
     remote_node_name character varying(63) NOT NULL,
     remote_feed_name character varying(63),
     remote_entry_id character varying(40),
     created_at timestamp without time zone NOT NULL,
-    reason smallint DEFAULT 0 NOT NULL,
-    remote_full_name character varying(96),
-    remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8),
-    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
-    remote_gender character varying(31)
+    status smallint DEFAULT 0 NOT NULL,
+    retry_at timestamp without time zone,
+    usage_count integer DEFAULT 0 NOT NULL
 );
 
 
@@ -1159,6 +1420,30 @@ CREATE TABLE public.tokens (
 
 
 ALTER TABLE public.tokens OWNER TO moera;
+
+--
+-- Name: user_subscriptions; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.user_subscriptions (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    subscription_type smallint NOT NULL,
+    feed_name character varying(63),
+    remote_node_name character varying(63) NOT NULL,
+    remote_feed_name character varying(63),
+    remote_entry_id character varying(40),
+    created_at timestamp without time zone NOT NULL,
+    reason smallint DEFAULT 0 NOT NULL,
+    remote_full_name character varying(96),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8),
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    remote_gender character varying(31)
+);
+
+
+ALTER TABLE public.user_subscriptions OWNER TO moera;
 
 --
 -- Name: avatars avatars_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
@@ -1238,6 +1523,30 @@ ALTER TABLE ONLY public.entry_revisions
 
 ALTER TABLE ONLY public.entry_sources
     ADD CONSTRAINT entry_sources_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: friend_groups friend_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.friend_groups
+    ADD CONSTRAINT friend_groups_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: friend_ofs friend_ofs_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.friend_ofs
+    ADD CONSTRAINT friend_ofs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: friends friends_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.friends
+    ADD CONSTRAINT friends_pkey PRIMARY KEY (id);
 
 
 --
@@ -1438,6 +1747,14 @@ ALTER TABLE ONLY public.subscriptions
 
 ALTER TABLE ONLY public.tokens
     ADD CONSTRAINT tokens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_subscriptions user_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_pkey PRIMARY KEY (id);
 
 
 --
@@ -1704,6 +2021,41 @@ CREATE INDEX entry_sources_entry_id_idx ON public.entry_sources USING btree (ent
 --
 
 CREATE INDEX entry_sources_remote_avatar_media_file_id_idx ON public.entry_sources USING btree (remote_avatar_media_file_id);
+
+
+--
+-- Name: friend_groups_node_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX friend_groups_node_id_idx ON public.friend_groups USING btree (node_id);
+
+
+--
+-- Name: friend_ofs_node_id_remote_node_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX friend_ofs_node_id_remote_node_name_idx ON public.friend_ofs USING btree (node_id, remote_node_name);
+
+
+--
+-- Name: friend_ofs_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX friend_ofs_remote_avatar_media_file_id_idx ON public.friend_ofs USING btree (remote_avatar_media_file_id);
+
+
+--
+-- Name: friends_friend_group_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX friends_friend_group_id_idx ON public.friends USING btree (friend_group_id);
+
+
+--
+-- Name: friends_node_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX friends_node_name_idx ON public.friends USING btree (node_name);
 
 
 --
@@ -2141,10 +2493,24 @@ CREATE INDEX subscribers_entry_id_idx ON public.subscribers USING btree (entry_i
 
 
 --
--- Name: subscribers_node_id_feed_name_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: subscribers_node_id_remote_node_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX subscribers_node_id_feed_name_idx ON public.subscribers USING btree (node_id, feed_name);
+CREATE INDEX subscribers_node_id_remote_node_name_idx ON public.subscribers USING btree (node_id, remote_node_name);
+
+
+--
+-- Name: subscribers_node_id_type_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX subscribers_node_id_type_entry_id_idx ON public.subscribers USING btree (node_id, subscription_type, entry_id);
+
+
+--
+-- Name: subscribers_node_id_type_feed_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX subscribers_node_id_type_feed_name_idx ON public.subscribers USING btree (node_id, subscription_type, feed_name);
 
 
 --
@@ -2155,17 +2521,24 @@ CREATE INDEX subscribers_remote_avatar_media_file_id_idx ON public.subscribers U
 
 
 --
--- Name: subscriptions_node_id_subscription_type_remote_node_name_re_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: subscriptions_node_id_type_remote_node_active_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE UNIQUE INDEX subscriptions_node_id_subscription_type_remote_node_name_re_idx ON public.subscriptions USING btree (node_id, subscription_type, remote_node_name, remote_subscriber_id);
+CREATE UNIQUE INDEX subscriptions_node_id_type_remote_node_active_idx ON public.subscriptions USING btree (node_id, subscription_type, remote_node_name, COALESCE(remote_feed_name, ''::character varying), COALESCE(remote_entry_id, ''::character varying)) WHERE (usage_count > 0);
 
 
 --
--- Name: subscriptions_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: subscriptions_node_id_type_remote_node_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX subscriptions_remote_avatar_media_file_id_idx ON public.subscriptions USING btree (remote_avatar_media_file_id);
+CREATE INDEX subscriptions_node_id_type_remote_node_idx ON public.subscriptions USING btree (node_id, subscription_type, remote_node_name, remote_subscriber_id);
+
+
+--
+-- Name: subscriptions_status_usage_count_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX subscriptions_status_usage_count_idx ON public.subscriptions USING btree (status, usage_count);
 
 
 --
@@ -2173,6 +2546,13 @@ CREATE INDEX subscriptions_remote_avatar_media_file_id_idx ON public.subscriptio
 --
 
 CREATE UNIQUE INDEX tokens_token_idx ON public.tokens USING btree (token);
+
+
+--
+-- Name: user_subscriptions_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX user_subscriptions_remote_avatar_media_file_id_idx ON public.user_subscriptions USING btree (remote_avatar_media_file_id);
 
 
 --
@@ -2267,6 +2647,13 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 
 
 --
+-- Name: friend_ofs update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.friend_ofs FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
 -- Name: own_comments update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -2302,10 +2689,38 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 
 
 --
--- Name: subscriptions update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+-- Name: user_subscriptions update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
-CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.subscriptions FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
+-- Name: contacts update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, remote_node_name ON public.contacts FOR EACH ROW EXECUTE FUNCTION public.update_contact_remote_node();
+
+
+--
+-- Name: entries update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, receiver_name, deleted_at ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entry_remote_node();
+
+
+--
+-- Name: subscribers update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, remote_node_name ON public.subscribers FOR EACH ROW EXECUTE FUNCTION public.update_subscriber_remote_node();
+
+
+--
+-- Name: user_subscriptions update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION public.update_user_subscription_remote_node();
 
 
 --
@@ -2486,6 +2901,22 @@ ALTER TABLE ONLY public.entry_sources
 
 ALTER TABLE ONLY public.entry_sources
     ADD CONSTRAINT entry_sources_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: friend_ofs friend_ofs_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.friend_ofs
+    ADD CONSTRAINT friend_ofs_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: friends friends_friend_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.friends
+    ADD CONSTRAINT friends_friend_group_id_fkey FOREIGN KEY (friend_group_id) REFERENCES public.friend_groups(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -2673,11 +3104,11 @@ ALTER TABLE ONLY public.subscribers
 
 
 --
--- Name: subscriptions subscriptions_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: user_subscriptions user_subscriptions_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
-ALTER TABLE ONLY public.subscriptions
-    ADD CONSTRAINT subscriptions_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+ALTER TABLE ONLY public.user_subscriptions
+    ADD CONSTRAINT user_subscriptions_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
