@@ -20,6 +20,7 @@ public class StorySummaryData {
     private Integer totalReactions;
     private String feedName;
     private SubscriptionReason subscriptionReason;
+    private StorySummaryFriend friend;
     private String description;
 
     public StorySummaryNode getNode() {
@@ -116,6 +117,14 @@ public class StorySummaryData {
 
     public void setSubscriptionReason(SubscriptionReason subscriptionReason) {
         this.subscriptionReason = subscriptionReason;
+    }
+
+    public StorySummaryFriend getFriend() {
+        return friend;
+    }
+
+    public void setFriend(StorySummaryFriend friend) {
+        this.friend = friend;
     }
 
     public String getDescription() {

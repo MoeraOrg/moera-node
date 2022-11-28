@@ -66,7 +66,7 @@ public class FriendGroupController {
 
         return Arrays.stream(friendCache.getNodeGroups())
                 .filter(this::isFriendGroupVisible)
-                .map(FriendGroupInfo::new)
+                .map(fg -> new FriendGroupInfo(fg, requestContext.isAdmin()))
                 .collect(Collectors.toList());
     }
 
@@ -81,7 +81,7 @@ public class FriendGroupController {
             throw new AuthenticationException();
         }
 
-        return new FriendGroupInfo(friendGroup);
+        return new FriendGroupInfo(friendGroup, requestContext.isAdmin());
     }
 
     private boolean isFriendGroupVisible(FriendGroup friendGroup) {
@@ -111,7 +111,7 @@ public class FriendGroupController {
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.send(new FriendGroupAddedLiberin(friendGroup));
 
-        return new FriendGroupInfo(friendGroup);
+        return new FriendGroupInfo(friendGroup, true);
     }
 
     @PutMapping("/{id}")
@@ -136,7 +136,7 @@ public class FriendGroupController {
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
         requestContext.send(new FriendGroupUpdatedLiberin(friendGroup, latestViewPrincipal));
 
-        return new FriendGroupInfo(friendGroup);
+        return new FriendGroupInfo(friendGroup, true);
     }
 
     @DeleteMapping("/{id}")

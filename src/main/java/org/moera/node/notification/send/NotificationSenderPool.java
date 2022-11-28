@@ -18,6 +18,8 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.Friend;
+import org.moera.node.data.FriendRepository;
 import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
@@ -62,6 +64,9 @@ public class NotificationSenderPool {
 
     @Inject
     private SubscriberRepository subscriberRepository;
+
+    @Inject
+    private FriendRepository friendRepository;
 
     @Inject
     private PendingNotificationRepository pendingNotificationRepository;
@@ -144,6 +149,21 @@ public class NotificationSenderPool {
                     ((SubscriberNotification) nt).setSubscriptionCreatedAt(subscriber.getCreatedAt());
                 }
                 sendSingle(dir, nt);
+            }
+            return;
+        }
+        if (direction instanceof FriendGroupDirection) {
+            FriendGroupDirection fd = (FriendGroupDirection) direction;
+
+            log.info("Sending to members of '{}' friend group, if {}",
+                    LogUtil.format(fd.getFriendGroupId()),
+                    direction.getPrincipalFilter());
+
+            List<Friend> friends = friendRepository.findAllByNodeIdAndGroup(fd.getNodeId(), fd.getFriendGroupId());
+            for (Friend friend : friends) {
+                SingleDirection dir = new SingleDirection(fd.getNodeId(), friend.getNodeName(),
+                        direction.getPrincipalFilter());
+                sendSingle(dir, notification.clone());
             }
             return;
         }

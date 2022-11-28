@@ -19,9 +19,11 @@ public class FriendGroupInfo {
     public FriendGroupInfo() {
     }
 
-    public FriendGroupInfo(FriendGroup friendGroup) {
+    public FriendGroupInfo(FriendGroup friendGroup, boolean isAdmin) {
         id = friendGroup.getId().toString();
-        title = friendGroup.getTitle();
+        if (isAdmin || !friendGroup.getViewPrincipal().isAdmin()) {
+            title = friendGroup.getTitle();
+        }
         createdAt = Util.toEpochSecond(friendGroup.getCreatedAt());
 
         operations = new HashMap<>();

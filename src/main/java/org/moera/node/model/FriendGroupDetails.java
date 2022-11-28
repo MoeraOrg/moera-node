@@ -9,7 +9,7 @@ import org.moera.node.data.Friend;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class FriendGroupDetails {
+public class FriendGroupDetails implements Cloneable {
 
     private String id;
     private String title;
@@ -17,6 +17,12 @@ public class FriendGroupDetails {
     private Map<String, Principal> operations;
 
     public FriendGroupDetails() {
+    }
+
+    public FriendGroupDetails(String id, String title, Long addedAt) {
+        this.id = id;
+        this.title = title;
+        this.addedAt = addedAt;
     }
 
     public FriendGroupDetails(Friend friend, boolean isAdmin) {
@@ -27,7 +33,7 @@ public class FriendGroupDetails {
         addedAt = Util.toEpochSecond(friend.getCreatedAt());
 
         operations = new HashMap<>();
-        putOperation(operations, "view", friend.getViewPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "view", friend.getFriendGroup().getViewPrincipal(), Principal.PUBLIC);
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
@@ -35,6 +41,16 @@ public class FriendGroupDetails {
         if (value != null && !value.equals(defaultValue)) {
             operations.put(operationName, value);
         }
+    }
+
+    public FriendGroupDetails toNonAdmin() {
+        Principal viewPrincipal = getPrincipal("view", Principal.PUBLIC);
+        if (viewPrincipal.isAdmin()) {
+            FriendGroupDetails friendGroupDetails = clone();
+            friendGroupDetails.setTitle(null);
+            return friendGroupDetails;
+        }
+        return this;
     }
 
     public String getId() {
@@ -67,6 +83,19 @@ public class FriendGroupDetails {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Principal getPrincipal(String operationName, Principal defaultValue) {
+        return operations != null ? operations.getOrDefault(operationName, defaultValue) : defaultValue;
+    }
+
+    @Override
+    public FriendGroupDetails clone() {
+        try {
+            return (FriendGroupDetails) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalArgumentException("Must implement Cloneable", e);
+        }
     }
 
 }

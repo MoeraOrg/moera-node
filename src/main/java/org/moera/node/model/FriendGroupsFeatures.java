@@ -16,7 +16,7 @@ public class FriendGroupsFeatures {
     public static FriendGroupsFeatures forAdmin(FriendGroup[] nodeGroups) {
         FriendGroupsFeatures features = new FriendGroupsFeatures();
         features.setAvailable(Arrays.stream(nodeGroups)
-                .map(FriendGroupInfo::new)
+                .map(fg -> new FriendGroupInfo(fg, true))
                 .toArray(FriendGroupInfo[]::new));
         return features;
     }
@@ -25,7 +25,7 @@ public class FriendGroupsFeatures {
         FriendGroupsFeatures features = new FriendGroupsFeatures();
         features.setAvailable(Arrays.stream(nodeGroups)
                 .filter(fg -> isFriendGroupVisible(fg, clientGroups))
-                .map(FriendGroupInfo::new)
+                .map(fg -> new FriendGroupInfo(fg, false))
                 .toArray(FriendGroupInfo[]::new));
         features.setMemberOf(
                 Arrays.stream(clientGroups)

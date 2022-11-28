@@ -22,9 +22,12 @@ public enum NotificationType {
     POSTING_IMPORTANT_UPDATE(PostingImportantUpdateNotification.class),
     POSTING_REACTION_ADDED(PostingReactionAddedNotification.class),
     POSTING_REACTION_DELETED(PostingReactionDeletedNotification.class),
-    POSTING_REACTION_DELETED_ALL(PostingReactionDeletedAllNotification.class);
+    POSTING_REACTION_DELETED_ALL(PostingReactionDeletedAllNotification.class),
+    FRIENDSHIP_UPDATED(FriendshipUpdatedNotification.class),
+    FRIEND_GROUP_UPDATED(FriendGroupUpdatedNotification.class),
+    FRIEND_GROUP_DELETED(FriendGroupDeletedNotification.class);
 
-    private Class<? extends Notification> structure;
+    private final Class<? extends Notification> structure;
 
     NotificationType(Class<? extends Notification> structure) {
         this.structure = structure;

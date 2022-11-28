@@ -24,16 +24,7 @@ public class SubscriberInstants extends InstantsCreator {
             return;
         }
 
-        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_ADDED);
-        story.setFeedName(Feed.INSTANT);
-        story.setRemoteNodeName(subscriber.getRemoteNodeName());
-        story.setRemoteFullName(subscriber.getRemoteFullName());
-        story.setRemoteAvatarMediaFile(subscriber.getRemoteAvatarMediaFile());
-        story.setRemoteAvatarShape(subscriber.getRemoteAvatarShape());
-        story.setSummaryData(buildSummary(subscriber));
-        updateMoment(story);
-        story = storyRepository.saveAndFlush(story);
-        storyAdded(story);
+        createStory(subscriber, StoryType.SUBSCRIBER_ADDED);
     }
 
     public void deleted(Subscriber subscriber) {
@@ -41,7 +32,11 @@ public class SubscriberInstants extends InstantsCreator {
             return;
         }
 
-        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.SUBSCRIBER_DELETED);
+        createStory(subscriber, StoryType.SUBSCRIBER_DELETED);
+    }
+
+    private void createStory(Subscriber subscriber, StoryType storyType) {
+        Story story = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
         story.setRemoteFullName(subscriber.getRemoteFullName());

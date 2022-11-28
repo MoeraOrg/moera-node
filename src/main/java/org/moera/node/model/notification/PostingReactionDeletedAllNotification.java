@@ -17,7 +17,7 @@ public class PostingReactionDeletedAllNotification extends Notification {
 
     private String postingId;
 
-    protected PostingReactionDeletedAllNotification() {
+    public PostingReactionDeletedAllNotification() {
         super(NotificationType.POSTING_REACTION_DELETED_ALL);
     }
 

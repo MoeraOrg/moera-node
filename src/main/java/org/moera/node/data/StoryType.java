@@ -30,7 +30,10 @@ public enum StoryType {
     COMMENT_MEDIA_REACTION_FAILED,         // 22
     POSTING_SUBSCRIBE_TASK_FAILED,         // 23
     POSTING_REACTION_TASK_FAILED,          // 24
-    COMMENT_REACTION_TASK_FAILED;          // 25
+    COMMENT_REACTION_TASK_FAILED,          // 25
+    FRIEND_ADDED,                          // 26
+    FRIEND_DELETED,                        // 27
+    FRIEND_GROUP_DELETED;                  // 28
 
     @JsonValue
     public String getValue() {

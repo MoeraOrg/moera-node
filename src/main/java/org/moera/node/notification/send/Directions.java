@@ -47,4 +47,12 @@ public class Directions {
         return new SubscribersDirection(nodeId, SubscriptionType.PROFILE, filter);
     }
 
+    public static Direction friends(UUID nodeId, UUID friendGroupId) {
+        return new FriendGroupDirection(nodeId, friendGroupId);
+    }
+
+    public static Direction friends(UUID nodeId, UUID friendGroupId, PrincipalFilter filter) {
+        return new FriendGroupDirection(nodeId, friendGroupId, filter);
+    }
+
 }
