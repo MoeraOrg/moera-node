@@ -364,6 +364,68 @@ $$;
 ALTER FUNCTION public.update_entry_remote_node() OWNER TO moera;
 
 --
+-- Name: update_friend_of_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_friend_of_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_subscription_reference(
+                OLD.node_id, 3, OLD.remote_node_name, NULL, NULL, NULL, NULL, NULL
+            );
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, OLD.remote_node_name, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, NULL, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_friend_of_remote_node() OWNER TO moera;
+
+--
+-- Name: update_friend_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_friend_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_subscription_reference(
+                OLD.node_id, 3, OLD.remote_node_name, NULL, NULL, NULL, NULL, NULL
+            );
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, OLD.remote_node_name, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, NULL, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_friend_remote_node() OWNER TO moera;
+
+--
 -- Name: update_media_file_deadline(); Type: FUNCTION; Schema: public; Owner: moera
 --
 
@@ -923,10 +985,15 @@ ALTER TABLE public.friend_ofs OWNER TO moera;
 
 CREATE TABLE public.friends (
     id uuid NOT NULL,
-    node_name character varying(63) NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
     friend_group_id uuid NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
+    view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    node_id uuid NOT NULL,
+    remote_full_name character varying(96),
+    remote_gender character varying(31),
+    remote_avatar_media_file_id character varying(40),
+    remote_avatar_shape character varying(8)
 );
 
 
@@ -2055,7 +2122,14 @@ CREATE INDEX friends_friend_group_id_idx ON public.friends USING btree (friend_g
 -- Name: friends_node_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX friends_node_name_idx ON public.friends USING btree (node_name);
+CREATE INDEX friends_node_name_idx ON public.friends USING btree (remote_node_name);
+
+
+--
+-- Name: friends_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX friends_remote_avatar_media_file_id_idx ON public.friends USING btree (remote_avatar_media_file_id);
 
 
 --
@@ -2654,6 +2728,13 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 
 
 --
+-- Name: friends update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.friends FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
+
+
+--
 -- Name: own_comments update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -2707,6 +2788,20 @@ CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, r
 --
 
 CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, receiver_name, deleted_at ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entry_remote_node();
+
+
+--
+-- Name: friend_ofs update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, remote_node_name ON public.friend_ofs FOR EACH ROW EXECUTE FUNCTION public.update_friend_of_remote_node();
+
+
+--
+-- Name: friends update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, remote_node_name ON public.friends FOR EACH ROW EXECUTE FUNCTION public.update_friend_remote_node();
 
 
 --
@@ -2917,6 +3012,14 @@ ALTER TABLE ONLY public.friend_ofs
 
 ALTER TABLE ONLY public.friends
     ADD CONSTRAINT friends_friend_group_id_fkey FOREIGN KEY (friend_group_id) REFERENCES public.friend_groups(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: friends friends_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.friends
+    ADD CONSTRAINT friends_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
