@@ -34,7 +34,7 @@ import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriberOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OperationsValidator;
-import org.moera.node.rest.task.RemoteAvatarDownloadTask;
+import org.moera.node.rest.task.RemoteProfileDownloadTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,7 +174,7 @@ public class SubscriberController {
         subscriber = subscriberRepository.save(subscriber);
 
         if (subscriber.getRemoteAvatarMediaFile() == null) {
-            var avatarTask = new RemoteAvatarDownloadTask(subscriber.getRemoteNodeName());
+            var avatarTask = new RemoteProfileDownloadTask(subscriber.getRemoteNodeName());
             taskAutowire.autowire(avatarTask);
             taskExecutor.execute(avatarTask);
         }

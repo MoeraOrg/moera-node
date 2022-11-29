@@ -3,50 +3,49 @@ package org.moera.node.rest.task;
 import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiUnknownNameException;
-import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
+import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.WhoAmI;
+import org.moera.node.operations.RemoteProfileOperations;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RemoteAvatarDownloadTask extends Task {
+public class RemoteProfileDownloadTask extends Task {
 
-    private static final Logger log = LoggerFactory.getLogger(RemoteAvatarDownloadTask.class);
+    private static final Logger log = LoggerFactory.getLogger(RemoteProfileDownloadTask.class);
 
     private final String targetNodeName;
 
     @Inject
-    private UserSubscriptionRepository userSubscriptionRepository;
-
-    @Inject
-    private SubscriberRepository subscriberRepository;
-
-    @Inject
-    private ContactRepository contactRepository;
+    private RemoteProfileOperations remoteProfileOperations;
 
     @Inject
     private MediaManager mediaManager;
 
-    public RemoteAvatarDownloadTask(String targetNodeName) {
+    public RemoteProfileDownloadTask(String targetNodeName) {
         this.targetNodeName = targetNodeName;
     }
 
     @Override
     protected void execute() {
         try {
-            AvatarImage targetAvatar = nodeApi.whoAmI(targetNodeName).getAvatar();
+            WhoAmI whoAmI = nodeApi.whoAmI(targetNodeName);
+            if (whoAmI.getFullName() != null || whoAmI.getGender() != null) {
+                inTransaction(() -> {
+                    remoteProfileOperations.updateDetails(targetNodeName, whoAmI.getFullName(), whoAmI.getGender());
+                    return null;
+                });
+                send(new RemoteNodeFullNameChangedLiberin(targetNodeName, whoAmI.getFullName()));
+            }
+            AvatarImage targetAvatar = whoAmI.getAvatar();
             MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar);
             if (mediaFile != null) {
                 inTransaction(() -> {
-                    subscriberRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
-                    userSubscriptionRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile,
-                            targetAvatar.getShape());
-                    contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
+                    remoteProfileOperations.updateAvatar(targetNodeName, mediaFile, targetAvatar.getShape());
                     return null;
                 });
                 send(new RemoteNodeAvatarChangedLiberin(

@@ -161,7 +161,7 @@ public class NotificationSenderPool {
 
             List<Friend> friends = friendRepository.findAllByNodeIdAndGroup(fd.getNodeId(), fd.getFriendGroupId());
             for (Friend friend : friends) {
-                SingleDirection dir = new SingleDirection(fd.getNodeId(), friend.getNodeName(),
+                SingleDirection dir = new SingleDirection(fd.getNodeId(), friend.getRemoteNodeName(),
                         direction.getPrincipalFilter());
                 sendSingle(dir, notification.clone());
             }

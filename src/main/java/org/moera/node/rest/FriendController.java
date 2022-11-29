@@ -24,14 +24,20 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
+import org.moera.node.media.MediaOperations;
 import org.moera.node.model.FriendDescription;
 import org.moera.node.model.FriendGroupAssignment;
 import org.moera.node.model.FriendGroupDetails;
 import org.moera.node.model.FriendInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OperationsValidator;
+import org.moera.node.rest.task.RemoteProfileDownloadTask;
+import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.util.Pair;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +64,16 @@ public class FriendController {
 
     @Inject
     private FriendCache friendCache;
+
+    @Inject
+    private MediaOperations mediaOperations;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
 
     @GetMapping
     @Transactional
@@ -88,7 +104,7 @@ public class FriendController {
             }
             if (groups == null) {
                 FriendInfo info = new FriendInfo();
-                info.setNodeName(friend.getNodeName());
+                info.setNodeName(friend.getRemoteNodeName());
                 if (groupId == null) {
                     groups = new ArrayList<>();
                     info.setGroups(groups);
@@ -98,7 +114,7 @@ public class FriendController {
             }
             boolean visible = requestContext.isPrincipal(friend.getViewE())
                     && (requestContext.isAdmin()
-                        || requestContext.isClient(friend.getNodeName())
+                        || requestContext.isClient(friend.getRemoteNodeName())
                         || friend.getFriendGroup().getViewPrincipal().isPublic());
             if (groups != null && visible) {
                 groups.add(new FriendGroupDetails(friend, requestContext.isAdmin()));
@@ -140,6 +156,11 @@ public class FriendController {
 
         Map<UUID, FriendGroup> groups = new HashMap<>();
         for (FriendDescription friendDescription : friendDescriptions) {
+            mediaOperations.validateAvatar(
+                    friendDescription.getAvatar(),
+                    friendDescription::setAvatarMediaFile,
+                    () -> new ValidationFailure("friendDescription.avatar.mediaId.not-found"));
+
             Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
             if (friendDescription.getGroups() != null) {
                 for (var ga : friendDescription.getGroups()) {
@@ -166,7 +187,8 @@ public class FriendController {
                 Friend friend = target.getValue().getSecond();
                 if (friend.getId() == null) {
                     friend.setId(UUID.randomUUID());
-                    friend.setNodeName(friendDescription.getNodeName());
+                    friend.setNodeId(requestContext.nodeId());
+                    friendDescription.toFriend(friend);
                     FriendGroup group = groups.computeIfAbsent(
                             target.getKey(),
                             id -> friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
@@ -175,12 +197,18 @@ public class FriendController {
                     friend.setFriendGroup(group);
                     target.getValue().getFirst().toFriend(friend);
                     friend = friendRepository.save(friend);
+
+                    if (friend.getRemoteAvatarMediaFile() == null) {
+                        var avatarTask = new RemoteProfileDownloadTask(friend.getRemoteNodeName());
+                        taskAutowire.autowire(avatarTask);
+                        taskExecutor.execute(avatarTask);
+                    }
                 } else {
                     target.getValue().getFirst().toFriend(friend);
                 }
                 if (friendInfo == null) {
                     friendInfo = new FriendInfo();
-                    friendInfo.setNodeName(friend.getNodeName());
+                    friendInfo.setNodeName(friend.getRemoteNodeName());
                     friendInfo.setGroups(new ArrayList<>());
                     result.add(friendInfo);
                 }

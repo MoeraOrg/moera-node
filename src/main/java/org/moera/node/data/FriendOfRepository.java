@@ -16,6 +16,11 @@ public interface FriendOfRepository extends JpaRepository<FriendOf, UUID> {
     @Query("select fo from FriendOf fo where fo.nodeId = ?1 and fo.remoteNodeName = ?2 and fo.remoteGroupId = ?3")
     Optional<FriendOf> findByNodeIdAndRemoteGroup(UUID nodeId, String remoteNodeName, String remoteGroupId);
 
+    @Query("update FriendOf fo set fo.remoteFullName = ?3, fo.remoteGender = ?4"
+            + " where fo.nodeId = ?1 and fo.remoteNodeName = ?2")
+    @Modifying
+    void updateRemoteFullNameAndGender(UUID nodeId, String remoteNodeName, String remoteFullName, String remoteGender);
+
     @Query("update FriendOf fo set fo.remoteAvatarMediaFile = ?3, fo.remoteAvatarShape = ?4"
             + " where fo.nodeId = ?1 and fo.remoteNodeName = ?2")
     @Modifying

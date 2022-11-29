@@ -21,8 +21,23 @@ public class Friend {
     private UUID id;
 
     @NotNull
+    private UUID nodeId;
+
+    @NotNull
     @Size(max = 63)
-    private String nodeName;
+    private String remoteNodeName;
+
+    @Size(max = 96)
+    private String remoteFullName;
+
+    @Size(max = 31)
+    private String remoteGender;
+
+    @ManyToOne
+    private MediaFile remoteAvatarMediaFile;
+
+    @Size(max = 8)
+    private String remoteAvatarShape;
 
     @ManyToOne
     private FriendGroup friendGroup;
@@ -40,12 +55,52 @@ public class Friend {
         this.id = id;
     }
 
-    public String getNodeName() {
-        return nodeName;
+    public UUID getNodeId() {
+        return nodeId;
     }
 
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
+    public void setNodeId(UUID nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getRemoteNodeName() {
+        return remoteNodeName;
+    }
+
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemoteFullName() {
+        return remoteFullName;
+    }
+
+    public void setRemoteFullName(String remoteFullName) {
+        this.remoteFullName = remoteFullName;
+    }
+
+    public String getRemoteGender() {
+        return remoteGender;
+    }
+
+    public void setRemoteGender(String remoteGender) {
+        this.remoteGender = remoteGender;
+    }
+
+    public MediaFile getRemoteAvatarMediaFile() {
+        return remoteAvatarMediaFile;
+    }
+
+    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
+        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
+    }
+
+    public String getRemoteAvatarShape() {
+        return remoteAvatarShape;
+    }
+
+    public void setRemoteAvatarShape(String remoteAvatarShape) {
+        this.remoteAvatarShape = remoteAvatarShape;
     }
 
     public FriendGroup getFriendGroup() {
@@ -65,7 +120,7 @@ public class Friend {
     }
 
     private Principal toAbsolute(Principal principal) {
-        return principal.withOwner(getNodeName());
+        return principal.withOwner(getRemoteNodeName());
     }
 
     public static Principal getViewAllPrincipal(Options options) {

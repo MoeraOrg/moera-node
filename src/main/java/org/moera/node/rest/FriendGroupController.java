@@ -157,7 +157,7 @@ public class FriendGroupController {
         // when the liberins will be processed
         requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal, null));
         members.forEach(member ->
-                requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal, member.getNodeName())));
+                requestContext.send(new FriendGroupDeletedLiberin(id, latestViewPrincipal, member.getRemoteNodeName())));
 
         return Result.OK;
     }

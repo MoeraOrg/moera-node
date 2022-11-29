@@ -41,7 +41,7 @@ import org.moera.node.operations.OperationsValidator;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.rest.task.AllRemoteSubscribersUpdateTask;
-import org.moera.node.rest.task.RemoteAvatarDownloadTask;
+import org.moera.node.rest.task.RemoteProfileDownloadTask;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
@@ -191,7 +191,7 @@ public class SubscriptionController {
         }
 
         if (subscription.getRemoteAvatarMediaFile() == null) {
-            var avatarTask = new RemoteAvatarDownloadTask(subscription.getRemoteNodeName());
+            var avatarTask = new RemoteProfileDownloadTask(subscription.getRemoteNodeName());
             taskAutowire.autowire(avatarTask);
             taskExecutor.execute(avatarTask);
         }
