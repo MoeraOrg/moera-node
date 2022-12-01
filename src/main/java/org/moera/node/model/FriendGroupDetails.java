@@ -33,7 +33,7 @@ public class FriendGroupDetails implements Cloneable {
         addedAt = Util.toEpochSecond(friend.getCreatedAt());
 
         operations = new HashMap<>();
-        putOperation(operations, "view", friend.getFriendGroup().getViewPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "view", friend.getViewPrincipal(), Principal.PUBLIC);
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
