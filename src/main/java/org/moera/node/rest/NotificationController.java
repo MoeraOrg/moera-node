@@ -80,6 +80,7 @@ public class NotificationController {
         if (!verifySignature(packet)) {
             throw new ValidationFailure("notificationPacket.signature.invalid");
         }
+        requestContext.authenticatedWithSignature(packet.getNodeName());
 
         Notification notification;
         try {
