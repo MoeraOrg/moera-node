@@ -15,6 +15,7 @@ public class Features {
     private List<String> plugins;
     private int feedWidth;
     private FriendGroupsFeatures friendGroups;
+    private AskFeatures ask;
 
     public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, Friend[] clientGroups,
                     boolean admin) {
@@ -26,6 +27,7 @@ public class Features {
         friendGroups = admin
                 ? FriendGroupsFeatures.forAdmin(nodeGroups)
                 : FriendGroupsFeatures.forRegular(nodeGroups, clientGroups);
+        ask = new AskFeatures(options);
     }
 
     public PostingFeatures getPosting() {
@@ -58,6 +60,14 @@ public class Features {
 
     public void setFriendGroups(FriendGroupsFeatures friendGroups) {
         this.friendGroups = friendGroups;
+    }
+
+    public AskFeatures getAsk() {
+        return ask;
+    }
+
+    public void setAsk(AskFeatures ask) {
+        this.ask = ask;
     }
 
 }

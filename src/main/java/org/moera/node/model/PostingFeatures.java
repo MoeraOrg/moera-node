@@ -14,9 +14,6 @@ public class PostingFeatures {
     private int imageRecommendedSize;
     private int imageRecommendedPixels;
 
-    public PostingFeatures() {
-    }
-
     public PostingFeatures(Options options) {
         subjectPresent = options.getBool("posting.subject.present");
         int maxSize = options.getInt("media.max-size");

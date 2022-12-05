@@ -4,6 +4,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.SubscriptionType;
@@ -43,6 +44,10 @@ public class AskProcessor {
     public void asked(AskedNotification notification) {
         switch (notification.getSubject()) {
             case SUBSCRIBE:
+                if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("ask.subscribe.allowed"))) {
+                    throw new AuthenticationException();
+                }
+
                 int count = userSubscriptionRepository.countByTypeAndRemoteNode(universalContext.nodeId(),
                         SubscriptionType.FEED, notification.getSenderNodeName());
                 if (count > 0) {
@@ -61,6 +66,10 @@ public class AskProcessor {
                 break;
 
             case FRIEND: {
+                if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("ask.friend.allowed"))) {
+                    throw new AuthenticationException();
+                }
+
                 UUID friendGroupId;
                 try {
                     friendGroupId = UUID.fromString(notification.getFriendGroupId());

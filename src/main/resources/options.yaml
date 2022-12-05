@@ -496,3 +496,21 @@
       - public
       - signed
       - admin
+
+- name: ask.subscribe.allowed
+  type: Principal
+  defaultValue: signed
+  title: Allow to ask for subscription
+  modifiers:
+    principals:
+      - signed
+      - none
+
+- name: ask.friend.allowed
+  type: Principal
+  defaultValue: signed
+  title: Allow to ask for friendship
+  modifiers:
+    principals:
+      - signed
+      - none
