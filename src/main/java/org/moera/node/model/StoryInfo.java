@@ -123,6 +123,8 @@ public class StoryInfo {
             case FRIEND_ADDED:
             case FRIEND_DELETED:
             case FRIEND_GROUP_DELETED:
+            case ASKED_TO_SUBSCRIBE:
+            case ASKED_TO_FRIEND:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 info.setSummaryNodeName(story.getRemoteNodeName());

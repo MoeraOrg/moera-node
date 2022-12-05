@@ -9,7 +9,8 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryFriend;
+import org.moera.node.model.StorySummaryFriendGroup;
+import org.moera.node.model.StorySummaryNode;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -45,9 +46,10 @@ public class FriendInstants extends InstantsCreator {
 
     private static StorySummaryData buildSummary(FriendOf friend) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setFriend(new StorySummaryFriend(
-                friend.getRemoteNodeName(), friend.getRemoteFullName(), friend.getRemoteGender(),
-                friend.getRemoteGroupTitle()));
+        summaryData.setNode(
+                new StorySummaryNode(friend.getRemoteNodeName(), friend.getRemoteFullName(), friend.getRemoteGender()));
+        summaryData.setFriendGroup(
+                new StorySummaryFriendGroup(friend.getRemoteGroupId(), friend.getRemoteGroupTitle()));
         return summaryData;
     }
 

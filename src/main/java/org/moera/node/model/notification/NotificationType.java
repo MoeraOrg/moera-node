@@ -25,7 +25,8 @@ public enum NotificationType {
     POSTING_REACTION_DELETED_ALL(PostingReactionDeletedAllNotification.class),
     FRIENDSHIP_UPDATED(FriendshipUpdatedNotification.class),
     FRIEND_GROUP_UPDATED(FriendGroupUpdatedNotification.class),
-    FRIEND_GROUP_DELETED(FriendGroupDeletedNotification.class);
+    FRIEND_GROUP_DELETED(FriendGroupDeletedNotification.class),
+    ASKED(AskedNotification.class);
 
     private final Class<? extends Notification> structure;
 
