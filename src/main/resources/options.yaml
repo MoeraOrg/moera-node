@@ -514,3 +514,19 @@
     principals:
       - signed
       - none
+
+- name: ask.interval
+  type: Duration
+  defaultValue: 10d
+  title: Minimal interval between subscription/friendship requests
+  modifiers:
+    min: 1d
+    max: 2000d
+
+- name: ask.total.max
+  type: int
+  defaultValue: 5
+  title: Maximal number of subscription/friendship requests per user
+  modifiers:
+    min: 2
+    max: 50

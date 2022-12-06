@@ -14,7 +14,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.NodeApiAuthenticationException;
 import org.moera.node.api.NodeApiNotFoundException;
+import org.moera.node.api.NodeApiOperationException;
 import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.api.NodeApiValidationException;
 import org.moera.node.data.PendingNotificationRepository;
@@ -206,6 +208,7 @@ public class NotificationSender extends Task {
             SubscriberNotification sn = (SubscriberNotification) notification;
             if (sn.getSubscriptionCreatedAt() != null
                     && sn.getSubscriptionCreatedAt().toInstant().plus(SUBSCRIPTION_DELAY).isAfter(Instant.now())) {
+                // Subscription may not be registered by the node yet
                 errorType = NotificationSenderError.REGULAR;
             } else {
                 pool.unsubscribe(UUID.fromString(sn.getSubscriberId()));
@@ -213,7 +216,7 @@ public class NotificationSender extends Task {
             }
         } else if (e instanceof NodeApiUnknownNameException) {
             errorType = NotificationSenderError.NAMING;
-        } else if (e instanceof NodeApiNotFoundException || e instanceof JsonProcessingException) {
+        } else if (isFatalError(e)) {
             errorType = NotificationSenderError.FATAL;
         }
         failed(e.getMessage());
@@ -225,6 +228,23 @@ public class NotificationSender extends Task {
         if (e instanceof NodeApiValidationException) {
             String errorCode = ((NodeApiValidationException) e).getErrorCode();
             return errorCode.equals("subscription.unsubscribe") || errorCode.equals("notificationPacket.type.unknown");
+        }
+        return false;
+    }
+
+    private boolean isFatalError(Throwable e) {
+        if (e instanceof NodeApiNotFoundException) {
+            return true;
+        }
+        if (e instanceof NodeApiAuthenticationException) {
+            return true;
+        }
+        if (e instanceof JsonProcessingException) {
+            return true;
+        }
+        if (e instanceof NodeApiOperationException) {
+            String errorCode = ((NodeApiOperationException) e).getErrorCode();
+            return errorCode.equals("ask.too-many");
         }
         return false;
     }

@@ -190,6 +190,9 @@ public class NodeApi {
             case NOT_FOUND:
                 throw new NodeApiNotFoundException(uri);
 
+            case FORBIDDEN:
+                throw new NodeApiAuthenticationException();
+
             case OK:
             case CREATED:
                 // do nothing
