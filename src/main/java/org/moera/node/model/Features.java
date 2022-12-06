@@ -3,6 +3,8 @@ package org.moera.node.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.option.Options;
@@ -15,19 +17,19 @@ public class Features {
     private List<String> plugins;
     private int feedWidth;
     private FriendGroupsFeatures friendGroups;
-    private AskFeatures ask;
+    private List<AskSubject> ask;
 
     public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, Friend[] clientGroups,
-                    boolean admin) {
+                    AccessChecker accessChecker, List<AskSubject> ask) {
         posting = new PostingFeatures(options);
         if (!ObjectUtils.isEmpty(plugins)) {
             this.plugins = plugins;
         }
         feedWidth = options.getInt("feed.width");
-        friendGroups = admin
+        friendGroups = accessChecker.isPrincipal(Principal.ADMIN)
                 ? FriendGroupsFeatures.forAdmin(nodeGroups)
                 : FriendGroupsFeatures.forRegular(nodeGroups, clientGroups);
-        ask = new AskFeatures(options);
+        this.ask = ask;
     }
 
     public PostingFeatures getPosting() {
@@ -62,11 +64,11 @@ public class Features {
         this.friendGroups = friendGroups;
     }
 
-    public AskFeatures getAsk() {
+    public List<AskSubject> getAsk() {
         return ask;
     }
 
-    public void setAsk(AskFeatures ask) {
+    public void setAsk(List<AskSubject> ask) {
         this.ask = ask;
     }
 

@@ -44,9 +44,10 @@ public class OptionHookManager {
                 if (params.length > 1 || params.length == 1 && params[0] != OptionValueChange.class) {
                     throw new InvalidOptionHookMethod(method);
                 }
-                String name = mapping.value();
-                handlers.computeIfAbsent(name, nm -> new ArrayList<>()).add(new HandlerMethod(bean, method));
-                log.debug("Adding hook to option '{}': {}", name, method);
+                for (String name : mapping.value()) {
+                    handlers.computeIfAbsent(name, nm -> new ArrayList<>()).add(new HandlerMethod(bean, method));
+                    log.debug("Adding hook to option '{}': {}", name, method);
+                }
             }
         }
     }

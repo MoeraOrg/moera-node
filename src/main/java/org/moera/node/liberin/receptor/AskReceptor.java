@@ -6,8 +6,10 @@ import org.moera.node.instant.AskInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.AskSubjectsChangedLiberin;
 import org.moera.node.liberin.model.AskedToFriendLiberin;
 import org.moera.node.liberin.model.AskedToSubscribeLiberin;
+import org.moera.node.model.event.AskSubjectsChangedEvent;
 
 @LiberinReceptor
 public class AskReceptor extends LiberinReceptorBase {
@@ -26,6 +28,11 @@ public class AskReceptor extends LiberinReceptorBase {
         askInstants.askedToFriend(liberin.getRemoteNodeName(), liberin.getRemoteFullName(),
                 liberin.getRemoteGender(), liberin.getRemoteAvatar(), liberin.getFriendGroupId(),
                 liberin.getFriendGroupTitle(), liberin.getMessage());
+    }
+
+    @LiberinMapping
+    public void subjectsChanged(AskSubjectsChangedLiberin liberin) {
+        send(liberin, new AskSubjectsChangedEvent());
     }
 
 }

@@ -16,6 +16,7 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.AskSubjectsChangedLiberin;
 import org.moera.node.liberin.model.AskedToFriendLiberin;
 import org.moera.node.liberin.model.AskedToSubscribeLiberin;
 import org.moera.node.media.MediaManager;
@@ -139,6 +140,8 @@ public class AskProcessor {
         askHistory.setRemoteNodeName(remoteNodeName);
         askHistory.setSubject(subject);
         askHistoryRepository.save(askHistory);
+
+        universalContext.send(new AskSubjectsChangedLiberin());
     }
 
 }
