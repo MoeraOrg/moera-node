@@ -39,6 +39,18 @@ public class Contact {
     private String remoteAvatarShape;
 
     @NotNull
+    private int feedSubscriptionCount;
+
+    @NotNull
+    private int feedSubscriberCount;
+
+    @NotNull
+    private int friendCount;
+
+    @NotNull
+    private int friendOfCount;
+
+    @NotNull
     private float closenessBase;
 
     @NotNull
@@ -104,6 +116,38 @@ public class Contact {
 
     public void setRemoteAvatarShape(String remoteAvatarShape) {
         this.remoteAvatarShape = remoteAvatarShape;
+    }
+
+    public int getFeedSubscriptionCount() {
+        return feedSubscriptionCount;
+    }
+
+    public void setFeedSubscriptionCount(int feedSubscriptionCount) {
+        this.feedSubscriptionCount = feedSubscriptionCount;
+    }
+
+    public int getFeedSubscriberCount() {
+        return feedSubscriberCount;
+    }
+
+    public void setFeedSubscriberCount(int feedSubscriberCount) {
+        this.feedSubscriberCount = feedSubscriberCount;
+    }
+
+    public int getFriendCount() {
+        return friendCount;
+    }
+
+    public void setFriendCount(int friendCount) {
+        this.friendCount = friendCount;
+    }
+
+    public int getFriendOfCount() {
+        return friendOfCount;
+    }
+
+    public void setFriendOfCount(int friendOfCount) {
+        this.friendOfCount = friendOfCount;
     }
 
     public float getClosenessBase() {

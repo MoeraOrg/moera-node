@@ -165,8 +165,13 @@ public class SubscriptionController {
                 userSubscription.setNodeId(requestContext.nodeId());
                 subscriptionDescription.toUserSubscription(userSubscription);
                 userSubscription = userSubscriptionRepository.save(userSubscription);
-                contactOperations.updateCloseness(userSubscription.getRemoteNodeName(),
-                        userSubscription.getSubscriptionType() == SubscriptionType.FEED ? 800 : 1);
+
+                if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
+                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
+                    contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
+                } else {
+                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
+                }
 
                 return userSubscription;
             });
@@ -222,8 +227,9 @@ public class SubscriptionController {
         UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
                         requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        userSubscriptionRepository.delete(subscription);
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            userSubscriptionRepository.delete(subscription);
+            contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1);
         }
 
         requestContext.subscriptionsUpdated();

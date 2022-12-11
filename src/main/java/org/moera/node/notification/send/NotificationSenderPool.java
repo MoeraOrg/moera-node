@@ -24,6 +24,7 @@ import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.friends.FriendCache;
@@ -31,6 +32,7 @@ import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
@@ -73,6 +75,9 @@ public class NotificationSenderPool {
 
     @Inject
     private FriendCache friendCache;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     @Inject
     private LiberinManager liberinManager;
@@ -224,6 +229,9 @@ public class NotificationSenderPool {
             Subscriber subscr = subscriberRepository.findById(subscriberId).orElse(null);
             if (subscr != null) {
                 subscriberRepository.delete(subscr);
+                if (subscr.getSubscriptionType() == SubscriptionType.FEED) {
+                    contactOperations.updateFeedSubscriberCount(subscr.getRemoteNodeName(), -1);
+                }
             }
             return subscr;
         });

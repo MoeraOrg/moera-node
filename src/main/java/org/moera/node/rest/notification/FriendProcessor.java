@@ -65,6 +65,7 @@ public class FriendProcessor {
         for (var prev : previous.entrySet()) {
             if (!current.containsKey(prev.getKey())) {
                 friendOfRepository.delete(prev.getValue());
+                contactOperations.updateFriendOfCount(notification.getSenderNodeName(), -1);
                 universalContext.send(new RemoteFromFriendGroupDeletedLiberin(prev.getValue()));
             }
         }
@@ -92,8 +93,9 @@ public class FriendProcessor {
         }
 
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getSenderNodeName(), 1),
+                contactOperations.updateCloseness(notification.getSenderNodeName(), 0),
                 notification.getSenderAvatar());
+        contactOperations.updateFriendOfCount(notification.getSenderNodeName(), added.size());
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},

@@ -166,8 +166,12 @@ public class SubscriberController {
         }
         subscriber = subscriberRepository.save(subscriber);
 
-        contactOperations.updateCloseness(subscriber.getRemoteNodeName(),
-                subscriber.getSubscriptionType() == SubscriptionType.FEED ? 1 : 0.25f);
+        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
+            contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
+            contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), 1);
+        } else {
+            contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 0.25f);
+        }
 
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
@@ -253,6 +257,9 @@ public class SubscriberController {
         }
 
         subscriberRepository.delete(subscriber);
+        if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
+            contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), -1);
+        }
 
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberDeletedLiberin(subscriber));

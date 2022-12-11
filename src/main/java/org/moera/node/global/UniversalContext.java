@@ -36,7 +36,7 @@ public class UniversalContext {
     @Inject
     private AvatarRepository avatarRepository;
 
-    private boolean isBackground() {
+    public boolean isBackground() {
         return RequestContextHolder.getRequestAttributes() == null;
     }
 

@@ -16,8 +16,10 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -46,6 +48,8 @@ public class ContactOperations {
     @Inject
     private PlatformTransactionManager txManager;
 
+    private final ParametrizedLock<Pair<UUID, String>> lock = new ParametrizedLock<>();
+
     public Contact updateCloseness(String remoteNodeName, float delta) {
         return updateCloseness(universalContext.nodeId(), remoteNodeName, delta);
     }
@@ -55,6 +59,7 @@ public class ContactOperations {
             return null;
         }
 
+        lock.lock(Pair.of(nodeId, remoteNodeName));
         try {
             return Transaction.execute(txManager, () -> {
                 Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
@@ -72,6 +77,100 @@ public class ContactOperations {
             });
         } catch (Throwable e) {
             throw new ContactUpdateException(e);
+        } finally {
+            lock.unlock(Pair.of(nodeId, remoteNodeName));
+        }
+    }
+
+    public void updateFeedSubscriptionCount(String remoteNodeName, int delta) {
+        updateFeedSubscriptionCount(universalContext.nodeId(), remoteNodeName, delta);
+    }
+
+    public void updateFeedSubscriptionCount(UUID nodeId, String remoteNodeName, int delta) {
+        if (remoteNodeName == null) {
+            return;
+        }
+
+        lock.lock(Pair.of(nodeId, remoteNodeName));
+        try {
+            Transaction.execute(txManager, () -> {
+                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
+                        contact -> contact.setFeedSubscriptionCount(contact.getFeedSubscriptionCount() + delta));
+                return null;
+            });
+        } catch (Throwable e) {
+            throw new ContactUpdateException(e);
+        } finally {
+            lock.unlock(Pair.of(nodeId, remoteNodeName));
+        }
+    }
+
+    public void updateFeedSubscriberCount(String remoteNodeName, int delta) {
+        updateFeedSubscriberCount(universalContext.nodeId(), remoteNodeName, delta);
+    }
+
+    public void updateFeedSubscriberCount(UUID nodeId, String remoteNodeName, int delta) {
+        if (remoteNodeName == null) {
+            return;
+        }
+
+        lock.lock(Pair.of(nodeId, remoteNodeName));
+        try {
+            Transaction.execute(txManager, () -> {
+                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
+                        contact -> contact.setFeedSubscriberCount(contact.getFeedSubscriberCount() + delta));
+                return null;
+            });
+        } catch (Throwable e) {
+            throw new ContactUpdateException(e);
+        } finally {
+            lock.unlock(Pair.of(nodeId, remoteNodeName));
+        }
+    }
+
+    public void updateFriendCount(String remoteNodeName, int delta) {
+        updateFriendCount(universalContext.nodeId(), remoteNodeName, delta);
+    }
+
+    public void updateFriendCount(UUID nodeId, String remoteNodeName, int delta) {
+        if (remoteNodeName == null) {
+            return;
+        }
+
+        lock.lock(Pair.of(nodeId, remoteNodeName));
+        try {
+            Transaction.execute(txManager, () -> {
+                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
+                        contact -> contact.setFriendCount(contact.getFriendCount() + delta));
+                return null;
+            });
+        } catch (Throwable e) {
+            throw new ContactUpdateException(e);
+        } finally {
+            lock.unlock(Pair.of(nodeId, remoteNodeName));
+        }
+    }
+
+    public void updateFriendOfCount(String remoteNodeName, int delta) {
+        updateFriendOfCount(universalContext.nodeId(), remoteNodeName, delta);
+    }
+
+    public void updateFriendOfCount(UUID nodeId, String remoteNodeName, int delta) {
+        if (remoteNodeName == null) {
+            return;
+        }
+
+        lock.lock(Pair.of(nodeId, remoteNodeName));
+        try {
+            Transaction.execute(txManager, () -> {
+                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
+                        contact -> contact.setFriendOfCount(contact.getFriendOfCount() + delta));
+                return null;
+            });
+        } catch (Throwable e) {
+            throw new ContactUpdateException(e);
+        } finally {
+            lock.unlock(Pair.of(nodeId, remoteNodeName));
         }
     }
 

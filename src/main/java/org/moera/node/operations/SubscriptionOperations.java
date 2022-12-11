@@ -23,6 +23,9 @@ public class SubscriptionOperations {
     @Inject
     private UserSubscriptionRepository userSubscriptionRepository;
 
+    @Inject
+    private ContactOperations contactOperations;
+
     public void subscribeToPostingComments(String nodeName, String entryId, SubscriptionReason reason) {
         UserSubscription subscription = new UserSubscription();
         subscription.setId(UUID.randomUUID());
@@ -43,6 +46,7 @@ public class SubscriptionOperations {
                 userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
                         universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
                         subscription.getRemoteFeedName());
+                contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1);
                 break;
             case POSTING:
             case POSTING_COMMENTS:

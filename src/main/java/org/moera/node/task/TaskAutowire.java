@@ -10,6 +10,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -27,6 +28,9 @@ public class TaskAutowire {
     private RequestContext requestContext;
 
     @Inject
+    private UniversalContext universalContext;
+
+    @Inject
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
 
     @Inject
@@ -34,8 +38,10 @@ public class TaskAutowire {
 
     public void autowire(Task task) {
         autowireCapableBeanFactory.autowireBean(task);
-        task.setNodeId(requestContext.nodeId());
-        task.setLocalAddr(getLocalAddr());
+        task.setNodeId(universalContext.nodeId());
+        task.setLocalAddr(universalContext.isBackground()
+                ? getLocalAddr(domains.getDomainName(universalContext.nodeId()))
+                : getLocalAddr());
     }
 
     public void autowireWithoutRequest(Task task, UUID nodeId) {

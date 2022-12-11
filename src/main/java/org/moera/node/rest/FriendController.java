@@ -172,6 +172,7 @@ public class FriendController {
                     targetGroups.put(friend.getFriendGroup().getId(), Pair.of(target.getFirst(), friend));
                 } else {
                     friendRepository.delete(friend);
+                    contactOperations.updateFriendCount(friend.getRemoteNodeName(), -1);
                 }
             }
 
@@ -192,6 +193,7 @@ public class FriendController {
                     friend = friendRepository.save(friend);
 
                     contactOperations.updateCloseness(friend.getRemoteNodeName(), 800);
+                    contactOperations.updateFriendCount(friend.getRemoteNodeName(), 1);
                 } else {
                     target.getValue().getFirst().toFriend(friend);
                 }
