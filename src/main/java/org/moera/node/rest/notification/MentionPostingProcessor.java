@@ -42,16 +42,11 @@ public class MentionPostingProcessor {
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getOwnerAvatar()},
-                mediaFiles -> {
-                    if (notification.getOwnerAvatar() != null) {
-                        notification.getOwnerAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    universalContext.send(
-                            new MentionInRemotePostingAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getOwnerName(), notification.getOwnerFullName(),
-                                    notification.getOwnerGender(), notification.getOwnerAvatar(),
-                                    notification.getPostingId(), notification.getHeading()));
-                });
+                () -> universalContext.send(
+                        new MentionInRemotePostingAddedLiberin(notification.getSenderNodeName(),
+                                notification.getOwnerName(), notification.getOwnerFullName(),
+                                notification.getOwnerGender(), notification.getOwnerAvatar(),
+                                notification.getPostingId(), notification.getHeading())));
         subscriptionOperations.subscribeToPostingComments(notification.getSenderNodeName(), notification.getPostingId(),
                 SubscriptionReason.MENTION);
     }

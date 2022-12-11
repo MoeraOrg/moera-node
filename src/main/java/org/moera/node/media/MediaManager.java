@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.UUID;
-import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -139,38 +138,34 @@ public class MediaManager {
                 universalContext.getOptions().getInt("avatar.max-size"));
     }
 
-    public void asyncDownloadPublicMedia(String nodeName, AvatarImage[] avatarImages, Consumer<MediaFile[]> callback) {
+    public void asyncDownloadPublicMedia(String nodeName, AvatarImage[] avatarImages, Runnable callback) {
         if (avatarImages == null) {
-            callback.accept(null);
+            callback.run();
             return;
         }
 
-        String[] ids = new String[avatarImages.length];
-        MediaFile[] mediaFiles = new MediaFile[avatarImages.length];
-
         boolean all = true;
-        for (int i = 0; i < avatarImages.length; i++) {
-            ids[i] = avatarImages[i] != null ? avatarImages[i].getMediaId() : null;
-            if (ids[i] == null) {
-                mediaFiles[i] = null;
+        for (AvatarImage avatarImage : avatarImages) {
+            String id = avatarImage != null ? avatarImage.getMediaId() : null;
+            if (id == null) {
                 continue;
             }
-            MediaFile mediaFile = avatarImages[i].getMediaFile() != null
-                    ? avatarImages[i].getMediaFile()
-                    : mediaFileRepository.findById(ids[i]).orElse(null);
-            if (mediaFile != null && mediaFile.isExposed()) {
-                mediaFiles[i] = mediaFile;
-                continue;
+            if (avatarImage.getMediaFile() != null) {
+                MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
+                if (mediaFile != null && mediaFile.isExposed()) {
+                    avatarImage.setMediaFile(mediaFile);
+                    continue;
+                }
             }
             all = false;
         }
 
         if (all) {
-            callback.accept(mediaFiles);
+            callback.run();
             return;
         }
 
-        var downloadTask = new PublicMediaDownloadTask(nodeName, ids, mediaFiles,
+        var downloadTask = new PublicMediaDownloadTask(nodeName, avatarImages,
                 universalContext.getOptions().getInt("avatar.max-size"), callback);
         taskAutowire.autowire(downloadTask);
         taskExecutor.execute(downloadTask);

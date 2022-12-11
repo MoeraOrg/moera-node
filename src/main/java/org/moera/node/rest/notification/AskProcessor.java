@@ -82,14 +82,9 @@ public class AskProcessor {
 
                 mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                         new AvatarImage[] {notification.getSenderAvatar()},
-                        mediaFiles -> {
-                            if (notification.getSenderAvatar() != null) {
-                                notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
-                            }
-                            universalContext.send(new AskedToSubscribeLiberin(notification.getSenderNodeName(),
-                                    notification.getSenderFullName(), notification.getSenderGender(),
-                                    notification.getSenderAvatar(), notification.getMessage()));
-                        });
+                        () -> universalContext.send(new AskedToSubscribeLiberin(notification.getSenderNodeName(),
+                                notification.getSenderFullName(), notification.getSenderGender(),
+                                notification.getSenderAvatar(), notification.getMessage())));
                 break;
 
             case FRIEND: {
@@ -119,15 +114,10 @@ public class AskProcessor {
 
                 mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                         new AvatarImage[] {notification.getSenderAvatar()},
-                        mediaFiles -> {
-                            if (notification.getSenderAvatar() != null) {
-                                notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
-                            }
-                            universalContext.send(new AskedToFriendLiberin(notification.getSenderNodeName(),
-                                    notification.getSenderFullName(), notification.getSenderGender(),
-                                    notification.getSenderAvatar(), friendGroup.getId(), friendGroup.getTitle(),
-                                    notification.getMessage()));
-                        });
+                        () -> universalContext.send(new AskedToFriendLiberin(notification.getSenderNodeName(),
+                                notification.getSenderFullName(), notification.getSenderGender(),
+                                notification.getSenderAvatar(), friendGroup.getId(), friendGroup.getTitle(),
+                                notification.getMessage())));
                 break;
             }
         }

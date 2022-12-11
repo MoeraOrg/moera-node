@@ -40,22 +40,14 @@ public class MentionCommentProcessor {
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
-                mediaFiles -> {
-                    if (notification.getPostingOwnerAvatar() != null) {
-                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    if (notification.getCommentOwnerAvatar() != null) {
-                        notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
-                    }
-                    universalContext.send(
-                            new MentionInRemoteCommentAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
-                                    notification.getPostingId(), notification.getPostingHeading(),
-                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
-                                    notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
-                                    notification.getCommentId(), notification.getCommentHeading()));
-                });
+                () -> universalContext.send(
+                        new MentionInRemoteCommentAddedLiberin(notification.getSenderNodeName(),
+                                notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                notification.getPostingId(), notification.getPostingHeading(),
+                                notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
+                                notification.getCommentId(), notification.getCommentHeading())));
     }
 
     @NotificationMapping(NotificationType.MENTION_COMMENT_DELETED)

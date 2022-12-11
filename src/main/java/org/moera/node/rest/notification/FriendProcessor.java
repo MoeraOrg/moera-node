@@ -97,12 +97,7 @@ public class FriendProcessor {
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
-                mediaFiles -> {
-                    if (notification.getSenderAvatar() != null) {
-                        notification.getSenderAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    updateAvatarsAndSend(notification.getSenderAvatar(), added);
-                });
+                () -> updateAvatarsAndSend(notification.getSenderAvatar(), added));
     }
 
     private void updateAvatarsAndSend(AvatarImage avatarImage, List<RemoteToFriendGroupAddedLiberin> liberins) {

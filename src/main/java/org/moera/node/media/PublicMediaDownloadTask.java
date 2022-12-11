@@ -1,10 +1,9 @@
 package org.moera.node.media;
 
-import java.util.function.Consumer;
 import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiUnknownNameException;
-import org.moera.node.data.MediaFile;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,19 +13,16 @@ public class PublicMediaDownloadTask extends Task {
     private static final Logger log = LoggerFactory.getLogger(PublicMediaDownloadTask.class);
 
     private final String targetNodeName;
-    private final String[] mediaIds;
-    private final MediaFile[] mediaFiles;
+    private final AvatarImage[] avatars;
     private final int maxSize;
-    private final Consumer<MediaFile[]> callback;
+    private final Runnable callback;
 
     @Inject
     private MediaManager mediaManager;
 
-    public PublicMediaDownloadTask(String targetNodeName, String[] mediaIds, MediaFile[] mediaFiles, int maxSize,
-                                   Consumer<MediaFile[]> callback) {
+    public PublicMediaDownloadTask(String targetNodeName, AvatarImage[] avatars, int maxSize, Runnable callback) {
         this.targetNodeName = targetNodeName;
-        this.mediaIds = mediaIds;
-        this.mediaFiles = mediaFiles;
+        this.avatars = avatars;
         this.maxSize = maxSize;
         this.callback = callback;
     }
@@ -35,15 +31,15 @@ public class PublicMediaDownloadTask extends Task {
     protected void execute() {
         String mediaId = null;
         try {
-            for (int i = 0; i < mediaIds.length; i++) {
-                if (mediaIds[i] == null || mediaFiles[i] != null) {
+            for (AvatarImage avatar : avatars) {
+                if (avatar == null || avatar.getMediaId() == null || avatar.getMediaFile() != null) {
                     continue;
                 }
-                mediaId = mediaIds[i];
-                mediaFiles[i] = mediaManager.downloadPublicMedia(targetNodeName, mediaId, maxSize);
+                mediaId = avatar.getMediaId();
+                avatar.setMediaFile(mediaManager.downloadPublicMedia(targetNodeName, mediaId, maxSize));
                 success(mediaId);
             }
-            callback.accept(mediaFiles);
+            callback.run();
         } catch (Throwable e) {
             error(mediaId, e);
         }

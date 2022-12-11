@@ -42,21 +42,13 @@ public class CommentReactionProcessor {
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingAvatar(), notification.getOwnerAvatar()},
-                mediaFiles -> {
-                    if (notification.getPostingAvatar() != null) {
-                        notification.getPostingAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    if (notification.getOwnerAvatar() != null) {
-                        notification.getOwnerAvatar().setMediaFile(mediaFiles[1]);
-                    }
-                    universalContext.send(new RemoteCommentReactionAddedLiberin(notification.getSenderNodeName(),
-                            notification.getPostingNodeName(), notification.getPostingFullName(),
-                            notification.getPostingGender(), notification.getPostingAvatar(),
-                            notification.getPostingId(), notification.getCommentId(), notification.getOwnerName(),
-                            notification.getOwnerFullName(), notification.getOwnerGender(),
-                            notification.getOwnerAvatar(), notification.getCommentHeading(), notification.isNegative(),
-                            notification.getEmoji()));
-                });
+                () -> universalContext.send(new RemoteCommentReactionAddedLiberin(notification.getSenderNodeName(),
+                        notification.getPostingNodeName(), notification.getPostingFullName(),
+                        notification.getPostingGender(), notification.getPostingAvatar(),
+                        notification.getPostingId(), notification.getCommentId(), notification.getOwnerName(),
+                        notification.getOwnerFullName(), notification.getOwnerGender(),
+                        notification.getOwnerAvatar(), notification.getCommentHeading(), notification.isNegative(),
+                        notification.getEmoji())));
     }
 
     @NotificationMapping(NotificationType.COMMENT_REACTION_DELETED)

@@ -86,22 +86,14 @@ public class RemotePostingProcessor {
                 notification.getCommentOwnerAvatar());
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
-                mediaFiles -> {
-                    if (notification.getPostingOwnerAvatar() != null) {
-                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    if (notification.getCommentOwnerAvatar() != null) {
-                        notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
-                    }
-                    universalContext.send(
-                            new ForeignCommentAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
-                                    notification.getPostingId(), notification.getPostingHeading(),
-                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
-                                    notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
-                                    notification.getCommentId(), notification.getCommentHeading(), reason));
-                });
+                () -> universalContext.send(
+                        new ForeignCommentAddedLiberin(notification.getSenderNodeName(),
+                                notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                notification.getPostingId(), notification.getPostingHeading(),
+                                notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
+                                notification.getCommentId(), notification.getCommentHeading(), reason)));
     }
 
     @NotificationMapping(NotificationType.POSTING_COMMENT_DELETED)
@@ -122,17 +114,12 @@ public class RemotePostingProcessor {
                 notification.getPostingOwnerAvatar());
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar()},
-                mediaFiles -> {
-                    if (notification.getPostingOwnerAvatar() != null) {
-                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    universalContext.send(
-                            new RemotePostingImportantUpdateLiberin(notification.getSenderNodeName(),
-                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
-                                    notification.getPostingId(), notification.getPostingHeading(),
-                                    notification.getDescription()));
-                });
+                () -> universalContext.send(
+                        new RemotePostingImportantUpdateLiberin(notification.getSenderNodeName(),
+                                notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                notification.getPostingId(), notification.getPostingHeading(),
+                                notification.getDescription())));
     }
 
 }

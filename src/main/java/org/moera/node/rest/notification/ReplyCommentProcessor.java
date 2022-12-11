@@ -39,23 +39,15 @@ public class ReplyCommentProcessor {
                 notification.getCommentOwnerAvatar());
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
-                mediaFiles -> {
-                    if (notification.getPostingOwnerAvatar() != null) {
-                        notification.getPostingOwnerAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    if (notification.getCommentOwnerAvatar() != null) {
-                        notification.getCommentOwnerAvatar().setMediaFile(mediaFiles[1]);
-                    }
-                    universalContext.send(
-                            new ReplyCommentAddedLiberin(notification.getSenderNodeName(),
-                                    notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
-                                    notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
-                                    notification.getPostingHeading(), notification.getPostingId(),
-                                    notification.getRepliedToHeading(), notification.getRepliedToId(),
-                                    notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
-                                    notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
-                                    notification.getCommentId()));
-                });
+                () -> universalContext.send(
+                        new ReplyCommentAddedLiberin(notification.getSenderNodeName(),
+                                notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
+                                notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
+                                notification.getPostingHeading(), notification.getPostingId(),
+                                notification.getRepliedToHeading(), notification.getRepliedToId(),
+                                notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
+                                notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
+                                notification.getCommentId())));
     }
 
     @NotificationMapping(NotificationType.REPLY_COMMENT_DELETED)

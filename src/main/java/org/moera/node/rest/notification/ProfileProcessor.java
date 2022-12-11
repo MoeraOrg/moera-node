@@ -70,13 +70,14 @@ public class ProfileProcessor {
 
         mediaManager.asyncDownloadPublicMedia(nodeName,
                 new AvatarImage[] {avatar},
-                mediaFiles -> this.saveAvatar(nodeName, mediaFiles[0], avatar != null ? avatar.getShape() : null));
+                () -> {
+                    if (avatar != null && avatar.getMediaFile() != null) {
+                        this.saveAvatar(nodeName, avatar.getMediaFile(), avatar.getShape());
+                    }
+                });
     }
 
     private void saveAvatar(String nodeName, MediaFile mediaFile, String shape) {
-        if (mediaFile == null) {
-            return;
-        }
         try {
             Transaction.execute(txManager, () -> {
                 contactOperations.updateAvatar(nodeName, mediaFile, shape);

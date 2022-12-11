@@ -44,17 +44,8 @@ public class PostingReactionProcessor {
                 notification.getOwnerAvatar());
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
-                new AvatarImage[] {
-                        notification.getParentPostingAvatar(),
-                        notification.getOwnerAvatar()
-                },
-                mediaFiles -> {
-                    if (notification.getParentPostingAvatar() != null) {
-                        notification.getParentPostingAvatar().setMediaFile(mediaFiles[0]);
-                    }
-                    if (notification.getOwnerAvatar() != null) {
-                        notification.getOwnerAvatar().setMediaFile(mediaFiles[1]);
-                    }
+                new AvatarImage[] {notification.getParentPostingAvatar(), notification.getOwnerAvatar()},
+                () -> {
                     if (notification.getParentPostingId() != null) {
                         if (notification.getParentCommentId() == null) {
                             addedToPostingMedia(notification);
