@@ -8,23 +8,25 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
+import org.moera.node.data.FriendOfRepository;
+import org.moera.node.data.FriendRepository;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.OwnCommentRepository;
-import org.moera.node.data.OwnReactionRepository;
+import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.UserSubscriptionRepository;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class ContactOperations {
 
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private ContactRepository contactRepository;
@@ -33,78 +35,70 @@ public class ContactOperations {
     private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
-    private OwnCommentRepository ownCommentRepository;
+    private SubscriberRepository subscriberRepository;
 
     @Inject
-    private OwnReactionRepository ownReactionRepository;
+    private FriendRepository friendRepository;
 
     @Inject
-    private CommentRepository commentRepository;
+    private FriendOfRepository friendOfRepository;
 
-    public void createOrUpdateCloseness(String remoteNodeName, String remoteFullName, String remoteGender,
-                                        MediaFile remoteAvatar, String remoteAvatarShape, float delta) {
-        createOrUpdateCloseness(requestContext.nodeId(), requestContext.nodeName(), remoteNodeName, remoteFullName,
-                remoteGender, remoteAvatar, remoteAvatarShape, delta);
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    public Contact updateCloseness(String remoteNodeName, float delta) {
+        return updateCloseness(universalContext.nodeId(), remoteNodeName, delta);
     }
 
-    public void createOrUpdateCloseness(UUID nodeId, String nodeName, String remoteNodeName, String remoteFullName,
-                                        String remoteGender, MediaFile remoteAvatar, String remoteAvatarShape,
-                                        float delta) {
+    public Contact updateCloseness(UUID nodeId, String remoteNodeName, float delta) {
         if (remoteNodeName == null) {
-            return;
+            return null;
         }
-        Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
-        if (contact != null) {
-            contact.setRemoteFullName(remoteFullName);
-            contact.setRemoteGender(remoteGender);
-            if (remoteAvatar != null) {
-                contact.setRemoteAvatarMediaFile(remoteAvatar);
-                contact.setRemoteAvatarShape(remoteAvatarShape);
-            }
-            contact.updateCloseness(delta);
-            return;
+
+        try {
+            return Transaction.execute(txManager, () -> {
+                Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
+                if (contact == null) {
+                    contact = new Contact();
+                    contact.setId(UUID.randomUUID());
+                    contact.setNodeId(nodeId);
+                    contact.setRemoteNodeName(remoteNodeName);
+                    contact.setCloseness(delta);
+                    contactRepository.save(contact);
+                    return null; // indicates that the contact did not exist
+                }
+                contact.updateCloseness(delta);
+                return contact;
+            });
+        } catch (Throwable e) {
+            throw new ContactUpdateException(e);
         }
-        contact = new Contact();
-        contact.setId(UUID.randomUUID());
-        contact.setNodeId(nodeId);
-        contact.setRemoteNodeName(remoteNodeName);
-        contact.setRemoteFullName(remoteFullName);
-        contact.setRemoteGender(remoteGender);
-        if (remoteAvatar != null) {
-            contact.setRemoteAvatarMediaFile(remoteAvatar);
-            contact.setRemoteAvatarShape(remoteAvatarShape);
-        }
-        float closeness = 0;
-        closeness += userSubscriptionRepository.countByRemoteNode(nodeId, remoteNodeName);
-        closeness += ownCommentRepository.countByRemoteNode(nodeId, remoteNodeName);
-        closeness += ownReactionRepository.countByRemoteNode(nodeId, remoteNodeName) * 0.25;
-        closeness += commentRepository.countByOwner(nodeId, remoteNodeName);
-        closeness += commentRepository.countByOwnerAndRepliedToName(nodeId, nodeName, remoteNodeName);
-        contact.setCloseness(closeness);
-        contactRepository.save(contact);
     }
 
-    public void updateCloseness(String remoteNodeName, float delta) {
-        updateCloseness(requestContext.nodeId(), remoteNodeName, delta);
+    public void updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {
+        subscriberRepository.updateRemoteFullNameAndGender(
+                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
+        userSubscriptionRepository.updateRemoteFullNameAndGender(
+                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
+        contactRepository.updateRemoteFullNameAndGender(
+                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
+        friendRepository.updateRemoteFullNameAndGender(
+                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
+        friendOfRepository.updateRemoteFullNameAndGender(
+                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
     }
 
-    public void updateCloseness(UUID nodeId, String remoteNodeName, float delta) {
-        if (remoteNodeName == null) {
-            return;
-        }
-        contactRepository.findByRemoteNode(nodeId, remoteNodeName)
-                .ifPresent(contact -> contact.updateCloseness(delta));
-    }
-
-    public void delete(String remoteNodeName) {
-        delete(requestContext.nodeId(), remoteNodeName);
-    }
-
-    public void delete(UUID nodeId, String remoteNodeName) {
-        if (remoteNodeName == null) {
-            return;
-        }
-        contactRepository.deleteByRemoteNode(nodeId, remoteNodeName);
+    public void updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape) {
+        subscriberRepository.updateRemoteAvatar(
+                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
+        userSubscriptionRepository.updateRemoteAvatar(
+                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
+        contactRepository.updateRemoteAvatar(
+                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
+        friendRepository.updateRemoteAvatar(
+                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
+        friendOfRepository.updateRemoteAvatar(
+                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
     }
 
     @Scheduled(fixedDelayString = "P1D")

@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.Contact;
 import org.moera.node.data.OwnCommentRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;
@@ -24,6 +25,7 @@ import org.moera.node.model.notification.PostingImportantUpdateNotification;
 import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.operations.ContactOperations;
 
 @NotificationProcessor
 public class RemotePostingProcessor {
@@ -42,6 +44,9 @@ public class RemotePostingProcessor {
 
     @Inject
     private MediaManager mediaManager;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     private Subscription getSubscription(PostingSubscriberNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
@@ -73,6 +78,12 @@ public class RemotePostingProcessor {
                 return; // We should receive another notification about somebody replied to our comment
             }
         }
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getPostingOwnerName(), 0),
+                notification.getPostingOwnerAvatar());
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getCommentOwnerName(), 1),
+                notification.getCommentOwnerAvatar());
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
                 mediaFiles -> {
@@ -106,6 +117,9 @@ public class RemotePostingProcessor {
     @Transactional
     public void postingUpdated(PostingImportantUpdateNotification notification) {
         getSubscription(notification);
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getPostingOwnerName(), 0),
+                notification.getPostingOwnerAvatar());
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar()},
                 mediaFiles -> {

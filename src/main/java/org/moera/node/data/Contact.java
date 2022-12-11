@@ -9,6 +9,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
 
 @Entity
@@ -139,6 +140,12 @@ public class Contact {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public static void toAvatar(Contact contact, AvatarImage avatarImage) {
+        if (contact != null && avatarImage != null) {
+            avatarImage.setMediaFile(contact.getRemoteAvatarMediaFile());
+        }
     }
 
 }

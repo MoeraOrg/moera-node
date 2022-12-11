@@ -41,7 +41,6 @@ import org.moera.node.operations.OperationsValidator;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.rest.task.AllRemoteSubscribersUpdateTask;
-import org.moera.node.rest.task.RemoteProfileDownloadTask;
 import org.moera.node.rest.task.RemoteFeedFetchTask;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
@@ -166,13 +165,8 @@ public class SubscriptionController {
                 userSubscription.setNodeId(requestContext.nodeId());
                 subscriptionDescription.toUserSubscription(userSubscription);
                 userSubscription = userSubscriptionRepository.save(userSubscription);
-                if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
-                    contactOperations.createOrUpdateCloseness(userSubscription.getRemoteNodeName(),
-                            userSubscription.getRemoteFullName(), userSubscription.getRemoteGender(),
-                            userSubscription.getRemoteAvatarMediaFile(), userSubscription.getRemoteAvatarShape(), 1);
-                } else {
-                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
-                }
+                contactOperations.updateCloseness(userSubscription.getRemoteNodeName(),
+                        userSubscription.getSubscriptionType() == SubscriptionType.FEED ? 800 : 1);
 
                 return userSubscription;
             });
@@ -188,12 +182,6 @@ public class SubscriptionController {
                     subscription.getRemoteFeedName());
             taskAutowire.autowire(fetchTask);
             taskExecutor.execute(fetchTask);
-        }
-
-        if (subscription.getRemoteAvatarMediaFile() == null) {
-            var avatarTask = new RemoteProfileDownloadTask(subscription.getRemoteNodeName());
-            taskAutowire.autowire(avatarTask);
-            taskExecutor.execute(avatarTask);
         }
 
         return new SubscriptionInfo(subscription);
@@ -235,12 +223,7 @@ public class SubscriptionController {
                         requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            int totalSubscriptions = userSubscriptionRepository.countByTypeAndRemoteNode(requestContext.nodeId(),
-                    SubscriptionType.FEED, subscription.getRemoteNodeName());
             userSubscriptionRepository.delete(subscription);
-            if (totalSubscriptions == 1) {
-                contactOperations.delete(subscription.getRemoteNodeName());
-            }
         }
 
         requestContext.subscriptionsUpdated();

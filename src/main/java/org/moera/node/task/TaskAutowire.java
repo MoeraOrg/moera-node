@@ -44,6 +44,10 @@ public class TaskAutowire {
         task.setLocalAddr(getLocalAddr(domains.getDomainName(nodeId)));
     }
 
+    public void autowireWithoutRequestAndDomain(Task task) {
+        autowireCapableBeanFactory.autowireBean(task);
+    }
+
     private InetAddress getLocalAddr() {
         if (config.getAddress() != null) {
             try {

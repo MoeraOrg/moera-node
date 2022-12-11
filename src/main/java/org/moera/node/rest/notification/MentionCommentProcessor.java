@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.Contact;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.MentionInRemoteCommentAddedLiberin;
 import org.moera.node.liberin.model.MentionInRemoteCommentDeletedLiberin;
@@ -13,6 +14,7 @@ import org.moera.node.model.notification.MentionCommentDeletedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.operations.ContactOperations;
 
 @NotificationProcessor
 public class MentionCommentProcessor {
@@ -23,9 +25,19 @@ public class MentionCommentProcessor {
     @Inject
     private MediaManager mediaManager;
 
+    @Inject
+    private ContactOperations contactOperations;
+
     @NotificationMapping(NotificationType.MENTION_COMMENT_ADDED)
     @Transactional
     public void added(MentionCommentAddedNotification notification) {
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getPostingOwnerName(), 0),
+                notification.getPostingOwnerAvatar());
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getCommentOwnerName(), 0),
+                notification.getCommentOwnerAvatar());
+
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar(), notification.getCommentOwnerAvatar()},
                 mediaFiles -> {

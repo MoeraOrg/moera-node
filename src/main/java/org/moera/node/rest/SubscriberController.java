@@ -33,13 +33,10 @@ import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriberOverride;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
-import org.moera.node.rest.task.RemoteProfileDownloadTask;
-import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -70,11 +67,7 @@ public class SubscriberController {
     private MediaOperations mediaOperations;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private ContactOperations contactOperations;
 
     @GetMapping
     @Transactional
@@ -173,11 +166,8 @@ public class SubscriberController {
         }
         subscriber = subscriberRepository.save(subscriber);
 
-        if (subscriber.getRemoteAvatarMediaFile() == null) {
-            var avatarTask = new RemoteProfileDownloadTask(subscriber.getRemoteNodeName());
-            taskAutowire.autowire(avatarTask);
-            taskExecutor.execute(avatarTask);
-        }
+        contactOperations.updateCloseness(subscriber.getRemoteNodeName(),
+                subscriber.getSubscriptionType() == SubscriptionType.FEED ? 1 : 0.25f);
 
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));

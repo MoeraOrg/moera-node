@@ -3,6 +3,7 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.Contact;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddedLiberin;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionDeletedAllLiberin;
@@ -18,6 +19,7 @@ import org.moera.node.model.notification.PostingReactionDeletedAllNotification;
 import org.moera.node.model.notification.PostingReactionDeletedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.operations.ContactOperations;
 
 @NotificationProcessor
 public class PostingReactionProcessor {
@@ -28,9 +30,19 @@ public class PostingReactionProcessor {
     @Inject
     private MediaManager mediaManager;
 
+    @Inject
+    private ContactOperations contactOperations;
+
     @NotificationMapping(NotificationType.POSTING_REACTION_ADDED)
     @Transactional
     public void added(PostingReactionAddedNotification notification) {
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getParentPostingNodeName(), 0),
+                notification.getParentPostingAvatar());
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getOwnerName(), 0),
+                notification.getOwnerAvatar());
+
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {
                         notification.getParentPostingAvatar(),

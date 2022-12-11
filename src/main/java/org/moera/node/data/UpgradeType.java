@@ -8,6 +8,7 @@ public enum UpgradeType {
     @Deprecated
     PROFILE_SUBSCRIBE, /* 3 */
     AVATAR_DOWNLOAD,   /* 4 */
-    GENDER_DOWNLOAD    /* 5 */
+    GENDER_DOWNLOAD,   /* 5 */
+    PROFILE_DOWNLOAD   /* 6 */
 
 }

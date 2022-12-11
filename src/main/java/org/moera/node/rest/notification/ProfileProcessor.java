@@ -16,7 +16,7 @@ import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
-import org.moera.node.operations.RemoteProfileOperations;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class ProfileProcessor {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
-    private RemoteProfileOperations remoteProfileOperations;
+    private ContactOperations contactOperations;
 
     @Inject
     private MediaManager mediaManager;
@@ -60,7 +60,7 @@ public class ProfileProcessor {
     public void updateProfileDetails(String nodeName, String fullName, String gender, AvatarImage avatar) {
         try {
             Transaction.execute(txManager, () -> {
-                remoteProfileOperations.updateDetails(nodeName, fullName, gender);
+                contactOperations.updateDetails(nodeName, fullName, gender);
                 return null;
             });
         } catch (Throwable e) {
@@ -79,7 +79,7 @@ public class ProfileProcessor {
         }
         try {
             Transaction.execute(txManager, () -> {
-                remoteProfileOperations.updateAvatar(nodeName, mediaFile, shape);
+                contactOperations.updateAvatar(nodeName, mediaFile, shape);
                 return null;
             });
             universalContext.send(new RemoteNodeAvatarChangedLiberin(nodeName, new AvatarImage(mediaFile, shape)));

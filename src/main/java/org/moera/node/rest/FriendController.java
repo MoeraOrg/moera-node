@@ -31,13 +31,10 @@ import org.moera.node.model.FriendGroupDetails;
 import org.moera.node.model.FriendInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
-import org.moera.node.rest.task.RemoteProfileDownloadTask;
-import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.util.Pair;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,11 +66,7 @@ public class FriendController {
     private MediaOperations mediaOperations;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private ContactOperations contactOperations;
 
     @GetMapping
     @Transactional
@@ -198,11 +191,7 @@ public class FriendController {
                     target.getValue().getFirst().toFriend(friend);
                     friend = friendRepository.save(friend);
 
-                    if (friend.getRemoteAvatarMediaFile() == null) {
-                        var avatarTask = new RemoteProfileDownloadTask(friend.getRemoteNodeName());
-                        taskAutowire.autowire(avatarTask);
-                        taskExecutor.execute(avatarTask);
-                    }
+                    contactOperations.updateCloseness(friend.getRemoteNodeName(), 800);
                 } else {
                     target.getValue().getFirst().toFriend(friend);
                 }

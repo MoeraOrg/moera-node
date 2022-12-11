@@ -155,7 +155,9 @@ public class MediaManager {
                 mediaFiles[i] = null;
                 continue;
             }
-            MediaFile mediaFile = mediaFileRepository.findById(ids[i]).orElse(null);
+            MediaFile mediaFile = avatarImages[i].getMediaFile() != null
+                    ? avatarImages[i].getMediaFile()
+                    : mediaFileRepository.findById(ids[i]).orElse(null);
             if (mediaFile != null && mediaFile.isExposed()) {
                 mediaFiles[i] = mediaFile;
                 continue;

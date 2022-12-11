@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.Contact;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.global.UniversalContext;
@@ -25,6 +26,7 @@ import org.moera.node.model.notification.FriendshipUpdatedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
+import org.moera.node.operations.ContactOperations;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -44,6 +46,9 @@ public class FriendProcessor {
 
     @Inject
     private MediaManager mediaManager;
+
+    @Inject
+    private ContactOperations contactOperations;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -82,6 +87,14 @@ public class FriendProcessor {
             friendOf.setRemoteGroupTitle(curr.getValue().getTitle());
         }
 
+        if (added.isEmpty()) {
+            return;
+        }
+
+        Contact.toAvatar(
+                contactOperations.updateCloseness(notification.getSenderNodeName(), 1),
+                notification.getSenderAvatar());
+
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
                 mediaFiles -> {
@@ -95,14 +108,16 @@ public class FriendProcessor {
     private void updateAvatarsAndSend(AvatarImage avatarImage, List<RemoteToFriendGroupAddedLiberin> liberins) {
         try {
             Transaction.execute(txManager, () -> {
+                if (avatarImage != null) {
+                    friendOfRepository.updateRemoteAvatar(
+                            universalContext.nodeId(),
+                            liberins.get(0).getFriendOf().getRemoteNodeName(),
+                            avatarImage.getMediaFile(),
+                            avatarImage.getShape()
+                    );
+                }
                 for (var liberin : liberins) {
                     if (avatarImage != null) {
-                        friendOfRepository.updateRemoteAvatar(
-                                universalContext.nodeId(),
-                                liberin.getFriendOf().getRemoteNodeName(),
-                                avatarImage.getMediaFile(),
-                                avatarImage.getShape()
-                        );
                         liberin.getFriendOf().setRemoteAvatarMediaFile(avatarImage.getMediaFile());
                         liberin.getFriendOf().setRemoteAvatarShape(avatarImage.getShape());
                     }

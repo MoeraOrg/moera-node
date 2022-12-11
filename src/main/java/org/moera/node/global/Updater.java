@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.data.ContactUpgradeRepository;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.EntryRevision;
@@ -30,6 +31,7 @@ import org.moera.node.operations.PostingOperations;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.AllRemoteAvatarsDownloadTask;
 import org.moera.node.rest.task.AllRemoteGendersDownloadTask;
+import org.moera.node.rest.task.ContactsUpgradeTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,9 @@ public class Updater {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
+    private ContactUpgradeRepository contactUpgradeRepository;
+
+    @Inject
     private MediaOperations mediaOperations;
 
     @Inject
@@ -86,6 +91,7 @@ public class Updater {
         executeDomainUpgrades();
         executeEntryRevisionUpgrades();
         executeMediaUpgrades();
+        executeContactUpgrades();
     }
 
     private void executeDomainUpgrades() {
@@ -216,6 +222,18 @@ public class Updater {
                 log.info("Created posting {} for media {}",
                         mediaFileOwner.getPosting(null).getId(), mediaFileOwner.getId());
             }
+        }
+    }
+
+    private void executeContactUpgrades() {
+        downloadProfiles();
+    }
+
+    private void downloadProfiles() {
+        if (contactUpgradeRepository.countPending(UpgradeType.PROFILE_DOWNLOAD) > 0) {
+            var task = new ContactsUpgradeTask();
+            taskAutowire.autowireWithoutRequestAndDomain(task);
+            taskExecutor.execute(task);
         }
     }
 
