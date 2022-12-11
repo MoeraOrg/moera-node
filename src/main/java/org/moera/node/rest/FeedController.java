@@ -1,10 +1,8 @@
 package org.moera.node.rest;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +28,6 @@ import org.moera.node.data.QStory;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.UserSubscription;
-import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -44,7 +40,6 @@ import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.PostingOperations;
@@ -86,9 +81,6 @@ public class FeedController {
 
     @Inject
     private OwnReactionRepository ownReactionRepository;
-
-    @Inject
-    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private StoryOperations storyOperations;
@@ -356,7 +348,6 @@ public class FeedController {
                 .collect(Collectors.toList());
         if (!remotePostingIds.isEmpty()) {
             fillOwnReactions(postings, remotePostingIds);
-            fillSubscriptions(postings, remotePostingIds);
         }
     }
 
@@ -373,27 +364,6 @@ public class FeedController {
                     && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
                 posting.setClientReaction(new ClientReactionInfo(ownReaction));
             }
-        });
-    }
-
-    private void fillSubscriptions(List<PostingInfo> postings, List<String> remotePostingIds) {
-        List<UserSubscription> allSubscriptions = userSubscriptionRepository
-                .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds);
-        Map<String, List<UserSubscription>> subscriptionMap = new HashMap<>();
-        for (UserSubscription subscription : allSubscriptions) {
-            subscriptionMap
-                    .computeIfAbsent(subscription.getRemoteEntryId(), key -> new ArrayList<>())
-                    .add(subscription);
-        }
-        postings.forEach(posting -> {
-            List<UserSubscription> subscriptions = subscriptionMap.get(posting.getReceiverPostingId());
-            if (subscriptions != null) {
-                subscriptions = subscriptions
-                        .stream()
-                        .filter(sb -> sb.getRemoteNodeName().equals(posting.getReceiverName()))
-                        .collect(Collectors.toList());
-            }
-            posting.setSubscriptions(new PostingSubscriptionsInfo(subscriptions));
         });
     }
 

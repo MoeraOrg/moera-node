@@ -84,7 +84,6 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private ReactionTotalsInfo reactions;
     private List<PostingSourceInfo> sources;
     private Integer totalComments;
-    private PostingSubscriptionsInfo subscriptions = new PostingSubscriptionsInfo();
 
     public PostingInfo() {
     }
@@ -719,14 +718,6 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setTotalComments(Integer totalComments) {
         this.totalComments = totalComments;
-    }
-
-    public PostingSubscriptionsInfo getSubscriptions() {
-        return subscriptions;
-    }
-
-    public void setSubscriptions(PostingSubscriptionsInfo subscriptions) {
-        this.subscriptions = subscriptions;
     }
 
     public void toPickedPosting(Posting posting) {

@@ -33,8 +33,6 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.UserSubscription;
-import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -49,7 +47,6 @@ import org.moera.node.model.ClientReactionInfo;
 import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingSubscriptionsInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -96,9 +93,6 @@ public class PostingController {
 
     @Inject
     private OwnReactionRepository ownReactionRepository;
-
-    @Inject
-    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
@@ -226,7 +220,7 @@ public class PostingController {
         }
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
-        return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, requestContext))));
+        return withStories(withClientReaction(new PostingInfo(posting, requestContext)));
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
@@ -320,8 +314,7 @@ public class PostingController {
 
         requestContext.send(new PostingReadLiberin(id));
 
-        return withSubscribers(withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"),
-                requestContext))));
+        return withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"), requestContext)));
     }
 
     @DeleteMapping("/{id}")
@@ -387,15 +380,6 @@ public class PostingController {
                 UUID.fromString(postingInfo.getId()));
         if (stories != null && !stories.isEmpty()) {
             postingInfo.setFeedReferences(stories.stream().map(FeedReference::new).collect(Collectors.toList()));
-        }
-        return postingInfo;
-    }
-
-    private PostingInfo withSubscribers(PostingInfo postingInfo) {
-        if (requestContext.isAdmin()) {
-            List<UserSubscription> subscriptions = userSubscriptionRepository.findAllByNodeAndEntryId(
-                    requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId());
-            postingInfo.setSubscriptions(new PostingSubscriptionsInfo(subscriptions));
         }
         return postingInfo;
     }
