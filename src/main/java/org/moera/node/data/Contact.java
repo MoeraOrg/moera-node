@@ -186,6 +186,16 @@ public class Contact {
         this.updatedAt = updatedAt;
     }
 
+    public void fill(ContactRelated related) {
+        if (related != null) {
+            related.setRemoteFullName(remoteFullName);
+            related.setRemoteGender(remoteGender);
+            related.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
+            related.setRemoteAvatarShape(remoteAvatarShape);
+            related.setContact(this);
+        }
+    }
+
     public static void toAvatar(Contact contact, AvatarImage avatarImage) {
         if (contact != null && avatarImage != null) {
             avatarImage.setMediaFile(contact.getRemoteAvatarMediaFile());

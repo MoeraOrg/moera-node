@@ -27,6 +27,12 @@ public class SubscriptionOperations {
     private ContactOperations contactOperations;
 
     public void subscribeToPostingComments(String nodeName, String entryId, SubscriptionReason reason) {
+        int count = userSubscriptionRepository.countByTypeAndNodeAndEntryId(
+                universalContext.nodeId(), SubscriptionType.POSTING_COMMENTS, nodeName, entryId);
+        if (count > 0) {
+            return;
+        }
+
         UserSubscription subscription = new UserSubscription();
         subscription.setId(UUID.randomUUID());
         subscription.setNodeId(universalContext.nodeId());
@@ -35,6 +41,9 @@ public class SubscriptionOperations {
         subscription.setRemoteEntryId(entryId);
         subscription.setReason(reason);
         subscription = userSubscriptionRepository.save(subscription);
+
+        contactOperations.updateCloseness(nodeName, 1).fill(subscription);
+
         universalContext.send(new SubscriptionAddedLiberin(subscription));
         universalContext.subscriptionsUpdated();
     }

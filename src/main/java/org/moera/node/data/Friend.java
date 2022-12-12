@@ -15,7 +15,7 @@ import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "friends")
-public class Friend {
+public class Friend implements ContactRelated {
 
     @Id
     private UUID id;
@@ -38,6 +38,9 @@ public class Friend {
 
     @Size(max = 8)
     private String remoteAvatarShape;
+
+    @ManyToOne
+    private Contact contact;
 
     @ManyToOne
     private FriendGroup friendGroup;
@@ -71,36 +74,54 @@ public class Friend {
         this.remoteNodeName = remoteNodeName;
     }
 
+    @Override
     public String getRemoteFullName() {
         return remoteFullName;
     }
 
+    @Override
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
     }
 
+    @Override
     public String getRemoteGender() {
         return remoteGender;
     }
 
+    @Override
     public void setRemoteGender(String remoteGender) {
         this.remoteGender = remoteGender;
     }
 
+    @Override
     public MediaFile getRemoteAvatarMediaFile() {
         return remoteAvatarMediaFile;
     }
 
+    @Override
     public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
         this.remoteAvatarMediaFile = remoteAvatarMediaFile;
     }
 
+    @Override
     public String getRemoteAvatarShape() {
         return remoteAvatarShape;
     }
 
+    @Override
     public void setRemoteAvatarShape(String remoteAvatarShape) {
         this.remoteAvatarShape = remoteAvatarShape;
+    }
+
+    @Override
+    public Contact getContact() {
+        return contact;
+    }
+
+    @Override
+    public void setContact(Contact contact) {
+        this.contact = contact;
     }
 
     public FriendGroup getFriendGroup() {

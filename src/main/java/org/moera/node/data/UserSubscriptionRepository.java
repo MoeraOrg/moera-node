@@ -29,23 +29,17 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
     List<UserSubscription> findAllByTypeAndNodeAndFeedName(UUID nodeId, SubscriptionType subscriptionType,
                                                            String remoteNodeName, String remoteFeedName);
 
-    @Query("select s from UserSubscription s left join fetch s.remoteAvatarMediaFile"
-            + " where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.remoteEntryId = ?3")
-    List<UserSubscription> findAllByNodeAndEntryId(UUID nodeId, String remoteNodeName, String remoteEntryId);
-
     @Query("select count(*) from UserSubscription s where s.nodeId = ?1 and s.subscriptionType = ?2")
     int countByType(UUID nodeId, SubscriptionType subscriptionType);
-
-    @Query("select s from UserSubscription s left join fetch s.remoteAvatarMediaFile"
-            + " where s.nodeId = ?1 and s.remoteEntryId in (?2)")
-    List<UserSubscription> findAllByRemotePostingIds(UUID nodeId, List<String> remotePostingIds);
-
-    @Query("select count(*) from UserSubscription s where s.nodeId = ?1 and s.remoteNodeName = ?2")
-    int countByRemoteNode(UUID nodeId, String remoteNodeName);
 
     @Query("select count(*) from UserSubscription s where s.nodeId = ?1 and s.subscriptionType = ?2"
             + " and s.remoteNodeName = ?3")
     int countByTypeAndRemoteNode(UUID nodeId, SubscriptionType subscriptionType, String remoteNodeName);
+
+    @Query("select count(*) from UserSubscription s"
+            + " where s.nodeId = ?1 and s.subscriptionType = ?2 and s.remoteNodeName = ?3 and s.remoteEntryId = ?4")
+    int countByTypeAndNodeAndEntryId(UUID nodeId, SubscriptionType subscriptionType, String remoteNodeName,
+                                     String remoteEntryId);
 
     @Query("update UserSubscription s set s.remoteFullName = ?3, s.remoteGender = ?4"
             + " where s.nodeId = ?1 and s.remoteNodeName = ?2")

@@ -69,8 +69,7 @@ public class ContactOperations {
                     contact.setNodeId(nodeId);
                     contact.setRemoteNodeName(remoteNodeName);
                     contact.setCloseness(delta);
-                    contactRepository.save(contact);
-                    return null; // indicates that the contact did not exist
+                    return contactRepository.save(contact);
                 }
                 contact.updateCloseness(delta);
                 return contact;

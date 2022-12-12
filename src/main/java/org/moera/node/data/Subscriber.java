@@ -16,7 +16,7 @@ import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "subscribers")
-public class Subscriber {
+public class Subscriber implements ContactRelated {
 
     @Id
     private UUID id;
@@ -49,6 +49,9 @@ public class Subscriber {
 
     @Size(max = 8)
     private String remoteAvatarShape;
+
+    @ManyToOne
+    private Contact contact;
 
     @NotNull
     private Timestamp createdAt = Util.now();
@@ -105,36 +108,54 @@ public class Subscriber {
         this.remoteNodeName = remoteNodeName;
     }
 
+    @Override
     public String getRemoteFullName() {
         return remoteFullName;
     }
 
+    @Override
     public void setRemoteFullName(String remoteFullName) {
         this.remoteFullName = remoteFullName;
     }
 
+    @Override
     public String getRemoteGender() {
         return remoteGender;
     }
 
+    @Override
     public void setRemoteGender(String remoteGender) {
         this.remoteGender = remoteGender;
     }
 
+    @Override
     public MediaFile getRemoteAvatarMediaFile() {
         return remoteAvatarMediaFile;
     }
 
+    @Override
     public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
         this.remoteAvatarMediaFile = remoteAvatarMediaFile;
     }
 
+    @Override
     public String getRemoteAvatarShape() {
         return remoteAvatarShape;
     }
 
+    @Override
     public void setRemoteAvatarShape(String remoteAvatarShape) {
         this.remoteAvatarShape = remoteAvatarShape;
+    }
+
+    @Override
+    public Contact getContact() {
+        return contact;
+    }
+
+    @Override
+    public void setContact(Contact contact) {
+        this.contact = contact;
     }
 
     public Timestamp getCreatedAt() {

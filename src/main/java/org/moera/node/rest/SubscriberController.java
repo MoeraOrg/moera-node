@@ -12,6 +12,7 @@ import com.querydsl.core.BooleanBuilder;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -166,12 +167,14 @@ public class SubscriberController {
         }
         subscriber = subscriberRepository.save(subscriber);
 
+        Contact contact;
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
+            contact = contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
             contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), 1);
         } else {
-            contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 0.25f);
+            contact = contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 0.25f);
         }
+        contact.fill(subscriber);
 
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));

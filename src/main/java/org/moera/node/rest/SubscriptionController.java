@@ -13,6 +13,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QUserSubscription;
 import org.moera.node.data.SubscriptionType;
@@ -166,12 +167,14 @@ public class SubscriptionController {
                 subscriptionDescription.toUserSubscription(userSubscription);
                 userSubscription = userSubscriptionRepository.save(userSubscription);
 
+                Contact contact;
                 if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
-                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
+                    contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
                     contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
                 } else {
-                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
+                    contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
                 }
+                contact.fill(userSubscription);
 
                 return userSubscription;
             });
