@@ -1,5 +1,7 @@
 # Moera Node
 
+Live network: https://web.moera.org
+
 Read more about Moera at https://moera.org
 
 Learn more about Moera nodes: http://moera.org/overview/node.html
