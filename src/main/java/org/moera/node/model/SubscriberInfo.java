@@ -21,6 +21,7 @@ public class SubscriberInfo {
     private String fullName;
     private String gender;
     private AvatarImage avatar;
+    private ContactInfo contact;
     private Long createdAt;
     private Map<String, Principal> operations;
     private Map<String, Principal> ownerOperations;
@@ -39,6 +40,9 @@ public class SubscriberInfo {
         gender = subscriber.getRemoteGender();
         if (subscriber.getRemoteAvatarMediaFile() != null) {
             avatar = new AvatarImage(subscriber.getRemoteAvatarMediaFile(), subscriber.getRemoteAvatarShape());
+        }
+        if (subscriber.getContact() != null) {
+            contact = new ContactInfo(subscriber.getContact());
         }
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
 
@@ -124,6 +128,14 @@ public class SubscriberInfo {
 
     public void setAvatar(AvatarImage avatar) {
         this.avatar = avatar;
+    }
+
+    public ContactInfo getContact() {
+        return contact;
+    }
+
+    public void setContact(ContactInfo contact) {
+        this.contact = contact;
     }
 
     public Long getCreatedAt() {

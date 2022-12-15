@@ -3,12 +3,15 @@ package org.moera.node.rest;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
@@ -16,6 +19,8 @@ import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
+import org.moera.node.data.QContact;
+import org.moera.node.data.QMediaFile;
 import org.moera.node.data.QSubscriber;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
@@ -70,6 +75,10 @@ public class SubscriberController {
     @Inject
     private ContactOperations contactOperations;
 
+    @Inject
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @GetMapping
     @Transactional
     public List<SubscriberInfo> getAll(@RequestParam(required = false) String nodeName,
@@ -105,7 +114,7 @@ public class SubscriberController {
             where.and(subscriber.entry.id.eq(entryId));
         }
 
-        return StreamSupport.stream(subscriberRepository.findAll(where).spliterator(), false)
+        return fetchSubscribers(where).stream()
                 .filter(s -> requestContext.isPrincipal(s.getViewE()))
                 .map(s -> new SubscriberInfo(s, requestContext))
                 .collect(Collectors.toList());
@@ -268,6 +277,20 @@ public class SubscriberController {
         requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
         return Result.OK;
+    }
+
+    private List<Subscriber> fetchSubscribers(Predicate where) {
+        QSubscriber subscriber = QSubscriber.subscriber;
+        QContact contact = QContact.contact;
+        QMediaFile mediaFile = QMediaFile.mediaFile;
+
+        return new JPAQueryFactory(entityManager)
+                .selectFrom(subscriber)
+                .leftJoin(subscriber.remoteAvatarMediaFile, mediaFile).fetchJoin()
+                .leftJoin(subscriber.contact, contact).fetchJoin()
+                .leftJoin(contact.remoteAvatarMediaFile, mediaFile).fetchJoin()
+                .where(where)
+                .fetch();
     }
 
 }

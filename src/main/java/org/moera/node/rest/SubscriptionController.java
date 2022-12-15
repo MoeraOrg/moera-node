@@ -3,18 +3,23 @@ package org.moera.node.rest;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
+import org.moera.node.data.QContact;
+import org.moera.node.data.QMediaFile;
 import org.moera.node.data.QUserSubscription;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
@@ -84,6 +89,10 @@ public class SubscriptionController {
     private PlatformTransactionManager txManager;
 
     @Inject
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Inject
     @Qualifier("remoteTaskExecutor")
     private TaskExecutor taskExecutor;
 
@@ -107,17 +116,17 @@ public class SubscriptionController {
             }
         }
 
-        QUserSubscription subscription = QUserSubscription.userSubscription;
+        QUserSubscription userSubscription = QUserSubscription.userSubscription;
         BooleanBuilder where = new BooleanBuilder();
-        where.and(subscription.nodeId.eq(requestContext.nodeId()));
+        where.and(userSubscription.nodeId.eq(requestContext.nodeId()));
         if (!ObjectUtils.isEmpty(nodeName)) {
-            where.and(subscription.remoteNodeName.eq(nodeName));
+            where.and(userSubscription.remoteNodeName.eq(nodeName));
         }
         if (type != null) {
-            where.and(subscription.subscriptionType.eq(type));
+            where.and(userSubscription.subscriptionType.eq(type));
         }
 
-        return StreamSupport.stream(userSubscriptionRepository.findAll(where).spliterator(), false)
+        return fetchSubscriptions(where).stream()
                 .filter(s -> requestContext.isPrincipal(s.getViewE()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
@@ -250,30 +259,44 @@ public class SubscriptionController {
             throw new ValidationFailure("subscription.filter.incomplete");
         }
 
-        QUserSubscription subscription = QUserSubscription.userSubscription;
+        QUserSubscription userSubscription = QUserSubscription.userSubscription;
         BooleanBuilder where = new BooleanBuilder();
-        where.and(subscription.nodeId.eq(requestContext.nodeId()));
+        where.and(userSubscription.nodeId.eq(requestContext.nodeId()));
         if (filter.getType() != null) {
-            where.and(subscription.subscriptionType.eq(filter.getType()));
+            where.and(userSubscription.subscriptionType.eq(filter.getType()));
         }
         if (filter.getFeeds() != null) {
             List<String> remoteFeedNames = filter.getFeeds().stream()
                     .map(RemoteFeed::getFeedName)
                     .collect(Collectors.toList());
-            where.and(subscription.remoteFeedName.in(remoteFeedNames));
+            where.and(userSubscription.remoteFeedName.in(remoteFeedNames));
         }
         if (filter.getPostings() != null) {
             List<String> remotePostingIds = filter.getPostings().stream()
                     .map(RemotePosting::getPostingId)
                     .collect(Collectors.toList());
-            where.and(subscription.remoteEntryId.in(remotePostingIds));
+            where.and(userSubscription.remoteEntryId.in(remotePostingIds));
         }
 
-        return StreamSupport.stream(userSubscriptionRepository.findAll(where).spliterator(), false)
+        return fetchSubscriptions(where).stream()
                 .filter(r -> filter.getFeeds() == null || filter.getFeeds().contains(r.getRemoteFeed()))
                 .filter(r -> filter.getPostings() == null || filter.getPostings().contains(r.getRemotePosting()))
                 .map(SubscriptionInfo::new)
                 .collect(Collectors.toList());
+    }
+
+    private List<UserSubscription> fetchSubscriptions(Predicate where) {
+        QUserSubscription userSubscription = QUserSubscription.userSubscription;
+        QContact contact = QContact.contact;
+        QMediaFile mediaFile = QMediaFile.mediaFile;
+
+        return new JPAQueryFactory(entityManager)
+                .selectFrom(userSubscription)
+                .leftJoin(userSubscription.remoteAvatarMediaFile, mediaFile).fetchJoin()
+                .leftJoin(userSubscription.contact, contact).fetchJoin()
+                .leftJoin(contact.remoteAvatarMediaFile, mediaFile).fetchJoin()
+                .where(where)
+                .fetch();
     }
 
     @OptionHook("subscriptions.view")
