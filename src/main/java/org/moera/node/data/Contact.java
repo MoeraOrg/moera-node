@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Objects;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -188,16 +189,13 @@ public class Contact {
 
     public void fill(ContactRelated related) {
         if (related != null) {
-            related.setRemoteFullName(remoteFullName);
-            related.setRemoteGender(remoteGender);
-            related.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
-            related.setRemoteAvatarShape(remoteAvatarShape);
             related.setContact(this);
         }
     }
 
     public static void toAvatar(Contact contact, AvatarImage avatarImage) {
-        if (contact != null && avatarImage != null) {
+        if (contact != null && contact.getRemoteAvatarMediaFile() != null && avatarImage != null
+                && Objects.equals(contact.getRemoteAvatarMediaFile().getId(), avatarImage.getMediaId())) {
             avatarImage.setMediaFile(contact.getRemoteAvatarMediaFile());
         }
     }

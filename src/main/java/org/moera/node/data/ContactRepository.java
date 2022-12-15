@@ -12,10 +12,14 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
 public interface ContactRepository extends JpaRepository<Contact, UUID>, QuerydslPredicateExecutor<Contact> {
 
-    @Query("select c from Contact c where c.nodeId = ?1 and c.remoteNodeName = ?2")
+    @Query("select c from Contact c left join fetch c.remoteAvatarMediaFile where c.nodeId = ?1")
+    Collection<Contact> findAllByNodeId(UUID nodeId);
+
+    @Query("select c from Contact c left join fetch c.remoteAvatarMediaFile"
+            + " where c.nodeId = ?1 and c.remoteNodeName = ?2")
     Optional<Contact> findByRemoteNode(UUID nodeId, String remoteNodeName);
 
-    @Query("select c from Contact c where c.updatedAt < ?1")
+    @Query("select c from Contact c left join fetch c.remoteAvatarMediaFile where c.updatedAt < ?1")
     Collection<Contact> findAllUpdatedBefore(Timestamp deadline);
 
     @Query("update Contact c set c.remoteFullName = ?3, c.remoteGender = ?4"

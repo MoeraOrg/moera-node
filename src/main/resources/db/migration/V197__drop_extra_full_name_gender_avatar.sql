@@ -1,0 +1,16 @@
+ALTER TABLE subscribers DROP COLUMN remote_full_name;
+ALTER TABLE subscribers DROP COLUMN remote_gender;
+ALTER TABLE subscribers DROP COLUMN remote_avatar_media_file_id CASCADE;
+ALTER TABLE subscribers DROP COLUMN remote_avatar_shape;
+ALTER TABLE user_subscriptions DROP COLUMN remote_full_name;
+ALTER TABLE user_subscriptions DROP COLUMN remote_gender;
+ALTER TABLE user_subscriptions DROP COLUMN remote_avatar_media_file_id CASCADE;
+ALTER TABLE user_subscriptions DROP COLUMN remote_avatar_shape;
+ALTER TABLE friends DROP COLUMN remote_full_name;
+ALTER TABLE friends DROP COLUMN remote_gender;
+ALTER TABLE friends DROP COLUMN remote_avatar_media_file_id CASCADE;
+ALTER TABLE friends DROP COLUMN remote_avatar_shape;
+ALTER TABLE friend_ofs DROP COLUMN remote_full_name;
+ALTER TABLE friend_ofs DROP COLUMN remote_gender;
+ALTER TABLE friend_ofs DROP COLUMN remote_avatar_media_file_id CASCADE;
+ALTER TABLE friend_ofs DROP COLUMN remote_avatar_shape;

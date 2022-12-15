@@ -35,9 +35,9 @@ public class FriendInstants extends InstantsCreator {
         Story story = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(friend.getRemoteNodeName());
-        story.setRemoteFullName(friend.getRemoteFullName());
-        story.setRemoteAvatarMediaFile(friend.getRemoteAvatarMediaFile());
-        story.setRemoteAvatarShape(friend.getRemoteAvatarShape());
+        story.setRemoteFullName(friend.getContact().getRemoteFullName());
+        story.setRemoteAvatarMediaFile(friend.getContact().getRemoteAvatarMediaFile());
+        story.setRemoteAvatarShape(friend.getContact().getRemoteAvatarShape());
         story.setSummaryData(buildSummary(friend));
         updateMoment(story);
         story = storyRepository.saveAndFlush(story);
@@ -46,8 +46,7 @@ public class FriendInstants extends InstantsCreator {
 
     private static StorySummaryData buildSummary(FriendOf friend) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(
-                new StorySummaryNode(friend.getRemoteNodeName(), friend.getRemoteFullName(), friend.getRemoteGender()));
+        summaryData.setNode(new StorySummaryNode(friend.getContact()));
         summaryData.setFriendGroup(
                 new StorySummaryFriendGroup(friend.getRemoteGroupId(), friend.getRemoteGroupTitle()));
         return summaryData;

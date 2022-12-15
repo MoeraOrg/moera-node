@@ -17,9 +17,6 @@ public class SubscriptionInfo {
     private SubscriptionType type;
     private String feedName;
     private String remoteNodeName;
-    private String remoteFullName;
-    private String remoteGender;
-    private AvatarImage remoteAvatar;
     private ContactInfo contact;
     private String remoteFeedName;
     private String remotePostingId;
@@ -35,11 +32,6 @@ public class SubscriptionInfo {
         type = subscription.getSubscriptionType();
         feedName = subscription.getFeedName();
         remoteNodeName = subscription.getRemoteNodeName();
-        remoteFullName = subscription.getRemoteFullName();
-        remoteGender = subscription.getRemoteGender();
-        if (subscription.getRemoteAvatarMediaFile() != null) {
-            remoteAvatar = new AvatarImage(subscription.getRemoteAvatarMediaFile(), subscription.getRemoteAvatarShape());
-        }
         if (subscription.getContact() != null) {
             contact = new ContactInfo(subscription.getContact());
         }
@@ -89,30 +81,6 @@ public class SubscriptionInfo {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
-    }
-
-    public String getRemoteFullName() {
-        return remoteFullName;
-    }
-
-    public void setRemoteFullName(String remoteFullName) {
-        this.remoteFullName = remoteFullName;
-    }
-
-    public String getRemoteGender() {
-        return remoteGender;
-    }
-
-    public void setRemoteGender(String remoteGender) {
-        this.remoteGender = remoteGender;
-    }
-
-    public AvatarImage getRemoteAvatar() {
-        return remoteAvatar;
-    }
-
-    public void setRemoteAvatar(AvatarImage remoteAvatar) {
-        this.remoteAvatar = remoteAvatar;
     }
 
     public ContactInfo getContact() {

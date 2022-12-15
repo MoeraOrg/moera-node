@@ -6,9 +6,7 @@ import org.moera.node.util.Util;
 public class FriendOfInfo {
 
     private String remoteNodeName;
-    private String remoteFullName;
-    private String remoteGender;
-    private AvatarImage remoteAvatar;
+    private ContactInfo contact;
     private FriendGroupDetails[] groups;
 
     public FriendOfInfo() {
@@ -16,9 +14,9 @@ public class FriendOfInfo {
 
     public FriendOfInfo(FriendOf friendOf) {
         remoteNodeName = friendOf.getRemoteNodeName();
-        remoteFullName = friendOf.getRemoteFullName();
-        remoteGender = friendOf.getRemoteGender();
-        remoteAvatar = new AvatarImage(friendOf.getRemoteAvatarMediaFile(), friendOf.getRemoteAvatarShape());
+        if (friendOf.getContact() != null) {
+            contact = new ContactInfo(friendOf.getContact());
+        }
         groups = new FriendGroupDetails[] {
                 new FriendGroupDetails(
                         friendOf.getRemoteGroupId(),
@@ -36,28 +34,12 @@ public class FriendOfInfo {
         this.remoteNodeName = remoteNodeName;
     }
 
-    public String getRemoteFullName() {
-        return remoteFullName;
+    public ContactInfo getContact() {
+        return contact;
     }
 
-    public void setRemoteFullName(String remoteFullName) {
-        this.remoteFullName = remoteFullName;
-    }
-
-    public String getRemoteGender() {
-        return remoteGender;
-    }
-
-    public void setRemoteGender(String remoteGender) {
-        this.remoteGender = remoteGender;
-    }
-
-    public AvatarImage getRemoteAvatar() {
-        return remoteAvatar;
-    }
-
-    public void setRemoteAvatar(AvatarImage remoteAvatar) {
-        this.remoteAvatar = remoteAvatar;
+    public void setContact(ContactInfo contact) {
+        this.contact = contact;
     }
 
     public FriendGroupDetails[] getGroups() {

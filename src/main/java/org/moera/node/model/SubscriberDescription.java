@@ -2,12 +2,9 @@ package org.moera.node.model;
 
 import java.util.Map;
 import java.util.UUID;
-import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.MediaFile;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
 
@@ -19,18 +16,6 @@ public class SubscriberDescription {
     private String feedName;
 
     private UUID postingId;
-
-    @Size(max = 96)
-    private String ownerFullName;
-
-    @Size(max = 31)
-    private String ownerGender;
-
-    @Valid
-    private AvatarDescription ownerAvatar;
-
-    @JsonIgnore
-    private MediaFile ownerAvatarMediaFile;
 
     private Long lastUpdatedAt;
 
@@ -60,38 +45,6 @@ public class SubscriberDescription {
         this.postingId = postingId;
     }
 
-    public String getOwnerFullName() {
-        return ownerFullName;
-    }
-
-    public void setOwnerFullName(String ownerFullName) {
-        this.ownerFullName = ownerFullName;
-    }
-
-    public String getOwnerGender() {
-        return ownerGender;
-    }
-
-    public void setOwnerGender(String ownerGender) {
-        this.ownerGender = ownerGender;
-    }
-
-    public AvatarDescription getOwnerAvatar() {
-        return ownerAvatar;
-    }
-
-    public void setOwnerAvatar(AvatarDescription ownerAvatar) {
-        this.ownerAvatar = ownerAvatar;
-    }
-
-    public MediaFile getOwnerAvatarMediaFile() {
-        return ownerAvatarMediaFile;
-    }
-
-    public void setOwnerAvatarMediaFile(MediaFile ownerAvatarMediaFile) {
-        this.ownerAvatarMediaFile = ownerAvatarMediaFile;
-    }
-
     public Long getLastUpdatedAt() {
         return lastUpdatedAt;
     }
@@ -114,16 +67,6 @@ public class SubscriberDescription {
 
     public void toSubscriber(Subscriber subscriber) {
         subscriber.setSubscriptionType(type);
-        subscriber.setRemoteFullName(ownerFullName);
-        subscriber.setRemoteGender(ownerGender);
-        if (ownerAvatar != null) {
-            if (ownerAvatarMediaFile != null) {
-                subscriber.setRemoteAvatarMediaFile(ownerAvatarMediaFile);
-            }
-            if (ownerAvatar.getShape() != null) {
-                subscriber.setRemoteAvatarShape(ownerAvatar.getShape());
-            }
-        }
         subscriber.setFeedName(feedName);
         if (getPrincipal("view") != null) {
             subscriber.setViewPrincipal(getPrincipal("view"));

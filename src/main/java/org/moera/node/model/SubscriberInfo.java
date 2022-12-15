@@ -18,9 +18,6 @@ public class SubscriberInfo {
     private String feedName;
     private String postingId;
     private String nodeName;
-    private String fullName;
-    private String gender;
-    private AvatarImage avatar;
     private ContactInfo contact;
     private Long createdAt;
     private Map<String, Principal> operations;
@@ -36,11 +33,6 @@ public class SubscriberInfo {
         feedName = subscriber.getFeedName();
         postingId = subscriber.getEntry() != null ? subscriber.getEntry().getId().toString() : null;
         nodeName = subscriber.getRemoteNodeName();
-        fullName = subscriber.getRemoteFullName();
-        gender = subscriber.getRemoteGender();
-        if (subscriber.getRemoteAvatarMediaFile() != null) {
-            avatar = new AvatarImage(subscriber.getRemoteAvatarMediaFile(), subscriber.getRemoteAvatarShape());
-        }
         if (subscriber.getContact() != null) {
             contact = new ContactInfo(subscriber.getContact());
         }
@@ -104,30 +96,6 @@ public class SubscriberInfo {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public AvatarImage getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(AvatarImage avatar) {
-        this.avatar = avatar;
     }
 
     public ContactInfo getContact() {

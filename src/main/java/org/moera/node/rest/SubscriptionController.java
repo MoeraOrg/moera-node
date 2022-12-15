@@ -31,7 +31,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
 import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
-import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RemoteFeed;
@@ -81,9 +80,6 @@ public class SubscriptionController {
 
     @Inject
     private ContactOperations contactOperations;
-
-    @Inject
-    private MediaOperations mediaOperations;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -161,11 +157,6 @@ public class SubscriptionController {
         UserSubscription subscription;
         try {
             subscription = Transaction.execute(txManager, () -> {
-                mediaOperations.validateAvatar(
-                        subscriptionDescription.getRemoteAvatar(),
-                        subscriptionDescription::setRemoteAvatarMediaFile,
-                        () -> new ValidationFailure("subscriptionDescription.remoteAvatar.mediaId.not-found"));
-
                 OperationsValidator.validateOperations(subscriptionDescription::getPrincipal,
                         OperationsValidator.SUBSCRIPTION_OPERATIONS, false,
                         "subscriptionDescription.operations.wrong-principal");
@@ -292,7 +283,6 @@ public class SubscriptionController {
 
         return new JPAQueryFactory(entityManager)
                 .selectFrom(userSubscription)
-                .leftJoin(userSubscription.remoteAvatarMediaFile, mediaFile).fetchJoin()
                 .leftJoin(userSubscription.contact, contact).fetchJoin()
                 .leftJoin(contact.remoteAvatarMediaFile, mediaFile).fetchJoin()
                 .where(where)

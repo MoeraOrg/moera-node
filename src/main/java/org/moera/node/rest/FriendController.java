@@ -24,13 +24,11 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
-import org.moera.node.media.MediaOperations;
 import org.moera.node.model.FriendDescription;
 import org.moera.node.model.FriendGroupAssignment;
 import org.moera.node.model.FriendGroupDetails;
 import org.moera.node.model.FriendInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.slf4j.Logger;
@@ -61,9 +59,6 @@ public class FriendController {
 
     @Inject
     private FriendCache friendCache;
-
-    @Inject
-    private MediaOperations mediaOperations;
 
     @Inject
     private ContactOperations contactOperations;
@@ -149,11 +144,6 @@ public class FriendController {
 
         Map<UUID, FriendGroup> groups = new HashMap<>();
         for (FriendDescription friendDescription : friendDescriptions) {
-            mediaOperations.validateAvatar(
-                    friendDescription.getAvatar(),
-                    friendDescription::setAvatarMediaFile,
-                    () -> new ValidationFailure("friendDescription.avatar.mediaId.not-found"));
-
             Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
             if (friendDescription.getGroups() != null) {
                 for (var ga : friendDescription.getGroups()) {

@@ -48,7 +48,9 @@ public class PeopleUiController {
     public String subscribers(Model model) {
         PeopleGeneralInfo totals = getTotals();
         Comparator<Subscriber> comparator = Comparator.comparing(
-                sr -> sr.getRemoteFullName() != null ? sr.getRemoteFullName() : NodeName.shorten(sr.getRemoteNodeName()));
+                sr -> sr.getContact().getRemoteFullName() != null
+                        ? sr.getContact().getRemoteFullName()
+                        : NodeName.shorten(sr.getRemoteNodeName()));
         List<SubscriberInfo> subscribers = Collections.emptyList();
         if (Subscriber.getViewAllE(requestContext.getOptions()).isPublic()) {
             subscribers = subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
@@ -76,7 +78,9 @@ public class PeopleUiController {
     public String subscriptions(Model model) {
         PeopleGeneralInfo totals = getTotals();
         Comparator<UserSubscription> comparator = Comparator.comparing(
-                sr -> sr.getRemoteFullName() != null ? sr.getRemoteFullName() : NodeName.shorten(sr.getRemoteNodeName()));
+                sr -> sr.getContact().getRemoteFullName() != null
+                        ? sr.getContact().getRemoteFullName()
+                        : NodeName.shorten(sr.getRemoteNodeName()));
         List<SubscriptionInfo> subscriptions = Collections.emptyList();
         if (UserSubscription.getViewAllE(requestContext.getOptions()).isPublic()) {
             subscriptions = userSubscriptionRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED)

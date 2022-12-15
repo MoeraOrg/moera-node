@@ -1,20 +1,16 @@
 package org.moera.node.rest.task;
 
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.Subscriber;
-import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UpgradeType;
-import org.moera.node.data.UserSubscription;
-import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.task.Task;
@@ -24,12 +20,6 @@ import org.slf4j.LoggerFactory;
 public class AllRemoteAvatarsDownloadTask extends Task {
 
     private static final Logger log = LoggerFactory.getLogger(AllRemoteAvatarsDownloadTask.class);
-
-    @Inject
-    private UserSubscriptionRepository userSubscriptionRepository;
-
-    @Inject
-    private SubscriberRepository subscriberRepository;
 
     @Inject
     private ContactRepository contactRepository;
@@ -75,14 +65,9 @@ public class AllRemoteAvatarsDownloadTask extends Task {
     }
 
     private Set<String> getTargetNodeNames() {
-        Set<String> nodeNames = new HashSet<>();
-        subscriberRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
-                .map(Subscriber::getRemoteNodeName)
-                .forEach(nodeNames::add);
-        userSubscriptionRepository.findAllByType(nodeId, SubscriptionType.FEED).stream()
-                .map(UserSubscription::getRemoteNodeName)
-                .forEach(nodeNames::add);
-        return nodeNames;
+        return contactRepository.findAllByNodeId(nodeId).stream()
+                .map(Contact::getRemoteNodeName)
+                .collect(Collectors.toSet());
     }
 
     private void download(String targetNodeName) throws Throwable {
@@ -90,9 +75,6 @@ public class AllRemoteAvatarsDownloadTask extends Task {
         MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar);
         if (mediaFile != null) {
             inTransaction(() -> {
-                subscriberRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
-                userSubscriptionRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile,
-                        targetAvatar.getShape());
                 contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
                 return null;
             });

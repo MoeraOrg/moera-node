@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.Contact;
+import org.moera.node.data.ContactRepository;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.global.UniversalContext;
@@ -45,6 +46,9 @@ public class FriendProcessor {
     private FriendOfRepository friendOfRepository;
 
     @Inject
+    private ContactRepository contactRepository;
+
+    @Inject
     private MediaManager mediaManager;
 
     @Inject
@@ -70,6 +74,8 @@ public class FriendProcessor {
             }
         }
 
+        Contact contact = contactOperations.updateCloseness(notification.getSenderNodeName(), 0);
+
         List<RemoteToFriendGroupAddedLiberin> added = new ArrayList<>();
         for (var curr : current.entrySet()) {
             FriendOf friendOf = previous.get(curr.getKey());
@@ -78,13 +84,12 @@ public class FriendProcessor {
                 friendOf.setId(UUID.randomUUID());
                 friendOf.setNodeId(universalContext.nodeId());
                 friendOf.setRemoteNodeName(notification.getSenderNodeName());
+                friendOf.setContact(contact);
                 friendOf.setRemoteGroupId(curr.getValue().getId());
                 friendOf.setRemoteAddedAt(Util.toTimestamp(curr.getValue().getAddedAt()));
                 friendOf = friendOfRepository.save(friendOf);
                 added.add(new RemoteToFriendGroupAddedLiberin(friendOf));
             }
-            friendOf.setRemoteFullName(notification.getSenderFullName());
-            friendOf.setRemoteGender(notification.getSenderGender());
             friendOf.setRemoteGroupTitle(curr.getValue().getTitle());
         }
 
@@ -92,9 +97,7 @@ public class FriendProcessor {
             return;
         }
 
-        Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getSenderNodeName(), 0),
-                notification.getSenderAvatar());
+        Contact.toAvatar(contact, notification.getSenderAvatar());
         contactOperations.updateFriendOfCount(notification.getSenderNodeName(), added.size());
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
@@ -106,7 +109,7 @@ public class FriendProcessor {
         try {
             Transaction.execute(txManager, () -> {
                 if (avatarImage != null) {
-                    friendOfRepository.updateRemoteAvatar(
+                    contactRepository.updateRemoteAvatar(
                             universalContext.nodeId(),
                             liberins.get(0).getFriendOf().getRemoteNodeName(),
                             avatarImage.getMediaFile(),
@@ -115,8 +118,8 @@ public class FriendProcessor {
                 }
                 for (var liberin : liberins) {
                     if (avatarImage != null) {
-                        liberin.getFriendOf().setRemoteAvatarMediaFile(avatarImage.getMediaFile());
-                        liberin.getFriendOf().setRemoteAvatarShape(avatarImage.getShape());
+                        liberin.getFriendOf().getContact().setRemoteAvatarMediaFile(avatarImage.getMediaFile());
+                        liberin.getFriendOf().getContact().setRemoteAvatarShape(avatarImage.getShape());
                     }
                     universalContext.send(liberin);
                 }

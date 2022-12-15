@@ -10,11 +10,7 @@ import javax.transaction.Transactional;
 
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
-import org.moera.node.data.FriendOfRepository;
-import org.moera.node.data.FriendRepository;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
@@ -32,18 +28,6 @@ public class ContactOperations {
 
     @Inject
     private ContactRepository contactRepository;
-
-    @Inject
-    private UserSubscriptionRepository userSubscriptionRepository;
-
-    @Inject
-    private SubscriberRepository subscriberRepository;
-
-    @Inject
-    private FriendRepository friendRepository;
-
-    @Inject
-    private FriendOfRepository friendOfRepository;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -174,28 +158,12 @@ public class ContactOperations {
     }
 
     public void updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {
-        subscriberRepository.updateRemoteFullNameAndGender(
-                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
-        userSubscriptionRepository.updateRemoteFullNameAndGender(
-                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
         contactRepository.updateRemoteFullNameAndGender(
-                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
-        friendRepository.updateRemoteFullNameAndGender(
-                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
-        friendOfRepository.updateRemoteFullNameAndGender(
                 universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
     }
 
     public void updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape) {
-        subscriberRepository.updateRemoteAvatar(
-                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
-        userSubscriptionRepository.updateRemoteAvatar(
-                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
         contactRepository.updateRemoteAvatar(
-                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
-        friendRepository.updateRemoteAvatar(
-                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
-        friendOfRepository.updateRemoteAvatar(
                 universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
     }
 

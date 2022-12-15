@@ -32,7 +32,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriberAddedLiberin;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
-import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
@@ -68,9 +67,6 @@ public class SubscriberController {
 
     @Inject
     private PostingRepository postingRepository;
-
-    @Inject
-    private MediaOperations mediaOperations;
 
     @Inject
     private ContactOperations contactOperations;
@@ -192,11 +188,6 @@ public class SubscriberController {
     }
 
     private void validate(SubscriberDescription description) {
-        mediaOperations.validateAvatar(
-                description.getOwnerAvatar(),
-                description::setOwnerAvatarMediaFile,
-                () -> new ValidationFailure("subscriberDescription.ownerAvatar.mediaId.not-found"));
-
         switch (description.getType()) {
             case FEED:
                 if (ObjectUtils.isEmpty(description.getFeedName())) {
@@ -286,7 +277,6 @@ public class SubscriberController {
 
         return new JPAQueryFactory(entityManager)
                 .selectFrom(subscriber)
-                .leftJoin(subscriber.remoteAvatarMediaFile, mediaFile).fetchJoin()
                 .leftJoin(subscriber.contact, contact).fetchJoin()
                 .leftJoin(contact.remoteAvatarMediaFile, mediaFile).fetchJoin()
                 .where(where)

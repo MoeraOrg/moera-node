@@ -39,9 +39,9 @@ public class SubscriberInstants extends InstantsCreator {
         Story story = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());
-        story.setRemoteFullName(subscriber.getRemoteFullName());
-        story.setRemoteAvatarMediaFile(subscriber.getRemoteAvatarMediaFile());
-        story.setRemoteAvatarShape(subscriber.getRemoteAvatarShape());
+        story.setRemoteFullName(subscriber.getContact().getRemoteFullName());
+        story.setRemoteAvatarMediaFile(subscriber.getContact().getRemoteAvatarMediaFile());
+        story.setRemoteAvatarShape(subscriber.getContact().getRemoteAvatarShape());
         story.setSummaryData(buildSummary(subscriber));
         updateMoment(story);
         story = storyRepository.saveAndFlush(story);
@@ -50,8 +50,7 @@ public class SubscriberInstants extends InstantsCreator {
 
     private static StorySummaryData buildSummary(Subscriber subscriber) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(
-                subscriber.getRemoteNodeName(), subscriber.getRemoteFullName(), subscriber.getRemoteGender()));
+        summaryData.setNode(new StorySummaryNode(subscriber.getContact()));
         summaryData.setFeedName(subscriber.getFeedName());
         return summaryData;
     }

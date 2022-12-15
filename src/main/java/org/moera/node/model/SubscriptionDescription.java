@@ -1,13 +1,10 @@
 package org.moera.node.model;
 
 import java.util.Map;
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.MediaFile;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
@@ -21,18 +18,6 @@ public class SubscriptionDescription {
     @NotBlank
     @Size(max = 63)
     private String remoteNodeName;
-
-    @Size(max = 96)
-    private String remoteFullName;
-
-    @Size(max = 31)
-    private String remoteGender;
-
-    @Valid
-    private AvatarDescription remoteAvatar;
-
-    @JsonIgnore
-    private MediaFile remoteAvatarMediaFile;
 
     @Size(max = 63)
     private String remoteFeedName;
@@ -66,38 +51,6 @@ public class SubscriptionDescription {
 
     public void setRemoteNodeName(String remoteNodeName) {
         this.remoteNodeName = remoteNodeName;
-    }
-
-    public String getRemoteFullName() {
-        return remoteFullName;
-    }
-
-    public void setRemoteFullName(String remoteFullName) {
-        this.remoteFullName = remoteFullName;
-    }
-
-    public String getRemoteGender() {
-        return remoteGender;
-    }
-
-    public void setRemoteGender(String remoteGender) {
-        this.remoteGender = remoteGender;
-    }
-
-    public AvatarDescription getRemoteAvatar() {
-        return remoteAvatar;
-    }
-
-    public void setRemoteAvatar(AvatarDescription remoteAvatar) {
-        this.remoteAvatar = remoteAvatar;
-    }
-
-    public MediaFile getRemoteAvatarMediaFile() {
-        return remoteAvatarMediaFile;
-    }
-
-    public void setRemoteAvatarMediaFile(MediaFile remoteAvatarMediaFile) {
-        this.remoteAvatarMediaFile = remoteAvatarMediaFile;
     }
 
     public String getRemoteFeedName() {
@@ -140,16 +93,6 @@ public class SubscriptionDescription {
         subscription.setSubscriptionType(type);
         subscription.setFeedName(feedName);
         subscription.setRemoteNodeName(remoteNodeName);
-        subscription.setRemoteFullName(remoteFullName);
-        subscription.setRemoteGender(remoteGender);
-        if (remoteAvatar != null) {
-            if (remoteAvatarMediaFile != null) {
-                subscription.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
-            }
-            if (remoteAvatar.getShape() != null) {
-                subscription.setRemoteAvatarShape(remoteAvatar.getShape());
-            }
-        }
         subscription.setRemoteFeedName(remoteFeedName);
         subscription.setRemoteEntryId(remotePostingId);
         subscription.setReason(reason);

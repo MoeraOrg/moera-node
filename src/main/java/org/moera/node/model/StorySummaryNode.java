@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.Contact;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StorySummaryNode {
@@ -16,6 +17,10 @@ public class StorySummaryNode {
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
         this.ownerGender = ownerGender;
+    }
+
+    public StorySummaryNode(Contact contact) {
+        this(contact.getRemoteNodeName(), contact.getRemoteFullName(), contact.getRemoteGender());
     }
 
     public String getOwnerName() {
