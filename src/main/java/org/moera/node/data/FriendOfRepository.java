@@ -10,6 +10,10 @@ import org.springframework.data.jpa.repository.Query;
 public interface FriendOfRepository extends JpaRepository<FriendOf, UUID> {
 
     @Query("select fo from FriendOf fo left join fetch fo.contact c left join fetch c.remoteAvatarMediaFile"
+            + " where fo.nodeId = ?1")
+    List<FriendOf> findAllByNodeId(UUID nodeId);
+
+    @Query("select fo from FriendOf fo left join fetch fo.contact c left join fetch c.remoteAvatarMediaFile"
             + " where fo.nodeId = ?1 and fo.remoteNodeName = ?2")
     List<FriendOf> findByNodeIdAndRemoteNode(UUID nodeId, String remoteNodeName);
 

@@ -9,6 +9,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @Entity
@@ -105,6 +107,14 @@ public class FriendOf implements ContactRelated {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public static Principal getViewAllPrincipal(Options options) {
+        return options.getPrincipal("friend-ofs.view");
+    }
+
+    public static Principal getViewAllE(Options options) {
+        return getViewAllPrincipal(options);
     }
 
 }

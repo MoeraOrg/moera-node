@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Friend;
+import org.moera.node.data.FriendOf;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -34,6 +35,12 @@ public class FriendGroupDetails implements Cloneable {
 
         operations = new HashMap<>();
         putOperation(operations, "view", friend.getViewPrincipal(), Principal.PUBLIC);
+    }
+
+    public FriendGroupDetails(FriendOf friendOf) {
+        id = friendOf.getRemoteGroupId();
+        title = friendOf.getRemoteGroupTitle();
+        addedAt = Util.toEpochSecond(friendOf.getRemoteAddedAt());
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,

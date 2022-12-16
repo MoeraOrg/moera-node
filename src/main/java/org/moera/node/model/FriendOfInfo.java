@@ -1,5 +1,8 @@
 package org.moera.node.model;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.moera.node.data.FriendOf;
 import org.moera.node.util.Util;
 
@@ -7,7 +10,7 @@ public class FriendOfInfo {
 
     private String remoteNodeName;
     private ContactInfo contact;
-    private FriendGroupDetails[] groups;
+    private List<FriendGroupDetails> groups;
 
     public FriendOfInfo() {
     }
@@ -17,13 +20,19 @@ public class FriendOfInfo {
         if (friendOf.getContact() != null) {
             contact = new ContactInfo(friendOf.getContact());
         }
-        groups = new FriendGroupDetails[] {
+        groups = Collections.singletonList(
                 new FriendGroupDetails(
                         friendOf.getRemoteGroupId(),
                         friendOf.getRemoteGroupTitle(),
                         Util.toEpochSecond(friendOf.getRemoteAddedAt())
                 )
-        };
+        );
+    }
+
+    public FriendOfInfo(String remoteNodeName, ContactInfo contact, List<FriendGroupDetails> groups) {
+        this.remoteNodeName = remoteNodeName;
+        this.contact = contact;
+        this.groups = groups;
     }
 
     public String getRemoteNodeName() {
@@ -42,11 +51,11 @@ public class FriendOfInfo {
         this.contact = contact;
     }
 
-    public FriendGroupDetails[] getGroups() {
+    public List<FriendGroupDetails> getGroups() {
         return groups;
     }
 
-    public void setGroups(FriendGroupDetails[] groups) {
+    public void setGroups(List<FriendGroupDetails> groups) {
         this.groups = groups;
     }
 
