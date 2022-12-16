@@ -3,10 +3,13 @@ package org.moera.node.ui;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.FriendOfRepository;
+import org.moera.node.data.FriendRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
@@ -36,6 +39,12 @@ public class PeopleUiController {
 
     @Inject
     private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Inject
+    private FriendRepository friendRepository;
+
+    @Inject
+    private FriendOfRepository friendOfRepository;
 
     @GetMapping("/people")
     public String people() {
@@ -106,7 +115,11 @@ public class PeopleUiController {
     private PeopleGeneralInfo getTotals() {
         int subscribersTotal = subscriberRepository.countAllByType(requestContext.nodeId(), SubscriptionType.FEED);
         int subscriptionsTotal = userSubscriptionRepository.countByType(requestContext.nodeId(), SubscriptionType.FEED);
-        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, requestContext.getOptions(), requestContext);
+        Map<String, Integer> friendsTotal = friendRepository.countGroupsByNodeId(requestContext.nodeId()).stream()
+                .collect(Collectors.toMap(fg -> fg.getId().toString(), fg -> (int) fg.getTotal()));
+        int friendOfsTotal = friendOfRepository.countByNodeId(requestContext.nodeId());
+        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, friendsTotal, friendOfsTotal,
+                requestContext.getOptions(), requestContext);
     }
 
 }

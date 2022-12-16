@@ -117,4 +117,12 @@ public class FriendOf implements ContactRelated {
         return getViewAllPrincipal(options);
     }
 
+    public static Principal getViewTotalPrincipal(Options options) {
+        return options.getPrincipal("friend-ofs.view-total");
+    }
+
+    public static Principal getViewTotalE(Options options) {
+        return getViewTotalPrincipal(options);
+    }
+
 }

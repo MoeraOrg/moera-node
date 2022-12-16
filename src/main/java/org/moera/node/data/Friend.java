@@ -100,6 +100,14 @@ public class Friend implements ContactRelated {
         return getViewAllPrincipal(options);
     }
 
+    public static Principal getViewTotalPrincipal(Options options) {
+        return options.getPrincipal("friends.view-total");
+    }
+
+    public static Principal getViewTotalE(Options options) {
+        return getViewTotalPrincipal(options);
+    }
+
     public Principal getViewE() {
         return toAbsolute(getViewPrincipal());
     }

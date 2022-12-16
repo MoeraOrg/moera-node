@@ -13,6 +13,10 @@ public interface FriendRepository extends JpaRepository<Friend, UUID> {
             + " where fr.nodeId = ?1 order by fr.remoteNodeName")
     List<Friend> findAllByNodeId(UUID nodeId);
 
+    @Query("select new org.moera.node.data.FriendGroupTotal(fr.friendGroup.id, count(*)) from Friend fr"
+            + " where fr.nodeId = ?1 group by fr.friendGroup.id")
+    List<FriendGroupTotal> countGroupsByNodeId(UUID nodeId);
+
     @Query("select fr from Friend fr left join fetch fr.contact c left join fetch c.remoteAvatarMediaFile"
             + " left join fetch fr.friendGroup fg"
             + " where fg.nodeId = ?1 and fg.id = ?2 order by fr.remoteNodeName")

@@ -497,10 +497,30 @@
       - signed
       - admin
 
+- name: friends.view-total
+  type: Principal
+  defaultValue: public
+  title: Number of friends is visible to
+  modifiers:
+    principals:
+      - public
+      - signed
+      - admin
+
 - name: friend-ofs.view
   type: Principal
   defaultValue: public
   title: List of added me as a friend is visible to
+  modifiers:
+    principals:
+      - public
+      - signed
+      - admin
+
+- name: friend-ofs.view-total
+  type: Principal
+  defaultValue: public
+  title: Number of added me as a friend is visible to
   modifiers:
     principals:
       - public

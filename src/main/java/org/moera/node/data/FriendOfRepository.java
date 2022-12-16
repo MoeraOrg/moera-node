@@ -13,6 +13,9 @@ public interface FriendOfRepository extends JpaRepository<FriendOf, UUID> {
             + " where fo.nodeId = ?1")
     List<FriendOf> findAllByNodeId(UUID nodeId);
 
+    @Query("select count(distinct fo.remoteNodeName) from FriendOf fo where fo.nodeId = ?1")
+    int countByNodeId(UUID nodeId);
+
     @Query("select fo from FriendOf fo left join fetch fo.contact c left join fetch c.remoteAvatarMediaFile"
             + " where fo.nodeId = ?1 and fo.remoteNodeName = ?2")
     List<FriendOf> findByNodeIdAndRemoteNode(UUID nodeId, String remoteNodeName);
