@@ -14,6 +14,7 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.data.ContactRepository;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
@@ -24,6 +25,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
+import org.moera.node.model.ContactInfo;
 import org.moera.node.model.FriendDescription;
 import org.moera.node.model.FriendGroupAssignment;
 import org.moera.node.model.FriendGroupDetails;
@@ -62,6 +64,11 @@ public class FriendController {
 
     @Inject
     private ContactOperations contactOperations;
+    private final ContactRepository contactRepository;
+
+    public FriendController(ContactRepository contactRepository) {
+        this.contactRepository = contactRepository;
+    }
 
     @GetMapping
     @Transactional
@@ -85,20 +92,19 @@ public class FriendController {
                 : friendRepository.findAllByNodeIdAndGroup(requestContext.nodeId(), groupId);
         List<FriendInfo> friendInfos = new ArrayList<>();
         List<FriendGroupDetails> groups = null;
-        UUID prevId = null;
+        String prevNodeName = null;
         for (Friend friend : friends) {
-            if (prevId != null && !prevId.equals(friend.getId())) {
+            if (prevNodeName != null && !prevNodeName.equals(friend.getRemoteNodeName())) {
                 groups = null;
             }
             if (groups == null) {
-                FriendInfo info = new FriendInfo();
-                info.setNodeName(friend.getRemoteNodeName());
+                FriendInfo info = new FriendInfo(friend);
                 if (groupId == null) {
                     groups = new ArrayList<>();
                     info.setGroups(groups);
                 }
                 friendInfos.add(info);
-                prevId = friend.getId();
+                prevNodeName = friend.getRemoteNodeName();
             }
             boolean visible = requestContext.isPrincipal(friend.getViewE())
                     && (requestContext.isAdmin()
@@ -122,6 +128,10 @@ public class FriendController {
             throw new AuthenticationException();
         }
 
+        ContactInfo contact = contactRepository.findByRemoteNode(requestContext.nodeId(), nodeName)
+                .map(ContactInfo::new)
+                .orElse(null);
+
         boolean privileged = requestContext.isAdmin() || requestContext.isClient(nodeName);
         Map<UUID, Boolean> isPublic = Arrays.stream(friendCache.getNodeGroups())
                 .collect(Collectors.toMap(FriendGroup::getId, fg -> fg.getViewPrincipal().isPublic()));
@@ -131,7 +141,7 @@ public class FriendController {
                 .map(fr -> new FriendGroupDetails(fr, requestContext.isAdmin()))
                 .collect(Collectors.toList());
 
-        return new FriendInfo(nodeName, groups);
+        return new FriendInfo(nodeName, contact, groups);
     }
 
     @PutMapping
@@ -188,8 +198,7 @@ public class FriendController {
                     target.getValue().getFirst().toFriend(friend);
                 }
                 if (friendInfo == null) {
-                    friendInfo = new FriendInfo();
-                    friendInfo.setNodeName(friend.getRemoteNodeName());
+                    friendInfo = new FriendInfo(friend);
                     friendInfo.setGroups(new ArrayList<>());
                     result.add(friendInfo);
                 }

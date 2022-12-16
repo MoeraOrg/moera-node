@@ -23,4 +23,7 @@ public interface FriendRepository extends JpaRepository<Friend, UUID> {
             + " where fr.nodeId = ?1 and fr.remoteNodeName = ?2")
     List<Friend> findAllByNodeIdAndName(UUID nodeId, String remoteNodeName);
 
+    @Query("select fr from Friend fr where fr.nodeId = ?1 and fr.remoteNodeName = ?2")
+    List<Friend> findByNodeIdAndName(UUID nodeId, String remoteNodeName);
+
 }

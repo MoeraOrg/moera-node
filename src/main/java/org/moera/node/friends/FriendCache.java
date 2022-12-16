@@ -134,7 +134,7 @@ public class FriendCache {
             clientGroupsLock.lock(nodeClient);
             try {
                 groups = clientGroups.computeIfAbsent(nodeClient,
-                        nid -> friendRepository.findAllByNodeIdAndName(universalContext.nodeId(), clientName)
+                        nid -> friendRepository.findByNodeIdAndName(universalContext.nodeId(), clientName)
                                 .toArray(Friend[]::new));
             } finally {
                 clientGroupsLock.unlock(nodeClient);
