@@ -74,7 +74,7 @@ public class FriendProcessor {
             }
         }
 
-        Contact contact = contactOperations.updateCloseness(notification.getSenderNodeName(), 0);
+        Contact contact = contactOperations.find(notification.getSenderNodeName());
 
         List<RemoteToFriendGroupAddedLiberin> added = new ArrayList<>();
         for (var curr : current.entrySet()) {

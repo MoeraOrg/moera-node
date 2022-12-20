@@ -197,6 +197,7 @@ public class FriendController {
                 } else {
                     target.getValue().getFirst().toFriend(friend);
                 }
+                contactOperations.updateViewPrincipal(friend);
                 if (friendInfo == null) {
                     friendInfo = new FriendInfo(friend);
                     friendInfo.setGroups(new ArrayList<>());

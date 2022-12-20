@@ -37,10 +37,10 @@ public class PostingReactionProcessor {
     @Transactional
     public void added(PostingReactionAddedNotification notification) {
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getParentPostingNodeName(), 0),
+                contactOperations.find(notification.getParentPostingNodeName()),
                 notification.getParentPostingAvatar());
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getOwnerName(), 0),
+                contactOperations.find(notification.getOwnerName()),
                 notification.getOwnerAvatar());
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),

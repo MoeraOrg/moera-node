@@ -44,8 +44,10 @@ public class Subscriber implements ContactRelated {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    @NotNull
     private Principal viewPrincipal = Principal.PUBLIC;
 
+    @NotNull
     private Principal adminViewPrincipal = Principal.UNSET;
 
     public UUID getId() {
@@ -164,6 +166,13 @@ public class Subscriber implements ContactRelated {
 
     public Principal getViewE() {
         return toAbsolute(getViewCompound());
+    }
+
+    @Override
+    public void toContactViewPrincipal(Contact contact) {
+        if (getSubscriptionType() == SubscriptionType.FEED) {
+            contact.setViewFeedSubscriberPrincipal(getViewCompound());
+        }
     }
 
     public Principal getViewOperationsPrincipal() {

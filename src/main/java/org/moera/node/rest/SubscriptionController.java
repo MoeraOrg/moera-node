@@ -171,6 +171,7 @@ public class SubscriptionController {
                 if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
                     contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
                     contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
+                    contactOperations.updateViewPrincipal(userSubscription);
                 } else {
                     contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
                 }
@@ -215,6 +216,7 @@ public class SubscriptionController {
                 "subscriptionOverride.operations.wrong-principal");
 
         subscriptionOverride.toUserSubscription(subscription);
+        contactOperations.updateViewPrincipal(subscription);
 
         requestContext.send(new SubscriptionOperationsUpdatedLiberin(subscription, latestView));
 

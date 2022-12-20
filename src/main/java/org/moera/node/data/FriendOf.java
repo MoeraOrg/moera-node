@@ -125,4 +125,8 @@ public class FriendOf implements ContactRelated {
         return getViewTotalPrincipal(options);
     }
 
+    @Override
+    public void toContactViewPrincipal(Contact contact) {
+    }
+
 }

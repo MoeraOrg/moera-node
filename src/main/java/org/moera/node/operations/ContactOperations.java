@@ -5,10 +5,12 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.node.data.Contact;
+import org.moera.node.data.ContactRelated;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.global.UniversalContext;
@@ -33,6 +35,14 @@ public class ContactOperations {
     private PlatformTransactionManager txManager;
 
     private final ParametrizedLock<Pair<UUID, String>> lock = new ParametrizedLock<>();
+
+    public Contact find(String remoteNodeName) {
+        return updateCloseness(remoteNodeName, 0);
+    }
+
+    public Contact find(UUID nodeId, String remoteNodeName) {
+        return updateCloseness(nodeId, remoteNodeName, 0);
+    }
 
     public Contact updateCloseness(String remoteNodeName, float delta) {
         return updateCloseness(universalContext.nodeId(), remoteNodeName, delta);
@@ -65,11 +75,7 @@ public class ContactOperations {
         }
     }
 
-    public void updateFeedSubscriptionCount(String remoteNodeName, int delta) {
-        updateFeedSubscriptionCount(universalContext.nodeId(), remoteNodeName, delta);
-    }
-
-    public void updateFeedSubscriptionCount(UUID nodeId, String remoteNodeName, int delta) {
+    public void updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
         if (remoteNodeName == null) {
             return;
         }
@@ -77,8 +83,7 @@ public class ContactOperations {
         lock.lock(Pair.of(nodeId, remoteNodeName));
         try {
             Transaction.execute(txManager, () -> {
-                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
-                        contact -> contact.setFeedSubscriptionCount(contact.getFeedSubscriptionCount() + delta));
+                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(updater);
                 return null;
             });
         } catch (Throwable e) {
@@ -86,75 +91,30 @@ public class ContactOperations {
         } finally {
             lock.unlock(Pair.of(nodeId, remoteNodeName));
         }
+    }
+
+    public void updateFeedSubscriptionCount(String remoteNodeName, int delta) {
+        updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setFeedSubscriptionCount(contact.getFeedSubscriptionCount() + delta));
     }
 
     public void updateFeedSubscriberCount(String remoteNodeName, int delta) {
-        updateFeedSubscriberCount(universalContext.nodeId(), remoteNodeName, delta);
-    }
-
-    public void updateFeedSubscriberCount(UUID nodeId, String remoteNodeName, int delta) {
-        if (remoteNodeName == null) {
-            return;
-        }
-
-        lock.lock(Pair.of(nodeId, remoteNodeName));
-        try {
-            Transaction.execute(txManager, () -> {
-                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
-                        contact -> contact.setFeedSubscriberCount(contact.getFeedSubscriberCount() + delta));
-                return null;
-            });
-        } catch (Throwable e) {
-            throw new ContactUpdateException(e);
-        } finally {
-            lock.unlock(Pair.of(nodeId, remoteNodeName));
-        }
+        updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setFeedSubscriberCount(contact.getFeedSubscriberCount() + delta));
     }
 
     public void updateFriendCount(String remoteNodeName, int delta) {
-        updateFriendCount(universalContext.nodeId(), remoteNodeName, delta);
-    }
-
-    public void updateFriendCount(UUID nodeId, String remoteNodeName, int delta) {
-        if (remoteNodeName == null) {
-            return;
-        }
-
-        lock.lock(Pair.of(nodeId, remoteNodeName));
-        try {
-            Transaction.execute(txManager, () -> {
-                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
-                        contact -> contact.setFriendCount(contact.getFriendCount() + delta));
-                return null;
-            });
-        } catch (Throwable e) {
-            throw new ContactUpdateException(e);
-        } finally {
-            lock.unlock(Pair.of(nodeId, remoteNodeName));
-        }
+        updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setFriendCount(contact.getFriendCount() + delta));
     }
 
     public void updateFriendOfCount(String remoteNodeName, int delta) {
-        updateFriendOfCount(universalContext.nodeId(), remoteNodeName, delta);
+        updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setFriendOfCount(contact.getFriendOfCount() + delta));
     }
 
-    public void updateFriendOfCount(UUID nodeId, String remoteNodeName, int delta) {
-        if (remoteNodeName == null) {
-            return;
-        }
-
-        lock.lock(Pair.of(nodeId, remoteNodeName));
-        try {
-            Transaction.execute(txManager, () -> {
-                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(
-                        contact -> contact.setFriendOfCount(contact.getFriendOfCount() + delta));
-                return null;
-            });
-        } catch (Throwable e) {
-            throw new ContactUpdateException(e);
-        } finally {
-            lock.unlock(Pair.of(nodeId, remoteNodeName));
-        }
+    public void updateViewPrincipal(ContactRelated related) {
+        updateAtomically(universalContext.nodeId(), related.getRemoteNodeName(), related::toContactViewPrincipal);
     }
 
     public void updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {

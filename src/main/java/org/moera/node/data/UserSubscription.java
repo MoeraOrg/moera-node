@@ -54,6 +54,7 @@ public class UserSubscription implements ContactRelated {
     @Enumerated
     private SubscriptionReason reason = SubscriptionReason.USER;
 
+    @NotNull
     private Principal viewPrincipal = Principal.PUBLIC;
 
     public UUID getId() {
@@ -168,6 +169,13 @@ public class UserSubscription implements ContactRelated {
 
     public Principal getViewE() {
         return toAbsolute(getViewPrincipal());
+    }
+
+    @Override
+    public void toContactViewPrincipal(Contact contact) {
+        if (getSubscriptionType() == SubscriptionType.FEED) {
+            contact.setViewFeedSubscriptionPrincipal(getViewPrincipal());
+        }
     }
 
     public Principal getEditOperationsPrincipal() {

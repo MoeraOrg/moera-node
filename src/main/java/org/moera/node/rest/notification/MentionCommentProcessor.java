@@ -32,10 +32,10 @@ public class MentionCommentProcessor {
     @Transactional
     public void added(MentionCommentAddedNotification notification) {
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getPostingOwnerName(), 0),
+                contactOperations.find(notification.getPostingOwnerName()),
                 notification.getPostingOwnerAvatar());
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getCommentOwnerName(), 0),
+                contactOperations.find(notification.getCommentOwnerName()),
                 notification.getCommentOwnerAvatar());
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),

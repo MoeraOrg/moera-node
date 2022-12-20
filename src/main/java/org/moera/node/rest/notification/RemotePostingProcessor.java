@@ -79,7 +79,7 @@ public class RemotePostingProcessor {
             }
         }
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getPostingOwnerName(), 0),
+                contactOperations.find(notification.getPostingOwnerName()),
                 notification.getPostingOwnerAvatar());
         Contact.toAvatar(
                 contactOperations.updateCloseness(notification.getCommentOwnerName(), 1),
@@ -110,7 +110,7 @@ public class RemotePostingProcessor {
     public void postingUpdated(PostingImportantUpdateNotification notification) {
         getSubscription(notification);
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getPostingOwnerName(), 0),
+                contactOperations.find(notification.getPostingOwnerName()),
                 notification.getPostingOwnerAvatar());
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getPostingOwnerAvatar()},

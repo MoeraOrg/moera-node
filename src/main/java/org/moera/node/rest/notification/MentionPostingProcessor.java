@@ -37,7 +37,7 @@ public class MentionPostingProcessor {
     @Transactional
     public void added(MentionPostingAddedNotification notification) {
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getOwnerName(), 0),
+                contactOperations.find(notification.getOwnerName()),
                 notification.getOwnerAvatar());
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),

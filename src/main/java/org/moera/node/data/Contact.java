@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.util.Util;
 
@@ -62,6 +63,15 @@ public class Contact {
 
     @NotNull
     private Timestamp updatedAt = Util.now();
+
+    @NotNull
+    private Principal viewFeedSubscriptionPrincipal = Principal.PUBLIC;
+
+    @NotNull
+    private Principal viewFeedSubscriberPrincipal = Principal.PUBLIC;
+
+    @NotNull
+    private Principal viewFriendPrincipal = Principal.PUBLIC;
 
     public UUID getId() {
         return id;
@@ -185,6 +195,46 @@ public class Contact {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    private Principal toAbsolute(Principal principal) {
+        return principal.withOwner(getRemoteNodeName());
+    }
+
+    public Principal getViewFeedSubscriptionPrincipal() {
+        return viewFeedSubscriptionPrincipal;
+    }
+
+    public void setViewFeedSubscriptionPrincipal(Principal viewFeedSubscriptionPrincipal) {
+        this.viewFeedSubscriptionPrincipal = viewFeedSubscriptionPrincipal;
+    }
+
+    public Principal getViewFeedSubscriptionE() {
+        return toAbsolute(getViewFeedSubscriptionPrincipal());
+    }
+
+    public Principal getViewFeedSubscriberPrincipal() {
+        return viewFeedSubscriberPrincipal;
+    }
+
+    public void setViewFeedSubscriberPrincipal(Principal viewFeedSubscriberPrincipal) {
+        this.viewFeedSubscriberPrincipal = viewFeedSubscriberPrincipal;
+    }
+
+    public Principal getViewFeedSubscriber() {
+        return toAbsolute(getViewFeedSubscriberPrincipal());
+    }
+
+    public Principal getViewFriendPrincipal() {
+        return viewFriendPrincipal;
+    }
+
+    public void setViewFriendPrincipal(Principal viewFriendPrincipal) {
+        this.viewFriendPrincipal = viewFriendPrincipal;
+    }
+
+    public Principal getViewFriendE() {
+        return toAbsolute(getViewFriendPrincipal());
     }
 
     public void fill(ContactRelated related) {

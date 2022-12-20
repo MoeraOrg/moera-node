@@ -36,6 +36,7 @@ public class Friend implements ContactRelated {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    @NotNull
     private Principal viewPrincipal = Principal.PUBLIC;
 
     public UUID getId() {
@@ -108,16 +109,21 @@ public class Friend implements ContactRelated {
         return getViewTotalPrincipal(options);
     }
 
-    public Principal getViewE() {
-        return toAbsolute(getViewPrincipal());
-    }
-
     public Principal getViewPrincipal() {
         return viewPrincipal;
     }
 
     public void setViewPrincipal(Principal viewPrincipal) {
         this.viewPrincipal = viewPrincipal;
+    }
+
+    public Principal getViewE() {
+        return toAbsolute(getViewPrincipal());
+    }
+
+    @Override
+    public void toContactViewPrincipal(Contact contact) {
+        contact.setViewFriendPrincipal(getViewPrincipal());
     }
 
 }

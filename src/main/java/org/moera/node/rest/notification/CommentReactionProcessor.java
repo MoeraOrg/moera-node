@@ -34,7 +34,7 @@ public class CommentReactionProcessor {
     @Transactional
     public void added(CommentReactionAddedNotification notification) {
         Contact.toAvatar(
-                contactOperations.updateCloseness(notification.getPostingNodeName(), 0),
+                contactOperations.find(notification.getPostingNodeName()),
                 notification.getPostingAvatar());
         Contact.toAvatar(
                 contactOperations.updateCloseness(notification.getOwnerName(), 0.1f),

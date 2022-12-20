@@ -2,7 +2,6 @@ package org.moera.node.operations;
 
 import java.util.List;
 import java.util.UUID;
-
 import javax.inject.Inject;
 
 import org.moera.node.data.Subscription;
