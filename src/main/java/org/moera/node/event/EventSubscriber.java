@@ -2,9 +2,14 @@ package org.moera.node.event;
 
 import java.util.UUID;
 
-public class EventSubscriber {
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.node.option.Options;
+
+public class EventSubscriber implements AccessChecker {
 
     private UUID nodeId;
+    private Options options;
     private String sessionId;
     private int lastEventSeen;
     private boolean admin;
@@ -18,6 +23,14 @@ public class EventSubscriber {
 
     public void setNodeId(UUID nodeId) {
         this.nodeId = nodeId;
+    }
+
+    public Options getOptions() {
+        return options;
+    }
+
+    public void setOptions(Options options) {
+        this.options = options;
     }
 
     public String getSessionId() {
@@ -66,6 +79,11 @@ public class EventSubscriber {
 
     public void setSubscribed(boolean subscribed) {
         this.subscribed = subscribed;
+    }
+
+    @Override
+    public boolean isPrincipal(PrincipalFilter principal) {
+        return principal.includes(admin, clientName, friendGroups);
     }
 
 }

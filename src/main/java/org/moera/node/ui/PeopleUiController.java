@@ -65,7 +65,7 @@ public class PeopleUiController {
             subscribers = subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
                     .sorted(comparator)
                     .filter(s -> requestContext.isPrincipal(s.getViewE()))
-                    .map(s -> new SubscriberInfo(s, requestContext))
+                    .map(s -> new SubscriberInfo(s, requestContext.getOptions(), requestContext))
                     .collect(Collectors.toList());
         }
 
@@ -96,7 +96,7 @@ public class PeopleUiController {
                     .stream()
                     .sorted(comparator)
                     .filter(s -> requestContext.isPrincipal(s.getViewE()))
-                    .map(SubscriptionInfo::new)
+                    .map(s -> new SubscriptionInfo(s, requestContext.getOptions(), requestContext))
                     .collect(Collectors.toList());
         }
 

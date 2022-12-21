@@ -112,7 +112,7 @@ public class SubscriberController {
 
         return fetchSubscribers(where).stream()
                 .filter(s -> requestContext.isPrincipal(s.getViewE()))
-                .map(s -> new SubscriberInfo(s, requestContext))
+                .map(s -> new SubscriberInfo(s, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -135,7 +135,7 @@ public class SubscriberController {
             }
         }
 
-        return new SubscriberInfo(subscriber, requestContext);
+        return new SubscriberInfo(subscriber, requestContext.getOptions(), requestContext);
     }
 
     @PostMapping
@@ -185,7 +185,7 @@ public class SubscriberController {
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
 
-        return new SubscriberInfo(subscriber, requestContext);
+        return new SubscriberInfo(subscriber, requestContext.getOptions(), requestContext);
     }
 
     private void validate(SubscriberDescription description) {
@@ -249,7 +249,7 @@ public class SubscriberController {
 
         requestContext.send(new SubscriberOperationsUpdatedLiberin(subscriber, latestView));
 
-        return new SubscriberInfo(subscriber, requestContext);
+        return new SubscriberInfo(subscriber, requestContext.getOptions(), requestContext);
     }
 
     @DeleteMapping("/{id}")

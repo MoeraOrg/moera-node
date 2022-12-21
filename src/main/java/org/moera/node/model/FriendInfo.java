@@ -3,7 +3,9 @@ package org.moera.node.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Friend;
+import org.moera.node.option.Options;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FriendInfo {
@@ -15,9 +17,9 @@ public class FriendInfo {
     public FriendInfo() {
     }
 
-    public FriendInfo(Friend friend) {
+    public FriendInfo(Friend friend, Options options, AccessChecker accessChecker) {
         this.nodeName = friend.getRemoteNodeName();
-        this.contact = new ContactInfo(friend.getContact());
+        this.contact = new ContactInfo(friend.getContact(), options, accessChecker);
     }
 
     public FriendInfo(String nodeName, ContactInfo contact, List<FriendGroupDetails> groups) {

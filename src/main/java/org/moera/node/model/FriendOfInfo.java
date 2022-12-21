@@ -3,7 +3,9 @@ package org.moera.node.model;
 import java.util.Collections;
 import java.util.List;
 
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.FriendOf;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 public class FriendOfInfo {
@@ -15,10 +17,10 @@ public class FriendOfInfo {
     public FriendOfInfo() {
     }
 
-    public FriendOfInfo(FriendOf friendOf) {
+    public FriendOfInfo(FriendOf friendOf, Options options) {
         remoteNodeName = friendOf.getRemoteNodeName();
         if (friendOf.getContact() != null) {
-            contact = new ContactInfo(friendOf.getContact());
+            contact = new ContactInfo(friendOf.getContact(), options);
         }
         groups = Collections.singletonList(
                 new FriendGroupDetails(
@@ -29,10 +31,19 @@ public class FriendOfInfo {
         );
     }
 
+    public FriendOfInfo(FriendOf friendOf, Options options, AccessChecker accessChecker) {
+        this(friendOf, options);
+        protect(accessChecker);
+    }
+
     public FriendOfInfo(String remoteNodeName, ContactInfo contact, List<FriendGroupDetails> groups) {
         this.remoteNodeName = remoteNodeName;
         this.contact = contact;
         this.groups = groups;
+    }
+
+    public void protect(AccessChecker accessChecker) {
+        contact.protect(accessChecker);
     }
 
     public String getRemoteNodeName() {

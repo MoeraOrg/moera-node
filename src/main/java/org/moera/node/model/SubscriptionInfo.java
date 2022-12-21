@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,13 +29,13 @@ public class SubscriptionInfo {
     public SubscriptionInfo() {
     }
 
-    public SubscriptionInfo(UserSubscription subscription) {
+    public SubscriptionInfo(UserSubscription subscription, Options options) {
         id = subscription.getId().toString();
         type = subscription.getSubscriptionType();
         feedName = subscription.getFeedName();
         remoteNodeName = subscription.getRemoteNodeName();
         if (subscription.getContact() != null) {
-            contact = new ContactInfo(subscription.getContact());
+            contact = new ContactInfo(subscription.getContact(), options);
         }
         remoteFeedName = subscription.getRemoteFeedName();
         remotePostingId = subscription.getRemoteEntryId();
@@ -42,6 +44,17 @@ public class SubscriptionInfo {
 
         operations = new HashMap<>();
         putOperation(operations, "view", subscription.getViewPrincipal(), Principal.PUBLIC);
+    }
+
+    public SubscriptionInfo(UserSubscription subscription, Options options, AccessChecker accessChecker) {
+        this(subscription, options);
+        protect(accessChecker);
+    }
+
+    public void protect(AccessChecker accessChecker) {
+        if (contact != null) {
+            contact.protect(accessChecker);
+        }
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,

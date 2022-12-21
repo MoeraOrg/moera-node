@@ -97,7 +97,7 @@ public class ContactsController {
             page.stream()
                     .filter(ct -> contactMatch(ct, regexes))
                     .limit(limit - result.size())
-                    .map(ContactInfo::new)
+                    .map(c -> new ContactInfo(c, requestContext.getOptions(), requestContext))
                     .forEach(result::add);
             if (result.size() >= limit) {
                 return result;

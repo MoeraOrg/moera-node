@@ -36,7 +36,7 @@ public class SubscriberAddedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("subscriber", new SubscriberInfo(subscriber, AccessCheckers.ADMIN));
+        model.put("subscriber", new SubscriberInfo(subscriber, getPluginContext().getOptions(), AccessCheckers.ADMIN));
         model.put("subscriberLastUpdatedAt", subscriberLastUpdatedAt);
     }
 

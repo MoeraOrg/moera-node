@@ -41,8 +41,11 @@ public abstract class Event {
         this.filter = filter;
     }
 
+    public void protect(EventSubscriber eventSubscriber) {
+    }
+
     public boolean isPermitted(EventSubscriber subscriber) {
-        return filter.includes(subscriber.isAdmin(), subscriber.getClientName(), subscriber.getFriendGroups());
+        return subscriber.isPrincipal(filter);
     }
 
     public final String toLogMessage() {

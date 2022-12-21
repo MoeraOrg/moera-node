@@ -25,7 +25,7 @@ public class SubscriptionDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("subscription", new SubscriptionInfo(subscription));
+        model.put("subscription", new SubscriptionInfo(subscription, getPluginContext().getOptions()));
     }
 
 }

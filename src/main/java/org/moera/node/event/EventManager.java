@@ -112,6 +112,7 @@ public class EventManager {
 
         EventSubscriber subscriber = new EventSubscriber();
         subscriber.setNodeId(nodeId);
+        subscriber.setOptions(domains.getDomainOptions(nodeId));
         subscriber.setSessionId(accessor.getSessionId());
         subscriber.setAdmin(admin);
         subscriber.setClientName(clientName);
@@ -294,6 +295,7 @@ public class EventManager {
                     continue;
                 }
                 log.debug("Sending event {}: {}", first + i, packet.getEvent().getType());
+                packet.getEvent().protect(subscriber);
                 messagingTemplate.convertAndSendToUser(subscriber.getSessionId(), EVENT_DESTINATION, packet, headers);
                 subscriber.setLastEventSeen(first + i);
             }

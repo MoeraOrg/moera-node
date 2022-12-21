@@ -123,8 +123,8 @@ public class SubscriptionController {
         }
 
         return fetchSubscriptions(where).stream()
-                .filter(s -> requestContext.isPrincipal(s.getViewE()))
-                .map(SubscriptionInfo::new)
+                .filter(sr -> requestContext.isPrincipal(sr.getViewE()))
+                .map(sr -> new SubscriptionInfo(sr, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -193,7 +193,7 @@ public class SubscriptionController {
             taskExecutor.execute(fetchTask);
         }
 
-        return new SubscriptionInfo(subscription);
+        return new SubscriptionInfo(subscription, requestContext.getOptions(), requestContext);
     }
 
     @PutMapping("/{id}")
@@ -220,7 +220,7 @@ public class SubscriptionController {
 
         requestContext.send(new SubscriptionOperationsUpdatedLiberin(subscription, latestView));
 
-        return new SubscriptionInfo(subscription);
+        return new SubscriptionInfo(subscription, requestContext.getOptions(), requestContext);
     }
 
     @DeleteMapping("/{id}")
@@ -274,7 +274,7 @@ public class SubscriptionController {
         return fetchSubscriptions(where).stream()
                 .filter(r -> filter.getFeeds() == null || filter.getFeeds().contains(r.getRemoteFeed()))
                 .filter(r -> filter.getPostings() == null || filter.getPostings().contains(r.getRemotePosting()))
-                .map(SubscriptionInfo::new)
+                .map(sr -> new SubscriptionInfo(sr, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 

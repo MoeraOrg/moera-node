@@ -55,7 +55,7 @@ public class FriendOfController {
                 groups = null;
             }
             if (groups == null) {
-                FriendOfInfo info = new FriendOfInfo(friendOf);
+                FriendOfInfo info = new FriendOfInfo(friendOf, requestContext.getOptions(), requestContext);
                 groups = new ArrayList<>();
                 info.setGroups(groups);
                 friendOfInfos.add(info);
@@ -86,7 +86,9 @@ public class FriendOfController {
                 .map(FriendGroupDetails::new)
                 .collect(Collectors.toList());
 
-        return new FriendOfInfo(nodeName, new ContactInfo(friendOfs.get(0).getContact()), groups);
+        ContactInfo contactInfo = new ContactInfo(
+                friendOfs.get(0).getContact(), requestContext.getOptions(), requestContext);
+        return new FriendOfInfo(nodeName, contactInfo, groups);
     }
 
 }

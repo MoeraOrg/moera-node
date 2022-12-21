@@ -6,10 +6,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.option.Options;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PluginContext {
@@ -25,6 +27,8 @@ public class PluginContext {
     private String nodeName;
     private String domainName;
     private String originUrl;
+    @JsonIgnore
+    private Options options;
 
     public PluginContext() {
     }
@@ -41,12 +45,14 @@ public class PluginContext {
         nodeName = requestContext.nodeName();
         domainName = requestContext.getDomainName();
         originUrl = requestContext.getUrl();
+        options = requestContext.getOptions();
     }
 
     public PluginContext(UniversalContext universalContext) {
         nodeId = universalContext.nodeId();
         nodeName = universalContext.nodeName();
         domainName = universalContext.getDomainName();
+        options = universalContext.getOptions();
     }
 
     private String getRemoteAddress(RequestContext requestContext) {
@@ -139,6 +145,14 @@ public class PluginContext {
 
     public void setOriginUrl(String originUrl) {
         this.originUrl = originUrl;
+    }
+
+    public Options getOptions() {
+        return options;
+    }
+
+    public void setOptions(Options options) {
+        this.options = options;
     }
 
     public void addContextHeaders(HttpRequest.Builder requestBuilder) {

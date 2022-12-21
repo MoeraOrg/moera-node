@@ -25,7 +25,7 @@ public class RemoteFriendGroupDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("friendOf", new FriendOfInfo(friendOf));
+        model.put("friendOf", new FriendOfInfo(friendOf, getPluginContext().getOptions()));
     }
 
 }

@@ -98,7 +98,7 @@ public class FriendController {
                 groups = null;
             }
             if (groups == null) {
-                FriendInfo info = new FriendInfo(friend);
+                FriendInfo info = new FriendInfo(friend, requestContext.getOptions(), requestContext);
                 if (groupId == null) {
                     groups = new ArrayList<>();
                     info.setGroups(groups);
@@ -129,7 +129,7 @@ public class FriendController {
         }
 
         ContactInfo contact = contactRepository.findByRemoteNode(requestContext.nodeId(), nodeName)
-                .map(ContactInfo::new)
+                .map(c -> new ContactInfo(c, requestContext.getOptions(), requestContext))
                 .orElse(null);
 
         boolean privileged = requestContext.isAdmin() || requestContext.isClient(nodeName);
@@ -199,7 +199,7 @@ public class FriendController {
                 }
                 contactOperations.updateViewPrincipal(friend);
                 if (friendInfo == null) {
-                    friendInfo = new FriendInfo(friend);
+                    friendInfo = new FriendInfo(friend, requestContext.getOptions(), requestContext);
                     friendInfo.setGroups(new ArrayList<>());
                     result.add(friendInfo);
                 }

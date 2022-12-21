@@ -26,7 +26,7 @@ public class SubscriberDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("subscriber", new SubscriberInfo(subscriber, AccessCheckers.ADMIN));
+        model.put("subscriber", new SubscriberInfo(subscriber, getPluginContext().getOptions(), AccessCheckers.ADMIN));
     }
 
 }

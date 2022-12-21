@@ -8,6 +8,7 @@ import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,14 +28,14 @@ public class SubscriberInfo {
     public SubscriberInfo() {
     }
 
-    public SubscriberInfo(Subscriber subscriber, AccessChecker accessChecker) {
+    public SubscriberInfo(Subscriber subscriber, Options options, AccessChecker accessChecker) {
         id = subscriber.getId().toString();
         type = subscriber.getSubscriptionType();
         feedName = subscriber.getFeedName();
         postingId = subscriber.getEntry() != null ? subscriber.getEntry().getId().toString() : null;
         nodeName = subscriber.getRemoteNodeName();
         if (subscriber.getContact() != null) {
-            contact = new ContactInfo(subscriber.getContact());
+            contact = new ContactInfo(subscriber.getContact(), options, accessChecker);
         }
         createdAt = Util.toEpochSecond(subscriber.getCreatedAt());
 
