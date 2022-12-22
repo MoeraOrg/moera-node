@@ -105,8 +105,8 @@ public class SubscriptionTask extends Task {
         try {
             mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(subscription.getSubscriptionType(),
-                    subscription.getRemoteFeedName(), subscription.getRemoteEntryId(), fullName(), gender(),
-                    getAvatar(), lastEditedAt, UserSubscription.getViewAllPrincipal(getOptions()).isPublic());
+                    subscription.getRemoteFeedName(), subscription.getRemoteEntryId(), lastEditedAt,
+                    UserSubscription.getViewAllPrincipal(getOptions()).isPublic());
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
