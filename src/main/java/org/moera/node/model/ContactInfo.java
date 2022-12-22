@@ -63,16 +63,16 @@ public class ContactInfo {
 
     public void protect(AccessChecker accessChecker) {
         hasFeedSubscriber = hasFeedSubscriber
-                && accessChecker.isPrincipal(adminOperations.getOrDefault("viewFeedSubscriber", Principal.PUBLIC))
-                && accessChecker.isPrincipal(operations.getOrDefault("viewFeedSubscriber", Principal.PUBLIC));
+                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFeedSubscriber", Principal.PUBLIC))
+                && accessChecker.isPrincipal(getPrincipalE(operations, "viewFeedSubscriber", Principal.PUBLIC));
         hasFeedSubscription = hasFeedSubscription
-                && accessChecker.isPrincipal(adminOperations.getOrDefault("viewFeedSubscription", Principal.PUBLIC))
-                && accessChecker.isPrincipal(operations.getOrDefault("viewFeedSubscription", Principal.PUBLIC));
+                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFeedSubscription", Principal.PUBLIC))
+                && accessChecker.isPrincipal(getPrincipalE(operations, "viewFeedSubscription", Principal.PUBLIC));
         hasFriend = hasFriend
-                && accessChecker.isPrincipal(adminOperations.getOrDefault("viewFriend", Principal.PUBLIC))
-                && accessChecker.isPrincipal(operations.getOrDefault("viewFriend", Principal.PUBLIC));
+                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFriend", Principal.PUBLIC))
+                && accessChecker.isPrincipal(getPrincipalE(operations, "viewFriend", Principal.PUBLIC));
         hasFriendOf = hasFriendOf
-                && accessChecker.isPrincipal(adminOperations.getOrDefault("viewFriendOf", Principal.PUBLIC));
+                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFriendOf", Principal.PUBLIC));
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
@@ -80,6 +80,10 @@ public class ContactInfo {
         if (value != null && !value.equals(defaultValue)) {
             operations.put(operationName, value);
         }
+    }
+
+    private Principal getPrincipalE(Map<String, Principal> operations, String operationName, Principal defaultValue) {
+        return operations.getOrDefault(operationName, defaultValue).withOwner(getNodeName());
     }
 
     public String getNodeName() {
