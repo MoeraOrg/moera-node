@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -75,16 +76,17 @@ public class ContactOperations {
         }
     }
 
-    public void updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
+    public Contact updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
         if (remoteNodeName == null) {
-            return;
+            return null;
         }
 
         lock.lock(Pair.of(nodeId, remoteNodeName));
         try {
-            Transaction.execute(txManager, () -> {
-                contactRepository.findByRemoteNode(nodeId, remoteNodeName).ifPresent(updater);
-                return null;
+            return Transaction.execute(txManager, () -> {
+                Optional<Contact> contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName);
+                contact.ifPresent(updater);
+                return contact.orElse(null);
             });
         } catch (Throwable e) {
             throw new ContactUpdateException(e);
@@ -93,28 +95,28 @@ public class ContactOperations {
         }
     }
 
-    public void updateFeedSubscriptionCount(String remoteNodeName, int delta) {
-        updateAtomically(universalContext.nodeId(), remoteNodeName,
+    public Contact updateFeedSubscriptionCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
                 contact -> contact.setFeedSubscriptionCount(contact.getFeedSubscriptionCount() + delta));
     }
 
-    public void updateFeedSubscriberCount(String remoteNodeName, int delta) {
-        updateAtomically(universalContext.nodeId(), remoteNodeName,
+    public Contact updateFeedSubscriberCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
                 contact -> contact.setFeedSubscriberCount(contact.getFeedSubscriberCount() + delta));
     }
 
-    public void updateFriendCount(String remoteNodeName, int delta) {
-        updateAtomically(universalContext.nodeId(), remoteNodeName,
+    public Contact updateFriendCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
                 contact -> contact.setFriendCount(contact.getFriendCount() + delta));
     }
 
-    public void updateFriendOfCount(String remoteNodeName, int delta) {
-        updateAtomically(universalContext.nodeId(), remoteNodeName,
+    public Contact updateFriendOfCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
                 contact -> contact.setFriendOfCount(contact.getFriendOfCount() + delta));
     }
 
-    public void updateViewPrincipal(ContactRelated related) {
-        updateAtomically(universalContext.nodeId(), related.getRemoteNodeName(), related::toContactViewPrincipal);
+    public Contact updateViewPrincipal(ContactRelated related) {
+        return updateAtomically(universalContext.nodeId(), related.getRemoteNodeName(), related::toContactViewPrincipal);
     }
 
     public void updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {

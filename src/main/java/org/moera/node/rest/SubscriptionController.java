@@ -31,11 +31,11 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
 import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
+import org.moera.node.model.ContactInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RemoteFeed;
 import org.moera.node.model.RemotePosting;
-import org.moera.node.model.Result;
 import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfo;
@@ -169,9 +169,9 @@ public class SubscriptionController {
 
                 Contact contact;
                 if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
-                    contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
+                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
                     contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
-                    contactOperations.updateViewPrincipal(userSubscription);
+                    contact = contactOperations.updateViewPrincipal(userSubscription);
                 } else {
                     contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
                 }
@@ -216,7 +216,9 @@ public class SubscriptionController {
                 "subscriptionOverride.operations.wrong-principal");
 
         subscriptionOverride.toUserSubscription(subscription);
-        contactOperations.updateViewPrincipal(subscription);
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            contactOperations.updateViewPrincipal(subscription).fill(subscription);
+        }
 
         requestContext.send(new SubscriptionOperationsUpdatedLiberin(subscription, latestView));
 
@@ -226,7 +228,7 @@ public class SubscriptionController {
     @DeleteMapping("/{id}")
     @Admin
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public ContactInfo delete(@PathVariable UUID id) {
         log.info("DELETE /people/subscriptions/{id} (id = {})", LogUtil.format(id));
 
         UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
@@ -234,13 +236,13 @@ public class SubscriptionController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         userSubscriptionRepository.delete(subscription);
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1);
+            contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1).fill(subscription);
         }
 
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriptionDeletedLiberin(subscription));
 
-        return Result.OK;
+        return new ContactInfo(subscription.getContact(), requestContext.getOptions(), requestContext);
     }
 
     @PostMapping("/search")

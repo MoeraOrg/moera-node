@@ -32,8 +32,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriberAddedLiberin;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
+import org.moera.node.model.ContactInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.Result;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriberOverride;
@@ -174,9 +174,9 @@ public class SubscriberController {
 
         Contact contact;
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            contact = contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
+            contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 1);
             contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), 1);
-            contactOperations.updateViewPrincipal(subscriber);
+            contact = contactOperations.updateViewPrincipal(subscriber);
         } else {
             contact = contactOperations.updateCloseness(subscriber.getRemoteNodeName(), 0.25f);
         }
@@ -244,7 +244,7 @@ public class SubscriberController {
 
         subscriberOverride.toSubscriber(subscriber);
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            contactOperations.updateViewPrincipal(subscriber);
+            contactOperations.updateViewPrincipal(subscriber).fill(subscriber);
         }
 
         requestContext.send(new SubscriberOperationsUpdatedLiberin(subscriber, latestView));
@@ -254,7 +254,7 @@ public class SubscriberController {
 
     @DeleteMapping("/{id}")
     @Transactional
-    public Result delete(@PathVariable UUID id) {
+    public ContactInfo delete(@PathVariable UUID id) {
         log.info("DELETE /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
@@ -265,13 +265,13 @@ public class SubscriberController {
 
         subscriberRepository.delete(subscriber);
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), -1);
+            contactOperations.updateFeedSubscriberCount(subscriber.getRemoteNodeName(), -1).fill(subscriber);
         }
 
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
-        return Result.OK;
+        return new ContactInfo(subscriber.getContact(), requestContext.getOptions(), requestContext);
     }
 
     private List<Subscriber> fetchSubscribers(Predicate where) {

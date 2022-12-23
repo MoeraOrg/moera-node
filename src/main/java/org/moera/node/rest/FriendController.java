@@ -192,12 +192,12 @@ public class FriendController {
                     target.getValue().getFirst().toFriend(friend);
                     friend = friendRepository.save(friend);
 
-                    contactOperations.updateCloseness(friend.getRemoteNodeName(), 800).fill(friend);
+                    contactOperations.updateCloseness(friend.getRemoteNodeName(), 800);
                     contactOperations.updateFriendCount(friend.getRemoteNodeName(), 1);
                 } else {
                     target.getValue().getFirst().toFriend(friend);
                 }
-                contactOperations.updateViewPrincipal(friend);
+                contactOperations.updateViewPrincipal(friend).fill(friend);
                 if (friendInfo == null) {
                     friendInfo = new FriendInfo(friend, requestContext.getOptions(), requestContext);
                     friendInfo.setGroups(new ArrayList<>());
