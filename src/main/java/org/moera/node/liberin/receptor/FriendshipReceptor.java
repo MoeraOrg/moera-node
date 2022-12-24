@@ -7,7 +7,9 @@ import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
+import org.moera.node.model.ContactInfo;
 import org.moera.node.model.FriendGroupDetails;
+import org.moera.node.model.FriendInfo;
 import org.moera.node.model.event.FriendshipUpdatedEvent;
 import org.moera.node.model.notification.FriendshipUpdatedNotification;
 import org.moera.node.notification.send.Directions;
@@ -23,7 +25,12 @@ public class FriendshipReceptor extends LiberinReceptorBase {
         }
         send(Directions.single(liberin.getNodeId(), liberin.getFriendNodeName()),
                 new FriendshipUpdatedNotification(friendGroups));
-        send(liberin, new FriendshipUpdatedEvent(liberin.getFriendNodeName(), friendGroups));
+        FriendInfo friend = new FriendInfo(
+                liberin.getFriendNodeName(),
+                new ContactInfo(liberin.getContact(), universalContext.getOptions()),
+                friendGroups
+        );
+        send(liberin, new FriendshipUpdatedEvent(friend));
     }
 
 }

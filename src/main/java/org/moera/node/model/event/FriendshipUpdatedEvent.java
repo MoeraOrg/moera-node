@@ -4,40 +4,36 @@ import java.util.List;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.model.FriendGroupDetails;
+import org.moera.node.event.EventSubscriber;
+import org.moera.node.model.FriendInfo;
 import org.springframework.data.util.Pair;
 
 public class FriendshipUpdatedEvent extends Event {
 
-    private String nodeName;
-    private List<FriendGroupDetails> friendGroups;
+    private FriendInfo friend;
 
-    public FriendshipUpdatedEvent(String nodeName, List<FriendGroupDetails> friendGroups) {
-        super(EventType.FRIENDSHIP_UPDATED, Principal.ADMIN.a().or(Principal.ofNode(nodeName)));
-        this.nodeName = nodeName;
-        this.friendGroups = friendGroups;
+    public FriendshipUpdatedEvent(FriendInfo friend) {
+        super(EventType.FRIENDSHIP_UPDATED, Principal.ADMIN.a().or(Principal.ofNode(friend.getNodeName())));
+        this.friend = friend;
     }
 
-    public String getNodeName() {
-        return nodeName;
+    public FriendInfo getFriend() {
+        return friend;
     }
 
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
+    public void setFriend(FriendInfo friend) {
+        this.friend = friend;
     }
 
-    public List<FriendGroupDetails> getFriendGroups() {
-        return friendGroups;
-    }
-
-    public void setFriendGroups(List<FriendGroupDetails> friendGroups) {
-        this.friendGroups = friendGroups;
+    @Override
+    public void protect(EventSubscriber eventSubscriber) {
+        friend.protect(eventSubscriber);
     }
 
     @Override
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
-        parameters.add(Pair.of("nodeName", LogUtil.format(nodeName)));
+        parameters.add(Pair.of("nodeName", LogUtil.format(friend.getNodeName())));
     }
 
 }

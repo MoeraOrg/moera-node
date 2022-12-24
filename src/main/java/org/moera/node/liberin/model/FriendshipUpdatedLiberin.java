@@ -3,17 +3,21 @@ package org.moera.node.liberin.model;
 import java.util.List;
 import java.util.Map;
 
+import org.moera.node.data.Contact;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.model.ContactInfo;
 import org.moera.node.model.FriendGroupDetails;
 
 public class FriendshipUpdatedLiberin extends Liberin {
 
     private String friendNodeName;
     private List<FriendGroupDetails> friendGroups;
+    private Contact contact;
 
-    public FriendshipUpdatedLiberin(String friendNodeName, List<FriendGroupDetails> friendGroups) {
+    public FriendshipUpdatedLiberin(String friendNodeName, List<FriendGroupDetails> friendGroups, Contact contact) {
         this.friendNodeName = friendNodeName;
         this.friendGroups = friendGroups;
+        this.contact = contact;
     }
 
     public String getFriendNodeName() {
@@ -32,11 +36,20 @@ public class FriendshipUpdatedLiberin extends Liberin {
         this.friendGroups = friendGroups;
     }
 
+    public Contact getContact() {
+        return contact;
+    }
+
+    public void setContact(Contact contact) {
+        this.contact = contact;
+    }
+
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("friendNodeName", friendNodeName);
         model.put("friendGroups", friendGroups);
+        model.put("contact", new ContactInfo(contact, getPluginContext().getOptions()));
     }
 
 }

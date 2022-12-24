@@ -14,6 +14,7 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
@@ -154,6 +155,10 @@ public class FriendController {
 
         Map<UUID, FriendGroup> groups = new HashMap<>();
         for (FriendDescription friendDescription : friendDescriptions) {
+            Contact contact = contactOperations.find(friendDescription.getNodeName());
+            FriendInfo friendInfo = new FriendInfo(contact, requestContext.getOptions(), requestContext);
+            result.add(friendInfo);
+
             Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
             if (friendDescription.getGroups() != null) {
                 for (var ga : friendDescription.getGroups()) {
@@ -172,11 +177,10 @@ public class FriendController {
                     targetGroups.put(friend.getFriendGroup().getId(), Pair.of(target.getFirst(), friend));
                 } else {
                     friendRepository.delete(friend);
-                    contactOperations.updateFriendCount(friend.getRemoteNodeName(), -1);
+                    contact = contactOperations.updateFriendCount(friend.getRemoteNodeName(), -1);
                 }
             }
 
-            FriendInfo friendInfo = null;
             for (var target : targetGroups.entrySet()) {
                 Friend friend = target.getValue().getSecond();
                 if (friend.getId() == null) {
@@ -197,20 +201,19 @@ public class FriendController {
                 } else {
                     target.getValue().getFirst().toFriend(friend);
                 }
-                contactOperations.updateViewPrincipal(friend).fill(friend);
-                if (friendInfo == null) {
-                    friendInfo = new FriendInfo(friend, requestContext.getOptions(), requestContext);
+                contact = contactOperations.updateViewPrincipal(friend);
+                contact.fill(friend);
+                if (friendInfo.getGroups() == null) {
                     friendInfo.setGroups(new ArrayList<>());
-                    result.add(friendInfo);
                 }
                 friendInfo.getGroups().add(new FriendGroupDetails(friend, true));
             }
 
+            friendInfo.setContact(new ContactInfo(contact, requestContext.getOptions(), requestContext));
+
             requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS, friendDescription.getNodeName());
-            requestContext.send(new FriendshipUpdatedLiberin(
-                    friendDescription.getNodeName(),
-                    friendInfo != null ? friendInfo.getGroups() : null
-            ));
+            requestContext.send(
+                    new FriendshipUpdatedLiberin(friendDescription.getNodeName(), friendInfo.getGroups(), contact));
         }
 
         return result;
