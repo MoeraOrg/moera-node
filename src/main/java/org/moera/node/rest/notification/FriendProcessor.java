@@ -1,8 +1,6 @@
 package org.moera.node.rest.notification;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -16,8 +14,7 @@ import org.moera.node.data.FriendOf;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.RemoteFriendGroupDeletedLiberin;
-import org.moera.node.liberin.model.RemoteFromFriendGroupDeletedLiberin;
-import org.moera.node.liberin.model.RemoteToFriendGroupAddedLiberin;
+import org.moera.node.liberin.model.RemoteFriendshipUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.FriendGroupDetails;
@@ -66,17 +63,17 @@ public class FriendProcessor {
         Map<String, FriendGroupDetails> current = Arrays.stream(notification.getFriendGroups())
                 .collect(Collectors.toMap(FriendGroupDetails::getId, Function.identity()));
 
+        RemoteFriendshipUpdatedLiberin liberin = new RemoteFriendshipUpdatedLiberin();
+        Contact contact = contactOperations.find(notification.getSenderNodeName());
+
         for (var prev : previous.entrySet()) {
             if (!current.containsKey(prev.getKey())) {
                 friendOfRepository.delete(prev.getValue());
                 contactOperations.updateFriendOfCount(notification.getSenderNodeName(), -1);
-                universalContext.send(new RemoteFromFriendGroupDeletedLiberin(prev.getValue()));
+                liberin.getDeleted().add(prev.getValue());
             }
         }
 
-        Contact contact = contactOperations.find(notification.getSenderNodeName());
-
-        List<RemoteToFriendGroupAddedLiberin> added = new ArrayList<>();
         for (var curr : current.entrySet()) {
             FriendOf friendOf = previous.get(curr.getKey());
             if (friendOf == null) {
@@ -88,41 +85,36 @@ public class FriendProcessor {
                 friendOf.setRemoteGroupId(curr.getValue().getId());
                 friendOf.setRemoteAddedAt(Util.toTimestamp(curr.getValue().getAddedAt()));
                 friendOf = friendOfRepository.save(friendOf);
-                added.add(new RemoteToFriendGroupAddedLiberin(friendOf));
+                liberin.getAdded().add(friendOf);
             }
             friendOf.setRemoteGroupTitle(curr.getValue().getTitle());
+            liberin.getCurrent().add(friendOf);
         }
 
-        if (added.isEmpty()) {
-            return;
-        }
-
-        Contact.toAvatar(contact, notification.getSenderAvatar());
-        contactOperations.updateFriendOfCount(notification.getSenderNodeName(), added.size());
+        Contact updatedContact = contactOperations.updateFriendOfCount(
+                notification.getSenderNodeName(), liberin.getAdded().size());
+        Contact.toAvatar(updatedContact, notification.getSenderAvatar());
 
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
-                () -> updateAvatarsAndSend(notification.getSenderAvatar(), added));
+                () -> updateAvatarsAndSend(notification.getSenderAvatar(), updatedContact, liberin));
     }
 
-    private void updateAvatarsAndSend(AvatarImage avatarImage, List<RemoteToFriendGroupAddedLiberin> liberins) {
+    private void updateAvatarsAndSend(AvatarImage avatarImage, Contact contact, RemoteFriendshipUpdatedLiberin liberin) {
         try {
             Transaction.execute(txManager, () -> {
                 if (avatarImage != null) {
                     contactRepository.updateRemoteAvatar(
                             universalContext.nodeId(),
-                            liberins.get(0).getFriendOf().getRemoteNodeName(),
+                            contact.getRemoteNodeName(),
                             avatarImage.getMediaFile(),
                             avatarImage.getShape()
                     );
+                    contact.setRemoteAvatarMediaFile(avatarImage.getMediaFile());
+                    contact.setRemoteAvatarShape(avatarImage.getShape());
                 }
-                for (var liberin : liberins) {
-                    if (avatarImage != null) {
-                        liberin.getFriendOf().getContact().setRemoteAvatarMediaFile(avatarImage.getMediaFile());
-                        liberin.getFriendOf().getContact().setRemoteAvatarShape(avatarImage.getShape());
-                    }
-                    universalContext.send(liberin);
-                }
+                liberin.setContact(contact);
+                universalContext.send(liberin);
                 return null;
             });
         } catch (Throwable e) {
@@ -141,7 +133,13 @@ public class FriendProcessor {
         String prevTitle = friendOf.getRemoteGroupTitle();
         friendOf.setRemoteGroupTitle(notification.getFriendGroup().getTitle());
         if (prevTitle == null && friendOf.getRemoteGroupTitle() != null) {
-            universalContext.send(new RemoteToFriendGroupAddedLiberin(friendOf));
+            RemoteFriendshipUpdatedLiberin liberin = new RemoteFriendshipUpdatedLiberin();
+            liberin.getAdded().add(friendOf);
+            friendOfRepository.findByNodeIdAndRemoteNode(
+                    universalContext.nodeId(), notification.getSenderNodeName()).stream()
+                    .map(fo -> fo.getRemoteGroupId().equals(friendOf.getRemoteGroupId()) ? friendOf : fo)
+                    .forEach(liberin.getCurrent()::add);
+            universalContext.send(liberin);
         } else if (prevTitle != null && friendOf.getRemoteGroupTitle() == null) {
             universalContext.send(new RemoteFriendGroupDeletedLiberin(friendOf));
         }
