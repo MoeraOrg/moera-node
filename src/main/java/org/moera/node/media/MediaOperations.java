@@ -416,7 +416,9 @@ public class MediaOperations {
     }
 
     public void updatePermissions(Entry entry) {
-        entry.getCurrentRevision().getAttachments().forEach(ea -> updatePermissions(ea.getMediaFileOwner()));
+        if (entry.getCurrentRevision() != null) {
+            entry.getCurrentRevision().getAttachments().forEach(ea -> updatePermissions(ea.getMediaFileOwner()));
+        }
     }
 
     public ResponseEntity<Resource> serve(MediaFile mediaFile, boolean download) {
