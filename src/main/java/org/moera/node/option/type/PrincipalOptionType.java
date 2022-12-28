@@ -1,8 +1,7 @@
 package org.moera.node.option.type;
 
-import java.util.Arrays;
-
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
 
@@ -36,9 +35,11 @@ public class PrincipalOptionType extends OptionTypeBase {
     }
 
     private Principal acceptString(String value, OptionTypeModifiers typeModifiers) {
-        if (typeModifiers != null && typeModifiers.getPrincipals() != null
-                && Arrays.stream(typeModifiers.getPrincipals()).noneMatch(v -> v.equals(value))) {
-            throw new UnsuitableOptionValueException(value);
+        if (typeModifiers != null && typeModifiers.getPrincipals() != null) {
+            int flags = PrincipalFlag.fromNames(typeModifiers.getPrincipals());
+            if (!new Principal(value).isOneOf(flags)) {
+                throw new UnsuitableOptionValueException(value);
+            }
         }
         return new Principal(value);
     }

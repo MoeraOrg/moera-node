@@ -1,5 +1,8 @@
 package org.moera.node.auth.principal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PrincipalFlag {
 
     public static final int NONE = 0x0001;
@@ -16,5 +19,40 @@ public class PrincipalFlag {
     public static final int ENIGMA = 0x0800;
     public static final int MAJOR = 0x1000;
     public static final int FRIENDS = 0x2000;
+
+    public static final Map<String, Integer> NAMES = new HashMap<>();
+
+    static {
+        NAMES.put("none", NONE);
+        NAMES.put("admin", ADMIN);
+        NAMES.put("signed", SIGNED);
+        NAMES.put("private", PRIVATE);
+        NAMES.put("owner", OWNER);
+        NAMES.put("public", PUBLIC);
+        NAMES.put("node", NODE);
+        NAMES.put("only", ONLY);
+        NAMES.put("unset", UNSET);
+        NAMES.put("secret", SECRET);
+        NAMES.put("senior", SENIOR);
+        NAMES.put("enigma", ENIGMA);
+        NAMES.put("major", MAJOR);
+        NAMES.put("friends", FRIENDS);
+    }
+
+    public static int fromName(String name) {
+        Integer flag = NAMES.get(name);
+        if (flag == null) {
+            throw new IllegalArgumentException("Unknown principal flag name");
+        }
+        return flag;
+    }
+
+    public static int fromNames(String[] names) {
+        int flags = 0;
+        for (String name : names) {
+            flags |= fromName(name);
+        }
+        return flags;
+    }
 
 }

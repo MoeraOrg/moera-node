@@ -78,6 +78,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
   internal: true
 
@@ -127,6 +128,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: subscribers.view-total
@@ -137,6 +139,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: subscriptions.view
@@ -147,6 +150,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: subscriptions.view-total
@@ -157,6 +161,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: webmaster.name
@@ -495,6 +500,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: friends.view-total
@@ -505,6 +511,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: friend-ofs.view
@@ -515,6 +522,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: friend-ofs.view-total
@@ -525,6 +533,7 @@
     principals:
       - public
       - signed
+      - friends
       - admin
 
 - name: ask.subscribe.allowed
@@ -534,6 +543,7 @@
   modifiers:
     principals:
       - signed
+      - friends
       - none
 
 - name: ask.friend.allowed
