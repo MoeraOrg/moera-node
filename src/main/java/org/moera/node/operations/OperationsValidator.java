@@ -12,78 +12,86 @@ public class OperationsValidator {
 
     public static final List<Pair<String, Integer>> PROFILE_OPERATIONS = List.of(
             Pair.of("viewEmail",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.ADMIN)
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.ADMIN)
     );
 
     public static final List<Pair<String, Integer>> POSTING_OPERATIONS = List.of(
             Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE),
             Pair.of("viewComments",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.NONE),
             Pair.of("addComment",
-                    PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("overrideComment",
                     PrincipalFlag.OWNER | PrincipalFlag.NONE),
             Pair.of("viewReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.NONE),
             Pair.of("viewNegativeReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.NONE),
             Pair.of("viewReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.NONE),
             Pair.of("viewNegativeReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.NONE),
             Pair.of("viewReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.NONE),
             Pair.of("viewNegativeReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.NONE),
             Pair.of("addReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.NONE),
+                    PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.NONE),
             Pair.of("addNegativeReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.NONE),
+                    PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.NONE),
             Pair.of("overrideReaction",
                     PrincipalFlag.OWNER | PrincipalFlag.NONE)
     );
 
     public static final List<Pair<String, Integer>> COMMENT_OPERATIONS = List.of(
             Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.SECRET
+                    | PrincipalFlag.PRIVATE),
             Pair.of("edit",
                     PrincipalFlag.OWNER | PrincipalFlag.NONE),
             Pair.of("delete",
                     PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.OWNER
                     | PrincipalFlag.ADMIN | PrincipalFlag.NONE),
             Pair.of("viewReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
-                    | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.SECRET
+                    | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("viewNegativeReactions",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
-                    | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.SECRET
+                    | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("viewReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
-                    | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.SECRET
+                    | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("viewNegativeReactionTotals",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
-                    | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.SECRET
+                    | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("viewReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
-                    | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.SECRET
+                    | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("viewNegativeReactionRatios",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
-                    | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.SECRET
+                    | PrincipalFlag.PRIVATE | PrincipalFlag.NONE),
             Pair.of("addReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR
-                    | PrincipalFlag.ADMIN | PrincipalFlag.NONE),
+                    PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET
+                    | PrincipalFlag.SENIOR | PrincipalFlag.ADMIN | PrincipalFlag.NONE),
             Pair.of("addNegativeReaction",
-                    PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR
-                    | PrincipalFlag.ADMIN | PrincipalFlag.NONE),
+                    PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET
+                    | PrincipalFlag.SENIOR | PrincipalFlag.ADMIN | PrincipalFlag.NONE),
             Pair.of("overrideReaction",
                     PrincipalFlag.OWNER | PrincipalFlag.NONE)
     );
 
     public static final List<Pair<String, Integer>> POSTING_REACTION_OPERATIONS = List.of(
             Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET
-                    | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.SECRET | PrincipalFlag.NONE),
             Pair.of("delete",
                     PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.OWNER
                     | PrincipalFlag.ADMIN | PrincipalFlag.NONE)
@@ -91,8 +99,8 @@ public class OperationsValidator {
 
     public static final List<Pair<String, Integer>> COMMENT_REACTION_OPERATIONS = List.of(
             Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET
-                    | PrincipalFlag.ENIGMA | PrincipalFlag.NONE),
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+                    | PrincipalFlag.SECRET | PrincipalFlag.ENIGMA | PrincipalFlag.NONE),
             Pair.of("delete",
                     PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.ENIGMA
                     | PrincipalFlag.MAJOR | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE)
@@ -100,12 +108,12 @@ public class OperationsValidator {
 
     public static final List<Pair<String, Integer>> SUBSCRIBER_OPERATIONS = List.of(
             Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE)
     );
 
     public static final List<Pair<String, Integer>> SUBSCRIPTION_OPERATIONS = List.of(
             Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.PRIVATE)
+                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE)
     );
 
     public static final List<Pair<String, Integer>> FRIEND_GROUP_OPERATIONS = List.of(

@@ -285,6 +285,11 @@ public class FeedController {
                 priv.and(story.entry.ownerName.eq(requestContext.getClientName()));
                 visibility.or(priv);
             }
+            if (requestContext.getFriendGroups() != null) {
+                for (String friendGroupName : requestContext.getFriendGroups()) {
+                    visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
+                }
+            }
             where.and(visibility);
         }
         return storyRepository.findAll(where, PageRequest.of(0, limit + 1, direction, "moment"));

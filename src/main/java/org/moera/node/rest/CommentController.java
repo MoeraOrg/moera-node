@@ -496,6 +496,11 @@ public class CommentController {
                 priv.and(comment.ownerName.eq(requestContext.getClientName()));
                 visibility.or(priv);
             }
+            if (requestContext.getFriendGroups() != null) {
+                for (String friendGroupName : requestContext.getFriendGroups()) {
+                    visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
+                }
+            }
             where.and(visibility);
         }
         return commentRepository.findAll(where, PageRequest.of(0, limit + 1, direction, "moment"));

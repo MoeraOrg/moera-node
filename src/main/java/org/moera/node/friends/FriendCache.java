@@ -160,7 +160,7 @@ public class FriendCache {
         Friend[] groups = getClientGroups(clientName);
         return groups != null
                 ? Arrays.stream(groups)
-                    .map(Friend::getId)
+                    .map(f -> f.getFriendGroup().getId())
                     .map(UUID::toString)
                     .toArray(String[]::new)
                 : null;
