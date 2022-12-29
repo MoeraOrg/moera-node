@@ -737,7 +737,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
         Principal principal = getOperations().getOrDefault("view", Principal.PUBLIC);
-        posting.setViewPrincipal(principal);
+        posting.setViewPrincipal(principal.isFriends() || principal.isSubscribed() ? Principal.PRIVATE : principal);
         posting.setReceiverViewPrincipal(principal);
         // TODO visibility to a particular group of friends should be converted to something here
         // https://github.com/MoeraOrg/moera-issues/issues/207
