@@ -43,6 +43,7 @@ public class Principal implements Cloneable, PrincipalFilter {
     public static final Principal NONE = new Principal("none");
     public static final Principal ADMIN = new Principal("admin");
     public static final Principal SIGNED = new Principal("signed");
+    public static final Principal SUBSCRIBED = new Principal("subscribed");
     public static final Principal PRIVATE = new Principal("private");
     public static final Principal SECRET = new Principal("secret");
     public static final Principal SENIOR = new Principal("senior");
@@ -112,6 +113,10 @@ public class Principal implements Cloneable, PrincipalFilter {
 
     public boolean isSigned() {
         return value.equals(SIGNED.value);
+    }
+
+    public boolean isSubscribed() {
+        return value.equals(SUBSCRIBED.value);
     }
 
     public boolean isPrivate() {
@@ -220,13 +225,6 @@ public class Principal implements Cloneable, PrincipalFilter {
         return this;
     }
 
-    public Principal withFriendGroup(String friendGroupId) {
-        if (isFriends()) {
-            return Principal.ofFriendGroup(friendGroupId);
-        }
-        return this;
-    }
-
     public Principal withSubordinate(Principal principal) {
         return isUnset() ? principal : this;
     }
@@ -260,7 +258,7 @@ public class Principal implements Cloneable, PrincipalFilter {
     }
 
     @Override
-    public boolean includes(boolean admin, String nodeName, String[] friendGroups) {
+    public boolean includes(boolean admin, String nodeName, boolean subscribed, String[] friendGroups) {
         if (isPublic()) {
             return true;
         }
@@ -279,6 +277,9 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isSigned()) {
             return nodeName != null;
         }
+        if (isSubscribed()) {
+            return subscribed;
+        }
         if (isNode()) {
             return includes(getNodeNames(), nodeName);
         }
@@ -288,8 +289,10 @@ public class Principal implements Cloneable, PrincipalFilter {
         throw new UnresolvedPrincipalException(this);
     }
 
-    public boolean includes(boolean admin, String nodeName, Supplier<String[]> friendGroups) {
-        return includes(admin, nodeName, isFriends() ? friendGroups.get() : null);
+    public boolean includes(boolean admin, String nodeName, Supplier<Boolean> subscribed,
+                            Supplier<String[]> friendGroups) {
+        return includes(admin, nodeName, isSubscribed() ? subscribed.get() : false,
+                isFriends() ? friendGroups.get() : null);
     }
 
     private static boolean includes(String[] names, String name) {
@@ -347,6 +350,9 @@ public class Principal implements Cloneable, PrincipalFilter {
         if (isFriends()) {
             return (flags & PrincipalFlag.FRIENDS) != 0;
         }
+        if (isSubscribed()) {
+            return (flags & PrincipalFlag.SUBSCRIBED) != 0;
+        }
         return false;
     }
 
@@ -359,6 +365,9 @@ public class Principal implements Cloneable, PrincipalFilter {
         }
         if (isSigned() || principal.isSigned()) {
             return Principal.SIGNED;
+        }
+        if (isSubscribed() || principal.isSubscribed()) {
+            return Principal.SUBSCRIBED;
         }
         if (isFriends() && principal.isFriends()) {
             return Principal.SIGNED; // FIXME too wide. Not so critical, because will almost never happen
@@ -389,6 +398,12 @@ public class Principal implements Cloneable, PrincipalFilter {
             return principal;
         }
         if (principal.isSigned()) {
+            return this;
+        }
+        if (isSubscribed()) {
+            return principal;
+        }
+        if (principal.isSubscribed()) {
             return this;
         }
         if (isFriends()) {

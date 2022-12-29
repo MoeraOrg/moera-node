@@ -184,6 +184,9 @@ public class SubscriptionController {
         }
 
         requestContext.subscriptionsUpdated();
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            requestContext.invalidateSubscribedCache(subscription.getRemoteNodeName());
+        }
         requestContext.send(new SubscriptionAddedLiberin(subscription));
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
@@ -240,6 +243,9 @@ public class SubscriptionController {
         }
 
         requestContext.subscriptionsUpdated();
+        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
+            requestContext.invalidateSubscribedCache(subscription.getRemoteNodeName());
+        }
         requestContext.send(new SubscriptionDeletedLiberin(subscription));
 
         return new ContactInfo(subscription.getContact(), requestContext.getOptions(), requestContext);

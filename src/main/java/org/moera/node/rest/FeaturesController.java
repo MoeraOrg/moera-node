@@ -59,7 +59,7 @@ public class FeaturesController {
 
         return new Features(requestContext.getOptions(), plugins.getNames(requestContext.nodeId()),
                 friendCache.getNodeGroups(), friendCache.getClientGroups(requestContext.getClientName()),
-                requestContext, getAsks(requestContext.getOptions()));
+                requestContext, getAsks(requestContext.getOptions()), requestContext.isSubscribedToClient());
     }
 
     private List<AskSubject> getAsks(Options options) {

@@ -28,6 +28,7 @@ import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.friends.FriendCache;
+import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.model.notification.Notification;
@@ -75,6 +76,9 @@ public class NotificationSenderPool {
 
     @Inject
     private FriendCache friendCache;
+
+    @Inject
+    private SubscribedCache subscribedCache;
 
     @Inject
     private ContactOperations contactOperations;
@@ -180,6 +184,7 @@ public class NotificationSenderPool {
         if (!direction.isPermitted(
                 Objects.equals(nodeName, direction.getNodeName()),
                 direction.getNodeName(),
+                subscribedCache.isSubscribed(direction.getNodeId(), direction.getNodeName()),
                 friendCache.getClientGroupIds(direction.getNodeName()))
         ) {
             return;

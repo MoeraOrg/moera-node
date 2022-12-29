@@ -14,6 +14,7 @@ public class EventSubscriber implements AccessChecker {
     private int lastEventSeen;
     private boolean admin;
     private String clientName;
+    private boolean subscribedToClient;
     private String[] friendGroups;
     private boolean subscribed;
 
@@ -65,6 +66,14 @@ public class EventSubscriber implements AccessChecker {
         this.clientName = clientName;
     }
 
+    public boolean isSubscribedToClient() {
+        return subscribedToClient;
+    }
+
+    public void setSubscribedToClient(boolean subscribedToClient) {
+        this.subscribedToClient = subscribedToClient;
+    }
+
     public String[] getFriendGroups() {
         return friendGroups;
     }
@@ -83,7 +92,7 @@ public class EventSubscriber implements AccessChecker {
 
     @Override
     public boolean isPrincipal(PrincipalFilter principal) {
-        return principal.includes(admin, clientName, friendGroups);
+        return principal.includes(admin, clientName, subscribedToClient, friendGroups);
     }
 
 }

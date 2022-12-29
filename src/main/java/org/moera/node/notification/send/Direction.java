@@ -32,8 +32,9 @@ public class Direction {
         return principalFilter;
     }
 
-    public boolean isPermitted(boolean remoteIsSelf, String remoteNodeName, String[] remoteFriendGroups) {
-        return principalFilter.includes(remoteIsSelf, remoteNodeName, remoteFriendGroups);
+    public boolean isPermitted(boolean remoteIsSelf, String remoteNodeName, boolean subscribed,
+                               String[] remoteFriendGroups) {
+        return principalFilter.includes(remoteIsSelf, remoteNodeName, subscribed, remoteFriendGroups);
     }
 
     @Override

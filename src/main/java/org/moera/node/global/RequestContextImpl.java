@@ -14,6 +14,8 @@ import org.moera.node.data.AvatarRepository;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;
+import org.moera.node.friends.Nodes;
+import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -28,6 +30,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean browserExtension;
     private boolean rootAdmin;
     private boolean admin;
+    private boolean subscribedToClient;
     private String[] friendGroups;
     private long authCategory;
     private UUID tokenId;
@@ -45,12 +48,16 @@ public class RequestContextImpl implements RequestContext {
     private final List<Liberin> afterCommitLiberins = new ArrayList<>();
     private boolean subscriptionsUpdated;
     private final List<FriendCacheInvalidation> friendCacheInvalidations = new ArrayList<>();
+    private final List<Nodes> subscribedCacheInvalidations = new ArrayList<>();
 
     @Inject
     private AvatarRepository avatarRepository;
 
     @Inject
     private FriendCache friendCache;
+
+    @Inject
+    private SubscribedCache subscribedCache;
 
     @Override
     public boolean isRegistrar() {
@@ -95,6 +102,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    @Override
+    public boolean isSubscribedToClient() {
+        return subscribedToClient;
+    }
+
+    @Override
+    public void setSubscribedToClient(boolean subscribedToClient) {
+        this.subscribedToClient = subscribedToClient;
     }
 
     @Override
@@ -292,7 +309,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(PrincipalFilter principal) {
-        return principal.includes(isAdmin(), getClientName(), getFriendGroups());
+        return principal.includes(isAdmin(), getClientName(), isSubscribedToClient(), getFriendGroups());
     }
 
     @Override
@@ -310,6 +327,7 @@ public class RequestContextImpl implements RequestContext {
         setAdmin(Objects.equals(nodeName, nodeName()));
         setClientName(nodeName);
         setFriendGroups(friendCache.getClientGroupIds(nodeName));
+        setSubscribedToClient(subscribedCache.isSubscribed(nodeName));
 
         setAuthCategory(AuthCategory.ALL);
     }
@@ -332,6 +350,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public List<FriendCacheInvalidation> getFriendCacheInvalidations() {
         return friendCacheInvalidations;
+    }
+
+    @Override
+    public void invalidateSubscribedCache(String clientName) {
+        subscribedCacheInvalidations.add(new Nodes(nodeId(), clientName));
+    }
+
+    @Override
+    public List<Nodes> getSubscribedCacheInvalidations() {
+        return subscribedCacheInvalidations;
     }
 
 }

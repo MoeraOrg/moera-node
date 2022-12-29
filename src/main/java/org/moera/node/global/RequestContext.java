@@ -8,6 +8,7 @@ import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Avatar;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;
+import org.moera.node.friends.Nodes;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 
@@ -30,6 +31,10 @@ public interface RequestContext extends AccessChecker {
     boolean isAdmin();
 
     void setAdmin(boolean admin);
+
+    boolean isSubscribedToClient();
+
+    void setSubscribedToClient(boolean subscribedToClient);
 
     String[] getFriendGroups();
 
@@ -114,5 +119,9 @@ public interface RequestContext extends AccessChecker {
     void invalidateFriendCache(FriendCachePart part, String clientName);
 
     List<FriendCacheInvalidation> getFriendCacheInvalidations();
+
+    void invalidateSubscribedCache(String clientName);
+
+    List<Nodes> getSubscribedCacheInvalidations();
 
 }

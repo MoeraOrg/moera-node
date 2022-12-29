@@ -26,6 +26,7 @@ import org.moera.node.auth.InvalidTokenException;
 import org.moera.node.data.Token;
 import org.moera.node.domain.Domains;
 import org.moera.node.friends.FriendCache;
+import org.moera.node.friends.SubscribedCache;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PingEvent;
@@ -69,6 +70,9 @@ public class EventManager {
 
     @Inject
     private FriendCache friendCache;
+
+    @Inject
+    private SubscribedCache subscribedCache;
 
     private final Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
     private final List<EventPacket> queue = new ArrayList<>();
@@ -116,6 +120,7 @@ public class EventManager {
         subscriber.setSessionId(accessor.getSessionId());
         subscriber.setAdmin(admin);
         subscriber.setClientName(clientName);
+        subscriber.setSubscribedToClient(subscribedCache.isSubscribed(clientName));
         subscriber.setFriendGroups(friendCache.getClientGroupIds(clientName));
         subscribers.put(accessor.getSessionId(), subscriber);
     }

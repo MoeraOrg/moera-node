@@ -19,6 +19,7 @@ public class PrincipalFlag {
     public static final int ENIGMA = 0x0800;
     public static final int MAJOR = 0x1000;
     public static final int FRIENDS = 0x2000;
+    public static final int SUBSCRIBED = 0x4000;
 
     public static final Map<String, Integer> NAMES = new HashMap<>();
 
@@ -37,6 +38,7 @@ public class PrincipalFlag {
         NAMES.put("enigma", ENIGMA);
         NAMES.put("major", MAJOR);
         NAMES.put("friends", FRIENDS);
+        NAMES.put("subscribed", SUBSCRIBED);
     }
 
     public static int fromName(String name) {

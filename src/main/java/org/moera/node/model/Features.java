@@ -18,9 +18,10 @@ public class Features {
     private int feedWidth;
     private FriendGroupsFeatures friendGroups;
     private List<AskSubject> ask;
+    private boolean subscribed;
 
     public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, Friend[] clientGroups,
-                    AccessChecker accessChecker, List<AskSubject> ask) {
+                    AccessChecker accessChecker, List<AskSubject> ask, boolean subscribed) {
         posting = new PostingFeatures(options);
         if (!ObjectUtils.isEmpty(plugins)) {
             this.plugins = plugins;
@@ -30,6 +31,7 @@ public class Features {
                 ? FriendGroupsFeatures.forAdmin(nodeGroups)
                 : FriendGroupsFeatures.forRegular(nodeGroups, clientGroups);
         this.ask = ask;
+        this.subscribed = subscribed;
     }
 
     public PostingFeatures getPosting() {
@@ -70,6 +72,14 @@ public class Features {
 
     public void setAsk(List<AskSubject> ask) {
         this.ask = ask;
+    }
+
+    public boolean isSubscribed() {
+        return subscribed;
+    }
+
+    public void setSubscribed(boolean subscribed) {
+        this.subscribed = subscribed;
     }
 
 }

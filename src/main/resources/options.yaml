@@ -78,6 +78,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
   internal: true
@@ -128,6 +129,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
 
@@ -139,6 +141,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
 
@@ -150,6 +153,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
 
@@ -500,6 +504,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
 
@@ -511,6 +516,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
 
@@ -522,6 +528,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
 
@@ -533,6 +540,7 @@
     principals:
       - public
       - signed
+      - subscribed
       - friends
       - admin
 
@@ -548,11 +556,12 @@
 
 - name: ask.friend.allowed
   type: Principal
-  defaultValue: signed
+  defaultValue: subscribed
   title: Allow to ask for friendship
   modifiers:
     principals:
       - signed
+      - subscribed
       - none
 
 - name: ask.interval
