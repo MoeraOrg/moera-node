@@ -47,6 +47,7 @@ import com.drew.metadata.exif.ExifIFD0Directory;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.config.Config;
 import org.moera.node.data.Entry;
@@ -482,7 +483,7 @@ public class MediaOperations {
             return Collections.emptyList();
         }
 
-        PostingFeatures features = new PostingFeatures(universalContext.getOptions());
+        PostingFeatures features = new PostingFeatures(universalContext.getOptions(), AccessCheckers.ADMIN);
         int recommendedSize = features.getImageRecommendedSize();
 
         List<MediaFileOwner> attached = new ArrayList<>();

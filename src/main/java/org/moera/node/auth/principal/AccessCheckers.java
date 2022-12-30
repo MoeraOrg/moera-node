@@ -7,6 +7,7 @@ public class AccessCheckers {
 
     public static AccessChecker node(String nodeName) {
         return principal -> principal.includes(false, nodeName, false, null);
+        // FIXME subscription status and friend groups should correspond the node
     }
 
 }

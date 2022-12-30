@@ -128,7 +128,7 @@ public class MediaController {
     }
 
     private DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
-        int maxSize = new PostingFeatures(requestContext.getOptions()).getMediaMaxSize();
+        int maxSize = new PostingFeatures(requestContext.getOptions(), requestContext).getMediaMaxSize();
         return MediaOperations.transfer(in, out, contentLength, maxSize);
     }
 

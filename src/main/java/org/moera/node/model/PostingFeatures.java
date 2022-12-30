@@ -3,23 +3,35 @@ package org.moera.node.model;
 import java.util.List;
 import javax.imageio.ImageIO;
 
+import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.option.Options;
 
 public class PostingFeatures {
 
+    private boolean post;
     private boolean subjectPresent;
     private final List<Choice> sourceFormats = Choice.forEnum(SourceFormat.class);
     private int mediaMaxSize;
     private int imageRecommendedSize;
     private int imageRecommendedPixels;
 
-    public PostingFeatures(Options options) {
+    public PostingFeatures(Options options, AccessChecker accessChecker) {
+        post = accessChecker.isPrincipal(Principal.ADMIN) || options.getBool("posting.non-admin.allowed");
         subjectPresent = options.getBool("posting.subject.present");
         int maxSize = options.getInt("media.max-size");
         mediaMaxSize = Math.min(maxSize, options.getInt("posting.media.max-size"));
         imageRecommendedSize = Math.min(mediaMaxSize, options.getInt("posting.image.recommended-size"));
         imageRecommendedPixels = options.getInt("posting.image.recommended-pixels");
+    }
+
+    public boolean isPost() {
+        return post;
+    }
+
+    public void setPost(boolean post) {
+        this.post = post;
     }
 
     public boolean isSubjectPresent() {

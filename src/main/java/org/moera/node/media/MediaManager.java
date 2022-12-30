@@ -14,6 +14,7 @@ import javax.transaction.Transactional;
 
 import org.moera.node.api.NodeApi;
 import org.moera.node.api.NodeApiException;
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;
@@ -269,7 +270,7 @@ public class MediaManager {
 
     public MediaFileOwner downloadPrivateMedia(String nodeName, String carte, PrivateMediaFileInfo info,
                                                UUID entryId) throws NodeApiException {
-        int maxSize = new PostingFeatures(universalContext.getOptions()).getMediaMaxSize();
+        int maxSize = new PostingFeatures(universalContext.getOptions(), AccessCheckers.ADMIN).getMediaMaxSize();
         return downloadPrivateMedia(nodeName, carte, info.getId(), info.getHash(), maxSize, entryId);
     }
 

@@ -22,7 +22,7 @@ public class Features {
 
     public Features(Options options, List<String> plugins, FriendGroup[] nodeGroups, Friend[] clientGroups,
                     AccessChecker accessChecker, List<AskSubject> ask, boolean subscribed) {
-        posting = new PostingFeatures(options);
+        posting = new PostingFeatures(options, accessChecker);
         if (!ObjectUtils.isEmpty(plugins)) {
             this.plugins = plugins;
         }
