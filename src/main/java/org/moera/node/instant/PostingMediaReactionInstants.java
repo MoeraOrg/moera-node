@@ -59,7 +59,6 @@ public class PostingMediaReactionInstants extends InstantsCreator {
                 story.setRemotePostingAvatarShape(parentPostingAvatar.getShape());
             }
             story.setRemotePostingId(mediaPostingId);
-            story.setRemoteHeading(parentPostingHeading);
             story.setRemoteParentPostingId(parentPostingId);
             story.setRemoteParentMediaId(parentMediaId);
             story.setSummaryData(buildParentPostingSummary(parentPostingGender, parentPostingHeading));
@@ -162,7 +161,8 @@ public class PostingMediaReactionInstants extends InstantsCreator {
         summaryData.setReactions(reactions);
         summaryData.setTotalReactions(stories.size());
         summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                story.getSummaryData().getParentPosting().getOwnerGender(), story.getRemoteHeading()));
+                story.getSummaryData().getParentPosting().getOwnerGender(),
+                story.getSummaryData().getParentPosting().getHeading()));
         summaryData.setNode(new StorySummaryNode(story.getRemoteNodeName(), story.getRemoteFullName(), null));
         return summaryData;
     }

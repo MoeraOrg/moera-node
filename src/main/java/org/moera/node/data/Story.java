@@ -115,14 +115,8 @@ public class Story {
     @Size(max = 40)
     private String remoteCommentId;
 
-    @Size(max = 255)
-    private String remoteHeading;
-
     @Size(max = 40)
     private String remoteRepliedToId;
-
-    @Size(max = 255)
-    private String remoteRepliedToHeading;
 
     @Size(max = 40)
     private String remoteParentPostingId;
@@ -392,28 +386,12 @@ public class Story {
         this.remoteCommentId = remoteCommentId;
     }
 
-    public String getRemoteHeading() {
-        return remoteHeading;
-    }
-
-    public void setRemoteHeading(String remoteHeading) {
-        this.remoteHeading = remoteHeading;
-    }
-
     public String getRemoteRepliedToId() {
         return remoteRepliedToId;
     }
 
     public void setRemoteRepliedToId(String remoteRepliedToId) {
         this.remoteRepliedToId = remoteRepliedToId;
-    }
-
-    public String getRemoteRepliedToHeading() {
-        return remoteRepliedToHeading;
-    }
-
-    public void setRemoteRepliedToHeading(String remoteRepliedToHeading) {
-        this.remoteRepliedToHeading = remoteRepliedToHeading;
     }
 
     public String getRemoteParentPostingId() {

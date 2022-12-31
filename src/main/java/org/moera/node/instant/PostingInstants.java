@@ -67,7 +67,6 @@ public class PostingInstants extends InstantsCreator {
             story.setRemotePostingAvatarShape(ownerAvatar.getShape());
         }
         story.setRemotePostingId(id);
-        story.setRemoteHeading(heading);
         story.setSummaryData(buildPostingUpdatedSummary(ownerName, ownerFullName, ownerGender, heading, description));
         story.setPublishedAt(Util.now());
         updateMoment(story);

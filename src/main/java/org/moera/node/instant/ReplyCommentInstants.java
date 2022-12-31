@@ -57,9 +57,7 @@ public class ReplyCommentInstants extends InstantsCreator {
                 story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
             story.setRemotePostingId(postingId);
-            story.setRemoteHeading(postingHeading);
             story.setRemoteRepliedToId(repliedToId);
-            story.setRemoteRepliedToHeading(repliedToHeading);
             story.setSummaryData(buildPostingSummary(postingOwnerGender, postingHeading, repliedToHeading));
             story.setMoment(0L);
             story = storyRepository.save(story);
@@ -163,10 +161,12 @@ public class ReplyCommentInstants extends InstantsCreator {
             summaryData.setTotalComments(1);
         }
         summaryData.setComments(comments);
-        summaryData.setRepliedTo(new StorySummaryEntry(null, null, null, story.getRemoteRepliedToHeading()));
+        summaryData.setRepliedTo(new StorySummaryEntry(
+                null, null, null, story.getSummaryData().getRepliedTo().getHeading()));
         summaryData.setPosting(new StorySummaryEntry(
                 story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                story.getSummaryData().getPosting().getOwnerGender(), story.getRemoteHeading()));
+                story.getSummaryData().getPosting().getOwnerGender(),
+                story.getSummaryData().getPosting().getHeading()));
         return summaryData;
     }
 

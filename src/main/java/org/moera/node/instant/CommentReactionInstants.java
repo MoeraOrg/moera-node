@@ -60,8 +60,7 @@ public class CommentReactionInstants extends InstantsCreator {
             }
             story.setRemotePostingId(postingId);
             story.setRemoteCommentId(commentId);
-            story.setRemoteHeading(commentHeading);
-            story.setSummaryData(buildPostingSummary(postingOwnerGender, commentHeading));
+            story.setSummaryData(buildPostingAndCommentSummary(postingOwnerGender, commentHeading));
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
@@ -81,7 +80,7 @@ public class CommentReactionInstants extends InstantsCreator {
         updated(story, isNewStory, true);
     }
 
-    private static StorySummaryData buildPostingSummary(String gender, String commentHeading) {
+    private static StorySummaryData buildPostingAndCommentSummary(String gender, String commentHeading) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(new StorySummaryEntry(null, null, gender, null));
         summaryData.setComment(new StorySummaryEntry(null, null, null, commentHeading));
@@ -162,7 +161,8 @@ public class CommentReactionInstants extends InstantsCreator {
         }
         summaryData.setReactions(reactions);
         summaryData.setTotalReactions(stories.size());
-        summaryData.setComment(new StorySummaryEntry(null, null, null, story.getRemoteHeading()));
+        summaryData.setComment(new StorySummaryEntry(
+                null, null, null, story.getSummaryData().getComment().getHeading()));
         summaryData.setPosting(new StorySummaryEntry(
                 story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
                 story.getSummaryData().getPosting().getOwnerGender(), null));

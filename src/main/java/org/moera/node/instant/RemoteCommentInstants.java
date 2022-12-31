@@ -58,7 +58,6 @@ public class RemoteCommentInstants extends InstantsCreator {
                 story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
             story.setRemotePostingId(postingId);
-            story.setRemoteHeading(postingHeading);
             story.setSummaryData(buildPostingSummary(postingOwnerGender, postingHeading));
             story.setMoment(0L);
             story = storyRepository.save(story);
@@ -74,7 +73,6 @@ public class RemoteCommentInstants extends InstantsCreator {
             substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         substory.setRemoteCommentId(commentId);
-        substory.setRemoteHeading(commentHeading);
         substory.setSummaryData(buildCommentSummary(commentOwnerGender, commentHeading));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
@@ -144,7 +142,8 @@ public class RemoteCommentInstants extends InstantsCreator {
         Story firstStory = stories.get(0);
         comments.add(new StorySummaryEntry(
                 firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(),
-                firstStory.getSummaryData().getComment().getOwnerGender(), firstStory.getRemoteHeading()));
+                firstStory.getSummaryData().getComment().getOwnerGender(),
+                firstStory.getSummaryData().getComment().getHeading()));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
@@ -155,7 +154,8 @@ public class RemoteCommentInstants extends InstantsCreator {
                 if (secondStory != null) {
                     comments.add(new StorySummaryEntry(
                             secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(),
-                            secondStory.getSummaryData().getComment().getOwnerGender(), secondStory.getRemoteHeading()));
+                            secondStory.getSummaryData().getComment().getOwnerGender(),
+                            secondStory.getSummaryData().getComment().getHeading()));
                 }
             }
             summaryData.setTotalComments(names.size());
@@ -165,7 +165,8 @@ public class RemoteCommentInstants extends InstantsCreator {
         summaryData.setComments(comments);
         summaryData.setPosting(new StorySummaryEntry(
                 story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                story.getSummaryData().getPosting().getOwnerGender(), story.getRemoteHeading()));
+                story.getSummaryData().getPosting().getOwnerGender(),
+                story.getSummaryData().getPosting().getHeading()));
         summaryData.setSubscriptionReason(reason);
         return summaryData;
     }
