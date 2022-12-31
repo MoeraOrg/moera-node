@@ -47,6 +47,7 @@ public class IndexUiController {
             return String.format(
                     "User-agent: *\n"
                     + "Disallow: /registrar\n"
+                    + "Disallow: /moera/gotoname\n"
                     + "\n"
                     + "Sitemap: %s/sitemaps\n",
                     requestContext.getSiteUrl());
