@@ -20,6 +20,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
@@ -35,6 +37,10 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.QComment;
+import org.moera.node.data.QEntryAttachment;
+import org.moera.node.data.QEntryRevision;
+import org.moera.node.data.QMediaFile;
+import org.moera.node.data.QMediaFileOwner;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
@@ -472,8 +478,7 @@ public class CommentController {
         return sliceInfo;
     }
 
-    private Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
-                                  Sort.Direction direction) {
+    private Predicate storyFilter(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment) {
         QComment comment = QComment.comment;
         BooleanBuilder where = new BooleanBuilder();
         where.and(comment.nodeId.eq(nodeId))
@@ -503,13 +508,35 @@ public class CommentController {
             }
             where.and(visibility);
         }
-        return commentRepository.findAll(where, PageRequest.of(0, limit + 1, direction, "moment"));
+        return where;
+    }
+
+    private Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
+                                    Sort.Direction direction) {
+        return commentRepository.findAll(
+                storyFilter(nodeId, parentId, afterMoment, beforeMoment),
+                PageRequest.of(0, limit + 1, direction, "moment"));
     }
 
     private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit) {
-        List<CommentInfo> comments = commentRepository.findInRange(
-                requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore())
+        QComment comment = QComment.comment;
+        QEntryRevision currentRevision = QEntryRevision.entryRevision;
+        QEntryAttachment attachment = QEntryAttachment.entryAttachment;
+        QMediaFileOwner attachmentMedia = QMediaFileOwner.mediaFileOwner;
+        QMediaFile attachmentMediaFile = new QMediaFile("attachmentMediaFile");
+        List<CommentInfo> comments = new JPAQueryFactory(entityManager)
+                .selectFrom(comment)
+                .leftJoin(comment.currentRevision, currentRevision).fetchJoin()
+                .leftJoin(comment.ownerAvatarMediaFile).fetchJoin()
+                .leftJoin(currentRevision.attachments, attachment).fetchJoin()
+                .leftJoin(attachment.mediaFileOwner, attachmentMedia).fetchJoin()
+                .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
+                .leftJoin(attachmentMediaFile.previews).fetchJoin()
+                .distinct()
+                .where(storyFilter(requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore()))
+                .fetch()
                 .stream()
+                // This should be unnecessary, but let it be for reliability
                 .filter(c -> requestContext.isPrincipal(c.getViewE()))
                 .map(c -> new CommentInfo(c, requestContext))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))

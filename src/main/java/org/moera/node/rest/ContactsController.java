@@ -20,7 +20,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Contact;
 import org.moera.node.data.QContact;
-import org.moera.node.data.QMediaFile;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -64,7 +63,6 @@ public class ContactsController {
         String[] words = query.split("\\s+");
 
         QContact contact = QContact.contact;
-        QMediaFile mediaFile = QMediaFile.mediaFile;
         BooleanBuilder where = new BooleanBuilder();
         where.and(contact.nodeId.eq(requestContext.nodeId()));
         if (!ObjectUtils.isEmpty(query)) {
@@ -77,8 +75,7 @@ public class ContactsController {
 
         var request = new JPAQueryFactory(entityManager)
                 .selectFrom(contact)
-                .leftJoin(contact.remoteAvatarMediaFile, mediaFile)
-                .fetchJoin()
+                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
                 .where(where)
                 .orderBy(contact.closeness.desc())
                 .limit(limit);

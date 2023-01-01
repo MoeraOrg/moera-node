@@ -12,10 +12,14 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
@@ -24,6 +28,11 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
+import org.moera.node.data.QEntry;
+import org.moera.node.data.QEntryAttachment;
+import org.moera.node.data.QEntryRevision;
+import org.moera.node.data.QMediaFile;
+import org.moera.node.data.QMediaFileOwner;
 import org.moera.node.data.QStory;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
@@ -90,6 +99,10 @@ public class FeedController {
 
     @Inject
     private PushService pushService;
+
+    @Inject
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @GetMapping
     @Transactional
@@ -266,8 +279,7 @@ public class FeedController {
         return sliceInfo;
     }
 
-    private Page<Story> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
-                                  Sort.Direction direction) {
+    private Predicate storyFilter(UUID nodeId, String feedName, long afterMoment, long beforeMoment) {
         QStory story = QStory.story;
         BooleanBuilder where = new BooleanBuilder();
         where.and(story.nodeId.eq(nodeId))
@@ -292,17 +304,46 @@ public class FeedController {
             }
             where.and(visibility);
         }
-        return storyRepository.findAll(where, PageRequest.of(0, limit + 1, direction, "moment"));
+        return where;
+    }
+
+    private Page<Story> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
+                                  Sort.Direction direction) {
+        return storyRepository.findAll(
+                storyFilter(nodeId, feedName, afterMoment, beforeMoment),
+                PageRequest.of(0, limit + 1, direction, "moment"));
     }
 
     private void fillSlice(FeedSliceInfo sliceInfo, String feedName, int limit) {
-        List<StoryInfo> stories = storyRepository.findInRange(
-                requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore())
+        QStory story = QStory.story;
+        QEntry entry = QEntry.entry;
+        QEntryRevision currentRevision = QEntryRevision.entryRevision;
+        QEntryAttachment attachment = QEntryAttachment.entryAttachment;
+        QMediaFileOwner attachmentMedia = QMediaFileOwner.mediaFileOwner;
+        QMediaFile attachmentMediaFile = new QMediaFile("attachmentMediaFile");
+        List<StoryInfo> stories = new JPAQueryFactory(entityManager)
+                .selectFrom(story)
+                .distinct()
+                .leftJoin(story.remoteAvatarMediaFile).fetchJoin()
+                .leftJoin(story.remoteOwnerAvatarMediaFile).fetchJoin()
+                .leftJoin(story.entry, entry).fetchJoin()
+                .leftJoin(entry.currentRevision, currentRevision).fetchJoin()
+                .leftJoin(currentRevision.attachments, attachment).fetchJoin()
+                .leftJoin(attachment.mediaFileOwner, attachmentMedia).fetchJoin()
+                .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
+                .leftJoin(attachmentMediaFile.previews).fetchJoin()
+                .leftJoin(entry.reactionTotals).fetchJoin()
+                .leftJoin(entry.sources).fetchJoin()
+                .leftJoin(entry.ownerAvatarMediaFile).fetchJoin()
+                .where(storyFilter(requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore()))
+                .fetch()
                 .stream()
                 .map(this::buildStoryInfo)
+                // This should be unnecessary, but let it be for reliability
                 .filter(this::isStoryVisible)
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .collect(Collectors.toList());
+
         String clientName = requestContext.getClientName();
         if (!ObjectUtils.isEmpty(clientName)) {
             Map<String, PostingInfo> postingMap = stories.stream()

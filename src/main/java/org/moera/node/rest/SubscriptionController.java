@@ -19,7 +19,6 @@ import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QContact;
-import org.moera.node.data.QMediaFile;
 import org.moera.node.data.QUserSubscription;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
@@ -289,12 +288,11 @@ public class SubscriptionController {
     private List<UserSubscription> fetchSubscriptions(Predicate where) {
         QUserSubscription userSubscription = QUserSubscription.userSubscription;
         QContact contact = QContact.contact;
-        QMediaFile mediaFile = QMediaFile.mediaFile;
 
         return new JPAQueryFactory(entityManager)
                 .selectFrom(userSubscription)
                 .leftJoin(userSubscription.contact, contact).fetchJoin()
-                .leftJoin(contact.remoteAvatarMediaFile, mediaFile).fetchJoin()
+                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
                 .where(where)
                 .fetch();
     }

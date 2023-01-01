@@ -20,7 +20,6 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.QContact;
-import org.moera.node.data.QMediaFile;
 import org.moera.node.data.QSubscriber;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
@@ -277,12 +276,11 @@ public class SubscriberController {
     private List<Subscriber> fetchSubscribers(Predicate where) {
         QSubscriber subscriber = QSubscriber.subscriber;
         QContact contact = QContact.contact;
-        QMediaFile mediaFile = QMediaFile.mediaFile;
 
         return new JPAQueryFactory(entityManager)
                 .selectFrom(subscriber)
                 .leftJoin(subscriber.contact, contact).fetchJoin()
-                .leftJoin(contact.remoteAvatarMediaFile, mediaFile).fetchJoin()
+                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
                 .where(where)
                 .fetch();
     }
