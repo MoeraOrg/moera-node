@@ -3,18 +3,34 @@ package org.moera.node.model.notification;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
 import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public class ReplyCommentAddedNotification extends ReplyCommentNotification {
 
+    @Size(max = 63)
     private String postingOwnerName;
+
+    @Size(max = 96)
     private String postingOwnerFullName;
+
+    @Size(max = 31)
     private String postingOwnerGender;
+
+    @Valid
     private AvatarImage postingOwnerAvatar;
+
+    @Size(max = 255)
     private String postingHeading;
+
+    @Size(max = 255)
     private String commentHeading;
+
+    @Size(max = 255)
     private String repliedToHeading;
 
     public ReplyCommentAddedNotification() {

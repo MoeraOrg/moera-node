@@ -2,6 +2,8 @@ package org.moera.node.model.notification;
 
 import java.util.List;
 
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
@@ -9,9 +11,16 @@ import org.springframework.data.util.Pair;
 
 public class StoryAddedNotification extends SubscriberNotification {
 
+    @Size(max = 36)
     private String storyId;
+
+    @Size(max = 63)
     private String feedName;
+
+    @Size(max = 63)
     private StoryType storyType;
+
+    @Size(max = 36)
     private String postingId;
 
     public StoryAddedNotification() {

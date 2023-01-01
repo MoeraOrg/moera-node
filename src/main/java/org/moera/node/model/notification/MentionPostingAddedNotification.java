@@ -3,16 +3,28 @@ package org.moera.node.model.notification;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
 import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public class MentionPostingAddedNotification extends MentionPostingNotification {
 
+    @Size(max = 63)
     private String ownerName;
+
+    @Size(max = 96)
     private String ownerFullName;
+
+    @Size(max = 31)
     private String ownerGender;
+
+    @Valid
     private AvatarImage ownerAvatar;
+
+    @Size(max = 255)
     private String heading;
 
     public MentionPostingAddedNotification() {

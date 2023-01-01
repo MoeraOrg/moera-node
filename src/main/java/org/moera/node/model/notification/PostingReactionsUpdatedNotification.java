@@ -2,10 +2,13 @@ package org.moera.node.model.notification;
 
 import java.util.UUID;
 
+import javax.validation.Valid;
+
 import org.moera.node.model.ReactionTotalsInfo;
 
 public class PostingReactionsUpdatedNotification extends PostingSubscriberNotification {
 
+    @Valid
     private ReactionTotalsInfo totals;
 
     public PostingReactionsUpdatedNotification() {

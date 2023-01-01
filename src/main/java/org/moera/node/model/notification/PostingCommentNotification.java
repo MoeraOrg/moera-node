@@ -11,6 +11,7 @@ import org.springframework.data.util.Pair;
 
 public abstract class PostingCommentNotification extends PostingSubscriberNotification {
 
+    @Size(max = 36)
     private String commentId;
 
     @Size(max = 63)

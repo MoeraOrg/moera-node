@@ -12,10 +12,13 @@ import org.springframework.data.util.Pair;
 
 public abstract class ReplyCommentNotification extends Notification {
 
+    @Size(max = 36)
     private String postingId;
 
+    @Size(max = 36)
     private String commentId;
 
+    @Size(max = 36)
     private String repliedToId;
 
     @Size(max = 63)

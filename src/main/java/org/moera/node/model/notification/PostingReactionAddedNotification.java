@@ -3,18 +3,33 @@ package org.moera.node.model.notification;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
 import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public class PostingReactionAddedNotification extends PostingReactionNotification {
 
+    @Size(max = 63)
     private String parentPostingNodeName;
+
+    @Size(max = 96)
     private String parentPostingFullName;
+
+    @Size(max = 31)
     private String parentPostingGender;
+
+    @Valid
     private AvatarImage parentPostingAvatar;
+
+    @Size(max = 255)
     private String parentHeading;
+
+    @Size(max = 255)
     private String postingHeading;
+
     private int emoji;
 
     public PostingReactionAddedNotification() {

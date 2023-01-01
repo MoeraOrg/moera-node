@@ -2,10 +2,13 @@ package org.moera.node.model.notification;
 
 import java.util.Collection;
 
+import javax.validation.Valid;
+
 import org.moera.node.model.FriendGroupDetails;
 
 public class FriendshipUpdatedNotification extends Notification {
 
+    @Valid
     private FriendGroupDetails[] friendGroups;
 
     public FriendshipUpdatedNotification() {

@@ -23,6 +23,7 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     @Valid
     private AvatarImage postingOwnerAvatar;
 
+    @Size(max = 255)
     private String postingHeading;
 
     @Size(max = 63)
@@ -37,6 +38,7 @@ public class MentionCommentAddedNotification extends MentionCommentNotification 
     @Valid
     private AvatarImage commentOwnerAvatar;
 
+    @Size(max = 255)
     private String commentHeading;
 
     public MentionCommentAddedNotification() {

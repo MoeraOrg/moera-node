@@ -3,12 +3,17 @@ package org.moera.node.model.notification;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
 import org.springframework.data.util.Pair;
 
 public class CommentReactionDeletedAllNotification extends Notification {
 
+    @Size(max = 36)
     private String postingId;
+
+    @Size(max = 36)
     private String commentId;
 
     public CommentReactionDeletedAllNotification() {

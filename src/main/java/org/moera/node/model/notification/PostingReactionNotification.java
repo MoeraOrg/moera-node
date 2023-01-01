@@ -4,15 +4,24 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
 import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public abstract class PostingReactionNotification extends ReactionNotification {
 
+    @Size(max = 36)
     private String parentPostingId;
+
+    @Size(max = 36)
     private String parentCommentId;
+
+    @Size(max = 36)
     private String parentMediaId;
+
+    @Size(max = 36)
     private String postingId;
 
     protected PostingReactionNotification(NotificationType type) {

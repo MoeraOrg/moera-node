@@ -3,11 +3,14 @@ package org.moera.node.model.notification;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.constraints.Size;
+
 import org.moera.commons.util.LogUtil;
 import org.springframework.data.util.Pair;
 
 public class FriendGroupDeletedNotification extends Notification {
 
+    @Size(max = 36)
     private String friendGroupId;
 
     public FriendGroupDeletedNotification() {
