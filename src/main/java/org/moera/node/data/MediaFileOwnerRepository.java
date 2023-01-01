@@ -46,4 +46,8 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
     @Modifying
     void updateUsageOfCommentAttachments(UUID nodeId, UUID postingId, Timestamp now);
 
+    @Query(value = "lock table only media_file_owners in exclusive mode", nativeQuery = true)
+    @Modifying
+    void lockExclusive();
+
 }

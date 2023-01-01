@@ -11,6 +11,7 @@ import javax.inject.Inject;
 
 import org.moera.node.data.Entry;
 import org.moera.node.data.Feed;
+import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
@@ -43,6 +44,9 @@ public class StoryOperations {
 
     @Inject
     private StoryRepository storyRepository;
+
+    @Inject
+    private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
     private LiberinManager liberinManager;
@@ -131,6 +135,7 @@ public class StoryOperations {
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
         List<Liberin> liberins = new ArrayList<>();
         Transaction.execute(txManager, () -> {
+            mediaFileOwnerRepository.lockExclusive();
             List<Story> stories = viewed
                 ? storyRepository.findExpiredViewed(nodeId, feedName, createdBefore)
                 : storyRepository.findExpired(nodeId, feedName, createdBefore);
