@@ -132,6 +132,9 @@ public class EventManager {
             if (ip != null) {
                 address = ip.toString();
             }
+            if (address.equals("/127.0.0.1")) { // Don't understand why '/' is here
+                address = "127.0.0.1";
+            }
         }
         return InetAddress.getByName(address);
     }
