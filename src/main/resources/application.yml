@@ -44,6 +44,12 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
 
+springdoc:
+  api-docs:
+    path: /moera/api-docs
+  swagger-ui:
+    path: /moera/api-ui.html
+
 node:
   root-secret:
   mock-network-latency: false
