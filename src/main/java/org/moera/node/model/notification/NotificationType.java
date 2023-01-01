@@ -4,7 +4,7 @@ public enum NotificationType {
 
     MENTION_POSTING_ADDED(MentionPostingAddedNotification.class),
     MENTION_POSTING_DELETED(MentionPostingDeletedNotification.class),
-    FEED_POSTING_ADDED(FeedPostingAddedNotification.class),
+    STORY_ADDED(StoryAddedNotification.class),
     POSTING_UPDATED(PostingUpdatedNotification.class),
     POSTING_DELETED(PostingDeletedNotification.class),
     POSTING_REACTIONS_UPDATED(PostingReactionsUpdatedNotification.class),

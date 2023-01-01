@@ -32,7 +32,7 @@ import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.notification.FeedPostingAddedNotification;
+import org.moera.node.model.notification.StoryAddedNotification;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
@@ -82,7 +82,7 @@ public class PostingReceptor extends LiberinReceptorBase {
             List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
             stories.forEach(story ->
                     send(Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
-                            new FeedPostingAddedNotification(story.getFeedName(), posting.getId())));
+                            new StoryAddedNotification(story)));
         }
 
         PrincipalExpression updatedFilter = posting.getViewE().a()

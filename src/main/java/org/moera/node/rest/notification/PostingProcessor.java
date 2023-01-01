@@ -11,6 +11,7 @@ import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
+import org.moera.node.data.StoryType;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
@@ -22,7 +23,7 @@ import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.UnsubscribeFailure;
-import org.moera.node.model.notification.FeedPostingAddedNotification;
+import org.moera.node.model.notification.StoryAddedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.PostingDeletedNotification;
@@ -77,14 +78,18 @@ public class PostingProcessor {
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
 
-    @NotificationMapping(NotificationType.FEED_POSTING_ADDED)
+    @NotificationMapping(NotificationType.STORY_ADDED)
     @Transactional
-    public void added(FeedPostingAddedNotification notification) {
+    public void added(StoryAddedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
                 requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
         if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.FEED
                 || !notification.getFeedName().equals(subscription.getRemoteFeedName())) {
             throw new UnsubscribeFailure();
+        }
+
+        if (notification.getStoryType() != StoryType.POSTING_ADDED || notification.getPostingId() == null) {
+            return;
         }
 
         List<UserSubscription> userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
