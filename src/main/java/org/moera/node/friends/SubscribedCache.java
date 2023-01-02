@@ -74,4 +74,8 @@ public class SubscribedCache {
         cache.remove(nodeClient);
     }
 
+    public void invalidate(Nodes nodes) {
+        invalidate(nodes.nodeId, nodes.remoteNodeName);
+    }
+
 }

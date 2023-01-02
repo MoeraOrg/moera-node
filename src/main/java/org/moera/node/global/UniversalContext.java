@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.domain.Domains;
+import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.option.Options;
@@ -32,6 +33,9 @@ public class UniversalContext {
 
     @Inject
     private SubscriptionManager subscriptionManager;
+
+    @Inject
+    private SubscribedCache subscribedCache;
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -111,6 +115,14 @@ public class UniversalContext {
             subscriptionManager.rescan();
         } else {
             requestContext.subscriptionsUpdated();
+        }
+    }
+
+    public void invalidateSubscribedCache(String clientName) {
+        if (isBackground()) {
+            subscribedCache.invalidate(nodeId(), clientName);
+        } else {
+            requestContext.invalidateSubscribedCache(clientName);
         }
     }
 

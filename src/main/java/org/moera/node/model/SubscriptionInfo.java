@@ -44,6 +44,7 @@ public class SubscriptionInfo {
 
         operations = new HashMap<>();
         putOperation(operations, "view", subscription.getViewPrincipal(), Principal.PUBLIC);
+        putOperation(operations, "delete", subscription.getDeletePrincipal(options), Principal.ADMIN);
     }
 
     public SubscriptionInfo(UserSubscription subscription, Options options, AccessChecker accessChecker) {

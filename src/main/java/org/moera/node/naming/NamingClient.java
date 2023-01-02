@@ -24,10 +24,12 @@ import org.moera.naming.rpc.PutCallFingerprint;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
 import org.moera.node.model.OperationFailure;
+import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.option.Options;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -47,7 +49,13 @@ public class NamingClient {
     private final Map<String, NamingService> namingServices = new ConcurrentHashMap<>();
 
     @Inject
+    private UniversalContext universalContext;
+
+    @Inject
     private Domains domains;
+
+    @Inject
+    private SubscriptionOperations subscriptionOperations;
 
     @Inject
     private TaskScheduler taskScheduler;
@@ -200,6 +208,13 @@ public class NamingClient {
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");
         if (signingKey != null) {
             options.set("profile.signing-key", signingKey);
+        }
+
+        universalContext.associate(options.nodeId());
+        try {
+            subscriptionOperations.autoSubscribe();
+        } catch (Throwable e) {
+            log.error("Error automatically subscribing the node", e);
         }
     }
 

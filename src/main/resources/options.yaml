@@ -579,3 +579,15 @@
   modifiers:
     min: 2
     max: 50
+
+- name: subscription.auto.node
+  type: string
+  privileged: true
+  defaultValue:
+  title: Automatically subscribe to the blog
+
+- name: subscription.auto.forced
+  type: bool
+  privileged: true
+  defaultValue: true
+  title: Do not allow to unsubscribe from the automatically subscribed blog

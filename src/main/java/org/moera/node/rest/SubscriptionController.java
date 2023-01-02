@@ -16,7 +16,6 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QContact;
 import org.moera.node.data.QUserSubscription;
@@ -27,12 +26,10 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
 import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
 import org.moera.node.model.ContactInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RemoteFeed;
 import org.moera.node.model.RemotePosting;
 import org.moera.node.model.SubscriptionDescription;
@@ -42,18 +39,15 @@ import org.moera.node.model.SubscriptionOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
+import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.rest.task.AllRemoteSubscribersUpdateTask;
-import org.moera.node.rest.task.RemoteFeedFetchTask;
 import org.moera.node.task.TaskAutowire;
-import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -81,7 +75,7 @@ public class SubscriptionController {
     private ContactOperations contactOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private SubscriptionOperations subscriptionOperations;
 
     @Inject
     @PersistenceContext
@@ -152,48 +146,11 @@ public class SubscriptionController {
                 throw new ValidationFailure("subscriptionDescription.feedName.not-found");
             }
         }
+        OperationsValidator.validateOperations(subscriptionDescription::getPrincipal,
+                OperationsValidator.SUBSCRIPTION_OPERATIONS, false,
+                "subscriptionDescription.operations.wrong-principal");
 
-        UserSubscription subscription;
-        try {
-            subscription = Transaction.execute(txManager, () -> {
-                OperationsValidator.validateOperations(subscriptionDescription::getPrincipal,
-                        OperationsValidator.SUBSCRIPTION_OPERATIONS, false,
-                        "subscriptionDescription.operations.wrong-principal");
-
-                UserSubscription userSubscription = new UserSubscription();
-                userSubscription.setId(UUID.randomUUID());
-                userSubscription.setNodeId(requestContext.nodeId());
-                subscriptionDescription.toUserSubscription(userSubscription);
-                userSubscription = userSubscriptionRepository.save(userSubscription);
-
-                Contact contact;
-                if (userSubscription.getSubscriptionType() == SubscriptionType.FEED) {
-                    contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 800);
-                    contactOperations.updateFeedSubscriptionCount(userSubscription.getRemoteNodeName(), 1);
-                    contact = contactOperations.updateViewPrincipal(userSubscription);
-                } else {
-                    contact = contactOperations.updateCloseness(userSubscription.getRemoteNodeName(), 1);
-                }
-                contact.fill(userSubscription);
-
-                return userSubscription;
-            });
-        } catch (DataIntegrityViolationException e) {
-            throw new OperationFailure("subscription.already-exists");
-        }
-
-        requestContext.subscriptionsUpdated();
-        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            requestContext.invalidateSubscribedCache(subscription.getRemoteNodeName());
-        }
-        requestContext.send(new SubscriptionAddedLiberin(subscription));
-
-        if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            var fetchTask = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
-                    subscription.getRemoteFeedName());
-            taskAutowire.autowire(fetchTask);
-            taskExecutor.execute(fetchTask);
-        }
+        UserSubscription subscription = subscriptionOperations.subscribe(subscriptionDescription::toUserSubscription);
 
         return new SubscriptionInfo(subscription, requestContext.getOptions(), requestContext);
     }
@@ -236,6 +193,9 @@ public class SubscriptionController {
         UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
                         requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        if (!requestContext.isPrincipal(subscription.getDeleteE(requestContext.getOptions()))) {
+            throw new AuthenticationException();
+        }
         userSubscriptionRepository.delete(subscription);
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             contactOperations.updateFeedSubscriptionCount(subscription.getRemoteNodeName(), -1).fill(subscription);

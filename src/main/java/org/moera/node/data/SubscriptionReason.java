@@ -7,7 +7,8 @@ public enum SubscriptionReason {
 
     USER,
     MENTION,
-    COMMENT;
+    COMMENT,
+    AUTO;
 
     @JsonValue
     public String getValue() {

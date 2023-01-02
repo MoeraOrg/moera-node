@@ -16,6 +16,7 @@ import org.moera.node.model.RemoteFeed;
 import org.moera.node.model.RemotePosting;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
+import org.springframework.util.ObjectUtils;
 
 @Entity
 @Table(name = "user_subscriptions")
@@ -169,6 +170,26 @@ public class UserSubscription implements ContactRelated {
 
     public Principal getViewE() {
         return toAbsolute(getViewPrincipal());
+    }
+
+    public Principal getDeletePrincipal(Options options) {
+        return isForcedAutoSubscription(options) ? Principal.NONE : Principal.ADMIN;
+    }
+
+    public Principal getDeleteE(Options options) {
+        return getDeletePrincipal(options);
+    }
+
+    private boolean isForcedAutoSubscription(Options options) {
+        if (subscriptionType != SubscriptionType.FEED || reason != SubscriptionReason.AUTO) {
+            return false;
+        }
+        String nodeName = options.getString("subscription.auto.node");
+        boolean forced = options.getBool("subscription.auto.forced");
+        if (ObjectUtils.isEmpty(nodeName) || !forced) {
+            return false;
+        }
+        return remoteNodeName.equals(nodeName);
     }
 
     @Override
