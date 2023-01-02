@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.friends.FriendCache;
+import org.moera.node.friends.SubscribedCache;
 import org.moera.node.global.NoClientId;
 import org.moera.node.global.RequestContext;
 import org.moera.node.subscriptions.SubscriptionManager;
@@ -27,11 +28,15 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     @Inject
     private FriendCache friendCache;
 
+    @Inject
+    private SubscribedCache subscribedCache;
+
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
         if (ex == null) {
             requestContext.getFriendCacheInvalidations().forEach(friendCache::invalidate);
+            requestContext.getSubscribedCacheInvalidations().forEach(subscribedCache::invalidate);
             boolean noClientId = handler instanceof HandlerMethod
                     && ((HandlerMethod) handler).hasMethodAnnotation(NoClientId.class);
             String clientId = noClientId ? null : requestContext.getClientId();
