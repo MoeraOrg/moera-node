@@ -27,11 +27,15 @@ public class FriendGroupsFeatures {
                 .filter(fg -> isFriendGroupVisible(fg, clientGroups))
                 .map(fg -> new FriendGroupInfo(fg, false))
                 .toArray(FriendGroupInfo[]::new));
-        features.setMemberOf(
-                Arrays.stream(clientGroups)
-                        .map(fr -> new FriendGroupDetails(fr, false))
-                        .toArray(FriendGroupDetails[]::new)
-        );
+        if (clientGroups != null) {
+            features.setMemberOf(
+                    Arrays.stream(clientGroups)
+                            .map(fr -> new FriendGroupDetails(fr, false))
+                            .toArray(FriendGroupDetails[]::new)
+            );
+        } else {
+            features.setMemberOf(new FriendGroupDetails[0]);
+        }
         return features;
 
     }
