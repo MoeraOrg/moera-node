@@ -13,13 +13,13 @@ public class ProfileUpdatedLiberin extends Liberin {
     private String nodeName;
     private Options options;
     private Avatar avatar;
-    private String oldEmail;
+    private String prevEmail;
 
-    public ProfileUpdatedLiberin(String nodeName, Options options, Avatar avatar, String oldEmail) {
+    public ProfileUpdatedLiberin(String nodeName, Options options, Avatar avatar, String prevEmail) {
         this.nodeName = nodeName;
         this.options = options;
         this.avatar = avatar;
-        this.oldEmail = oldEmail;
+        this.prevEmail = prevEmail;
     }
 
     public String getNodeName() {
@@ -46,12 +46,12 @@ public class ProfileUpdatedLiberin extends Liberin {
         this.avatar = avatar;
     }
 
-    public String getOldEmail() {
-        return oldEmail;
+    public String getPrevEmail() {
+        return prevEmail;
     }
 
-    public void setOldEmail(String oldEmail) {
-        this.oldEmail = oldEmail;
+    public void setPrevEmail(String prevEmail) {
+        this.prevEmail = prevEmail;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ProfileUpdatedLiberin extends Liberin {
         model.put("nodeName", nodeName);
         model.put("profile", new ProfileInfo(options));
         model.put("avatar", new AvatarInfo(avatar));
-        model.put("oldEmail", oldEmail);
+        model.put("prevEmail", prevEmail);
     }
 
 }

@@ -6,6 +6,7 @@ public class MailConfig {
     private int sendLimit = 10;
     private int sendPeriod = 10;
     private String replyToAddress;
+    private String rootAddress = "root";
 
     public int getSendLimit() {
         return sendLimit;
@@ -29,6 +30,14 @@ public class MailConfig {
 
     public void setReplyToAddress(String replyToAddress) {
         this.replyToAddress = replyToAddress;
+    }
+
+    public String getRootAddress() {
+        return rootAddress;
+    }
+
+    public void setRootAddress(String rootAddress) {
+        this.rootAddress = rootAddress;
     }
 
 }

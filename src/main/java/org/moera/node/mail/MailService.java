@@ -74,7 +74,10 @@ public class MailService {
 
         String mailDomain = domainName.equals(Domains.DEFAULT_DOMAIN) ? config.getDomain() : domainName;
         mail.setDomainName(mailDomain);
-        mail.setEmail(domains.getDomainOptions(nodeId).getString("profile.email"));
+        String email = nodeId != null
+                ? domains.getDomainOptions(nodeId).getString("profile.email")
+                : config.getMail().getRootAddress();
+        mail.setEmail(email);
         try {
             send(mail);
         } catch (MailServiceException e) {

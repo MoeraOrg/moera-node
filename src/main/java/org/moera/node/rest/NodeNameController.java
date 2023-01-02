@@ -202,11 +202,13 @@ public class NodeNameController {
         if (requestContext.getOptions().getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
+        String prevNodeName = requestContext.getOptions().getString("profile.node-name");
         requestContext.getOptions().runInTransaction(options -> {
             options.reset("profile.node-name");
             options.reset("profile.signing-key");
         });
-        requestContext.send(new NodeNameChangedLiberin(requestContext.getOptions(), requestContext.getAvatar()));
+        requestContext.send(new NodeNameChangedLiberin(
+                prevNodeName, requestContext.getOptions(), requestContext.getAvatar()));
 
         return Result.OK;
     }

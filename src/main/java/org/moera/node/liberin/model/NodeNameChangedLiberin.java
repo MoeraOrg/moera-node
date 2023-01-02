@@ -10,15 +10,17 @@ import org.moera.node.option.Options;
 public class NodeNameChangedLiberin extends Liberin {
 
     private String nodeName;
+    private String prevNodeName;
     private Options options;
     private Avatar avatar;
 
-    public NodeNameChangedLiberin(Options options, Avatar avatar) {
-        this("", options, avatar);
+    public NodeNameChangedLiberin(String prevNodeName, Options options, Avatar avatar) {
+        this("", prevNodeName, options, avatar);
     }
 
-    public NodeNameChangedLiberin(String nodeName, Options options, Avatar avatar) {
+    public NodeNameChangedLiberin(String nodeName, String prevNodeName, Options options, Avatar avatar) {
         this.nodeName = nodeName;
+        this.prevNodeName = prevNodeName;
         this.options = options;
         this.avatar = avatar;
     }
@@ -29,6 +31,14 @@ public class NodeNameChangedLiberin extends Liberin {
 
     public void setNodeName(String nodeName) {
         this.nodeName = nodeName;
+    }
+
+    public String getPrevNodeName() {
+        return prevNodeName;
+    }
+
+    public void setPrevNodeName(String prevNodeName) {
+        this.prevNodeName = prevNodeName;
     }
 
     public Options getOptions() {
@@ -51,6 +61,7 @@ public class NodeNameChangedLiberin extends Liberin {
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
+        model.put("prevNodeName", prevNodeName);
         model.put("fullName", options.getString("profile.full-name"));
         model.put("gender", options.getString("profile.gender"));
         model.put("title", options.getString("profile.title"));

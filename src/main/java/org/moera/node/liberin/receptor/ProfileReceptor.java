@@ -8,12 +8,14 @@ import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.liberin.model.RegisteredNameOperationStatusLiberin;
+import org.moera.node.mail.DomainCreatedMail;
 import org.moera.node.mail.EmailConfirmMail;
 import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.model.event.ProfileUpdatedEvent;
 import org.moera.node.model.event.RegisteredNameOperationStatusEvent;
 import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.send.Directions;
+import org.springframework.util.ObjectUtils;
 
 @LiberinReceptor
 public class ProfileReceptor extends LiberinReceptorBase {
@@ -23,14 +25,17 @@ public class ProfileReceptor extends LiberinReceptorBase {
         send(liberin, new ProfileUpdatedEvent());
         send(liberin, new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
         send(Directions.profileSubscribers(liberin.getNodeId()), new ProfileUpdatedNotification());
-        if (!Objects.equals(liberin.getOptions().getString("profile.email"), liberin.getOldEmail())) {
+        if (!Objects.equals(liberin.getOptions().getString("profile.email"), liberin.getPrevEmail())) {
             send(new EmailConfirmMail());
         }
     }
 
     @LiberinMapping
     public void nodeNameChanged(NodeNameChangedLiberin liberin) {
-        send(liberin, new NodeNameChangedEvent("", liberin.getOptions(), liberin.getAvatar()));
+        send(liberin, new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
+        if (ObjectUtils.isEmpty(liberin.getPrevNodeName())) {
+            send(new DomainCreatedMail(liberin.getNodeName()));
+        }
     }
 
     @LiberinMapping

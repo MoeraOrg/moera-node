@@ -193,7 +193,8 @@ public class NamingClient {
         options.set("profile.node-name", newRegisteredName);
         if (!Objects.equals(prevRegisteredName, newRegisteredName)) {
             liberinManager.send(
-                    new NodeNameChangedLiberin(newRegisteredName, options, null).withNodeId(options.nodeId()));
+                    new NodeNameChangedLiberin(newRegisteredName, prevRegisteredName, options, null)
+                            .withNodeId(options.nodeId()));
         }
 
         PrivateKey signingKey = options.getPrivateKey("naming.operation.signing-key");
