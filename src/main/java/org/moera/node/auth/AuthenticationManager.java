@@ -9,6 +9,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
+import com.vladmihalcea.hibernate.type.basic.Inet;
 import org.hibernate.HibernateException;
 import org.moera.commons.crypto.CryptoException;
 import org.moera.commons.crypto.CryptoUtil;
@@ -23,6 +24,7 @@ import org.moera.node.fingerprint.CarteProperties;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -39,6 +41,9 @@ public class AuthenticationManager {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private UniversalContext universalContext;
 
     @Inject
     private TokenRepository tokenRepository;
@@ -70,23 +75,42 @@ public class AuthenticationManager {
             log.error("Cannot resolve token address {}", token.getIp(), e);
             throw new InvalidTokenException();
         }
-        prolongToken(token);
+        stampToken(token);
         return token;
     }
 
-    private void prolongToken(Token token) {
+    private void stampToken(Token token) {
         Duration lifetime = Duration.between(token.getCreatedAt().toInstant(), token.getDeadline().toInstant());
         if (Instant.now().plus(lifetime).isAfter(token.getDeadline().toInstant().plus(1, ChronoUnit.HOURS))) {
             try {
                 Transaction.execute(txManager, () -> {
                     Token tk = entityManager.merge(token);
                     tk.setDeadline(Timestamp.from(Instant.now().plus(lifetime)));
+                    if (!universalContext.isBackground()) {
+                        tk.setLastUsedAt(Util.now());
+                        tk.setLastUsedBrowser(getUserAgentString());
+                        if (requestContext.getRemoteAddr() != null) {
+                            tk.setLastUsedIp(new Inet(requestContext.getRemoteAddr().getHostAddress()));
+                        }
+                    }
                     return null;
                 });
             } catch (Throwable e) {
-                log.error("Could not prolong token {}: {}", LogUtil.format(token.getId()), e.getMessage());
+                log.error("Could not stamp token {}: {}", LogUtil.format(token.getId()), e.getMessage());
             }
         }
+    }
+
+    private String getUserAgentString() {
+        StringBuilder buf = new StringBuilder();
+        if (requestContext.getUserAgent() != null) {
+            buf.append(requestContext.getUserAgent().getTitle());
+        }
+        if (requestContext.getUserAgentOs() != null) {
+            buf.append('/');
+            buf.append(requestContext.getUserAgentOs().getTitle());
+        }
+        return buf.toString();
     }
 
     public CarteAuthInfo getCarte(String carteS, InetAddress clientAddress) {

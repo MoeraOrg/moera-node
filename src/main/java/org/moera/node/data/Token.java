@@ -43,6 +43,12 @@ public class Token {
 
     private Timestamp deadline;
 
+    private Timestamp lastUsedAt;
+
+    private String lastUsedBrowser;
+
+    private Inet lastUsedIp;
+
     public UUID getId() {
         return id;
     }
@@ -113,6 +119,30 @@ public class Token {
 
     public void setDeadline(Timestamp deadline) {
         this.deadline = deadline;
+    }
+
+    public Timestamp getLastUsedAt() {
+        return lastUsedAt;
+    }
+
+    public void setLastUsedAt(Timestamp lastUsedAt) {
+        this.lastUsedAt = lastUsedAt;
+    }
+
+    public String getLastUsedBrowser() {
+        return lastUsedBrowser;
+    }
+
+    public void setLastUsedBrowser(String lastUsedBrowser) {
+        this.lastUsedBrowser = lastUsedBrowser;
+    }
+
+    public Inet getLastUsedIp() {
+        return lastUsedIp;
+    }
+
+    public void setLastUsedIp(Inet lastUsedIp) {
+        this.lastUsedIp = lastUsedIp;
     }
 
 }

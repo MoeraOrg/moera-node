@@ -70,8 +70,8 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
         try {
-            processAuthParameters(request);
             processUserAgent(request);
+            processAuthParameters(request);
 
             if (!(handler instanceof HandlerMethod)) {
                 return true;
@@ -178,20 +178,26 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             requestContext.setUserAgent(UserAgent.FIREFOX);
         } else if (userAgent.contains("Opera")) {
             requestContext.setUserAgent(UserAgent.OPERA);
+        } else if (userAgent.contains("Googlebot")) {
+            requestContext.setUserAgent(UserAgent.GOOGLEBOT);
+        } else if (userAgent.contains("PetalBot")) {
+            requestContext.setUserAgent(UserAgent.PETALBOT);
         } else if (userAgent.contains("Chrome")) {
-            if (userAgent.contains("Googlebot")) {
-                requestContext.setUserAgent(UserAgent.GOOGLEBOT);
-            } else if (userAgent.contains("YaBrowser")) {
+            if (userAgent.contains("YaBrowser")) {
                 requestContext.setUserAgent(UserAgent.YANDEX);
             } else if (userAgent.contains("Brave")) {
                 requestContext.setUserAgent(UserAgent.BRAVE);
             } else if (userAgent.contains("Vivaldi")) {
                 requestContext.setUserAgent(UserAgent.VIVALDI);
-            } else if (userAgent.contains("PetalBot")) {
-                requestContext.setUserAgent(UserAgent.PETALBOT);
+            } else if (userAgent.contains("Edge")) {
+                requestContext.setUserAgent(UserAgent.EDGE);
             } else {
                 requestContext.setUserAgent(UserAgent.CHROME);
             }
+        } else if (userAgent.contains("Safari")) {
+            requestContext.setUserAgent(UserAgent.SAFARI);
+        } else if (userAgent.contains("MSIE")) {
+            requestContext.setUserAgent(UserAgent.IE);
         } else if (userAgent.contains("Dolphin")) {
             requestContext.setUserAgent(UserAgent.DOLPHIN);
         }
@@ -200,6 +206,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             requestContext.setUserAgentOs(UserAgentOs.ANDROID);
         } else if (userAgent.contains("iPhone")) {
             requestContext.setUserAgentOs(UserAgentOs.IOS);
+        } else if (userAgent.contains("Windows")) {
+            requestContext.setUserAgentOs(UserAgentOs.WINDOWS);
+        } else if (userAgent.contains("Linux")) {
+            requestContext.setUserAgentOs(UserAgentOs.LINUX);
         }
     }
 

@@ -15,6 +15,9 @@ public class TokenInfo {
     private String pluginName;
     private Long createdAt;
     private Long deadline;
+    private Long lastUsedAt;
+    private String lastUsedBrowser;
+    private String lastUsedIp;
 
     public TokenInfo() {
     }
@@ -30,6 +33,11 @@ public class TokenInfo {
         pluginName = tokenData.getPluginName();
         createdAt = Util.toEpochSecond(tokenData.getCreatedAt());
         deadline = Util.toEpochSecond(tokenData.getDeadline());
+        lastUsedAt = Util.toEpochSecond(tokenData.getLastUsedAt());
+        lastUsedBrowser = tokenData.getLastUsedBrowser();
+        if (tokenData.getLastUsedIp() != null) {
+            lastUsedIp = tokenData.getLastUsedIp().getAddress();
+        }
     }
 
     public String getId() {
@@ -86,6 +94,30 @@ public class TokenInfo {
 
     public void setDeadline(Long deadline) {
         this.deadline = deadline;
+    }
+
+    public Long getLastUsedAt() {
+        return lastUsedAt;
+    }
+
+    public void setLastUsedAt(Long lastUsedAt) {
+        this.lastUsedAt = lastUsedAt;
+    }
+
+    public String getLastUsedBrowser() {
+        return lastUsedBrowser;
+    }
+
+    public void setLastUsedBrowser(String lastUsedBrowser) {
+        this.lastUsedBrowser = lastUsedBrowser;
+    }
+
+    public String getLastUsedIp() {
+        return lastUsedIp;
+    }
+
+    public void setLastUsedIp(String lastUsedIp) {
+        this.lastUsedIp = lastUsedIp;
     }
 
 }
