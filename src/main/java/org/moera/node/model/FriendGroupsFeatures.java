@@ -46,6 +46,9 @@ public class FriendGroupsFeatures {
     }
 
     private static boolean isMemberOf(UUID friendGroupId, Friend[] clientGroups) {
+        if (clientGroups == null) {
+            return false;
+        }
         for (Friend clientGroup : clientGroups) {
             if (clientGroup.getFriendGroup().getId().equals(friendGroupId)) {
                 return true;
