@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.data.BlockedInstantRepository;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
@@ -31,6 +32,9 @@ public class CommentInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
+    @Inject
+    private BlockedInstantRepository blockedInstantRepository;
+
     public void added(Comment comment) {
         if (comment.getOwnerName().equals(nodeName())
                 // 'reply-comment' instant is expected to be created for such a comment
@@ -38,8 +42,14 @@ public class CommentInstants extends InstantsCreator {
             return;
         }
 
-        boolean alreadyReported = !storyRepository.findSubsByTypeAndEntryId(nodeId(), StoryType.COMMENT_ADDED,
-                comment.getId()).isEmpty();
+        boolean blocked = blockedInstantRepository.findByStoryTypeAndEntryId(
+                nodeId(), StoryType.COMMENT_ADDED, comment.getPosting().getId()).isPresent();
+        if (blocked) {
+            return;
+        }
+
+        boolean alreadyReported = !storyRepository.findSubsByTypeAndEntryId(
+                nodeId(), StoryType.COMMENT_ADDED, comment.getId()).isEmpty();
         if (alreadyReported) {
             return;
         }

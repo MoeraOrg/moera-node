@@ -335,6 +335,7 @@ public class FeedController {
                 .leftJoin(entry.reactionTotals).fetchJoin()
                 .leftJoin(entry.sources).fetchJoin()
                 .leftJoin(entry.ownerAvatarMediaFile).fetchJoin()
+                .leftJoin(entry.blockedInstants).fetchJoin()
                 .where(storyFilter(requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore()))
                 .fetch()
                 .stream()

@@ -268,6 +268,9 @@ public class Entry {
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "entry")
     private SitemapRecord sitemapRecord;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
+    private Set<BlockedInstant> blockedInstants = new HashSet<>();
+
     public UUID getId() {
         return id;
     }
@@ -1319,6 +1322,24 @@ public class Entry {
         if (sitemapRecord != null) {
             sitemapRecord.setEntry(this);
         }
+    }
+
+    public Set<BlockedInstant> getBlockedInstants() {
+        return blockedInstants;
+    }
+
+    public void setBlockedInstants(Set<BlockedInstant> blockedInstants) {
+        this.blockedInstants = blockedInstants;
+    }
+
+    public void addBlockedInstant(BlockedInstant blockedInstant) {
+        blockedInstants.add(blockedInstant);
+        blockedInstant.setEntry(this);
+    }
+
+    public void removeBlockedInstant(BlockedInstant blockedInstant) {
+        blockedInstants.removeIf(bi -> bi.getId().equals(blockedInstant.getId()));
+        blockedInstant.setEntry(null);
     }
 
 }

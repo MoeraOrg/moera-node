@@ -74,6 +74,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private byte[] signature;
     private Short signatureVersion;
     private List<FeedReference> feedReferences;
+    private List<BlockedPostingInstantInfo> blockedInstants;
     private Map<String, Principal> operations;
     private Map<String, Principal> receiverOperations;
     private Map<String, Principal> commentOperations;
@@ -159,6 +160,11 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         signatureVersion = revision.getSignatureVersion();
         if (stories != null && !stories.isEmpty()) {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
+        }
+        if (posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()) {
+            blockedInstants = posting.getBlockedInstants().stream()
+                    .map(BlockedPostingInstantInfo::new)
+                    .collect(Collectors.toList());
         }
 
         operations = new HashMap<>();
@@ -616,7 +622,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         return getFeedReferences().stream().filter(fr -> fr.getFeedName().equals(feedName)).findFirst().orElse(null);
     }
 
-    // Methods for Web UI
+    public List<BlockedPostingInstantInfo> getBlockedInstants() {
+        return blockedInstants;
+    }
+
+    public void setBlockedInstants(List<BlockedPostingInstantInfo> blockedInstants) {
+        this.blockedInstants = blockedInstants;
+    }
+// Methods for Web UI
 
     @JsonIgnore
     public Long getTimelinePublishedAt() {

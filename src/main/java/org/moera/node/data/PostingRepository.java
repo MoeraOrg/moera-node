@@ -23,6 +23,7 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
             + " left join fetch p.currentRevision cr left join fetch cr.attachments cra"
             + " left join fetch cra.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
             + " left join fetch p.reactionTotals left join fetch p.sources left join fetch p.ownerAvatarMediaFile"
+            + " left join fetch p.blockedInstants"
             + " where p.nodeId = ?1 and p.id = ?2 and p.deletedAt is null")
     Optional<Posting> findFullByNodeIdAndId(UUID nodeId, UUID id);
 
