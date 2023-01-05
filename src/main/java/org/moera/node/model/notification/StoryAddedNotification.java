@@ -17,7 +17,6 @@ public class StoryAddedNotification extends SubscriberNotification {
     @Size(max = 63)
     private String feedName;
 
-    @Size(max = 63)
     private StoryType storyType;
 
     @Size(max = 36)
