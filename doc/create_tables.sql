@@ -666,6 +666,21 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: ask_history; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.ask_history (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    subject smallint NOT NULL,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.ask_history OWNER TO moera;
+
+--
 -- Name: avatars; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -682,6 +697,35 @@ CREATE TABLE public.avatars (
 ALTER TABLE public.avatars OWNER TO moera;
 
 --
+-- Name: blocked_instants; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.blocked_instants (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    story_type smallint NOT NULL,
+    entry_id uuid,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.blocked_instants OWNER TO moera;
+
+--
+-- Name: contact_upgrades; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.contact_upgrades (
+    id bigint NOT NULL,
+    node_id uuid NOT NULL,
+    upgrade_type smallint NOT NULL,
+    remote_node_name character varying(63) NOT NULL
+);
+
+
+ALTER TABLE public.contact_upgrades OWNER TO moera;
+
+--
 -- Name: contacts; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -696,7 +740,14 @@ CREATE TABLE public.contacts (
     updated_at timestamp without time zone NOT NULL,
     remote_avatar_media_file_id character varying(40),
     remote_avatar_shape character varying(8),
-    remote_gender character varying(31)
+    remote_gender character varying(31),
+    feed_subscription_count integer DEFAULT 0 NOT NULL,
+    feed_subscriber_count integer DEFAULT 0 NOT NULL,
+    friend_count integer DEFAULT 0 NOT NULL,
+    friend_of_count integer DEFAULT 0 NOT NULL,
+    view_feed_subscription_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    view_feed_subscriber_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    view_friend_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
 );
 
 
@@ -966,14 +1017,11 @@ CREATE TABLE public.friend_ofs (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     remote_node_name character varying(63) NOT NULL,
-    remote_full_name character varying(96),
-    remote_gender character varying(31),
-    remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8),
     remote_group_id character varying(40) NOT NULL,
     remote_group_title character varying(63),
     remote_added_at timestamp without time zone NOT NULL,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    contact_id uuid
 );
 
 
@@ -990,10 +1038,7 @@ CREATE TABLE public.friends (
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     node_id uuid NOT NULL,
-    remote_full_name character varying(96),
-    remote_gender character varying(31),
-    remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8)
+    contact_id uuid
 );
 
 
@@ -1403,9 +1448,7 @@ CREATE TABLE public.stories (
     parent_id uuid,
     remote_comment_id character varying(40),
     remote_owner_name character varying(63),
-    remote_heading character varying(255),
     remote_replied_to_id character varying(40),
-    remote_replied_to_heading character varying(255),
     remote_full_name character varying(96),
     remote_owner_full_name character varying(96),
     remote_avatar_media_file_id character varying(40),
@@ -1437,12 +1480,9 @@ CREATE TABLE public.subscribers (
     entry_id uuid,
     remote_node_name character varying(63) NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    remote_full_name character varying(96),
-    remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8),
     admin_view_principal character varying(70) DEFAULT 'unset'::character varying NOT NULL,
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
-    remote_gender character varying(31)
+    contact_id uuid
 );
 
 
@@ -1482,7 +1522,10 @@ CREATE TABLE public.tokens (
     auth_category bigint DEFAULT 0 NOT NULL,
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     ip inet,
-    plugin_name character varying(48)
+    plugin_name character varying(48),
+    last_used_at timestamp without time zone,
+    last_used_browser character varying(32),
+    last_used_ip inet
 );
 
 
@@ -1502,15 +1545,20 @@ CREATE TABLE public.user_subscriptions (
     remote_entry_id character varying(40),
     created_at timestamp without time zone NOT NULL,
     reason smallint DEFAULT 0 NOT NULL,
-    remote_full_name character varying(96),
-    remote_avatar_media_file_id character varying(40),
-    remote_avatar_shape character varying(8),
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
-    remote_gender character varying(31)
+    contact_id uuid
 );
 
 
 ALTER TABLE public.user_subscriptions OWNER TO moera;
+
+--
+-- Name: ask_history ask_history_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.ask_history
+    ADD CONSTRAINT ask_history_pkey PRIMARY KEY (id);
+
 
 --
 -- Name: avatars avatars_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
@@ -1518,6 +1566,22 @@ ALTER TABLE public.user_subscriptions OWNER TO moera;
 
 ALTER TABLE ONLY public.avatars
     ADD CONSTRAINT avatars_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: blocked_instants blocked_instants_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.blocked_instants
+    ADD CONSTRAINT blocked_instants_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: contact_upgrades contact_upgrades_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.contact_upgrades
+    ADD CONSTRAINT contact_upgrades_pkey PRIMARY KEY (id);
 
 
 --
@@ -1825,6 +1889,13 @@ ALTER TABLE ONLY public.user_subscriptions
 
 
 --
+-- Name: ask_history_node_id_remote_node_name_subject_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX ask_history_node_id_remote_node_name_subject_idx ON public.ask_history USING btree (node_id, remote_node_name, subject);
+
+
+--
 -- Name: avatars_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -1839,10 +1910,24 @@ CREATE INDEX avatars_node_id_ordinal_created_at_idx ON public.avatars USING btre
 
 
 --
+-- Name: blocked_instants_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_instants_entry_id_idx ON public.blocked_instants USING btree (entry_id);
+
+
+--
 -- Name: comments_slice_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE INDEX comments_slice_idx ON public.entries USING btree (node_id, parent_id, moment, view_principal, owner_name) WHERE (deleted_at IS NULL);
+
+
+--
+-- Name: contact_upgrades_upgrade_type_node_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX contact_upgrades_upgrade_type_node_id_idx ON public.contact_upgrades USING btree (upgrade_type, node_id);
 
 
 --
@@ -2098,6 +2183,13 @@ CREATE INDEX friend_groups_node_id_idx ON public.friend_groups USING btree (node
 
 
 --
+-- Name: friend_ofs_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX friend_ofs_contact_id_idx ON public.friend_ofs USING btree (contact_id);
+
+
+--
 -- Name: friend_ofs_node_id_remote_node_name_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2105,10 +2197,10 @@ CREATE INDEX friend_ofs_node_id_remote_node_name_idx ON public.friend_ofs USING 
 
 
 --
--- Name: friend_ofs_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: friends_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX friend_ofs_remote_avatar_media_file_id_idx ON public.friend_ofs USING btree (remote_avatar_media_file_id);
+CREATE INDEX friends_contact_id_idx ON public.friends USING btree (contact_id);
 
 
 --
@@ -2123,13 +2215,6 @@ CREATE INDEX friends_friend_group_id_idx ON public.friends USING btree (friend_g
 --
 
 CREATE INDEX friends_node_name_idx ON public.friends USING btree (remote_node_name);
-
-
---
--- Name: friends_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX friends_remote_avatar_media_file_id_idx ON public.friends USING btree (remote_avatar_media_file_id);
 
 
 --
@@ -2560,6 +2645,13 @@ CREATE UNIQUE INDEX stories_tracking_id_idx ON public.stories USING btree (track
 
 
 --
+-- Name: subscribers_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX subscribers_contact_id_idx ON public.subscribers USING btree (contact_id);
+
+
+--
 -- Name: subscribers_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2585,13 +2677,6 @@ CREATE INDEX subscribers_node_id_type_entry_id_idx ON public.subscribers USING b
 --
 
 CREATE INDEX subscribers_node_id_type_feed_name_idx ON public.subscribers USING btree (node_id, subscription_type, feed_name);
-
-
---
--- Name: subscribers_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE INDEX subscribers_remote_avatar_media_file_id_idx ON public.subscribers USING btree (remote_avatar_media_file_id);
 
 
 --
@@ -2623,10 +2708,10 @@ CREATE UNIQUE INDEX tokens_token_idx ON public.tokens USING btree (token);
 
 
 --
--- Name: user_subscriptions_remote_avatar_media_file_id_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: user_subscriptions_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX user_subscriptions_remote_avatar_media_file_id_idx ON public.user_subscriptions USING btree (remote_avatar_media_file_id);
+CREATE INDEX user_subscriptions_contact_id_idx ON public.user_subscriptions USING btree (contact_id);
 
 
 --
@@ -2721,20 +2806,6 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 
 
 --
--- Name: friend_ofs update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
---
-
-CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.friend_ofs FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
-
-
---
--- Name: friends update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
---
-
-CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.friends FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
-
-
---
 -- Name: own_comments update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -2760,20 +2831,6 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 --
 
 CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.stories FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
-
-
---
--- Name: subscribers update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
---
-
-CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.subscribers FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
-
-
---
--- Name: user_subscriptions update_remote_avatar_media_file_id; Type: TRIGGER; Schema: public; Owner: moera
---
-
-CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDATE OF remote_avatar_media_file_id ON public.user_subscriptions FOR EACH ROW EXECUTE FUNCTION public.update_entity_remote_avatar_media_file_id();
 
 
 --
@@ -2852,6 +2909,14 @@ CREATE TRIGGER update_replied_to_avatar_media_file_id AFTER INSERT OR DELETE OR 
 
 ALTER TABLE ONLY public.avatars
     ADD CONSTRAINT avatars_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: blocked_instants blocked_instants_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.blocked_instants
+    ADD CONSTRAINT blocked_instants_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -2999,11 +3064,19 @@ ALTER TABLE ONLY public.entry_sources
 
 
 --
--- Name: friend_ofs friend_ofs_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: friend_ofs friend_ofs_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.friend_ofs
-    ADD CONSTRAINT friend_ofs_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+    ADD CONSTRAINT friend_ofs_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: friends friends_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.friends
+    ADD CONSTRAINT friends_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -3012,14 +3085,6 @@ ALTER TABLE ONLY public.friend_ofs
 
 ALTER TABLE ONLY public.friends
     ADD CONSTRAINT friends_friend_group_id_fkey FOREIGN KEY (friend_group_id) REFERENCES public.friend_groups(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: friends friends_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.friends
-    ADD CONSTRAINT friends_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
@@ -3191,6 +3256,14 @@ ALTER TABLE ONLY public.stories
 
 
 --
+-- Name: subscribers subscribers_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.subscribers
+    ADD CONSTRAINT subscribers_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: subscribers subscribers_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -3199,19 +3272,11 @@ ALTER TABLE ONLY public.subscribers
 
 
 --
--- Name: subscribers subscribers_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.subscribers
-    ADD CONSTRAINT subscribers_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
-
-
---
--- Name: user_subscriptions user_subscriptions_remote_avatar_media_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: user_subscriptions user_subscriptions_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.user_subscriptions
-    ADD CONSTRAINT user_subscriptions_remote_avatar_media_file_id_fkey FOREIGN KEY (remote_avatar_media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+    ADD CONSTRAINT user_subscriptions_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
