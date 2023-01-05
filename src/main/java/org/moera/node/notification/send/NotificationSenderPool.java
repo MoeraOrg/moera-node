@@ -29,6 +29,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.model.notification.Notification;
@@ -54,6 +55,9 @@ public class NotificationSenderPool {
 
     private final ConcurrentMap<SingleDirection, NotificationSender> senders = new ConcurrentHashMap<>();
     private final List<NotificationSender> pausedSenders = Collections.synchronizedList(new ArrayList<>());
+
+    @Inject
+    private UniversalContext universalContext;
 
     @Inject
     private Domains domains;
@@ -98,6 +102,7 @@ public class NotificationSenderPool {
     }
 
     private void resend(PendingNotification pending) {
+        universalContext.associate(pending.getNodeId());
         SingleDirection direction = new SingleDirection(pending.getNodeId(), pending.getNodeName());
         Notification notification;
         try {
