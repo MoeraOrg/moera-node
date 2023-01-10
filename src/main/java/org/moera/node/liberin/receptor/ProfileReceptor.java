@@ -34,7 +34,7 @@ public class ProfileReceptor extends LiberinReceptorBase {
     public void nodeNameChanged(NodeNameChangedLiberin liberin) {
         send(liberin, new NodeNameChangedEvent(liberin.getNodeName(), liberin.getOptions(), liberin.getAvatar()));
         if (ObjectUtils.isEmpty(liberin.getPrevNodeName())) {
-            send(new DomainCreatedMail(liberin.getNodeName()));
+            sendToRoot(new DomainCreatedMail(liberin.getNodeName()));
         }
     }
 

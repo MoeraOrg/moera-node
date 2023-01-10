@@ -46,6 +46,10 @@ public abstract class LiberinReceptorBase {
         mailService.send(universalContext.nodeId(), mail);
     }
 
+    protected void sendToRoot(Mail mail) {
+        mailService.sendToRoot(universalContext.nodeId(), mail);
+    }
+
     protected void send(PushContent pushContent) {
         pushService.send(universalContext.nodeId(), pushContent);
     }
