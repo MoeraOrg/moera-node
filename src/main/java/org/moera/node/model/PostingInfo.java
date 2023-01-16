@@ -161,7 +161,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         if (stories != null && !stories.isEmpty()) {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
-        if (posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()) {
+        if (accessChecker.isPrincipal(Principal.ADMIN)
+                && posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()) {
             blockedInstants = posting.getBlockedInstants().stream()
                     .map(BlockedPostingInstantInfo::new)
                     .collect(Collectors.toList());

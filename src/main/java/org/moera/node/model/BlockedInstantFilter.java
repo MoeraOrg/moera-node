@@ -2,19 +2,15 @@ package org.moera.node.model;
 
 import java.util.UUID;
 
-import org.moera.node.data.BlockedInstant;
 import org.moera.node.data.StoryType;
-import org.moera.node.util.Util;
 
-public class BlockedInstantAttributes {
+public class BlockedInstantFilter {
 
     private StoryType storyType;
-
     private UUID entryId;
     private String remoteNodeName;
     private String remotePostingId;
     private String remoteOwnerName;
-    private Long deadline;
 
     public StoryType getStoryType() {
         return storyType;
@@ -54,22 +50,6 @@ public class BlockedInstantAttributes {
 
     public void setRemoteOwnerName(String remoteOwnerName) {
         this.remoteOwnerName = remoteOwnerName;
-    }
-
-    public Long getDeadline() {
-        return deadline;
-    }
-
-    public void setDeadline(Long deadline) {
-        this.deadline = deadline;
-    }
-
-    public void toBlockedInstant(BlockedInstant blockedInstant) {
-        blockedInstant.setStoryType(storyType);
-        blockedInstant.setRemoteNodeName(remoteNodeName);
-        blockedInstant.setRemotePostingId(remotePostingId);
-        blockedInstant.setRemoteOwnerName(remoteOwnerName);
-        blockedInstant.setDeadline(Util.toTimestamp(deadline));
     }
 
 }

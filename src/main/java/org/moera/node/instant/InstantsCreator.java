@@ -5,12 +5,14 @@ import javax.inject.Inject;
 
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
+import org.moera.node.data.StoryType;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.FeedStatus;
+import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.operations.StoryOperations;
 
 public class InstantsCreator {
@@ -21,12 +23,37 @@ public class InstantsCreator {
     @Inject
     private StoryOperations storyOperations;
 
+    @Inject
+    private BlockedInstantOperations blockedInstantOperations;
+
     protected UUID nodeId() {
         return universalContext.nodeId();
     }
 
     protected String nodeName() {
         return universalContext.nodeName();
+    }
+
+    protected boolean isBlocked(StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
+                                String remoteOwnerName) {
+        return blockedInstantOperations.count(
+                nodeId(), storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName) > 0;
+    }
+
+    protected boolean isBlocked(StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId) {
+        return isBlocked(storyType, entryId, remoteNodeName, remotePostingId, null);
+    }
+
+    protected boolean isBlocked(StoryType storyType, UUID entryId, String remoteNodeName) {
+        return isBlocked(storyType, entryId, remoteNodeName, null, null);
+    }
+
+    protected boolean isBlocked(StoryType storyType, UUID entryId) {
+        return isBlocked(storyType, entryId, null, null, null);
+    }
+
+    protected boolean isBlocked(StoryType storyType) {
+        return isBlocked(storyType, null, null, null, null);
     }
 
     protected void storyAdded(Story story) {

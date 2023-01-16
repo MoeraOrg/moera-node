@@ -32,6 +32,10 @@ public class FriendInstants extends InstantsCreator {
     }
 
     private void createStory(FriendOf friend, StoryType storyType) {
+        if (isBlocked(storyType, null, null, null, friend.getRemoteNodeName())) {
+            return;
+        }
+
         Story story = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(friend.getRemoteNodeName());

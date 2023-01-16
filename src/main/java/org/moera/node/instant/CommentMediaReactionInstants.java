@@ -44,6 +44,10 @@ public class CommentMediaReactionInstants extends InstantsCreator {
         StoryType storyType = reactionNegative ? StoryType.COMMENT_MEDIA_REACTION_ADDED_NEGATIVE
                 : StoryType.COMMENT_MEDIA_REACTION_ADDED_POSITIVE;
 
+        if (isBlocked(storyType, null, parentPostingNodeName, parentPostingId, reactionNodeName)) {
+            return;
+        }
+
         boolean isNewStory = false;
         Story story = storyRepository.findFullByRemotePostingId(
                         nodeId(), Feed.INSTANT, storyType, nodeName, mediaPostingId).stream()
@@ -173,6 +177,10 @@ public class CommentMediaReactionInstants extends InstantsCreator {
 
     public void addingFailed(String nodeName, String mediaPostingId, String parentPostingId, String parentCommentId,
                              String parentMediaId, PostingInfo parentPostingInfo, CommentInfo parentCommentInfo) {
+        if (isBlocked(StoryType.COMMENT_MEDIA_REACTION_FAILED, null, nodeName, parentPostingId)) {
+            return;
+        }
+
         String postingOwnerName = parentPostingInfo != null ? parentPostingInfo.getOwnerName() : "";
         String postingOwnerFullName = parentPostingInfo != null ? parentPostingInfo.getOwnerFullName() : null;
         String postingOwnerGender = parentPostingInfo != null ? parentPostingInfo.getOwnerGender() : null;

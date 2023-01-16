@@ -37,6 +37,10 @@ public class RemoteCommentInstants extends InstantsCreator {
             return;
         }
 
+        if (isBlocked(StoryType.REMOTE_COMMENT_ADDED, null, nodeName, postingId, commentOwnerName)) {
+            return;
+        }
+
         boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(nodeId(),
                 StoryType.REMOTE_COMMENT_ADDED, nodeName, postingId, commentId).isEmpty();
         if (alreadyReported) {

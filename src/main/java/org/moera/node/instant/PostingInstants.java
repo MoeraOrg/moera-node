@@ -23,6 +23,10 @@ public class PostingInstants extends InstantsCreator {
     private StoryRepository storyRepository;
 
     public void subscribingToCommentsFailed(String nodeName, String postingId, PostingInfo postingInfo) {
+        if (isBlocked(StoryType.POSTING_SUBSCRIBE_TASK_FAILED, null, nodeName, postingId)) {
+            return;
+        }
+
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
@@ -57,6 +61,10 @@ public class PostingInstants extends InstantsCreator {
 
     public void updated(String nodeName, String ownerName, String ownerFullName, String ownerGender,
                         AvatarImage ownerAvatar, String id, String heading, String description) {
+        if (isBlocked(StoryType.POSTING_UPDATED, null, nodeName, id, ownerName)) {
+            return;
+        }
+
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_UPDATED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(nodeName);
@@ -89,6 +97,10 @@ public class PostingInstants extends InstantsCreator {
         String remoteGender = nodeInfo != null ? nodeInfo.getGender() : null;
         AvatarImage remoteAvatar = nodeInfo != null ? nodeInfo.getAvatar() : null;
 
+        if (isBlocked(StoryType.POSTING_POST_TASK_FAILED, null, remoteNodeName)) {
+            return;
+        }
+
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_POST_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
@@ -116,6 +128,10 @@ public class PostingInstants extends InstantsCreator {
         String remoteGender = nodeInfo != null ? nodeInfo.getGender() : null;
         AvatarImage remoteAvatar = nodeInfo != null ? nodeInfo.getAvatar() : null;
         String postingHeading = postingInfo != null ? postingInfo.getHeading() : "";
+
+        if (isBlocked(StoryType.POSTING_UPDATE_TASK_FAILED, null, remoteNodeName, postingId)) {
+            return;
+        }
 
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.POSTING_UPDATE_TASK_FAILED);
         story.setFeedName(Feed.INSTANT);

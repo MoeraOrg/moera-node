@@ -36,6 +36,10 @@ public class SubscriberInstants extends InstantsCreator {
     }
 
     private void createStory(Subscriber subscriber, StoryType storyType) {
+        if (isBlocked(storyType, null, null, null, subscriber.getRemoteNodeName())) {
+            return;
+        }
+
         Story story = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(subscriber.getRemoteNodeName());

@@ -36,6 +36,10 @@ public class ReplyCommentInstants extends InstantsCreator {
             return;
         }
 
+        if (isBlocked(StoryType.REPLY_COMMENT, null, nodeName, postingId, commentOwnerName)) {
+            return;
+        }
+
         boolean alreadyReported = !storyRepository.findSubsByRemotePostingAndCommentId(nodeId(),
                 StoryType.REPLY_COMMENT, nodeName, postingId, commentId).isEmpty();
         if (alreadyReported) {

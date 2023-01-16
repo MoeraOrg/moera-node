@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
-import org.moera.node.data.BlockedInstantRepository;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
@@ -32,9 +31,6 @@ public class CommentInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    @Inject
-    private BlockedInstantRepository blockedInstantRepository;
-
     public void added(Comment comment) {
         if (comment.getOwnerName().equals(nodeName())
                 // 'reply-comment' instant is expected to be created for such a comment
@@ -42,9 +38,7 @@ public class CommentInstants extends InstantsCreator {
             return;
         }
 
-        boolean blocked = blockedInstantRepository.findByStoryTypeAndEntryId(
-                nodeId(), StoryType.COMMENT_ADDED, comment.getPosting().getId()).isPresent();
-        if (blocked) {
+        if (isBlocked(StoryType.COMMENT_ADDED, comment.getPosting().getId(), null, null, comment.getOwnerName())) {
             return;
         }
 
@@ -151,6 +145,10 @@ public class CommentInstants extends InstantsCreator {
     }
 
     public void addingFailed(String remoteNodeName, String remotePostingId, PostingInfo postingInfo) {
+        if (isBlocked(StoryType.COMMENT_POST_TASK_FAILED, null, remoteNodeName, remotePostingId)) {
+            return;
+        }
+
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;
@@ -177,6 +175,10 @@ public class CommentInstants extends InstantsCreator {
 
     public void updateFailed(String remoteNodeName, String remotePostingId, PostingInfo postingInfo,
                              String remoteCommentId, CommentInfo commentInfo) {
+        if (isBlocked(StoryType.COMMENT_UPDATE_TASK_FAILED, null, remotePostingId, remoteCommentId)) {
+            return;
+        }
+
         String postingOwnerName = postingInfo != null ? postingInfo.getOwnerName() : "";
         String postingOwnerFullName = postingInfo != null ? postingInfo.getOwnerFullName() : null;
         String postingOwnerGender = postingInfo != null ? postingInfo.getOwnerGender() : null;

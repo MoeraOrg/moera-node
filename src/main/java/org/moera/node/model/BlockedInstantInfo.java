@@ -11,7 +11,11 @@ public class BlockedInstantInfo {
     private String id;
     private StoryType storyType;
     private String entryId;
+    private String remoteNodeName;
+    private String remotePostingId;
+    private String remoteOwnerName;
     private long createdAt;
+    private Long deadline;
 
     public BlockedInstantInfo() {
     }
@@ -22,7 +26,11 @@ public class BlockedInstantInfo {
         if (blockedInstant.getEntry() != null) {
             entryId = blockedInstant.getEntry().getId().toString();
         }
+        remoteNodeName = blockedInstant.getRemoteNodeName();
+        remotePostingId = blockedInstant.getRemotePostingId();
+        remoteOwnerName = blockedInstant.getRemoteOwnerName();
         createdAt = Util.toEpochSecond(blockedInstant.getCreatedAt());
+        deadline = Util.toEpochSecond(blockedInstant.getDeadline());
     }
 
     public String getId() {
@@ -49,12 +57,44 @@ public class BlockedInstantInfo {
         this.entryId = entryId;
     }
 
+    public String getRemoteNodeName() {
+        return remoteNodeName;
+    }
+
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemotePostingId() {
+        return remotePostingId;
+    }
+
+    public void setRemotePostingId(String remotePostingId) {
+        this.remotePostingId = remotePostingId;
+    }
+
+    public String getRemoteOwnerName() {
+        return remoteOwnerName;
+    }
+
+    public void setRemoteOwnerName(String remoteOwnerName) {
+        this.remoteOwnerName = remoteOwnerName;
+    }
+
     public long getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Long deadline) {
+        this.deadline = deadline;
     }
 
 }

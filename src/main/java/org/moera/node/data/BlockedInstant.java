@@ -28,8 +28,16 @@ public class BlockedInstant {
     @ManyToOne
     private Entry entry;
 
+    private String remoteNodeName;
+
+    private String remotePostingId;
+
+    private String remoteOwnerName;
+
     @NotNull
     private Timestamp createdAt = Util.now();
+
+    private Timestamp deadline;
 
     public UUID getId() {
         return id;
@@ -63,12 +71,44 @@ public class BlockedInstant {
         this.entry = entry;
     }
 
+    public String getRemoteNodeName() {
+        return remoteNodeName;
+    }
+
+    public void setRemoteNodeName(String remoteNodeName) {
+        this.remoteNodeName = remoteNodeName;
+    }
+
+    public String getRemotePostingId() {
+        return remotePostingId;
+    }
+
+    public void setRemotePostingId(String remotePostingId) {
+        this.remotePostingId = remotePostingId;
+    }
+
+    public String getRemoteOwnerName() {
+        return remoteOwnerName;
+    }
+
+    public void setRemoteOwnerName(String remoteOwnerName) {
+        this.remoteOwnerName = remoteOwnerName;
+    }
+
     public Timestamp getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Timestamp deadline) {
+        this.deadline = deadline;
     }
 
 }

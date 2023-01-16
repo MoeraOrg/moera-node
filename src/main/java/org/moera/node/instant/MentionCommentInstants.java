@@ -22,6 +22,9 @@ public class MentionCommentInstants extends InstantsCreator {
                       AvatarImage postingAvatar, String postingId, String postingHeading, String commentOwnerName,
                       String commentOwnerFullName, String commentOwnerGender, AvatarImage commentOwnerAvatar,
                       String commentId, String commentHeading) {
+        if (isBlocked(StoryType.MENTION_COMMENT, null, nodeName, postingId, commentOwnerName)) {
+            return;
+        }
         Story story = findStory(nodeName, postingId, commentId);
         if (story != null) {
             return;

@@ -21,6 +21,10 @@ public class AskInstants extends InstantsCreator {
 
     public void askedToSubscribe(String remoteNodeName, String remoteFullName, String remoteGender,
                                  AvatarImage remoteAvatar, String message) {
+        if (isBlocked(StoryType.ASKED_TO_SUBSCRIBE, null, null, null, remoteNodeName)) {
+            return;
+        }
+
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.ASKED_TO_SUBSCRIBE);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
@@ -43,6 +47,10 @@ public class AskInstants extends InstantsCreator {
 
     public void askedToFriend(String remoteNodeName, String remoteFullName, String remoteGender,
                               AvatarImage remoteAvatar, UUID friendGroupId, String friendGroupTitle, String message) {
+        if (isBlocked(StoryType.ASKED_TO_FRIEND, null, null, null, remoteNodeName)) {
+            return;
+        }
+
         Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.ASKED_TO_FRIEND);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);

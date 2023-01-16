@@ -20,6 +20,9 @@ public class MentionPostingInstants extends InstantsCreator {
 
     public void added(String nodeName, String ownerName, String ownerFullName, String ownerGender,
                       AvatarImage ownerAvatar, String id, String heading) {
+        if (isBlocked(StoryType.MENTION_POSTING, null, nodeName, id, ownerName)) {
+            return;
+        }
         Story story = findStory(nodeName, id);
         if (story != null) {
             return;

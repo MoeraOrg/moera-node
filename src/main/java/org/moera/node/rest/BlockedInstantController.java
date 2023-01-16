@@ -1,7 +1,9 @@
 package org.moera.node.rest;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -18,9 +20,11 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.BlockedInstantAddedLiberin;
 import org.moera.node.liberin.model.BlockedInstantDeletedLiberin;
 import org.moera.node.model.BlockedInstantAttributes;
+import org.moera.node.model.BlockedInstantFilter;
 import org.moera.node.model.BlockedInstantInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
+import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +52,19 @@ public class BlockedInstantController {
     @Inject
     private BlockedInstantRepository blockedInstantRepository;
 
+    @Inject
+    private BlockedInstantOperations blockedInstantOperations;
+
     @PostMapping
     @Admin
     @Transactional
     public ResponseEntity<BlockedInstantInfo> post(
             @Valid @RequestBody BlockedInstantAttributes blockedInstantAttributes) {
-        log.info("POST /blocked-instants (storyType = {}, entryId = {}",
+        log.info("POST /blocked-instants (storyType = {}, entryId = {}, remoteNodeName = {}, remotePostingId = {}",
                 LogUtil.format(blockedInstantAttributes.getStoryType().toString()),
-                LogUtil.format(blockedInstantAttributes.getEntryId()));
+                LogUtil.format(blockedInstantAttributes.getEntryId()),
+                LogUtil.format(blockedInstantAttributes.getRemoteNodeName()),
+                LogUtil.format(blockedInstantAttributes.getRemotePostingId()));
 
         Entry entry = null;
         if (blockedInstantAttributes.getEntryId() != null) {
@@ -63,12 +72,17 @@ public class BlockedInstantController {
                     .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
         }
 
+        blockedInstantOperations.findExact(requestContext.nodeId(), blockedInstantAttributes.getStoryType(),
+                blockedInstantAttributes.getEntryId(), blockedInstantAttributes.getRemoteNodeName(),
+                blockedInstantAttributes.getRemotePostingId(), blockedInstantAttributes.getRemoteOwnerName())
+                .forEach(blockedInstantRepository::delete);
+
         BlockedInstant blockedInstant = new BlockedInstant();
         blockedInstant.setId(UUID.randomUUID());
         blockedInstant.setNodeId(requestContext.nodeId());
-        blockedInstant.setStoryType(blockedInstantAttributes.getStoryType());
         blockedInstant.setEntry(entry);
         blockedInstant.setCreatedAt(Util.now());
+        blockedInstantAttributes.toBlockedInstant(blockedInstant);
         blockedInstant = blockedInstantRepository.save(blockedInstant);
 
         requestContext.send(new BlockedInstantAddedLiberin(blockedInstant));
@@ -102,6 +116,20 @@ public class BlockedInstantController {
         requestContext.send(new BlockedInstantDeletedLiberin(blockedInstant));
 
         return Result.OK;
+    }
+
+    @PostMapping("/search")
+    @Admin
+    @Transactional
+    public List<BlockedInstantInfo> post(@Valid @RequestBody BlockedInstantFilter blockedInstantFilter) {
+        log.info("POST /blocked-instants/search (storyType = {})",
+                LogUtil.format(blockedInstantFilter.getStoryType().toString()));
+
+        return blockedInstantOperations.search(requestContext.nodeId(), blockedInstantFilter.getStoryType(),
+                        blockedInstantFilter.getEntryId(), blockedInstantFilter.getRemoteNodeName(),
+                        blockedInstantFilter.getRemotePostingId(), blockedInstantFilter.getRemoteOwnerName())
+                .map(BlockedInstantInfo::new)
+                .collect(Collectors.toList());
     }
 
 }
