@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRelated;
 import org.moera.node.data.ContactRepository;
@@ -76,6 +77,36 @@ public class ContactOperations {
         }
     }
 
+    public Contact assignCloseness(String remoteNodeName, float closeness) {
+        return assignCloseness(universalContext.nodeId(), remoteNodeName, closeness);
+    }
+
+    public Contact assignCloseness(UUID nodeId, String remoteNodeName, float closeness) {
+        if (remoteNodeName == null) {
+            return null;
+        }
+
+        lock.lock(Pair.of(nodeId, remoteNodeName));
+        try {
+            return Transaction.execute(txManager, () -> {
+                Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
+                if (contact == null) {
+                    contact = new Contact();
+                    contact.setId(UUID.randomUUID());
+                    contact.setNodeId(nodeId);
+                    contact.setRemoteNodeName(remoteNodeName);
+                    contact = contactRepository.save(contact);
+                }
+                contact.setCloseness(closeness);
+                return contact;
+            });
+        } catch (Throwable e) {
+            throw new ContactUpdateException(e);
+        } finally {
+            lock.unlock(Pair.of(nodeId, remoteNodeName));
+        }
+    }
+
     public Contact updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
         if (remoteNodeName == null) {
             return null;
@@ -113,6 +144,24 @@ public class ContactOperations {
     public Contact updateFriendOfCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
                 contact -> contact.setFriendOfCount(contact.getFriendOfCount() + delta));
+    }
+
+    public Contact updateBlockedUserCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setBlockedUserCount(contact.getBlockedUserCount() + delta));
+    }
+
+    public Contact updateBlockedUserPostingCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setBlockedUserPostingCount(contact.getBlockedUserCount() + delta));
+    }
+
+    public Contact updateBlockedUserCounts(BlockedUser blockedUser, int delta) {
+        if (blockedUser.isGlobal()) {
+            return updateBlockedUserCount(blockedUser.getRemoteNodeName(), delta);
+        } else {
+            return updateBlockedUserPostingCount(blockedUser.getRemoteNodeName(), delta);
+        }
     }
 
     public Contact updateViewPrincipal(ContactRelated related) {

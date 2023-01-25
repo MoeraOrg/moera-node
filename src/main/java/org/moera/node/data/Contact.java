@@ -53,6 +53,12 @@ public class Contact {
     private int friendOfCount;
 
     @NotNull
+    private int blockedUserCount;
+
+    @NotNull
+    private int blockedUserPostingCount;
+
+    @NotNull
     private float closenessBase;
 
     @NotNull
@@ -159,6 +165,22 @@ public class Contact {
 
     public void setFriendOfCount(int friendOfCount) {
         this.friendOfCount = friendOfCount;
+    }
+
+    public int getBlockedUserCount() {
+        return blockedUserCount;
+    }
+
+    public void setBlockedUserCount(int blockedUserCount) {
+        this.blockedUserCount = blockedUserCount;
+    }
+
+    public int getBlockedUserPostingCount() {
+        return blockedUserPostingCount;
+    }
+
+    public void setBlockedUserPostingCount(int blockedUserPostingCount) {
+        this.blockedUserPostingCount = blockedUserPostingCount;
     }
 
     public float getClosenessBase() {

@@ -591,3 +591,15 @@
   privileged: true
   defaultValue: true
   title: Do not allow to unsubscribe from the automatically subscribed blog
+
+- name: blocked-users.view
+  type: Principal
+  defaultValue: public
+  title: List of blocked users is visible to
+  modifiers:
+    principals:
+      - public
+      - signed
+      - subscribed
+      - friends
+      - admin

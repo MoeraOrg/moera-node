@@ -11,9 +11,13 @@ public class BlockedInstantAttributes {
     private StoryType storyType;
 
     private UUID entryId;
+
     private String remoteNodeName;
+
     private String remotePostingId;
+
     private String remoteOwnerName;
+
     private Long deadline;
 
     public StoryType getStoryType() {

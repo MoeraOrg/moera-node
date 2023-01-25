@@ -24,6 +24,7 @@ import org.moera.node.model.BlockedInstantFilter;
 import org.moera.node.model.BlockedInstantInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -60,11 +61,15 @@ public class BlockedInstantController {
     @Transactional
     public ResponseEntity<BlockedInstantInfo> post(
             @Valid @RequestBody BlockedInstantAttributes blockedInstantAttributes) {
-        log.info("POST /blocked-instants (storyType = {}, entryId = {}, remoteNodeName = {}, remotePostingId = {}",
+        log.info("POST /blocked-instants (storyType = {}, entryId = {}, remoteNodeName = {}, remotePostingId = {})",
                 LogUtil.format(blockedInstantAttributes.getStoryType().toString()),
                 LogUtil.format(blockedInstantAttributes.getEntryId()),
                 LogUtil.format(blockedInstantAttributes.getRemoteNodeName()),
                 LogUtil.format(blockedInstantAttributes.getRemotePostingId()));
+
+        if (blockedInstantAttributes.getStoryType() == null) {
+            throw new ValidationFailure("blockedInstantAttributes.storyType.blank");
+        }
 
         Entry entry = null;
         if (blockedInstantAttributes.getEntryId() != null) {
