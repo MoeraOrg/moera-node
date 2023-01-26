@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
+import org.moera.node.auth.UserBlockedException;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -170,6 +171,14 @@ public class ExceptionsControllerAdvice {
     public Result carteInvalid(InvalidCarteException e) {
         String message = messageSource.getMessage(e.getErrorCode(), null, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result userBlocked(UserBlockedException e, HttpServletResponse response) {
+        String errorCode = "authentication.blocked";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message);
     }
 
 }

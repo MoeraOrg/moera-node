@@ -9,6 +9,8 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.UserBlockedException;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Reaction;
@@ -30,6 +32,7 @@ import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
@@ -76,6 +79,9 @@ public class CommentReactionController {
     private ReactionTotalOperations reactionTotalOperations;
 
     @Inject
+    private BlockedUserOperations blockedUserOperations;
+
+    @Inject
     private PlatformTransactionManager txManager;
 
     private final ParametrizedLock<UUID> lock = new ParametrizedLock<>();
@@ -112,6 +118,9 @@ public class CommentReactionController {
                 }
                 if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
                     throw new ObjectNotFoundFailure("comment.not-found");
+                }
+                if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
+                    throw new UserBlockedException();
                 }
                 OperationsValidator.validateOperations(reactionDescription::getPrincipal,
                         OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
@@ -158,6 +167,9 @@ public class CommentReactionController {
         if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
                 && !requestContext.isClient(ownerName)) {
             throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+            throw new UserBlockedException();
         }
         OperationsValidator.validateOperations(reactionOverride::getPrincipal,
                 OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
@@ -289,6 +301,9 @@ public class CommentReactionController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+            throw new UserBlockedException();
+        }
 
         reactionRepository.deleteAllByEntryId(commentId, Util.now());
         reactionTotalRepository.deleteAllByEntryId(commentId);
@@ -322,6 +337,9 @@ public class CommentReactionController {
                 }
                 if (!comment.getPosting().getId().equals(postingId)) {
                     throw new ObjectNotFoundFailure("comment.wrong-posting");
+                }
+                if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
+                    throw new UserBlockedException();
                 }
 
                 var liberin = new CommentReactionDeletedLiberin(comment);

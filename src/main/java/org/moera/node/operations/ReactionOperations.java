@@ -17,7 +17,9 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
@@ -84,6 +86,9 @@ public class ReactionOperations {
     private MediaOperations mediaOperations;
 
     @Inject
+    private BlockedUserOperations blockedUserOperations;
+
+    @Inject
     private PlatformTransactionManager txManager;
 
     private final MomentFinder momentFinder = new MomentFinder();
@@ -121,6 +126,10 @@ public class ReactionOperations {
             if (reactionDescription.isNegative()
                     && !requestContext.isPrincipal(entry.getAddNegativeReactionE())) {
                 throw new AuthenticationException();
+            }
+            UUID postingId = entry.getParent() != null ? entry.getParent().getId() : entry.getId();
+            if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
+                throw new UserBlockedException();
             }
         }
 

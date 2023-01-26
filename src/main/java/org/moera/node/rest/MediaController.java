@@ -22,7 +22,9 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.AuthenticationCategory;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.UserBlockedException;
 import org.moera.node.config.Config;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
@@ -46,6 +48,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
@@ -87,6 +90,9 @@ public class MediaController {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private BlockedUserOperations blockedUserOperations;
 
     @Inject
     @PersistenceContext
@@ -143,6 +149,9 @@ public class MediaController {
         if (requestContext.getClientName() == null) {
             throw new AuthenticationException();
         }
+        if (isBlocked()) {
+            throw new UserBlockedException();
+        }
 
         var tmp = mediaOperations.tmpFile();
         try {
@@ -164,6 +173,12 @@ public class MediaController {
         }
     }
 
+    private boolean isBlocked() {
+        return (!requestContext.getOptions().getBool("posting.non-admin.allowed")
+                    || blockedUserOperations.isBlocked(BlockedOperation.POSTING))
+                && blockedUserOperations.isBlocked(BlockedOperation.COMMENT);
+    }
+
     @PostMapping("/private")
     @Transactional
     public PrivateMediaFileInfo postPrivate(@RequestHeader("Content-Type") MediaType mediaType,
@@ -174,6 +189,9 @@ public class MediaController {
 
         if (requestContext.getClientName() == null) {
             throw new AuthenticationException();
+        }
+        if (isBlocked()) {
+            throw new UserBlockedException();
         }
 
         var tmp = mediaOperations.tmpFile();

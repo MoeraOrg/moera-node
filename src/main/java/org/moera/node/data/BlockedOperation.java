@@ -7,6 +7,7 @@ public enum BlockedOperation {
 
     REACTION,
     COMMENT,
+    POSTING,
     VISIBILITY,
     INSTANT;
 

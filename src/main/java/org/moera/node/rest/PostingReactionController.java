@@ -13,8 +13,9 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.UserBlockedException;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.Posting;
@@ -39,6 +40,7 @@ import org.moera.node.model.ReactionsFilter;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.ReactionOperations;
 import org.moera.node.operations.ReactionTotalOperations;
@@ -86,6 +88,9 @@ public class PostingReactionController {
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
+
+    @Inject
+    private BlockedUserOperations blockedUserOperations;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -182,6 +187,9 @@ public class PostingReactionController {
         if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
                 && !requestContext.isClient(ownerName)) {
             throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
+            throw new UserBlockedException();
         }
         OperationsValidator.validateOperations(reactionOverride::getPrincipal,
                 OperationsValidator.POSTING_REACTION_OPERATIONS, false,
@@ -293,15 +301,20 @@ public class PostingReactionController {
     }
 
     @DeleteMapping("/{postingId}/reactions")
-    @Admin
     @Transactional
     public Result deleteAll(@PathVariable UUID postingId) {
         log.info("DELETE /postings/{postingId}/reactions (postingId = {})", LogUtil.format(postingId));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+        if (!requestContext.isAdmin() && !requestContext.isClient(posting.getOwnerName())) {
+            throw new AuthenticationException();
+        }
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
+            throw new UserBlockedException();
         }
 
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
@@ -313,6 +326,7 @@ public class PostingReactionController {
     }
 
     @DeleteMapping("/{postingId}/reactions/{ownerName}")
+    @Transactional
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) throws Throwable {
         log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
@@ -324,14 +338,17 @@ public class PostingReactionController {
             if (!requestContext.isPrincipal(posting.getViewE())) {
                 throw new ObjectNotFoundFailure("posting.not-found");
             }
+            if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
+                throw new UserBlockedException();
+            }
 
             ReactionTotalsInfo info = Transaction.execute(txManager, () -> {
                 if (posting.isOriginal()) {
                     return deleteFromOriginal(ownerName, posting);
-                } else if (requestContext.isAdmin()) {
+                } else {
                     deleteFromPickedAtHome(posting);
+                    return null;
                 }
-                return null;
             });
             return info != null ? info : reactionTotalOperations.getInfo(posting).getClientInfo();
         } finally {

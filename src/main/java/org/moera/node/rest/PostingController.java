@@ -19,7 +19,9 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
@@ -52,6 +54,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
@@ -114,6 +117,9 @@ public class PostingController {
     private StoryOperations storyOperations;
 
     @Inject
+    private BlockedUserOperations blockedUserOperations;
+
+    @Inject
     private TextConverter textConverter;
 
     @Inject
@@ -141,6 +147,9 @@ public class PostingController {
         byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
+            throw new UserBlockedException();
         }
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
                 postingText.getMedia(),
@@ -191,6 +200,9 @@ public class PostingController {
         }
         if (!requestContext.isPrincipal(posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
+            throw new UserBlockedException();
         }
         if (postingText.getPublications() != null && !postingText.getPublications().isEmpty()) {
             throw new ValidationFailure("postingText.publications.cannot-modify");
@@ -327,6 +339,9 @@ public class PostingController {
         EntryRevision latest = posting.getCurrentRevision();
         if (!requestContext.isPrincipal(posting.getDeleteE())) {
             throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
+            throw new UserBlockedException();
         }
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         postingOperations.deletePosting(posting);

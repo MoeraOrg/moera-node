@@ -13,6 +13,7 @@ import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.QBlockedUser;
+import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,6 +21,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class BlockedUserOperations {
+
+    @Inject
+    private RequestContext requestContext;
 
     @Inject
     private UniversalContext universalContext;
@@ -54,20 +58,32 @@ public class BlockedUserOperations {
         return StreamSupport.stream(blockedUserRepository.findAll(where).spliterator(), false);
     }
 
-    public long count(
-            UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
-            String entryPostingId
-    ) {
+    public long count(UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId,
+                      String entryNodeName, String entryPostingId) {
         Predicate where = buildFilter(
                 nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId);
         return blockedUserRepository.count(where);
     }
 
-    public boolean isBlocked(
-            UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
-            String entryPostingId
-    ) {
+    public boolean isBlocked(UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId,
+                             String entryNodeName, String entryPostingId) {
         return count(nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId) > 0;
+    }
+
+    public boolean isBlocked(BlockedOperation blockedOperation, UUID entryId, String entryNodeName,
+                             String entryPostingId) {
+        return isBlocked(requestContext.nodeId(), blockedOperation, requestContext.getClientName(), entryId,
+                entryNodeName, entryPostingId);
+    }
+
+    public boolean isBlocked(BlockedOperation blockedOperation, UUID entryId) {
+        return isBlocked(requestContext.nodeId(), blockedOperation, requestContext.getClientName(), entryId,
+                null, null);
+    }
+
+    public boolean isBlocked(BlockedOperation blockedOperation) {
+        return isBlocked(requestContext.nodeId(), blockedOperation, requestContext.getClientName(), null,
+                null, null);
     }
 
     private static BooleanBuilder buildFilter(

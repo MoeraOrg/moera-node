@@ -28,7 +28,9 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -68,6 +70,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
@@ -131,6 +134,9 @@ public class CommentController {
     private MediaOperations mediaOperations;
 
     @Inject
+    private BlockedUserOperations blockedUserOperations;
+
+    @Inject
     private TextConverter textConverter;
 
     @Inject
@@ -180,6 +186,9 @@ public class CommentController {
         }
         if (!requestContext.isPrincipal(posting.getAddCommentE())) {
             throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+            throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(
                 commentText.getOwnerAvatar(),
@@ -250,6 +259,9 @@ public class CommentController {
         }
         if (!requestContext.isPrincipal(comment.getViewE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+            throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(
                 commentText.getOwnerAvatar(),
@@ -370,6 +382,9 @@ public class CommentController {
         }
         if (!requestContext.isPrincipal(posting.getOverrideCommentE())) {
             throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+            throw new UserBlockedException();
         }
         OperationsValidator.validateOperations(commentMassAttributes::getSeniorPrincipal,
                 OperationsValidator.COMMENT_OPERATIONS, true,
@@ -648,6 +663,9 @@ public class CommentController {
         }
         if (!requestContext.isPrincipal(comment.getDeleteE())) {
             throw new AuthenticationException();
+        }
+        if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
+            throw new UserBlockedException();
         }
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
