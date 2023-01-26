@@ -21,6 +21,7 @@ import javax.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
@@ -478,7 +479,7 @@ public class CommentController {
         return sliceInfo;
     }
 
-    private Predicate storyFilter(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment) {
+    private Predicate commentFilter(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment) {
         QComment comment = QComment.comment;
         BooleanBuilder where = new BooleanBuilder();
         where.and(comment.nodeId.eq(nodeId))
@@ -487,34 +488,46 @@ public class CommentController {
                 .and(comment.moment.loe(beforeMoment))
                 .and(comment.deletedAt.isNull());
         if (!requestContext.isAdmin()) {
-            var viewPrincipal = comment.viewPrincipal;
             BooleanBuilder visibility = new BooleanBuilder();
-            visibility.or(viewPrincipal.eq(Principal.PUBLIC));
-            if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
-                visibility.or(viewPrincipal.eq(Principal.SIGNED));
-                BooleanBuilder secret = new BooleanBuilder();
-                secret.and(viewPrincipal.eq(Principal.SECRET));
-                secret.and(comment.parent.ownerName.eq(requestContext.getClientName()));
-                visibility.or(secret);
-                BooleanBuilder priv = new BooleanBuilder();
-                priv.and(viewPrincipal.eq(Principal.PRIVATE));
-                priv.and(comment.ownerName.eq(requestContext.getClientName()));
-                visibility.or(priv);
-            }
-            if (requestContext.getFriendGroups() != null) {
-                for (String friendGroupName : requestContext.getFriendGroups()) {
-                    visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
-                }
-            }
+            visibility.or(visibilityFilter(comment, comment.parentViewPrincipal));
+            BooleanBuilder expr = new BooleanBuilder();
+            expr.and(comment.parentViewPrincipal.eq(Principal.UNSET));
+            expr.and(visibilityFilter(comment, comment.viewPrincipal));
+            visibility.or(expr);
             where.and(visibility);
         }
         return where;
     }
 
+    private Predicate visibilityFilter(QComment comment, SimplePath<Principal> viewPrincipal) {
+        BooleanBuilder visibility = new BooleanBuilder();
+        visibility.or(viewPrincipal.eq(Principal.PUBLIC));
+        if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+            visibility.or(viewPrincipal.eq(Principal.SIGNED));
+            BooleanBuilder secret = new BooleanBuilder();
+            secret.and(viewPrincipal.eq(Principal.SECRET));
+            secret.and(comment.parent.ownerName.eq(requestContext.getClientName()));
+            visibility.or(secret);
+            BooleanBuilder priv = new BooleanBuilder();
+            priv.and(viewPrincipal.eq(Principal.PRIVATE));
+            priv.and(comment.ownerName.eq(requestContext.getClientName()));
+            visibility.or(priv);
+        }
+        if (requestContext.isSubscribedToClient()) {
+            visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
+        }
+        if (requestContext.getFriendGroups() != null) {
+            for (String friendGroupName : requestContext.getFriendGroups()) {
+                visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
+            }
+        }
+        return visibility;
+    }
+
     private Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
                                     Sort.Direction direction) {
         return commentRepository.findAll(
-                storyFilter(nodeId, parentId, afterMoment, beforeMoment),
+                commentFilter(nodeId, parentId, afterMoment, beforeMoment),
                 PageRequest.of(0, limit + 1, direction, "moment"));
     }
 
@@ -533,7 +546,9 @@ public class CommentController {
                 .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
                 .leftJoin(attachmentMediaFile.previews).fetchJoin()
                 .distinct()
-                .where(storyFilter(requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore()))
+                .where(
+                    commentFilter(requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore())
+                )
                 .fetch()
                 .stream()
                 // This should be unnecessary, but let it be for reliability
