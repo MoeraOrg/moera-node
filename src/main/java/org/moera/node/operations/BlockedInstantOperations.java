@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
 import org.moera.node.data.BlockedInstant;
 import org.moera.node.data.BlockedInstantRepository;
 import org.moera.node.data.QBlockedInstant;
@@ -34,7 +35,7 @@ public class BlockedInstantOperations {
             UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
             String remoteOwnerName
     ) {
-        BooleanBuilder where = buildFilter(
+        Predicate where = buildFilter(
                 nodeId, storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName);
         return StreamSupport.stream(blockedInstantRepository.findAll(where).spliterator(), false);
     }
@@ -43,7 +44,7 @@ public class BlockedInstantOperations {
             UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
             String remoteOwnerName
     ) {
-        BooleanBuilder where = buildFilter(
+        Predicate where = buildFilter(
                 nodeId, storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName);
         return blockedInstantRepository.count(where);
     }

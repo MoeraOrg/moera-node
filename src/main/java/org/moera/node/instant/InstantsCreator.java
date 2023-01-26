@@ -3,6 +3,7 @@ package org.moera.node.instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
@@ -13,7 +14,9 @@ import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.operations.BlockedInstantOperations;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.StoryOperations;
+import org.springframework.util.ObjectUtils;
 
 public class InstantsCreator {
 
@@ -26,6 +29,9 @@ public class InstantsCreator {
     @Inject
     private BlockedInstantOperations blockedInstantOperations;
 
+    @Inject
+    private BlockedUserOperations blockedUserOperations;
+
     protected UUID nodeId() {
         return universalContext.nodeId();
     }
@@ -36,8 +42,14 @@ public class InstantsCreator {
 
     protected boolean isBlocked(StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
                                 String remoteOwnerName) {
-        return blockedInstantOperations.count(
+        boolean blocked = false;
+        if (!ObjectUtils.isEmpty(remoteOwnerName)) {
+            blocked |= blockedUserOperations.isBlocked(
+                    nodeId(), BlockedOperation.INSTANT, remoteOwnerName, entryId, remoteNodeName, remotePostingId);
+        }
+        blocked |= blockedInstantOperations.count(
                 nodeId(), storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName) > 0;
+        return blocked;
     }
 
     protected boolean isBlocked(StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId) {

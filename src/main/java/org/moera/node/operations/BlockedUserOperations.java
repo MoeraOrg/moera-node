@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.BlockedUserRepository;
@@ -48,9 +49,25 @@ public class BlockedUserOperations {
             UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
             String entryPostingId
     ) {
-        BooleanBuilder where = buildFilter(
+        Predicate where = buildFilter(
                 nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId);
         return StreamSupport.stream(blockedUserRepository.findAll(where).spliterator(), false);
+    }
+
+    public long count(
+            UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
+            String entryPostingId
+    ) {
+        Predicate where = buildFilter(
+                nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId);
+        return blockedUserRepository.count(where);
+    }
+
+    public boolean isBlocked(
+            UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
+            String entryPostingId
+    ) {
+        return count(nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId) > 0;
     }
 
     private static BooleanBuilder buildFilter(

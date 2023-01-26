@@ -7,7 +7,8 @@ public enum BlockedOperation {
 
     REACTION,
     COMMENT,
-    VISIBILITY;
+    VISIBILITY,
+    INSTANT;
 
     @JsonValue
     public String getValue() {
