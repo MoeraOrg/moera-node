@@ -1,8 +1,10 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,10 +23,13 @@ public class BlockedUserInfo {
     public BlockedUserInfo() {
     }
 
-    public BlockedUserInfo(BlockedUser blockedUser) {
+    public BlockedUserInfo(BlockedUser blockedUser, Options options) {
         id = blockedUser.getId().toString();
         blockedOperation = blockedUser.getBlockedOperation();
         nodeName = blockedUser.getRemoteNodeName();
+        if (blockedUser.getContact() != null) {
+            contact = new ContactInfo(blockedUser.getContact(), options);
+        }
         if (blockedUser.getEntry() != null) {
             entryId = blockedUser.getEntry().getId().toString();
         }
@@ -32,6 +37,15 @@ public class BlockedUserInfo {
         entryPostingId = blockedUser.getEntryPostingId();
         createdAt = Util.toEpochSecond(blockedUser.getCreatedAt());
         deadline = Util.toEpochSecond(blockedUser.getDeadline());
+    }
+
+    public BlockedUserInfo(BlockedUser blockedUser, Options options, AccessChecker accessChecker) {
+        this(blockedUser, options);
+        protect(accessChecker);
+    }
+
+    public void protect(AccessChecker accessChecker) {
+        contact.protect(accessChecker);
     }
 
     public String getId() {

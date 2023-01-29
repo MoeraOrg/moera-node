@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRelated;
@@ -153,7 +154,7 @@ public class ContactOperations {
 
     public Contact updateBlockedUserPostingCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedUserPostingCount(contact.getBlockedUserCount() + delta));
+                contact -> contact.setBlockedUserPostingCount(contact.getBlockedUserPostingCount() + delta));
     }
 
     public Contact updateBlockedUserCounts(BlockedUser blockedUser, int delta) {
@@ -161,6 +162,24 @@ public class ContactOperations {
             return updateBlockedUserCount(blockedUser.getRemoteNodeName(), delta);
         } else {
             return updateBlockedUserPostingCount(blockedUser.getRemoteNodeName(), delta);
+        }
+    }
+
+    public Contact updateBlockedByUserCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setBlockedByUserCount(contact.getBlockedByUserCount() + delta));
+    }
+
+    public Contact updateBlockedByUserPostingCount(String remoteNodeName, int delta) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName,
+                contact -> contact.setBlockedByUserPostingCount(contact.getBlockedByUserPostingCount() + delta));
+    }
+
+    public Contact updateBlockedByUserCounts(BlockedByUser blockedByUser, int delta) {
+        if (blockedByUser.isGlobal()) {
+            return updateBlockedByUserCount(blockedByUser.getRemoteNodeName(), delta);
+        } else {
+            return updateBlockedByUserPostingCount(blockedByUser.getRemoteNodeName(), delta);
         }
     }
 

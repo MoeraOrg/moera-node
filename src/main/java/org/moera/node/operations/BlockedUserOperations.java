@@ -1,23 +1,30 @@
 package org.moera.node.operations;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
+import javax.persistence.EntityManager;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.QBlockedUser;
+import org.moera.node.data.QContact;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.Liberin;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
+import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class BlockedUserOperations {
@@ -34,6 +41,15 @@ public class BlockedUserOperations {
     @Inject
     private ContactOperations contactOperations;
 
+    @Inject
+    private LiberinManager liberinManager;
+
+    @Inject
+    private EntityManager entityManager;
+
+    @Inject
+    private PlatformTransactionManager txManager;
+
     public Collection<BlockedUser> findExact(
             UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
             String entryPostingId
@@ -49,13 +65,20 @@ public class BlockedUserOperations {
         }
     }
 
-    public Stream<BlockedUser> search(
+    public List<BlockedUser> search(
             UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
             String entryPostingId
     ) {
+        QBlockedUser blockedUser = QBlockedUser.blockedUser;
+        QContact contact = QContact.contact;
         Predicate where = buildFilter(
                 nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId);
-        return StreamSupport.stream(blockedUserRepository.findAll(where).spliterator(), false);
+        return new JPAQueryFactory(entityManager)
+                .selectFrom(blockedUser)
+                .leftJoin(blockedUser.contact, contact).fetchJoin()
+                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
+                .where(where)
+                .fetch();
     }
 
     public long count(UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId,
@@ -127,13 +150,18 @@ public class BlockedUserOperations {
     }
 
     @Scheduled(fixedDelayString = "PT1H")
-    @Transactional
-    public void purgeExpired() {
-        blockedUserRepository.findExpired(Util.now()).forEach(blockedUser -> {
-            universalContext.associate(blockedUser.getNodeId());
-            contactOperations.updateBlockedUserCounts(blockedUser, -1);
-            blockedUserRepository.delete(blockedUser);
+    public void purgeExpired() throws Throwable {
+        List<Liberin> liberinList = new ArrayList<>();
+        Transaction.execute(txManager, () -> {
+            blockedUserRepository.findExpired(Util.now()).forEach(blockedUser -> {
+                universalContext.associate(blockedUser.getNodeId());
+                contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
+                blockedUserRepository.delete(blockedUser);
+                liberinList.add(new BlockedUserDeletedLiberin(blockedUser).withNodeId(blockedUser.getNodeId()));
+            });
+            return null;
         });
+        liberinList.forEach(liberinManager::send);
     }
 
 }

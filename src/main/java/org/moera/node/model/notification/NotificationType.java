@@ -26,7 +26,9 @@ public enum NotificationType {
     FRIENDSHIP_UPDATED(FriendshipUpdatedNotification.class),
     FRIEND_GROUP_UPDATED(FriendGroupUpdatedNotification.class),
     FRIEND_GROUP_DELETED(FriendGroupDeletedNotification.class),
-    ASKED(AskedNotification.class);
+    ASKED(AskedNotification.class),
+    BLOCKING_ADDED(BlockingAddedNotification.class),
+    BLOCKING_DELETED(BlockingDeletedNotification.class);
 
     private final Class<? extends Notification> structure;
 

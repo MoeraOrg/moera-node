@@ -603,3 +603,15 @@
       - subscribed
       - friends
       - admin
+
+- name: blocked-by-users.view
+  type: Principal
+  defaultValue: admin
+  title: List of blocked users is visible to
+  modifiers:
+    principals:
+      - public
+      - signed
+      - subscribed
+      - friends
+      - admin

@@ -19,6 +19,8 @@ import org.moera.node.data.EntryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.BlockedUserAddedLiberin;
+import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
 import org.moera.node.model.BlockedUserAttributes;
 import org.moera.node.model.BlockedUserFilter;
 import org.moera.node.model.BlockedUserInfo;
@@ -39,7 +41,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
-@RequestMapping("/moera/api/blocked-users")
+@RequestMapping("/moera/api/people/blocked-users")
 @NoCache
 public class BlockedUserController {
 
@@ -65,7 +67,7 @@ public class BlockedUserController {
     @Transactional
     public ResponseEntity<BlockedUserInfo> post(
             @Valid @RequestBody BlockedUserAttributes blockedUserAttributes) {
-        log.info("POST /blocked-instants (blockedOperation = {}, nodeName = {}, entryId = {}, entryNodeName = {}"
+        log.info("POST /people/blocked-users (blockedOperation = {}, nodeName = {}, entryId = {}, entryNodeName = {}"
                         + " entryPostingId = {})",
                 LogUtil.format(blockedUserAttributes.getBlockedOperation().toString()),
                 LogUtil.format(blockedUserAttributes.getNodeName()),
@@ -89,7 +91,8 @@ public class BlockedUserController {
                 blockedUserAttributes.getEntryPostingId());
         blockedUsers.forEach(blockedUser -> {
             blockedUserRepository.delete(blockedUser);
-            contactOperations.updateBlockedUserCounts(blockedUser, -1);
+            contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
+            requestContext.send(new BlockedUserDeletedLiberin(blockedUser));
         });
 
         BlockedUser blockedUser = new BlockedUser();
@@ -106,16 +109,16 @@ public class BlockedUserController {
         contactOperations.updateBlockedUserCounts(blockedUser, 1);
         contactOperations.updateViewPrincipal(blockedUser).fill(blockedUser);
 
-//        requestContext.send(new BlockedInstantAddedLiberin(blockedInstant));
+        requestContext.send(new BlockedUserAddedLiberin(blockedUser));
 
         return ResponseEntity.created(URI.create("/blocked-users/" + blockedUser.getId()))
-                .body(new BlockedUserInfo(blockedUser));
+                .body(new BlockedUserInfo(blockedUser, requestContext.getOptions(), requestContext));
     }
 
     @GetMapping("/{id}")
     @Transactional
     public BlockedUserInfo get(@PathVariable UUID id) {
-        log.info("GET /blocked-users/{id}, (id = {})", LogUtil.format(id));
+        log.info("GET /people/blocked-users/{id}, (id = {})", LogUtil.format(id));
 
         BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
@@ -125,20 +128,21 @@ public class BlockedUserController {
             throw new AuthenticationException();
         }
 
-        return new BlockedUserInfo(blockedUser);
+        return new BlockedUserInfo(blockedUser, requestContext.getOptions(), requestContext);
     }
 
     @DeleteMapping("/{id}")
     @Admin
     @Transactional
     public Result delete(@PathVariable UUID id) {
-        log.info("DELETE /blocked-instants/{id}, (id = {})", LogUtil.format(id));
+        log.info("DELETE /people/blocked-users/{id}, (id = {})", LogUtil.format(id));
 
         BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
         blockedUserRepository.delete(blockedUser);
+        contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
 
-//        requestContext.send(new BlockedInstantDeletedLiberin(blockedInstant));
+        requestContext.send(new BlockedUserDeletedLiberin(blockedUser));
 
         return Result.OK;
     }
@@ -146,7 +150,7 @@ public class BlockedUserController {
     @PostMapping("/search")
     @Transactional
     public List<BlockedUserInfo> post(@Valid @RequestBody BlockedUserFilter blockedUserFilter) {
-        log.info("POST /blocked-users/search");
+        log.info("POST /people/blocked-users/search");
 
         if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()))
                 && (blockedUserFilter.getNodeName() == null
@@ -156,8 +160,8 @@ public class BlockedUserController {
 
         return blockedUserOperations.search(requestContext.nodeId(), blockedUserFilter.getBlockedOperation(),
                         blockedUserFilter.getNodeName(), blockedUserFilter.getEntryId(),
-                        blockedUserFilter.getEntryNodeName(), blockedUserFilter.getEntryPostingId())
-                .map(BlockedUserInfo::new)
+                        blockedUserFilter.getEntryNodeName(), blockedUserFilter.getEntryPostingId()).stream()
+                .map(bu -> new BlockedUserInfo(bu, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 

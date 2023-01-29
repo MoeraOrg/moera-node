@@ -59,6 +59,12 @@ public class Contact {
     private int blockedUserPostingCount;
 
     @NotNull
+    private int blockedByUserCount;
+
+    @NotNull
+    private int blockedByUserPostingCount;
+
+    @NotNull
     private float closenessBase;
 
     @NotNull
@@ -181,6 +187,22 @@ public class Contact {
 
     public void setBlockedUserPostingCount(int blockedUserPostingCount) {
         this.blockedUserPostingCount = blockedUserPostingCount;
+    }
+
+    public int getBlockedByUserCount() {
+        return blockedByUserCount;
+    }
+
+    public void setBlockedByUserCount(int blockedByUserCount) {
+        this.blockedByUserCount = blockedByUserCount;
+    }
+
+    public int getBlockedByUserPostingCount() {
+        return blockedByUserPostingCount;
+    }
+
+    public void setBlockedByUserPostingCount(int blockedByUserPostingCount) {
+        this.blockedByUserPostingCount = blockedByUserPostingCount;
     }
 
     public float getClosenessBase() {
