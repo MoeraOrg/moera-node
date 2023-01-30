@@ -6,6 +6,8 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedByUser;
+import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.Subscriber;
@@ -19,6 +21,8 @@ public class PeopleGeneralInfo {
     private Integer feedSubscriptionsTotal;
     private Map<String, Integer> friendsTotal;
     private Integer friendOfsTotal;
+    private Integer blockedTotal;
+    private Integer blockedByTotal;
     private Map<String, Principal> operations;
 
     public PeopleGeneralInfo() {
@@ -26,12 +30,15 @@ public class PeopleGeneralInfo {
 
     public PeopleGeneralInfo(
         Integer feedSubscribersTotal, Integer feedSubscriptionsTotal, Map<String, Integer> friendsTotal,
-        Integer friendOfsTotal, Options options, AccessChecker accessChecker
+        Integer friendOfsTotal, Integer blockedTotal, Integer blockedByTotal, Options options,
+        AccessChecker accessChecker
     ) {
         Principal viewSubscribers = Subscriber.getViewAllE(options);
         Principal viewSubscriptions = UserSubscription.getViewAllE(options);
         Principal viewFriends = Friend.getViewAllE(options);
         Principal viewFriendOfs = FriendOf.getViewAllE(options);
+        Principal viewBlocked = BlockedUser.getViewAllE(options);
+        Principal viewBlockedBy = BlockedByUser.getViewAllE(options);
         Principal viewSubscribersTotal = Subscriber.getViewTotalE(options);
         Principal viewSubscriptionsTotal = UserSubscription.getViewTotalE(options);
         Principal viewFriendsTotal = Friend.getViewTotalE(options);
@@ -45,11 +52,15 @@ public class PeopleGeneralInfo {
                 || accessChecker.isPrincipal(viewFriendsTotal) ? friendsTotal : null;
         this.friendOfsTotal = accessChecker.isPrincipal(viewFriendOfs)
                 || accessChecker.isPrincipal(viewFriendOfsTotal) ? friendOfsTotal : null;
+        this.blockedTotal = accessChecker.isPrincipal(viewBlocked) ? blockedTotal : null;
+        this.blockedByTotal = accessChecker.isPrincipal(viewBlockedBy) ? blockedByTotal : null;
         operations = new HashMap<>();
         putOperation(operations, "viewSubscribers", viewSubscribers, Principal.PUBLIC);
         putOperation(operations, "viewSubscriptions", viewSubscriptions, Principal.PUBLIC);
         putOperation(operations, "viewFriends", viewSubscriptions, Principal.PUBLIC);
         putOperation(operations, "viewFriendOfs", viewSubscriptions, Principal.PUBLIC);
+        putOperation(operations, "viewBlocked", viewBlocked, Principal.PUBLIC);
+        putOperation(operations, "viewBlockedBy", viewBlockedBy, Principal.ADMIN);
         putOperation(operations, "viewSubscribersTotal", viewSubscribersTotal, Principal.PUBLIC);
         putOperation(operations, "viewSubscriptionsTotal", viewSubscriptionsTotal, Principal.PUBLIC);
         putOperation(operations, "viewFriendsTotal", viewSubscriptionsTotal, Principal.PUBLIC);
@@ -93,6 +104,22 @@ public class PeopleGeneralInfo {
 
     public void setFriendOfsTotal(Integer friendOfsTotal) {
         this.friendOfsTotal = friendOfsTotal;
+    }
+
+    public Integer getBlockedTotal() {
+        return blockedTotal;
+    }
+
+    public void setBlockedTotal(Integer blockedTotal) {
+        this.blockedTotal = blockedTotal;
+    }
+
+    public Integer getBlockedByTotal() {
+        return blockedByTotal;
+    }
+
+    public void setBlockedByTotal(Integer blockedByTotal) {
+        this.blockedByTotal = blockedByTotal;
     }
 
     public Map<String, Principal> getOperations() {

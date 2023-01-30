@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.data.BlockedByUserRepository;
+import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.data.FriendRepository;
 import org.moera.node.data.Subscriber;
@@ -45,6 +47,12 @@ public class PeopleUiController {
 
     @Inject
     private FriendOfRepository friendOfRepository;
+
+    @Inject
+    private BlockedUserRepository blockedUserRepository;
+
+    @Inject
+    private BlockedByUserRepository blockedByUserRepository;
 
     @GetMapping("/people")
     public String people() {
@@ -118,8 +126,10 @@ public class PeopleUiController {
         Map<String, Integer> friendsTotal = friendRepository.countGroupsByNodeId(requestContext.nodeId()).stream()
                 .collect(Collectors.toMap(fg -> fg.getId().toString(), fg -> (int) fg.getTotal()));
         int friendOfsTotal = friendOfRepository.countByNodeId(requestContext.nodeId());
-        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, friendsTotal, friendOfsTotal,
-                requestContext.getOptions(), requestContext);
+        int blockedTotal = blockedUserRepository.countByNodeId(requestContext.nodeId());
+        int blockedByTotal = blockedByUserRepository.countByNodeId(requestContext.nodeId());
+        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, friendsTotal, friendOfsTotal, blockedTotal,
+                blockedByTotal, requestContext.getOptions(), requestContext);
     }
 
 }
