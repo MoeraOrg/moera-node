@@ -158,7 +158,7 @@ public class BlockedUserController {
             throw new AuthenticationException();
         }
 
-        return blockedUserOperations.search(requestContext.nodeId(), blockedUserFilter.getBlockedOperation(),
+        return blockedUserOperations.search(requestContext.nodeId(), blockedUserFilter.getBlockedOperations(),
                         blockedUserFilter.getNodeName(), blockedUserFilter.getEntryId(),
                         blockedUserFilter.getEntryNodeName(), blockedUserFilter.getEntryPostingId()).stream()
                 .map(bu -> new BlockedUserInfo(bu, requestContext.getOptions(), requestContext))

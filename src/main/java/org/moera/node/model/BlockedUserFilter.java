@@ -6,18 +6,18 @@ import org.moera.node.data.BlockedOperation;
 
 public class BlockedUserFilter {
 
-    private BlockedOperation blockedOperation;
+    private BlockedOperation[] blockedOperations;
     private String nodeName;
     private UUID entryId;
     private String entryNodeName;
     private String entryPostingId;
 
-    public BlockedOperation getBlockedOperation() {
-        return blockedOperation;
+    public BlockedOperation[] getBlockedOperations() {
+        return blockedOperations;
     }
 
-    public void setBlockedOperation(BlockedOperation blockedOperation) {
-        this.blockedOperation = blockedOperation;
+    public void setBlockedOperations(BlockedOperation[] blockedOperations) {
+        this.blockedOperations = blockedOperations;
     }
 
     public String getNodeName() {

@@ -66,13 +66,13 @@ public class BlockedUserOperations {
     }
 
     public List<BlockedUser> search(
-            UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
-            String entryPostingId
+            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
+            String entryNodeName, String entryPostingId
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
         QContact contact = QContact.contact;
         Predicate where = buildFilter(
-                nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId);
+                nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId);
         return new JPAQueryFactory(entityManager)
                 .selectFrom(blockedUser)
                 .leftJoin(blockedUser.contact, contact).fetchJoin()
@@ -81,43 +81,48 @@ public class BlockedUserOperations {
                 .fetch();
     }
 
-    public long count(UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId,
+    public long count(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
                       String entryNodeName, String entryPostingId) {
         Predicate where = buildFilter(
-                nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId);
+                nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId);
         return blockedUserRepository.count(where);
     }
 
-    public boolean isBlocked(UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId,
+    public boolean isBlocked(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
                              String entryNodeName, String entryPostingId) {
-        return count(nodeId, blockedOperation, remoteNodeName, entryId, entryNodeName, entryPostingId) > 0;
+        return count(nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId) > 0;
     }
 
-    public boolean isBlocked(BlockedOperation blockedOperation, UUID entryId, String entryNodeName,
+    public boolean isBlocked(BlockedOperation[] blockedOperations, UUID entryId, String entryNodeName,
                              String entryPostingId) {
-        return isBlocked(requestContext.nodeId(), blockedOperation, requestContext.getClientName(), entryId,
+        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(), entryId,
                 entryNodeName, entryPostingId);
     }
 
     public boolean isBlocked(BlockedOperation blockedOperation, UUID entryId) {
-        return isBlocked(requestContext.nodeId(), blockedOperation, requestContext.getClientName(), entryId,
+        return isBlocked(requestContext.nodeId(), new BlockedOperation[]{blockedOperation},
+                requestContext.getClientName(), entryId, null, null);
+    }
+
+    public boolean isBlocked(BlockedOperation[] blockedOperations, UUID entryId) {
+        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(), entryId,
                 null, null);
     }
 
-    public boolean isBlocked(BlockedOperation blockedOperation) {
-        return isBlocked(requestContext.nodeId(), blockedOperation, requestContext.getClientName(), null,
+    public boolean isBlocked(BlockedOperation... blockedOperations) {
+        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(), null,
                 null, null);
     }
 
     private static BooleanBuilder buildFilter(
-            UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
-            String entryPostingId
+            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
+            String entryNodeName, String entryPostingId
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
         BooleanBuilder where = new BooleanBuilder();
         where.and(blockedUser.nodeId.eq(nodeId));
-        if (blockedOperation != null) {
-            where.and(blockedUser.blockedOperation.eq(blockedOperation));
+        if (blockedOperations != null) {
+            where.and(blockedUser.blockedOperation.in(blockedOperations));
         }
         if (remoteNodeName != null) {
             where.and(blockedUser.remoteNodeName.eq(remoteNodeName));

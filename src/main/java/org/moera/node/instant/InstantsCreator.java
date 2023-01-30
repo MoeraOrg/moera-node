@@ -45,7 +45,8 @@ public class InstantsCreator {
         boolean blocked = false;
         if (!ObjectUtils.isEmpty(remoteOwnerName)) {
             blocked |= blockedUserOperations.isBlocked(
-                    nodeId(), BlockedOperation.INSTANT, remoteOwnerName, entryId, remoteNodeName, remotePostingId);
+                    nodeId(), new BlockedOperation[]{BlockedOperation.INSTANT}, remoteOwnerName, entryId,
+                    remoteNodeName, remotePostingId);
         }
         blocked |= blockedInstantOperations.count(
                 nodeId(), storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName) > 0;
