@@ -63,6 +63,7 @@ public class BlockingProcessor {
         blockedByUser.setRemoteNodeName(notification.getSenderNodeName());
         blockedByUser.setRemotePostingId(notification.getPostingId());
         blockedByUser.setDeadline(Util.toTimestamp(notification.getDeadline()));
+        blockedByUser.setReason(notification.getReason() != null ? notification.getReason() : "");
         blockedByUser = blockedByUserRepository.save(blockedByUser);
 
         BlockedByUserAddedLiberin liberin = new BlockedByUserAddedLiberin(blockedByUser);

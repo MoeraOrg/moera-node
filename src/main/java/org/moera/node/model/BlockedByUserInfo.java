@@ -17,6 +17,7 @@ public class BlockedByUserInfo {
     private String postingId;
     private long createdAt;
     private Long deadline;
+    private String reason;
 
     public BlockedByUserInfo() {
     }
@@ -31,6 +32,7 @@ public class BlockedByUserInfo {
         postingId = blockedByUser.getRemotePostingId();
         createdAt = Util.toEpochSecond(blockedByUser.getCreatedAt());
         deadline = Util.toEpochSecond(blockedByUser.getDeadline());
+        reason = blockedByUser.getReason();
     }
 
     public BlockedByUserInfo(BlockedByUser blockedByUser, Options options, AccessChecker accessChecker) {
@@ -96,6 +98,14 @@ public class BlockedByUserInfo {
 
     public void setDeadline(Long deadline) {
         this.deadline = deadline;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
 }

@@ -1,7 +1,6 @@
 package org.moera.node.operations;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -49,21 +48,6 @@ public class BlockedUserOperations {
 
     @Inject
     private PlatformTransactionManager txManager;
-
-    public Collection<BlockedUser> findExact(
-            UUID nodeId, BlockedOperation blockedOperation, String remoteNodeName, UUID entryId, String entryNodeName,
-            String entryPostingId
-    ) {
-        if (entryId != null) {
-            return blockedUserRepository.findByOperationAndNodeAndEntry(
-                    nodeId, blockedOperation, remoteNodeName, entryId);
-        } else if (entryNodeName != null) {
-            return blockedUserRepository.findByOperationAndNodeAndRemoteEntry(
-                    nodeId, blockedOperation, remoteNodeName, entryNodeName, entryPostingId);
-        } else {
-            return blockedUserRepository.findByOperationAndNodeAndNoEntry(nodeId, blockedOperation, remoteNodeName);
-        }
-    }
 
     public List<BlockedUser> search(
             UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,

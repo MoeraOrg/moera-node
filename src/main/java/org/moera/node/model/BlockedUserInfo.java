@@ -2,8 +2,10 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.AccessChecker;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
+import org.moera.node.data.SourceFormat;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
@@ -19,6 +21,9 @@ public class BlockedUserInfo {
     private String entryPostingId;
     private long createdAt;
     private Long deadline;
+    private String reasonSrc;
+    private SourceFormat reasonSrcFormat;
+    private String reason;
 
     public BlockedUserInfo() {
     }
@@ -37,6 +42,9 @@ public class BlockedUserInfo {
         entryPostingId = blockedUser.getEntryPostingId();
         createdAt = Util.toEpochSecond(blockedUser.getCreatedAt());
         deadline = Util.toEpochSecond(blockedUser.getDeadline());
+        reasonSrc = blockedUser.getReasonSrc();
+        reasonSrcFormat = blockedUser.getReasonSrcFormat();
+        reason = blockedUser.getReason();
     }
 
     public BlockedUserInfo(BlockedUser blockedUser, Options options, AccessChecker accessChecker) {
@@ -46,6 +54,10 @@ public class BlockedUserInfo {
 
     public void protect(AccessChecker accessChecker) {
         contact.protect(accessChecker);
+        if (!accessChecker.isPrincipal(Principal.ADMIN)) {
+            reasonSrc = null;
+            reasonSrcFormat = null;
+        }
     }
 
     public String getId() {
@@ -118,6 +130,30 @@ public class BlockedUserInfo {
 
     public void setDeadline(Long deadline) {
         this.deadline = deadline;
+    }
+
+    public String getReasonSrc() {
+        return reasonSrc;
+    }
+
+    public void setReasonSrc(String reasonSrc) {
+        this.reasonSrc = reasonSrc;
+    }
+
+    public SourceFormat getReasonSrcFormat() {
+        return reasonSrcFormat;
+    }
+
+    public void setReasonSrcFormat(SourceFormat reasonSrcFormat) {
+        this.reasonSrcFormat = reasonSrcFormat;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
 }

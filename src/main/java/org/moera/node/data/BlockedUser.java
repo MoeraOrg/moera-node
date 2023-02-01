@@ -45,6 +45,16 @@ public class BlockedUser implements ContactRelated {
 
     private Timestamp deadline;
 
+    @NotNull
+    private String reasonSrc = "";
+
+    @NotNull
+    @Enumerated
+    private SourceFormat reasonSrcFormat = SourceFormat.MARKDOWN;
+
+    @NotNull
+    private String reason = "";
+
     public UUID getId() {
         return id;
     }
@@ -130,6 +140,30 @@ public class BlockedUser implements ContactRelated {
 
     public void setDeadline(Timestamp deadline) {
         this.deadline = deadline;
+    }
+
+    public String getReasonSrc() {
+        return reasonSrc;
+    }
+
+    public void setReasonSrc(String reasonSrc) {
+        this.reasonSrc = reasonSrc;
+    }
+
+    public SourceFormat getReasonSrcFormat() {
+        return reasonSrcFormat;
+    }
+
+    public void setReasonSrcFormat(SourceFormat reasonSrcFormat) {
+        this.reasonSrcFormat = reasonSrcFormat;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     private Principal toAbsolute(Principal principal) {

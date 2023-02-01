@@ -1,7 +1,6 @@
 package org.moera.node.rest;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,6 +28,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +62,9 @@ public class BlockedUserController {
     @Inject
     private ContactOperations contactOperations;
 
+    @Inject
+    private TextConverter textConverter;
+
     @PostMapping
     @Admin
     @Transactional
@@ -85,22 +88,12 @@ public class BlockedUserController {
                     .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
         }
 
-        Collection<BlockedUser> blockedUsers = blockedUserOperations.findExact(requestContext.nodeId(),
-                blockedUserAttributes.getBlockedOperation(), blockedUserAttributes.getNodeName(),
-                blockedUserAttributes.getEntryId(), blockedUserAttributes.getEntryNodeName(),
-                blockedUserAttributes.getEntryPostingId());
-        blockedUsers.forEach(blockedUser -> {
-            blockedUserRepository.delete(blockedUser);
-            contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
-            requestContext.send(new BlockedUserDeletedLiberin(blockedUser));
-        });
-
         BlockedUser blockedUser = new BlockedUser();
         blockedUser.setId(UUID.randomUUID());
         blockedUser.setNodeId(requestContext.nodeId());
         blockedUser.setEntry(entry);
         blockedUser.setCreatedAt(Util.now());
-        blockedUserAttributes.toBlockedInstant(blockedUser);
+        blockedUserAttributes.toBlockedInstant(blockedUser, textConverter);
         blockedUser = blockedUserRepository.save(blockedUser);
 
         if (blockedUser.isGlobal() && blockedUser.getDeadline() == null) {

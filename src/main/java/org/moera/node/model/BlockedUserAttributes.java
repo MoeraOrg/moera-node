@@ -1,10 +1,14 @@
 package org.moera.node.model;
 
 import java.util.UUID;
+import javax.validation.constraints.Size;
 
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
+import org.moera.node.data.SourceFormat;
+import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
+import org.springframework.util.ObjectUtils;
 
 public class BlockedUserAttributes {
 
@@ -19,6 +23,11 @@ public class BlockedUserAttributes {
     private String entryPostingId;
 
     private Long deadline;
+
+    @Size(max = 4096)
+    private String reasonSrc;
+
+    private SourceFormat reasonSrcFormat = SourceFormat.MARKDOWN;
 
     public BlockedOperation getBlockedOperation() {
         return blockedOperation;
@@ -68,12 +77,35 @@ public class BlockedUserAttributes {
         this.deadline = deadline;
     }
 
-    public void toBlockedInstant(BlockedUser blockedUser) {
+    public String getReasonSrc() {
+        return reasonSrc;
+    }
+
+    public void setReasonSrc(String reasonSrc) {
+        this.reasonSrc = reasonSrc;
+    }
+
+    public SourceFormat getReasonSrcFormat() {
+        return reasonSrcFormat;
+    }
+
+    public void setReasonSrcFormat(SourceFormat reasonSrcFormat) {
+        this.reasonSrcFormat = reasonSrcFormat;
+    }
+
+    public void toBlockedInstant(BlockedUser blockedUser, TextConverter textConverter) {
         blockedUser.setBlockedOperation(blockedOperation);
         blockedUser.setRemoteNodeName(nodeName);
         blockedUser.setEntryNodeName(entryNodeName);
         blockedUser.setEntryPostingId(entryPostingId);
         blockedUser.setDeadline(Util.toTimestamp(deadline));
+        blockedUser.setReasonSrc(reasonSrc != null ? reasonSrc : "");
+        blockedUser.setReasonSrcFormat(reasonSrcFormat);
+        if (!ObjectUtils.isEmpty(reasonSrc) && reasonSrcFormat != SourceFormat.APPLICATION) {
+            blockedUser.setReason(textConverter.toHtml(reasonSrcFormat, reasonSrc));
+        } else {
+            blockedUser.setReason(blockedUser.getReasonSrc());
+        }
     }
 
 }

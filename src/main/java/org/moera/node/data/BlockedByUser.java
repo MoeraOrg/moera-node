@@ -40,6 +40,9 @@ public class BlockedByUser implements ContactRelated {
 
     private Timestamp deadline;
 
+    @NotNull
+    private String reason = "";
+
     public UUID getId() {
         return id;
     }
@@ -109,6 +112,14 @@ public class BlockedByUser implements ContactRelated {
 
     public void setDeadline(Timestamp deadline) {
         this.deadline = deadline;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     private Principal toAbsolute(Principal principal) {

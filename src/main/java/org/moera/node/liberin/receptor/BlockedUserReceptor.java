@@ -26,7 +26,8 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
                     new BlockingAddedNotification(
                             blockedUser.getBlockedOperation(),
                             postingId,
-                            Util.toEpochSecond(blockedUser.getDeadline())));
+                            Util.toEpochSecond(blockedUser.getDeadline()),
+                            blockedUser.getReason()));
         }
     }
 
