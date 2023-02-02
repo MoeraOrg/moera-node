@@ -125,6 +125,8 @@ public class StoryInfo {
             case FRIEND_GROUP_DELETED:
             case ASKED_TO_SUBSCRIBE:
             case ASKED_TO_FRIEND:
+            case BLOCKED_USER:
+            case UNBLOCKED_USER:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 info.setSummaryNodeName(story.getRemoteNodeName());

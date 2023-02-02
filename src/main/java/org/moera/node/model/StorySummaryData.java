@@ -21,6 +21,7 @@ public class StorySummaryData {
     private String feedName;
     private SubscriptionReason subscriptionReason;
     private StorySummaryFriendGroup friendGroup;
+    private StorySummaryBlocked blocked;
     private String description;
 
     public StorySummaryNode getNode() {
@@ -125,6 +126,14 @@ public class StorySummaryData {
 
     public void setFriendGroup(StorySummaryFriendGroup friendGroup) {
         this.friendGroup = friendGroup;
+    }
+
+    public StorySummaryBlocked getBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(StorySummaryBlocked blocked) {
+        this.blocked = blocked;
     }
 
     public String getDescription() {
