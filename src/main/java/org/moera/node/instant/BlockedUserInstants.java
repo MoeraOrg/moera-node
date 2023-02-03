@@ -1,5 +1,7 @@
 package org.moera.node.instant;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -61,7 +63,8 @@ public class BlockedUserInstants extends InstantsCreator {
             story.setRemoteAvatarShape(contact.getRemoteAvatarShape());
         }
 
-        story.setSummaryData(buildSummary(contact, story.getSummaryData(), blockedByUser.getBlockedOperation()));
+        story.setSummaryData(buildSummary(contact, story.getSummaryData(), blockedByUser.getBlockedOperation(),
+                blockedByUser.getDeadline()));
         story.setPublishedAt(Util.now());
         story.setRead(false);
         story.setViewed(false);
@@ -71,7 +74,7 @@ public class BlockedUserInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildSummary(Contact contact, StorySummaryData prevSummary,
-                                                 BlockedOperation newOperation) {
+                                                 BlockedOperation newOperation, Timestamp deadline) {
         Set<BlockedOperation> operations;
         if (prevSummary == null) {
             operations = Set.of(newOperation);
@@ -79,11 +82,12 @@ public class BlockedUserInstants extends InstantsCreator {
             operations = new HashSet<>(prevSummary.getBlocked().getOperations());
             operations.add(newOperation);
         }
+        Long period = deadline != null ? deadline.toInstant().getEpochSecond() - Instant.now().getEpochSecond() : null;
 
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setNode(new StorySummaryNode(contact.getRemoteNodeName(), contact.getRemoteFullName(),
                 contact.getRemoteGender()));
-        summaryData.setBlocked(new StorySummaryBlocked(operations));
+        summaryData.setBlocked(new StorySummaryBlocked(operations, period));
         return summaryData;
     }
 
