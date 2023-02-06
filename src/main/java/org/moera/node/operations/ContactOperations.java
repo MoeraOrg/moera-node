@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -39,50 +38,7 @@ public class ContactOperations {
 
     private final ParametrizedLock<Pair<UUID, String>> lock = new ParametrizedLock<>();
 
-    public Contact find(String remoteNodeName) {
-        return updateCloseness(remoteNodeName, 0);
-    }
-
-    public Contact find(UUID nodeId, String remoteNodeName) {
-        return updateCloseness(nodeId, remoteNodeName, 0);
-    }
-
-    public Contact updateCloseness(String remoteNodeName, float delta) {
-        return updateCloseness(universalContext.nodeId(), remoteNodeName, delta);
-    }
-
-    public Contact updateCloseness(UUID nodeId, String remoteNodeName, float delta) {
-        if (remoteNodeName == null) {
-            return null;
-        }
-
-        lock.lock(Pair.of(nodeId, remoteNodeName));
-        try {
-            return Transaction.execute(txManager, () -> {
-                Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
-                if (contact == null) {
-                    contact = new Contact();
-                    contact.setId(UUID.randomUUID());
-                    contact.setNodeId(nodeId);
-                    contact.setRemoteNodeName(remoteNodeName);
-                    contact.setCloseness(delta);
-                    return contactRepository.save(contact);
-                }
-                contact.updateCloseness(delta);
-                return contact;
-            });
-        } catch (Throwable e) {
-            throw new ContactUpdateException(e);
-        } finally {
-            lock.unlock(Pair.of(nodeId, remoteNodeName));
-        }
-    }
-
-    public Contact assignCloseness(String remoteNodeName, float closeness) {
-        return assignCloseness(universalContext.nodeId(), remoteNodeName, closeness);
-    }
-
-    public Contact assignCloseness(UUID nodeId, String remoteNodeName, float closeness) {
+    private Contact updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
         if (remoteNodeName == null) {
             return null;
         }
@@ -98,7 +54,7 @@ public class ContactOperations {
                     contact.setRemoteNodeName(remoteNodeName);
                     contact = contactRepository.save(contact);
                 }
-                contact.setCloseness(closeness);
+                updater.accept(contact);
                 return contact;
             });
         } catch (Throwable e) {
@@ -108,53 +64,59 @@ public class ContactOperations {
         }
     }
 
-    public Contact updateAtomically(UUID nodeId, String remoteNodeName, Consumer<Contact> updater) {
-        if (remoteNodeName == null) {
-            return null;
-        }
+    public Contact find(String remoteNodeName) {
+        return updateCloseness(remoteNodeName, 0);
+    }
 
-        lock.lock(Pair.of(nodeId, remoteNodeName));
-        try {
-            return Transaction.execute(txManager, () -> {
-                Optional<Contact> contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName);
-                contact.ifPresent(updater);
-                return contact.orElse(null);
-            });
-        } catch (Throwable e) {
-            throw new ContactUpdateException(e);
-        } finally {
-            lock.unlock(Pair.of(nodeId, remoteNodeName));
-        }
+    public Contact find(UUID nodeId, String remoteNodeName) {
+        return updateCloseness(nodeId, remoteNodeName, 0);
+    }
+
+    public Contact updateCloseness(String remoteNodeName, float delta) {
+        return updateCloseness(universalContext.nodeId(), remoteNodeName, delta);
+    }
+
+    public Contact updateCloseness(UUID nodeId, String remoteNodeName, float delta) {
+        return updateAtomically(nodeId, remoteNodeName, contact -> contact.updateCloseness(delta));
+    }
+
+    public Contact assignCloseness(String remoteNodeName, float closeness) {
+        return assignCloseness(universalContext.nodeId(), remoteNodeName, closeness);
+    }
+
+    public Contact assignCloseness(UUID nodeId, String remoteNodeName, float closeness) {
+        return updateAtomically(nodeId, remoteNodeName, contact -> contact.setCloseness(closeness));
     }
 
     public Contact updateFeedSubscriptionCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFeedSubscriptionCount(contact.getFeedSubscriptionCount() + delta));
+                contact -> contact.setFeedSubscriptionCount(Math.max(contact.getFeedSubscriptionCount() + delta, 0)));
     }
 
     public Contact updateFeedSubscriberCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFeedSubscriberCount(contact.getFeedSubscriberCount() + delta));
+                contact -> contact.setFeedSubscriberCount(Math.max(contact.getFeedSubscriberCount() + delta, 0)));
     }
 
     public Contact updateFriendCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFriendCount(contact.getFriendCount() + delta));
+                contact -> contact.setFriendCount(Math.max(contact.getFriendCount() + delta, 0)));
     }
 
     public Contact updateFriendOfCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setFriendOfCount(contact.getFriendOfCount() + delta));
+                contact -> contact.setFriendOfCount(Math.max(contact.getFriendOfCount() + delta, 0)));
     }
 
     public Contact updateBlockedUserCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedUserCount(contact.getBlockedUserCount() + delta));
+                contact -> contact.setBlockedUserCount(Math.max(contact.getBlockedUserCount() + delta, 0)));
     }
 
     public Contact updateBlockedUserPostingCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedUserPostingCount(contact.getBlockedUserPostingCount() + delta));
+                contact -> contact.setBlockedUserPostingCount(
+                        Math.max(contact.getBlockedUserPostingCount() + delta, 0)));
     }
 
     public Contact updateBlockedUserCounts(BlockedUser blockedUser, int delta) {
@@ -167,12 +129,13 @@ public class ContactOperations {
 
     public Contact updateBlockedByUserCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedByUserCount(contact.getBlockedByUserCount() + delta));
+                contact -> contact.setBlockedByUserCount(Math.max(contact.getBlockedByUserCount() + delta, 0)));
     }
 
     public Contact updateBlockedByUserPostingCount(String remoteNodeName, int delta) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName,
-                contact -> contact.setBlockedByUserPostingCount(contact.getBlockedByUserPostingCount() + delta));
+                contact -> contact.setBlockedByUserPostingCount(
+                        Math.max(contact.getBlockedByUserPostingCount() + delta, 0)));
     }
 
     public Contact updateBlockedByUserCounts(BlockedByUser blockedByUser, int delta) {
