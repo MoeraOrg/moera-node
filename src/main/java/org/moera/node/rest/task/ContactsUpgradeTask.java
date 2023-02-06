@@ -61,20 +61,13 @@ public class ContactsUpgradeTask extends Task {
         try {
             WhoAmI whoAmI = nodeApi.whoAmI(upgrade.getRemoteNodeName());
             if (whoAmI.getFullName() != null || whoAmI.getGender() != null) {
-                inTransaction(() -> {
-                    contactOperations.updateDetails(
-                            upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getGender());
-                    return null;
-                });
+                contactOperations.updateDetails(upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getGender());
                 send(new RemoteNodeFullNameChangedLiberin(upgrade.getRemoteNodeName(), whoAmI.getFullName()));
             }
             AvatarImage targetAvatar = whoAmI.getAvatar();
             MediaFile mediaFile = mediaManager.downloadPublicMedia(upgrade.getRemoteNodeName(), targetAvatar);
             if (mediaFile != null) {
-                inTransaction(() -> {
-                    contactOperations.updateAvatar(upgrade.getRemoteNodeName(), mediaFile, targetAvatar.getShape());
-                    return null;
-                });
+                contactOperations.updateAvatar(upgrade.getRemoteNodeName(), mediaFile, targetAvatar.getShape());
                 send(new RemoteNodeAvatarChangedLiberin(
                         upgrade.getRemoteNodeName(), new AvatarImage(mediaFile, targetAvatar.getShape())));
             }

@@ -17,15 +17,9 @@ import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.operations.ContactOperations;
-import org.moera.node.util.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @NotificationProcessor
 public class ProfileProcessor {
-
-    private static final Logger log = LoggerFactory.getLogger(ProfileProcessor.class);
 
     @Inject
     private UniversalContext universalContext;
@@ -38,9 +32,6 @@ public class ProfileProcessor {
 
     @Inject
     private MediaManager mediaManager;
-
-    @Inject
-    private PlatformTransactionManager txManager;
 
     private void validateSubscription(ProfileUpdatedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
@@ -58,14 +49,7 @@ public class ProfileProcessor {
     }
 
     public void updateProfileDetails(String nodeName, String fullName, String gender, AvatarImage avatar) {
-        try {
-            Transaction.execute(txManager, () -> {
-                contactOperations.updateDetails(nodeName, fullName, gender);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error saving the full name: {}", e.getMessage());
-        }
+        contactOperations.updateDetails(nodeName, fullName, gender);
         universalContext.send(new RemoteNodeFullNameChangedLiberin(nodeName, fullName));
 
         mediaManager.asyncDownloadPublicMedia(nodeName,
@@ -78,15 +62,8 @@ public class ProfileProcessor {
     }
 
     private void saveAvatar(String nodeName, MediaFile mediaFile, String shape) {
-        try {
-            Transaction.execute(txManager, () -> {
-                contactOperations.updateAvatar(nodeName, mediaFile, shape);
-                return null;
-            });
-            universalContext.send(new RemoteNodeAvatarChangedLiberin(nodeName, new AvatarImage(mediaFile, shape)));
-        } catch (Throwable e) {
-            log.error("Error saving the downloaded avatar: {}", e.getMessage());
-        }
+        contactOperations.updateAvatar(nodeName, mediaFile, shape);
+        universalContext.send(new RemoteNodeAvatarChangedLiberin(nodeName, new AvatarImage(mediaFile, shape)));
     }
 
 }

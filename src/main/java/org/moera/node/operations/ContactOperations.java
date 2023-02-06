@@ -187,14 +187,18 @@ public class ContactOperations {
         return updateAtomically(universalContext.nodeId(), related.getRemoteNodeName(), related::toContactViewPrincipal);
     }
 
-    public void updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {
-        contactRepository.updateRemoteFullNameAndGender(
-                universalContext.nodeId(), remoteNodeName, remoteFullName, remoteGender);
+    public Contact updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName, contact -> {
+            contact.setRemoteFullName(remoteFullName);
+            contact.setRemoteGender(remoteGender);
+        });
     }
 
-    public void updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape) {
-        contactRepository.updateRemoteAvatar(
-                universalContext.nodeId(), remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape);
+    public Contact updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape) {
+        return updateAtomically(universalContext.nodeId(), remoteNodeName, contact -> {
+            contact.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
+            contact.setRemoteAvatarShape(remoteAvatarShape);
+        });
     }
 
     @Scheduled(fixedDelayString = "P1D")
