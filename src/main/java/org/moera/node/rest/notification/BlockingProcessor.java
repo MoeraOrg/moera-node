@@ -53,7 +53,8 @@ public class BlockingProcessor {
     @NotificationMapping(NotificationType.BLOCKING_ADDED)
     @Transactional
     public void added(BlockingAddedNotification notification) {
-        Contact contact = contactOperations.find(notification.getSenderNodeName());
+        Contact contact = contactOperations.updateDetails(notification.getSenderNodeName(),
+                notification.getSenderFullName(), notification.getSenderGender());
 
         BlockedByUser blockedByUser = new BlockedByUser();
         blockedByUser.setId(UUID.randomUUID());
