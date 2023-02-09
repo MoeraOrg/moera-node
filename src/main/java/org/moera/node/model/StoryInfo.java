@@ -104,6 +104,8 @@ public class StoryInfo {
                 break;
 
             case POSTING_UPDATE_TASK_FAILED:
+            case BLOCKED_USER_IN_POSTING:
+            case UNBLOCKED_USER_IN_POSTING:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setRemoteFullName(story.getRemoteFullName());
                 info.setSummaryNodeName(story.getRemoteNodeName());
