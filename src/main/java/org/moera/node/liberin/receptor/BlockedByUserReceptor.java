@@ -17,12 +17,12 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(BlockedByUserAddedLiberin liberin) {
-        blockedUserInstants.blocked(liberin.getBlockedByUser());
+        blockedUserInstants.blocked(liberin.getBlockedByUser(), liberin.getEntryHeading());
     }
 
     @LiberinMapping
     public void deleted(BlockedByUserDeletedLiberin liberin) {
-        blockedUserInstants.unblocked(liberin.getBlockedByUser());
+        blockedUserInstants.unblocked(liberin.getBlockedByUser(), liberin.getEntryHeading());
     }
 
 }

@@ -21,11 +21,17 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
         if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
                 && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
                 && blockedUser.getEntryNodeName() == null) {
-            String postingId = blockedUser.getEntry() != null ? blockedUser.getEntry().getId().toString() : null;
+            String postingId = null;
+            String postingHeading = null;
+            if (blockedUser.getEntry() != null) {
+                postingId = blockedUser.getEntry().getId().toString();
+                postingHeading = blockedUser.getEntry().getCurrentRevision().getHeading();
+            }
             send(Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
                     new BlockingAddedNotification(
                             blockedUser.getBlockedOperation(),
                             postingId,
+                            postingHeading,
                             Util.toEpochSecond(blockedUser.getDeadline()),
                             blockedUser.getReason()));
         }
@@ -37,9 +43,14 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
         if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
                 && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
                 && blockedUser.getEntryNodeName() == null) {
-            String postingId = blockedUser.getEntry() != null ? blockedUser.getEntry().getId().toString() : null;
+            String postingId = null;
+            String postingHeading = null;
+            if (blockedUser.getEntry() != null) {
+                postingId = blockedUser.getEntry().getId().toString();
+                postingHeading = blockedUser.getEntry().getCurrentRevision().getHeading();
+            }
             send(Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
-                    new BlockingDeletedNotification(blockedUser.getBlockedOperation(), postingId));
+                    new BlockingDeletedNotification(blockedUser.getBlockedOperation(), postingId, postingHeading));
         }
     }
 

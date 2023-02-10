@@ -16,10 +16,12 @@ public interface BlockedUserRepository
     int countByNodeId(UUID nodeId);
 
     @Query("select bu from BlockedUser bu left join fetch bu.contact c left join fetch c.remoteAvatarMediaFile"
+            + " left join fetch bu.entry e left join fetch e.currentRevision"
             + " where bu.nodeId = ?1 and bu.id = ?2")
     Optional<BlockedUser> findByNodeIdAndId(UUID nodeId, UUID id);
 
-    @Query("select bu from BlockedUser bu where bu.deadline < ?1")
+    @Query("select bu from BlockedUser bu left join fetch bu.entry e left join fetch e.currentRevision"
+            + " where bu.deadline < ?1")
     Collection<BlockedUser> findExpired(Timestamp deadline);
 
 }

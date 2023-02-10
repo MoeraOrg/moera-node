@@ -37,7 +37,9 @@ public enum StoryType {
     ASKED_TO_SUBSCRIBE,                    // 29
     ASKED_TO_FRIEND,                       // 30
     BLOCKED_USER,                          // 31
-    UNBLOCKED_USER;                        // 32
+    UNBLOCKED_USER,                        // 32
+    BLOCKED_USER_IN_POSTING,               // 33
+    UNBLOCKED_USER_IN_POSTING;             // 34
 
     @JsonValue
     public String getValue() {

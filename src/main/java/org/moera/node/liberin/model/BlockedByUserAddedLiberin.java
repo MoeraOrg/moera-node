@@ -4,8 +4,8 @@ import org.moera.node.data.BlockedByUser;
 
 public class BlockedByUserAddedLiberin extends BlockedByUserLiberin {
 
-    public BlockedByUserAddedLiberin(BlockedByUser blockedByUser) {
-        super(blockedByUser);
+    public BlockedByUserAddedLiberin(BlockedByUser blockedByUser, String entryHeading) {
+        super(blockedByUser, entryHeading);
     }
 
 }

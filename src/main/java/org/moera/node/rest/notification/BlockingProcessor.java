@@ -67,7 +67,8 @@ public class BlockingProcessor {
         blockedByUser.setReason(notification.getReason() != null ? notification.getReason() : "");
         blockedByUser = blockedByUserRepository.save(blockedByUser);
 
-        BlockedByUserAddedLiberin liberin = new BlockedByUserAddedLiberin(blockedByUser);
+        BlockedByUserAddedLiberin liberin =
+                new BlockedByUserAddedLiberin(blockedByUser, notification.getPostingHeading());
 
         Contact updatedContact = contactOperations.updateBlockedByUserCounts(blockedByUser, 1);
         Contact.toAvatar(updatedContact, notification.getSenderAvatar());
@@ -75,28 +76,6 @@ public class BlockingProcessor {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
                 () -> updateAvatarsAndSend(notification.getSenderAvatar(), updatedContact, liberin));
-    }
-
-    @NotificationMapping(NotificationType.BLOCKING_DELETED)
-    @Transactional
-    public void deleted(BlockingDeletedNotification notification) {
-        Collection<BlockedByUser> blockedByUsers = notification.getPostingId() == null
-                ? blockedByUserRepository.findByRemoteNode(
-                        universalContext.nodeId(), notification.getSenderNodeName())
-                : blockedByUserRepository.findByRemotePosting(
-                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getPostingId());
-        BlockedByUser blockedByUser = blockedByUsers.stream()
-                .filter(bbu -> bbu.getBlockedOperation() == notification.getBlockedOperation())
-                .findFirst()
-                .orElse(null);
-
-        if (blockedByUser == null) {
-            return;
-        }
-
-        blockedByUserRepository.delete(blockedByUser);
-        contactOperations.updateBlockedByUserCounts(blockedByUser, -1).fill(blockedByUser);
-        universalContext.send(new BlockedByUserDeletedLiberin(blockedByUser));
     }
 
     private void updateAvatarsAndSend(AvatarImage avatarImage, Contact contact, BlockedByUserLiberin liberin) {
@@ -119,6 +98,28 @@ public class BlockingProcessor {
         } catch (Throwable e) {
             log.error("Error saving the downloaded avatar: {}", e.getMessage());
         }
+    }
+
+    @NotificationMapping(NotificationType.BLOCKING_DELETED)
+    @Transactional
+    public void deleted(BlockingDeletedNotification notification) {
+        Collection<BlockedByUser> blockedByUsers = notification.getPostingId() == null
+                ? blockedByUserRepository.findByRemoteNode(
+                        universalContext.nodeId(), notification.getSenderNodeName())
+                : blockedByUserRepository.findByRemotePosting(
+                        universalContext.nodeId(), notification.getSenderNodeName(), notification.getPostingId());
+        BlockedByUser blockedByUser = blockedByUsers.stream()
+                .filter(bbu -> bbu.getBlockedOperation() == notification.getBlockedOperation())
+                .findFirst()
+                .orElse(null);
+
+        if (blockedByUser == null) {
+            return;
+        }
+
+        blockedByUserRepository.delete(blockedByUser);
+        contactOperations.updateBlockedByUserCounts(blockedByUser, -1).fill(blockedByUser);
+        universalContext.send(new BlockedByUserDeletedLiberin(blockedByUser, notification.getPostingHeading()));
     }
 
 }
