@@ -171,7 +171,7 @@ public class PostingController {
         requestContext.send(new PostingAddedLiberin(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
-                .body(withStories(new PostingInfo(posting, requestContext)));
+                .body(withBlockings(withStories(new PostingInfo(posting, requestContext))));
     }
 
     @PutMapping("/{id}")
@@ -232,7 +232,7 @@ public class PostingController {
         }
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
-        return withStories(withClientReaction(new PostingInfo(posting, requestContext)));
+        return withBlockings(withStories(withClientReaction(new PostingInfo(posting, requestContext))));
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
@@ -326,7 +326,8 @@ public class PostingController {
 
         requestContext.send(new PostingReadLiberin(id));
 
-        return withStories(withClientReaction(new PostingInfo(posting, includeSet.contains("source"), requestContext)));
+        return withBlockings(withStories(withClientReaction(
+                new PostingInfo(posting, includeSet.contains("source"), requestContext))));
     }
 
     @DeleteMapping("/{id}")
@@ -368,7 +369,7 @@ public class PostingController {
                 : entryAttachmentRepository.findReceivedAttachedPostings(
                         requestContext.nodeId(), posting.getCurrentRevision().getId(), posting.getReceiverName());
         return attached.stream()
-                .map(p -> withClientReaction(new PostingInfo(p, false, requestContext)))
+                .map(p -> withBlockings(withClientReaction(new PostingInfo(p, false, requestContext))))
                 .collect(Collectors.toList());
     }
 
@@ -396,6 +397,12 @@ public class PostingController {
         if (stories != null && !stories.isEmpty()) {
             postingInfo.setFeedReferences(stories.stream().map(FeedReference::new).collect(Collectors.toList()));
         }
+        return postingInfo;
+    }
+
+    private PostingInfo withBlockings(PostingInfo postingInfo) {
+        postingInfo.putBlockedOperations(
+                blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
         return postingInfo;
     }
 

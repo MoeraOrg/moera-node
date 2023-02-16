@@ -221,8 +221,9 @@ public class CommentController {
 
         requestContext.send(new CommentAddedLiberin(posting, comment));
 
+        var blockedOperations = blockedUserOperations.findBlockedOperations(postingId);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
-                .body(new CommentCreated(comment, posting.getTotalChildren(), requestContext));
+                .body(new CommentCreated(comment, posting.getTotalChildren(), requestContext, blockedOperations));
     }
 
     @PutMapping("/{commentId}")
@@ -294,8 +295,8 @@ public class CommentController {
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
 
-        return withSeniorReaction(withClientReaction(new CommentInfo(comment, requestContext)),
-                comment.getPosting().getOwnerName());
+        return withBlockings(withSeniorReaction(withClientReaction(new CommentInfo(comment, requestContext)),
+                comment.getPosting().getOwnerName()));
     }
 
     private byte[] validateCommentText(Posting posting, Comment comment, CommentText commentText, String ownerName,
@@ -592,6 +593,8 @@ public class CommentController {
                 .map(ClientReactionInfo::new)
                 .filter(r -> commentMap.containsKey(r.getEntryId()))
                 .forEach(r -> commentMap.get(r.getEntryId()).setSeniorReaction(r));
+        var blockedOperations = blockedUserOperations.findBlockedOperations(posting.getId());
+        comments.forEach(c -> c.putBlockedOperations(blockedOperations));
         sliceInfo.setComments(comments);
     }
 
@@ -635,9 +638,9 @@ public class CommentController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        return withSeniorReaction(
+        return withBlockings(withSeniorReaction(
                 withClientReaction(new CommentInfo(comment, includeSet.contains("source"), requestContext)),
-                comment.getPosting().getOwnerName());
+                comment.getPosting().getOwnerName()));
     }
 
     @DeleteMapping("/{commentId}")
@@ -703,7 +706,7 @@ public class CommentController {
         List<Posting> attached = entryAttachmentRepository.findOwnAttachedPostings(
                 requestContext.nodeId(), comment.getCurrentRevision().getId());
         return attached.stream()
-                .map(p -> withClientReaction(new PostingInfo(p, false, requestContext)))
+                .map(p -> withBlockings(withClientReaction(new PostingInfo(p, false, requestContext))))
                 .collect(Collectors.toList());
     }
 
@@ -731,6 +734,18 @@ public class CommentController {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
         postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
         return postingInfo;
+    }
+
+    private PostingInfo withBlockings(PostingInfo postingInfo) {
+        postingInfo.putBlockedOperations(
+                blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
+        return postingInfo;
+    }
+
+    private CommentInfo withBlockings(CommentInfo commentInfo) {
+        commentInfo.putBlockedOperations(
+                blockedUserOperations.findBlockedOperations(UUID.fromString(commentInfo.getPostingId())));
+        return commentInfo;
     }
 
 }

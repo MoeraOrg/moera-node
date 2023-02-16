@@ -2,7 +2,10 @@ package org.moera.node.model;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -11,6 +14,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
@@ -61,6 +65,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private Map<String, Principal> reactionOperations;
     private Map<String, Principal> ownerOperations;
     private Map<String, Principal> seniorOperations;
+    private Set<String> blockedOperations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ClientReactionInfo seniorReaction;
@@ -511,6 +516,31 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
 
     public void setSeniorOperations(Map<String, Principal> seniorOperations) {
         this.seniorOperations = seniorOperations;
+    }
+
+    public Set<String> getBlockedOperations() {
+        return blockedOperations;
+    }
+
+    public void setBlockedOperations(Set<String> blockedOperations) {
+        this.blockedOperations = blockedOperations;
+    }
+
+    public void putBlockedOperation(BlockedOperation operation) {
+        if (blockedOperations == null) {
+            blockedOperations = new HashSet<>();
+        }
+        if (operation == BlockedOperation.REACTION) {
+            blockedOperations.add("addReaction");
+        }
+    }
+
+    public void putBlockedOperations(List<BlockedOperation> operations) {
+        if (operations != null) {
+            for (BlockedOperation operation : operations) {
+                putBlockedOperation(operation);
+            }
+        }
     }
 
     public AcceptedReactions getAcceptedReactions() {

@@ -1,8 +1,11 @@
 package org.moera.node.operations;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
@@ -24,6 +27,7 @@ import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class BlockedUserOperations {
@@ -49,14 +53,25 @@ public class BlockedUserOperations {
     @Inject
     private PlatformTransactionManager txManager;
 
+    private static <E> List<E> single(E e) {
+        return e != null ? List.of(e) : null;
+    }
+
     public List<BlockedUser> search(
             UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
+            String entryNodeName, String entryPostingId
+    ) {
+        return search(nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId);
+    }
+
+    public List<BlockedUser> search(
+            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, Collection<UUID> entryIds,
             String entryNodeName, String entryPostingId
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
         QContact contact = QContact.contact;
         Predicate where = buildFilter(
-                nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId);
+                nodeId, blockedOperations, remoteNodeName, entryIds, entryNodeName, entryPostingId);
         return new JPAQueryFactory(entityManager)
                 .selectFrom(blockedUser)
                 .leftJoin(blockedUser.contact, contact).fetchJoin()
@@ -68,7 +83,7 @@ public class BlockedUserOperations {
     public long count(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
                       String entryNodeName, String entryPostingId) {
         Predicate where = buildFilter(
-                nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId);
+                nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId);
         return blockedUserRepository.count(where);
     }
 
@@ -99,7 +114,7 @@ public class BlockedUserOperations {
     }
 
     private static BooleanBuilder buildFilter(
-            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
+            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, Collection<UUID> entryIds,
             String entryNodeName, String entryPostingId
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
@@ -111,9 +126,9 @@ public class BlockedUserOperations {
         if (remoteNodeName != null) {
             where.and(blockedUser.remoteNodeName.eq(remoteNodeName));
         }
-        if (entryId != null) {
+        if (!ObjectUtils.isEmpty(entryIds)) {
             BooleanBuilder expr = new BooleanBuilder();
-            expr.or(blockedUser.entry.id.eq(entryId))
+            expr.or(blockedUser.entry.id.in(entryIds))
                     .or(blockedUser.entry.isNull());
             where.and(expr);
         } else {
@@ -136,6 +151,24 @@ public class BlockedUserOperations {
             where.and(blockedUser.entryPostingId.isNull());
         }
         return where;
+    }
+
+    public List<BlockedOperation> findBlockedOperations(UUID postingId) {
+        if (requestContext.isAdmin()) {
+            return Collections.emptyList();
+        }
+        String clientName = requestContext.getClientName();
+        if (ObjectUtils.isEmpty(clientName)) {
+            return Collections.emptyList();
+        }
+        return search(
+                requestContext.nodeId(),
+                new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
+                clientName,
+                postingId,
+                null,
+                null
+        ).stream().map(BlockedUser::getBlockedOperation).collect(Collectors.toList());
     }
 
     @Scheduled(fixedDelayString = "PT1H")

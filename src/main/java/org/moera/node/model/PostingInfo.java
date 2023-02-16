@@ -3,8 +3,10 @@ package org.moera.node.model;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -14,6 +16,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
@@ -80,6 +83,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Map<String, Principal> commentOperations;
     private Map<String, Principal> reactionOperations;
     private Map<String, Principal> commentReactionOperations;
+    private Set<String> blockedOperations;
+    private Set<String> blockedCommentOperations;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -691,6 +696,48 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setCommentReactionOperations(Map<String, Principal> commentReactionOperations) {
         this.commentReactionOperations = commentReactionOperations;
+    }
+
+    public Set<String> getBlockedOperations() {
+        return blockedOperations;
+    }
+
+    public void setBlockedOperations(Set<String> blockedOperations) {
+        this.blockedOperations = blockedOperations;
+    }
+
+    public Set<String> getBlockedCommentOperations() {
+        return blockedCommentOperations;
+    }
+
+    public void setBlockedCommentOperations(Set<String> blockedCommentOperations) {
+        this.blockedCommentOperations = blockedCommentOperations;
+    }
+
+    public void putBlockedOperation(BlockedOperation operation) {
+        if (blockedOperations == null) {
+            blockedOperations = new HashSet<>();
+        }
+        switch (operation) {
+            case COMMENT:
+                blockedOperations.add("addComment");
+                break;
+            case REACTION:
+                blockedOperations.add("addReaction");
+                if (blockedCommentOperations == null) {
+                    blockedCommentOperations = new HashSet<>();
+                }
+                blockedCommentOperations.add("addReaction");
+                break;
+        }
+    }
+
+    public void putBlockedOperations(List<BlockedOperation> operations) {
+        if (operations != null) {
+            for (BlockedOperation operation : operations) {
+                putBlockedOperation(operation);
+            }
+        }
     }
 
     public AcceptedReactions getAcceptedReactions() {

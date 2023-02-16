@@ -24,6 +24,8 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedOperation;
+import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
@@ -51,6 +53,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
@@ -93,6 +96,9 @@ public class FeedController {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private BlockedUserOperations blockedUserOperations;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -362,6 +368,25 @@ public class FeedController {
                     .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
             if (requestContext.isAdmin()) {
                 fillOwnInfo(stories, postingMap);
+            } else {
+                List<BlockedUser> blockedUsers = blockedUserOperations.search(
+                        requestContext.nodeId(),
+                        new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
+                        clientName,
+                        postingMap.keySet().stream().map(UUID::fromString).collect(Collectors.toList()),
+                        null,
+                        null
+                );
+                for (BlockedUser blockedUser : blockedUsers) {
+                    if (blockedUser.isGlobal()) {
+                        postingMap.values().forEach(p -> p.putBlockedOperation(blockedUser.getBlockedOperation()));
+                    } else {
+                        PostingInfo postingInfo = postingMap.get(blockedUser.getEntry().getId().toString());
+                        if (postingInfo != null) {
+                            postingInfo.putBlockedOperation(blockedUser.getBlockedOperation());
+                        }
+                    }
+                }
             }
         }
         sliceInfo.getStories().addAll(stories);
