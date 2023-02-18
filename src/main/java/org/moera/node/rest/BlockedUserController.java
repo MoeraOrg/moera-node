@@ -142,7 +142,7 @@ public class BlockedUserController {
 
     @PostMapping("/search")
     @Transactional
-    public List<BlockedUserInfo> post(@Valid @RequestBody BlockedUserFilter blockedUserFilter) {
+    public List<BlockedUserInfo> search(@Valid @RequestBody BlockedUserFilter blockedUserFilter) {
         log.info("POST /people/blocked-users/search");
 
         if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()))
