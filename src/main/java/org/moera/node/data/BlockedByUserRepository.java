@@ -6,8 +6,10 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
-public interface BlockedByUserRepository extends JpaRepository<BlockedByUser, UUID> {
+public interface BlockedByUserRepository
+        extends JpaRepository<BlockedByUser, UUID>, QuerydslPredicateExecutor<BlockedByUser> {
 
     @Query("select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
             + " where bbu.nodeId = ?1")

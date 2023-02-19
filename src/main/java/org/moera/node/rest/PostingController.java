@@ -54,6 +54,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
+import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
@@ -118,6 +119,9 @@ public class PostingController {
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
+
+    @Inject
+    private BlockedByUserOperations blockedByUserOperations;
 
     @Inject
     private TextConverter textConverter;
@@ -401,8 +405,14 @@ public class PostingController {
     }
 
     private PostingInfo withBlockings(PostingInfo postingInfo) {
-        postingInfo.putBlockedOperations(
-                blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
+        if (postingInfo.isOriginal()) {
+            postingInfo.putBlockedOperations(
+                    blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
+        } else if (requestContext.isAdmin()) {
+            postingInfo.putBlockedOperations(
+                    blockedByUserOperations.findBlockedOperations(
+                            postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()));
+        }
         return postingInfo;
     }
 

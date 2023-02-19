@@ -24,6 +24,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.principal.Principal;
+import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Feed;
@@ -51,8 +52,10 @@ import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.RemotePosting;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
@@ -99,6 +102,9 @@ public class FeedController {
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
+
+    @Inject
+    private BlockedByUserOperations blockedByUserOperations;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -417,16 +423,20 @@ public class FeedController {
                 .filter(Objects::nonNull)
                 .filter(p -> !p.isOriginal())
                 .collect(Collectors.toList());
-        List<String> remotePostingIds = postingMap.values().stream()
+        List<RemotePosting> remotePostings = postingMap.values().stream()
                 .filter(p -> !p.isOriginal())
-                .map(PostingInfo::getReceiverPostingId)
+                .map(p -> new RemotePosting(p.getReceiverName(), p.getReceiverPostingId()))
                 .collect(Collectors.toList());
-        if (!remotePostingIds.isEmpty()) {
-            fillOwnReactions(postings, remotePostingIds);
+        if (!remotePostings.isEmpty()) {
+            fillOwnReactions(postings, remotePostings);
+            fillBlockedBy(postings, remotePostings);
         }
     }
 
-    private void fillOwnReactions(List<PostingInfo> postings, List<String> remotePostingIds) {
+    private void fillOwnReactions(List<PostingInfo> postings, List<RemotePosting> remotePostings) {
+        List<String> remotePostingIds = remotePostings.stream()
+                .map(RemotePosting::getPostingId)
+                .collect(Collectors.toList());
         Map<String, OwnReaction> ownReactions = ownReactionRepository
                 .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
                 .stream()
@@ -440,6 +450,25 @@ public class FeedController {
                 posting.setClientReaction(new ClientReactionInfo(ownReaction));
             }
         });
+    }
+
+    private void fillBlockedBy(List<PostingInfo> postings, List<RemotePosting> remotePostings) {
+        List<BlockedByUser> blockedByUsers = blockedByUserOperations.search(
+                requestContext.nodeId(),
+                new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
+                remotePostings.toArray(RemotePosting[]::new));
+        if (blockedByUsers.isEmpty()) {
+            return;
+        }
+        for (BlockedByUser blockedByUser : blockedByUsers) {
+            for (PostingInfo posting : postings) {
+                if (blockedByUser.getRemoteNodeName().equals(posting.getReceiverName())
+                        && (blockedByUser.isGlobal()
+                            || blockedByUser.getRemotePostingId().equals(posting.getReceiverPostingId()))) {
+                    posting.putBlockedOperation(blockedByUser.getBlockedOperation());
+                }
+            }
+        }
     }
 
     private StoryInfo buildStoryInfo(Story story) {

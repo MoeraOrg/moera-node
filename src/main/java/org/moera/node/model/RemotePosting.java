@@ -7,6 +7,14 @@ public class RemotePosting {
     private String nodeName;
     private String postingId;
 
+    public RemotePosting() {
+    }
+
+    public RemotePosting(String nodeName, String postingId) {
+        this.nodeName = nodeName;
+        this.postingId = postingId;
+    }
+
     public String getNodeName() {
         return nodeName;
     }
