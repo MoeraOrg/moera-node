@@ -381,7 +381,8 @@ public class FeedController {
                         clientName,
                         postingMap.keySet().stream().map(UUID::fromString).collect(Collectors.toList()),
                         null,
-                        null
+                        null,
+                        false
                 );
                 for (BlockedUser blockedUser : blockedUsers) {
                     if (blockedUser.isGlobal()) {

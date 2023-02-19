@@ -11,6 +11,7 @@ public class BlockedUserFilter {
     private UUID entryId;
     private String entryNodeName;
     private String entryPostingId;
+    private Boolean strict;
 
     public BlockedOperation[] getBlockedOperations() {
         return blockedOperations;
@@ -50,6 +51,14 @@ public class BlockedUserFilter {
 
     public void setEntryPostingId(String entryPostingId) {
         this.entryPostingId = entryPostingId;
+    }
+
+    public Boolean getStrict() {
+        return strict;
+    }
+
+    public void setStrict(Boolean strict) {
+        this.strict = strict;
     }
 
 }

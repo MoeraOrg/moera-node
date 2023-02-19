@@ -12,8 +12,8 @@ public interface BlockedByUserRepository
         extends JpaRepository<BlockedByUser, UUID>, QuerydslPredicateExecutor<BlockedByUser> {
 
     @Query("select bbu from BlockedByUser bbu left join fetch bbu.contact c left join fetch c.remoteAvatarMediaFile"
-            + " where bbu.nodeId = ?1")
-    Collection<BlockedByUser> findByNodeId(UUID nodeId);
+            + " where bbu.nodeId = ?1 and bbu.remoteNodeName is null and bbu.remotePostingId is null")
+    Collection<BlockedByUser> findByNodeIdGlobal(UUID nodeId);
 
     @Query("select count(distinct bbu.remoteNodeName) from BlockedByUser bbu where bbu.nodeId = ?1")
     int countByNodeId(UUID nodeId);

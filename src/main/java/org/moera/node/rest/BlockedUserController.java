@@ -153,7 +153,8 @@ public class BlockedUserController {
 
         return blockedUserOperations.search(requestContext.nodeId(), blockedUserFilter.getBlockedOperations(),
                         blockedUserFilter.getNodeName(), blockedUserFilter.getEntryId(),
-                        blockedUserFilter.getEntryNodeName(), blockedUserFilter.getEntryPostingId()).stream()
+                        blockedUserFilter.getEntryNodeName(), blockedUserFilter.getEntryPostingId(),
+                        blockedUserFilter.getStrict() != null && blockedUserFilter.getStrict()).stream()
                 .map(bu -> new BlockedUserInfo(bu, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }

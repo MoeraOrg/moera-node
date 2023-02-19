@@ -59,7 +59,7 @@ public class BlockedByUserController {
         Collection<BlockedByUser> blockedByUsers;
         if (nodeName == null) {
             if (postingId == null) {
-                blockedByUsers = blockedByUserRepository.findByNodeId(requestContext.nodeId());
+                blockedByUsers = blockedByUserRepository.findByNodeIdGlobal(requestContext.nodeId());
             } else {
                 throw new ValidationFailure("blocked-by-user.nodeName.blank");
             }

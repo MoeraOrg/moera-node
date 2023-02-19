@@ -59,19 +59,19 @@ public class BlockedUserOperations {
 
     public List<BlockedUser> search(
             UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
-            String entryNodeName, String entryPostingId
+            String entryNodeName, String entryPostingId, boolean strict
     ) {
-        return search(nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId);
+        return search(nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId, strict);
     }
 
     public List<BlockedUser> search(
             UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, Collection<UUID> entryIds,
-            String entryNodeName, String entryPostingId
+            String entryNodeName, String entryPostingId, boolean strict
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
         QContact contact = QContact.contact;
         Predicate where = buildFilter(
-                nodeId, blockedOperations, remoteNodeName, entryIds, entryNodeName, entryPostingId);
+                nodeId, blockedOperations, remoteNodeName, entryIds, entryNodeName, entryPostingId, strict);
         return new JPAQueryFactory(entityManager)
                 .selectFrom(blockedUser)
                 .leftJoin(blockedUser.contact, contact).fetchJoin()
@@ -81,15 +81,15 @@ public class BlockedUserOperations {
     }
 
     public long count(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
-                      String entryNodeName, String entryPostingId) {
+                      String entryNodeName, String entryPostingId, boolean strict) {
         Predicate where = buildFilter(
-                nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId);
+                nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId, strict);
         return blockedUserRepository.count(where);
     }
 
     public boolean isBlocked(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
                              String entryNodeName, String entryPostingId) {
-        return count(nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId) > 0;
+        return count(nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId, false) > 0;
     }
 
     public boolean isBlocked(BlockedOperation[] blockedOperations, UUID entryId, String entryNodeName,
@@ -115,7 +115,7 @@ public class BlockedUserOperations {
 
     private static BooleanBuilder buildFilter(
             UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, Collection<UUID> entryIds,
-            String entryNodeName, String entryPostingId
+            String entryNodeName, String entryPostingId, boolean strict
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
         BooleanBuilder where = new BooleanBuilder();
@@ -128,24 +128,30 @@ public class BlockedUserOperations {
         }
         if (!ObjectUtils.isEmpty(entryIds)) {
             BooleanBuilder expr = new BooleanBuilder();
-            expr.or(blockedUser.entry.id.in(entryIds))
-                    .or(blockedUser.entry.isNull());
+            expr.or(blockedUser.entry.id.in(entryIds));
+            if (!strict) {
+                expr.or(blockedUser.entry.isNull());
+            }
             where.and(expr);
         } else {
             where.and(blockedUser.entry.isNull());
         }
         if (entryNodeName != null) {
             BooleanBuilder expr = new BooleanBuilder();
-            expr.or(blockedUser.entryNodeName.eq(entryNodeName))
-                    .or(blockedUser.entryNodeName.isNull());
+            expr.or(blockedUser.entryNodeName.eq(entryNodeName));
+            if (!strict) {
+                expr.or(blockedUser.entryNodeName.isNull());
+            }
             where.and(expr);
         } else {
             where.and(blockedUser.entryNodeName.isNull());
         }
         if (entryPostingId != null) {
             BooleanBuilder expr = new BooleanBuilder();
-            expr.or(blockedUser.entryPostingId.eq(entryPostingId))
-                    .or(blockedUser.entryPostingId.isNull());
+            expr.or(blockedUser.entryPostingId.eq(entryPostingId));
+            if (!strict) {
+                expr.or(blockedUser.entryPostingId.isNull());
+            }
             where.and(expr);
         } else {
             where.and(blockedUser.entryPostingId.isNull());
@@ -167,7 +173,8 @@ public class BlockedUserOperations {
                 clientName,
                 postingId,
                 null,
-                null
+                null,
+                false
         ).stream().map(BlockedUser::getBlockedOperation).collect(Collectors.toList());
     }
 
