@@ -27,10 +27,11 @@ public class BlockedByUserOperations {
     @Inject
     private EntityManager entityManager;
 
-    public List<BlockedByUser> search(UUID nodeId, BlockedOperation[] blockedOperations, RemotePosting[] postings) {
+    public List<BlockedByUser> search(UUID nodeId, BlockedOperation[] blockedOperations, RemotePosting[] postings,
+                                      boolean strict) {
         QBlockedByUser blockedByUser = QBlockedByUser.blockedByUser;
         QContact contact = QContact.contact;
-        Predicate where = buildFilter(nodeId, blockedOperations, postings);
+        Predicate where = buildFilter(nodeId, blockedOperations, postings, strict);
         return new JPAQueryFactory(entityManager)
                 .selectFrom(blockedByUser)
                 .leftJoin(blockedByUser.contact, contact).fetchJoin()
@@ -40,7 +41,7 @@ public class BlockedByUserOperations {
     }
 
     private static BooleanBuilder buildFilter(UUID nodeId, BlockedOperation[] blockedOperations,
-                                              RemotePosting[] postings) {
+                                              RemotePosting[] postings, boolean strict) {
         QBlockedByUser blockedByUser = QBlockedByUser.blockedByUser;
         BooleanBuilder where = new BooleanBuilder();
         where.and(blockedByUser.nodeId.eq(nodeId));
@@ -51,13 +52,14 @@ public class BlockedByUserOperations {
             BooleanBuilder wherePostings = new BooleanBuilder();
             for (RemotePosting posting : postings) {
                 if (!ObjectUtils.isEmpty(posting.getNodeName())) {
-                    BooleanBuilder expr = new BooleanBuilder();
-                    expr.and(blockedByUser.remoteNodeName.eq(posting.getNodeName()));
-                    expr.and(blockedByUser.remotePostingId.isNull());
-                    wherePostings.or(expr);
-
+                    if (ObjectUtils.isEmpty(posting.getPostingId()) || !strict) {
+                        BooleanBuilder expr = new BooleanBuilder();
+                        expr.and(blockedByUser.remoteNodeName.eq(posting.getNodeName()));
+                        expr.and(blockedByUser.remotePostingId.isNull());
+                        wherePostings.or(expr);
+                    }
                     if (!ObjectUtils.isEmpty(posting.getPostingId())) {
-                        expr = new BooleanBuilder();
+                        BooleanBuilder expr = new BooleanBuilder();
                         expr.and(blockedByUser.remoteNodeName.eq(posting.getNodeName()));
                         expr.and(blockedByUser.remotePostingId.eq(posting.getPostingId()));
                         wherePostings.or(expr);
@@ -65,6 +67,9 @@ public class BlockedByUserOperations {
                 }
             }
             where.and(wherePostings);
+        } else if (strict) {
+            where.and(blockedByUser.remoteNodeName.isNull())
+                    .and(blockedByUser.remotePostingId.isNull());
         }
         return where;
     }
@@ -73,7 +78,8 @@ public class BlockedByUserOperations {
         return search(
                 requestContext.nodeId(),
                 new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
-                new RemotePosting[]{new RemotePosting(nodeName, postingId)}
+                new RemotePosting[]{new RemotePosting(nodeName, postingId)},
+                false
         ).stream().map(BlockedByUser::getBlockedOperation).collect(Collectors.toList());
     }
 

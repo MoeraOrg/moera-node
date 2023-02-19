@@ -457,7 +457,8 @@ public class FeedController {
         List<BlockedByUser> blockedByUsers = blockedByUserOperations.search(
                 requestContext.nodeId(),
                 new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
-                remotePostings.toArray(RemotePosting[]::new));
+                remotePostings.toArray(RemotePosting[]::new),
+                false);
         if (blockedByUsers.isEmpty()) {
             return;
         }

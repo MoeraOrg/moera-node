@@ -1,6 +1,5 @@
 package org.moera.node.rest;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -18,7 +17,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.BlockedByUserFilter;
 import org.moera.node.model.BlockedByUserInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +25,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
 @RequestMapping("/moera/api/people/blocked-by-users")
@@ -44,38 +41,6 @@ public class BlockedByUserController {
 
     @Inject
     private BlockedByUserOperations blockedByUserOperations;
-
-    @GetMapping
-    @Transactional
-    public List<BlockedByUserInfo> getAll(@RequestParam(required = false) String nodeName,
-                                          @RequestParam(required = false) String postingId) {
-        log.info("GET /people/blocked-by-users (nodeName = {}, postingId = {})",
-                LogUtil.format(nodeName), LogUtil.format(postingId));
-
-        if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()))) {
-            throw new AuthenticationException();
-        }
-
-        Collection<BlockedByUser> blockedByUsers;
-        if (nodeName == null) {
-            if (postingId == null) {
-                blockedByUsers = blockedByUserRepository.findByNodeIdGlobal(requestContext.nodeId());
-            } else {
-                throw new ValidationFailure("blocked-by-user.nodeName.blank");
-            }
-        } else {
-            if (postingId == null) {
-                blockedByUsers = blockedByUserRepository.findByRemoteNode(requestContext.nodeId(), nodeName);
-            } else {
-                blockedByUsers = blockedByUserRepository.findByRemotePosting(
-                        requestContext.nodeId(), nodeName, postingId);
-            }
-        }
-
-        return blockedByUsers.stream()
-                .map(bbu -> new BlockedByUserInfo(bbu, requestContext.getOptions(), requestContext))
-                .collect(Collectors.toList());
-    }
 
     @GetMapping("/{id}")
     @Transactional
@@ -103,7 +68,8 @@ public class BlockedByUserController {
         }
 
         return blockedByUserOperations.search(requestContext.nodeId(), blockedByUserFilter.getBlockedOperations(),
-                        blockedByUserFilter.getPostings()).stream()
+                        blockedByUserFilter.getPostings(),
+                        blockedByUserFilter.getStrict() != null && blockedByUserFilter.getStrict()).stream()
                 .map(bbu -> new BlockedByUserInfo(bbu, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
