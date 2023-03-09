@@ -604,6 +604,11 @@
       - friends
       - admin
 
+- name: blocked-users.visibility.checksum
+  type: int
+  defaultValue: 0
+  internal: true
+
 - name: blocked-by-users.view
   type: Principal
   defaultValue: admin

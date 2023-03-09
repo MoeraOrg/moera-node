@@ -1,9 +1,12 @@
 package org.moera.node.operations;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -17,6 +20,7 @@ import org.moera.node.data.BlockedUser;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.QBlockedUser;
 import org.moera.node.data.QContact;
+import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
@@ -37,6 +41,9 @@ public class BlockedUserOperations {
 
     @Inject
     private UniversalContext universalContext;
+
+    @Inject
+    private Domains domains;
 
     @Inject
     private BlockedUserRepository blockedUserRepository;
@@ -178,16 +185,25 @@ public class BlockedUserOperations {
         ).stream().map(BlockedUser::getBlockedOperation).collect(Collectors.toList());
     }
 
+    public void recalculateChecksums(UUID nodeId) {
+        int checksum = Arrays.hashCode(blockedUserRepository.findIdsByGlobalOperation(
+                nodeId, BlockedOperation.VISIBILITY).toArray(UUID[]::new));
+        domains.getDomainOptions(nodeId).set("blocked-users.visibility.checksum", checksum);
+    }
+
     @Scheduled(fixedDelayString = "PT1H")
     public void purgeExpired() throws Throwable {
         List<Liberin> liberinList = new ArrayList<>();
         Transaction.execute(txManager, () -> {
+            Set<UUID> nodeIds = new HashSet<>();
             blockedUserRepository.findExpired(Util.now()).forEach(blockedUser -> {
+                nodeIds.add(blockedUser.getNodeId());
                 universalContext.associate(blockedUser.getNodeId());
                 contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
                 blockedUserRepository.delete(blockedUser);
                 liberinList.add(new BlockedUserDeletedLiberin(blockedUser).withNodeId(blockedUser.getNodeId()));
             });
+            nodeIds.forEach(this::recalculateChecksums);
             return null;
         });
         liberinList.forEach(liberinManager::send);

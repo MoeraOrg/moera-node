@@ -49,6 +49,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean subscriptionsUpdated;
     private final List<FriendCacheInvalidation> friendCacheInvalidations = new ArrayList<>();
     private final List<Nodes> subscribedCacheInvalidations = new ArrayList<>();
+    private boolean blockedUsersUpdated;
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -360,6 +361,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public List<Nodes> getSubscribedCacheInvalidations() {
         return subscribedCacheInvalidations;
+    }
+
+    @Override
+    public void blockedUsersUpdated() {
+        blockedUsersUpdated = true;
+    }
+
+    @Override
+    public boolean isBlockedUsersUpdated() {
+        return blockedUsersUpdated;
     }
 
 }

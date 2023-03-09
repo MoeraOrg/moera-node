@@ -8,6 +8,7 @@ import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
 import org.moera.node.global.NoClientId;
 import org.moera.node.global.RequestContext;
+import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.subscriptions.SubscriptionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
@@ -31,6 +32,9 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     @Inject
     private SubscribedCache subscribedCache;
 
+    @Inject
+    private BlockedUserOperations blockedUserOperations;
+
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
@@ -48,6 +52,9 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
             liberinManager.send(requestContext.getAfterCommitLiberins());
             if (requestContext.isSubscriptionsUpdated()) {
                 subscriptionManager.rescan();
+            }
+            if (requestContext.isBlockedUsersUpdated()) {
+                blockedUserOperations.recalculateChecksums(requestContext.nodeId());
             }
         }
     }

@@ -124,4 +124,8 @@ public interface RequestContext extends AccessChecker {
 
     List<Nodes> getSubscribedCacheInvalidations();
 
+    void blockedUsersUpdated();
+
+    boolean isBlockedUsersUpdated();
+
 }

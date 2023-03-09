@@ -23,6 +23,7 @@ import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
 import org.moera.node.model.BlockedUserAttributes;
 import org.moera.node.model.BlockedUserFilter;
 import org.moera.node.model.BlockedUserInfo;
+import org.moera.node.model.BlockedUsersChecksums;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -102,6 +103,7 @@ public class BlockedUserController {
         contactOperations.updateBlockedUserCounts(blockedUser, 1);
         contactOperations.updateViewPrincipal(blockedUser).fill(blockedUser);
 
+        requestContext.blockedUsersUpdated();
         requestContext.send(new BlockedUserAddedLiberin(blockedUser));
 
         return ResponseEntity.created(URI.create("/blocked-users/" + blockedUser.getId()))
@@ -135,6 +137,7 @@ public class BlockedUserController {
         blockedUserRepository.delete(blockedUser);
         contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
 
+        requestContext.blockedUsersUpdated();
         requestContext.send(new BlockedUserDeletedLiberin(blockedUser));
 
         return Result.OK;
@@ -157,6 +160,15 @@ public class BlockedUserController {
                         blockedUserFilter.getStrict() != null && blockedUserFilter.getStrict()).stream()
                 .map(bu -> new BlockedUserInfo(bu, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/checksums")
+    @Admin
+    @Transactional
+    public BlockedUsersChecksums checksums() {
+        log.info("GET /people/blocked-users/checksums");
+
+        return new BlockedUsersChecksums(requestContext.getOptions().getLong("blocked-users.visibility.checksum"));
     }
 
 }
