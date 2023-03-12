@@ -1,6 +1,5 @@
 package org.moera.node.liberin.receptor;
 
-import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.liberin.LiberinMapping;
@@ -23,7 +22,8 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     public void added(BlockedUserAddedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
         send(liberin, new BlockedUserAddedEvent(
-                new BlockedUserInfo(blockedUser, universalContext.getOptions(), AccessCheckers.ADMIN)));
+                new BlockedUserInfo(blockedUser, universalContext.getOptions()),
+                BlockedUser.getViewAllE(universalContext.getOptions())));
         if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
                 && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
                 && blockedUser.getEntryNodeName() == null) {
@@ -47,7 +47,8 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     public void deleted(BlockedUserDeletedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
         send(liberin, new BlockedUserDeletedEvent(
-                new BlockedUserInfo(blockedUser, universalContext.getOptions(), AccessCheckers.ADMIN)));
+                new BlockedUserInfo(blockedUser, universalContext.getOptions()),
+                BlockedUser.getViewAllE(universalContext.getOptions())));
         if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
                 && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
                 && blockedUser.getEntryNodeName() == null) {

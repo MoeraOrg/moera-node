@@ -2,7 +2,6 @@ package org.moera.node.liberin.receptor;
 
 import javax.inject.Inject;
 
-import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.instant.BlockedUserInstants;
 import org.moera.node.liberin.LiberinMapping;
@@ -25,7 +24,8 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
         BlockedByUser blockedByUser = liberin.getBlockedByUser();
         blockedUserInstants.blocked(blockedByUser, liberin.getEntryHeading());
         send(liberin, new BlockedByUserAddedEvent(
-                new BlockedByUserInfo(blockedByUser, universalContext.getOptions(), AccessCheckers.ADMIN)));
+                new BlockedByUserInfo(blockedByUser, universalContext.getOptions()),
+                BlockedByUser.getViewAllE(universalContext.getOptions())));
     }
 
     @LiberinMapping
@@ -33,7 +33,8 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
         BlockedByUser blockedByUser = liberin.getBlockedByUser();
         blockedUserInstants.unblocked(blockedByUser, liberin.getEntryHeading());
         send(liberin, new BlockedByUserDeletedEvent(
-                new BlockedByUserInfo(blockedByUser, universalContext.getOptions(), AccessCheckers.ADMIN)));
+                new BlockedByUserInfo(blockedByUser, universalContext.getOptions()),
+                BlockedByUser.getViewAllE(universalContext.getOptions())));
     }
 
 }

@@ -3,7 +3,8 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.principal.Principal;
+import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.BlockedByUserInfo;
 import org.springframework.data.util.Pair;
 
@@ -12,11 +13,11 @@ public class BlockedByUserEvent extends Event {
     private BlockedByUserInfo blockedByUser;
 
     protected BlockedByUserEvent(EventType type) {
-        super(type, Principal.ADMIN);
+        super(type);
     }
 
-    protected BlockedByUserEvent(EventType type, BlockedByUserInfo blockedByUser) {
-        super(type, Principal.ADMIN);
+    protected BlockedByUserEvent(EventType type, BlockedByUserInfo blockedByUser, PrincipalFilter filter) {
+        super(type, filter);
         this.blockedByUser = blockedByUser;
     }
 
@@ -26,6 +27,11 @@ public class BlockedByUserEvent extends Event {
 
     public void setBlockedByUser(BlockedByUserInfo blockedByUser) {
         this.blockedByUser = blockedByUser;
+    }
+
+    @Override
+    public void protect(EventSubscriber eventSubscriber) {
+        blockedByUser.protect(eventSubscriber);
     }
 
     @Override

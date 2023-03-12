@@ -1,5 +1,6 @@
 package org.moera.node.model.event;
 
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.model.BlockedUserInfo;
 
 public class BlockedUserDeletedEvent extends BlockedUserEvent {
@@ -8,7 +9,7 @@ public class BlockedUserDeletedEvent extends BlockedUserEvent {
         super(EventType.BLOCKED_USER_DELETED);
     }
 
-    public BlockedUserDeletedEvent(BlockedUserInfo blockedUser) {
-        super(EventType.BLOCKED_USER_DELETED, blockedUser);
+    public BlockedUserDeletedEvent(BlockedUserInfo blockedUser, PrincipalFilter filter) {
+        super(EventType.BLOCKED_USER_DELETED, blockedUser, filter);
     }
 }
