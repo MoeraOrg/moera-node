@@ -1,5 +1,6 @@
 package org.moera.node.liberin.receptor;
 
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.liberin.LiberinMapping;
@@ -7,6 +8,9 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.BlockedUserAddedLiberin;
 import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
+import org.moera.node.model.BlockedUserInfo;
+import org.moera.node.model.event.BlockedUserAddedEvent;
+import org.moera.node.model.event.BlockedUserDeletedEvent;
 import org.moera.node.model.notification.BlockingAddedNotification;
 import org.moera.node.model.notification.BlockingDeletedNotification;
 import org.moera.node.notification.send.Directions;
@@ -18,6 +22,8 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void added(BlockedUserAddedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
+        send(liberin, new BlockedUserAddedEvent(
+                new BlockedUserInfo(blockedUser, universalContext.getOptions(), AccessCheckers.ADMIN)));
         if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
                 && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
                 && blockedUser.getEntryNodeName() == null) {
@@ -40,6 +46,8 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void deleted(BlockedUserDeletedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
+        send(liberin, new BlockedUserDeletedEvent(
+                new BlockedUserInfo(blockedUser, universalContext.getOptions(), AccessCheckers.ADMIN)));
         if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
                 && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
                 && blockedUser.getEntryNodeName() == null) {
