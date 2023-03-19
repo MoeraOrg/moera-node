@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -14,6 +15,7 @@ public class FeedInfo implements Cloneable {
     private Long firstCreatedAt;
     private Long lastCreatedAt;
     private Map<String, Principal> operations;
+    private List<String> sheriffs;
 
     public FeedInfo() {
     }
@@ -68,6 +70,14 @@ public class FeedInfo implements Cloneable {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public List<String> getSheriffs() {
+        return sheriffs;
+    }
+
+    public void setSheriffs(List<String> sheriffs) {
+        this.sheriffs = sheriffs;
     }
 
     @Override

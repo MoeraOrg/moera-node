@@ -56,6 +56,7 @@ import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
+import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
@@ -124,6 +125,9 @@ public class PostingController {
     private BlockedByUserOperations blockedByUserOperations;
 
     @Inject
+    private FeedOperations feedOperations;
+
+    @Inject
     private TextConverter textConverter;
 
     @Inject
@@ -175,7 +179,7 @@ public class PostingController {
         requestContext.send(new PostingAddedLiberin(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
-                .body(withBlockings(withStories(new PostingInfo(posting, requestContext))));
+                .body(withSheriffs(withBlockings(withStories(new PostingInfo(posting, requestContext)))));
     }
 
     @PutMapping("/{id}")
@@ -236,7 +240,7 @@ public class PostingController {
         }
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
-        return withBlockings(withStories(withClientReaction(new PostingInfo(posting, requestContext))));
+        return withSheriffs(withBlockings(withStories(withClientReaction(new PostingInfo(posting, requestContext)))));
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
@@ -330,8 +334,8 @@ public class PostingController {
 
         requestContext.send(new PostingReadLiberin(id));
 
-        return withBlockings(withStories(withClientReaction(
-                new PostingInfo(posting, includeSet.contains("source"), requestContext))));
+        return withSheriffs(withBlockings(withStories(withClientReaction(
+                new PostingInfo(posting, includeSet.contains("source"), requestContext)))));
     }
 
     @DeleteMapping("/{id}")
@@ -413,6 +417,11 @@ public class PostingController {
                     blockedByUserOperations.findBlockedOperations(
                             postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()));
         }
+        return postingInfo;
+    }
+
+    private PostingInfo withSheriffs(PostingInfo postingInfo) {
+        feedOperations.fillFeedSheriffs(postingInfo);
         return postingInfo;
     }
 

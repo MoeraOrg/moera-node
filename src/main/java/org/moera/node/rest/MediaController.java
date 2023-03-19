@@ -49,6 +49,7 @@ import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
+import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;
@@ -93,6 +94,9 @@ public class MediaController {
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
+
+    @Inject
+    private FeedOperations feedOperations;
 
     @Inject
     @PersistenceContext
@@ -285,7 +289,9 @@ public class MediaController {
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {
             if (entry instanceof Posting) {
-                parents.add(new EntryInfo(new PostingInfo((Posting) entry, requestContext)));
+                PostingInfo postingInfo = new PostingInfo((Posting) entry, requestContext);
+                feedOperations.fillFeedSheriffs(postingInfo);
+                parents.add(new EntryInfo(postingInfo));
             }
             if (entry instanceof Comment) {
                 parents.add(new EntryInfo(new CommentInfo((Comment) entry, requestContext)));

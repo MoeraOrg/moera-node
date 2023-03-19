@@ -57,6 +57,7 @@ import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
+import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
@@ -107,6 +108,9 @@ public class FeedController {
     private BlockedByUserOperations blockedByUserOperations;
 
     @Inject
+    private FeedOperations feedOperations;
+
+    @Inject
     private PlatformTransactionManager txManager;
 
     @Inject
@@ -125,6 +129,7 @@ public class FeedController {
                 .stream()
                 .map(FeedInfo::clone)
                 .peek(this::fillFeedTotals)
+                .peek(feedOperations::fillFeedSheriffs)
                 .collect(Collectors.toList());
     }
 
@@ -139,6 +144,7 @@ public class FeedController {
 
         FeedInfo feedInfo = Feed.getStandard(feedName).clone();
         fillFeedTotals(feedInfo);
+        feedOperations.fillFeedSheriffs(feedInfo);
 
         return feedInfo;
     }
@@ -479,7 +485,9 @@ public class FeedController {
                 requestContext.isAdmin(),
                 t -> {
                     Posting posting = (Posting) t.getEntry();
-                    return new PostingInfo(posting, requestContext);
+                    PostingInfo info = new PostingInfo(posting, requestContext);
+                    feedOperations.fillFeedSheriffs(info);
+                    return info;
                 }
         );
     }
