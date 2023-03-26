@@ -47,7 +47,10 @@ import org.moera.node.data.QMediaFileOwner;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.friends.FriendCache;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.NoClientId;
@@ -73,6 +76,7 @@ import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.SafeInteger;
@@ -122,7 +126,13 @@ public class CommentController {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
+    private StoryRepository storyRepository;
+
+    @Inject
     private NamingCache namingCache;
+
+    @Inject
+    private FriendCache friendCache;
 
     @Inject
     private CommentOperations commentOperations;
@@ -135,6 +145,9 @@ public class CommentController {
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
+
+    @Inject
+    private FeedOperations feedOperations;
 
     @Inject
     private TextConverter textConverter;
@@ -425,10 +438,15 @@ public class CommentController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        List<Story> stories = requestContext.isPossibleSheriff()
+                ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
+                : Collections.emptyList();
+        if (!requestContext.isPrincipal(posting.getViewE())
+                && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewCommentsE())) {
+        if (!requestContext.isPrincipal(posting.getViewCommentsE())
+                && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())) {
             CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
             sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             sliceInfo.setAfter(SafeInteger.MIN_VALUE);
@@ -445,12 +463,14 @@ public class CommentController {
             throw new ValidationFailure("limit.invalid");
         }
 
+        boolean sheriff = feedOperations.isSheriff(stories);
+
         CommentsSliceInfo sliceInfo;
         if (after == null) {
             before = before != null ? before : SafeInteger.MAX_VALUE;
-            sliceInfo = getCommentsBefore(posting, before, limit);
+            sliceInfo = getCommentsBefore(posting, before, limit, sheriff);
         } else {
-            sliceInfo = getCommentsAfter(posting, after, limit);
+            sliceInfo = getCommentsAfter(posting, after, limit, sheriff);
         }
         calcSliceTotals(sliceInfo, posting);
 
@@ -459,43 +479,43 @@ public class CommentController {
         return sliceInfo;
     }
 
-    private CommentsSliceInfo getCommentsBefore(Posting posting, long before, int limit) {
+    private CommentsSliceInfo getCommentsBefore(Posting posting, long before, int limit, boolean sheriff) {
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
             Page<Comment> page = findSlice(requestContext.nodeId(), posting.getId(), SafeInteger.MIN_VALUE, sliceBefore,
-                    limit + 1, Sort.Direction.DESC);
+                    limit + 1, Sort.Direction.DESC, sheriff);
             if (page.getNumberOfElements() < limit + 1) {
                 sliceInfo.setAfter(SafeInteger.MIN_VALUE);
             } else {
                 sliceInfo.setAfter(page.getContent().get(limit).getMoment());
             }
-            fillSlice(sliceInfo, posting, limit);
+            fillSlice(sliceInfo, posting, limit, sheriff);
             sliceBefore = sliceInfo.getAfter();
         } while (sliceBefore > SafeInteger.MIN_VALUE && sliceInfo.getComments().size() < limit / 2);
         return sliceInfo;
     }
 
-    private CommentsSliceInfo getCommentsAfter(Posting posting, long after, int limit) {
+    private CommentsSliceInfo getCommentsAfter(Posting posting, long after, int limit, boolean sheriff) {
         CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
             Page<Comment> page = findSlice(requestContext.nodeId(), posting.getId(), sliceAfter, SafeInteger.MAX_VALUE,
-                    limit + 1, Sort.Direction.ASC);
+                    limit + 1, Sort.Direction.ASC, sheriff);
             if (page.getNumberOfElements() < limit + 1) {
                 sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             } else {
                 sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
             }
-            fillSlice(sliceInfo, posting, limit);
+            fillSlice(sliceInfo, posting, limit, sheriff);
             sliceAfter = sliceInfo.getBefore();
         } while (sliceAfter < SafeInteger.MAX_VALUE && sliceInfo.getComments().size() < limit / 2);
         return sliceInfo;
     }
 
-    private Predicate commentFilter(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment) {
+    private Predicate commentFilter(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, boolean sheriff) {
         QComment comment = QComment.comment;
         BooleanBuilder where = new BooleanBuilder();
         where.and(comment.nodeId.eq(nodeId))
@@ -505,17 +525,17 @@ public class CommentController {
                 .and(comment.deletedAt.isNull());
         if (!requestContext.isAdmin()) {
             BooleanBuilder visibility = new BooleanBuilder();
-            visibility.or(visibilityFilter(comment, comment.parentViewPrincipal));
+            visibility.or(visibilityFilter(comment, comment.parentViewPrincipal, sheriff));
             BooleanBuilder expr = new BooleanBuilder();
             expr.and(comment.parentViewPrincipal.eq(Principal.UNSET));
-            expr.and(visibilityFilter(comment, comment.viewPrincipal));
+            expr.and(visibilityFilter(comment, comment.viewPrincipal, sheriff));
             visibility.or(expr);
             where.and(visibility);
         }
         return where;
     }
 
-    private Predicate visibilityFilter(QComment comment, SimplePath<Principal> viewPrincipal) {
+    private Predicate visibilityFilter(QComment comment, SimplePath<Principal> viewPrincipal, boolean sheriff) {
         BooleanBuilder visibility = new BooleanBuilder();
         visibility.or(viewPrincipal.eq(Principal.PUBLIC));
         if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
@@ -529,11 +549,12 @@ public class CommentController {
             priv.and(comment.ownerName.eq(requestContext.getClientName()));
             visibility.or(priv);
         }
-        if (requestContext.isSubscribedToClient()) {
+        if (requestContext.isSubscribedToClient() || sheriff) {
             visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
         }
-        if (requestContext.getFriendGroups() != null) {
-            for (String friendGroupName : requestContext.getFriendGroups()) {
+        String[] friendGroups = sheriff ? friendCache.getNodeGroupIds() : requestContext.getFriendGroups();
+        if (friendGroups != null) {
+            for (String friendGroupName : friendGroups) {
                 visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
             }
         }
@@ -541,13 +562,13 @@ public class CommentController {
     }
 
     private Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
-                                    Sort.Direction direction) {
+                                    Sort.Direction direction, boolean sheriff) {
         return commentRepository.findAll(
-                commentFilter(nodeId, parentId, afterMoment, beforeMoment),
+                commentFilter(nodeId, parentId, afterMoment, beforeMoment, sheriff),
                 PageRequest.of(0, limit + 1, direction, "moment"));
     }
 
-    private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit) {
+    private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit, boolean sheriff) {
         QComment comment = QComment.comment;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;
         QEntryAttachment attachment = QEntryAttachment.entryAttachment;
@@ -562,13 +583,13 @@ public class CommentController {
                 .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
                 .leftJoin(attachmentMediaFile.previews).fetchJoin()
                 .distinct()
-                .where(
-                    commentFilter(requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore())
-                )
+                .where(commentFilter(
+                        requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore(), sheriff
+                ))
                 .fetch()
                 .stream()
                 // This should be unnecessary, but let it be for reliability
-                .filter(c -> requestContext.isPrincipal(c.getViewE()))
+                .filter(c -> requestContext.isPrincipal(c.getViewE()) || sheriff)
                 .map(c -> new CommentInfo(c, requestContext))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
@@ -625,13 +646,19 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        List<Story> stories = requestContext.isPossibleSheriff()
+                ? storyRepository.findByEntryId(requestContext.nodeId(), comment.getPosting().getId())
+                : Collections.emptyList();
+        if (!requestContext.isPrincipal(comment.getViewE())
+                && !feedOperations.isSheriffAllowed(stories, comment.getViewE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE())
+                && !feedOperations.isSheriffAllowed(stories, comment.getPosting().getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())
+                && !feedOperations.isSheriffAllowed(stories, comment.getPosting().getViewCommentsE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!comment.getPosting().getId().equals(postingId)) {

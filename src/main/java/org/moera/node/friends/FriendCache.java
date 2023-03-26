@@ -55,6 +55,16 @@ public class FriendCache {
         }
     }
 
+    public String[] getNodeGroupIds() {
+        FriendGroup[] groups = getNodeGroups();
+        return groups != null
+                ? Arrays.stream(groups)
+                    .map(FriendGroup::getId)
+                    .map(UUID::toString)
+                    .toArray(String[]::new)
+                : null;
+    }
+
     public Optional<FriendGroup> getNodeGroup(UUID id) {
         return Arrays.stream(getNodeGroups())
                 .filter(fg -> fg.getId().equals(id))

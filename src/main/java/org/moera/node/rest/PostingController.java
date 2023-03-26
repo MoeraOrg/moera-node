@@ -328,14 +328,16 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
+        if (!requestContext.isPrincipal(posting.getViewE())
+                && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
         requestContext.send(new PostingReadLiberin(id));
 
         return withSheriffs(withBlockings(withStories(withClientReaction(
-                new PostingInfo(posting, includeSet.contains("source"), requestContext)))));
+                new PostingInfo(posting, includeSet.contains("source"), requestContext)), stories)));
     }
 
     @DeleteMapping("/{id}")
@@ -402,6 +404,10 @@ public class PostingController {
     private PostingInfo withStories(PostingInfo postingInfo) {
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(),
                 UUID.fromString(postingInfo.getId()));
+        return withStories(postingInfo, stories);
+    }
+
+    private PostingInfo withStories(PostingInfo postingInfo, List<Story> stories) {
         if (stories != null && !stories.isEmpty()) {
             postingInfo.setFeedReferences(stories.stream().map(FeedReference::new).collect(Collectors.toList()));
         }

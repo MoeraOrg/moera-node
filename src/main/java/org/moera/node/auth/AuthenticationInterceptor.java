@@ -20,6 +20,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.Result;
+import org.moera.node.operations.FeedOperations;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     @Inject
     private AuthenticationManager authenticationManager;
+
+    @Inject
+    private FeedOperations feedOperations;
 
     @Inject
     private FriendCache friendCache;
@@ -165,6 +169,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         }
         if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(requestContext.getClientName())) {
             log.info("Authorized with node name {}", requestContext.getClientName());
+        }
+        if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+            requestContext.setPossibleSheriff(
+                    feedOperations.getAllPossibleSheriffs().stream().anyMatch(requestContext::isClient));
         }
     }
 

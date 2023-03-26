@@ -30,6 +30,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean browserExtension;
     private boolean rootAdmin;
     private boolean admin;
+    private boolean possibleSheriff;
     private boolean subscribedToClient;
     private String[] friendGroups;
     private long authCategory;
@@ -103,6 +104,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    @Override
+    public boolean isPossibleSheriff() {
+        return possibleSheriff;
+    }
+
+    @Override
+    public void setPossibleSheriff(boolean possibleSheriff) {
+        this.possibleSheriff = possibleSheriff;
     }
 
     @Override

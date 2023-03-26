@@ -32,6 +32,10 @@ public interface RequestContext extends AccessChecker {
 
     void setAdmin(boolean admin);
 
+    boolean isPossibleSheriff();
+
+    void setPossibleSheriff(boolean possibleSheriff);
+
     boolean isSubscribedToClient();
 
     void setSubscribedToClient(boolean subscribedToClient);
