@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
@@ -23,16 +25,21 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Posting;
+import org.moera.node.data.SheriffMark;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.model.body.Body;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingInfo implements MediaInfo, ReactionsInfo {
+
+    private static final Logger log = LoggerFactory.getLogger(PostingInfo.class);
 
     private String id;
     private String revisionId;
@@ -85,6 +92,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Map<String, Principal> commentReactionOperations;
     private Set<String> blockedOperations;
     private Set<String> blockedCommentOperations;
+    private SheriffMark[] sheriffMarks;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -278,6 +286,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 posting.getChildReactionOperations().getView(), Principal.UNSET);
         putOperation(commentReactionOperations, "delete",
                 posting.getChildReactionOperations().getDelete(), Principal.UNSET);
+
+        if (!ObjectUtils.isEmpty(posting.getSheriffMarks())) {
+            try {
+                sheriffMarks = new ObjectMapper().readValue(posting.getSheriffMarks(), SheriffMark[].class);
+            } catch (JsonProcessingException e) {
+                log.error("Error deserializing Posting.sheriffMarks", e);
+            }
+        }
 
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
@@ -738,6 +754,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 putBlockedOperation(operation);
             }
         }
+    }
+
+    public SheriffMark[] getSheriffMarks() {
+        return sheriffMarks;
+    }
+
+    public void setSheriffMarks(SheriffMark[] sheriffMarks) {
+        this.sheriffMarks = sheriffMarks;
     }
 
     public AcceptedReactions getAcceptedReactions() {

@@ -625,3 +625,8 @@
   type: string
   defaultValue: ""
   title: Moderators allowed to supervise the Timeline
+
+- name: sheriffs.timeline.marks
+  type: string
+  defaultValue: ""
+  internal: true

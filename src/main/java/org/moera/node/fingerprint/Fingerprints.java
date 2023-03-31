@@ -46,6 +46,10 @@ public class Fingerprints {
         return new AttachmentFingerprintFactory(get(FingerprintObjectType.ATTACHMENT, version));
     }
 
+    public static SheriffOrderFingerprintFactory sheriffOrder(short version) {
+        return new SheriffOrderFingerprintFactory(get(FingerprintObjectType.SHERIFF_ORDER, version));
+    }
+
     public static Class<? extends Fingerprint> get(FingerprintObjectType objectType, short version) {
         return FINGERPRINTS.get(new FingerprintId(objectType, version));
     }

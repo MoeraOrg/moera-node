@@ -7,6 +7,7 @@ public enum FingerprintObjectType {
     REACTION,
     NOTIFICATION_PACKET,
     COMMENT,
-    ATTACHMENT
+    ATTACHMENT,
+    SHERIFF_ORDER
 
 }

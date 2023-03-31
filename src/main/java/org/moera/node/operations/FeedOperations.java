@@ -38,6 +38,10 @@ public class FeedOperations {
         return Collections.emptyList();
     }
 
+    public boolean isFeedSheriff(String feedName) {
+        return getFeedSheriffs(feedName).stream().anyMatch(requestContext::isClient);
+    }
+
     public List<String> getAllPossibleSheriffs() {
         return getFeedSheriffs(Feed.TIMELINE);
     }
@@ -89,7 +93,7 @@ public class FeedOperations {
         return feedNames.stream()
                 .map(this::getFeedSheriffs)
                 .flatMap(Collection::stream)
-                .anyMatch(name -> requestContext.isClient(name));
+                .anyMatch(requestContext::isClient);
     }
 
 }

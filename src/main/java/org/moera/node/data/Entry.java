@@ -241,6 +241,10 @@ public class Entry {
 
     private ChildOperations childReactionOperations = new ChildOperations();
 
+    private String sheriffMarks = "";
+
+    private String receiverSheriffMarks = "";
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entry")
     private Set<EntryRevision> revisions = new HashSet<>();
 
@@ -1193,6 +1197,22 @@ public class Entry {
 
     public void setChildReactionOperations(ChildOperations childReactionOperations) {
         this.childReactionOperations = childReactionOperations;
+    }
+
+    public String getSheriffMarks() {
+        return sheriffMarks;
+    }
+
+    public void setSheriffMarks(String sheriffMarks) {
+        this.sheriffMarks = sheriffMarks;
+    }
+
+    public String getReceiverSheriffMarks() {
+        return receiverSheriffMarks;
+    }
+
+    public void setReceiverSheriffMarks(String receiverSheriffMarks) {
+        this.receiverSheriffMarks = receiverSheriffMarks;
     }
 
     public Set<Story> getStories() {
