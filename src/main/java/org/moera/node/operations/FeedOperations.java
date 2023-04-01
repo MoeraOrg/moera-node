@@ -9,21 +9,31 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
+import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.FeedInfo;
 import org.moera.node.model.FeedReference;
 import org.moera.node.model.PostingInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Component
 public class FeedOperations {
 
+    private static final Logger log = LoggerFactory.getLogger(FeedOperations.class);
+
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private ObjectMapper objectMapper;
 
     public List<String> getFeedSheriffs(String feedName) {
         if (feedName.equals(Feed.TIMELINE)) {
@@ -42,6 +52,10 @@ public class FeedOperations {
         return getFeedSheriffs(feedName).stream().anyMatch(requestContext::isClient);
     }
 
+    public String getFeedSheriffMarksOption(String feedName) {
+        return String.format("sheriffs.%s.marks", feedName);
+    }
+
     public List<String> getAllPossibleSheriffs() {
         return getFeedSheriffs(Feed.TIMELINE);
     }
@@ -50,6 +64,14 @@ public class FeedOperations {
         List<String> sheriffs = getFeedSheriffs(feedInfo.getFeedName());
         if (!sheriffs.isEmpty()) {
             feedInfo.setSheriffs(sheriffs);
+        }
+        String marks = requestContext.getOptions().getString(getFeedSheriffMarksOption(feedInfo.getFeedName()));
+        if (!ObjectUtils.isEmpty(marks)) {
+            try {
+                feedInfo.setSheriffMarks(objectMapper.readValue(marks, SheriffMark[].class));
+            } catch (JsonProcessingException e) {
+                log.error(String.format("Error deserializing feed '%s' sheriff marks", feedInfo.getFeedName()), e);
+            }
         }
     }
 

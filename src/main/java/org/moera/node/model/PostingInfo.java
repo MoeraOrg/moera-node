@@ -81,6 +81,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Long revisionCreatedAt;
     private Long receiverRevisionCreatedAt;
     private Long deadline;
+    private byte[] digest;
     private byte[] signature;
     private Short signatureVersion;
     private List<FeedReference> feedReferences;
@@ -169,6 +170,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         revisionCreatedAt = Util.toEpochSecond(revision.getCreatedAt());
         receiverRevisionCreatedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
         deadline = Util.toEpochSecond(posting.getDeadline());
+        digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         if (stories != null && !stories.isEmpty()) {
@@ -611,6 +613,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setDeadline(Long deadline) {
         this.deadline = deadline;
+    }
+
+    public byte[] getDigest() {
+        return digest;
+    }
+
+    public void setDigest(byte[] digest) {
+        this.digest = digest;
     }
 
     public byte[] getSignature() {

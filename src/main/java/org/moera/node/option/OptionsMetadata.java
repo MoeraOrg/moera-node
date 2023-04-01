@@ -163,15 +163,18 @@ public class OptionsMetadata {
     }
 
     public OptionTypeBase getOptionType(String name) {
-        return getType(getDescriptor(name).getType());
+        OptionDescriptor descriptor = getDescriptor(name);
+        return descriptor != null ? getType(descriptor.getType()) : null;
     }
 
     public boolean isInternal(String name) {
-        return getDescriptor(name).isInternal();
+        OptionDescriptor descriptor = getDescriptor(name);
+        return descriptor != null && descriptor.isInternal();
     }
 
     public boolean isPrivileged(String name) {
-        return getDescriptor(name).isPrivileged();
+        OptionDescriptor descriptor = getDescriptor(name);
+        return descriptor != null && descriptor.isPrivileged();
     }
 
     private Map<String, OptionDescriptor> getDescriptors() {

@@ -29,6 +29,7 @@ public class PostingRevisionInfo implements RevisionInfo {
     private Long deletedAt;
     private Long receiverCreatedAt;
     private Long receiverDeletedAt;
+    private byte[] digest;
     private byte[] signature;
     private short signatureVersion;
     private ClientReactionInfo clientReaction;
@@ -60,6 +61,7 @@ public class PostingRevisionInfo implements RevisionInfo {
         deletedAt = Util.toEpochSecond(revision.getDeletedAt());
         receiverCreatedAt = Util.toEpochSecond(revision.getReceiverCreatedAt());
         receiverDeletedAt = Util.toEpochSecond(revision.getReceiverDeletedAt());
+        digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         reactions = new ReactionTotalsInfo(revision.getReactionTotals(), posting, accessChecker);
@@ -177,6 +179,14 @@ public class PostingRevisionInfo implements RevisionInfo {
 
     public void setReceiverDeletedAt(Long receiverDeletedAt) {
         this.receiverDeletedAt = receiverDeletedAt;
+    }
+
+    public byte[] getDigest() {
+        return digest;
+    }
+
+    public void setDigest(byte[] digest) {
+        this.digest = digest;
     }
 
     public byte[] getSignature() {

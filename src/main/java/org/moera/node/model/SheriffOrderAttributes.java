@@ -4,7 +4,7 @@ import java.util.UUID;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-public class SheriffOrderDetails {
+public class SheriffOrderAttributes {
 
     private boolean delete;
 
@@ -26,26 +26,6 @@ public class SheriffOrderDetails {
 
     @Size(max = 4096)
     private String reasonDetails;
-
-    private long createdAt;
-
-    private byte[] signature;
-
-    private short signatureVersion;
-
-    public SheriffOrderDetails() {
-    }
-
-    public SheriffOrderDetails(SheriffOrderAttributes attributes) {
-        delete = attributes.isDelete();
-        sheriffName = attributes.getSheriffName();
-        feedName = attributes.getFeedName();
-        postingId = attributes.getPostingId();
-        commentId = attributes.getCommentId();
-        category = attributes.getCategory();
-        reasonCode = attributes.getReasonCode();
-        reasonDetails = attributes.getReasonDetails();
-    }
 
     public boolean isDelete() {
         return delete;
@@ -109,30 +89,6 @@ public class SheriffOrderDetails {
 
     public void setReasonDetails(String reasonDetails) {
         this.reasonDetails = reasonDetails;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public byte[] getSignature() {
-        return signature;
-    }
-
-    public void setSignature(byte[] signature) {
-        this.signature = signature;
-    }
-
-    public short getSignatureVersion() {
-        return signatureVersion;
-    }
-
-    public void setSignatureVersion(short signatureVersion) {
-        this.signatureVersion = signatureVersion;
     }
 
 }

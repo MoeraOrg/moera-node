@@ -79,10 +79,11 @@ public class SheriffOrderController {
     @PostMapping
     @Transactional
     public Result post(@Valid @RequestBody SheriffOrderDetails sheriffOrderDetails) throws JsonProcessingException {
-        log.info("POST /sheriff/orders"
-                    + " (delete = {}, sheriffName = {}, postingId = {}, commentId = {}, category = {}, reasonCode = {})",
+        log.info("POST /sheriff/orders (delete = {}, sheriffName = {}, feedName = {}, postingId = {}, commentId = {},"
+                        + " category = {}, reasonCode = {})",
                 LogUtil.format(sheriffOrderDetails.isDelete()),
                 LogUtil.format(sheriffOrderDetails.getSheriffName()),
+                LogUtil.format(sheriffOrderDetails.getFeedName()),
                 LogUtil.format(sheriffOrderDetails.getPostingId()),
                 LogUtil.format(sheriffOrderDetails.getCommentId()),
                 LogUtil.format(sheriffOrderDetails.getCategory().getValue()),
@@ -134,7 +135,7 @@ public class SheriffOrderController {
         }
 
         if (posting == null) {
-            String optionName = String.format("sheriffs.%s.marks", sheriffOrderDetails.getFeedName());
+            String optionName = feedOperations.getFeedSheriffMarksOption(sheriffOrderDetails.getFeedName());
             updateSheriffMarks(sheriffOrderDetails,
                     () -> requestContext.getOptions().getString(optionName),
                     value -> requestContext.getOptions().set(optionName, value));
