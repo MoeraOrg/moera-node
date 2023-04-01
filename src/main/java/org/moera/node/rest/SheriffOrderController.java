@@ -1,5 +1,7 @@
 package org.moera.node.rest;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,6 +53,8 @@ public class SheriffOrderController {
 
     private static final Logger log = LoggerFactory.getLogger(SheriffOrderController.class);
 
+    private static final Duration CREATED_AT_MARGIN = Duration.ofMinutes(10);
+
     @Inject
     private RequestContext requestContext;
 
@@ -83,6 +87,11 @@ public class SheriffOrderController {
                 LogUtil.format(sheriffOrderDetails.getCommentId()),
                 LogUtil.format(sheriffOrderDetails.getCategory().getValue()),
                 LogUtil.format(sheriffOrderDetails.getReasonCode().getValue()));
+
+        if (Duration.between(Instant.ofEpochSecond(sheriffOrderDetails.getCreatedAt()), Instant.now()).abs()
+                .compareTo(CREATED_AT_MARGIN) > 0) {
+            throw new ValidationFailure("sheriffOrderDetails.createdAt.out-of-range");
+        }
 
         Posting posting = null;
         Comment comment = null;

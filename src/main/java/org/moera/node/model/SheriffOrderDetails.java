@@ -12,6 +12,7 @@ public class SheriffOrderDetails {
     @Size(max = 63)
     private String sheriffName;
 
+    @NotBlank
     @Size(max = 63)
     private String feedName;
 
