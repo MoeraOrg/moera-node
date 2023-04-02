@@ -76,6 +76,9 @@ public class FeedOperations {
     }
 
     public void fillFeedSheriffs(PostingInfo postingInfo) {
+        if (postingInfo == null || postingInfo.getFeedReferences() == null) {
+            return;
+        }
         for (FeedReference feedReference : postingInfo.getFeedReferences()) {
             List<String> sheriffs = getFeedSheriffs(feedReference.getFeedName());
             if (!sheriffs.isEmpty()) {
