@@ -67,7 +67,7 @@ public class SheriffOrderPostTask extends Task {
                     digest = commentInfo.getDigest();
                 }
             }
-            sheriffOrderDetails = new SheriffOrderDetails(attributes);
+            sheriffOrderDetails = new SheriffOrderDetails(nodeName(), attributes);
             sheriffOrderDetails.setCreatedAt(Instant.now().getEpochSecond());
             Fingerprint fingerprint = Fingerprints.sheriffOrder(SheriffOrderFingerprint.VERSION)
                     .create(remoteNodeName, sheriffOrderDetails, digest);

@@ -36,9 +36,9 @@ public class SheriffOrderDetails {
     public SheriffOrderDetails() {
     }
 
-    public SheriffOrderDetails(SheriffOrderAttributes attributes) {
+    public SheriffOrderDetails(String sheriffName, SheriffOrderAttributes attributes) {
         delete = attributes.isDelete();
-        sheriffName = attributes.getSheriffName();
+        this.sheriffName = sheriffName;
         feedName = attributes.getFeedName();
         postingId = attributes.getPostingId();
         commentId = attributes.getCommentId();

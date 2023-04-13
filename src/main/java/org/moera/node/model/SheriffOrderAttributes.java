@@ -10,10 +10,6 @@ public class SheriffOrderAttributes {
 
     @NotBlank
     @Size(max = 63)
-    private String sheriffName;
-
-    @NotBlank
-    @Size(max = 63)
     private String feedName;
 
     private UUID postingId;
@@ -33,14 +29,6 @@ public class SheriffOrderAttributes {
 
     public void setDelete(boolean delete) {
         this.delete = delete;
-    }
-
-    public String getSheriffName() {
-        return sheriffName;
-    }
-
-    public void setSheriffName(String sheriffName) {
-        this.sheriffName = sheriffName;
     }
 
     public String getFeedName() {

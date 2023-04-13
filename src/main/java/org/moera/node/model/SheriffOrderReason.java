@@ -14,8 +14,7 @@ public enum SheriffOrderReason {
     MALWARE,
     COPYRIGHT,
     IMPERSONATING,
-    PRIVACY,
-    SLANDER;
+    PRIVACY;
 
     @JsonValue
     public String getValue() {

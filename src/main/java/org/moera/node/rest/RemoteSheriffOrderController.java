@@ -40,11 +40,10 @@ public class RemoteSheriffOrderController {
     @Entitled
     public Result post(@PathVariable String nodeName,
                        @Valid @RequestBody SheriffOrderAttributes sheriffOrderAttributes) {
-        log.info("POST /moera/api/nodes/{nodeName}/sheriff/orders (nodeName = {}, delete = {}, sheriffName = {},"
-                        + " feedName = {}, postingId = {}, commentId = {}, category = {}, reasonCode = {})",
+        log.info("POST /moera/api/nodes/{nodeName}/sheriff/orders (nodeName = {}, delete = {}, feedName = {},"
+                        + " postingId = {}, commentId = {}, category = {}, reasonCode = {})",
                 LogUtil.format(nodeName),
                 LogUtil.format(sheriffOrderAttributes.isDelete()),
-                LogUtil.format(sheriffOrderAttributes.getSheriffName()),
                 LogUtil.format(sheriffOrderAttributes.getFeedName()),
                 LogUtil.format(sheriffOrderAttributes.getPostingId()),
                 LogUtil.format(sheriffOrderAttributes.getCommentId()),
