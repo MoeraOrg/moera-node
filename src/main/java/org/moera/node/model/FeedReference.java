@@ -1,7 +1,6 @@
 package org.moera.node.model;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,7 +17,6 @@ public class FeedReference {
     private Long moment;
     private String storyId;
     private Map<String, Principal> operations;
-    private List<String> sheriffs;
 
     public FeedReference() {
     }
@@ -80,14 +78,6 @@ public class FeedReference {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
-    }
-
-    public List<String> getSheriffs() {
-        return sheriffs;
-    }
-
-    public void setSheriffs(List<String> sheriffs) {
-        this.sheriffs = sheriffs;
     }
 
 }

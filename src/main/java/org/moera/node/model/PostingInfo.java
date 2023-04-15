@@ -93,6 +93,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Map<String, Principal> commentReactionOperations;
     private Set<String> blockedOperations;
     private Set<String> blockedCommentOperations;
+    private List<String> sheriffs;
     private SheriffMark[] sheriffMarks;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
@@ -764,6 +765,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 putBlockedOperation(operation);
             }
         }
+    }
+
+    public List<String> getSheriffs() {
+        return sheriffs;
+    }
+
+    public void setSheriffs(List<String> sheriffs) {
+        this.sheriffs = sheriffs;
     }
 
     public SheriffMark[] getSheriffMarks() {

@@ -1,5 +1,6 @@
 package org.moera.node.operations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,10 +81,20 @@ public class FeedOperations {
             return;
         }
         for (FeedReference feedReference : postingInfo.getFeedReferences()) {
-            List<String> sheriffs = getFeedSheriffs(feedReference.getFeedName());
-            if (!sheriffs.isEmpty()) {
-                feedReference.setSheriffs(sheriffs);
+            fillFeedSheriffs(postingInfo, feedReference.getFeedName());
+        }
+    }
+
+    public void fillFeedSheriffs(PostingInfo postingInfo, String feedName) {
+        if (postingInfo == null) {
+            return;
+        }
+        List<String> sheriffs = getFeedSheriffs(feedName);
+        if (!sheriffs.isEmpty()) {
+            if (postingInfo.getSheriffs() == null) {
+                postingInfo.setSheriffs(new ArrayList<>());
             }
+            postingInfo.getSheriffs().addAll(sheriffs);
         }
     }
 

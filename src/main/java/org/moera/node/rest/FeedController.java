@@ -486,7 +486,7 @@ public class FeedController {
                 t -> {
                     Posting posting = (Posting) t.getEntry();
                     PostingInfo info = new PostingInfo(posting, requestContext);
-                    feedOperations.fillFeedSheriffs(info);
+                    feedOperations.fillFeedSheriffs(info, story.getFeedName());
                     return info;
                 }
         );
