@@ -10,6 +10,8 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.model.Result;
 import org.moera.node.model.SheriffOrderAttributes;
+import org.moera.node.model.SheriffOrderCategory;
+import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.rest.task.SheriffOrderPostTask;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
@@ -47,8 +49,8 @@ public class RemoteSheriffOrderController {
                 LogUtil.format(sheriffOrderAttributes.getFeedName()),
                 LogUtil.format(sheriffOrderAttributes.getPostingId()),
                 LogUtil.format(sheriffOrderAttributes.getCommentId()),
-                LogUtil.format(sheriffOrderAttributes.getCategory().getValue()),
-                LogUtil.format(sheriffOrderAttributes.getReasonCode().getValue()));
+                LogUtil.format(SheriffOrderCategory.toValue(sheriffOrderAttributes.getCategory())),
+                LogUtil.format(SheriffOrderReason.toValue(sheriffOrderAttributes.getReasonCode())));
 
         var postTask = new SheriffOrderPostTask(nodeName, sheriffOrderAttributes);
         taskAutowire.autowire(postTask);

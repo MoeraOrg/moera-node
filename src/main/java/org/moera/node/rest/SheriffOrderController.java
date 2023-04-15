@@ -35,7 +35,9 @@ import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
+import org.moera.node.model.SheriffOrderCategory;
 import org.moera.node.model.SheriffOrderDetails;
+import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.FeedOperations;
@@ -86,8 +88,8 @@ public class SheriffOrderController {
                 LogUtil.format(sheriffOrderDetails.getFeedName()),
                 LogUtil.format(sheriffOrderDetails.getPostingId()),
                 LogUtil.format(sheriffOrderDetails.getCommentId()),
-                LogUtil.format(sheriffOrderDetails.getCategory().getValue()),
-                LogUtil.format(sheriffOrderDetails.getReasonCode().getValue()));
+                LogUtil.format(SheriffOrderCategory.toValue(sheriffOrderDetails.getCategory())),
+                LogUtil.format(SheriffOrderReason.toValue(sheriffOrderDetails.getReasonCode())));
 
         if (Duration.between(Instant.ofEpochSecond(sheriffOrderDetails.getCreatedAt()), Instant.now()).abs()
                 .compareTo(CREATED_AT_MARGIN) > 0) {
