@@ -122,7 +122,7 @@ public class CommentReceptor extends LiberinReceptorBase {
 
     private void notifyReplyAdded(Posting posting, Comment comment) {
         if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null
-                || comment.getRevisions().size() > 1) {
+                || comment.getTotalRevisions() > 1) {
             return;
         }
         AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
