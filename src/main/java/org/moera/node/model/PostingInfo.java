@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -94,7 +95,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Set<String> blockedOperations;
     private Set<String> blockedCommentOperations;
     private List<String> sheriffs;
-    private SheriffMark[] sheriffMarks;
+    private List<SheriffMark> sheriffMarks;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -292,7 +293,9 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
         if (!ObjectUtils.isEmpty(posting.getSheriffMarks())) {
             try {
-                sheriffMarks = new ObjectMapper().readValue(posting.getSheriffMarks(), SheriffMark[].class);
+                sheriffMarks = new ArrayList<>();
+                Collections.addAll(sheriffMarks,
+                        new ObjectMapper().readValue(posting.getSheriffMarks(), SheriffMark[].class));
             } catch (JsonProcessingException e) {
                 log.error("Error deserializing Posting.sheriffMarks", e);
             }
@@ -775,11 +778,11 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         this.sheriffs = sheriffs;
     }
 
-    public SheriffMark[] getSheriffMarks() {
+    public List<SheriffMark> getSheriffMarks() {
         return sheriffMarks;
     }
 
-    public void setSheriffMarks(SheriffMark[] sheriffMarks) {
+    public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
     }
 

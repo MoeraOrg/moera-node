@@ -4,7 +4,9 @@ import org.moera.node.data.Feed;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
+import org.moera.node.liberin.model.FeedSheriffDataUpdatedLiberin;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
+import org.moera.node.model.event.FeedSheriffDataUpdatedEvent;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.push.PushContent;
@@ -23,6 +25,12 @@ public class FeedReceptor extends LiberinReceptorBase {
             send(liberin, new StoriesStatusUpdatedEvent(liberin.getFeedName(), liberin.getChange()));
         }
         send(PushContent.feedUpdated(liberin.getFeedName(), liberin.getStatus()));
+    }
+
+    @LiberinMapping
+    public void sheriffDataUpdated(FeedSheriffDataUpdatedLiberin liberin) {
+        send(liberin, new FeedSheriffDataUpdatedEvent(liberin.getFeedName(), liberin.getSheriffs(),
+                liberin.getSheriffMarks()));
     }
 
 }

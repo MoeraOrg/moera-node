@@ -35,6 +35,7 @@ public class Options {
     private final OptionsMetadata optionsMetadata;
     private final OptionRepository optionRepository;
     private final OptionHookManager optionHookManager;
+    private boolean loading;
 
     public Options(UUID nodeId, OptionsMetadata optionsMetadata, OptionRepository optionRepository,
                    OptionHookManager optionHookManager) {
@@ -47,10 +48,15 @@ public class Options {
     }
 
     private void load() {
-        optionsMetadata.getDescriptorsForNode(nodeId).stream()
-                .filter(desc -> desc.getDefaultValue() != null)
-                .forEach(desc -> putValue(desc.getName(), desc.getDefaultValue()));
-        optionRepository.findAllByNodeId(nodeId).forEach(option -> putValue(option.getName(), option.getValue()));
+        loading = true;
+        try {
+            optionsMetadata.getDescriptorsForNode(nodeId).stream()
+                    .filter(desc -> desc.getDefaultValue() != null)
+                    .forEach(desc -> putValue(desc.getName(), desc.getDefaultValue()));
+            optionRepository.findAllByNodeId(nodeId).forEach(option -> putValue(option.getName(), option.getValue()));
+        } finally {
+            loading = false;
+        }
     }
 
     public void reload() {
@@ -163,7 +169,11 @@ public class Options {
         if (inTransaction()) {
             transaction.get().put(name, value);
         } else {
+            OptionValueChange change = new OptionValueChange(nodeId, name, values.get(name), value);
             values.put(name, value);
+            if (!loading && change.isTangible()) {
+                optionHookManager.invoke(change);
+            }
         }
     }
 

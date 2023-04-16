@@ -17,9 +17,14 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.LiberinManager;
+import org.moera.node.liberin.model.FeedSheriffDataUpdatedLiberin;
 import org.moera.node.model.FeedInfo;
 import org.moera.node.model.FeedReference;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.option.OptionHook;
+import org.moera.node.option.OptionValueChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -34,11 +39,17 @@ public class FeedOperations {
     private RequestContext requestContext;
 
     @Inject
+    private UniversalContext universalContext;
+
+    @Inject
     private ObjectMapper objectMapper;
+
+    @Inject
+    private LiberinManager liberinManager;
 
     public List<String> getFeedSheriffs(String feedName) {
         if (feedName.equals(Feed.TIMELINE)) {
-            String sheriffs = requestContext.getOptions().getString("sheriffs.timeline");
+            String sheriffs = universalContext.getOptions().getString("sheriffs.timeline");
             if (ObjectUtils.isEmpty(sheriffs)) {
                 return Collections.emptyList();
             }
@@ -57,6 +68,18 @@ public class FeedOperations {
         return String.format("sheriffs.%s.marks", feedName);
     }
 
+    public SheriffMark[] getFeedSheriffMarks(String feedName) {
+        String marks = universalContext.getOptions().getString(getFeedSheriffMarksOption(feedName));
+        if (!ObjectUtils.isEmpty(marks)) {
+            try {
+                return objectMapper.readValue(marks, SheriffMark[].class);
+            } catch (JsonProcessingException e) {
+                log.error(String.format("Error deserializing feed '%s' sheriff marks", feedName), e);
+            }
+        }
+        return null;
+    }
+
     public List<String> getAllPossibleSheriffs() {
         return getFeedSheriffs(Feed.TIMELINE);
     }
@@ -66,14 +89,7 @@ public class FeedOperations {
         if (!sheriffs.isEmpty()) {
             feedInfo.setSheriffs(sheriffs);
         }
-        String marks = requestContext.getOptions().getString(getFeedSheriffMarksOption(feedInfo.getFeedName()));
-        if (!ObjectUtils.isEmpty(marks)) {
-            try {
-                feedInfo.setSheriffMarks(objectMapper.readValue(marks, SheriffMark[].class));
-            } catch (JsonProcessingException e) {
-                log.error(String.format("Error deserializing feed '%s' sheriff marks", feedInfo.getFeedName()), e);
-            }
-        }
+        feedInfo.setSheriffMarks(getFeedSheriffMarks(feedInfo.getFeedName()));
     }
 
     public void fillFeedSheriffs(PostingInfo postingInfo) {
@@ -95,6 +111,13 @@ public class FeedOperations {
                 postingInfo.setSheriffs(new ArrayList<>());
             }
             postingInfo.getSheriffs().addAll(sheriffs);
+        }
+        SheriffMark[] sheriffMarks = getFeedSheriffMarks(feedName);
+        if (!ObjectUtils.isEmpty(sheriffMarks)) {
+            if (postingInfo.getSheriffMarks() == null) {
+                postingInfo.setSheriffMarks(new ArrayList<>());
+            }
+            Collections.addAll(postingInfo.getSheriffMarks(), sheriffMarks);
         }
     }
 
@@ -130,6 +153,13 @@ public class FeedOperations {
                 .map(this::getFeedSheriffs)
                 .flatMap(Collection::stream)
                 .anyMatch(requestContext::isClient);
+    }
+
+    @OptionHook({"sheriffs.timeline", "sheriffs.timeline.marks"})
+    public void timelineSheriffDataChanged(OptionValueChange change) {
+        universalContext.associate(change.getNodeId());
+        liberinManager.send(new FeedSheriffDataUpdatedLiberin(Feed.TIMELINE, this)
+                .withNodeId(change.getNodeId()));
     }
 
 }
