@@ -3,17 +3,20 @@ package org.moera.node.rest.task;
 import java.security.interfaces.ECPrivateKey;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.UUID;
+import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApiException;
+import org.moera.node.data.SheriffOrder;
+import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.SheriffOrderFingerprint;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.SheriffOrderAttributes;
-import org.moera.node.model.SheriffOrderDetails;
+import org.moera.node.model.SheriffOrderDetailsQ;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +30,10 @@ public class SheriffOrderPostTask extends Task {
 
     private final String remoteNodeName;
     private final SheriffOrderAttributes attributes;
-    private SheriffOrderDetails sheriffOrderDetails;
+    private SheriffOrderDetailsQ sheriffOrderDetails;
+
+    @Inject
+    private SheriffOrderRepository sheriffOrderRepository;
 
     public SheriffOrderPostTask(String remoteNodeName, SheriffOrderAttributes attributes) {
         this.remoteNodeName = remoteNodeName;
@@ -55,8 +61,8 @@ public class SheriffOrderPostTask extends Task {
     private void post() throws NodeApiException {
         if (sheriffOrderDetails == null) {
             String carte = generateCarte(remoteNodeName);
-            String postingId = Objects.toString(attributes.getPostingId(), null);
-            String commentId = Objects.toString(attributes.getCommentId(), null);
+            String postingId = attributes.getPostingId();
+            String commentId = attributes.getCommentId();
             byte[] digest = null;
             if (postingId != null) {
                 if (commentId == null) {
@@ -67,7 +73,7 @@ public class SheriffOrderPostTask extends Task {
                     digest = commentInfo.getDigest();
                 }
             }
-            sheriffOrderDetails = new SheriffOrderDetails(nodeName(), attributes);
+            sheriffOrderDetails = new SheriffOrderDetailsQ(nodeName(), attributes);
             sheriffOrderDetails.setCreatedAt(Instant.now().getEpochSecond());
             Fingerprint fingerprint = Fingerprints.sheriffOrder(SheriffOrderFingerprint.VERSION)
                     .create(remoteNodeName, sheriffOrderDetails, digest);
@@ -75,6 +81,17 @@ public class SheriffOrderPostTask extends Task {
             sheriffOrderDetails.setSignatureVersion(SheriffOrderFingerprint.VERSION);
         }
         nodeApi.postSheriffOrder(remoteNodeName, sheriffOrderDetails);
+
+        try {
+            inTransaction(() -> {
+                SheriffOrder sheriffOrder = new SheriffOrder(UUID.randomUUID(), nodeId, remoteNodeName);
+                sheriffOrderDetails.toSheriffOrder(sheriffOrder);
+                sheriffOrderRepository.save(sheriffOrder);
+                return null;
+            });
+        } catch (Throwable e) {
+            log.error("Could not store sheriff order", e);
+        }
     }
 
 }

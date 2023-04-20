@@ -40,7 +40,7 @@ import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.Result;
-import org.moera.node.model.SheriffOrderDetails;
+import org.moera.node.model.SheriffOrderDetailsQ;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriberOverride;
@@ -424,7 +424,7 @@ public class NodeApi {
                 auth("carte", carte), subscriberOverride, SubscriberInfo.class);
     }
 
-    public Result postSheriffOrder(String nodeName, SheriffOrderDetails sheriffOrderDetails) throws NodeApiException {
+    public Result postSheriffOrder(String nodeName, SheriffOrderDetailsQ sheriffOrderDetails) throws NodeApiException {
         return call("POST", nodeName, "/sheriff/orders", null, sheriffOrderDetails, Result.class);
     }
 

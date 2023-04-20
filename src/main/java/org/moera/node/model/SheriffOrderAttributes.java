@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.UUID;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -12,9 +11,9 @@ public class SheriffOrderAttributes {
     @Size(max = 63)
     private String feedName;
 
-    private UUID postingId;
+    private String postingId;
 
-    private UUID commentId;
+    private String commentId;
 
     private SheriffOrderCategory category;
 
@@ -39,19 +38,19 @@ public class SheriffOrderAttributes {
         this.feedName = feedName;
     }
 
-    public UUID getPostingId() {
+    public String getPostingId() {
         return postingId;
     }
 
-    public void setPostingId(UUID postingId) {
+    public void setPostingId(String postingId) {
         this.postingId = postingId;
     }
 
-    public UUID getCommentId() {
+    public String getCommentId() {
         return commentId;
     }
 
-    public void setCommentId(UUID commentId) {
+    public void setCommentId(String commentId) {
         this.commentId = commentId;
     }
 
