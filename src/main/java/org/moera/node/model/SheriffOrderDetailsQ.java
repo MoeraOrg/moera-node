@@ -5,6 +5,7 @@ import org.moera.node.util.Util;
 
 public class SheriffOrderDetailsQ {
 
+    private String id;
     private boolean delete;
     private String sheriffName;
     private String feedName;
@@ -20,7 +21,8 @@ public class SheriffOrderDetailsQ {
     public SheriffOrderDetailsQ() {
     }
 
-    public SheriffOrderDetailsQ(String sheriffName, SheriffOrderAttributes attributes) {
+    public SheriffOrderDetailsQ(String id, String sheriffName, SheriffOrderAttributes attributes) {
+        this.id = id;
         delete = attributes.isDelete();
         this.sheriffName = sheriffName;
         feedName = attributes.getFeedName();
@@ -29,6 +31,14 @@ public class SheriffOrderDetailsQ {
         category = attributes.getCategory();
         reasonCode = attributes.getReasonCode();
         reasonDetails = attributes.getReasonDetails();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public boolean isDelete() {

@@ -22,6 +22,7 @@ public class StorySummaryData {
     private SubscriptionReason subscriptionReason;
     private StorySummaryFriendGroup friendGroup;
     private StorySummaryBlocked blocked;
+    private StorySummarySheriff sheriff;
     private String description;
 
     public StorySummaryNode getNode() {
@@ -134,6 +135,14 @@ public class StorySummaryData {
 
     public void setBlocked(StorySummaryBlocked blocked) {
         this.blocked = blocked;
+    }
+
+    public StorySummarySheriff getSheriff() {
+        return sheriff;
+    }
+
+    public void setSheriff(StorySummarySheriff sheriff) {
+        this.sheriff = sheriff;
     }
 
     public String getDescription() {

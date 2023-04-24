@@ -52,6 +52,10 @@ public class RemoteSheriffOrderController {
                 LogUtil.format(SheriffOrderCategory.toValue(sheriffOrderAttributes.getCategory())),
                 LogUtil.format(SheriffOrderReason.toValue(sheriffOrderAttributes.getReasonCode())));
 
+        if (sheriffOrderAttributes.getReasonCode() == null) {
+            sheriffOrderAttributes.setReasonCode(SheriffOrderReason.UNKNOWN);
+        }
+
         var postTask = new SheriffOrderPostTask(nodeName, sheriffOrderAttributes);
         taskAutowire.autowire(postTask);
         taskExecutor.execute(postTask);

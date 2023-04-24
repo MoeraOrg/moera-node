@@ -1,41 +1,46 @@
 package org.moera.node.model;
 
-import java.util.UUID;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import java.util.Objects;
 
-public class SheriffOrderDetails {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.data.SheriffOrder;
+import org.moera.node.util.Util;
 
-    @NotBlank
-    @Size(max = 40)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SheriffOrderInfo {
+
     private String id;
-
     private boolean delete;
-
-    @NotBlank
-    @Size(max = 63)
     private String sheriffName;
-
-    @NotBlank
-    @Size(max = 63)
+    private String nodeName;
     private String feedName;
-
-    private UUID postingId;
-
-    private UUID commentId;
-
+    private String postingId;
+    private String commentId;
     private SheriffOrderCategory category;
-
     private SheriffOrderReason reasonCode;
-
-    @Size(max = 4096)
     private String reasonDetails;
-
     private long createdAt;
-
     private byte[] signature;
-
     private short signatureVersion;
+
+    public SheriffOrderInfo() {
+    }
+
+    public SheriffOrderInfo(SheriffOrder sheriffOrder, String sheriffName) {
+        id = sheriffOrder.getId().toString();
+        delete = sheriffOrder.isDelete();
+        this.sheriffName = sheriffName;
+        nodeName = sheriffOrder.getRemoteNodeName();
+        feedName = sheriffOrder.getRemoteFeedName();
+        postingId = Objects.toString(sheriffOrder.getRemotePostingId(), null);
+        commentId = Objects.toString(sheriffOrder.getRemoteCommentId(), null);
+        category = sheriffOrder.getCategory();
+        reasonCode = sheriffOrder.getReasonCode();
+        reasonDetails = sheriffOrder.getReasonDetails();
+        createdAt = Util.toEpochSecond(sheriffOrder.getCreatedAt());
+        signature = sheriffOrder.getSignature();
+        signatureVersion = sheriffOrder.getSignatureVersion();
+    }
 
     public String getId() {
         return id;
@@ -61,6 +66,14 @@ public class SheriffOrderDetails {
         this.sheriffName = sheriffName;
     }
 
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
+    }
+
     public String getFeedName() {
         return feedName;
     }
@@ -69,19 +82,19 @@ public class SheriffOrderDetails {
         this.feedName = feedName;
     }
 
-    public UUID getPostingId() {
+    public String getPostingId() {
         return postingId;
     }
 
-    public void setPostingId(UUID postingId) {
+    public void setPostingId(String postingId) {
         this.postingId = postingId;
     }
 
-    public UUID getCommentId() {
+    public String getCommentId() {
         return commentId;
     }
 
-    public void setCommentId(UUID commentId) {
+    public void setCommentId(String commentId) {
         this.commentId = commentId;
     }
 

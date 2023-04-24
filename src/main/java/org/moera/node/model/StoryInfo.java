@@ -249,6 +249,24 @@ public class StoryInfo {
                 info.setRemotePostingId(story.getRemoteParentPostingId());
                 info.setRemoteMediaId(story.getRemoteParentMediaId());
                 break;
+
+            case FEED_SHERIFF_MARKED:
+            case FEED_SHERIFF_UNMARKED:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                break;
+
+            case POSTING_SHERIFF_MARKED:
+            case POSTING_SHERIFF_UNMARKED:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemotePostingId(story.getRemotePostingId());
+                break;
+
+            case COMMENT_SHERIFF_MARKED:
+            case COMMENT_SHERIFF_UNMARKED:
+                info.setRemoteNodeName(story.getRemoteNodeName());
+                info.setRemotePostingId(story.getRemotePostingId());
+                info.setRemoteCommentId(story.getRemoteCommentId());
+                break;
         }
         return info;
     }

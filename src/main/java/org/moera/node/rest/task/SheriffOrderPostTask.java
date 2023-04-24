@@ -59,6 +59,7 @@ public class SheriffOrderPostTask extends Task {
     }
 
     private void post() throws NodeApiException {
+        UUID orderId = UUID.randomUUID();
         if (sheriffOrderDetails == null) {
             String carte = generateCarte(remoteNodeName);
             String postingId = attributes.getPostingId();
@@ -73,7 +74,7 @@ public class SheriffOrderPostTask extends Task {
                     digest = commentInfo.getDigest();
                 }
             }
-            sheriffOrderDetails = new SheriffOrderDetailsQ(nodeName(), attributes);
+            sheriffOrderDetails = new SheriffOrderDetailsQ(orderId.toString(), nodeName(), attributes);
             sheriffOrderDetails.setCreatedAt(Instant.now().getEpochSecond());
             Fingerprint fingerprint = Fingerprints.sheriffOrder(SheriffOrderFingerprint.VERSION)
                     .create(remoteNodeName, sheriffOrderDetails, digest);
@@ -84,7 +85,7 @@ public class SheriffOrderPostTask extends Task {
 
         try {
             inTransaction(() -> {
-                SheriffOrder sheriffOrder = new SheriffOrder(UUID.randomUUID(), nodeId, remoteNodeName);
+                SheriffOrder sheriffOrder = new SheriffOrder(orderId, nodeId, remoteNodeName);
                 sheriffOrderDetails.toSheriffOrder(sheriffOrder);
                 sheriffOrderRepository.save(sheriffOrder);
                 return null;

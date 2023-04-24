@@ -31,8 +31,7 @@ import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.liberin.model.CommentUpdatedLiberin;
-import org.moera.node.liberin.model.PostingUpdatedLiberin;
+import org.moera.node.liberin.model.SheriffOrderReceivedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SheriffOrderCategory;
@@ -144,12 +143,11 @@ public class SheriffOrderController {
         } else {
             Entry entry = comment == null ? posting : comment;
             updateSheriffMarks(sheriffOrderDetails, entry::getSheriffMarks, entry::setSheriffMarks);
-
-            requestContext.send(comment == null
-                    ? new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), posting.getViewE())
-                    : new CommentUpdatedLiberin(comment, comment.getCurrentRevision(), comment.getViewE()));
         }
 
+        requestContext.send(new SheriffOrderReceivedLiberin(sheriffOrderDetails.isDelete(),
+                sheriffOrderDetails.getFeedName(), posting, comment, sheriffOrderDetails.getSheriffName(),
+                sheriffOrderDetails.getId()));
         return Result.OK;
     }
 
