@@ -38,7 +38,7 @@ public class SheriffInstants extends InstantsCreator {
     }
 
     public void deletedOrderForFeed(String remoteFeedName, String sheriffName, String orderId) {
-        buildStory(StoryType.FEED_SHERIFF_UNMARKED, null, remoteFeedName, null, null, null, null, null, null,
+        buildStory(StoryType.FEED_SHERIFF_UNMARKED, nodeName(), remoteFeedName, null, null, null, null, null, null,
                 sheriffName, orderId);
     }
 
