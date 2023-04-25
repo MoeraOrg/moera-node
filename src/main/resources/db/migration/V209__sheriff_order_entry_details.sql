@@ -1,0 +1,11 @@
+ALTER TABLE sheriff_orders ADD COLUMN remote_node_full_name varchar(96);
+ALTER TABLE sheriff_orders ADD COLUMN remote_posting_owner_name varchar(63);
+ALTER TABLE sheriff_orders ADD COLUMN remote_posting_owner_full_name varchar(96);
+ALTER TABLE sheriff_orders ADD COLUMN remote_posting_owner_gender varchar(31);
+ALTER TABLE sheriff_orders ADD COLUMN remote_posting_heading varchar(255);
+ALTER TABLE sheriff_orders ADD COLUMN remote_posting_revision_id varchar(40);
+ALTER TABLE sheriff_orders ADD COLUMN remote_comment_owner_name varchar(63);
+ALTER TABLE sheriff_orders ADD COLUMN remote_comment_owner_full_name varchar(96);
+ALTER TABLE sheriff_orders ADD COLUMN remote_comment_owner_gender varchar(31);
+ALTER TABLE sheriff_orders ADD COLUMN remote_comment_heading varchar(255);
+ALTER TABLE sheriff_orders ADD COLUMN remote_comment_revision_id varchar(40);

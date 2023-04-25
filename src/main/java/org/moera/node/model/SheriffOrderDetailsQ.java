@@ -132,8 +132,6 @@ public class SheriffOrderDetailsQ {
     public void toSheriffOrder(SheriffOrder sheriffOrder) {
         sheriffOrder.setDelete(delete);
         sheriffOrder.setRemoteFeedName(feedName);
-        sheriffOrder.setRemotePostingId(postingId);
-        sheriffOrder.setRemoteCommentId(commentId);
         sheriffOrder.setCategory(category);
         sheriffOrder.setReasonCode(reasonCode);
         sheriffOrder.setReasonDetails(reasonDetails);

@@ -17,6 +17,7 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.SheriffOrderAttributes;
 import org.moera.node.model.SheriffOrderDetailsQ;
+import org.moera.node.model.WhoAmI;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,22 +60,26 @@ public class SheriffOrderPostTask extends Task {
     }
 
     private void post() throws NodeApiException {
-        UUID orderId = UUID.randomUUID();
+        SheriffOrder sheriffOrder = new SheriffOrder(UUID.randomUUID(), nodeId, remoteNodeName);
+        WhoAmI whoAmI = nodeApi.whoAmI(remoteNodeName);
+        sheriffOrder.setRemoteNodeFullName(whoAmI.getFullName());
         if (sheriffOrderDetails == null) {
             String carte = generateCarte(remoteNodeName);
             String postingId = attributes.getPostingId();
             String commentId = attributes.getCommentId();
             byte[] digest = null;
             if (postingId != null) {
+                PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, carte, postingId);
+                sheriffOrder.setRemotePosting(postingInfo);
                 if (commentId == null) {
-                    PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, carte, postingId);
                     digest = postingInfo.getDigest();
                 } else {
                     CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, carte, postingId, commentId);
+                    sheriffOrder.setRemoteComment(commentInfo);
                     digest = commentInfo.getDigest();
                 }
             }
-            sheriffOrderDetails = new SheriffOrderDetailsQ(orderId.toString(), nodeName(), attributes);
+            sheriffOrderDetails = new SheriffOrderDetailsQ(sheriffOrder.getId().toString(), nodeName(), attributes);
             sheriffOrderDetails.setCreatedAt(Instant.now().getEpochSecond());
             Fingerprint fingerprint = Fingerprints.sheriffOrder(SheriffOrderFingerprint.VERSION)
                     .create(remoteNodeName, sheriffOrderDetails, digest);
@@ -82,11 +87,10 @@ public class SheriffOrderPostTask extends Task {
             sheriffOrderDetails.setSignatureVersion(SheriffOrderFingerprint.VERSION);
         }
         nodeApi.postSheriffOrder(remoteNodeName, sheriffOrderDetails);
+        sheriffOrderDetails.toSheriffOrder(sheriffOrder);
 
         try {
             inTransaction(() -> {
-                SheriffOrder sheriffOrder = new SheriffOrder(orderId, nodeId, remoteNodeName);
-                sheriffOrderDetails.toSheriffOrder(sheriffOrder);
                 sheriffOrderRepository.save(sheriffOrder);
                 return null;
             });
