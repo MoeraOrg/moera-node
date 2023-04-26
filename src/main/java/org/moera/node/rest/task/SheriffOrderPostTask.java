@@ -13,6 +13,9 @@ import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.SheriffOrderFingerprint;
+import org.moera.node.liberin.model.SheriffOrderSentLiberin;
+import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarDescription;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.SheriffOrderAttributes;
@@ -31,10 +34,14 @@ public class SheriffOrderPostTask extends Task {
 
     private final String remoteNodeName;
     private final SheriffOrderAttributes attributes;
+    private SheriffOrder sheriffOrder;
     private SheriffOrderDetailsQ sheriffOrderDetails;
 
     @Inject
     private SheriffOrderRepository sheriffOrderRepository;
+
+    @Inject
+    private MediaManager mediaManager;
 
     public SheriffOrderPostTask(String remoteNodeName, SheriffOrderAttributes attributes) {
         this.remoteNodeName = remoteNodeName;
@@ -60,10 +67,12 @@ public class SheriffOrderPostTask extends Task {
     }
 
     private void post() throws NodeApiException {
-        SheriffOrder sheriffOrder = new SheriffOrder(UUID.randomUUID(), nodeId, remoteNodeName);
-        WhoAmI whoAmI = nodeApi.whoAmI(remoteNodeName);
-        sheriffOrder.setRemoteNodeFullName(whoAmI.getFullName());
-        if (sheriffOrderDetails == null) {
+        if (sheriffOrder == null) {
+            sheriffOrder = new SheriffOrder(UUID.randomUUID(), nodeId, remoteNodeName);
+
+            WhoAmI whoAmI = nodeApi.whoAmI(remoteNodeName);
+            sheriffOrder.setRemoteNodeFullName(whoAmI.getFullName());
+
             String carte = generateCarte(remoteNodeName);
             String postingId = attributes.getPostingId();
             String commentId = attributes.getCommentId();
@@ -79,15 +88,20 @@ public class SheriffOrderPostTask extends Task {
                     digest = commentInfo.getDigest();
                 }
             }
-            sheriffOrderDetails = new SheriffOrderDetailsQ(sheriffOrder.getId().toString(), nodeName(), attributes);
+
+            mediaManager.uploadPublicMedia(remoteNodeName, generateCarte(remoteNodeName), getAvatar());
+
+            sheriffOrderDetails = new SheriffOrderDetailsQ(sheriffOrder.getId().toString(), nodeName(),
+                    new AvatarDescription(getAvatar()), attributes);
             sheriffOrderDetails.setCreatedAt(Instant.now().getEpochSecond());
             Fingerprint fingerprint = Fingerprints.sheriffOrder(SheriffOrderFingerprint.VERSION)
                     .create(remoteNodeName, sheriffOrderDetails, digest);
             sheriffOrderDetails.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
             sheriffOrderDetails.setSignatureVersion(SheriffOrderFingerprint.VERSION);
+
+            sheriffOrderDetails.toSheriffOrder(sheriffOrder);
         }
         nodeApi.postSheriffOrder(remoteNodeName, sheriffOrderDetails);
-        sheriffOrderDetails.toSheriffOrder(sheriffOrder);
 
         try {
             inTransaction(() -> {
@@ -97,6 +111,8 @@ public class SheriffOrderPostTask extends Task {
         } catch (Throwable e) {
             log.error("Could not store sheriff order", e);
         }
+
+        send(new SheriffOrderSentLiberin(nodeName(), sheriffOrder));
     }
 
 }

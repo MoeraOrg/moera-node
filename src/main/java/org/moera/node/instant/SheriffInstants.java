@@ -7,6 +7,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.StorySummaryData;
 import org.moera.node.model.StorySummaryEntry;
 import org.moera.node.model.StorySummarySheriff;
@@ -19,51 +20,61 @@ public class SheriffInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    public void orderForFeed(String remoteFeedName, String sheriffName, String orderId) {
+    public void orderForFeed(String remoteFeedName, String sheriffName, AvatarImage sheriffAvatar, String orderId) {
         buildStory(StoryType.FEED_SHERIFF_MARKED, nodeName(), remoteFeedName, null, null, null, null, null, null,
-                sheriffName, orderId);
+                sheriffName, sheriffAvatar, orderId);
     }
 
     public void orderForPosting(String remoteNodeName, String remoteFeedName, String postingHeading, String postingId,
-                                String sheriffName, String orderId) {
+                                String sheriffName, AvatarImage sheriffAvatar, String orderId) {
         buildStory(StoryType.POSTING_SHERIFF_MARKED, remoteNodeName, remoteFeedName, null, null, postingHeading,
-                postingId, null, null, sheriffName, orderId);
+                postingId, null, null, sheriffName, sheriffAvatar, orderId);
     }
 
     public void orderForComment(String remoteNodeName, String remoteFeedName, String postingOwnerName,
                                 String postingOwnerFullName, String postingHeading, String postingId,
-                                String commentHeading, String commentId, String sheriffName, String orderId) {
+                                String commentHeading, String commentId, String sheriffName, AvatarImage sheriffAvatar,
+                                String orderId) {
         buildStory(StoryType.COMMENT_SHERIFF_MARKED, remoteNodeName, remoteFeedName, postingOwnerName,
-                postingOwnerFullName, postingHeading, postingId, commentHeading, commentId, sheriffName, orderId);
+                postingOwnerFullName, postingHeading, postingId, commentHeading, commentId, sheriffName, sheriffAvatar,
+                orderId);
     }
 
-    public void deletedOrderForFeed(String remoteFeedName, String sheriffName, String orderId) {
+    public void deletedOrderForFeed(String remoteFeedName, String sheriffName, AvatarImage sheriffAvatar,
+                                    String orderId) {
         buildStory(StoryType.FEED_SHERIFF_UNMARKED, nodeName(), remoteFeedName, null, null, null, null, null, null,
-                sheriffName, orderId);
+                sheriffName, sheriffAvatar, orderId);
     }
 
     public void deletedOrderForPosting(String remoteNodeName, String remoteFeedName, String postingHeading,
-                                       String postingId, String sheriffName, String orderId) {
+                                       String postingId, String sheriffName, AvatarImage sheriffAvatar,
+                                       String orderId) {
         buildStory(StoryType.POSTING_SHERIFF_UNMARKED, remoteNodeName, remoteFeedName, null, null, postingHeading,
-                postingId, null, null, sheriffName, orderId);
+                postingId, null, null, sheriffName, sheriffAvatar, orderId);
     }
 
     public void deletedOrderForComment(String remoteNodeName, String remoteFeedName, String postingOwnerName,
                                        String postingOwnerFullName, String postingHeading, String postingId,
-                                       String commentHeading, String commentId, String sheriffName, String orderId) {
+                                       String commentHeading, String commentId, String sheriffName,
+                                       AvatarImage sheriffAvatar, String orderId) {
         buildStory(StoryType.COMMENT_SHERIFF_UNMARKED, remoteNodeName, remoteFeedName, postingOwnerName,
-                postingOwnerFullName, postingHeading, postingId, commentHeading, commentId, sheriffName, orderId);
+                postingOwnerFullName, postingHeading, postingId, commentHeading, commentId, sheriffName, sheriffAvatar,
+                orderId);
     }
 
     private void buildStory(StoryType storyType, String remoteNodeName, String remoteFeedName, String postingOwnerName,
                             String postingOwnerFullName, String postingHeading, String postingId, String commentHeading,
-                            String commentId, String sheriffName, String orderId) {
+                            String commentId, String sheriffName, AvatarImage sheriffAvatar, String orderId) {
         if (isBlocked(storyType)) {
             return;
         }
         Story story = new Story(UUID.randomUUID(), nodeId(), storyType);
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
+        if (sheriffAvatar != null) {
+            story.setRemoteAvatarMediaFile(sheriffAvatar.getMediaFile());
+            story.setRemoteAvatarShape(sheriffAvatar.getShape());
+        }
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
         story.setSummaryData(buildSummary(remoteFeedName, postingOwnerName, postingOwnerFullName, postingHeading,

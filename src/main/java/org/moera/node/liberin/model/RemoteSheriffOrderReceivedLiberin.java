@@ -4,6 +4,7 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.moera.node.liberin.Liberin;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.SheriffOrderForCommentNotification;
 import org.moera.node.model.notification.SheriffOrderForPostingNotification;
 
@@ -19,6 +20,7 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
     private String commentHeading;
     private String commentId;
     private String sheriffName;
+    private AvatarImage sheriffAvatar;
     private String orderId;
 
     public RemoteSheriffOrderReceivedLiberin(boolean deleted, SheriffOrderForPostingNotification notification) {
@@ -28,6 +30,7 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
         postingHeading = notification.getPostingHeading();
         postingId = notification.getPostingId();
         sheriffName = notification.getSenderNodeName();
+        sheriffAvatar = notification.getSenderAvatar();
         orderId = notification.getOrderId();
     }
 
@@ -42,6 +45,7 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
         commentHeading = notification.getCommentHeading();
         commentId = notification.getCommentId();
         sheriffName = notification.getSenderNodeName();
+        sheriffAvatar = notification.getSenderAvatar();
         orderId = notification.getOrderId();
     }
 
@@ -123,6 +127,14 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
 
     public void setSheriffName(String sheriffName) {
         this.sheriffName = sheriffName;
+    }
+
+    public AvatarImage getSheriffAvatar() {
+        return sheriffAvatar;
+    }
+
+    public void setSheriffAvatar(AvatarImage sheriffAvatar) {
+        this.sheriffAvatar = sheriffAvatar;
     }
 
     public String getOrderId() {

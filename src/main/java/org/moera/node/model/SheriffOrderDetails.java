@@ -1,8 +1,12 @@
 package org.moera.node.model;
 
 import java.util.UUID;
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.data.MediaFile;
 
 public class SheriffOrderDetails {
 
@@ -15,6 +19,12 @@ public class SheriffOrderDetails {
     @NotBlank
     @Size(max = 63)
     private String sheriffName;
+
+    @Valid
+    private AvatarDescription sheriffAvatar;
+
+    @JsonIgnore
+    private MediaFile sheriffAvatarMediaFile;
 
     @NotBlank
     @Size(max = 63)
@@ -59,6 +69,22 @@ public class SheriffOrderDetails {
 
     public void setSheriffName(String sheriffName) {
         this.sheriffName = sheriffName;
+    }
+
+    public AvatarDescription getSheriffAvatar() {
+        return sheriffAvatar;
+    }
+
+    public void setSheriffAvatar(AvatarDescription sheriffAvatar) {
+        this.sheriffAvatar = sheriffAvatar;
+    }
+
+    public MediaFile getSheriffAvatarMediaFile() {
+        return sheriffAvatarMediaFile;
+    }
+
+    public void setSheriffAvatarMediaFile(MediaFile sheriffAvatarMediaFile) {
+        this.sheriffAvatarMediaFile = sheriffAvatarMediaFile;
     }
 
     public String getFeedName() {

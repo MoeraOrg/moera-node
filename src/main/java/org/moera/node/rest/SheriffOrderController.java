@@ -32,6 +32,8 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SheriffOrderReceivedLiberin;
+import org.moera.node.media.MediaOperations;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SheriffOrderCategory;
@@ -72,6 +74,9 @@ public class SheriffOrderController {
     private FeedOperations feedOperations;
 
     @Inject
+    private MediaOperations mediaOperations;
+
+    @Inject
     private NamingCache namingCache;
 
     @Inject
@@ -94,6 +99,11 @@ public class SheriffOrderController {
                 .compareTo(CREATED_AT_MARGIN) > 0) {
             throw new ValidationFailure("sheriffOrderDetails.createdAt.out-of-range");
         }
+
+        mediaOperations.validateAvatar(
+                sheriffOrderDetails.getSheriffAvatar(),
+                sheriffOrderDetails::setSheriffAvatarMediaFile,
+                () -> new ValidationFailure("sheriffOrderDetails.sheriffAvatar.mediaId.not-found"));
 
         Posting posting = null;
         Comment comment = null;
@@ -147,6 +157,7 @@ public class SheriffOrderController {
 
         requestContext.send(new SheriffOrderReceivedLiberin(sheriffOrderDetails.isDelete(),
                 sheriffOrderDetails.getFeedName(), posting, comment, sheriffOrderDetails.getSheriffName(),
+                new AvatarImage(sheriffOrderDetails.getSheriffAvatar(), sheriffOrderDetails.getSheriffAvatarMediaFile()),
                 sheriffOrderDetails.getId()));
         return Result.OK;
     }

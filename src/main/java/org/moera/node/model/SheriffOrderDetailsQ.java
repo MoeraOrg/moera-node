@@ -8,6 +8,7 @@ public class SheriffOrderDetailsQ {
     private String id;
     private boolean delete;
     private String sheriffName;
+    private AvatarDescription sheriffAvatar;
     private String feedName;
     private String postingId;
     private String commentId;
@@ -21,10 +22,12 @@ public class SheriffOrderDetailsQ {
     public SheriffOrderDetailsQ() {
     }
 
-    public SheriffOrderDetailsQ(String id, String sheriffName, SheriffOrderAttributes attributes) {
+    public SheriffOrderDetailsQ(String id, String sheriffName, AvatarDescription sheriffAvatar,
+                                SheriffOrderAttributes attributes) {
         this.id = id;
         delete = attributes.isDelete();
         this.sheriffName = sheriffName;
+        this.sheriffAvatar = sheriffAvatar;
         feedName = attributes.getFeedName();
         postingId = attributes.getPostingId();
         commentId = attributes.getCommentId();
@@ -55,6 +58,14 @@ public class SheriffOrderDetailsQ {
 
     public void setSheriffName(String sheriffName) {
         this.sheriffName = sheriffName;
+    }
+
+    public AvatarDescription getSheriffAvatar() {
+        return sheriffAvatar;
+    }
+
+    public void setSheriffAvatar(AvatarDescription sheriffAvatar) {
+        this.sheriffAvatar = sheriffAvatar;
     }
 
     public String getFeedName() {

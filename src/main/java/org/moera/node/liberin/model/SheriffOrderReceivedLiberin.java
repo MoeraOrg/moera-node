@@ -7,6 +7,7 @@ import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
+import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 
@@ -17,15 +18,17 @@ public class SheriffOrderReceivedLiberin extends Liberin {
     private Posting posting;
     private Comment comment;
     private String sheriffName;
+    private AvatarImage sheriffAvatar;
     private String orderId;
 
     public SheriffOrderReceivedLiberin(boolean deleted, String feedName, Posting posting, Comment comment,
-                                       String sheriffName, String orderId) {
+                                       String sheriffName, AvatarImage sheriffAvatar, String orderId) {
         this.deleted = deleted;
         this.feedName = feedName;
         this.posting = posting;
         this.comment = comment;
         this.sheriffName = sheriffName;
+        this.sheriffAvatar = sheriffAvatar;
         this.orderId = orderId;
     }
 
@@ -69,6 +72,14 @@ public class SheriffOrderReceivedLiberin extends Liberin {
         this.sheriffName = sheriffName;
     }
 
+    public AvatarImage getSheriffAvatar() {
+        return sheriffAvatar;
+    }
+
+    public void setSheriffAvatar(AvatarImage sheriffAvatar) {
+        this.sheriffAvatar = sheriffAvatar;
+    }
+
     public String getOrderId() {
         return orderId;
     }
@@ -80,8 +91,8 @@ public class SheriffOrderReceivedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
+        model.put("deleted", deleted);
         model.put("feedName", feedName);
-        model.put("orderId", orderId);
         if (posting != null) {
             posting = entityManager.merge(posting);
             model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
@@ -90,6 +101,9 @@ public class SheriffOrderReceivedLiberin extends Liberin {
             comment = entityManager.merge(comment);
             model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
         }
+        model.put("sheriffName", sheriffName);
+        model.put("sheriffAvatar", sheriffAvatar);
+        model.put("orderId", orderId);
     }
 
 }

@@ -44,6 +44,10 @@ public class AvatarImage {
         this.shape = shape;
     }
 
+    public AvatarImage(AvatarDescription avatarDescription, MediaFile mediaFile) {
+        this(mediaFile, avatarDescription != null ? avatarDescription.getShape() : null);
+    }
+
     public String getMediaId() {
         return mediaId;
     }
