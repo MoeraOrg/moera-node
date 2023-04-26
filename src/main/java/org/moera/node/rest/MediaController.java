@@ -308,9 +308,7 @@ public class MediaController {
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {
             if (entry instanceof Posting) {
-                PostingInfo postingInfo = new PostingInfo((Posting) entry, requestContext);
-                feedOperations.fillFeedSheriffs(postingInfo);
-                parents.add(new EntryInfo(postingInfo));
+                parents.add(new EntryInfo(new PostingInfo((Posting) entry, requestContext)));
             }
             if (entry instanceof Comment) {
                 parents.add(new EntryInfo(new CommentInfo((Comment) entry, requestContext)));

@@ -10,8 +10,6 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
@@ -24,15 +22,11 @@ import org.moera.node.data.OwnComment;
 import org.moera.node.data.SheriffMark;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
+import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CommentInfo implements MediaInfo, ReactionsInfo {
-
-    private static final Logger log = LoggerFactory.getLogger(CommentInfo.class);
 
     private String id;
     private String ownerName;
@@ -74,7 +68,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private Map<String, Principal> ownerOperations;
     private Map<String, Principal> seniorOperations;
     private Set<String> blockedOperations;
-    private SheriffMark[] sheriffMarks;
+    private List<SheriffMark> sheriffMarks;
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ClientReactionInfo seniorReaction;
@@ -213,13 +207,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
                     comment.getParentAddNegativeReactionPrincipal(), Principal.UNSET);
         }
 
-        if (!ObjectUtils.isEmpty(comment.getSheriffMarks())) {
-            try {
-                sheriffMarks = new ObjectMapper().readValue(comment.getSheriffMarks(), SheriffMark[].class);
-            } catch (JsonProcessingException e) {
-                log.error("Error deserializing Posting.sheriffMarks", e);
-            }
-        }
+        sheriffMarks = SheriffUtil.deserializeSheriffMarks(comment.getSheriffMarks()).orElse(null);
 
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
@@ -560,11 +548,11 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         }
     }
 
-    public SheriffMark[] getSheriffMarks() {
+    public List<SheriffMark> getSheriffMarks() {
         return sheriffMarks;
     }
 
-    public void setSheriffMarks(SheriffMark[] sheriffMarks) {
+    public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
     }
 

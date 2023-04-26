@@ -6,6 +6,8 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SheriffMark;
+import org.moera.node.operations.FeedOperations;
+import org.moera.node.option.Options;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class FeedInfo implements Cloneable {
@@ -17,7 +19,7 @@ public class FeedInfo implements Cloneable {
     private Long lastCreatedAt;
     private Map<String, Principal> operations;
     private List<String> sheriffs;
-    private SheriffMark[] sheriffMarks;
+    private List<SheriffMark> sheriffMarks;
 
     public FeedInfo() {
     }
@@ -82,12 +84,17 @@ public class FeedInfo implements Cloneable {
         this.sheriffs = sheriffs;
     }
 
-    public SheriffMark[] getSheriffMarks() {
+    public List<SheriffMark> getSheriffMarks() {
         return sheriffMarks;
     }
 
-    public void setSheriffMarks(SheriffMark[] sheriffMarks) {
+    public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
+    }
+
+    public void fillSheriffs(Options options) {
+        sheriffs = FeedOperations.getFeedSheriffs(options, feedName).orElse(null);
+        sheriffMarks = FeedOperations.getFeedSheriffMarks(options, feedName).orElse(null);
     }
 
     @Override

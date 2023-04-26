@@ -46,7 +46,6 @@ import org.moera.node.liberin.model.PostingReadLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfo;
-import org.moera.node.model.FeedReference;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
@@ -175,11 +174,12 @@ public class PostingController {
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
 
         requestContext.send(new PostingAddedLiberin(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
-                .body(withSheriffs(withBlockings(withStories(new PostingInfo(posting, requestContext)))));
+                .body(withBlockings(new PostingInfo(posting, stories, requestContext, requestContext.getOptions())));
     }
 
     @PutMapping("/{id}")
@@ -234,13 +234,15 @@ public class PostingController {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
         }
+        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
         if (!sameViewComments) {
             mediaFileOwnerRepository.updateUsageOfCommentAttachments(
                     requestContext.nodeId(), posting.getId(), Util.now());
         }
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
-        return withSheriffs(withBlockings(withStories(withClientReaction(new PostingInfo(posting, requestContext)))));
+        return withBlockings(withClientReaction(
+                new PostingInfo(posting, stories, requestContext, requestContext.getOptions())));
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
@@ -336,8 +338,9 @@ public class PostingController {
 
         requestContext.send(new PostingReadLiberin(id));
 
-        return withSheriffs(withBlockings(withStories(withClientReaction(
-                new PostingInfo(posting, includeSet.contains("source"), requestContext)), stories)));
+        return withBlockings(withClientReaction(
+                new PostingInfo(posting, stories, includeSet.contains("source"), requestContext,
+                        requestContext.getOptions())));
     }
 
     @DeleteMapping("/{id}")
@@ -401,19 +404,6 @@ public class PostingController {
         return postingInfo;
     }
 
-    private PostingInfo withStories(PostingInfo postingInfo) {
-        List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(),
-                UUID.fromString(postingInfo.getId()));
-        return withStories(postingInfo, stories);
-    }
-
-    private PostingInfo withStories(PostingInfo postingInfo, List<Story> stories) {
-        if (stories != null && !stories.isEmpty()) {
-            postingInfo.setFeedReferences(stories.stream().map(FeedReference::new).collect(Collectors.toList()));
-        }
-        return postingInfo;
-    }
-
     private PostingInfo withBlockings(PostingInfo postingInfo) {
         if (postingInfo.isOriginal()) {
             postingInfo.putBlockedOperations(
@@ -423,11 +413,6 @@ public class PostingController {
                     blockedByUserOperations.findBlockedOperations(
                             postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()));
         }
-        return postingInfo;
-    }
-
-    private PostingInfo withSheriffs(PostingInfo postingInfo) {
-        feedOperations.fillFeedSheriffs(postingInfo);
         return postingInfo;
     }
 

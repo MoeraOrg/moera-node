@@ -129,7 +129,7 @@ public class FeedController {
                 .stream()
                 .map(FeedInfo::clone)
                 .peek(this::fillFeedTotals)
-                .peek(feedOperations::fillFeedSheriffs)
+                .peek(fi -> fi.fillSheriffs(requestContext.getOptions()))
                 .collect(Collectors.toList());
     }
 
@@ -144,7 +144,7 @@ public class FeedController {
 
         FeedInfo feedInfo = Feed.getStandard(feedName).clone();
         fillFeedTotals(feedInfo);
-        feedOperations.fillFeedSheriffs(feedInfo);
+        feedInfo.fillSheriffs(requestContext.getOptions());
 
         return feedInfo;
     }
@@ -483,12 +483,7 @@ public class FeedController {
         return StoryInfo.build(
                 story,
                 requestContext.isAdmin(),
-                t -> {
-                    Posting posting = (Posting) t.getEntry();
-                    PostingInfo info = new PostingInfo(posting, requestContext);
-                    feedOperations.fillFeedSheriffs(info, story.getFeedName());
-                    return info;
-                }
+                t -> new PostingInfo((Posting) t.getEntry(), List.of(t), requestContext, requestContext.getOptions())
         );
     }
 

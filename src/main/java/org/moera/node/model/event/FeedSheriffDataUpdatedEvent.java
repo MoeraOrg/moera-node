@@ -10,13 +10,13 @@ public class FeedSheriffDataUpdatedEvent extends Event {
 
     private String feedName;
     private List<String> sheriffs;
-    private SheriffMark[] sheriffMarks;
+    private List<SheriffMark> sheriffMarks;
 
     public FeedSheriffDataUpdatedEvent() {
         super(EventType.FEED_SHERIFF_DATA_UPDATED);
     }
 
-    public FeedSheriffDataUpdatedEvent(String feedName, List<String> sheriffs, SheriffMark[] sheriffMarks) {
+    public FeedSheriffDataUpdatedEvent(String feedName, List<String> sheriffs, List<SheriffMark> sheriffMarks) {
         super(EventType.FEED_SHERIFF_DATA_UPDATED);
         this.feedName = feedName;
         this.sheriffs = sheriffs;
@@ -39,11 +39,11 @@ public class FeedSheriffDataUpdatedEvent extends Event {
         this.sheriffs = sheriffs;
     }
 
-    public SheriffMark[] getSheriffMarks() {
+    public List<SheriffMark> getSheriffMarks() {
         return sheriffMarks;
     }
 
-    public void setSheriffMarks(SheriffMark[] sheriffMarks) {
+    public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
     }
 

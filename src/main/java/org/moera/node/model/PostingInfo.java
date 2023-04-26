@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -13,8 +14,6 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
@@ -30,17 +29,16 @@ import org.moera.node.data.SheriffMark;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.model.body.Body;
+import org.moera.node.operations.FeedOperations;
+import org.moera.node.option.Options;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
+import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostingInfo implements MediaInfo, ReactionsInfo {
-
-    private static final Logger log = LoggerFactory.getLogger(PostingInfo.class);
 
     private String id;
     private String revisionId;
@@ -118,15 +116,20 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {
-        this(posting, revision, null, includeSource, accessChecker);
+        this(posting, revision, null, includeSource, accessChecker, null);
     }
 
-    public PostingInfo(Posting posting, List<Story> stories, AccessChecker accessChecker) {
-        this(posting, posting.getCurrentRevision(), stories, false, accessChecker);
+    public PostingInfo(Posting posting, Collection<Story> stories, AccessChecker accessChecker, Options options) {
+        this(posting, posting.getCurrentRevision(), stories, false, accessChecker, options);
     }
 
-    public PostingInfo(Posting posting, EntryRevision revision, List<Story> stories, boolean includeSource,
-                       AccessChecker accessChecker) {
+    public PostingInfo(Posting posting, Collection<Story> stories, boolean includeSource, AccessChecker accessChecker,
+                       Options options) {
+        this(posting, posting.getCurrentRevision(), stories, includeSource, accessChecker, options);
+    }
+
+    public PostingInfo(Posting posting, EntryRevision revision, Collection<Story> stories, boolean includeSource,
+                       AccessChecker accessChecker, Options options) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
         receiverRevisionId = revision.getReceiverRevisionId();
@@ -175,7 +178,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        if (stories != null && !stories.isEmpty()) {
+        if (!ObjectUtils.isEmpty(stories)) {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
         if (accessChecker.isPrincipal(Principal.ADMIN)
@@ -291,15 +294,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         putOperation(commentReactionOperations, "delete",
                 posting.getChildReactionOperations().getDelete(), Principal.UNSET);
 
-        if (!ObjectUtils.isEmpty(posting.getSheriffMarks())) {
-            try {
-                sheriffMarks = new ArrayList<>();
-                Collections.addAll(sheriffMarks,
-                        new ObjectMapper().readValue(posting.getSheriffMarks(), SheriffMark[].class));
-            } catch (JsonProcessingException e) {
-                log.error("Error deserializing Posting.sheriffMarks", e);
-            }
-        }
+        fillSheriffs(posting, options);
 
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
@@ -322,12 +317,51 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         }
     }
 
-    public static PostingInfo forUi(Posting posting) {
-        return forUi(posting, null);
+    private void fillSheriffs(Posting posting, Options options) {
+        if (posting.isOriginal()) {
+            fillFeedSheriffs(options);
+            SheriffUtil.deserializeSheriffMarks(posting.getSheriffMarks()).ifPresent(marks -> {
+                if (sheriffMarks == null) {
+                    sheriffMarks = new ArrayList<>();
+                }
+                sheriffMarks.addAll(marks);
+            });
+        } else {
+            sheriffs = SheriffUtil.deserializeSheriffs(posting.getReceiverSheriffs()).orElse(null);
+            sheriffMarks = SheriffUtil.deserializeSheriffMarks(posting.getReceiverSheriffMarks()).orElse(null);
+        }
     }
 
-    public static PostingInfo forUi(Posting posting, List<Story> stories) {
-        PostingInfo info = new PostingInfo(posting, stories, AccessCheckers.PUBLIC);
+    private void fillFeedSheriffs(Options options) {
+        if (feedReferences == null || options == null) {
+            return;
+        }
+
+        for (FeedReference feedReference : feedReferences) {
+            String feedName = feedReference.getFeedName();
+
+            FeedOperations.getFeedSheriffs(options, feedName).ifPresent(feedSheriffs -> {
+                if (sheriffs == null) {
+                    sheriffs = new ArrayList<>();
+                }
+                sheriffs.addAll(feedSheriffs);
+            });
+
+            FeedOperations.getFeedSheriffMarks(options, feedName).ifPresent(marks -> {
+                if (sheriffMarks == null) {
+                    sheriffMarks = new ArrayList<>();
+                }
+                sheriffMarks.addAll(marks);
+            });
+        }
+    }
+
+    public static PostingInfo forUi(Posting posting) {
+        return forUi(posting, null, null);
+    }
+
+    public static PostingInfo forUi(Posting posting, List<Story> stories, Options options) {
+        PostingInfo info = new PostingInfo(posting, stories, AccessCheckers.PUBLIC, options);
         String saneBodyPreview = posting.getCurrentRevision().getSaneBodyPreview();
         if (saneBodyPreview != null) {
             info.setSaneBodyPreview(saneBodyPreview);
@@ -888,6 +922,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         posting.setReceiverOverrideReactionPrincipal(principal);
         principal = getOperations().getOrDefault("overrideCommentReaction", Principal.OWNER);
         posting.setReceiverOverrideCommentReactionPrincipal(principal);
+        posting.setReceiverSheriffs(SheriffUtil.serializeSheriffs(sheriffs).orElse(null));
+        posting.setReceiverSheriffMarks(SheriffUtil.serializeSheriffMarks(sheriffMarks).orElse(null));
     }
 
     public void toPickedEntryRevision(EntryRevision entryRevision) {

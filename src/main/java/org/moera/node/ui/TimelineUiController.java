@@ -129,7 +129,7 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
-        model.addAttribute("posting", PostingInfo.forUi(posting, stories));
+        model.addAttribute("posting", PostingInfo.forUi(posting, stories, requestContext.getOptions()));
         model.addAttribute("canonicalUrl", canonicalUrl);
         model.addAttribute("openComments", commentId != null || before != null);
         model.addAttribute("openMediaPostingId", id.toString());

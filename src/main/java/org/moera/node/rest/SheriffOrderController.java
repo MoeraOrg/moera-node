@@ -2,8 +2,7 @@ package org.moera.node.rest;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -12,8 +11,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
@@ -42,9 +39,10 @@ import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.naming.NamingCache;
 import org.moera.node.operations.FeedOperations;
+import org.moera.node.util.SheriffUtil;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -79,12 +77,9 @@ public class SheriffOrderController {
     @Inject
     private NamingCache namingCache;
 
-    @Inject
-    private ObjectMapper objectMapper;
-
     @PostMapping
     @Transactional
-    public Result post(@Valid @RequestBody SheriffOrderDetails sheriffOrderDetails) throws JsonProcessingException {
+    public Result post(@Valid @RequestBody SheriffOrderDetails sheriffOrderDetails) {
         log.info("POST /sheriff/orders (delete = {}, sheriffName = {}, feedName = {}, postingId = {}, commentId = {},"
                         + " category = {}, reasonCode = {})",
                 LogUtil.format(sheriffOrderDetails.isDelete()),
@@ -146,13 +141,14 @@ public class SheriffOrderController {
         }
 
         if (posting == null) {
-            String optionName = feedOperations.getFeedSheriffMarksOption(sheriffOrderDetails.getFeedName());
+            String optionName = FeedOperations.getFeedSheriffMarksOption(sheriffOrderDetails.getFeedName());
             updateSheriffMarks(sheriffOrderDetails,
                     () -> requestContext.getOptions().getString(optionName),
                     value -> requestContext.getOptions().set(optionName, value));
         } else {
             Entry entry = comment == null ? posting : comment;
             updateSheriffMarks(sheriffOrderDetails, entry::getSheriffMarks, entry::setSheriffMarks);
+            entry.setEditedAt(Util.now());
         }
 
         requestContext.send(new SheriffOrderReceivedLiberin(sheriffOrderDetails.isDelete(),
@@ -162,21 +158,16 @@ public class SheriffOrderController {
         return Result.OK;
     }
 
-    private void updateSheriffMarks(SheriffOrderDetails details,
-                                    Supplier<String> getter, Consumer<String> setter) throws JsonProcessingException {
-        String marksS = getter.get();
-        List<SheriffMark> marks;
-        if (!ObjectUtils.isEmpty(marksS)) {
-            marks = Arrays.stream(objectMapper.readValue(marksS, SheriffMark[].class))
-                    .filter(mark -> !mark.getSheriffName().equals(details.getSheriffName()))
-                    .collect(Collectors.toList());
-        } else {
-            marks = new ArrayList<>();
-        }
+    private void updateSheriffMarks(SheriffOrderDetails details, Supplier<String> getter, Consumer<String> setter) {
+        List<SheriffMark> sheriffMarks = SheriffUtil.deserializeSheriffMarks(getter.get())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(mark -> !mark.getSheriffName().equals(details.getSheriffName()))
+                .collect(Collectors.toList());
         if (!details.isDelete()) {
-            marks.add(new SheriffMark(details.getSheriffName()));
+            sheriffMarks.add(new SheriffMark(details.getSheriffName()));
         }
-        setter.accept(!marks.isEmpty() ? objectMapper.writeValueAsString(marks) : "");
+        setter.accept(SheriffUtil.serializeSheriffMarks(sheriffMarks).orElse(""));
     }
 
 }

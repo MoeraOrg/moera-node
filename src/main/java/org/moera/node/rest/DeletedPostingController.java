@@ -115,7 +115,7 @@ public class DeletedPostingController {
         requestContext.send(new PostingRestoredLiberin(posting));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
-        return new PostingInfo(posting, stories, requestContext);
+        return new PostingInfo(posting, stories, requestContext, requestContext.getOptions());
     }
 
     @Scheduled(fixedDelayString = "P1D")

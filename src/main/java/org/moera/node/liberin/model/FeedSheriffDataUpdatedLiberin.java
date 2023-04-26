@@ -6,17 +6,18 @@ import java.util.Map;
 import org.moera.node.data.SheriffMark;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.operations.FeedOperations;
+import org.moera.node.option.Options;
 
 public class FeedSheriffDataUpdatedLiberin extends Liberin {
 
     private String feedName;
     private List<String> sheriffs;
-    private SheriffMark[] sheriffMarks;
+    private List<SheriffMark> sheriffMarks;
 
-    public FeedSheriffDataUpdatedLiberin(String feedName, FeedOperations feedOperations) {
+    public FeedSheriffDataUpdatedLiberin(String feedName, Options options) {
         this.feedName = feedName;
-        sheriffs = feedOperations.getFeedSheriffs(feedName);
-        sheriffMarks = feedOperations.getFeedSheriffMarks(feedName);
+        sheriffs = FeedOperations.getFeedSheriffs(options, feedName).orElse(null);
+        sheriffMarks = FeedOperations.getFeedSheriffMarks(options, feedName).orElse(null);
     }
 
     public String getFeedName() {
@@ -35,11 +36,11 @@ public class FeedSheriffDataUpdatedLiberin extends Liberin {
         this.sheriffs = sheriffs;
     }
 
-    public SheriffMark[] getSheriffMarks() {
+    public List<SheriffMark> getSheriffMarks() {
         return sheriffMarks;
     }
 
-    public void setSheriffMarks(SheriffMark[] sheriffMarks) {
+    public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
     }
 
