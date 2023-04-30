@@ -31,6 +31,7 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.EntryInfo;
+import org.moera.node.model.FeedInfo;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
@@ -316,6 +317,10 @@ public class NodeApi {
     public Result deleteSubscriber(String nodeName, String carte, String subscriberId) throws NodeApiException {
         return call("DELETE", nodeName, String.format("/people/subscribers/%s", Util.ue(subscriberId)),
                 auth("carte", carte), Result.class);
+    }
+
+    public FeedInfo getFeed(String nodeName, String feedName) throws NodeApiException {
+        return call("GET", nodeName, String.format("/feeds/%s", Util.ue(feedName)), null, FeedInfo.class);
     }
 
     public FeedSliceInfo getFeedStories(String nodeName, String feedName, int limit) throws NodeApiException {

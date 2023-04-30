@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.5 (Ubuntu 14.5-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.5 (Ubuntu 14.5-0ubuntu0.22.04.1)
+-- Dumped from database version 14.7 (Ubuntu 14.7-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.7 (Ubuntu 14.7-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -29,6 +29,68 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
+
+--
+-- Name: update_blocked_by_user_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_blocked_by_user_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_subscription_reference(
+                OLD.node_id, 3, OLD.remote_node_name, NULL, NULL, NULL, NULL, NULL
+            );
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, OLD.remote_node_name, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, NULL, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_blocked_by_user_remote_node() OWNER TO moera;
+
+--
+-- Name: update_blocked_user_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
+--
+
+CREATE FUNCTION public.update_blocked_user_remote_node() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        IF TG_OP = 'DELETE' THEN
+            PERFORM update_subscription_reference(
+                OLD.node_id, 3, OLD.remote_node_name, NULL, NULL, NULL, NULL, NULL
+            );
+            RETURN OLD;
+        ELSIF TG_OP = 'UPDATE' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, OLD.remote_node_name, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        ELSIF TG_OP = 'INSERT' THEN
+            PERFORM update_subscription_reference(
+                NEW.node_id, 3, NULL, NULL, NULL, NEW.remote_node_name, NULL, NULL
+            );
+            RETURN NEW;
+        END IF;
+        RETURN NULL;
+    END;
+$$;
+
+
+ALTER FUNCTION public.update_blocked_user_remote_node() OWNER TO moera;
 
 --
 -- Name: update_contact_remote_node(); Type: FUNCTION; Schema: public; Owner: moera
@@ -321,29 +383,34 @@ CREATE FUNCTION public.update_entry_remote_node() RETURNS trigger
         IF TG_OP = 'DELETE' THEN
             IF OLD.receiver_name IS NOT NULL AND OLD.deleted_at IS NULL THEN
                 PERFORM update_subscription_reference(
-                    OLD.node_id, 3, OLD.receiver_name, NULL, NULL, NULL, NULL, NULL
+                    OLD.node_id, 1, OLD.receiver_name, NULL, OLD.receiver_entry_id, NULL, NULL, NULL
                 );
             END IF;
             RETURN OLD;
         ELSIF TG_OP = 'UPDATE' THEN
             DECLARE
                 old_receiver_name varchar(63) := CASE WHEN OLD.deleted_at IS NULL THEN OLD.receiver_name ELSE NULL END;
+                old_receiver_entry_id varchar(40) := CASE WHEN OLD.deleted_at IS NULL THEN OLD.receiver_entry_id ELSE NULL END;
                 new_receiver_name varchar(63) := CASE WHEN NEW.deleted_at IS NULL THEN NEW.receiver_name ELSE NULL END;
+                new_receiver_entry_id varchar(40) := CASE WHEN NEW.deleted_at IS NULL THEN NEW.receiver_entry_id ELSE NULL END;
             BEGIN
-                IF old_receiver_name IS NULL AND new_receiver_name IS NULL OR old_receiver_name = new_receiver_name THEN
+                IF (old_receiver_name IS NULL AND new_receiver_name IS NULL OR old_receiver_name = new_receiver_name)
+                   AND (old_receiver_entry_id IS NULL AND new_receiver_entry_id IS NULL
+                        OR old_receiver_entry_id = new_receiver_entry_id) THEN
                     RETURN NEW;
                 END IF;
                 IF new_receiver_name IS NULL THEN
                     PERFORM update_subscription_reference(
-                        NEW.node_id, 3, old_receiver_name, NULL, NULL, NULL, NULL, NULL
+                        NEW.node_id, 1, old_receiver_name, NULL, old_receiver_entry_id, NULL, NULL, NULL
                     );
                 ELSIF old_receiver_name IS NULL THEN
                     PERFORM update_subscription_reference(
-                        NEW.node_id, 3, NULL, NULL, NULL, new_receiver_name, NULL, NULL
+                        NEW.node_id, 1, NULL, NULL, NULL, new_receiver_name, NULL, new_receiver_entry_id
                     );
                 ELSE
                     PERFORM update_subscription_reference(
-                        NEW.node_id, 3, old_receiver_name, NULL, NULL, new_receiver_name, NULL, NULL
+                        NEW.node_id, 1, old_receiver_name, NULL, old_receiver_entry_id,
+                        new_receiver_name, NULL, new_receiver_entry_id
                     );
                 END IF;
                 RETURN NEW;
@@ -351,7 +418,7 @@ CREATE FUNCTION public.update_entry_remote_node() RETURNS trigger
         ELSIF TG_OP = 'INSERT' THEN
             IF NEW.receiver_name IS NOT NULL AND NEW.deleted_at IS NULL THEN
                 PERFORM update_subscription_reference(
-                    NEW.node_id, 3, NULL, NULL, NULL, NEW.receiver_name, NULL, NULL
+                    NEW.node_id, 1, NULL, NULL, NULL, NEW.receiver_name, NULL, NEW.receiver_entry_id
                 );
             END IF;
             RETURN NEW;
@@ -697,6 +764,25 @@ CREATE TABLE public.avatars (
 ALTER TABLE public.avatars OWNER TO moera;
 
 --
+-- Name: blocked_by_users; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.blocked_by_users (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    blocked_operation smallint NOT NULL,
+    contact_id uuid,
+    remote_node_name character varying(63) NOT NULL,
+    remote_posting_id character varying(40),
+    created_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone,
+    reason text DEFAULT ''::text NOT NULL
+);
+
+
+ALTER TABLE public.blocked_by_users OWNER TO moera;
+
+--
 -- Name: blocked_instants; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -705,11 +791,38 @@ CREATE TABLE public.blocked_instants (
     node_id uuid NOT NULL,
     story_type smallint NOT NULL,
     entry_id uuid,
-    created_at timestamp without time zone NOT NULL
+    created_at timestamp without time zone NOT NULL,
+    remote_node_name character varying(63),
+    remote_posting_id character varying(40),
+    remote_owner_name character varying(63),
+    deadline timestamp without time zone
 );
 
 
 ALTER TABLE public.blocked_instants OWNER TO moera;
+
+--
+-- Name: blocked_users; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.blocked_users (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    blocked_operation smallint NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    contact_id uuid,
+    entry_id uuid,
+    entry_node_name character varying(63),
+    entry_posting_id character varying(40),
+    created_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone,
+    reason_src text DEFAULT ''::text NOT NULL,
+    reason_src_format smallint DEFAULT 0 NOT NULL,
+    reason text DEFAULT ''::text NOT NULL
+);
+
+
+ALTER TABLE public.blocked_users OWNER TO moera;
 
 --
 -- Name: contact_upgrades; Type: TABLE; Schema: public; Owner: moera
@@ -747,7 +860,11 @@ CREATE TABLE public.contacts (
     friend_of_count integer DEFAULT 0 NOT NULL,
     view_feed_subscription_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     view_feed_subscriber_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
-    view_friend_principal character varying(70) DEFAULT 'public'::character varying NOT NULL
+    view_friend_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
+    blocked_user_count integer DEFAULT 0 NOT NULL,
+    blocked_user_posting_count integer DEFAULT 0 NOT NULL,
+    blocked_by_user_count integer DEFAULT 0 NOT NULL,
+    blocked_by_user_posting_count integer DEFAULT 0 NOT NULL
 );
 
 
@@ -903,7 +1020,10 @@ CREATE TABLE public.entries (
     receiver_override_comment_reaction_principal character varying(70),
     owner_gender character varying(31),
     receiver_gender character varying(31),
-    replied_to_gender character varying(31)
+    replied_to_gender character varying(31),
+    sheriff_marks text DEFAULT ''::text NOT NULL,
+    receiver_sheriff_marks text,
+    receiver_sheriffs text
 );
 
 
@@ -1408,6 +1528,90 @@ CREATE TABLE public.schema_history (
 ALTER TABLE public.schema_history OWNER TO moera;
 
 --
+-- Name: sheriff_complains; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.sheriff_complains (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    owner_name character varying(63),
+    owner_full_name character varying(96),
+    owner_gender character varying(31),
+    remote_node_name character varying(63) NOT NULL,
+    remote_node_full_name character varying(96),
+    remote_feed_name character varying(63) NOT NULL,
+    remote_posting_owner_name character varying(63),
+    remote_posting_owner_full_name character varying(96),
+    remote_posting_owner_gender character varying(31),
+    remote_posting_heading character varying(255),
+    remote_posting_id character varying(40),
+    remote_posting_revision_id character varying(40),
+    remote_comment_owner_name character varying(63),
+    remote_comment_owner_full_name character varying(96),
+    remote_comment_owner_gender character varying(31),
+    remote_comment_heading character varying(255),
+    remote_comment_id character varying(40),
+    remote_comment_revision_id character varying(40),
+    reason_code smallint NOT NULL,
+    reason_details text,
+    created_at timestamp without time zone NOT NULL,
+    status smallint NOT NULL,
+    sheriff_decision_id uuid
+);
+
+
+ALTER TABLE public.sheriff_complains OWNER TO moera;
+
+--
+-- Name: sheriff_decisions; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.sheriff_decisions (
+    id uuid NOT NULL,
+    accepted boolean NOT NULL,
+    reason_code smallint NOT NULL,
+    reason_details text,
+    created_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.sheriff_decisions OWNER TO moera;
+
+--
+-- Name: sheriff_orders; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.sheriff_orders (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    delete boolean DEFAULT false NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    remote_feed_name character varying(63) NOT NULL,
+    remote_posting_id character varying(40),
+    remote_comment_id character varying(40),
+    category smallint NOT NULL,
+    reason_code smallint NOT NULL,
+    reason_details text,
+    created_at timestamp without time zone NOT NULL,
+    signature bytea NOT NULL,
+    signature_version smallint NOT NULL,
+    remote_posting_owner_name character varying(63),
+    remote_posting_owner_full_name character varying(96),
+    remote_posting_owner_gender character varying(31),
+    remote_posting_heading character varying(255),
+    remote_posting_revision_id character varying(40),
+    remote_comment_owner_name character varying(63),
+    remote_comment_owner_full_name character varying(96),
+    remote_comment_owner_gender character varying(31),
+    remote_comment_heading character varying(255),
+    remote_comment_revision_id character varying(40),
+    remote_node_full_name character varying(96)
+);
+
+
+ALTER TABLE public.sheriff_orders OWNER TO moera;
+
+--
 -- Name: sitemap_records; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1569,11 +1773,27 @@ ALTER TABLE ONLY public.avatars
 
 
 --
+-- Name: blocked_by_users blocked_by_users_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.blocked_by_users
+    ADD CONSTRAINT blocked_by_users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: blocked_instants blocked_instants_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.blocked_instants
     ADD CONSTRAINT blocked_instants_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: blocked_users blocked_users_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.blocked_users
+    ADD CONSTRAINT blocked_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -1841,6 +2061,30 @@ ALTER TABLE ONLY public.schema_history
 
 
 --
+-- Name: sheriff_complains sheriff_complains_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sheriff_complains
+    ADD CONSTRAINT sheriff_complains_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sheriff_decisions sheriff_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sheriff_decisions
+    ADD CONSTRAINT sheriff_decisions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sheriff_orders sheriff_orders_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sheriff_orders
+    ADD CONSTRAINT sheriff_orders_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: sitemap_records sitemap_records_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -1910,10 +2154,80 @@ CREATE INDEX avatars_node_id_ordinal_created_at_idx ON public.avatars USING btre
 
 
 --
+-- Name: blocked_by_users_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_by_users_contact_id_idx ON public.blocked_by_users USING btree (contact_id);
+
+
+--
+-- Name: blocked_by_users_node_id_remote_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_by_users_node_id_remote_idx ON public.blocked_by_users USING btree (node_id, remote_node_name, remote_posting_id);
+
+
+--
+-- Name: blocked_instants_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_instants_deadline_idx ON public.blocked_instants USING btree (deadline);
+
+
+--
 -- Name: blocked_instants_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
 CREATE INDEX blocked_instants_entry_id_idx ON public.blocked_instants USING btree (entry_id);
+
+
+--
+-- Name: blocked_instants_node_id_type_owner_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_instants_node_id_type_owner_idx ON public.blocked_instants USING btree (node_id, story_type, remote_owner_name);
+
+
+--
+-- Name: blocked_instants_node_id_type_remote_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_instants_node_id_type_remote_idx ON public.blocked_instants USING btree (node_id, story_type, remote_node_name, remote_posting_id);
+
+
+--
+-- Name: blocked_users_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_users_contact_id_idx ON public.blocked_users USING btree (contact_id);
+
+
+--
+-- Name: blocked_users_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_users_deadline_idx ON public.blocked_users USING btree (deadline);
+
+
+--
+-- Name: blocked_users_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_users_entry_id_idx ON public.blocked_users USING btree (entry_id);
+
+
+--
+-- Name: blocked_users_node_id_operation_node_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_users_node_id_operation_node_idx ON public.blocked_users USING btree (node_id, blocked_operation, remote_node_name);
+
+
+--
+-- Name: blocked_users_node_id_remote_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX blocked_users_node_id_remote_idx ON public.blocked_users USING btree (node_id, entry_node_name, entry_posting_id);
 
 
 --
@@ -2547,6 +2861,27 @@ CREATE INDEX schema_history_s_idx ON public.schema_history USING btree (success)
 
 
 --
+-- Name: sheriff_complains_decision_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sheriff_complains_decision_idx ON public.sheriff_complains USING btree (sheriff_decision_id);
+
+
+--
+-- Name: sheriff_complains_target_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sheriff_complains_target_idx ON public.sheriff_complains USING btree (node_id, remote_node_name, remote_feed_name, remote_posting_id, remote_comment_id);
+
+
+--
+-- Name: sheriff_orders_target_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sheriff_orders_target_idx ON public.sheriff_orders USING btree (node_id, remote_node_name, remote_feed_name, remote_posting_id, remote_comment_id);
+
+
+--
 -- Name: sitemap_records_entry_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2834,6 +3169,20 @@ CREATE TRIGGER update_remote_avatar_media_file_id AFTER INSERT OR DELETE OR UPDA
 
 
 --
+-- Name: blocked_by_users update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, remote_node_name ON public.blocked_by_users FOR EACH ROW EXECUTE FUNCTION public.update_blocked_by_user_remote_node();
+
+
+--
+-- Name: blocked_users update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
+--
+
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, remote_node_name ON public.blocked_users FOR EACH ROW EXECUTE FUNCTION public.update_blocked_user_remote_node();
+
+
+--
 -- Name: contacts update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
 --
 
@@ -2844,7 +3193,7 @@ CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, r
 -- Name: entries update_remote_node; Type: TRIGGER; Schema: public; Owner: moera
 --
 
-CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, receiver_name, deleted_at ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entry_remote_node();
+CREATE TRIGGER update_remote_node AFTER INSERT OR DELETE OR UPDATE OF node_id, receiver_name, receiver_entry_id, deleted_at ON public.entries FOR EACH ROW EXECUTE FUNCTION public.update_entry_remote_node();
 
 
 --
@@ -2912,11 +3261,35 @@ ALTER TABLE ONLY public.avatars
 
 
 --
+-- Name: blocked_by_users blocked_by_users_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.blocked_by_users
+    ADD CONSTRAINT blocked_by_users_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
 -- Name: blocked_instants blocked_instants_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.blocked_instants
     ADD CONSTRAINT blocked_instants_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: blocked_users blocked_users_contact_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.blocked_users
+    ADD CONSTRAINT blocked_users_contact_id_fkey FOREIGN KEY (contact_id) REFERENCES public.contacts(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: blocked_users blocked_users_entry_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.blocked_users
+    ADD CONSTRAINT blocked_users_entry_id_fkey FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -3205,6 +3578,14 @@ ALTER TABLE ONLY public.reactions
 
 ALTER TABLE ONLY public.remote_media_cache
     ADD CONSTRAINT remote_media_cache_media_file_id_fkey FOREIGN KEY (media_file_id) REFERENCES public.media_files(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+
+--
+-- Name: sheriff_complains sheriff_complains_sheriff_decision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sheriff_complains
+    ADD CONSTRAINT sheriff_complains_sheriff_decision_id_fkey FOREIGN KEY (sheriff_decision_id) REFERENCES public.sheriff_decisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --
