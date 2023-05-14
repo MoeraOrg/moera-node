@@ -211,7 +211,7 @@ public class SheriffComplainText {
         sheriffComplain.setRemoteCommentOwnerGender(commentOwnerGender);
         sheriffComplain.setRemoteCommentHeading(commentHeading);
         sheriffComplain.setRemoteCommentId(commentId);
-        sheriffComplain.setReasonCode(reasonCode != null ? reasonCode : SheriffOrderReason.UNKNOWN);
+        sheriffComplain.setReasonCode(reasonCode != null ? reasonCode : SheriffOrderReason.OTHER);
         sheriffComplain.setReasonDetails(reasonDetails);
     }
 

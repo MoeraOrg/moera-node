@@ -68,7 +68,7 @@ public class RemoteSheriffOrderController {
                 LogUtil.format(SheriffOrderReason.toValue(sheriffOrderAttributes.getReasonCode())));
 
         if (sheriffOrderAttributes.getReasonCode() == null) {
-            sheriffOrderAttributes.setReasonCode(SheriffOrderReason.UNKNOWN);
+            sheriffOrderAttributes.setReasonCode(SheriffOrderReason.OTHER);
         }
 
         var postTask = new SheriffOrderPostTask(nodeName, sheriffOrderAttributes);

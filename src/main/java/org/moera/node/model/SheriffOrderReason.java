@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum SheriffOrderReason {
 
-    UNKNOWN,
+    OTHER,
     UNLAWFUL,
     DEFAMATORY,
     THREAT,
