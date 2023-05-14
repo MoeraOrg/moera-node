@@ -5,11 +5,11 @@ import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.util.Util;
 
 @Entity
@@ -79,8 +79,12 @@ public class SheriffComplainGroup {
     @Enumerated
     private SheriffComplainStatus status = SheriffComplainStatus.POSTED;
 
-    @ManyToOne
-    private SheriffDecision sheriffDecision;
+    @Enumerated
+    private SheriffOrderReason decisionCode;
+
+    private String decisionDetails;
+
+    private Timestamp decidedAt;
 
     public UUID getId() {
         return id;
@@ -242,12 +246,28 @@ public class SheriffComplainGroup {
         this.status = status;
     }
 
-    public SheriffDecision getSheriffDecision() {
-        return sheriffDecision;
+    public SheriffOrderReason getDecisionCode() {
+        return decisionCode;
     }
 
-    public void setSheriffDecision(SheriffDecision sheriffDecision) {
-        this.sheriffDecision = sheriffDecision;
+    public void setDecisionCode(SheriffOrderReason decisionCode) {
+        this.decisionCode = decisionCode;
+    }
+
+    public String getDecisionDetails() {
+        return decisionDetails;
+    }
+
+    public void setDecisionDetails(String decisionDetails) {
+        this.decisionDetails = decisionDetails;
+    }
+
+    public Timestamp getDecidedAt() {
+        return decidedAt;
+    }
+
+    public void setDecidedAt(Timestamp decidedAt) {
+        this.decidedAt = decidedAt;
     }
 
 }

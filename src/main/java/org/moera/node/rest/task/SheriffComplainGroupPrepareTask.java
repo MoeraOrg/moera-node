@@ -13,8 +13,6 @@ import org.moera.node.api.NodeApiUnknownNameException;
 import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffComplainGroupRepository;
 import org.moera.node.data.SheriffComplainStatus;
-import org.moera.node.data.SheriffDecision;
-import org.moera.node.data.SheriffDecisionRepository;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.model.CommentInfo;
@@ -22,6 +20,7 @@ import org.moera.node.model.FeedInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.task.Task;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -42,9 +41,6 @@ public class SheriffComplainGroupPrepareTask extends Task {
 
     @Inject
     private SheriffComplainGroupRepository sheriffComplainGroupRepository;
-
-    @Inject
-    private SheriffDecisionRepository sheriffDecisionRepository;
 
     @Inject
     private SheriffOrderRepository sheriffOrderRepository;
@@ -150,14 +146,10 @@ public class SheriffComplainGroupPrepareTask extends Task {
             SheriffOrder order = orders.get(0);
             if (!order.isDelete()) {
                 updateComplainGroup(complainGroup -> {
-                    SheriffDecision decision = new SheriffDecision();
-                    decision.setId(UUID.randomUUID());
-                    decision.setAccepted(true);
-                    decision.setReasonCode(order.getReasonCode());
-                    decision.setReasonDetails(order.getReasonDetails());
-                    decision = sheriffDecisionRepository.save(decision);
-                    complainGroup.setSheriffDecision(decision);
-                    complainGroup.setStatus(SheriffComplainStatus.DECIDED);
+                    complainGroup.setStatus(SheriffComplainStatus.ACCEPTED);
+                    complainGroup.setDecisionCode(order.getReasonCode());
+                    complainGroup.setDecisionDetails(order.getReasonDetails());
+                    complainGroup.setDecidedAt(Util.now());
                 });
             }
         }

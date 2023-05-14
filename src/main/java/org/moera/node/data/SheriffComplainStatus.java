@@ -12,7 +12,8 @@ public enum SheriffComplainStatus {
     INVALID_TARGET,
     NOT_ORIGINAL,
     NOT_SHERIFF,
-    DECIDED;
+    ACCEPTED,
+    REJECTED;
 
     @JsonValue
     public String getValue() {
