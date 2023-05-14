@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.Optional;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -7,6 +8,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.data.SheriffComplain;
+import org.moera.node.data.SheriffComplainGroup;
+import org.moera.node.data.SheriffComplainGroupRepository;
 import org.moera.node.data.SheriffComplainRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -14,12 +17,18 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.Result;
 import org.moera.node.model.SheriffComplainText;
 import org.moera.node.model.SheriffOrderReason;
-import org.moera.node.rest.task.SheriffComplainPrepareTask;
+import org.moera.node.rest.task.SheriffComplainGroupPrepareTask;
 import org.moera.node.task.TaskAutowire;
+import org.moera.node.util.MomentFinder;
+import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.util.Pair;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,15 +47,23 @@ public class SheriffComplainController {
     private SheriffComplainRepository sheriffComplainRepository;
 
     @Inject
+    private SheriffComplainGroupRepository sheriffComplainGroupRepository;
+
+    @Inject
     @Qualifier("remoteTaskExecutor")
     private TaskExecutor taskExecutor;
 
     @Inject
     private TaskAutowire taskAutowire;
 
+    @Inject
+    private PlatformTransactionManager txManager;
+
+    private final MomentFinder momentFinder = new MomentFinder();
+
     @PostMapping
     @Transactional
-    public Result post(@Valid @RequestBody SheriffComplainText sheriffComplainText) {
+    public Result post(@Valid @RequestBody SheriffComplainText sheriffComplainText) throws Throwable {
         log.info("POST /sheriff/complains"
                         + " (nodeName = {}, feedName = {}, postingId = {}, commentId = {}, reasonCode = {})",
                 LogUtil.format(sheriffComplainText.getNodeName()),
@@ -58,17 +75,59 @@ public class SheriffComplainController {
         SheriffComplain sheriffComplain = new SheriffComplain();
         sheriffComplain.setId(UUID.randomUUID());
         sheriffComplain.setNodeId(requestContext.nodeId());
+        var groupAndCreated = findOrCreateComplainGroup(sheriffComplainText);
+        SheriffComplainGroup group = groupAndCreated.getFirst();
+        boolean groupCreated = groupAndCreated.getSecond();
+        sheriffComplain.setGroup(group);
         sheriffComplain.setOwnerName(requestContext.getClientName());
         sheriffComplainText.toSheriffComplain(sheriffComplain);
         sheriffComplainRepository.save(sheriffComplain);
 
-        var prepareTask = new SheriffComplainPrepareTask(sheriffComplain.getId(), sheriffComplain.getRemoteNodeName(),
-                sheriffComplain.getRemoteFeedName(), sheriffComplain.getRemotePostingId(),
-                sheriffComplain.getRemoteCommentId());
-        taskAutowire.autowire(prepareTask);
-        taskExecutor.execute(prepareTask);
+        if (groupCreated) {
+            var prepareTask = new SheriffComplainGroupPrepareTask(group.getId(), group.getRemoteNodeName(),
+                    group.getRemoteFeedName(), group.getRemotePostingId(), group.getRemoteCommentId());
+            taskAutowire.autowire(prepareTask);
+            taskExecutor.execute(prepareTask);
+        }
 
         return Result.OK; // FIXME return SheriffComplainInfo
+    }
+
+    private Pair<SheriffComplainGroup, Boolean> findOrCreateComplainGroup(SheriffComplainText sheriffComplainText)
+            throws Throwable {
+        SheriffComplainGroup group = findComplainGroup(sheriffComplainText).orElse(null);
+        if (group != null) {
+            return Pair.of(group, false);
+        }
+        try {
+            return Transaction.execute(txManager, () -> {
+                SheriffComplainGroup grp = new SheriffComplainGroup();
+                grp.setId(UUID.randomUUID());
+                grp.setNodeId(requestContext.nodeId());
+                sheriffComplainText.toSheriffComplainGroup(grp);
+                grp.setMoment(momentFinder.find(
+                        moment -> sheriffComplainGroupRepository.countMoments(requestContext.nodeId(), moment) == 0,
+                        Util.now()));
+                return Pair.of(sheriffComplainGroupRepository.save(grp), true);
+            });
+        } catch (DataIntegrityViolationException e) {
+            return Pair.of(findComplainGroup(sheriffComplainText).orElseThrow(), true);
+        }
+    }
+
+    private Optional<SheriffComplainGroup> findComplainGroup(SheriffComplainText sheriffComplainText) {
+        if (sheriffComplainText.getPostingId() == null) {
+            return sheriffComplainGroupRepository.findByFeed(requestContext.nodeId(),
+                    sheriffComplainText.getNodeName(), sheriffComplainText.getFeedName());
+        } else if (sheriffComplainText.getCommentId() == null) {
+            return sheriffComplainGroupRepository.findByPosting(requestContext.nodeId(),
+                    sheriffComplainText.getNodeName(), sheriffComplainText.getFeedName(),
+                    sheriffComplainText.getPostingId());
+        } else {
+            return sheriffComplainGroupRepository.findByComment(requestContext.nodeId(),
+                    sheriffComplainText.getNodeName(), sheriffComplainText.getFeedName(),
+                    sheriffComplainText.getPostingId(), sheriffComplainText.getCommentId());
+        }
     }
 
 }

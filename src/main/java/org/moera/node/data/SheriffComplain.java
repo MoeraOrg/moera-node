@@ -33,51 +33,8 @@ public class SheriffComplain {
     private String ownerGender;
 
     @NotNull
-    @Size(max = 63)
-    private String remoteNodeName;
-
-    @Size(max = 96)
-    private String remoteNodeFullName;
-
-    @NotNull
-    @Size(max = 63)
-    private String remoteFeedName;
-
-    @Size(max = 63)
-    private String remotePostingOwnerName;
-
-    @Size(max = 96)
-    private String remotePostingOwnerFullName;
-
-    @Size(max = 31)
-    private String remotePostingOwnerGender;
-
-    @Size(max = 255)
-    private String remotePostingHeading;
-
-    @Size(max = 40)
-    private String remotePostingId;
-
-    @Size(max = 40)
-    private String remotePostingRevisionId;
-
-    @Size(max = 63)
-    private String remoteCommentOwnerName;
-
-    @Size(max = 96)
-    private String remoteCommentOwnerFullName;
-
-    @Size(max = 31)
-    private String remoteCommentOwnerGender;
-
-    @Size(max = 255)
-    private String remoteCommentHeading;
-
-    @Size(max = 40)
-    private String remoteCommentId;
-
-    @Size(max = 40)
-    private String remoteCommentRevisionId;
+    @ManyToOne
+    private SheriffComplainGroup group;
 
     @NotNull
     @Enumerated
@@ -87,13 +44,6 @@ public class SheriffComplain {
 
     @NotNull
     private Timestamp createdAt = Util.now();
-
-    @NotNull
-    @Enumerated
-    private SheriffComplainStatus status = SheriffComplainStatus.POSTED;
-
-    @ManyToOne
-    private SheriffDecision sheriffDecision;
 
     public UUID getId() {
         return id;
@@ -135,124 +85,12 @@ public class SheriffComplain {
         this.ownerGender = ownerGender;
     }
 
-    public String getRemoteNodeName() {
-        return remoteNodeName;
+    public SheriffComplainGroup getGroup() {
+        return group;
     }
 
-    public void setRemoteNodeName(String remoteNodeName) {
-        this.remoteNodeName = remoteNodeName;
-    }
-
-    public String getRemoteNodeFullName() {
-        return remoteNodeFullName;
-    }
-
-    public void setRemoteNodeFullName(String remoteNodeFullName) {
-        this.remoteNodeFullName = remoteNodeFullName;
-    }
-
-    public String getRemoteFeedName() {
-        return remoteFeedName;
-    }
-
-    public void setRemoteFeedName(String remoteFeedName) {
-        this.remoteFeedName = remoteFeedName;
-    }
-
-    public String getRemotePostingOwnerName() {
-        return remotePostingOwnerName;
-    }
-
-    public void setRemotePostingOwnerName(String remotePostingOwnerName) {
-        this.remotePostingOwnerName = remotePostingOwnerName;
-    }
-
-    public String getRemotePostingOwnerFullName() {
-        return remotePostingOwnerFullName;
-    }
-
-    public void setRemotePostingOwnerFullName(String remotePostingOwnerFullName) {
-        this.remotePostingOwnerFullName = remotePostingOwnerFullName;
-    }
-
-    public String getRemotePostingOwnerGender() {
-        return remotePostingOwnerGender;
-    }
-
-    public void setRemotePostingOwnerGender(String remotePostingOwnerGender) {
-        this.remotePostingOwnerGender = remotePostingOwnerGender;
-    }
-
-    public String getRemotePostingHeading() {
-        return remotePostingHeading;
-    }
-
-    public void setRemotePostingHeading(String remotePostingHeading) {
-        this.remotePostingHeading = remotePostingHeading;
-    }
-
-    public String getRemotePostingId() {
-        return remotePostingId;
-    }
-
-    public void setRemotePostingId(String remotePostingId) {
-        this.remotePostingId = remotePostingId;
-    }
-
-    public String getRemotePostingRevisionId() {
-        return remotePostingRevisionId;
-    }
-
-    public void setRemotePostingRevisionId(String remotePostingRevisionId) {
-        this.remotePostingRevisionId = remotePostingRevisionId;
-    }
-
-    public String getRemoteCommentOwnerName() {
-        return remoteCommentOwnerName;
-    }
-
-    public void setRemoteCommentOwnerName(String remoteCommentOwnerName) {
-        this.remoteCommentOwnerName = remoteCommentOwnerName;
-    }
-
-    public String getRemoteCommentOwnerFullName() {
-        return remoteCommentOwnerFullName;
-    }
-
-    public void setRemoteCommentOwnerFullName(String remoteCommentOwnerFullName) {
-        this.remoteCommentOwnerFullName = remoteCommentOwnerFullName;
-    }
-
-    public String getRemoteCommentOwnerGender() {
-        return remoteCommentOwnerGender;
-    }
-
-    public void setRemoteCommentOwnerGender(String remoteCommentOwnerGender) {
-        this.remoteCommentOwnerGender = remoteCommentOwnerGender;
-    }
-
-    public String getRemoteCommentHeading() {
-        return remoteCommentHeading;
-    }
-
-    public void setRemoteCommentHeading(String remoteCommentHeading) {
-        this.remoteCommentHeading = remoteCommentHeading;
-    }
-
-    public String getRemoteCommentId() {
-        return remoteCommentId;
-    }
-
-    public void setRemoteCommentId(String remoteCommentId) {
-        this.remoteCommentId = remoteCommentId;
-    }
-
-    public String getRemoteCommentRevisionId() {
-        return remoteCommentRevisionId;
-    }
-
-    public void setRemoteCommentRevisionId(String remoteCommentRevisionId) {
-        this.remoteCommentRevisionId = remoteCommentRevisionId;
+    public void setGroup(SheriffComplainGroup group) {
+        this.group = group;
     }
 
     public SheriffOrderReason getReasonCode() {
@@ -277,22 +115,6 @@ public class SheriffComplain {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public SheriffComplainStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(SheriffComplainStatus status) {
-        this.status = status;
-    }
-
-    public SheriffDecision getSheriffDecision() {
-        return sheriffDecision;
-    }
-
-    public void setSheriffDecision(SheriffDecision sheriffDecision) {
-        this.sheriffDecision = sheriffDecision;
     }
 
 }
