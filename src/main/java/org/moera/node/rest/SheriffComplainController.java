@@ -14,7 +14,7 @@ import org.moera.node.data.SheriffComplainRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.Result;
+import org.moera.node.model.SheriffComplainInfo;
 import org.moera.node.model.SheriffComplainText;
 import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.rest.task.SheriffComplainGroupPrepareTask;
@@ -63,7 +63,7 @@ public class SheriffComplainController {
 
     @PostMapping
     @Transactional
-    public Result post(@Valid @RequestBody SheriffComplainText sheriffComplainText) throws Throwable {
+    public SheriffComplainInfo post(@Valid @RequestBody SheriffComplainText sheriffComplainText) throws Throwable {
         log.info("POST /sheriff/complains"
                         + " (nodeName = {}, feedName = {}, postingId = {}, commentId = {}, reasonCode = {})",
                 LogUtil.format(sheriffComplainText.getNodeName()),
@@ -81,7 +81,7 @@ public class SheriffComplainController {
         sheriffComplain.setGroup(group);
         sheriffComplain.setOwnerName(requestContext.getClientName());
         sheriffComplainText.toSheriffComplain(sheriffComplain);
-        sheriffComplainRepository.save(sheriffComplain);
+        sheriffComplain = sheriffComplainRepository.save(sheriffComplain);
 
         if (groupCreated) {
             var prepareTask = new SheriffComplainGroupPrepareTask(group.getId(), group.getRemoteNodeName(),
@@ -90,7 +90,7 @@ public class SheriffComplainController {
             taskExecutor.execute(prepareTask);
         }
 
-        return Result.OK; // FIXME return SheriffComplainInfo
+        return new SheriffComplainInfo(sheriffComplain);
     }
 
     private Pair<SheriffComplainGroup, Boolean> findOrCreateComplainGroup(SheriffComplainText sheriffComplainText)

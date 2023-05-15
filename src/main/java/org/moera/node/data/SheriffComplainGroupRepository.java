@@ -3,6 +3,8 @@ package org.moera.node.data;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -10,6 +12,9 @@ public interface SheriffComplainGroupRepository extends JpaRepository<SheriffCom
 
     @Query("select scg from SheriffComplainGroup scg where scg.nodeId = ?1 and scg.id = ?2")
     Optional<SheriffComplainGroup> findByNodeIdAndId(UUID nodeId, UUID id);
+
+    @Query("select count(*) from SheriffComplainGroup scg where scg.nodeId = ?1")
+    int countByNodeId(UUID nodeId);
 
     @Query("select scg from SheriffComplainGroup scg"
             + " where scg.nodeId = ?1 and scg.remoteNodeName = ?2 and scg.remoteFeedName = ?3"
@@ -30,5 +35,12 @@ public interface SheriffComplainGroupRepository extends JpaRepository<SheriffCom
 
     @Query("select count(*) from SheriffComplainGroup scg where scg.nodeId = ?1 and scg.moment = ?2")
     int countMoments(UUID nodeId, long moment);
+
+    @Query("select scg from SheriffComplainGroup scg where scg.nodeId = ?1 and scg.moment > ?2 and scg.moment <= ?3")
+    Page<SheriffComplainGroup> findInRange(UUID nodeId, long afterMoment, long beforeMoment, Pageable pageable);
+
+    @Query("select count(*) from SheriffComplainGroup scg where scg.nodeId = ?1"
+            + " and scg.moment > ?2 and scg.moment <= ?3")
+    int countInRange(UUID nodeId, long afterMoment, long beforeMoment);
 
 }
