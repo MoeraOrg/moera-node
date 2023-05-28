@@ -19,12 +19,12 @@ public class SheriffComplainInfo {
     public SheriffComplainInfo() {
     }
 
-    public SheriffComplainInfo(SheriffComplain sheriffComplain) {
+    public SheriffComplainInfo(SheriffComplain sheriffComplain, boolean withGroup) {
         id = sheriffComplain.getId().toString();
         ownerName = sheriffComplain.getOwnerName();
         ownerFullName = sheriffComplain.getOwnerFullName();
         ownerGender = sheriffComplain.getOwnerGender();
-        if (sheriffComplain.getGroup() != null) {
+        if (withGroup && sheriffComplain.getGroup() != null) {
             group = new SheriffComplainGroupInfo(sheriffComplain.getGroup());
         }
         reasonCode = sheriffComplain.getReasonCode();

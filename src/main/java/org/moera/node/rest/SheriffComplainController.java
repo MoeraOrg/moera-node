@@ -90,7 +90,7 @@ public class SheriffComplainController {
             taskExecutor.execute(prepareTask);
         }
 
-        return new SheriffComplainInfo(sheriffComplain);
+        return new SheriffComplainInfo(sheriffComplain, true);
     }
 
     private Pair<SheriffComplainGroup, Boolean> findOrCreateComplainGroup(SheriffComplainText sheriffComplainText)

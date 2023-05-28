@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -7,13 +8,17 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.SheriffComplain;
 import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffComplainGroupRepository;
+import org.moera.node.data.SheriffComplainRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SheriffComplainGroupInfo;
 import org.moera.node.model.SheriffComplainGroupsSliceInfo;
+import org.moera.node.model.SheriffComplainInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.SafeInteger;
 import org.slf4j.Logger;
@@ -22,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -39,6 +45,9 @@ public class SheriffComplainGroupController {
 
     @Inject
     private SheriffComplainGroupRepository sheriffComplainGroupRepository;
+
+    @Inject
+    private SheriffComplainRepository sheriffComplainRepository;
 
     @GetMapping
     @Admin
@@ -126,6 +135,32 @@ public class SheriffComplainGroupController {
             sliceInfo.setTotalInFuture(totalInFuture);
             sliceInfo.setTotalInPast(total - totalInFuture - sliceInfo.getGroups().size());
         }
+    }
+
+    @GetMapping("/{id}")
+    @Admin
+    @Transactional
+    public SheriffComplainGroupInfo get(@PathVariable UUID id) {
+        log.info("GET /sheriff/complains/groups/{id} (id = {})", LogUtil.format(id));
+
+        SheriffComplainGroup sheriffComplainGroup = sheriffComplainGroupRepository
+                .findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complain-group.not-found"));
+
+        return new SheriffComplainGroupInfo(sheriffComplainGroup);
+    }
+
+    @GetMapping("/{id}/complains")
+    @Admin
+    @Transactional
+    public List<SheriffComplainInfo> getComplains(@PathVariable UUID id) {
+        log.info("GET /sheriff/complains/groups/{id}/complains (id = {})", LogUtil.format(id));
+
+        List<SheriffComplain> sheriffComplains = sheriffComplainRepository.findByGroupId(requestContext.nodeId(), id);
+
+        return sheriffComplains.stream()
+                .map(sc -> new SheriffComplainInfo(sc, false))
+                .collect(Collectors.toList());
     }
 
 }
