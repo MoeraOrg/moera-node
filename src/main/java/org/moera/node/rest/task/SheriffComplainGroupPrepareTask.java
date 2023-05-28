@@ -146,7 +146,7 @@ public class SheriffComplainGroupPrepareTask extends Task {
             SheriffOrder order = orders.get(0);
             if (!order.isDelete()) {
                 updateComplainGroup(complainGroup -> {
-                    complainGroup.setStatus(SheriffComplainStatus.ACCEPTED);
+                    complainGroup.setStatus(SheriffComplainStatus.APPROVED);
                     complainGroup.setDecisionCode(order.getReasonCode());
                     complainGroup.setDecisionDetails(order.getReasonDetails());
                     complainGroup.setDecidedAt(Util.now());

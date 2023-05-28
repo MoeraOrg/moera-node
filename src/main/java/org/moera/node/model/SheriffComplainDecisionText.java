@@ -43,7 +43,7 @@ public class SheriffComplainDecisionText {
             sheriffComplainGroup.setStatus(SheriffComplainStatus.REJECTED);
             sheriffComplainGroup.setDecisionCode(null);
         } else {
-            sheriffComplainGroup.setStatus(SheriffComplainStatus.ACCEPTED);
+            sheriffComplainGroup.setStatus(SheriffComplainStatus.APPROVED);
             sheriffComplainGroup.setDecisionCode(decisionCode);
         }
         sheriffComplainGroup.setDecisionDetails(decisionDetails);

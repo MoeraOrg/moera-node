@@ -12,7 +12,7 @@ public enum SheriffComplainStatus {
     INVALID_TARGET,
     NOT_ORIGINAL,
     NOT_SHERIFF,
-    ACCEPTED,
+    APPROVED,
     REJECTED;
 
     @JsonValue
