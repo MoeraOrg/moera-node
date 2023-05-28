@@ -1,10 +1,12 @@
 package org.moera.node.rest;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -12,22 +14,32 @@ import org.moera.node.data.SheriffComplain;
 import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffComplainGroupRepository;
 import org.moera.node.data.SheriffComplainRepository;
+import org.moera.node.data.SheriffComplainStatus;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.SheriffComplainDecisionText;
 import org.moera.node.model.SheriffComplainGroupInfo;
 import org.moera.node.model.SheriffComplainGroupsSliceInfo;
 import org.moera.node.model.SheriffComplainInfo;
+import org.moera.node.model.SheriffOrderAttributes;
+import org.moera.node.model.SheriffOrderCategory;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.rest.task.SheriffOrderPostTask;
+import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.SafeInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -48,6 +60,13 @@ public class SheriffComplainGroupController {
 
     @Inject
     private SheriffComplainRepository sheriffComplainRepository;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
 
     @GetMapping
     @Admin
@@ -161,6 +180,39 @@ public class SheriffComplainGroupController {
         return sheriffComplains.stream()
                 .map(sc -> new SheriffComplainInfo(sc, false))
                 .collect(Collectors.toList());
+    }
+
+    @PutMapping("/{id}")
+    @Admin
+    @Transactional
+    public SheriffComplainGroupInfo put(@PathVariable UUID id,
+                                        @Valid @RequestBody SheriffComplainDecisionText sheriffComplainDecisionText) {
+        log.info("PUT /sheriff/complains/groups/{id} (id = {}, reject = {}, decisionCode = {})",
+                LogUtil.format(id),
+                LogUtil.format(sheriffComplainDecisionText.isReject()),
+                LogUtil.format(Objects.toString(sheriffComplainDecisionText.getDecisionCode())));
+
+        if (!sheriffComplainDecisionText.isReject() && sheriffComplainDecisionText.getDecisionCode() == null) {
+            throw new ValidationFailure("sheriffComplainDecisionText.decisionCode.blank");
+        }
+
+        SheriffComplainGroup sheriffComplainGroup = sheriffComplainGroupRepository
+                .findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complain-group.not-found"));
+        boolean noOrder = (sheriffComplainGroup.getStatus() == SheriffComplainStatus.POSTED
+                || sheriffComplainGroup.getStatus() == SheriffComplainStatus.PREPARED)
+                && sheriffComplainDecisionText.isReject();
+        sheriffComplainDecisionText.toSheriffComplainGroup(sheriffComplainGroup);
+
+        if (!noOrder) {
+            SheriffOrderAttributes attributes = new SheriffOrderAttributes(
+                    sheriffComplainGroup, SheriffOrderCategory.VISIBILITY, sheriffComplainDecisionText);
+            var orderTask = new SheriffOrderPostTask(sheriffComplainGroup.getRemoteNodeName(), attributes);
+            taskAutowire.autowire(orderTask);
+            taskExecutor.execute(orderTask);
+        }
+
+        return new SheriffComplainGroupInfo(sheriffComplainGroup);
     }
 
 }

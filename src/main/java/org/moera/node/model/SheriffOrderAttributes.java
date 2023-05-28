@@ -3,6 +3,8 @@ package org.moera.node.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import org.moera.node.data.SheriffComplainGroup;
+
 public class SheriffOrderAttributes {
 
     private boolean delete;
@@ -21,6 +23,23 @@ public class SheriffOrderAttributes {
 
     @Size(max = 4096)
     private String reasonDetails;
+
+    public SheriffOrderAttributes() {
+    }
+
+    public SheriffOrderAttributes(SheriffComplainGroup group, SheriffOrderCategory category,
+                                  SheriffComplainDecisionText decisionText) {
+        delete = decisionText.isReject();
+        feedName = group.getRemoteFeedName();
+        postingId = group.getRemotePostingId();
+        commentId = group.getRemoteCommentId();
+        this.category = category;
+        reasonCode = decisionText.getDecisionCode();
+        if (reasonCode == null) {
+            reasonCode = SheriffOrderReason.OTHER;
+        }
+        reasonDetails = decisionText.getDecisionDetails();
+    }
 
     public boolean isDelete() {
         return delete;
