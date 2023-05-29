@@ -16,6 +16,9 @@ public interface SheriffComplainGroupRepository extends JpaRepository<SheriffCom
     @Query("select count(*) from SheriffComplainGroup scg where scg.nodeId = ?1")
     int countByNodeId(UUID nodeId);
 
+    @Query("select count(*) from SheriffComplainGroup scg where scg.nodeId = ?1 and scg.status = ?2")
+    int countByStatus(UUID nodeId, SheriffComplainStatus status);
+
     @Query("select scg from SheriffComplainGroup scg"
             + " where scg.nodeId = ?1 and scg.remoteNodeName = ?2 and scg.remoteFeedName = ?3"
             + " and scg.remotePostingId is null and scg.remoteCommentId is null")
@@ -39,8 +42,17 @@ public interface SheriffComplainGroupRepository extends JpaRepository<SheriffCom
     @Query("select scg from SheriffComplainGroup scg where scg.nodeId = ?1 and scg.moment > ?2 and scg.moment <= ?3")
     Page<SheriffComplainGroup> findInRange(UUID nodeId, long afterMoment, long beforeMoment, Pageable pageable);
 
+    @Query("select scg from SheriffComplainGroup scg"
+            + " where scg.nodeId = ?1 and scg.moment > ?2 and scg.moment <= ?3 and scg.status = ?4")
+    Page<SheriffComplainGroup> findByStatusInRange(UUID nodeId, long afterMoment, long beforeMoment,
+                                                   SheriffComplainStatus status, Pageable pageable);
+
     @Query("select count(*) from SheriffComplainGroup scg where scg.nodeId = ?1"
             + " and scg.moment > ?2 and scg.moment <= ?3")
     int countInRange(UUID nodeId, long afterMoment, long beforeMoment);
+
+    @Query("select count(*) from SheriffComplainGroup scg where scg.nodeId = ?1"
+            + " and scg.moment > ?2 and scg.moment <= ?3 and scg.status = ?4")
+    int countByStatusInRange(UUID nodeId, long afterMoment, long beforeMoment, SheriffComplainStatus status);
 
 }

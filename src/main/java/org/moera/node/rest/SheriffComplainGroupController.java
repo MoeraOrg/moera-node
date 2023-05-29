@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,10 +75,12 @@ public class SheriffComplainGroupController {
     public SheriffComplainGroupsSliceInfo getAll(
             @RequestParam(required = false) Long before,
             @RequestParam(required = false) Long after,
-            @RequestParam(required = false) Integer limit) {
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) SheriffComplainStatus status) {
 
-        log.info("GET /sheriff/complains/groups (before = {}, after = {}, limit = {})",
-                LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
+        log.info("GET /sheriff/complains/groups (before = {}, after = {}, limit = {}, status = {})",
+                LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit),
+                LogUtil.format(Objects.toString(status)));
 
         if (before != null && after != null) {
             throw new ValidationFailure("sheriff-complain-groups.before-after-exclusive");
@@ -91,20 +94,20 @@ public class SheriffComplainGroupController {
         SheriffComplainGroupsSliceInfo sliceInfo;
         if (after == null) {
             before = before != null ? before : SafeInteger.MAX_VALUE;
-            sliceInfo = getGroupsBefore(before, limit);
+            sliceInfo = getGroupsBefore(before, limit, status);
         } else {
-            sliceInfo = getGroupsAfter(after, limit);
+            sliceInfo = getGroupsAfter(after, limit, status);
         }
-        calcSliceTotals(sliceInfo);
+        calcSliceTotals(sliceInfo, status);
 
         return sliceInfo;
     }
 
-    private SheriffComplainGroupsSliceInfo getGroupsBefore(long before, int limit) {
+    private SheriffComplainGroupsSliceInfo getGroupsBefore(long before, int limit, SheriffComplainStatus status) {
         SheriffComplainGroupsSliceInfo sliceInfo = new SheriffComplainGroupsSliceInfo();
         sliceInfo.setBefore(before);
         Page<SheriffComplainGroup> page = findSlice(requestContext.nodeId(), SafeInteger.MIN_VALUE, before,
-                limit + 1, Sort.Direction.DESC);
+                limit + 1, Sort.Direction.DESC, status);
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setAfter(SafeInteger.MIN_VALUE);
         } else {
@@ -114,11 +117,11 @@ public class SheriffComplainGroupController {
         return sliceInfo;
     }
 
-    private SheriffComplainGroupsSliceInfo getGroupsAfter(long after, int limit) {
+    private SheriffComplainGroupsSliceInfo getGroupsAfter(long after, int limit, SheriffComplainStatus status) {
         SheriffComplainGroupsSliceInfo sliceInfo = new SheriffComplainGroupsSliceInfo();
         sliceInfo.setAfter(after);
         Page<SheriffComplainGroup> page = findSlice(requestContext.nodeId(), after, SafeInteger.MAX_VALUE,
-                limit + 1, Sort.Direction.ASC);
+                limit + 1, Sort.Direction.ASC, status);
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setBefore(SafeInteger.MAX_VALUE);
         } else {
@@ -129,18 +132,22 @@ public class SheriffComplainGroupController {
     }
 
     private Page<SheriffComplainGroup> findSlice(UUID nodeId, long afterMoment, long beforeMoment, int limit,
-                                    Sort.Direction direction) {
-        return sheriffComplainGroupRepository.findInRange(
-                nodeId, afterMoment, beforeMoment,
-                PageRequest.of(0, limit + 1, direction, "moment"));
+                                    Sort.Direction direction, SheriffComplainStatus status) {
+        Pageable pageable = PageRequest.of(0, limit + 1, direction, "moment");
+        return status == null
+                ? sheriffComplainGroupRepository.findInRange(nodeId, afterMoment, beforeMoment, pageable)
+                : sheriffComplainGroupRepository.findByStatusInRange(
+                        nodeId, afterMoment, beforeMoment, status, pageable);
     }
 
     private static void fillSlice(SheriffComplainGroupsSliceInfo sliceInfo, Page<SheriffComplainGroup> page) {
         sliceInfo.setGroups(page.getContent().stream().map(SheriffComplainGroupInfo::new).collect(Collectors.toList()));
     }
 
-    private void calcSliceTotals(SheriffComplainGroupsSliceInfo sliceInfo) {
-        int total = sheriffComplainGroupRepository.countByNodeId(requestContext.nodeId());
+    private void calcSliceTotals(SheriffComplainGroupsSliceInfo sliceInfo, SheriffComplainStatus status) {
+        int total = status == null
+                ? sheriffComplainGroupRepository.countByNodeId(requestContext.nodeId())
+                : sheriffComplainGroupRepository.countByStatus(requestContext.nodeId(), status);
         sliceInfo.setTotal(total);
         if (sliceInfo.getAfter() <= SafeInteger.MIN_VALUE) {
             sliceInfo.setTotalInPast(0);
@@ -149,8 +156,11 @@ public class SheriffComplainGroupController {
             sliceInfo.setTotalInFuture(0);
             sliceInfo.setTotalInPast(total - sliceInfo.getGroups().size());
         } else {
-            int totalInFuture = sheriffComplainGroupRepository.countInRange(requestContext.nodeId(),
-                    sliceInfo.getBefore(), SafeInteger.MAX_VALUE);
+            int totalInFuture = status == null
+                    ? sheriffComplainGroupRepository.countInRange(
+                            requestContext.nodeId(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE)
+                    : sheriffComplainGroupRepository.countByStatusInRange(
+                            requestContext.nodeId(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE, status);
             sliceInfo.setTotalInFuture(totalInFuture);
             sliceInfo.setTotalInPast(total - totalInFuture - sliceInfo.getGroups().size());
         }
