@@ -250,29 +250,8 @@ public class StoryInfo {
                 info.setRemoteMediaId(story.getRemoteParentMediaId());
                 break;
 
-            case FEED_SHERIFF_MARKED:
-            case FEED_SHERIFF_UNMARKED:
-                info.setRemoteNodeName(story.getRemoteNodeName());
-                info.setSummaryNodeName(story.getSummaryData().getSheriff().getSheriffName());
-                if (story.getRemoteAvatarMediaFile() != null) {
-                    info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
-                }
-                break;
-
-            case POSTING_SHERIFF_MARKED:
-            case POSTING_SHERIFF_UNMARKED:
-                info.setRemoteNodeName(story.getRemoteNodeName());
-                info.setSummaryNodeName(story.getSummaryData().getSheriff().getSheriffName());
-                if (story.getRemoteAvatarMediaFile() != null) {
-                    info.setSummaryAvatar(
-                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
-                }
-                info.setRemotePostingId(story.getRemotePostingId());
-                break;
-
-            case COMMENT_SHERIFF_MARKED:
-            case COMMENT_SHERIFF_UNMARKED:
+            case SHERIFF_MARKED:
+            case SHERIFF_UNMARKED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setSummaryNodeName(story.getSummaryData().getSheriff().getSheriffName());
                 if (story.getRemoteAvatarMediaFile() != null) {
