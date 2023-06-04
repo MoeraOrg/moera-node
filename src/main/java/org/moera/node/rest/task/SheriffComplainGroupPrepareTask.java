@@ -15,6 +15,7 @@ import org.moera.node.data.SheriffComplainGroupRepository;
 import org.moera.node.data.SheriffComplainStatus;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
+import org.moera.node.liberin.model.SheriffComplainGroupUpdatedLiberin;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.FeedInfo;
 import org.moera.node.model.PostingInfo;
@@ -157,16 +158,18 @@ public class SheriffComplainGroupPrepareTask extends Task {
 
     private void updateComplainGroup(Consumer<SheriffComplainGroup> updater) {
         try {
-            inTransaction(() -> {
+            var group = inTransaction(() -> {
                 SheriffComplainGroup complainGroup = sheriffComplainGroupRepository.findByNodeIdAndId(nodeId, groupId)
                         .orElse(null);
                 if (complainGroup == null) {
                     return null;
                 }
                 updater.accept(complainGroup);
-                sheriffComplainGroupRepository.save(complainGroup);
-                return null;
+                return sheriffComplainGroupRepository.save(complainGroup);
             });
+            if (group != null) {
+                send(new SheriffComplainGroupUpdatedLiberin(group));
+            }
         } catch (Throwable e) {
             log.error("Could not store complain group", e);
             if (e instanceof RuntimeException) {

@@ -14,6 +14,8 @@ import org.moera.node.data.SheriffComplainRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.SheriffComplainAddedLiberin;
+import org.moera.node.liberin.model.SheriffComplainGroupAddedLiberin;
 import org.moera.node.model.SheriffComplainInfo;
 import org.moera.node.model.SheriffComplainText;
 import org.moera.node.model.SheriffOrderReason;
@@ -84,11 +86,15 @@ public class SheriffComplainController {
         sheriffComplain = sheriffComplainRepository.save(sheriffComplain);
 
         if (groupCreated) {
+            requestContext.send(new SheriffComplainGroupAddedLiberin(group));
+
             var prepareTask = new SheriffComplainGroupPrepareTask(group.getId(), group.getRemoteNodeName(),
                     group.getRemoteFeedName(), group.getRemotePostingId(), group.getRemoteCommentId());
             taskAutowire.autowire(prepareTask);
             taskExecutor.execute(prepareTask);
         }
+
+        requestContext.send(new SheriffComplainAddedLiberin(sheriffComplain, group.getId()));
 
         return new SheriffComplainInfo(sheriffComplain, true);
     }
@@ -111,7 +117,7 @@ public class SheriffComplainController {
                 return Pair.of(sheriffComplainGroupRepository.save(grp), true);
             });
         } catch (DataIntegrityViolationException e) {
-            return Pair.of(findComplainGroup(sheriffComplainText).orElseThrow(), true);
+            return Pair.of(findComplainGroup(sheriffComplainText).orElseThrow(), false);
         }
     }
 

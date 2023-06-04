@@ -18,6 +18,7 @@ import org.moera.node.data.SheriffComplainStatus;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.SheriffComplainGroupUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SheriffComplainDecisionText;
 import org.moera.node.model.SheriffComplainGroupInfo;
@@ -221,6 +222,8 @@ public class SheriffComplainGroupController {
             taskAutowire.autowire(orderTask);
             taskExecutor.execute(orderTask);
         }
+
+        requestContext.send(new SheriffComplainGroupUpdatedLiberin(sheriffComplainGroup));
 
         return new SheriffComplainGroupInfo(sheriffComplainGroup);
     }
