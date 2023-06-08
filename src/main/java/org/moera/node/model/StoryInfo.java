@@ -261,6 +261,14 @@ public class StoryInfo {
                 info.setRemotePostingId(story.getRemotePostingId());
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 break;
+
+            case SHERIFF_COMPLAIN_ADDED:
+                info.setSummaryNodeName(story.getSummaryData().getSheriff().getSheriffName());
+                if (story.getRemoteAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                }
+                break;
         }
         return info;
     }

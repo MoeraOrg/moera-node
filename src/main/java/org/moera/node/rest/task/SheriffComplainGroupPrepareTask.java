@@ -158,17 +158,19 @@ public class SheriffComplainGroupPrepareTask extends Task {
 
     private void updateComplainGroup(Consumer<SheriffComplainGroup> updater) {
         try {
-            var group = inTransaction(() -> {
+            var liberin = inTransaction(() -> {
                 SheriffComplainGroup complainGroup = sheriffComplainGroupRepository.findByNodeIdAndId(nodeId, groupId)
                         .orElse(null);
                 if (complainGroup == null) {
                     return null;
                 }
+                SheriffComplainStatus prevStatus = complainGroup.getStatus();
                 updater.accept(complainGroup);
-                return sheriffComplainGroupRepository.save(complainGroup);
+                complainGroup = sheriffComplainGroupRepository.save(complainGroup);
+                return new SheriffComplainGroupUpdatedLiberin(complainGroup, prevStatus);
             });
-            if (group != null) {
-                send(new SheriffComplainGroupUpdatedLiberin(group));
+            if (liberin != null) {
+                send(liberin);
             }
         } catch (Throwable e) {
             log.error("Could not store complain group", e);

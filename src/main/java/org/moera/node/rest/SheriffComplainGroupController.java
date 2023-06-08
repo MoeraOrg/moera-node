@@ -210,8 +210,8 @@ public class SheriffComplainGroupController {
         SheriffComplainGroup sheriffComplainGroup = sheriffComplainGroupRepository
                 .findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complain-group.not-found"));
-        boolean noOrder = (sheriffComplainGroup.getStatus() == SheriffComplainStatus.POSTED
-                || sheriffComplainGroup.getStatus() == SheriffComplainStatus.PREPARED)
+        SheriffComplainStatus prevStatus = sheriffComplainGroup.getStatus();
+        boolean noOrder = (prevStatus == SheriffComplainStatus.POSTED || prevStatus == SheriffComplainStatus.PREPARED)
                 && sheriffComplainDecisionText.isReject();
         sheriffComplainDecisionText.toSheriffComplainGroup(sheriffComplainGroup);
 
@@ -223,7 +223,7 @@ public class SheriffComplainGroupController {
             taskExecutor.execute(orderTask);
         }
 
-        requestContext.send(new SheriffComplainGroupUpdatedLiberin(sheriffComplainGroup));
+        requestContext.send(new SheriffComplainGroupUpdatedLiberin(sheriffComplainGroup, prevStatus));
 
         return new SheriffComplainGroupInfo(sheriffComplainGroup);
     }

@@ -96,7 +96,32 @@ public class SheriffInstants extends InstantsCreator {
             summaryData.setComment(new StorySummaryEntry(null, null, null, commentHeading));
         }
         summaryData.setFeedName(remoteFeedName);
-        summaryData.setSheriff(new StorySummarySheriff(sheriffName, orderId));
+        summaryData.setSheriff(new StorySummarySheriff(sheriffName, orderId, null));
+        return summaryData;
+    }
+
+    public void complainAdded(String sheriffName, AvatarImage sheriffAvatar, String complainId) {
+        if (isBlocked(StoryType.SHERIFF_COMPLAIN_ADDED)) {
+            return;
+        }
+        Story story = new Story(UUID.randomUUID(), nodeId(), StoryType.SHERIFF_COMPLAIN_ADDED);
+        story.setFeedName(Feed.INSTANT);
+        if (sheriffAvatar != null) {
+            story.setRemoteAvatarMediaFile(sheriffAvatar.getMediaFile());
+            story.setRemoteAvatarShape(sheriffAvatar.getShape());
+        }
+        story.setSummaryData(buildComplainSummary(sheriffName, complainId));
+        story.setPublishedAt(Util.now());
+        story.setRead(false);
+        story.setViewed(false);
+        updateMoment(story);
+        story = storyRepository.saveAndFlush(story);
+        storyAdded(story);
+    }
+
+    private static StorySummaryData buildComplainSummary(String sheriffName, String complainId) {
+        StorySummaryData summaryData = new StorySummaryData();
+        summaryData.setSheriff(new StorySummarySheriff(sheriffName, null, complainId));
         return summaryData;
     }
 
