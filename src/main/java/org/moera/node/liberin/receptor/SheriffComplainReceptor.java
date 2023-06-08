@@ -10,6 +10,7 @@ import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.SheriffComplainAddedLiberin;
 import org.moera.node.liberin.model.SheriffComplainGroupAddedLiberin;
 import org.moera.node.liberin.model.SheriffComplainGroupUpdatedLiberin;
+import org.moera.node.mail.ComplainAddedMail;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.event.SheriffComplainAddedEvent;
 import org.moera.node.model.event.SheriffComplainGroupAddedEvent;
@@ -33,6 +34,7 @@ public class SheriffComplainReceptor extends LiberinReceptorBase {
                 && liberin.getGroup().getStatus() != liberin.getPrevStatus()) {
             sheriffInstants.complainAdded(universalContext.nodeName(), new AvatarImage(universalContext.getAvatar()),
                     liberin.getGroup().getId().toString());
+            send(new ComplainAddedMail(liberin.getGroup().getId()));
         }
     }
 
