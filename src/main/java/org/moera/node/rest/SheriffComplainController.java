@@ -11,6 +11,7 @@ import org.moera.node.data.SheriffComplain;
 import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffComplainGroupRepository;
 import org.moera.node.data.SheriffComplainRepository;
+import org.moera.node.data.SheriffComplainStatus;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -83,6 +84,10 @@ public class SheriffComplainController {
         sheriffComplain.setGroup(group);
         sheriffComplain.setOwnerName(requestContext.getClientName());
         sheriffComplainText.toSheriffComplain(sheriffComplain);
+        if (group.getStatus() != SheriffComplainStatus.APPROVED
+                && group.getStatus() != SheriffComplainStatus.REJECTED) {
+            group.setAnonymous(group.isAnonymous() || sheriffComplain.isAnonymousRequested());
+        }
         sheriffComplain = sheriffComplainRepository.save(sheriffComplain);
 
         if (groupCreated) {

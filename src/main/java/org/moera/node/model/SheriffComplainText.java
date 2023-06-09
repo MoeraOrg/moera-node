@@ -60,6 +60,8 @@ public class SheriffComplainText {
     @Size(max = 4096)
     private String reasonDetails;
 
+    private Boolean anonymous;
+
     public String getOwnerFullName() {
         return ownerFullName;
     }
@@ -196,11 +198,22 @@ public class SheriffComplainText {
         this.reasonDetails = reasonDetails;
     }
 
+    public Boolean getAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(Boolean anonymous) {
+        this.anonymous = anonymous;
+    }
+
     public void toSheriffComplain(SheriffComplain sheriffComplain) {
         sheriffComplain.setOwnerFullName(ownerFullName);
         sheriffComplain.setOwnerGender(ownerGender);
         sheriffComplain.setReasonCode(reasonCode != null ? reasonCode : SheriffOrderReason.OTHER);
         sheriffComplain.setReasonDetails(reasonDetails);
+        if (anonymous != null) {
+            sheriffComplain.setAnonymousRequested(anonymous);
+        }
     }
 
     public void toSheriffComplainGroup(SheriffComplainGroup sheriffComplainGroup) {

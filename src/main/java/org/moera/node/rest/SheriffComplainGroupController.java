@@ -71,7 +71,6 @@ public class SheriffComplainGroupController {
     private TaskAutowire taskAutowire;
 
     @GetMapping
-    @Admin
     @Transactional
     public SheriffComplainGroupsSliceInfo getAll(
             @RequestParam(required = false) Long before,
@@ -168,7 +167,6 @@ public class SheriffComplainGroupController {
     }
 
     @GetMapping("/{id}")
-    @Admin
     @Transactional
     public SheriffComplainGroupInfo get(@PathVariable UUID id) {
         log.info("GET /sheriff/complains/groups/{id} (id = {})", LogUtil.format(id));
@@ -181,14 +179,21 @@ public class SheriffComplainGroupController {
     }
 
     @GetMapping("/{id}/complains")
-    @Admin
     @Transactional
     public List<SheriffComplainInfo> getComplains(@PathVariable UUID id) {
         log.info("GET /sheriff/complains/groups/{id}/complains (id = {})", LogUtil.format(id));
 
+        SheriffComplainGroup sheriffComplainGroup = sheriffComplainGroupRepository
+                .findByNodeIdAndId(requestContext.nodeId(), id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complain-group.not-found"));
+
         List<SheriffComplain> sheriffComplains = sheriffComplainRepository.findByGroupId(requestContext.nodeId(), id);
 
         return sheriffComplains.stream()
+                .filter(sc ->
+                        !sheriffComplainGroup.isAnonymous()
+                                || requestContext.isAdmin()
+                                || requestContext.isClient(sc.getOwnerName()))
                 .map(sc -> new SheriffComplainInfo(sc, false))
                 .collect(Collectors.toList());
     }

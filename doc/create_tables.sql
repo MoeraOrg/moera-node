@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.7 (Ubuntu 14.7-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.7 (Ubuntu 14.7-0ubuntu0.22.04.1)
+-- Dumped from database version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1528,15 +1528,12 @@ CREATE TABLE public.schema_history (
 ALTER TABLE public.schema_history OWNER TO moera;
 
 --
--- Name: sheriff_complains; Type: TABLE; Schema: public; Owner: moera
+-- Name: sheriff_complain_groups; Type: TABLE; Schema: public; Owner: moera
 --
 
-CREATE TABLE public.sheriff_complains (
+CREATE TABLE public.sheriff_complain_groups (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
-    owner_name character varying(63),
-    owner_full_name character varying(96),
-    owner_gender character varying(31),
     remote_node_name character varying(63) NOT NULL,
     remote_node_full_name character varying(96),
     remote_feed_name character varying(63) NOT NULL,
@@ -1552,30 +1549,37 @@ CREATE TABLE public.sheriff_complains (
     remote_comment_heading character varying(255),
     remote_comment_id character varying(40),
     remote_comment_revision_id character varying(40),
+    created_at timestamp without time zone NOT NULL,
+    moment bigint NOT NULL,
+    status smallint NOT NULL,
+    decision_code smallint,
+    decision_details text,
+    decided_at timestamp without time zone,
+    anonymous boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.sheriff_complain_groups OWNER TO moera;
+
+--
+-- Name: sheriff_complains; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.sheriff_complains (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    owner_name character varying(63),
+    owner_full_name character varying(96),
+    owner_gender character varying(31),
+    group_id uuid NOT NULL,
     reason_code smallint NOT NULL,
     reason_details text,
     created_at timestamp without time zone NOT NULL,
-    status smallint NOT NULL,
-    sheriff_decision_id uuid
+    anonymous_requested boolean DEFAULT false NOT NULL
 );
 
 
 ALTER TABLE public.sheriff_complains OWNER TO moera;
-
---
--- Name: sheriff_decisions; Type: TABLE; Schema: public; Owner: moera
---
-
-CREATE TABLE public.sheriff_decisions (
-    id uuid NOT NULL,
-    accepted boolean NOT NULL,
-    reason_code smallint NOT NULL,
-    reason_details text,
-    created_at timestamp without time zone NOT NULL
-);
-
-
-ALTER TABLE public.sheriff_decisions OWNER TO moera;
 
 --
 -- Name: sheriff_orders; Type: TABLE; Schema: public; Owner: moera
@@ -2061,19 +2065,19 @@ ALTER TABLE ONLY public.schema_history
 
 
 --
+-- Name: sheriff_complain_groups sheriff_complain_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sheriff_complain_groups
+    ADD CONSTRAINT sheriff_complain_groups_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: sheriff_complains sheriff_complains_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.sheriff_complains
     ADD CONSTRAINT sheriff_complains_pkey PRIMARY KEY (id);
-
-
---
--- Name: sheriff_decisions sheriff_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
---
-
-ALTER TABLE ONLY public.sheriff_decisions
-    ADD CONSTRAINT sheriff_decisions_pkey PRIMARY KEY (id);
 
 
 --
@@ -2861,17 +2865,24 @@ CREATE INDEX schema_history_s_idx ON public.schema_history USING btree (success)
 
 
 --
--- Name: sheriff_complains_decision_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: sheriff_complain_groups_moment_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX sheriff_complains_decision_idx ON public.sheriff_complains USING btree (sheriff_decision_id);
+CREATE INDEX sheriff_complain_groups_moment_idx ON public.sheriff_complain_groups USING btree (moment);
 
 
 --
--- Name: sheriff_complains_target_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: sheriff_complain_groups_target_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX sheriff_complains_target_idx ON public.sheriff_complains USING btree (node_id, remote_node_name, remote_feed_name, remote_posting_id, remote_comment_id);
+CREATE UNIQUE INDEX sheriff_complain_groups_target_idx ON public.sheriff_complain_groups USING btree (node_id, remote_node_name, remote_feed_name, COALESCE(remote_posting_id, ''::character varying), COALESCE(remote_comment_id, ''::character varying));
+
+
+--
+-- Name: sheriff_complains_group_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sheriff_complains_group_idx ON public.sheriff_complains USING btree (group_id);
 
 
 --
@@ -3581,11 +3592,11 @@ ALTER TABLE ONLY public.remote_media_cache
 
 
 --
--- Name: sheriff_complains sheriff_complains_sheriff_decision_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: sheriff_complains sheriff_complains_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.sheriff_complains
-    ADD CONSTRAINT sheriff_complains_sheriff_decision_id_fkey FOREIGN KEY (sheriff_decision_id) REFERENCES public.sheriff_decisions(id) ON UPDATE CASCADE ON DELETE SET NULL;
+    ADD CONSTRAINT sheriff_complains_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.sheriff_complain_groups(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --

@@ -43,6 +43,9 @@ public class SheriffComplain {
     private String reasonDetails;
 
     @NotNull
+    private boolean anonymousRequested;
+
+    @NotNull
     private Timestamp createdAt = Util.now();
 
     public UUID getId() {
@@ -107,6 +110,14 @@ public class SheriffComplain {
 
     public void setReasonDetails(String reasonDetails) {
         this.reasonDetails = reasonDetails;
+    }
+
+    public boolean isAnonymousRequested() {
+        return anonymousRequested;
+    }
+
+    public void setAnonymousRequested(boolean anonymousRequested) {
+        this.anonymousRequested = anonymousRequested;
     }
 
     public Timestamp getCreatedAt() {

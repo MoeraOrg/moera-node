@@ -86,6 +86,9 @@ public class SheriffComplainGroup {
 
     private Timestamp decidedAt;
 
+    @NotNull
+    private boolean anonymous;
+
     public UUID getId() {
         return id;
     }
@@ -268,6 +271,14 @@ public class SheriffComplainGroup {
 
     public void setDecidedAt(Timestamp decidedAt) {
         this.decidedAt = decidedAt;
+    }
+
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
 }

@@ -14,6 +14,7 @@ public class SheriffComplainInfo {
     private SheriffComplainGroupInfo group;
     private SheriffOrderReason reasonCode;
     private String reasonDetails;
+    private boolean anonymousRequested;
     private long createdAt;
 
     public SheriffComplainInfo() {
@@ -29,6 +30,7 @@ public class SheriffComplainInfo {
         }
         reasonCode = sheriffComplain.getReasonCode();
         reasonDetails = sheriffComplain.getReasonDetails();
+        anonymousRequested = sheriffComplain.isAnonymousRequested();
         createdAt = Util.toEpochSecond(sheriffComplain.getCreatedAt());
     }
 
@@ -86,6 +88,14 @@ public class SheriffComplainInfo {
 
     public void setReasonDetails(String reasonDetails) {
         this.reasonDetails = reasonDetails;
+    }
+
+    public boolean isAnonymousRequested() {
+        return anonymousRequested;
+    }
+
+    public void setAnonymousRequested(boolean anonymousRequested) {
+        this.anonymousRequested = anonymousRequested;
     }
 
     public long getCreatedAt() {

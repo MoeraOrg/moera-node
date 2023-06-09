@@ -30,6 +30,7 @@ public class SheriffComplainGroupInfo {
     private SheriffOrderReason decisionCode;
     private String decisionDetails;
     private Long decidedAt;
+    private boolean anonymous;
 
     public SheriffComplainGroupInfo() {
     }
@@ -57,6 +58,7 @@ public class SheriffComplainGroupInfo {
         decisionCode = sheriffComplainGroup.getDecisionCode();
         decisionDetails = sheriffComplainGroup.getDecisionDetails();
         decidedAt = Util.toEpochSecond(sheriffComplainGroup.getDecidedAt());
+        anonymous = sheriffComplainGroup.isAnonymous();
     }
 
     public String getId() {
@@ -233,6 +235,14 @@ public class SheriffComplainGroupInfo {
 
     public void setDecidedAt(Long decidedAt) {
         this.decidedAt = decidedAt;
+    }
+
+    public boolean isAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
 }

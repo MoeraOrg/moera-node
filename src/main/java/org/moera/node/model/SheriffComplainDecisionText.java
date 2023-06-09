@@ -14,6 +14,8 @@ public class SheriffComplainDecisionText {
     @Size(max = 4096)
     private String decisionDetails;
 
+    private Boolean anonymous;
+
     public boolean isReject() {
         return reject;
     }
@@ -38,6 +40,14 @@ public class SheriffComplainDecisionText {
         this.decisionDetails = decisionDetails;
     }
 
+    public Boolean getAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(Boolean anonymous) {
+        this.anonymous = anonymous;
+    }
+
     public void toSheriffComplainGroup(SheriffComplainGroup sheriffComplainGroup) {
         if (reject) {
             sheriffComplainGroup.setStatus(SheriffComplainStatus.REJECTED);
@@ -47,6 +57,9 @@ public class SheriffComplainDecisionText {
             sheriffComplainGroup.setDecisionCode(decisionCode);
         }
         sheriffComplainGroup.setDecisionDetails(decisionDetails);
+        if (anonymous != null) {
+            sheriffComplainGroup.setAnonymous(anonymous);
+        }
     }
 
 }
