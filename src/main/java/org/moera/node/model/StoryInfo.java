@@ -252,6 +252,7 @@ public class StoryInfo {
 
             case SHERIFF_MARKED:
             case SHERIFF_UNMARKED:
+            case SHERIFF_COMPLAIN_DECIDED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setSummaryNodeName(story.getSummaryData().getSheriff().getSheriffName());
                 if (story.getRemoteAvatarMediaFile() != null) {

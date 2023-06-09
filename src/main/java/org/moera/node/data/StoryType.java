@@ -42,7 +42,8 @@ public enum StoryType {
     UNBLOCKED_USER_IN_POSTING,             // 34
     SHERIFF_MARKED,                        // 35
     SHERIFF_UNMARKED,                      // 36
-    SHERIFF_COMPLAIN_ADDED;                // 37
+    SHERIFF_COMPLAIN_ADDED,                // 37
+    SHERIFF_COMPLAIN_DECIDED;              // 38
 
     @JsonValue
     public String getValue() {

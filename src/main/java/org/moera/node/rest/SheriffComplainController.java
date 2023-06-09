@@ -99,7 +99,7 @@ public class SheriffComplainController {
             taskExecutor.execute(prepareTask);
         }
 
-        requestContext.send(new SheriffComplainAddedLiberin(sheriffComplain, group.getId()));
+        requestContext.send(new SheriffComplainAddedLiberin(sheriffComplain, group));
 
         return new SheriffComplainInfo(sheriffComplain, true);
     }

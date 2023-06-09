@@ -3,10 +3,12 @@ package org.moera.node.rest.notification;
 import javax.inject.Inject;
 
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.RemoteSheriffComplainDecidedLiberin;
 import org.moera.node.liberin.model.RemoteSheriffOrderReceivedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.notification.NotificationType;
+import org.moera.node.model.notification.SheriffComplainDecidedNotification;
 import org.moera.node.model.notification.SheriffOrderForCommentAddedNotification;
 import org.moera.node.model.notification.SheriffOrderForCommentDeletedNotification;
 import org.moera.node.model.notification.SheriffOrderForPostingAddedNotification;
@@ -49,6 +51,13 @@ public class SheriffProcessor {
         mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
                 new AvatarImage[] {notification.getSenderAvatar()},
                 () -> universalContext.send(new RemoteSheriffOrderReceivedLiberin(true, notification)));
+    }
+
+    @NotificationMapping(NotificationType.SHERIFF_COMPLAIN_DECIDED)
+    public void complainDecided(SheriffComplainDecidedNotification notification) {
+        mediaManager.asyncDownloadPublicMedia(notification.getSenderNodeName(),
+                new AvatarImage[] {notification.getSenderAvatar()},
+                () -> universalContext.send(new RemoteSheriffComplainDecidedLiberin(notification)));
     }
 
 }
