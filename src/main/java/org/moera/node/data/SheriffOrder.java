@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -93,6 +94,9 @@ public class SheriffOrder {
 
     @NotNull
     private short signatureVersion;
+
+    @ManyToOne
+    private SheriffComplainGroup complainGroup;
 
     public SheriffOrder() {
     }
@@ -313,6 +317,14 @@ public class SheriffOrder {
 
     public void setSignatureVersion(short signatureVersion) {
         this.signatureVersion = signatureVersion;
+    }
+
+    public SheriffComplainGroup getComplainGroup() {
+        return complainGroup;
+    }
+
+    public void setComplainGroup(SheriffComplainGroup complainGroup) {
+        this.complainGroup = complainGroup;
     }
 
 }

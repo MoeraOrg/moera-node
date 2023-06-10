@@ -71,7 +71,7 @@ public class RemoteSheriffOrderController {
             sheriffOrderAttributes.setReasonCode(SheriffOrderReason.OTHER);
         }
 
-        var postTask = new SheriffOrderPostTask(nodeName, sheriffOrderAttributes);
+        var postTask = new SheriffOrderPostTask(nodeName, sheriffOrderAttributes, null);
         taskAutowire.autowire(postTask);
         taskExecutor.execute(postTask);
 

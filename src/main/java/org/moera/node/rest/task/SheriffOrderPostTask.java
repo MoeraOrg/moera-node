@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.NodeApiException;
+import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.fingerprint.Fingerprints;
@@ -34,6 +35,7 @@ public class SheriffOrderPostTask extends Task {
 
     private final String remoteNodeName;
     private final SheriffOrderAttributes attributes;
+    private final SheriffComplainGroup complainGroup;
     private SheriffOrder sheriffOrder;
     private SheriffOrderDetailsQ sheriffOrderDetails;
 
@@ -43,9 +45,11 @@ public class SheriffOrderPostTask extends Task {
     @Inject
     private MediaManager mediaManager;
 
-    public SheriffOrderPostTask(String remoteNodeName, SheriffOrderAttributes attributes) {
+    public SheriffOrderPostTask(String remoteNodeName, SheriffOrderAttributes attributes,
+                                SheriffComplainGroup complainGroup) {
         this.remoteNodeName = remoteNodeName;
         this.attributes = attributes;
+        this.complainGroup = complainGroup;
     }
 
     @Override
@@ -69,6 +73,7 @@ public class SheriffOrderPostTask extends Task {
     private void post() throws NodeApiException {
         if (sheriffOrder == null) {
             sheriffOrder = new SheriffOrder(UUID.randomUUID(), nodeId, remoteNodeName);
+            sheriffOrder.setComplainGroup(complainGroup);
 
             WhoAmI whoAmI = nodeApi.whoAmI(remoteNodeName);
             sheriffOrder.setRemoteNodeFullName(whoAmI.getFullName());

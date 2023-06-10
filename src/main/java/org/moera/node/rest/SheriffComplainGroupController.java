@@ -80,7 +80,7 @@ public class SheriffComplainGroupController {
 
         log.info("GET /sheriff/complains/groups (before = {}, after = {}, limit = {}, status = {})",
                 LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit),
-                LogUtil.format(Objects.toString(status)));
+                LogUtil.format(Objects.toString(status, null)));
 
         if (before != null && after != null) {
             throw new ValidationFailure("sheriff-complain-groups.before-after-exclusive");
@@ -206,7 +206,7 @@ public class SheriffComplainGroupController {
         log.info("PUT /sheriff/complains/groups/{id} (id = {}, reject = {}, decisionCode = {})",
                 LogUtil.format(id),
                 LogUtil.format(sheriffComplainDecisionText.isReject()),
-                LogUtil.format(Objects.toString(sheriffComplainDecisionText.getDecisionCode())));
+                LogUtil.format(Objects.toString(sheriffComplainDecisionText.getDecisionCode(), null)));
 
         if (!sheriffComplainDecisionText.isReject() && sheriffComplainDecisionText.getDecisionCode() == null) {
             throw new ValidationFailure("sheriffComplainDecisionText.decisionCode.blank");
@@ -223,7 +223,8 @@ public class SheriffComplainGroupController {
         if (!noOrder) {
             SheriffOrderAttributes attributes = new SheriffOrderAttributes(
                     sheriffComplainGroup, SheriffOrderCategory.VISIBILITY, sheriffComplainDecisionText);
-            var orderTask = new SheriffOrderPostTask(sheriffComplainGroup.getRemoteNodeName(), attributes);
+            var orderTask = new SheriffOrderPostTask(
+                    sheriffComplainGroup.getRemoteNodeName(), attributes, sheriffComplainGroup);
             taskAutowire.autowire(orderTask);
             taskExecutor.execute(orderTask);
         }

@@ -31,6 +31,7 @@ public class SheriffOrderInfo {
     private long createdAt;
     private byte[] signature;
     private short signatureVersion;
+    private String complainGroupId;
 
     public SheriffOrderInfo() {
     }
@@ -60,6 +61,9 @@ public class SheriffOrderInfo {
         createdAt = Util.toEpochSecond(sheriffOrder.getCreatedAt());
         signature = sheriffOrder.getSignature();
         signatureVersion = sheriffOrder.getSignatureVersion();
+        if (sheriffOrder.getComplainGroup() != null) {
+            complainGroupId = sheriffOrder.getComplainGroup().getId().toString();
+        }
     }
 
     public String getId() {
@@ -252,6 +256,14 @@ public class SheriffOrderInfo {
 
     public void setSignatureVersion(short signatureVersion) {
         this.signatureVersion = signatureVersion;
+    }
+
+    public String getComplainGroupId() {
+        return complainGroupId;
+    }
+
+    public void setComplainGroupId(String complainGroupId) {
+        this.complainGroupId = complainGroupId;
     }
 
 }
