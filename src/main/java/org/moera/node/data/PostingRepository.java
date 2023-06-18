@@ -47,6 +47,10 @@ public interface PostingRepository extends JpaRepository<Posting, UUID> {
     @Query("select p from Posting p where p.nodeId = ?1 and p.receiverName = ?2 and p.receiverEntryId = ?3")
     Optional<Posting> findByReceiverId(UUID nodeId, String receiverName, String receiverEntryId);
 
+    @Query("select count(*) from Posting p left join p.stories s"
+            + " where p.nodeId = ?1 and p.ownerName = ?2 and p.deletedAt is null and s.feedName = ?3")
+    int countByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
+
     @Query("select p from Posting p where p.nodeId = ?1 and p.deletedAt is null and p.parentMedia is null"
             + " and not exists(select s from Story s where s.entry.id = p.id)")
     List<Posting> findUnlinked(UUID nodeId);

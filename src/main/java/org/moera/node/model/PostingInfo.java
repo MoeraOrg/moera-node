@@ -94,6 +94,10 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Set<String> blockedCommentOperations;
     private List<String> sheriffs;
     private List<SheriffMark> sheriffMarks;
+
+    @JsonIgnore
+    private boolean sheriffUserListReferred;
+
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ReactionTotalsInfo reactions;
@@ -295,6 +299,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
                 posting.getChildReactionOperations().getDelete(), Principal.UNSET);
 
         fillSheriffs(posting, options);
+        sheriffUserListReferred = posting.isSheriffUserListReferred();
 
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
@@ -818,6 +823,14 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
     public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
+    }
+
+    public boolean isSheriffUserListReferred() {
+        return sheriffUserListReferred;
+    }
+
+    public void setSheriffUserListReferred(boolean sheriffUserListReferred) {
+        this.sheriffUserListReferred = sheriffUserListReferred;
     }
 
     public AcceptedReactions getAcceptedReactions() {

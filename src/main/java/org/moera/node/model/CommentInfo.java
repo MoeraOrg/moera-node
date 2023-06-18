@@ -69,6 +69,10 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private Map<String, Principal> seniorOperations;
     private Set<String> blockedOperations;
     private List<SheriffMark> sheriffMarks;
+
+    @JsonIgnore
+    private boolean sheriffUserListReferred;
+
     private AcceptedReactions acceptedReactions;
     private ClientReactionInfo clientReaction;
     private ClientReactionInfo seniorReaction;
@@ -208,6 +212,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         }
 
         sheriffMarks = SheriffUtil.deserializeSheriffMarks(comment.getSheriffMarks()).orElse(null);
+        sheriffUserListReferred = comment.isSheriffUserListReferred();
 
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
@@ -554,6 +559,14 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
 
     public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
         this.sheriffMarks = sheriffMarks;
+    }
+
+    public boolean isSheriffUserListReferred() {
+        return sheriffUserListReferred;
+    }
+
+    public void setSheriffUserListReferred(boolean sheriffUserListReferred) {
+        this.sheriffUserListReferred = sheriffUserListReferred;
     }
 
     public AcceptedReactions getAcceptedReactions() {

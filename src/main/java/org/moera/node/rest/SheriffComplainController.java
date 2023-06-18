@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 import javax.inject.Inject;
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.util.Pair;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -66,7 +68,9 @@ public class SheriffComplainController {
 
     @PostMapping
     @Transactional
-    public SheriffComplainInfo post(@Valid @RequestBody SheriffComplainText sheriffComplainText) throws Throwable {
+    public ResponseEntity<SheriffComplainInfo> post(@Valid @RequestBody SheriffComplainText sheriffComplainText)
+            throws Throwable {
+
         log.info("POST /sheriff/complains"
                         + " (nodeName = {}, feedName = {}, postingId = {}, commentId = {}, reasonCode = {})",
                 LogUtil.format(sheriffComplainText.getNodeName()),
@@ -101,7 +105,8 @@ public class SheriffComplainController {
 
         requestContext.send(new SheriffComplainAddedLiberin(sheriffComplain, group));
 
-        return new SheriffComplainInfo(sheriffComplain, true);
+        return ResponseEntity.created(URI.create("/sheriff/complains/" + sheriffComplain.getId()))
+                .body(new SheriffComplainInfo(sheriffComplain, true));
     }
 
     private Pair<SheriffComplainGroup, Boolean> findOrCreateComplainGroup(SheriffComplainText sheriffComplainText)

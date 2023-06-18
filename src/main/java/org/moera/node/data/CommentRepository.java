@@ -45,6 +45,10 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Queryds
             + " and c.moment > ?3 and c.moment <= ?4")
     Page<Long> findMomentsInRange(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, Pageable pageable);
 
+    @Query("select count(*) from Comment c left join c.parent p left join p.stories s"
+            + " where c.nodeId = ?1 and c.ownerName = ?2 and c.deletedAt is null and s.feedName = ?3")
+    int countByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
+
     @Query("select c from Comment c left join fetch c.currentRevision"
             + " where c.deletedAt is null and c.currentRevision.deadline < ?1")
     List<Comment> findExpiredUnsigned(Timestamp deadline);

@@ -57,8 +57,8 @@ import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
-import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.UserListOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.push.PushContent;
 import org.moera.node.push.PushService;
@@ -108,7 +108,7 @@ public class FeedController {
     private BlockedByUserOperations blockedByUserOperations;
 
     @Inject
-    private FeedOperations feedOperations;
+    private UserListOperations userListOperations;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -402,6 +402,9 @@ public class FeedController {
                 }
             }
         }
+
+        userListOperations.fillSheriffListMarks(feedName, stories);
+
         sliceInfo.getStories().addAll(stories);
         if (sliceInfo.getStories().size() > limit) {
             sliceInfo.getStories().remove(limit);

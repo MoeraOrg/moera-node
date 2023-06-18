@@ -1023,7 +1023,8 @@ CREATE TABLE public.entries (
     replied_to_gender character varying(31),
     sheriff_marks text DEFAULT ''::text NOT NULL,
     receiver_sheriff_marks text,
-    receiver_sheriffs text
+    receiver_sheriffs text,
+    sheriff_user_list_referred boolean DEFAULT false NOT NULL
 );
 
 
@@ -1486,6 +1487,24 @@ CREATE TABLE public.remote_media_cache (
 ALTER TABLE public.remote_media_cache OWNER TO moera;
 
 --
+-- Name: remote_user_list_items; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.remote_user_list_items (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    list_node_name character varying(63) NOT NULL,
+    list_name character varying(63) NOT NULL,
+    node_name character varying(63) NOT NULL,
+    absent boolean DEFAULT false NOT NULL,
+    cached_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.remote_user_list_items OWNER TO moera;
+
+--
 -- Name: remote_verifications; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1609,7 +1628,8 @@ CREATE TABLE public.sheriff_orders (
     remote_comment_owner_gender character varying(31),
     remote_comment_heading character varying(255),
     remote_comment_revision_id character varying(40),
-    remote_node_full_name character varying(96)
+    remote_node_full_name character varying(96),
+    complain_group_id uuid
 );
 
 
@@ -1738,6 +1758,22 @@ CREATE TABLE public.tokens (
 
 
 ALTER TABLE public.tokens OWNER TO moera;
+
+--
+-- Name: user_list_items; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.user_list_items (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    list_name character varying(63) NOT NULL,
+    node_name character varying(63) NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    moment bigint NOT NULL
+);
+
+
+ALTER TABLE public.user_list_items OWNER TO moera;
 
 --
 -- Name: user_subscriptions; Type: TABLE; Schema: public; Owner: moera
@@ -2049,6 +2085,14 @@ ALTER TABLE ONLY public.remote_media_cache
 
 
 --
+-- Name: remote_user_list_items remote_user_list_items_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.remote_user_list_items
+    ADD CONSTRAINT remote_user_list_items_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: remote_verifications remote_verifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2126,6 +2170,14 @@ ALTER TABLE ONLY public.subscriptions
 
 ALTER TABLE ONLY public.tokens
     ADD CONSTRAINT tokens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_list_items user_list_items_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.user_list_items
+    ADD CONSTRAINT user_list_items_pkey PRIMARY KEY (id);
 
 
 --
@@ -2837,6 +2889,20 @@ CREATE UNIQUE INDEX remote_media_cache_null_remote_node_name_remote_media_id_idx
 
 
 --
+-- Name: remote_user_list_items_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX remote_user_list_items_deadline_idx ON public.remote_user_list_items USING btree (deadline);
+
+
+--
+-- Name: remote_user_list_items_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX remote_user_list_items_name_idx ON public.remote_user_list_items USING btree (node_id, list_node_name, list_name, node_name);
+
+
+--
 -- Name: remote_verifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2883,6 +2949,13 @@ CREATE UNIQUE INDEX sheriff_complain_groups_target_idx ON public.sheriff_complai
 --
 
 CREATE INDEX sheriff_complains_group_idx ON public.sheriff_complains USING btree (group_id);
+
+
+--
+-- Name: sheriff_orders_complain_group_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sheriff_orders_complain_group_idx ON public.sheriff_complain_groups USING btree (id);
 
 
 --
@@ -3051,6 +3124,20 @@ CREATE INDEX subscriptions_status_usage_count_idx ON public.subscriptions USING 
 --
 
 CREATE UNIQUE INDEX tokens_token_idx ON public.tokens USING btree (token);
+
+
+--
+-- Name: user_list_items_moment_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX user_list_items_moment_idx ON public.user_list_items USING btree (node_id, list_name, moment);
+
+
+--
+-- Name: user_list_items_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX user_list_items_name_idx ON public.user_list_items USING btree (node_id, list_name, node_name);
 
 
 --
@@ -3597,6 +3684,14 @@ ALTER TABLE ONLY public.remote_media_cache
 
 ALTER TABLE ONLY public.sheriff_complains
     ADD CONSTRAINT sheriff_complains_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.sheriff_complain_groups(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+--
+-- Name: sheriff_orders sheriff_orders_complain_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.sheriff_orders
+    ADD CONSTRAINT sheriff_orders_complain_group_id_fkey FOREIGN KEY (complain_group_id) REFERENCES public.sheriff_complain_groups(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --

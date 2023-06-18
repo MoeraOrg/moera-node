@@ -49,6 +49,9 @@ public class StoryOperations {
     private MediaFileOwnerRepository mediaFileOwnerRepository;
 
     @Inject
+    private UserListOperations userListOperations;
+
+    @Inject
     private LiberinManager liberinManager;
 
     @Inject
@@ -71,6 +74,7 @@ public class StoryOperations {
         if (publications == null) {
             return;
         }
+
         for (StoryAttributes publication : publications) {
             Story story = new Story(UUID.randomUUID(), nodeId, StoryType.POSTING_ADDED);
             story.setEntry(posting);
@@ -79,6 +83,8 @@ public class StoryOperations {
             updateMoment(story, nodeId);
             story = storyRepository.saveAndFlush(story);
             posting.addStory(story);
+
+            userListOperations.sheriffListReference(story);
 
             liberinSender.accept(new StoryAddedLiberin(story).withNodeId(nodeId));
         }

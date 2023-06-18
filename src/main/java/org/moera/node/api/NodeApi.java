@@ -45,6 +45,7 @@ import org.moera.node.model.SheriffOrderDetailsQ;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriberOverride;
+import org.moera.node.model.UserListItemInfo;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.naming.NamingCache;
@@ -431,6 +432,11 @@ public class NodeApi {
 
     public Result postSheriffOrder(String nodeName, SheriffOrderDetailsQ sheriffOrderDetails) throws NodeApiException {
         return call("POST", nodeName, "/sheriff/orders", null, sheriffOrderDetails, Result.class);
+    }
+
+    public UserListItemInfo getUserListItem(String nodeName, String listName, String name) throws NodeApiException {
+        return call("GET", nodeName, String.format("/user-lists/%s/items/%s", Util.ue(listName), Util.ue(name)),
+                null, UserListItemInfo.class);
     }
 
 }

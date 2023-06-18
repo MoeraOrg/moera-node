@@ -2,11 +2,7 @@ package org.moera.node.rest;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -21,7 +17,6 @@ import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.fingerprint.Fingerprints;
@@ -142,12 +137,15 @@ public class SheriffOrderController {
 
         if (posting == null) {
             String optionName = FeedOperations.getFeedSheriffMarksOption(sheriffOrderDetails.getFeedName());
-            updateSheriffMarks(sheriffOrderDetails,
+            SheriffUtil.updateSheriffMarks(
+                    sheriffOrderDetails.getSheriffName(),
+                    sheriffOrderDetails.isDelete(),
                     () -> requestContext.getOptions().getString(optionName),
                     value -> requestContext.getOptions().set(optionName, value));
         } else {
             Entry entry = comment == null ? posting : comment;
-            updateSheriffMarks(sheriffOrderDetails, entry::getSheriffMarks, entry::setSheriffMarks);
+            SheriffUtil.updateSheriffMarks(
+                    sheriffOrderDetails.getSheriffName(), sheriffOrderDetails.isDelete(), entry);
             entry.setEditedAt(Util.now());
         }
 
@@ -156,18 +154,6 @@ public class SheriffOrderController {
                 new AvatarImage(sheriffOrderDetails.getSheriffAvatar(), sheriffOrderDetails.getSheriffAvatarMediaFile()),
                 sheriffOrderDetails.getId()));
         return Result.OK;
-    }
-
-    private void updateSheriffMarks(SheriffOrderDetails details, Supplier<String> getter, Consumer<String> setter) {
-        List<SheriffMark> sheriffMarks = SheriffUtil.deserializeSheriffMarks(getter.get())
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(mark -> !mark.getSheriffName().equals(details.getSheriffName()))
-                .collect(Collectors.toList());
-        if (!details.isDelete()) {
-            sheriffMarks.add(new SheriffMark(details.getSheriffName()));
-        }
-        setter.accept(SheriffUtil.serializeSheriffMarks(sheriffMarks).orElse(""));
     }
 
 }

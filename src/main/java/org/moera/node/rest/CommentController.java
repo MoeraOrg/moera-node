@@ -78,6 +78,7 @@ import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.OperationsValidator;
+import org.moera.node.operations.UserListOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
@@ -148,6 +149,9 @@ public class CommentController {
 
     @Inject
     private FeedOperations feedOperations;
+
+    @Inject
+    private UserListOperations userListOperations;
 
     @Inject
     private TextConverter textConverter;
@@ -593,9 +597,11 @@ public class CommentController {
                 .map(c -> new CommentInfo(c, requestContext))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
+
         if (comments.size() > limit) {
             comments.remove(limit);
         }
+
         Map<String, CommentInfo> commentMap = comments.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
@@ -614,8 +620,12 @@ public class CommentController {
                 .map(ClientReactionInfo::new)
                 .filter(r -> commentMap.containsKey(r.getEntryId()))
                 .forEach(r -> commentMap.get(r.getEntryId()).setSeniorReaction(r));
+
         var blockedOperations = blockedUserOperations.findBlockedOperations(posting.getId());
         comments.forEach(c -> c.putBlockedOperations(blockedOperations));
+
+        userListOperations.fillSheriffListMarks(posting, comments);
+
         sliceInfo.setComments(comments);
     }
 
@@ -646,28 +656,29 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+        Posting posting = comment.getPosting();
         List<Story> stories = requestContext.isPossibleSheriff()
-                ? storyRepository.findByEntryId(requestContext.nodeId(), comment.getPosting().getId())
+                ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
                 : Collections.emptyList();
         if (!requestContext.isPrincipal(comment.getViewE())
                 && !feedOperations.isSheriffAllowed(stories, comment.getViewE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())
-                && !feedOperations.isSheriffAllowed(stories, comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE())
+                && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())
-                && !feedOperations.isSheriffAllowed(stories, comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(posting.getViewCommentsE())
+                && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!comment.getPosting().getId().equals(postingId)) {
+        if (!posting.getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
 
-        return withBlockings(withSeniorReaction(
+        return withSheriffUserListMarks(withBlockings(withSeniorReaction(
                 withClientReaction(new CommentInfo(comment, includeSet.contains("source"), requestContext)),
-                comment.getPosting().getOwnerName()));
+                posting.getOwnerName())), posting);
     }
 
     @DeleteMapping("/{commentId}")
@@ -772,6 +783,11 @@ public class CommentController {
     private CommentInfo withBlockings(CommentInfo commentInfo) {
         commentInfo.putBlockedOperations(
                 blockedUserOperations.findBlockedOperations(UUID.fromString(commentInfo.getPostingId())));
+        return commentInfo;
+    }
+
+    private CommentInfo withSheriffUserListMarks(CommentInfo commentInfo, Posting posting) {
+        userListOperations.fillSheriffListMarks(posting, commentInfo);
         return commentInfo;
     }
 

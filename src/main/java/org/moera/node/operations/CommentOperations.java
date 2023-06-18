@@ -73,6 +73,9 @@ public class CommentOperations {
     private MediaOperations mediaOperations;
 
     @Inject
+    private UserListOperations userListOperations;
+
+    @Inject
     private PlatformTransactionManager txManager;
 
     @Inject
@@ -132,6 +135,8 @@ public class CommentOperations {
         comment.setMoment(momentFinder.find(
                 moment -> commentRepository.countMoments(posting.getId(), moment) == 0,
                 Util.now()));
+
+        userListOperations.sheriffListReference(comment);
 
         log.debug("Total comments for posting {} = {} + 1: new comment {}",
                 LogUtil.format(posting.getId()),

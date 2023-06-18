@@ -47,6 +47,18 @@ public class FeedOperations {
         return getFeedSheriffs(universalContext.getOptions(), feedName);
     }
 
+    public static List<String> getSheriffFeeds(Options options, String sheriffName) {
+        List<String> sheriffs = getFeedSheriffs(options, Feed.TIMELINE).orElse(null);
+        if (sheriffs == null || !sheriffs.contains(sheriffName)) {
+            return Collections.emptyList();
+        }
+        return Collections.singletonList(Feed.TIMELINE);
+    }
+
+    public List<String> getSheriffFeeds(String sheriffName) {
+        return getSheriffFeeds(universalContext.getOptions(), sheriffName);
+    }
+
     public boolean isFeedSheriff(String feedName) {
         return getFeedSheriffs(feedName).orElse(Collections.emptyList()).stream().anyMatch(requestContext::isClient);
     }

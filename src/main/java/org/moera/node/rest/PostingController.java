@@ -58,6 +58,7 @@ import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
+import org.moera.node.operations.UserListOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
@@ -125,6 +126,9 @@ public class PostingController {
 
     @Inject
     private FeedOperations feedOperations;
+
+    @Inject
+    private UserListOperations userListOperations;
 
     @Inject
     private TextConverter textConverter;
@@ -338,9 +342,9 @@ public class PostingController {
 
         requestContext.send(new PostingReadLiberin(id));
 
-        return withBlockings(withClientReaction(
+        return withSheriffUserListMarks(withBlockings(withClientReaction(
                 new PostingInfo(posting, stories, includeSet.contains("source"), requestContext,
-                        requestContext.getOptions())));
+                        requestContext.getOptions()))));
     }
 
     @DeleteMapping("/{id}")
@@ -413,6 +417,11 @@ public class PostingController {
                     blockedByUserOperations.findBlockedOperations(
                             postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()));
         }
+        return postingInfo;
+    }
+
+    private PostingInfo withSheriffUserListMarks(PostingInfo postingInfo) {
+        userListOperations.fillSheriffListMarks(postingInfo);
         return postingInfo;
     }
 
