@@ -8,7 +8,8 @@ public enum SubscriptionType {
     FEED,
     POSTING,
     POSTING_COMMENTS,
-    PROFILE;
+    PROFILE,
+    USER_LIST;
 
     @JsonValue
     public String getValue() {

@@ -141,6 +141,7 @@ public class NotificationSenderPool {
             List<Subscriber> subscribers = Collections.emptyList();
             switch (sd.getSubscriptionType()) {
                 case FEED:
+                case USER_LIST:
                     subscribers = subscriberRepository.findAllByFeedName(
                             sd.getNodeId(), sd.getSubscriptionType(), sd.getFeedName());
                     break;

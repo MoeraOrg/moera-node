@@ -15,4 +15,7 @@ public interface EntryRepository extends JpaRepository<Entry, UUID> {
     @Query("select e from Entry e left join e.revisions er left join er.attachments a where a.mediaFileOwner.id = ?1")
     Set<Entry> findByMediaId(UUID id);
 
+    @Query("select count(*) from Entry e where e.nodeId = ?1 and e.deletedAt is null and e.ownerName <> ?2")
+    int countNotOwnedBy(UUID nodeId, String ownerName);
+
 }

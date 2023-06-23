@@ -24,6 +24,7 @@ import org.moera.node.data.QSubscriber;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
 import org.moera.node.data.SubscriptionType;
+import org.moera.node.data.UserList;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -207,6 +208,14 @@ public class SubscriberController {
                 }
                 break;
             case PROFILE:
+                break;
+            case USER_LIST:
+                if (ObjectUtils.isEmpty(description.getFeedName())) {
+                    throw new ValidationFailure("subscriberDescription.feedName.blank");
+                }
+                if (!UserList.isKnown(description.getFeedName())) {
+                    throw new ValidationFailure("subscriberDescription.feedName.not-found");
+                }
                 break;
         }
 

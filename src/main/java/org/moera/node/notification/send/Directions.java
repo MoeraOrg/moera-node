@@ -55,4 +55,12 @@ public class Directions {
         return new FriendGroupDirection(nodeId, friendGroupId, filter);
     }
 
+    public static Direction userListSubscribers(UUID nodeId, String listName) {
+        return new SubscribersDirection(nodeId, SubscriptionType.USER_LIST, listName);
+    }
+
+    public static Direction userListSubscribers(UUID nodeId, String listName, PrincipalFilter filter) {
+        return new SubscribersDirection(nodeId, SubscriptionType.USER_LIST, listName, filter);
+    }
+
 }

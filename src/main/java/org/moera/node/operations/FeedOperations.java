@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -36,23 +37,31 @@ public class FeedOperations {
     @Inject
     private LiberinManager liberinManager;
 
-    public static Optional<List<String>> getFeedSheriffs(Options options, String feedName) {
+    public static Optional<List<String>> getFeedSheriffs(Function<String, String> optionsGetter, String feedName) {
         if (feedName.equals(Feed.TIMELINE)) {
-            return SheriffUtil.deserializeSheriffs(options.getString("sheriffs.timeline"));
+            return SheriffUtil.deserializeSheriffs(optionsGetter.apply("sheriffs.timeline"));
         }
         return Optional.empty();
+    }
+
+    public static Optional<List<String>> getFeedSheriffs(Options options, String feedName) {
+        return getFeedSheriffs(options::getString, feedName);
     }
 
     public Optional<List<String>> getFeedSheriffs(String feedName) {
         return getFeedSheriffs(universalContext.getOptions(), feedName);
     }
 
-    public static List<String> getSheriffFeeds(Options options, String sheriffName) {
-        List<String> sheriffs = getFeedSheriffs(options, Feed.TIMELINE).orElse(null);
+    public static List<String> getSheriffFeeds(Function<String, String> optionsGetter, String sheriffName) {
+        List<String> sheriffs = getFeedSheriffs(optionsGetter, Feed.TIMELINE).orElse(null);
         if (sheriffs == null || !sheriffs.contains(sheriffName)) {
             return Collections.emptyList();
         }
         return Collections.singletonList(Feed.TIMELINE);
+    }
+
+    public static List<String> getSheriffFeeds(Options options, String sheriffName) {
+        return getSheriffFeeds(options::getString, sheriffName);
     }
 
     public List<String> getSheriffFeeds(String sheriffName) {

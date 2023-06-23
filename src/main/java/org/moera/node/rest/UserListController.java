@@ -14,6 +14,8 @@ import org.moera.node.data.UserListItemRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.UserListItemAddedLiberin;
+import org.moera.node.liberin.model.UserListItemDeletedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -22,6 +24,7 @@ import org.moera.node.model.UserListItemAttributes;
 import org.moera.node.model.UserListItemInfo;
 import org.moera.node.model.UserListSliceInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -53,6 +56,8 @@ public class UserListController {
 
     @Inject
     private UserListItemRepository userListItemRepository;
+
+    private final MomentFinder momentFinder = new MomentFinder();
 
     @GetMapping("/{name}")
     @Transactional
@@ -184,7 +189,12 @@ public class UserListController {
         item.setNodeId(requestContext.nodeId());
         item.setListName(listName);
         item.setNodeName(userListItemAttributes.getNodeName());
+        item.setMoment(momentFinder.find(
+                moment -> userListItemRepository.countMoments(requestContext.nodeId(), moment) == 0,
+                Util.now()));
         item = userListItemRepository.save(item);
+
+        requestContext.send(new UserListItemAddedLiberin(item));
 
         return ResponseEntity
                 .created(URI.create(String.format("/%s/items/%s", Util.ue(listName), Util.ue(item.getNodeName()))))
@@ -201,6 +211,8 @@ public class UserListController {
         UserListItem item = userListItemRepository.findByListAndNodeName(requestContext.nodeId(), listName, nodeName)
                 .orElseThrow(() -> new ObjectNotFoundFailure("user-list-item.not-found"));
         userListItemRepository.delete(item);
+
+        requestContext.send(new UserListItemDeletedLiberin(item));
 
         return Result.OK;
     }

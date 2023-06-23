@@ -151,6 +151,11 @@ public class SubscriptionOperations {
                 userSubscriptions = userSubscriptionRepository.findAllByType(
                         universalContext.nodeId(), subscription.getSubscriptionType());
                 break;
+            case USER_LIST:
+                userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
+                        universalContext.nodeId(), subscription.getSubscriptionType(), subscription.getRemoteNodeName(),
+                        subscription.getRemoteFeedName());
+                break;
         }
         if (userSubscriptions != null) {
             userSubscriptions.forEach(us -> userSubscriptionRepository.delete(us));

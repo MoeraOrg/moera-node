@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -18,19 +20,27 @@ import javax.transaction.Transactional;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
+import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
 import org.moera.node.data.Story;
+import org.moera.node.data.SubscriptionReason;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserList;
 import org.moera.node.data.UserListItem;
 import org.moera.node.data.UserListItemRepository;
+import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.option.OptionHook;
+import org.moera.node.option.OptionValueChange;
 import org.moera.node.rest.task.RemoteUserListItemFetchTask;
+import org.moera.node.rest.task.UserListUpdateTask;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
@@ -62,7 +72,13 @@ public class UserListOperations {
     private CommentRepository commentRepository;
 
     @Inject
+    private UserSubscriptionRepository userSubscriptionRepository;
+
+    @Inject
     private FeedOperations feedOperations;
+
+    @Inject
+    private SubscriptionOperations subscriptionOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -252,6 +268,122 @@ public class UserListOperations {
         }
     }
 
+    public void addToList(String listNodeName, String listName, String nodeName) {
+        RemoteUserListItem item = remoteUserListItemRepository
+                .findByListAndNodeName(universalContext.nodeId(), listNodeName, listName, nodeName)
+                .orElse(null);
+        if (item != null) {
+            if (!item.isAbsent()) {
+                return;
+            } else {
+                item.setAbsent(false);
+                item.setDeadline(Timestamp.from(Instant.now().plus(PRESENT_TTL)));
+            }
+        } else {
+            item = new RemoteUserListItem();
+            item.setId(UUID.randomUUID());
+            item.setNodeId(universalContext.nodeId());
+            item.setListNodeName(listNodeName);
+            item.setListName(listName);
+            item.setNodeName(nodeName);
+            item.setAbsent(false);
+            item.setDeadline(Timestamp.from(Instant.now().plus(PRESENT_TTL)));
+            remoteUserListItemRepository.save(item);
+        }
+
+        if (UserList.SHERIFF_HIDE.equals(listName)) {
+            addToSheriffList(listNodeName, nodeName);
+        }
+    }
+
+    private void addToSheriffList(String sheriffName, String nodeName) {
+        // TODO not optimized for large lists of postings/comments
+        List<String> feeds = feedOperations.getSheriffFeeds(sheriffName);
+        for (String feedName : feeds) {
+            List<Posting> postings = postingRepository.findByOwnerNameAndFeed(
+                    universalContext.nodeId(), nodeName, feedName);
+            for (Posting posting : postings) {
+                if (posting.isSheriffUserListReferred()) {
+                    continue;
+                }
+                posting.setSheriffUserListReferred(true);
+                posting.setEditedAt(Util.now());
+                universalContext.send(
+                        new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), posting.getViewE()));
+            }
+            commentRepository.updateSheriffReferredByOwnerNameAndFeed(
+                    universalContext.nodeId(), nodeName, feedName, true);
+        }
+    }
+
+    public void deleteFromList(String listNodeName, String listName, List<String> sheriffFeeds, String nodeName) {
+        RemoteUserListItem item = remoteUserListItemRepository
+                .findByListAndNodeName(universalContext.nodeId(), listNodeName, listName, nodeName)
+                .orElse(null);
+        if (item == null || item.isAbsent()) {
+            return;
+        }
+        item.setAbsent(true);
+        item.setDeadline(Timestamp.from(Instant.now().plus(ABSENT_TTL)));
+
+        if (UserList.SHERIFF_HIDE.equals(listName)) {
+            deleteFromSheriffList(listNodeName, sheriffFeeds, nodeName);
+        }
+    }
+
+    private void deleteFromSheriffList(String sheriffName, List<String> sheriffFeeds, String nodeName) {
+        // TODO not optimized for large lists of postings/comments
+        Set<String> otherFeeds = new HashSet<>();
+        // feeds, where nodeName is still hidden by other sheriffs
+        remoteUserListItemRepository.findByNodeNameNotAbsent(universalContext.nodeId(), UserList.SHERIFF_HIDE, nodeName)
+                .stream()
+                .map(RemoteUserListItem::getListNodeName)
+                .filter(sh -> !sh.equals(sheriffName))
+                .map(feedOperations::getSheriffFeeds)
+                .forEach(otherFeeds::addAll);
+        if (otherFeeds.equals(new HashSet<>(sheriffFeeds))) {
+            // nodeName is still hidden on the same feeds by other sheriffs, nothing changed
+            return;
+        }
+        for (String feedName : sheriffFeeds) {
+            List<Posting> postings = postingRepository.findByOwnerNameAndFeed(
+                    universalContext.nodeId(), nodeName, feedName);
+            for (Posting posting : postings) {
+                if (!posting.isSheriffUserListReferred()) {
+                    continue;
+                }
+                boolean referred = false;
+                if (!otherFeeds.isEmpty()) {
+                    referred = posting.getStories().stream().map(Story::getFeedName).anyMatch(otherFeeds::contains);
+                }
+                if (referred) {
+                    continue;
+                }
+                posting.setSheriffUserListReferred(false);
+                posting.setEditedAt(Util.now());
+                universalContext.send(
+                        new PostingUpdatedLiberin(posting, posting.getCurrentRevision(), posting.getViewE()));
+            }
+
+            if (otherFeeds.isEmpty()) {
+                commentRepository.updateSheriffReferredByOwnerNameAndFeed(
+                        universalContext.nodeId(), nodeName, feedName, true);
+                continue;
+            }
+            List<Comment> comments = commentRepository.findByOwnerNameAndFeed(
+                    universalContext.nodeId(), nodeName, feedName);
+            for (Comment comment : comments) {
+                if (!comment.isSheriffUserListReferred()) {
+                    continue;
+                }
+                boolean referred = comment.getPosting().getStories().stream()
+                        .map(Story::getFeedName)
+                        .anyMatch(otherFeeds::contains);
+                comment.setSheriffUserListReferred(referred);
+            }
+        }
+    }
+
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void purgeExpired() {
@@ -281,4 +413,50 @@ public class UserListOperations {
         }
     }
 
+    @OptionHook("sheriffs.timeline")
+    public void timelineSheriffChanged(OptionValueChange change) throws Throwable {
+        universalContext.associate(change.getNodeId());
+        Function<String, String> prevOptions =
+                name -> name.equals(change.getName())
+                    ? change.getPreviousValue().toString()
+                    : universalContext.getOptions().getString(change.getName());
+        List<String> sheriffs = feedOperations.getFeedSheriffs(Feed.TIMELINE)
+                .orElse(Collections.emptyList());
+        List<String> prevSheriffs = FeedOperations.getFeedSheriffs(prevOptions, Feed.TIMELINE)
+                .orElse(Collections.emptyList());
+        for (String sheriffName : sheriffs) {
+            if (!prevSheriffs.contains(sheriffName)) {
+                subscriptionOperations.subscribe(subscription -> {
+                    subscription.setSubscriptionType(SubscriptionType.USER_LIST);
+                    subscription.setRemoteNodeName(sheriffName);
+                    subscription.setRemoteFeedName(UserList.SHERIFF_HIDE);
+                    subscription.setReason(SubscriptionReason.USER);
+                });
+                var updateTask = new UserListUpdateTask(
+                        sheriffName,
+                        UserList.SHERIFF_HIDE,
+                        feedOperations.getSheriffFeeds(sheriffName),
+                        null,
+                        false);
+                taskAutowire.autowireWithoutRequest(updateTask, change.getNodeId());
+                taskExecutor.execute(updateTask);
+            }
+        }
+        for (String sheriffName : prevSheriffs) {
+            if (!sheriffs.contains(sheriffName)) {
+                userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
+                            universalContext.nodeId(), SubscriptionType.USER_LIST, sheriffName, UserList.SHERIFF_HIDE)
+                        .forEach(us -> userSubscriptionRepository.delete(us));
+
+                var updateTask = new UserListUpdateTask(
+                        sheriffName,
+                        UserList.SHERIFF_HIDE,
+                        FeedOperations.getSheriffFeeds(prevOptions, sheriffName),
+                        null,
+                        true);
+                taskAutowire.autowireWithoutRequest(updateTask, change.getNodeId());
+                taskExecutor.execute(updateTask);
+            }
+        }
+    }
 }

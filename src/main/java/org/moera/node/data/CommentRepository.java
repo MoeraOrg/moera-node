@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
@@ -45,9 +46,19 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Queryds
             + " and c.moment > ?3 and c.moment <= ?4")
     Page<Long> findMomentsInRange(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, Pageable pageable);
 
+    @Query("select c from Comment c left join c.parent p left join p.stories s"
+            + " where c.nodeId = ?1 and c.ownerName = ?2 and c.deletedAt is null and s.feedName = ?3")
+    List<Comment> findByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
+
     @Query("select count(*) from Comment c left join c.parent p left join p.stories s"
             + " where c.nodeId = ?1 and c.ownerName = ?2 and c.deletedAt is null and s.feedName = ?3")
     int countByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName);
+
+    @Query("update Comment c set c.sheriffUserListReferred = ?4"
+            + " where c.nodeId = ?1 and c.ownerName = ?2 and c.deletedAt is null"
+            + " and exists(select s from Story s where s.entry = c.parent and s.feedName = ?3)")
+    @Modifying
+    void updateSheriffReferredByOwnerNameAndFeed(UUID nodeId, String ownerName, String feedName, boolean referred);
 
     @Query("select c from Comment c left join fetch c.currentRevision"
             + " where c.deletedAt is null and c.currentRevision.deadline < ?1")
