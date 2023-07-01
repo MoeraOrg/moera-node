@@ -43,11 +43,12 @@ public class ReplyCommentProcessor {
                         new ReplyCommentAddedLiberin(notification.getSenderNodeName(),
                                 notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
                                 notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
-                                notification.getPostingHeading(), notification.getPostingId(),
+                                notification.getPostingHeading(), notification.getPostingSheriffs(),
+                                notification.getPostingSheriffMarks(), notification.getPostingId(),
                                 notification.getRepliedToHeading(), notification.getRepliedToId(),
                                 notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
                                 notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
-                                notification.getCommentId())));
+                                notification.getCommentSheriffMarks(), notification.getCommentId())));
     }
 
     @NotificationMapping(NotificationType.REPLY_COMMENT_DELETED)

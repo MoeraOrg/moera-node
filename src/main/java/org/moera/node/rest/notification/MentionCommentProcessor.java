@@ -45,9 +45,11 @@ public class MentionCommentProcessor {
                                 notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
                                 notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
                                 notification.getPostingId(), notification.getPostingHeading(),
+                                notification.getPostingSheriffs(), notification.getPostingSheriffMarks(),
                                 notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
                                 notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
-                                notification.getCommentId(), notification.getCommentHeading())));
+                                notification.getCommentId(), notification.getCommentHeading(),
+                                notification.getCommentSheriffMarks())));
     }
 
     @NotificationMapping(NotificationType.MENTION_COMMENT_DELETED)

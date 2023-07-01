@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
@@ -26,20 +27,22 @@ import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.model.PostingInfo;
 import org.moera.node.model.body.Body;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.notification.StoryAddedNotification;
 import org.moera.node.model.notification.MentionPostingAddedNotification;
 import org.moera.node.model.notification.MentionPostingDeletedNotification;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.model.notification.PostingImportantUpdateNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.model.notification.StoryAddedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.UserListOperations;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.ExtendedDuration;
 
@@ -54,6 +57,9 @@ public class PostingReceptor extends LiberinReceptorBase {
 
     @Inject
     private SubscribedCache subscribedCache;
+
+    @Inject
+    private UserListOperations userListOperations;
 
     @LiberinMapping
     public void added(PostingAddedLiberin liberin) {
@@ -145,19 +151,23 @@ public class PostingReceptor extends LiberinReceptorBase {
 
     private void notifyMentioned(Posting posting, EntryRevision current, Principal currentView, EntryRevision latest,
                                  Principal latestView, String ownerName) {
-        AvatarImage ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
-        String currentHeading = current != null ? current.getHeading() : null;
         Set<String> currentMentions = current != null
                 ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
                 : Collections.emptySet();
         Set<String> latestMentions = latest != null && latest.getSignature() != null
                 ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
                 : Collections.emptySet();
-        currentMentions.stream()
-                .filter(m -> !latestMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m))
-                .forEach(d -> send(d, new MentionPostingAddedNotification(posting.getId(), posting.getOwnerName(),
-                        posting.getOwnerFullName(), posting.getOwnerGender(), ownerAvatar, currentHeading)));
+        if (!currentMentions.isEmpty()) {
+            PostingInfo postingInfo = new PostingInfo(posting, posting.getStories(), AccessCheckers.ADMIN,
+                    universalContext.getOptions());
+            userListOperations.fillSheriffListMarks(postingInfo);
+            currentMentions.stream()
+                    .filter(m -> !latestMentions.contains(m))
+                    .map(m -> Directions.single(posting.getNodeId(), m))
+                    .forEach(d -> send(d, new MentionPostingAddedNotification(posting.getId(), posting.getOwnerName(),
+                            posting.getOwnerFullName(), posting.getOwnerGender(), postingInfo.getOwnerAvatar(),
+                            postingInfo.getHeading(), postingInfo.getSheriffs(), postingInfo.getSheriffMarks())));
+        }
         latestMentions.stream()
                 .filter(m -> !currentMentions.contains(m))
                 .map(m -> Directions.single(posting.getNodeId(), m))

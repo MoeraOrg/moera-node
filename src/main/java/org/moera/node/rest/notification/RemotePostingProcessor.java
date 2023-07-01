@@ -91,9 +91,11 @@ public class RemotePostingProcessor {
                                 notification.getPostingOwnerName(), notification.getPostingOwnerFullName(),
                                 notification.getPostingOwnerGender(), notification.getPostingOwnerAvatar(),
                                 notification.getPostingId(), notification.getPostingHeading(),
+                                notification.getPostingSheriffs(), notification.getPostingSheriffMarks(),
                                 notification.getCommentOwnerName(), notification.getCommentOwnerFullName(),
                                 notification.getCommentOwnerGender(), notification.getCommentOwnerAvatar(),
-                                notification.getCommentId(), notification.getCommentHeading(), reason)));
+                                notification.getCommentId(), notification.getCommentHeading(),
+                                notification.getCommentSheriffMarks(), reason)));
     }
 
     @NotificationMapping(NotificationType.POSTING_COMMENT_DELETED)

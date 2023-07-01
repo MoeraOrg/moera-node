@@ -46,7 +46,8 @@ public class MentionPostingProcessor {
                         new MentionInRemotePostingAddedLiberin(notification.getSenderNodeName(),
                                 notification.getOwnerName(), notification.getOwnerFullName(),
                                 notification.getOwnerGender(), notification.getOwnerAvatar(),
-                                notification.getPostingId(), notification.getHeading())));
+                                notification.getPostingId(), notification.getHeading(), notification.getSheriffs(),
+                                notification.getSheriffMarks())));
         subscriptionOperations.subscribeToPostingComments(notification.getSenderNodeName(), notification.getPostingId(),
                 SubscriptionReason.MENTION);
     }

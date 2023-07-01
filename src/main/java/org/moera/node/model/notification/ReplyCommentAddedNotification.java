@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.SheriffMark;
 import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
@@ -27,8 +28,17 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
     @Size(max = 255)
     private String postingHeading;
 
+    @Size(max = 4096)
+    private List<String> postingSheriffs;
+
+    @Size(max = 4096)
+    private List<SheriffMark> postingSheriffMarks;
+
     @Size(max = 255)
     private String commentHeading;
+
+    @Size(max = 4096)
+    private List<SheriffMark> commentSheriffMarks;
 
     @Size(max = 255)
     private String repliedToHeading;
@@ -40,9 +50,11 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
     public ReplyCommentAddedNotification(String postingOwnerName, String postingOwnerFullName,
                                          String postingOwnerGender, AvatarImage postingOwnerAvatar, UUID postingId,
                                          UUID commentId, UUID repliedToId, String postingHeading,
+                                         List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks,
                                          String commentOwnerName, String commentOwnerFullName,
                                          String commentOwnerGender, AvatarImage commentOwnerAvatar,
-                                         String commentHeading, String repliedToHeading) {
+                                         String commentHeading, List<SheriffMark> commentSheriffMarks,
+                                         String repliedToHeading) {
         super(NotificationType.REPLY_COMMENT_ADDED, postingId, commentId, repliedToId, commentOwnerName,
                 commentOwnerFullName, commentOwnerGender, commentOwnerAvatar);
         this.postingOwnerName = postingOwnerName;
@@ -50,7 +62,10 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
         this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
+        this.postingSheriffs = postingSheriffs;
+        this.postingSheriffMarks = postingSheriffMarks;
         this.commentHeading = commentHeading;
+        this.commentSheriffMarks = commentSheriffMarks;
         this.repliedToHeading = repliedToHeading;
     }
 
@@ -94,12 +109,36 @@ public class ReplyCommentAddedNotification extends ReplyCommentNotification {
         this.postingHeading = postingHeading;
     }
 
+    public List<String> getPostingSheriffs() {
+        return postingSheriffs;
+    }
+
+    public void setPostingSheriffs(List<String> postingSheriffs) {
+        this.postingSheriffs = postingSheriffs;
+    }
+
+    public List<SheriffMark> getPostingSheriffMarks() {
+        return postingSheriffMarks;
+    }
+
+    public void setPostingSheriffMarks(List<SheriffMark> postingSheriffMarks) {
+        this.postingSheriffMarks = postingSheriffMarks;
+    }
+
     public String getCommentHeading() {
         return commentHeading;
     }
 
     public void setCommentHeading(String commentHeading) {
         this.commentHeading = commentHeading;
+    }
+
+    public List<SheriffMark> getCommentSheriffMarks() {
+        return commentSheriffMarks;
+    }
+
+    public void setCommentSheriffMarks(List<SheriffMark> commentSheriffMarks) {
+        this.commentSheriffMarks = commentSheriffMarks;
     }
 
     public String getRepliedToHeading() {

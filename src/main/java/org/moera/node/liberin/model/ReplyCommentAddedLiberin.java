@@ -1,7 +1,9 @@
 package org.moera.node.liberin.model;
 
+import java.util.List;
 import java.util.Map;
 
+import org.moera.node.data.SheriffMark;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
 
@@ -13,6 +15,8 @@ public class ReplyCommentAddedLiberin extends Liberin {
     private String postingOwnerGender;
     private AvatarImage postingOwnerAvatar;
     private String postingHeading;
+    private List<String> postingSheriffs;
+    private List<SheriffMark> postingSheriffMarks;
     private String postingId;
     private String repliedToHeading;
     private String repliedToId;
@@ -20,27 +24,33 @@ public class ReplyCommentAddedLiberin extends Liberin {
     private String commentOwnerFullName;
     private String commentOwnerGender;
     private AvatarImage commentOwnerAvatar;
+    private List<SheriffMark> commentSheriffMarks;
     private String commentId;
 
     public ReplyCommentAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
                                     String postingOwnerGender, AvatarImage postingOwnerAvatar, String postingHeading,
+                                    List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks,
                                     String postingId, String repliedToHeading, String repliedToId,
                                     String commentOwnerName, String commentOwnerFullName, String commentOwnerGender,
-                                    AvatarImage commentOwnerAvatar, String commentId) {
+                                    AvatarImage commentOwnerAvatar, List<SheriffMark> commentSheriffMarks,
+                                    String commentId) {
         this.nodeName = nodeName;
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
         this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
-        this.postingId = postingId;
         this.postingHeading = postingHeading;
-        this.commentId = commentId;
-        this.repliedToId = repliedToId;
+        this.postingSheriffs = postingSheriffs;
+        this.postingSheriffMarks = postingSheriffMarks;
+        this.postingId = postingId;
         this.repliedToHeading = repliedToHeading;
+        this.repliedToId = repliedToId;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
         this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
+        this.commentSheriffMarks = commentSheriffMarks;
+        this.commentId = commentId;
     }
 
     public String getNodeName() {
@@ -89,6 +99,22 @@ public class ReplyCommentAddedLiberin extends Liberin {
 
     public void setPostingHeading(String postingHeading) {
         this.postingHeading = postingHeading;
+    }
+
+    public List<String> getPostingSheriffs() {
+        return postingSheriffs;
+    }
+
+    public void setPostingSheriffs(List<String> postingSheriffs) {
+        this.postingSheriffs = postingSheriffs;
+    }
+
+    public List<SheriffMark> getPostingSheriffMarks() {
+        return postingSheriffMarks;
+    }
+
+    public void setPostingSheriffMarks(List<SheriffMark> postingSheriffMarks) {
+        this.postingSheriffMarks = postingSheriffMarks;
     }
 
     public String getPostingId() {
@@ -147,6 +173,14 @@ public class ReplyCommentAddedLiberin extends Liberin {
         this.commentOwnerAvatar = commentOwnerAvatar;
     }
 
+    public List<SheriffMark> getCommentSheriffMarks() {
+        return commentSheriffMarks;
+    }
+
+    public void setCommentSheriffMarks(List<SheriffMark> commentSheriffMarks) {
+        this.commentSheriffMarks = commentSheriffMarks;
+    }
+
     public String getCommentId() {
         return commentId;
     }
@@ -164,6 +198,8 @@ public class ReplyCommentAddedLiberin extends Liberin {
         model.put("postingOwnerGender", postingOwnerGender);
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingHeading", postingHeading);
+        model.put("postingSheriffs", postingSheriffs);
+        model.put("postingSheriffMarks", postingSheriffMarks);
         model.put("postingId", postingId);
         model.put("repliedToHeading", repliedToHeading);
         model.put("repliedToId", repliedToId);
@@ -171,6 +207,7 @@ public class ReplyCommentAddedLiberin extends Liberin {
         model.put("commentOwnerFullName", commentOwnerFullName);
         model.put("commentOwnerGender", commentOwnerGender);
         model.put("commentOwnerAvatar", commentOwnerAvatar);
+        model.put("commentSheriffMarks", commentSheriffMarks);
         model.put("commentId", commentId);
     }
 

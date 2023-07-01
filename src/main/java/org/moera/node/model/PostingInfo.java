@@ -112,11 +112,11 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     }
 
     public PostingInfo(Posting posting, AccessChecker accessChecker) {
-        this(posting, posting.getCurrentRevision(), false, accessChecker);
+        this(posting, posting.getCurrentRevision(), null, false, accessChecker, null);
     }
 
     public PostingInfo(Posting posting, boolean includeSource, AccessChecker accessChecker) {
-        this(posting, posting.getCurrentRevision(), includeSource, accessChecker);
+        this(posting, posting.getCurrentRevision(), null, includeSource, accessChecker, null);
     }
 
     public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.node.data.Feed;
+import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
@@ -30,9 +31,11 @@ public class RemoteCommentInstants extends InstantsCreator {
     private StoryRepository storyRepository;
 
     public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
-                      AvatarImage postingOwnerAvatar, String postingId, String postingHeading, String commentOwnerName,
+                      AvatarImage postingOwnerAvatar, String postingId, String postingHeading,
+                      List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks, String commentOwnerName,
                       String commentOwnerFullName, String commentOwnerGender, AvatarImage commentOwnerAvatar,
-                      String commentId, String commentHeading, SubscriptionReason reason) {
+                      String commentId, String commentHeading, List<SheriffMark> commentSheriffMarks,
+                      SubscriptionReason reason) {
         if (commentOwnerName.equals(nodeName())) {
             return;
         }
@@ -62,7 +65,8 @@ public class RemoteCommentInstants extends InstantsCreator {
                 story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
             story.setRemotePostingId(postingId);
-            story.setSummaryData(buildPostingSummary(postingOwnerGender, postingHeading));
+            story.setSummaryData(buildPostingSummary(
+                    postingOwnerGender, postingHeading, postingSheriffs, postingSheriffMarks));
             story.setMoment(0L);
             story = storyRepository.save(story);
         }
@@ -77,7 +81,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         substory.setRemoteCommentId(commentId);
-        substory.setSummaryData(buildCommentSummary(commentOwnerGender, commentHeading));
+        substory.setSummaryData(buildCommentSummary(commentOwnerGender, commentHeading, commentSheriffMarks));
         substory.setMoment(0L);
         substory = storyRepository.save(substory);
         story.addSubstory(substory);
@@ -85,15 +89,16 @@ public class RemoteCommentInstants extends InstantsCreator {
         updated(story, reason, isNewStory, true);
     }
 
-    private static StorySummaryData buildPostingSummary(String gender, String heading) {
+    private static StorySummaryData buildPostingSummary(String gender, String heading, List<String> sheriffs,
+                                                        List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(null, null, gender, heading));
+        summaryData.setPosting(new StorySummaryEntry(null, null, gender, heading, sheriffs, sheriffMarks));
         return summaryData;
     }
 
-    private static StorySummaryData buildCommentSummary(String gender, String heading) {
+    private static StorySummaryData buildCommentSummary(String gender, String heading, List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setComment(new StorySummaryEntry(null, null, gender, heading));
+        summaryData.setComment(new StorySummaryEntry(null, null, gender, heading, null, sheriffMarks));
         return summaryData;
     }
 
@@ -147,7 +152,9 @@ public class RemoteCommentInstants extends InstantsCreator {
         comments.add(new StorySummaryEntry(
                 firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(),
                 firstStory.getSummaryData().getComment().getOwnerGender(),
-                firstStory.getSummaryData().getComment().getHeading()));
+                firstStory.getSummaryData().getComment().getHeading(),
+                firstStory.getSummaryData().getComment().getSheriffs(),
+                firstStory.getSummaryData().getComment().getSheriffMarks()));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
@@ -159,7 +166,9 @@ public class RemoteCommentInstants extends InstantsCreator {
                     comments.add(new StorySummaryEntry(
                             secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(),
                             secondStory.getSummaryData().getComment().getOwnerGender(),
-                            secondStory.getSummaryData().getComment().getHeading()));
+                            secondStory.getSummaryData().getComment().getHeading(),
+                            secondStory.getSummaryData().getComment().getSheriffs(),
+                            secondStory.getSummaryData().getComment().getSheriffMarks()));
                 }
             }
             summaryData.setTotalComments(names.size());
@@ -169,8 +178,9 @@ public class RemoteCommentInstants extends InstantsCreator {
         summaryData.setComments(comments);
         summaryData.setPosting(new StorySummaryEntry(
                 story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                story.getSummaryData().getPosting().getOwnerGender(),
-                story.getSummaryData().getPosting().getHeading()));
+                story.getSummaryData().getPosting().getOwnerGender(), story.getSummaryData().getPosting().getHeading(),
+                story.getSummaryData().getPosting().getSheriffs(),
+                story.getSummaryData().getPosting().getSheriffMarks()));
         summaryData.setSubscriptionReason(reason);
         return summaryData;
     }

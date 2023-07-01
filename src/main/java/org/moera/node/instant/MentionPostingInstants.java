@@ -1,9 +1,11 @@
 package org.moera.node.instant;
 
+import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.data.Feed;
+import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
@@ -19,7 +21,8 @@ public class MentionPostingInstants extends InstantsCreator {
     private StoryRepository storyRepository;
 
     public void added(String nodeName, String ownerName, String ownerFullName, String ownerGender,
-                      AvatarImage ownerAvatar, String id, String heading) {
+                      AvatarImage ownerAvatar, String id, String heading, List<String> sheriffs,
+                      List<SheriffMark> sheriffMarks) {
         if (isBlocked(StoryType.MENTION_POSTING, null, nodeName, id, ownerName)) {
             return;
         }
@@ -37,7 +40,7 @@ public class MentionPostingInstants extends InstantsCreator {
             story.setRemotePostingAvatarShape(ownerAvatar.getShape());
         }
         story.setRemotePostingId(id);
-        story.setSummaryData(buildSummary(story, ownerGender, heading));
+        story.setSummaryData(buildSummary(story, ownerGender, heading, sheriffs, sheriffMarks));
         updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
@@ -57,10 +60,12 @@ public class MentionPostingInstants extends InstantsCreator {
                 nodeName, id).stream().findFirst().orElse(null);
     }
 
-    private static StorySummaryData buildSummary(Story story, String ownerGender, String heading) {
+    private static StorySummaryData buildSummary(Story story, String ownerGender, String heading, List<String> sheriffs,
+                                                 List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(new StorySummaryEntry(
-                story.getRemotePostingNodeName(), story.getRemotePostingFullName(), ownerGender, heading));
+                story.getRemotePostingNodeName(), story.getRemotePostingFullName(), ownerGender, heading, sheriffs,
+                sheriffMarks));
         return summaryData;
     }
 

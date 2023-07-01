@@ -1,7 +1,9 @@
 package org.moera.node.liberin.model;
 
+import java.util.List;
 import java.util.Map;
 
+import org.moera.node.data.SheriffMark;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
@@ -15,19 +17,24 @@ public class ForeignCommentAddedLiberin extends Liberin {
     private AvatarImage postingOwnerAvatar;
     private String postingId;
     private String postingHeading;
+    private List<String> postingSheriffs;
+    private List<SheriffMark> postingSheriffMarks;
     private String commentOwnerName;
     private String commentOwnerFullName;
     private String commentOwnerGender;
     private AvatarImage commentOwnerAvatar;
     private String commentId;
     private String commentHeading;
+    private List<SheriffMark> commentSheriffMarks;
     private SubscriptionReason subscriptionReason;
 
     public ForeignCommentAddedLiberin(String nodeName, String postingOwnerName, String postingOwnerFullName,
                                       String postingOwnerGender, AvatarImage postingOwnerAvatar, String postingId,
-                                      String postingHeading, String commentOwnerName, String commentOwnerFullName,
-                                      String commentOwnerGender, AvatarImage commentOwnerAvatar, String commentId,
-                                      String commentHeading, SubscriptionReason subscriptionReason) {
+                                      String postingHeading, List<String> postingSheriffs,
+                                      List<SheriffMark> postingSheriffMarks, String commentOwnerName,
+                                      String commentOwnerFullName, String commentOwnerGender,
+                                      AvatarImage commentOwnerAvatar, String commentId, String commentHeading,
+                                      List<SheriffMark> commentSheriffMarks, SubscriptionReason subscriptionReason) {
         this.nodeName = nodeName;
         this.postingOwnerName = postingOwnerName;
         this.postingOwnerFullName = postingOwnerFullName;
@@ -35,12 +42,15 @@ public class ForeignCommentAddedLiberin extends Liberin {
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingId = postingId;
         this.postingHeading = postingHeading;
+        this.postingSheriffs = postingSheriffs;
+        this.postingSheriffMarks = postingSheriffMarks;
         this.commentOwnerName = commentOwnerName;
         this.commentOwnerFullName = commentOwnerFullName;
         this.commentOwnerGender = commentOwnerGender;
         this.commentOwnerAvatar = commentOwnerAvatar;
         this.commentId = commentId;
         this.commentHeading = commentHeading;
+        this.commentSheriffMarks = commentSheriffMarks;
         this.subscriptionReason = subscriptionReason;
     }
 
@@ -100,6 +110,22 @@ public class ForeignCommentAddedLiberin extends Liberin {
         this.postingHeading = postingHeading;
     }
 
+    public List<String> getPostingSheriffs() {
+        return postingSheriffs;
+    }
+
+    public void setPostingSheriffs(List<String> postingSheriffs) {
+        this.postingSheriffs = postingSheriffs;
+    }
+
+    public List<SheriffMark> getPostingSheriffMarks() {
+        return postingSheriffMarks;
+    }
+
+    public void setPostingSheriffMarks(List<SheriffMark> postingSheriffMarks) {
+        this.postingSheriffMarks = postingSheriffMarks;
+    }
+
     public String getCommentOwnerName() {
         return commentOwnerName;
     }
@@ -148,6 +174,14 @@ public class ForeignCommentAddedLiberin extends Liberin {
         this.commentHeading = commentHeading;
     }
 
+    public List<SheriffMark> getCommentSheriffMarks() {
+        return commentSheriffMarks;
+    }
+
+    public void setCommentSheriffMarks(List<SheriffMark> commentSheriffMarks) {
+        this.commentSheriffMarks = commentSheriffMarks;
+    }
+
     public SubscriptionReason getSubscriptionReason() {
         return subscriptionReason;
     }
@@ -166,12 +200,15 @@ public class ForeignCommentAddedLiberin extends Liberin {
         model.put("postingOwnerAvatar", postingOwnerAvatar);
         model.put("postingId", postingId);
         model.put("postingHeading", postingHeading);
+        model.put("postingSheriffs", postingSheriffs);
+        model.put("postingSheriffMarks", postingSheriffMarks);
         model.put("commentOwnerName", commentOwnerName);
         model.put("commentOwnerFullName", commentOwnerFullName);
         model.put("commentOwnerGender", commentOwnerGender);
         model.put("commentOwnerAvatar", commentOwnerAvatar);
         model.put("commentId", commentId);
         model.put("commentHeading", commentHeading);
+        model.put("commentSheriffMarks", commentSheriffMarks);
         model.put("subscriptionReason", subscriptionReason);
     }
 

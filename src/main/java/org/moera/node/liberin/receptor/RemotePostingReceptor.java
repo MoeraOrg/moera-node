@@ -95,7 +95,8 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void mentionAdded(MentionInRemotePostingAddedLiberin liberin) {
         mentionPostingInstants.added(liberin.getNodeName(), liberin.getOwnerName(), liberin.getOwnerFullName(),
-                liberin.getOwnerGender(), liberin.getOwnerAvatar(), liberin.getId(), liberin.getHeading());
+                liberin.getOwnerGender(), liberin.getOwnerAvatar(), liberin.getId(), liberin.getHeading(),
+                liberin.getSheriffs(), liberin.getSheriffMarks());
     }
 
     @LiberinMapping
@@ -107,9 +108,10 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     public void foreignCommentAdded(ForeignCommentAddedLiberin liberin) {
         remoteCommentInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
                 liberin.getPostingOwnerFullName(), liberin.getPostingOwnerGender(), liberin.getPostingOwnerAvatar(),
-                liberin.getPostingId(), liberin.getPostingHeading(), liberin.getCommentOwnerName(),
-                liberin.getCommentOwnerFullName(), liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(),
-                liberin.getCommentId(), liberin.getCommentHeading(), liberin.getSubscriptionReason());
+                liberin.getPostingId(), liberin.getPostingHeading(), liberin.getPostingSheriffs(),
+                liberin.getPostingSheriffMarks(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
+                liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(), liberin.getCommentId(),
+                liberin.getCommentHeading(), liberin.getCommentSheriffMarks(), liberin.getSubscriptionReason());
     }
 
     @LiberinMapping
@@ -122,8 +124,9 @@ public class RemotePostingReceptor extends LiberinReceptorBase {
     public void replyCommentAdded(ReplyCommentAddedLiberin liberin) {
         replyCommentInstants.added(liberin.getNodeName(), liberin.getPostingOwnerName(),
                 liberin.getPostingOwnerFullName(), liberin.getPostingOwnerGender(), liberin.getPostingOwnerAvatar(),
-                liberin.getPostingHeading(), liberin.getPostingId(), liberin.getCommentOwnerName(),
-                liberin.getCommentOwnerFullName(), liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(),
+                liberin.getPostingHeading(), liberin.getPostingSheriffs(), liberin.getPostingSheriffMarks(),
+                liberin.getPostingId(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
+                liberin.getCommentOwnerGender(), liberin.getCommentOwnerAvatar(), liberin.getCommentSheriffMarks(),
                 liberin.getCommentId(), liberin.getRepliedToHeading(), liberin.getRepliedToId());
     }
 

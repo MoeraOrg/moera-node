@@ -1,9 +1,11 @@
 package org.moera.node.instant;
 
+import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.data.Feed;
+import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
@@ -19,9 +21,10 @@ public class MentionCommentInstants extends InstantsCreator {
     private StoryRepository storyRepository;
 
     public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
-                      AvatarImage postingAvatar, String postingId, String postingHeading, String commentOwnerName,
-                      String commentOwnerFullName, String commentOwnerGender, AvatarImage commentOwnerAvatar,
-                      String commentId, String commentHeading) {
+                      AvatarImage postingAvatar, String postingId, String postingHeading, List<String> postingSheriffs,
+                      List<SheriffMark> postingSheriffMarks, String commentOwnerName, String commentOwnerFullName,
+                      String commentOwnerGender, AvatarImage commentOwnerAvatar, String commentId,
+                      String commentHeading, List<SheriffMark> commentSheriffMarks) {
         if (isBlocked(StoryType.MENTION_COMMENT, null, nodeName, postingId, commentOwnerName)) {
             return;
         }
@@ -47,7 +50,8 @@ public class MentionCommentInstants extends InstantsCreator {
         }
         story.setRemoteCommentId(commentId);
         story.setSummaryData(buildSummary(
-                story, postingOwnerGender, postingHeading, commentOwnerGender, commentHeading));
+                story, postingOwnerGender, postingHeading, postingSheriffs, postingSheriffMarks, commentOwnerGender,
+                commentHeading, commentSheriffMarks));
         updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
@@ -68,12 +72,14 @@ public class MentionCommentInstants extends InstantsCreator {
     }
 
     private StorySummaryData buildSummary(Story story, String postingOwnerGender, String postingHeading,
-                                          String commentOwnerGender, String commentHeading) {
+                                          List<String> postingSheriffs, List<SheriffMark> postingSheriffMarks,
+                                          String commentOwnerGender, String commentHeading,
+                                          List<SheriffMark> commentSheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                postingOwnerGender, postingHeading));
+                postingOwnerGender, postingHeading, postingSheriffs, postingSheriffMarks));
         summaryData.setComment(new StorySummaryEntry(story.getRemoteOwnerName(), story.getRemoteOwnerFullName(),
-                commentOwnerGender, commentHeading));
+                commentOwnerGender, commentHeading, null, commentSheriffMarks));
         return summaryData;
     }
 

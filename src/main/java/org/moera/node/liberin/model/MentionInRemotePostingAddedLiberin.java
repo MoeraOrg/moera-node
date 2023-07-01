@@ -1,7 +1,9 @@
 package org.moera.node.liberin.model;
 
+import java.util.List;
 import java.util.Map;
 
+import org.moera.node.data.SheriffMark;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
 
@@ -14,9 +16,12 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
     private AvatarImage ownerAvatar;
     private String id;
     private String heading;
+    private List<String> sheriffs;
+    private List<SheriffMark> sheriffMarks;
 
     public MentionInRemotePostingAddedLiberin(String nodeName, String ownerName, String ownerFullName,
-                                              String ownerGender, AvatarImage ownerAvatar, String id, String heading) {
+                                              String ownerGender, AvatarImage ownerAvatar, String id, String heading,
+                                              List<String> sheriffs, List<SheriffMark> sheriffMarks) {
         this.nodeName = nodeName;
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
@@ -24,6 +29,8 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
         this.ownerAvatar = ownerAvatar;
         this.id = id;
         this.heading = heading;
+        this.sheriffs = sheriffs;
+        this.sheriffMarks = sheriffMarks;
     }
 
     public String getNodeName() {
@@ -82,6 +89,22 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
         this.heading = heading;
     }
 
+    public List<String> getSheriffs() {
+        return sheriffs;
+    }
+
+    public void setSheriffs(List<String> sheriffs) {
+        this.sheriffs = sheriffs;
+    }
+
+    public List<SheriffMark> getSheriffMarks() {
+        return sheriffMarks;
+    }
+
+    public void setSheriffMarks(List<SheriffMark> sheriffMarks) {
+        this.sheriffMarks = sheriffMarks;
+    }
+
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
@@ -92,6 +115,8 @@ public class MentionInRemotePostingAddedLiberin extends Liberin {
         model.put("ownerAvatar", ownerAvatar);
         model.put("id", id);
         model.put("heading", heading);
+        model.put("sheriffs", sheriffs);
+        model.put("sheriffMarks", sheriffMarks);
     }
 
 }

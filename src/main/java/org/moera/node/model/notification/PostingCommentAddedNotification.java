@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.data.SheriffMark;
 import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
@@ -28,8 +29,17 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
     @Size(max = 255)
     private String postingHeading;
 
+    @Size(max = 4096)
+    private List<String> postingSheriffs;
+
+    @Size(max = 4096)
+    private List<SheriffMark> postingSheriffMarks;
+
     @Size(max = 255)
     private String commentHeading;
+
+    @Size(max = 4096)
+    private List<SheriffMark> commentSheriffMarks;
 
     @Size(max = 36)
     private String commentRepliedTo;
@@ -40,9 +50,11 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
 
     public PostingCommentAddedNotification(String postingOwnerName, String postingOwnerFullName,
                                            String postingOwnerGender, AvatarImage postingOwnerAvatar, UUID postingId,
-                                           String postingHeading, UUID commentId, String commentOwnerName,
-                                           String commentOwnerFullName, String commentOwnerGender,
-                                           AvatarImage commentOwnerAvatar, String commentHeading,
+                                           String postingHeading, List<String> postingSheriffs,
+                                           List<SheriffMark> postingSheriffMarks, UUID commentId,
+                                           String commentOwnerName, String commentOwnerFullName,
+                                           String commentOwnerGender, AvatarImage commentOwnerAvatar,
+                                           String commentHeading, List<SheriffMark> commentSheriffMarks,
                                            UUID commentRepliedTo) {
         super(NotificationType.POSTING_COMMENT_ADDED, postingId, commentId, commentOwnerName, commentOwnerFullName,
                 commentOwnerGender, commentOwnerAvatar);
@@ -51,7 +63,10 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
         this.postingOwnerGender = postingOwnerGender;
         this.postingOwnerAvatar = postingOwnerAvatar;
         this.postingHeading = postingHeading;
+        this.postingSheriffs = postingSheriffs;
+        this.postingSheriffMarks = postingSheriffMarks;
         this.commentHeading = commentHeading;
+        this.commentSheriffMarks = commentSheriffMarks;
         this.commentRepliedTo = Objects.toString(commentRepliedTo, null);
     }
 
@@ -95,12 +110,36 @@ public class PostingCommentAddedNotification extends PostingCommentNotification 
         this.postingHeading = postingHeading;
     }
 
+    public List<String> getPostingSheriffs() {
+        return postingSheriffs;
+    }
+
+    public void setPostingSheriffs(List<String> postingSheriffs) {
+        this.postingSheriffs = postingSheriffs;
+    }
+
+    public List<SheriffMark> getPostingSheriffMarks() {
+        return postingSheriffMarks;
+    }
+
+    public void setPostingSheriffMarks(List<SheriffMark> postingSheriffMarks) {
+        this.postingSheriffMarks = postingSheriffMarks;
+    }
+
     public String getCommentHeading() {
         return commentHeading;
     }
 
     public void setCommentHeading(String commentHeading) {
         this.commentHeading = commentHeading;
+    }
+
+    public List<SheriffMark> getCommentSheriffMarks() {
+        return commentSheriffMarks;
+    }
+
+    public void setCommentSheriffMarks(List<SheriffMark> commentSheriffMarks) {
+        this.commentSheriffMarks = commentSheriffMarks;
     }
 
     public String getCommentRepliedTo() {
