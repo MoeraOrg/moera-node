@@ -38,6 +38,9 @@ public class FeedOperations {
     private LiberinManager liberinManager;
 
     public static Optional<List<String>> getFeedSheriffs(Function<String, String> optionsGetter, String feedName) {
+        if (feedName == null) {
+            return Optional.empty();
+        }
         if (feedName.equals(Feed.TIMELINE)) {
             return SheriffUtil.deserializeSheriffs(optionsGetter.apply("sheriffs.timeline"));
         }
