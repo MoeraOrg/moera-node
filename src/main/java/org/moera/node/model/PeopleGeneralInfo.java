@@ -57,8 +57,8 @@ public class PeopleGeneralInfo {
         operations = new HashMap<>();
         putOperation(operations, "viewSubscribers", viewSubscribers, Principal.PUBLIC);
         putOperation(operations, "viewSubscriptions", viewSubscriptions, Principal.PUBLIC);
-        putOperation(operations, "viewFriends", viewSubscriptions, Principal.PUBLIC);
-        putOperation(operations, "viewFriendOfs", viewSubscriptions, Principal.PUBLIC);
+        putOperation(operations, "viewFriends", viewFriends, Principal.PUBLIC);
+        putOperation(operations, "viewFriendOfs", viewFriendOfs, Principal.PUBLIC);
         putOperation(operations, "viewBlocked", viewBlocked, Principal.PUBLIC);
         putOperation(operations, "viewBlockedBy", viewBlockedBy, Principal.ADMIN);
         putOperation(operations, "viewSubscribersTotal", viewSubscribersTotal, Principal.PUBLIC);
