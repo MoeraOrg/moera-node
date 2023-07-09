@@ -114,6 +114,8 @@ public class PostingReactionAddedNotification extends PostingReactionNotificatio
         super.logParameters(parameters);
         parameters.add(Pair.of("parentPostingNodeName", LogUtil.format(parentPostingNodeName)));
         parameters.add(Pair.of("parentPostingFullName", LogUtil.format(parentPostingFullName)));
+        parameters.add(Pair.of("parentHeading", LogUtil.format(parentHeading)));
+        parameters.add(Pair.of("postingHeading", LogUtil.format(postingHeading)));
         parameters.add(Pair.of("emoji", LogUtil.format(emoji)));
     }
 

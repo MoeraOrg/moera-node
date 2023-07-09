@@ -63,7 +63,7 @@ public class PostingReactionProcessor {
                         notification.getParentPostingGender(), notification.getParentPostingAvatar(),
                         notification.getPostingId(), notification.getParentPostingId(), notification.getParentMediaId(),
                         notification.getOwnerName(), notification.getOwnerFullName(), notification.getOwnerGender(),
-                        notification.getOwnerAvatar(), notification.getPostingHeading(), notification.isNegative(),
+                        notification.getOwnerAvatar(), notification.getParentHeading(), notification.isNegative(),
                         notification.getEmoji()));
     }
 
@@ -75,7 +75,7 @@ public class PostingReactionProcessor {
                         notification.getPostingId(), notification.getParentPostingId(),
                         notification.getParentCommentId(), notification.getParentMediaId(), notification.getOwnerName(),
                         notification.getOwnerFullName(), notification.getOwnerGender(), notification.getOwnerAvatar(),
-                        notification.getPostingHeading(), notification.isNegative(), notification.getEmoji()));
+                        notification.getParentHeading(), notification.isNegative(), notification.getEmoji()));
     }
 
     @NotificationMapping(NotificationType.POSTING_REACTION_DELETED)

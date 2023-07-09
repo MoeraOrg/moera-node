@@ -128,10 +128,10 @@ public class PostingMediaReactionInstants extends InstantsCreator {
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
-        List<Story> stories = story.getSubstories().stream()
+        List<Story> substories = story.getSubstories().stream()
                 .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
                 .collect(Collectors.toList());
-        if (stories.size() == 0) {
+        if (substories.size() == 0) {
             storyRepository.delete(story);
             if (!isNew) {
                 storyDeleted(story);
@@ -139,11 +139,11 @@ public class PostingMediaReactionInstants extends InstantsCreator {
             return;
         }
 
-        story.setSummaryData(buildAddedSummary(story, stories));
-        story.setRemoteOwnerName(stories.get(0).getRemoteOwnerName());
-        story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
-        story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
-        story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
+        story.setSummaryData(buildAddedSummary(story, substories));
+        story.setRemoteOwnerName(substories.get(0).getRemoteOwnerName());
+        story.setRemoteOwnerFullName(substories.get(0).getRemoteOwnerFullName());
+        story.setRemoteOwnerAvatarMediaFile(substories.get(0).getRemoteOwnerAvatarMediaFile());
+        story.setRemoteOwnerAvatarShape(substories.get(0).getRemoteOwnerAvatarShape());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);
@@ -153,17 +153,17 @@ public class PostingMediaReactionInstants extends InstantsCreator {
         storyAddedOrUpdated(story, isNew);
     }
 
-    private StorySummaryData buildAddedSummary(Story story, List<Story> stories) {
+    private StorySummaryData buildAddedSummary(Story story, List<Story> substories) {
         StorySummaryData summaryData = new StorySummaryData();
         List<StorySummaryReaction> reactions = new ArrayList<>();
-        for (int i = 0; i < 2 && i < stories.size(); i++) {
-            Story substory = stories.get(i);
+        for (int i = 0; i < 2 && i < substories.size(); i++) {
+            Story substory = substories.get(i);
             StorySummaryReaction reaction = substory.getSummaryData().getReaction();
             reactions.add(new StorySummaryReaction(substory.getRemoteOwnerName(), substory.getRemoteOwnerFullName(),
                     reaction.getOwnerGender(), reaction.getEmoji()));
         }
         summaryData.setReactions(reactions);
-        summaryData.setTotalReactions(stories.size());
+        summaryData.setTotalReactions(substories.size());
         summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
                 story.getSummaryData().getParentPosting().getOwnerGender(),
                 story.getSummaryData().getParentPosting().getHeading()));
