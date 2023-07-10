@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.api.NodeApiException;
 import org.moera.node.api.NodeApiNotFoundException;
 import org.moera.node.auth.principal.Principal;
@@ -143,7 +144,8 @@ public class Picker extends Task {
     }
 
     private void download(Pick pick) throws Throwable {
-        log.info("Downloading from node '{}', postingId = {}", remoteNodeName, pick.getRemotePostingId());
+        log.info("Downloading pick {} from node {}, postingId = {}",
+                LogUtil.format(pick.getId()), LogUtil.format(remoteNodeName), LogUtil.format(pick.getRemotePostingId()));
 
         List<Liberin> liberins = new ArrayList<>();
         List<Pick> picks = new ArrayList<>();

@@ -17,6 +17,7 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.WhoAmI;
+import org.moera.node.naming.NamingNotAvailableException;
 import org.moera.node.rest.notification.ProfileProcessor;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
@@ -110,14 +111,14 @@ public class SubscriptionTask extends Task {
             SubscriberInfo subscriberInfo =
                     nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
-        } catch (NodeApiException e) {
+        } catch (NodeApiException | NamingNotAvailableException e) {
             error(true, e);
             if (e instanceof NodeApiValidationException
                     && ((NodeApiValidationException) e).getErrorCode()
                             .equals("subscriberDescription.postingId.not-found")) {
                 subscriptionManager.subscriptionInvalid(subscription);
             } else {
-                subscriptionManager.failed(subscriptionId, subscription.getCreatedAt().toInstant());
+                subscriptionManager.failed(subscription);
             }
             return;
         }

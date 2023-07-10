@@ -3,6 +3,7 @@ package org.moera.node.subscriptions;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,6 +33,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 public class SubscriptionManager {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionManager.class);
+
+    private static final Duration MAX_RETRY_DELAY = Duration.ofDays(14);
 
     private boolean initialized = false;
     private final Map<UUID, SubscriptionTask> running = new HashMap<>();
@@ -73,7 +77,9 @@ public class SubscriptionManager {
 
     private void add(Subscription subscription) {
         SubscriptionTask task = null;
-        if (running.containsKey(subscription.getId()) || pending.containsKey(subscription.getId())) {
+        if (running.containsKey(subscription.getId())
+                || pending.containsKey(subscription.getId())
+                || subscription.getRetryAt().toInstant().isAfter(Instant.now().plus(1, ChronoUnit.HOURS))) {
             return;
         }
         if (subscription.getRetryAt() == null || subscription.getRetryAt().toInstant().isBefore(Instant.now())) {
@@ -129,22 +135,41 @@ public class SubscriptionManager {
         }
     }
 
-    void failed(UUID subscriptionId, Instant createdAt) {
+    void failed(Subscription subscription) {
         Instant retryAt = Instant.now();
+        boolean fatal;
         synchronized (lock) {
-            SubscriptionTask task = running.remove(subscriptionId);
-            Duration delay = Duration.between(createdAt, retryAt);
-            retryAt = retryAt.plus(delay);
-            pending.put(subscriptionId, new PendingSubscription(task.getSubscriptionId(), task.getNodeId(), retryAt));
+            SubscriptionTask task = running.remove(subscription.getId());
+            Duration delay = Duration.between(subscription.getCreatedAt().toInstant(), retryAt);
+            fatal = delay.compareTo(MAX_RETRY_DELAY) >= 0;
+            if (!fatal) {
+                retryAt = retryAt.plus(delay);
+                pending.put(subscription.getId(),
+                        new PendingSubscription(task.getSubscriptionId(), task.getNodeId(), retryAt));
+            }
         }
-        Timestamp retryAtTs = Timestamp.from(retryAt);
-        try {
-            inTransaction(() -> {
-                subscriptionRepository.updateRetryAtById(subscriptionId, retryAtTs);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error updating subscription retry timestamp", e);
+        if (!fatal) {
+            Timestamp retryAtTs = Timestamp.from(retryAt);
+            try {
+                inTransaction(() -> {
+                    subscriptionRepository.updateRetryAtById(subscription.getId(), retryAtTs);
+                    return null;
+                });
+            } catch (Throwable e) {
+                log.error("Error updating subscription retry timestamp", e);
+            }
+        } else {
+            log.info("Subscription {} cannot be established", subscription.getId());
+            try {
+                inTransaction(() -> {
+                    subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
+                    subscriptionOperations.deleteParents(subscription);
+                    // The subscription itself becomes a pending unused subscription and will be removed by trigger
+                    return null;
+                });
+            } catch (Throwable e) {
+                log.error("Error deleting hopeless subscription", e);
+            }
         }
     }
 
@@ -156,6 +181,7 @@ public class SubscriptionManager {
         }
         try {
             inTransaction(() -> {
+                subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
                 subscriptionOperations.deleteParents(subscription);
                 // The subscription itself becomes a pending unused subscription and will be removed by trigger
                 return null;

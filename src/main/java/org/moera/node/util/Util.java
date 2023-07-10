@@ -27,6 +27,10 @@ public class Util {
         return Timestamp.from(Instant.now());
     }
 
+    public static Timestamp farFuture() {
+        return Timestamp.from(Instant.now().plus(3650, ChronoUnit.DAYS));
+    }
+
     public static Long toEpochSecond(Timestamp timestamp) {
         return timestamp != null ? timestamp.getTime() / 1000 : null;
     }
