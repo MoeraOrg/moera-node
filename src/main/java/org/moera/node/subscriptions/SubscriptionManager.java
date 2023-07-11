@@ -79,7 +79,8 @@ public class SubscriptionManager {
         SubscriptionTask task = null;
         if (running.containsKey(subscription.getId())
                 || pending.containsKey(subscription.getId())
-                || subscription.getRetryAt().toInstant().isAfter(Instant.now().plus(1, ChronoUnit.HOURS))) {
+                || subscription.getRetryAt() != null
+                    && subscription.getRetryAt().toInstant().isAfter(Instant.now().plus(1, ChronoUnit.HOURS))) {
             return;
         }
         if (subscription.getRetryAt() == null || subscription.getRetryAt().toInstant().isBefore(Instant.now())) {
