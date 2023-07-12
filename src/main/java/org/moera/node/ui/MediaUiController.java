@@ -19,6 +19,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.operations.FeedOperations;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
@@ -43,6 +44,9 @@ public class MediaUiController {
 
     @Inject
     private MediaOperations mediaOperations;
+
+    @Inject
+    private FeedOperations feedOperations;
 
     @GetMapping("/public/{id}.{ext}")
     @MaxCache
@@ -70,6 +74,7 @@ public class MediaUiController {
                 .orElseThrow(PageNotFoundException::new);
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
         if (!requestContext.isPrincipal(viewPrincipal)
+                && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
                 && !(viewPrincipal.isAdmin()) && requestContext.isClient(requestContext.nodeName())) {
                 // The exception above is made to allow to authenticate with a carte as admin to view admin-only
                 // media. This allows to avoid passing admin tokens in parameters
@@ -88,6 +93,7 @@ public class MediaUiController {
             throw new PageNotFoundException();
         }
         if (!requestContext.isPrincipal(posting.getViewE())
+                && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), posting.getViewE())
                 && !(posting.getViewE().isAdmin()) && requestContext.isClient(requestContext.nodeName())) {
                 // See the comment above
             throw new PageNotFoundException();

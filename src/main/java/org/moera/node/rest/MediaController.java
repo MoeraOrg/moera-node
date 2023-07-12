@@ -9,11 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -36,8 +34,6 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
-import org.moera.node.data.Story;
-import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.RequestContext;
 import org.moera.node.media.InvalidImageException;
@@ -90,9 +86,6 @@ public class MediaController {
 
     @Inject
     private EntryRepository entryRepository;
-
-    @Inject
-    private StoryRepository storyRepository;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -245,19 +238,10 @@ public class MediaController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
         if (!requestContext.isPrincipal(viewPrincipal)
-                && !feedOperations.isSheriffAllowed(() -> getParentStories(id), viewPrincipal)) {
+                && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)) {
             throw new ObjectNotFoundFailure("media.not-found");
         }
         return mediaFileOwner;
-    }
-
-    private List<Story> getParentStories(UUID mediaFileOwnerId) {
-        Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwnerId);
-        return entries.stream()
-                .map(entry -> entry instanceof Comment ? entry.getParent().getId() : entry.getId())
-                .map(id -> storyRepository.findByEntryId(requestContext.nodeId(), id))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
     }
 
     @GetMapping("/public/{id}/info")

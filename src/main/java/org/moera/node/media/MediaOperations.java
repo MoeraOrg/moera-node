@@ -50,8 +50,10 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.config.Config;
+import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
+import org.moera.node.data.EntryRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -59,6 +61,8 @@ import org.moera.node.data.MediaFilePreview;
 import org.moera.node.data.MediaFilePreviewRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
+import org.moera.node.data.Story;
+import org.moera.node.data.StoryRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
 import org.moera.node.model.PostingFeatures;
@@ -105,6 +109,12 @@ public class MediaOperations {
 
     @Inject
     private EntryAttachmentRepository entryAttachmentRepository;
+
+    @Inject
+    private EntryRepository entryRepository;
+
+    @Inject
+    private StoryRepository storyRepository;
 
     @Inject
     private PlatformTransactionManager txManager;
@@ -510,6 +520,15 @@ public class MediaOperations {
             usedIds.add(id);
         }
         return attached;
+    }
+
+    public List<Story> getParentStories(UUID mediaFileOwnerId) {
+        Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwnerId);
+        return entries.stream()
+                .map(entry -> entry instanceof Comment ? entry.getParent().getId() : entry.getId())
+                .map(id -> storyRepository.findByEntryId(universalContext.nodeId(), id))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     @Scheduled(fixedDelayString = "PT6H")

@@ -3,6 +3,7 @@ package org.moera.node.friends;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,8 +83,7 @@ public class FriendCache {
             clientGroupsLock.lock(nodeClient);
             try {
                 groups = clientGroups.computeIfAbsent(nodeClient,
-                        nid -> friendRepository.findByNodeIdAndName(universalContext.nodeId(), clientName)
-                                .toArray(Friend[]::new));
+                        nid -> fetchClientGroups(clientName).toArray(Friend[]::new));
             } finally {
                 clientGroupsLock.unlock(nodeClient);
             }
@@ -91,6 +91,14 @@ public class FriendCache {
         updateUsage(nodeClient);
 
         return groups;
+    }
+
+    private List<Friend> fetchClientGroups(String clientName) {
+        if (Objects.equals(universalContext.nodeName(), clientName)) {
+            return friendRepository.findByNodeId(universalContext.nodeId());
+        } else {
+            return friendRepository.findByNodeIdAndName(universalContext.nodeId(), clientName);
+        }
     }
 
     private void updateUsage(Nodes nodeClient) {
