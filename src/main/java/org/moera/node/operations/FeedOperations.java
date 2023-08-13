@@ -64,6 +64,9 @@ public class FeedOperations {
     }
 
     public static List<String> getSheriffFeeds(Options options, String sheriffName) {
+        if (options == null) {
+            return Collections.emptyList();
+        }
         return getSheriffFeeds(options::getString, sheriffName);
     }
 
