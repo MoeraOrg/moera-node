@@ -885,6 +885,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         }
         posting.setReceiverCreatedAt(Util.toTimestamp(isOriginal() ? createdAt : receiverCreatedAt));
         posting.setReceiverEditedAt(Util.toTimestamp(isOriginal() ? editedAt : receiverEditedAt));
+        posting.setReceiverDeletedAt(null);
         posting.setAcceptedReactionsPositive(acceptedReactions.getPositive());
         posting.setAcceptedReactionsNegative(acceptedReactions.getNegative());
         posting.setTotalChildren(totalComments);
