@@ -93,6 +93,18 @@ public class MoeraUiController {
         return "redirect:/people/" + tab;
     }
 
+    @GetMapping("/complains")
+    @VirtualPage
+    public String complains(Model model) {
+        return openClient("Complaints", model);
+    }
+
+    @GetMapping("/complains/{id}")
+    @VirtualPage
+    public String complainsGroup(@PathVariable String id, Model model) {
+        return openClient("Complaints", model);
+    }
+
     private String openClient(String title, Model model) {
         model.addAttribute("pageTitle", titleBuilder.build(title));
         model.addAttribute("url", Util.ue(requestContext.getUrl()));

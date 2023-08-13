@@ -17,7 +17,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,9 +37,6 @@ public class CommentRevisionController {
 
     @Inject
     protected EntryRevisionRepository entryRevisionRepository;
-
-    @Inject
-    private ReactionTotalOperations reactionTotalOperations;
 
     @GetMapping
     @NoCache

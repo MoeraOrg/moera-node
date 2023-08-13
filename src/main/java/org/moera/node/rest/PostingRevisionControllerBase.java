@@ -23,7 +23,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.PostingOperations;
-import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -47,9 +46,6 @@ public abstract class PostingRevisionControllerBase {
 
     @Inject
     private PostingOperations postingOperations;
-
-    @Inject
-    private ReactionTotalOperations reactionTotalOperations;
 
     protected abstract Logger getLog();
 

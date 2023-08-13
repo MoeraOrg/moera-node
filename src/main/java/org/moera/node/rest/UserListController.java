@@ -92,16 +92,16 @@ public class UserListController {
         UserListSliceInfo sliceInfo;
         if (after == null) {
             before = before != null ? before : SafeInteger.MAX_VALUE;
-            sliceInfo = getGroupsBefore(listName, before, limit);
+            sliceInfo = getItemsBefore(listName, before, limit);
         } else {
-            sliceInfo = getGroupsAfter(listName, after, limit);
+            sliceInfo = getItemsAfter(listName, after, limit);
         }
         calcSliceTotals(sliceInfo);
 
         return sliceInfo;
     }
 
-    private UserListSliceInfo getGroupsBefore(String listName, long before, int limit) {
+    private UserListSliceInfo getItemsBefore(String listName, long before, int limit) {
         UserListSliceInfo sliceInfo = new UserListSliceInfo(listName);
         sliceInfo.setBefore(before);
         Page<UserListItem> page = findSlice(requestContext.nodeId(), listName, SafeInteger.MIN_VALUE, before,
@@ -115,7 +115,7 @@ public class UserListController {
         return sliceInfo;
     }
 
-    private UserListSliceInfo getGroupsAfter(String listName, long after, int limit) {
+    private UserListSliceInfo getItemsAfter(String listName, long after, int limit) {
         UserListSliceInfo sliceInfo = new UserListSliceInfo(listName);
         sliceInfo.setAfter(after);
         Page<UserListItem> page = findSlice(requestContext.nodeId(), listName, after, SafeInteger.MAX_VALUE,

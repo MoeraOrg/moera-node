@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.SheriffComplain;
 import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffComplainGroupRepository;
@@ -34,6 +35,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -78,6 +80,10 @@ public class SheriffComplainController {
                 LogUtil.format(sheriffComplainText.getPostingId()),
                 LogUtil.format(sheriffComplainText.getCommentId()),
                 LogUtil.format(SheriffOrderReason.toValue(sheriffComplainText.getReasonCode())));
+
+        if (ObjectUtils.isEmpty(requestContext.getClientName())) {
+            throw new AuthenticationException();
+        }
 
         SheriffComplain sheriffComplain = new SheriffComplain();
         sheriffComplain.setId(UUID.randomUUID());
