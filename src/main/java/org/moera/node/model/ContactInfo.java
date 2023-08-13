@@ -30,6 +30,7 @@ public class ContactInfo {
     private boolean hasBlock;
     private boolean hasBlockBy;
     private Map<String, Principal> operations;
+    private Map<String, Principal> ownerOperations;
     private Map<String, Principal> adminOperations;
 
     public ContactInfo() {
@@ -51,9 +52,21 @@ public class ContactInfo {
         hasBlockBy = contact.getBlockedByUserCount() > 0;
 
         operations = new HashMap<>();
-        putOperation(operations, "viewFeedSubscriber", contact.getViewFeedSubscriberPrincipal(), Principal.PUBLIC);
-        putOperation(operations, "viewFeedSubscription", contact.getViewFeedSubscriptionPrincipal(), Principal.PUBLIC);
-        putOperation(operations, "viewFriend", contact.getViewFriendPrincipal(), Principal.PUBLIC);
+        putOperation(
+                operations, "viewFeedSubscriber", contact.getViewFeedSubscriberCompound(options), Principal.PUBLIC);
+        putOperation(
+                operations, "viewFeedSubscription", contact.getViewFeedSubscriptionCompound(options), Principal.PUBLIC);
+        putOperation(operations, "viewFriend", contact.getViewFriendCompound(options), Principal.PUBLIC);
+        putOperation(operations, "viewFriendOf", FriendOf.getViewAllE(options), Principal.PUBLIC);
+        putOperation(operations, "viewBlock", BlockedUser.getViewAllE(options), Principal.PUBLIC);
+        putOperation(operations, "viewBlockBy", BlockedByUser.getViewAllE(options), Principal.PUBLIC);
+
+        ownerOperations = new HashMap<>();
+        putOperation(
+                ownerOperations, "viewFeedSubscriber", contact.getViewFeedSubscriberPrincipal(), Principal.PUBLIC);
+        putOperation(
+                ownerOperations, "viewFeedSubscription", contact.getViewFeedSubscriptionPrincipal(), Principal.PUBLIC);
+        putOperation(ownerOperations, "viewFriend", contact.getViewFriendPrincipal(), Principal.PUBLIC);
 
         adminOperations = new HashMap<>();
         putOperation(adminOperations, "viewFeedSubscriber", Subscriber.getViewAllE(options), Principal.PUBLIC);
@@ -192,6 +205,14 @@ public class ContactInfo {
 
     public void setOperations(Map<String, Principal> operations) {
         this.operations = operations;
+    }
+
+    public Map<String, Principal> getOwnerOperations() {
+        return ownerOperations;
+    }
+
+    public void setOwnerOperations(Map<String, Principal> ownerOperations) {
+        this.ownerOperations = ownerOperations;
     }
 
     public Map<String, Principal> getAdminOperations() {

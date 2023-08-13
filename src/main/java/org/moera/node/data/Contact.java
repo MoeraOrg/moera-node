@@ -12,6 +12,7 @@ import javax.validation.constraints.Size;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.model.AvatarImage;
+import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
 @Entity
@@ -253,8 +254,12 @@ public class Contact {
         this.viewFeedSubscriptionPrincipal = viewFeedSubscriptionPrincipal;
     }
 
-    public Principal getViewFeedSubscriptionE() {
-        return toAbsolute(getViewFeedSubscriptionPrincipal());
+    public Principal getViewFeedSubscriptionCompound(Options options) {
+        return UserSubscription.getViewAllE(options).withSubordinate(getViewFeedSubscriptionPrincipal());
+    }
+
+    public Principal getViewFeedSubscriptionE(Options options) {
+        return toAbsolute(getViewFeedSubscriptionCompound(options));
     }
 
     public Principal getViewFeedSubscriberPrincipal() {
@@ -265,8 +270,12 @@ public class Contact {
         this.viewFeedSubscriberPrincipal = viewFeedSubscriberPrincipal;
     }
 
-    public Principal getViewFeedSubscriber() {
-        return toAbsolute(getViewFeedSubscriberPrincipal());
+    public Principal getViewFeedSubscriberCompound(Options options) {
+        return Subscriber.getViewAllE(options).withSubordinate(getViewFeedSubscriberPrincipal());
+    }
+
+    public Principal getViewFeedSubscriberE(Options options) {
+        return toAbsolute(getViewFeedSubscriberCompound(options));
     }
 
     public Principal getViewFriendPrincipal() {
@@ -277,8 +286,12 @@ public class Contact {
         this.viewFriendPrincipal = viewFriendPrincipal;
     }
 
-    public Principal getViewFriendE() {
-        return toAbsolute(getViewFriendPrincipal());
+    public Principal getViewFriendCompound(Options options) {
+        return Friend.getViewAllE(options).withSubordinate(getViewFriendPrincipal());
+    }
+
+    public Principal getViewFriendE(Options options) {
+        return toAbsolute(getViewFriendCompound(options));
     }
 
     public void fill(ContactRelated related) {
