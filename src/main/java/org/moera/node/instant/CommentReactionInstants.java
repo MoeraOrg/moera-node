@@ -132,7 +132,7 @@ public class CommentReactionInstants extends InstantsCreator {
         List<Story> stories = story.getSubstories().stream()
                 .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
                 .collect(Collectors.toList());
-        if (stories.size() == 0) {
+        if (stories.isEmpty()) {
             storyRepository.delete(story);
             if (!isNew) {
                 storyDeleted(story);

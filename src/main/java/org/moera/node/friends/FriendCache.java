@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.node.data.Friend;
@@ -129,7 +128,7 @@ public class FriendCache {
     public void invalidateClientGroups(UUID nodeId) {
         List<Nodes> keys = clientGroups.keySet().stream()
                 .filter(key -> key.nodeId.equals(nodeId))
-                .collect(Collectors.toList());
+                .toList();
         keys.forEach(clientGroups::remove);
     }
 

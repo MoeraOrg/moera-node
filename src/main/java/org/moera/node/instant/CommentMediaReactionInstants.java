@@ -134,7 +134,7 @@ public class CommentMediaReactionInstants extends InstantsCreator {
         List<Story> substories = story.getSubstories().stream()
                 .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
                 .collect(Collectors.toList());
-        if (substories.size() == 0) {
+        if (substories.isEmpty()) {
             storyRepository.delete(story);
             if (!isNew) {
                 storyDeleted(story);

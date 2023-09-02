@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Option;
@@ -119,7 +118,7 @@ public class Options {
                 .map(update ->
                         new OptionValueChange(nodeId, update.getKey(), values.get(update.getKey()), update.getValue()))
                 .filter(OptionValueChange::isTangible)
-                .collect(Collectors.toList());
+                .toList();
 
         values.putAll(transaction.get());
         transaction.remove();
@@ -273,6 +272,7 @@ public class Options {
                 try {
                     consumer.consume(entry.getKey(), entry.getValue(), optionType);
                 } catch (Exception e) {
+                    // ignore
                 }
             }
         } finally {

@@ -82,14 +82,11 @@ public class MoeraHelperSource {
         if (ObjectUtils.isEmpty(gender)) {
             return "";
         }
-        switch (gender.toLowerCase()) {
-            case "male":
-                return "m.";
-            case "female":
-                return "f.";
-            default:
-                return gender;
-        }
+        return switch (gender.toLowerCase()) {
+            case "male" -> "m.";
+            case "female" -> "f.";
+            default -> gender;
+        };
     }
 
     public CharSequence avatar(Object avatar, Object size, Options options) {
@@ -137,7 +134,7 @@ public class MoeraHelperSource {
 
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");
-        if (totalsInfo.getPositive().size() > 0) {
+        if (!totalsInfo.getPositive().isEmpty()) {
             buf.append("<span class=\"positive\">");
             appendEmojis(buf, totalsInfo.getPositive());
             if (totalsVisible) {
@@ -145,7 +142,7 @@ public class MoeraHelperSource {
             }
             buf.append("</span>");
         }
-        if (totalsInfo.getNegative().size() > 0) {
+        if (!totalsInfo.getNegative().isEmpty()) {
             buf.append("<span class=\"negative\">");
             appendEmojis(buf, totalsInfo.getNegative());
             if (totalsVisible && negativeTotalsVisible) {

@@ -107,7 +107,7 @@ public class ContactsController {
         String haystack = !ObjectUtils.isEmpty(contact.getRemoteFullName())
                 ? contact.getRemoteFullName() + " " + contact.getRemoteNodeName()
                 : contact.getRemoteNodeName();
-        List<Matcher> matchers = regexes.stream().map(regex -> regex.matcher(haystack)).collect(Collectors.toList());
+        List<Matcher> matchers = regexes.stream().map(regex -> regex.matcher(haystack)).toList();
         boolean allFound = matchers.stream().allMatch(Matcher::find);
         if (!allFound) {
             return false;

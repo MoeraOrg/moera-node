@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.node.data.Subscription;
@@ -212,7 +211,7 @@ public class SubscriptionManager {
         synchronized (lock) {
             List<PendingSubscription> pendings = pending.values().stream()
                     .filter(ps -> ps.getRetryAt().isBefore(Instant.now()))
-                    .collect(Collectors.toList());
+                    .toList();
             for (PendingSubscription ps : pendings) {
                 pending.remove(ps.getId());
                 SubscriptionTask task = new SubscriptionTask(ps.getId());

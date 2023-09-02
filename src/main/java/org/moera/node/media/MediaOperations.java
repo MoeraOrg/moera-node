@@ -376,7 +376,7 @@ public class MediaOperations {
         for (Posting posting : mediaFileOwner.getPostings()) {
             List<Entry> list = entries.stream()
                     .filter(e -> Objects.equals(e.getReceiverName(), posting.getReceiverName()))
-                    .collect(Collectors.toList());
+                    .toList();
             list.forEach(e -> posting.setAcceptedReactionsPositive(e.getAcceptedReactionsPositive()));
             list.forEach(e -> posting.setAcceptedReactionsNegative(e.getAcceptedReactionsNegative()));
             Principal principal = list.stream()
@@ -538,9 +538,7 @@ public class MediaOperations {
             mediaFileOwnerRepository.deleteUnused(now);
             return null;
         });
-        List<Path> fileNames = mediaFileRepository.findUnused(now).stream()
-                .map(this::getPath)
-                .collect(Collectors.toList());
+        List<Path> fileNames = mediaFileRepository.findUnused(now).stream().map(this::getPath).toList();
         Transaction.execute(txManager, () -> {
             mediaFileRepository.deleteUnused(now);
             return null;

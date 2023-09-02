@@ -1,7 +1,6 @@
 package org.moera.node.rest.task;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.node.data.Pick;
@@ -48,7 +47,7 @@ public class RemoteFeedFetchTask extends Task {
                     .filter(t -> t.getStoryType() == StoryType.POSTING_ADDED)
                     .filter(t -> !t.isPinned())
                     .map(StoryInfo::getPosting)
-                    .collect(Collectors.toList());
+                    .toList();
             for (int i = list.size() - 1; i >= 0; i--) {
                 download(list.get(i));
             }

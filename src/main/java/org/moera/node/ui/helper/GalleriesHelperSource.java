@@ -180,7 +180,7 @@ public class GalleriesHelperSource {
                 .filter(ma -> !ma.isEmbedded())
                 .map(MediaAttachment::getMedia)
                 .collect(Collectors.toList());
-        if (images.size() == 0) {
+        if (images.isEmpty()) {
             return null;
         }
 
