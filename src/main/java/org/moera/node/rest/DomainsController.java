@@ -202,7 +202,7 @@ public class DomainsController {
             throw new OperationFailure("domains.registration-not-available");
         }
 
-        Slugify slugify = new Slugify().withTransliterator(true);
+        Slugify slugify = Slugify.builder().transliterator(true).build();
         String domainName = slugify.slugify(nodeName);
         if (ObjectUtils.isEmpty(domainName)) {
             domainName = "x";

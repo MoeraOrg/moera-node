@@ -22,6 +22,7 @@ import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.option.Options;
 import org.moera.node.util.SheriffUtil;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -35,6 +36,7 @@ public class FeedOperations {
     private UniversalContext universalContext;
 
     @Inject
+    @Lazy
     private LiberinManager liberinManager;
 
     public static Optional<List<String>> getFeedSheriffs(Function<String, String> optionsGetter, String feedName) {

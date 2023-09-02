@@ -27,6 +27,7 @@ import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -52,6 +53,7 @@ public class StoryOperations {
     private UserListOperations userListOperations;
 
     @Inject
+    @Lazy
     private LiberinManager liberinManager;
 
     @Inject

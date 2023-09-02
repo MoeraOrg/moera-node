@@ -10,6 +10,7 @@ import org.moera.node.global.NoClientId;
 import org.moera.node.global.RequestContext;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.subscriptions.SubscriptionManager;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -21,9 +22,11 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     private RequestContext requestContext;
 
     @Inject
+    @Lazy
     private LiberinManager liberinManager;
 
     @Inject
+    @Lazy
     private SubscriptionManager subscriptionManager;
 
     @Inject
@@ -33,6 +36,7 @@ public class AfterCommitLiberinsInterceptor implements HandlerInterceptor {
     private SubscribedCache subscribedCache;
 
     @Inject
+    @Lazy
     private BlockedUserOperations blockedUserOperations;
 
     @Override

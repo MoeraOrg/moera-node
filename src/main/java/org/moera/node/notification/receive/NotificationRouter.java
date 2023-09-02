@@ -37,7 +37,7 @@ public class NotificationRouter {
                     throw new DuplicationNotificationMapping(type, handlers.get(type).getMethod());
                 }
                 Class<?>[] params = method.getParameterTypes();
-                if (params.length > 1 || (params.length == 1 && params[0] != type.getStructure())) {
+                if (params.length > 1 || params.length == 1 && params[0] != type.getStructure()) {
                     throw new InvalidNotificationHandlerMethod(type);
                 }
                 handlers.put(type, new HandlerMethod(processor, method));

@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ParametrizedLock<K> {
 
-    private static class CountedLock {
+    private static final class CountedLock {
 
         public int counter;
         public Lock lock = new ReentrantLock();

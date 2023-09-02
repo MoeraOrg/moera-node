@@ -13,6 +13,7 @@ import org.moera.node.option.Options;
 import org.moera.node.subscriptions.SubscriptionManager;
 import org.moera.node.task.Task;
 import org.slf4j.MDC;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 
@@ -29,12 +30,15 @@ public class UniversalContext {
     private Domains domains;
 
     @Inject
+    @Lazy
     private LiberinManager liberinManager;
 
     @Inject
+    @Lazy
     private SubscriptionManager subscriptionManager;
 
     @Inject
+    @Lazy
     private SubscribedCache subscribedCache;
 
     @Inject

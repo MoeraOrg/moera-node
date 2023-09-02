@@ -53,7 +53,7 @@ public class NamingCache {
 
     }
 
-    private static class Record {
+    private static final class Record {
 
         public Instant accessed = Instant.now();
         public Instant deadline;
@@ -210,7 +210,7 @@ public class NamingCache {
         } finally {
             cacheLock.readLock().unlock();
         }
-        if (remove.size() > 0) {
+        if (!remove.isEmpty()) {
             cacheLock.writeLock().lock();
             try {
                 remove.forEach(key -> {

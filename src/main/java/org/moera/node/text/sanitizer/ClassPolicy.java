@@ -9,12 +9,12 @@ import org.springframework.util.ObjectUtils;
 
 public class ClassPolicy implements AttributePolicy {
 
-    private static class ClassMatcher {
+    private static final class ClassMatcher {
         String[] templates;
         Set<String> elements;
         boolean notInPreview;
 
-        ClassMatcher onElements(String ...elements) {
+        ClassMatcher onElements(String... elements) {
             this.elements = Set.of(elements);
             return this;
         }

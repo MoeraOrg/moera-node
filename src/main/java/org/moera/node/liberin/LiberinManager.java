@@ -64,7 +64,7 @@ public class LiberinManager implements Runnable {
         new Thread(this).start();
     }
 
-    public void send(Liberin ...liberins) {
+    public void send(Liberin... liberins) {
         try {
             for (Liberin liberin : liberins) {
                 queue.put(liberin);

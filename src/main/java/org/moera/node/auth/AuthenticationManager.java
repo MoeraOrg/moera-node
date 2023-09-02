@@ -30,6 +30,7 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
@@ -49,6 +50,7 @@ public class AuthenticationManager {
     private TokenRepository tokenRepository;
 
     @Inject
+    @Lazy
     private NamingCache namingCache;
 
     @Inject

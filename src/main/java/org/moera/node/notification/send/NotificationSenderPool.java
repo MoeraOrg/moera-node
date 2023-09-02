@@ -12,7 +12,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,6 +39,7 @@ import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -88,6 +88,7 @@ public class NotificationSenderPool {
     private ContactOperations contactOperations;
 
     @Inject
+    @Lazy
     private LiberinManager liberinManager;
 
     @Inject
@@ -129,8 +130,7 @@ public class NotificationSenderPool {
             sendSingle((SingleDirection) direction, notification);
             return;
         }
-        if (direction instanceof SubscribersDirection) {
-            SubscribersDirection sd = (SubscribersDirection) direction;
+        if (direction instanceof SubscribersDirection sd) {
 
             log.info("Sending to '{}' subscribers (feedName = {}, postingId = {}), if {}",
                     sd.getSubscriptionType().getValue(),
@@ -138,23 +138,14 @@ public class NotificationSenderPool {
                     LogUtil.format(sd.getPostingId()),
                     direction.getPrincipalFilter());
 
-            List<Subscriber> subscribers = Collections.emptyList();
-            switch (sd.getSubscriptionType()) {
-                case FEED:
-                case USER_LIST:
-                    subscribers = subscriberRepository.findAllByFeedName(
-                            sd.getNodeId(), sd.getSubscriptionType(), sd.getFeedName());
-                    break;
-                case POSTING:
-                case POSTING_COMMENTS:
-                    subscribers = subscriberRepository.findAllByEntryId(
-                            sd.getNodeId(), sd.getSubscriptionType(), sd.getPostingId());
-                    break;
-                case PROFILE:
-                    subscribers = subscriberRepository.findAllByType(
-                            sd.getNodeId(), sd.getSubscriptionType());
-                    break;
-            }
+            List<Subscriber> subscribers = switch (sd.getSubscriptionType()) {
+                case FEED, USER_LIST -> subscriberRepository.findAllByFeedName(
+                        sd.getNodeId(), sd.getSubscriptionType(), sd.getFeedName());
+                case POSTING, POSTING_COMMENTS -> subscriberRepository.findAllByEntryId(
+                        sd.getNodeId(), sd.getSubscriptionType(), sd.getPostingId());
+                case PROFILE -> subscriberRepository.findAllByType(
+                        sd.getNodeId(), sd.getSubscriptionType());
+            };
             for (Subscriber subscriber : subscribers) {
                 SingleDirection dir = new SingleDirection(subscriber.getNodeId(), subscriber.getRemoteNodeName(),
                         direction.getPrincipalFilter());
@@ -167,9 +158,7 @@ public class NotificationSenderPool {
             }
             return;
         }
-        if (direction instanceof FriendGroupDirection) {
-            FriendGroupDirection fd = (FriendGroupDirection) direction;
-
+        if (direction instanceof FriendGroupDirection fd) {
             log.info("Sending to members of '{}' friend group, if {}",
                     LogUtil.format(fd.getFriendGroupId()),
                     direction.getPrincipalFilter());
@@ -283,7 +272,7 @@ public class NotificationSenderPool {
     public void resumeSenders() {
         List<NotificationSender> resumed = pausedSenders.stream()
                 .filter(sender -> Instant.now().compareTo(sender.getPausedTill()) >= 0)
-                .collect(Collectors.toList());
+                .toList();
         resumed.forEach(sender -> {
             resumeSender(sender);
             taskExecutor.execute(sender);

@@ -28,9 +28,9 @@ public class MentionsExtractor {
         return extractor.getResult();
     }
 
-    private static class Extractor implements NodeFilter {
+    private static final class Extractor implements NodeFilter {
 
-        private Set<String> result = new HashSet<>();
+        private final Set<String> result = new HashSet<>();
 
         Set<String> getResult() {
             return result;

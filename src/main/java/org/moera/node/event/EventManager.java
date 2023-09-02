@@ -33,6 +33,7 @@ import org.moera.node.model.event.PingEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
@@ -63,6 +64,7 @@ public class EventManager {
     private Domains domains;
 
     @Inject
+    @Lazy
     private SimpMessagingTemplate messagingTemplate;
 
     @Inject
