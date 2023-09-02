@@ -19,6 +19,8 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.moera.commons.util.LogUtil;
+import org.moera.node.config.Config;
 import org.moera.node.data.OptionDefault;
 import org.moera.node.data.OptionDefaultRepository;
 import org.moera.node.model.PluginDescription;
@@ -54,6 +56,9 @@ public class OptionsMetadata {
     private ApplicationContext applicationContext;
 
     @Inject
+    private Config config;
+
+    @Inject
     private Plugins plugins;
 
     @Inject
@@ -75,6 +80,14 @@ public class OptionsMetadata {
                 new TypeReference<>() {
                 });
         descriptors = data.stream().collect(Collectors.toMap(OptionDescriptor::getName, Function.identity()));
+        for (var option : config.getOptions()) {
+            OptionDescriptor descriptor = descriptors.get(option.getName());
+            if (descriptor == null) {
+                log.warn("Unknown option referenced in the config file: {}", LogUtil.format(option.getName()));
+                continue;
+            }
+            descriptor.setDefaultValue(option.getDefaultValue());
+        }
         typeModifiers = data.stream()
                 .filter(desc -> desc.getModifiers() != null)
                 .filter(desc -> types.get(desc.getType()) != null)

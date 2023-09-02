@@ -6,4 +6,4 @@
 /target/
 /log/
 /media/
-application-dev*.yml
+/application-dev*.yml

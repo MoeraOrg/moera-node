@@ -1,0 +1,4 @@
+node:
+  options:
+    - name: naming.location
+      defaultValue: https://naming-dev.moera.org/moera-naming

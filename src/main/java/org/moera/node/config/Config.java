@@ -17,6 +17,7 @@ public class Config {
     private RegistrarConfig registrar;
     private MailConfig mail = new MailConfig();
     private MediaConfig media = new MediaConfig();
+    private OptionConfig[] options = new OptionConfig[0];
 
     public String getRootSecret() {
         return rootSecret;
@@ -101,6 +102,14 @@ public class Config {
 
     public void setMedia(MediaConfig media) {
         this.media = media;
+    }
+
+    public OptionConfig[] getOptions() {
+        return options;
+    }
+
+    public void setOptions(OptionConfig[] options) {
+        this.options = options;
     }
 
 }
