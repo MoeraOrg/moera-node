@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.data.RemotePostingVerification;
+import org.moera.node.data.VerificationStatus;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RemotePostingVerificationInfo {
@@ -10,7 +11,7 @@ public class RemotePostingVerificationInfo {
     private String nodeName;
     private String postingId;
     private String revisionId;
-    private String status;
+    private VerificationStatus status;
     private String errorCode;
     private String errorMessage;
 
@@ -22,7 +23,7 @@ public class RemotePostingVerificationInfo {
         nodeName = data.getNodeName();
         postingId = data.getPostingId();
         revisionId = data.getRevisionId();
-        status = data.getStatus().getValue();
+        status = data.getStatus();
         errorCode = data.getErrorCode();
         errorMessage = data.getErrorMessage();
     }
@@ -59,11 +60,11 @@ public class RemotePostingVerificationInfo {
         this.revisionId = revisionId;
     }
 
-    public String getStatus() {
+    public VerificationStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(VerificationStatus status) {
         this.status = status;
     }
 
