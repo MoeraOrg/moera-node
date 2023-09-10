@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.moera.node.auth.principal.AccessChecker;
@@ -12,7 +11,6 @@ public class PostingFeatures {
 
     private boolean post;
     private boolean subjectPresent;
-    private final List<Choice> sourceFormats = Choice.forEnum(SourceFormat.class);
     private int mediaMaxSize;
     private int imageRecommendedSize;
     private int imageRecommendedPixels;
@@ -42,8 +40,8 @@ public class PostingFeatures {
         this.subjectPresent = subjectPresent;
     }
 
-    public List<Choice> getSourceFormats() {
-        return sourceFormats;
+    public SourceFormat[] getSourceFormats() {
+        return SourceFormat.values();
     }
 
     public int getMediaMaxSize() {

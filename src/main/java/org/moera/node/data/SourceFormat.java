@@ -3,25 +3,13 @@ package org.moera.node.data;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum SourceFormat implements Choosable {
+public enum SourceFormat {
 
-    PLAIN_TEXT("No formatting"),
-    HTML("HTML"),
-    MARKDOWN("Markdown"),
-    APPLICATION("Application-specific");
+    PLAIN_TEXT,
+    HTML,
+    MARKDOWN,
+    APPLICATION;
 
-    private String title;
-
-    SourceFormat(String title) {
-        this.title = title;
-    }
-
-    @Override
-    public String getTitle() {
-        return title;
-    }
-
-    @Override
     @JsonValue
     public String getValue() {
         return name().toLowerCase().replace('_', '-');
