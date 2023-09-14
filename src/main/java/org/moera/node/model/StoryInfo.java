@@ -30,7 +30,9 @@ public class StoryInfo {
     private StorySummaryData summaryData;
     private String trackingId;
     private PostingInfo posting;
+    private String postingId;
     private CommentInfo comment;
+    private String commentId;
     private String remoteNodeName;
     private String remoteFullName;
     private String remotePostingId;
@@ -75,7 +77,7 @@ public class StoryInfo {
 
             case REACTION_ADDED_POSITIVE:
             case REACTION_ADDED_NEGATIVE:
-                info.setPosting(new PostingInfo(story.getEntry().getId()));
+                info.setPostingId(story.getEntry().getId().toString());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
                 if (story.getRemoteOwnerAvatarMediaFile() != null) {
@@ -142,7 +144,7 @@ public class StoryInfo {
                 break;
 
             case COMMENT_ADDED:
-                info.setPosting(new PostingInfo(story.getEntry().getId()));
+                info.setPostingId(story.getEntry().getId().toString());
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 info.setSummaryNodeName(story.getRemoteOwnerName());
                 info.setSummaryFullName(story.getRemoteOwnerFullName());
@@ -410,12 +412,28 @@ public class StoryInfo {
         this.posting = posting;
     }
 
+    public String getPostingId() {
+        return postingId;
+    }
+
+    public void setPostingId(String postingId) {
+        this.postingId = postingId;
+    }
+
     public CommentInfo getComment() {
         return comment;
     }
 
     public void setComment(CommentInfo comment) {
         this.comment = comment;
+    }
+
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
     }
 
     public String getRemoteNodeName() {

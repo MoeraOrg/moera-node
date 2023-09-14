@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
+import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
@@ -66,7 +67,8 @@ public class StoryController {
             throw new ObjectNotFoundFailure("story.not-found");
         }
 
-        return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
+        return StoryInfo.build(story, requestContext.isAdmin(),
+                t -> new PostingInfo((Posting) t.getEntry(), requestContext));
     }
 
     @PutMapping("/{id}")
@@ -107,7 +109,8 @@ public class StoryController {
 
         requestContext.send(new StoryUpdatedLiberin(story));
 
-        return StoryInfo.build(story, requestContext.isAdmin(), t -> new PostingInfo(t.getEntry().getId()));
+        return StoryInfo.build(story, requestContext.isAdmin(),
+                t -> new PostingInfo((Posting) t.getEntry(), requestContext));
     }
 
 }

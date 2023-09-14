@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -79,10 +78,6 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     private ReactionTotalsInfo reactions;
 
     public CommentInfo() {
-    }
-
-    public CommentInfo(UUID id) {
-        this.id = id.toString();
     }
 
     public CommentInfo(Comment comment, AccessChecker accessChecker) {

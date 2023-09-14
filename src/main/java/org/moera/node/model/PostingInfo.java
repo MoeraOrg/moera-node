@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -105,10 +104,6 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     private Integer totalComments;
 
     public PostingInfo() {
-    }
-
-    public PostingInfo(UUID id) {
-        this.id = id.toString();
     }
 
     public PostingInfo(Posting posting, AccessChecker accessChecker) {
