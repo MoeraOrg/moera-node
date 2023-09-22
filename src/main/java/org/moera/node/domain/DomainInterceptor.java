@@ -14,7 +14,10 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
 import org.slf4j.MDC;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
@@ -65,7 +68,7 @@ public class DomainInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        if (config.isRegistrarEnabled()) {
+        if (acceptsHtml(request) && config.isRegistrarEnabled()) {
             String hostname = host.substring(0, host.length() - config.getRegistrar().getDomain().length() - 1);
             response.sendRedirect(String.format("%s/registrar?host=%s",
                     UriUtil.siteUrl(config.getRegistrar().getHost(), uriComponents.getPort()), Util.ue(hostname)));
@@ -73,6 +76,14 @@ public class DomainInterceptor implements HandlerInterceptor {
         }
 
         throw new PageNotFoundException();
+    }
+
+    private boolean acceptsHtml(HttpServletRequest request) {
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        if (ObjectUtils.isEmpty(accept)) {
+            return true;
+        }
+        return MediaType.parseMediaTypes(accept).stream().anyMatch(mt -> mt.includes(MediaType.TEXT_HTML));
     }
 
 }
