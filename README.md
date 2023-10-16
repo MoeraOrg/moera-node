@@ -1,29 +1,26 @@
 # Moera Node
 
-Live network: https://web.moera.org
+## Resources
 
-Read more about Moera at https://moera.org
+* Live network: https://web.moera.org
+* Read more about Moera at https://moera.org
+* Learn more about Moera nodes: http://moera.org/overview/node.html
+* Bugs and feature requests: https://github.com/MoeraOrg/moera-issues/issues
+* How to set up a complete Moera Development Environment:
+http://moera.org/development/development-environment.html
 
-Learn more about Moera nodes: http://moera.org/overview/node.html
+## Installation instructions
 
-Bugs and feature requests: https://github.com/MoeraOrg/moera-issues/issues
-
-How to setup a complete Moera Development Environment:
-http://moera.org/development/setup/index.html
-
-Installation instructions:
-
-1. As prerequisites you need to have Java 11+ and PostgreSQL 9.6+
-   installed. In all major Linux distributions you can install them from
+1. As prerequisites, you need to have Java 17+ and PostgreSQL 9.6+
+   installed. In all major Linux distributions, you can install them from
    the main package repository.
 2. Create a PostgreSQL user `<username>` with password `<password>` and
-   an empty database `<dbname>` owned by this user (see detailed
-   instructions here:
-   http://moera.org/development/setup/create-db.html).
+   an empty database `<dbname>` owned by this user
+   (see [detailed instructions][2]).
 3. Create a directory `<media>`, where the server will keep media files.
 4. Go to the source directory.
-5. Create `src/main/resources/application-dev.yml` with the following
-   content:
+5. Create `application-dev.yml` file with the following content
+   (see [details about configuration][3]):
    
    ```yaml
    spring:
@@ -40,7 +37,7 @@ Installation instructions:
        path: <media>
    ```
 
-   * `<secret>` must be a long random string of letters and digits
+   `<secret>` must be a long random string of letters and digits
      without spaces.
 
 6. By default, the server runs on port 8081. If you want it to run on a
@@ -55,3 +52,5 @@ Installation instructions:
    correctly in node settings.
 
 [1]: https://github.com/MoeraOrg/moera-naming
+[2]: https://moera.org/administration/installation/create-db.html
+[3]: https://moera.org/administration/installation/config.html
