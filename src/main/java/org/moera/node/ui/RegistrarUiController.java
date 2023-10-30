@@ -98,7 +98,6 @@ public class RegistrarUiController {
             throw new PageNotFoundException();
         }
 
-        model.addAttribute("browserExtension", requestContext.isBrowserExtension());
         int port = UriUtil.createBuilderFromRequest(request).build().getPort();
         model.addAttribute("siteUrl", UriUtil.siteUrl(host, port));
 

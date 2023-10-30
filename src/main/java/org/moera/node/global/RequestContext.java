@@ -20,10 +20,6 @@ public interface RequestContext extends AccessChecker {
 
     boolean isUndefinedDomain();
 
-    boolean isBrowserExtension();
-
-    void setBrowserExtension(boolean browserExtension);
-
     boolean isRootAdmin();
 
     void setRootAdmin(boolean rootAdmin);

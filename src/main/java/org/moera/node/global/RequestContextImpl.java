@@ -27,7 +27,6 @@ import org.springframework.web.context.annotation.RequestScope;
 public class RequestContextImpl implements RequestContext {
 
     private boolean registrar;
-    private boolean browserExtension;
     private boolean rootAdmin;
     private boolean admin;
     private boolean possibleSheriff;
@@ -74,16 +73,6 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public boolean isUndefinedDomain() {
         return options == null;
-    }
-
-    @Override
-    public boolean isBrowserExtension() {
-        return browserExtension;
-    }
-
-    @Override
-    public void setBrowserExtension(boolean browserExtension) {
-        this.browserExtension = browserExtension;
     }
 
     @Override
@@ -275,7 +264,6 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public RequestContext getPublic() {
         RequestContextImpl context = new RequestContextImpl();
-        context.browserExtension = false;
         context.admin = false;
         context.options = options;
         context.siteUrl = siteUrl;

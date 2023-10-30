@@ -15,8 +15,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class CacheControlInterceptor implements HandlerInterceptor {
 
-    private static final String X_ACCEPT_MOERA = "X-Accept-Moera";
-
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 
@@ -30,10 +28,7 @@ public class CacheControlInterceptor implements HandlerInterceptor {
                     || AnnotatedElementUtils.hasAnnotation(methodType, MaxCache.class)) {
                 response.addHeader(HttpHeaders.CACHE_CONTROL,
                         CacheControl.maxAge(3650, TimeUnit.DAYS).getHeaderValue());
-            } else if (request.getHeader(X_ACCEPT_MOERA) != null) {
-                response.addHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
             }
-            response.addHeader(HttpHeaders.VARY, X_ACCEPT_MOERA);
         } else {
             if (AnnotatedElementUtils.hasAnnotation(controllerType, NoCache.class)
                 || AnnotatedElementUtils.hasAnnotation(methodType, NoCache.class)) {

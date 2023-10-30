@@ -1,8 +1,6 @@
 package org.moera.node.global;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,13 +33,6 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
         }
         VirtualPageHeader.put(response, virtualPage.value());
 
-        if (requestContext.isBrowserExtension()) {
-            response.setContentType("text/plain; charset=utf-8");
-            try (Writer outputStream = new OutputStreamWriter(response.getOutputStream())) {
-                outputStream.write("Moera client is loading...");
-            }
-            return false;
-        }
         if (isAutoClient()) {
             response.sendRedirect(WebClient.URL + "?href=" + Util.ue(requestContext.getUrl()));
             return false;

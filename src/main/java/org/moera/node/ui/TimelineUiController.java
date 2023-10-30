@@ -116,10 +116,6 @@ public class TimelineUiController {
         }
         VirtualPageHeader.put(response, builder.build().toUriString());
 
-        if (requestContext.isBrowserExtension()) {
-            return null;
-        }
-
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null || !posting.isMessage() || posting.getParentMedia() != null
                 || !posting.getViewCompound().isPublic()) {
