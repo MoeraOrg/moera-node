@@ -31,7 +31,7 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
         if (virtualPage == null) {
             return true;
         }
-        VirtualPageHeader.put(response, virtualPage.value());
+        VirtualPageHeader.put(response, requestContext.nodeName(), virtualPage.value());
 
         if (isAutoClient()) {
             response.sendRedirect(WebClient.URL + "?href=" + Util.ue(requestContext.getUrl()));

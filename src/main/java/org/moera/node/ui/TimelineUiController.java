@@ -114,7 +114,7 @@ public class TimelineUiController {
         if (mediaId != null) {
             builder = builder.queryParam("media", mediaId);
         }
-        VirtualPageHeader.put(response, builder.build().toUriString());
+        VirtualPageHeader.put(response, requestContext.nodeName(), builder.build().toUriString());
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null || !posting.isMessage() || posting.getParentMedia() != null
