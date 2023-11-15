@@ -25,6 +25,7 @@ import org.moera.node.push.PushService;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,7 +74,6 @@ public class StoryController {
 
     @PutMapping("/{id}")
     @Admin
-    @Transactional
     public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) throws Throwable {
         log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
@@ -82,19 +82,23 @@ public class StoryController {
                 LogUtil.format(storyAttributes.getViewed()),
                 LogUtil.format(storyAttributes.getRead()));
 
-        Story story = Transaction.execute(txManager, () -> {
-            Story currentStory = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+        Pair<Story, StoryInfo> info = Transaction.execute(txManager, () -> {
+            Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                     .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-            if (currentStory.getEntry() != null && !requestContext.isPrincipal(currentStory.getViewPrincipalFilter())) {
+            if (story.getEntry() != null && !requestContext.isPrincipal(story.getViewPrincipalFilter())) {
                 throw new ObjectNotFoundFailure("story.not-found");
             }
-            storyAttributes.toStory(currentStory);
+            storyAttributes.toStory(story);
             if (storyAttributes.getFeedName() != null
                     || storyAttributes.getPublishAt() != null
                     || storyAttributes.getPinned() != null) {
-                storyOperations.updateMoment(currentStory, requestContext.nodeId());
+                storyOperations.updateMoment(story, requestContext.nodeId());
             }
-            return currentStory;
+
+            StoryInfo storyInfo = StoryInfo.build(story, requestContext.isAdmin(),
+                    t -> new PostingInfo((Posting) t.getEntry(), requestContext));
+
+            return Pair.of(story, storyInfo);
         });
 
         if (storyAttributes.getViewed() != null) {
@@ -102,15 +106,14 @@ public class StoryController {
             if (storyAttributes.getViewed()) {
                 content = PushContent.storyDeleted(id);
             } else {
-                content = PushContent.storyAdded(story);
+                content = PushContent.storyAdded(info.getFirst());
             }
             pushService.send(requestContext.nodeId(), content);
         }
 
-        requestContext.send(new StoryUpdatedLiberin(story));
+        requestContext.send(new StoryUpdatedLiberin(info.getFirst()));
 
-        return StoryInfo.build(story, requestContext.isAdmin(),
-                t -> new PostingInfo((Posting) t.getEntry(), requestContext));
+        return info.getSecond();
     }
 
 }
