@@ -25,7 +25,8 @@ import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriptionInfo;
 import org.moera.node.naming.NodeName;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @UiController
 public class PeopleUiController {
@@ -54,12 +55,13 @@ public class PeopleUiController {
     @Inject
     private BlockedByUserRepository blockedByUserRepository;
 
-    @GetMapping("/people")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people")
+    @VirtualPage
     public String people() {
         return "redirect:/people/subscribers";
     }
 
-    @GetMapping("/people/subscribers")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscribers")
     @VirtualPage
     @Transactional
     public String subscribers(Model model) {
@@ -89,7 +91,7 @@ public class PeopleUiController {
         return "subscribers";
     }
 
-    @GetMapping("/people/subscriptions")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscriptions")
     @VirtualPage
     @Transactional
     public String subscriptions(Model model) {

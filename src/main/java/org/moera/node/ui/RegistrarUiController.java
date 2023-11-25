@@ -9,7 +9,6 @@ import javax.transaction.Transactional;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.PageNotFoundException;
-import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.registrar.RegistrarHost;
 import org.moera.node.util.UriUtil;
@@ -31,9 +30,6 @@ public class RegistrarUiController {
 
     @Inject
     private Domains domains;
-
-    @Inject
-    private RequestContext requestContext;
 
     @GetMapping("/registrar")
     public String index(@RequestParam(required = false) String host, @RequestParam(required = false) String error,

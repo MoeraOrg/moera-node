@@ -10,6 +10,8 @@ import org.moera.node.model.ProfileInfo;
 import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @UiController
@@ -21,13 +23,13 @@ public class IndexUiController {
     @Inject
     private TitleBuilder titleBuilder;
 
-    @GetMapping("/")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/")
     @VirtualPage
     public String index(Model model) {
         return !requestContext.isRegistrar() ? "redirect:/timeline" : "redirect:/registrar";
     }
 
-    @GetMapping("/profile")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/profile")
     @VirtualPage
     public String profile(Model model, HttpServletResponse response) {
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));

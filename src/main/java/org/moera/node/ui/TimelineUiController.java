@@ -36,8 +36,9 @@ import org.moera.node.operations.TimelinePublicPageOperations;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -68,7 +69,7 @@ public class TimelineUiController {
     @Inject
     private CommentPublicPageOperations commentPublicPageOperations;
 
-    @GetMapping("/timeline")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
     @VirtualPage
     @Transactional
     public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
@@ -100,7 +101,7 @@ public class TimelineUiController {
         return "timeline";
     }
 
-    @GetMapping("/post/{id}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}")
     @Transactional
     public String posting(@PathVariable UUID id, @RequestParam(required = false) Long before,
                           @RequestParam(name = "comment", required = false) UUID commentId,

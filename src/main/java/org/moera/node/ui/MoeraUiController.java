@@ -8,9 +8,9 @@ import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.util.Util;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -24,19 +24,19 @@ public class MoeraUiController {
     @Inject
     private TitleBuilder titleBuilder;
 
-    @GetMapping
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD})
     @VirtualPage
     public String index() {
         return "redirect:/";
     }
 
-    @GetMapping("/timeline")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
     @VirtualPage
     public String timeline(@RequestParam(required = false) Long before) {
         return before == null ? "redirect:/timeline" : String.format("redirect:/timeline?before=%d", before);
     }
 
-    @GetMapping("/post/{id}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}")
     @VirtualPage
     public String post(@PathVariable String id,
                        @RequestParam(name = "comment", required = false) UUID commentId,
@@ -51,55 +51,55 @@ public class MoeraUiController {
         return builder.build().toUriString();
     }
 
-    @GetMapping("/compose")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/compose")
     @VirtualPage
     public String compose(Model model) {
         return openClient("New Post", model);
     }
 
-    @GetMapping("/profile")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/profile")
     @VirtualPage
     public String profile() {
         return "redirect:/profile";
     }
 
-    @GetMapping("/settings")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/settings")
     @VirtualPage
     public String settings(Model model) {
         return openClient("Settings", model);
     }
 
-    @GetMapping("/settings/{tab}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/settings/{tab}")
     @VirtualPage
     public String settingsTab(@PathVariable String tab, Model model) {
         return openClient("Settings", model);
     }
 
-    @GetMapping("/news")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/news")
     @VirtualPage
     public String news(Model model) {
         return openClient("News", model);
     }
 
-    @GetMapping("/people")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people")
     @VirtualPage
     public String people() {
         return "redirect:/people/subscribers";
     }
 
-    @GetMapping("/people/{tab}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/{tab}")
     @VirtualPage
     public String peopleTab(@PathVariable String tab) {
         return "redirect:/people/" + tab;
     }
 
-    @GetMapping("/complains")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains")
     @VirtualPage
     public String complains(Model model) {
         return openClient("Complaints", model);
     }
 
-    @GetMapping("/complains/{id}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains/{id}")
     @VirtualPage
     public String complainsGroup(@PathVariable String id, Model model) {
         return openClient("Complaints", model);
