@@ -261,7 +261,6 @@ public class EventManager {
     private void pingAll() {
         Set<UUID> nodeIds = subscribers.values().stream()
                 .filter(EventSubscriber::isSubscribed)
-                .filter(EventSubscriber::isAdmin)
                 .map(EventSubscriber::getNodeId)
                 .collect(Collectors.toSet());
         nodeIds.forEach(nodeId -> send(nodeId, new PingEvent()));
