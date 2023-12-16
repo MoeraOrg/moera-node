@@ -33,6 +33,10 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
         }
         VirtualPageHeader.put(response, requestContext.nodeName(), virtualPage.value());
 
+        if (request.getHeader("X-Accept-Moera") != null) {
+            // No redirect and no content, because a Moera client is making this request
+            return false;
+        }
         if (isAutoClient()) {
             response.sendRedirect(WebClient.URL + "?href=" + Util.ue(requestContext.getUrl()));
             return false;
@@ -54,15 +58,10 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
         if (!redirectToClient) {
             return false;
         }
-        switch (requestContext.getUserAgent()) {
-            case FIREFOX:
-            case CHROME:
-            case YANDEX:
-            case BRAVE:
-                return true;
-            default:
-                return false;
-        }
+        return switch (requestContext.getUserAgent()) {
+            case FIREFOX, CHROME, YANDEX, BRAVE -> true;
+            default -> false;
+        };
     }
 
 }
