@@ -69,12 +69,12 @@ class MentionsTest {
     void weirdMentionInASentence() {
         String expectedResult = "<p>very " +
                 "<a " +
-                "href=\"/moera/gotoname?name=-%3D%21%21.%3F%3Fweird**UsErNamEE%2B--_0\" " +
-                "data-nodename=\"-=!!.??weird**UsErNamEE+--_0\">" +
-                "@-=!!.??weird**UsErNamEE+--" +
+                "href=\"/moera/gotoname?name=-%21%21.weird**UsErNamEE--_0\" " +
+                "data-nodename=\"-!!.weird**UsErNamEE--_0\">" +
+                "@-!!.weird**UsErNamEE--" +
                 "</a>" +
                 " indeed</p>\n";
-        assertRendering("very @-=!!.??weird**UsErNamEE+-- indeed", expectedResult);
+        assertRendering("very @-!!.weird**UsErNamEE-- indeed", expectedResult);
     }
 
     @Test
