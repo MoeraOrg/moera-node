@@ -33,7 +33,6 @@ public class StoryEvent extends Event {
     private AvatarImage summaryAvatar;
     private String summary;
     private StorySummaryData summaryData;
-    private String trackingId;
     private String remoteNodeName;
     private String remoteFullName;
     private String remotePostingId;
@@ -58,7 +57,6 @@ public class StoryEvent extends Event {
             viewed = story.isViewed();
             read = story.isRead();
             satisfied = story.isSatisfied();
-            trackingId = story.getTrackingId().toString();
         }
         remoteNodeName = story.getRemoteNodeName();
         remoteFullName = story.getRemoteFullName();
@@ -197,14 +195,6 @@ public class StoryEvent extends Event {
         this.summaryData = summaryData;
     }
 
-    public String getTrackingId() {
-        return trackingId;
-    }
-
-    public void setTrackingId(String trackingId) {
-        this.trackingId = trackingId;
-    }
-
     public String getRemoteNodeName() {
         return remoteNodeName;
     }
@@ -257,7 +247,6 @@ public class StoryEvent extends Event {
         parameters.add(Pair.of("read", LogUtil.format(read)));
         parameters.add(Pair.of("satisfied", LogUtil.format(satisfied)));
         parameters.add(Pair.of("summary", LogUtil.format(summary)));
-        parameters.add(Pair.of("trackingId", LogUtil.format(trackingId)));
         parameters.add(Pair.of("remoteNodeName", LogUtil.format(remoteNodeName)));
         parameters.add(Pair.of("remotePostingId", LogUtil.format(remotePostingId)));
         parameters.add(Pair.of("remoteCommentId", LogUtil.format(remoteCommentId)));

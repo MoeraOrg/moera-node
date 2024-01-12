@@ -116,9 +116,6 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     @Query("select min(s.createdAt) from Story s where s.nodeId = ?1 and s.feedName = ?2")
     Timestamp findFirstCreatedAt(UUID nodeId, String feedName);
 
-    @Query("select s from Story s where s.nodeId = ?1 and s.trackingId = ?2")
-    Optional<Story> findByTrackingId(UUID nodeId, UUID trackingId);
-
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
             + " and s.remoteNodeName = ?4 order by s.moment desc")
     List<Story> findByRemoteNodeName(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName);

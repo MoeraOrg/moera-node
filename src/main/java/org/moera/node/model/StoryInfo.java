@@ -28,7 +28,6 @@ public class StoryInfo {
     private AvatarImage summaryAvatar;
     private String summary;
     private StorySummaryData summaryData;
-    private String trackingId;
     private PostingInfo posting;
     private String postingId;
     private CommentInfo comment;
@@ -55,7 +54,6 @@ public class StoryInfo {
             viewed = story.isViewed();
             read = story.isRead();
             satisfied = story.isSatisfied();
-            trackingId = story.getTrackingId().toString();
         }
         if (story.getSummary().startsWith("{")) {
             summaryData = story.getSummaryData();
@@ -394,14 +392,6 @@ public class StoryInfo {
 
     public void setSummaryData(StorySummaryData summaryData) {
         this.summaryData = summaryData;
-    }
-
-    public String getTrackingId() {
-        return trackingId;
-    }
-
-    public void setTrackingId(String trackingId) {
-        this.trackingId = trackingId;
     }
 
     public PostingInfo getPosting() {

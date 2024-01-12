@@ -70,9 +70,6 @@ public class Story {
     @NotNull
     private String summary = "";
 
-    @NotNull
-    private UUID trackingId;
-
     @Size(max = 63)
     private String remoteNodeName;
 
@@ -140,7 +137,6 @@ public class Story {
         this.id = id;
         this.nodeId = nodeId;
         this.storyType = storyType;
-        this.trackingId = UUID.randomUUID();
     }
 
     public UUID getId() {
@@ -264,14 +260,6 @@ public class Story {
         } catch (JsonProcessingException e) {
             log.error("Cannot encode story summary data: {}", summaryData);
         }
-    }
-
-    public UUID getTrackingId() {
-        return trackingId;
-    }
-
-    public void setTrackingId(UUID trackingId) {
-        this.trackingId = trackingId;
     }
 
     public String getRemoteNodeName() {
