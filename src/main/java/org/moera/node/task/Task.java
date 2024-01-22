@@ -7,6 +7,8 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import javax.inject.Inject;
 
+import org.moera.naming.rpc.NodeName;
+import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.api.NodeApi;
 import org.moera.node.auth.AuthCategory;
@@ -14,8 +16,6 @@ import org.moera.node.data.Avatar;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.naming.NamingClient;
-import org.moera.node.naming.NodeName;
-import org.moera.node.naming.RegisteredName;
 import org.moera.node.option.Options;
 import org.moera.node.util.Carte;
 import org.moera.node.util.Transaction;

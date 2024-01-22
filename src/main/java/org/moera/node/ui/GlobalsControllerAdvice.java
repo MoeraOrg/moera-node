@@ -2,12 +2,12 @@ package org.moera.node.ui;
 
 import javax.inject.Inject;
 
+import org.moera.naming.rpc.NodeName;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.WebClient;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.NodeNameInfo;
-import org.moera.node.naming.NodeName;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;

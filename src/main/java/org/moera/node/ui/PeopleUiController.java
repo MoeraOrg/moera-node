@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.naming.rpc.NodeName;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.FriendOfRepository;
@@ -23,7 +24,6 @@ import org.moera.node.global.VirtualPage;
 import org.moera.node.model.PeopleGeneralInfo;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriptionInfo;
-import org.moera.node.naming.NodeName;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

@@ -8,6 +8,8 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
+import org.moera.naming.rpc.NodeName;
+import org.moera.naming.rpc.RegisteredName;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
@@ -18,8 +20,6 @@ import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsInfo;
 import org.moera.node.naming.NamingCache;
-import org.moera.node.naming.NodeName;
-import org.moera.node.naming.RegisteredName;
 import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;

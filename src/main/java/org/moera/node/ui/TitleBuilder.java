@@ -2,8 +2,8 @@ package org.moera.node.ui;
 
 import javax.inject.Inject;
 
+import org.moera.naming.rpc.NodeName;
 import org.moera.node.global.RequestContext;
-import org.moera.node.naming.NodeName;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -30,7 +30,7 @@ public class TitleBuilder {
                 buf.append(' ');
             }
         }
-        if (buf.length() > 0) {
+        if (!buf.isEmpty()) {
             buf.append("| ");
         }
         buf.append("Moera");

@@ -21,6 +21,7 @@ import org.moera.naming.rpc.NamingService;
 import org.moera.naming.rpc.OperationStatus;
 import org.moera.naming.rpc.OperationStatusInfo;
 import org.moera.naming.rpc.PutCallFingerprint;
+import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;

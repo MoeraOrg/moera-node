@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.util.Util;
@@ -206,7 +206,7 @@ public class NamingCache {
             remove = cache.entrySet().stream()
                     .filter(e -> e.getValue().deadline != null && e.getValue().deadline.isBefore(Instant.now()))
                     .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
+                    .toList();
         } finally {
             cacheLock.readLock().unlock();
         }
