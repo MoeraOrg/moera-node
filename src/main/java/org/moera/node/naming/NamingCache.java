@@ -14,7 +14,6 @@ import javax.inject.Inject;
 import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.util.Util;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.TaskExecutor;
@@ -88,7 +87,7 @@ public class NamingCache {
         RegisteredNameDetails details = getOrRun(getKey(name));
         return details != null
                 ? details.clone()
-                : new RegisteredNameDetails(name, getRedirector(name), getRedirector(name, "/profile"), null);
+                : new RegisteredNameDetails(name, null, null);
     }
 
     public RegisteredNameDetails get(String name) {
@@ -188,14 +187,6 @@ public class NamingCache {
         synchronized (queryDone) {
             queryDone.notifyAll();
         }
-    }
-
-    public static String getRedirector(String name, String location) {
-        return "/moera/gotoname?name=" + Util.ue(name) + (location != null ? "&location=" + Util.ue(location) : "");
-    }
-
-    public static String getRedirector(String name) {
-        return getRedirector(name, null);
     }
 
     @Scheduled(fixedDelayString = "PT1M")

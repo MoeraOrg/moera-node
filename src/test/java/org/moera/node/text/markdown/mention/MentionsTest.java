@@ -27,7 +27,7 @@ class MentionsTest {
     @Test
     void onlyMention() {
         String expectedResult = "<p>" +
-                "<a href=\"/moera/gotoname?name=simple-username_0\" data-nodename=\"simple-username_0\">" +
+                "<a href=\"https://moera.page/@simple-username/~/\" data-nodename=\"simple-username_0\">" +
                 "@simple-username" +
                 "</a>" +
                 "</p>\n";
@@ -47,7 +47,7 @@ class MentionsTest {
     @Test
     void mentionInASentence() {
         String expectedResult = "<p>not so " +
-                "<a href=\"/moera/gotoname?name=simple-username_0\" data-nodename=\"simple-username_0\">" +
+                "<a href=\"https://moera.page/@simple-username/~/\" data-nodename=\"simple-username_0\">" +
                 "@simple-username" +
                 "</a>" +
                 " after all</p>\n";
@@ -58,7 +58,7 @@ class MentionsTest {
     void mentionAfterSpoiler() {
         String expectedResult = "<p>" +
                 "<mr-spoiler>not so</mr-spoiler>" +
-                "<a href=\"/moera/gotoname?name=simple-username_0\" data-nodename=\"simple-username_0\">" +
+                "<a href=\"https://moera.page/@simple-username/~/\" data-nodename=\"simple-username_0\">" +
                 "@simple-username" +
                 "</a>" +
                 " after all</p>\n";
@@ -69,7 +69,7 @@ class MentionsTest {
     void weirdMentionInASentence() {
         String expectedResult = "<p>very " +
                 "<a " +
-                "href=\"/moera/gotoname?name=-%21%21.weird**UsErNamEE--_0\" " +
+                "href=\"https://moera.page/@-!!.weird**UsErNamEE--/~/\" " +
                 "data-nodename=\"-!!.weird**UsErNamEE--_0\">" +
                 "@-!!.weird**UsErNamEE--" +
                 "</a>" +
@@ -80,7 +80,7 @@ class MentionsTest {
     @Test
     void mentionWithPunctuation() {
         String expectedResult = "<p>mention just " +
-                "<a href=\"/moera/gotoname?name=username_0\" data-nodename=\"username_0\">" +
+                "<a href=\"https://moera.page/@username/~/\" data-nodename=\"username_0\">" +
                 "@username" +
                 "</a>" +
                 ".</p>\n";
@@ -90,7 +90,7 @@ class MentionsTest {
     @Test
     void mentionWithGeneration() {
         String expectedResult = "<p>only one generation of " +
-                "<a href=\"/moera/gotoname?name=username_123\" data-nodename=\"username_123\">" +
+                "<a href=\"https://moera.page/@username_123/~/\" data-nodename=\"username_123\">" +
                 "@username_123" +
                 "</a>" +
                 ".</p>\n";

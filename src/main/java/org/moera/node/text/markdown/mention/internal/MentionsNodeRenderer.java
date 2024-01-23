@@ -10,8 +10,8 @@ import com.vladsch.flexmark.html.renderer.NodeRendererFactory;
 import com.vladsch.flexmark.html.renderer.NodeRenderingHandler;
 import com.vladsch.flexmark.util.data.DataHolder;
 import org.jetbrains.annotations.NotNull;
+import org.moera.commons.util.UniversalLocation;
 import org.moera.naming.rpc.NodeName;
-import org.moera.node.naming.NamingCache;
 import org.moera.node.text.markdown.mention.MentionNode;
 
 public class MentionsNodeRenderer implements NodeRenderer {
@@ -35,10 +35,10 @@ public class MentionsNodeRenderer implements NodeRenderer {
         if (context.isDoNotRenderLinks()) {
             html.text(node.getChars());
         } else {
-            String name = NodeName.parse(node.getName().toString()).toString();
+            String name = node.getName().toString();
             html.srcPos(node.getChars())
-                    .attr("href", NamingCache.getRedirector(name))
-                    .attr("data-nodename", name)
+                    .attr("href", UniversalLocation.redirectTo(name, null))
+                    .attr("data-nodename", NodeName.expand(name))
                     .withAttr()
                     .tag("a");
             if (node.getText().isNull()) {

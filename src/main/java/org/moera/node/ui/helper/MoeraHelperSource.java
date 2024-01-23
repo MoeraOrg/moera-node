@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
+import org.moera.commons.util.UniversalLocation;
 import org.moera.naming.rpc.NodeName;
 import org.moera.naming.rpc.RegisteredName;
 import org.moera.node.auth.principal.Principal;
@@ -19,7 +20,6 @@ import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsInfo;
 import org.moera.node.naming.NamingCache;
-import org.moera.node.naming.RegisteredNameDetails;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -39,16 +39,13 @@ public class MoeraHelperSource {
         StringBuilder buf = new StringBuilder();
         RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
-            RegisteredNameDetails details = namingCache.getFast(nodeName);
-            if (!linked) {
-                details.setNodeUri("");
-            }
-            String tag = !ObjectUtils.isEmpty(details.getNodeUri()) ? "a" : "span";
+            String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
 
+            String tag = linked ? "a" : "span";
             buf.append('<');
             buf.append(tag);
             if (tag.equals("a")) {
-                HelperUtil.appendAttr(buf, "href", details.getNodeUri());
+                HelperUtil.appendAttr(buf, "href", UniversalLocation.redirectTo(nodeName, nodeUrl));
             }
             HelperUtil.appendAttr(buf, "class", "node-name");
             if (!ObjectUtils.isEmpty(fullName)) {
@@ -95,9 +92,10 @@ public class MoeraHelperSource {
         StringBuilder buf = new StringBuilder();
         RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
-            RegisteredNameDetails details = namingCache.getFast(nodeName);
+            String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
             buf.append("<a");
-            HelperUtil.appendAttr(buf, "href", details.getNodeProfileUri());
+            HelperUtil.appendAttr(buf, "href",
+                    UniversalLocation.redirectTo(nodeName, nodeUrl, "/", null, null));
             HelperUtil.appendAttr(buf, "title", "Profile");
             buf.append('>');
         }

@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import org.moera.commons.util.UniversalLocation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -68,6 +69,9 @@ public class TimelineUiController {
 
     @Inject
     private CommentPublicPageOperations commentPublicPageOperations;
+
+    @Inject
+    private NamingCache namingCache;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
     @VirtualPage
@@ -163,13 +167,14 @@ public class TimelineUiController {
                 model.addAttribute("comments", Collections.emptyList());
             }
         } else {
-            model.addAttribute("originalHref", NamingCache.getRedirector(posting.getReceiverName(),
-                    entryLocation(posting.getReceiverEntryId(), null)));
-            model.addAttribute("commentsHref", NamingCache.getRedirector(posting.getReceiverName(),
-                    entryLocation(posting.getReceiverEntryId(), commentId)));
+            model.addAttribute("originalHref",
+                    entryLocation(posting.getReceiverName(), null, posting.getReceiverEntryId(), null));
+            model.addAttribute("commentsHref",
+                    entryLocation(posting.getReceiverName(), null, posting.getReceiverEntryId(), commentId));
         }
 
-        model.addAttribute("ogUrl", requestContext.getSiteUrl() + entryLocation(posting.getId(), commentId));
+        model.addAttribute("ogUrl",
+                entryLocation(requestContext.nodeName(), requestContext.getSiteUrl(), posting.getId(), commentId));
         model.addAttribute("ogType", "article");
         Entry entry = comment != null ? comment : posting;
         String heading = entry.getCurrentRevision().getHeading();
@@ -207,10 +212,10 @@ public class TimelineUiController {
         return "posting";
     }
 
-    private String entryLocation(Object postingId, Object commentId) {
-        return commentId != null
-                ? String.format("/post/%s?comment=%s", postingId, commentId)
-                : String.format("/post/%s", postingId);
+    private String entryLocation(String nodeName, String nodeUrl, Object postingId, Object commentId) {
+        nodeUrl = nodeUrl != null ? nodeUrl : namingCache.getFast(nodeName).getNodeUri();
+        String query = commentId != null ? "?comment=" + commentId : null;
+        return UniversalLocation.redirectTo(nodeName, nodeUrl, "/post/" + postingId, query, null);
     }
 
 }
