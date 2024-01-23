@@ -13,7 +13,6 @@ import org.moera.naming.rpc.RegisteredName;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
-import org.moera.node.global.WebClient;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.AvatarInfo;
 import org.moera.node.model.ReactionTotalInfo;
@@ -184,9 +183,7 @@ public class MoeraHelperSource {
                     + "get Moera app on Google Play</a> or ");
         }
         buf.append("<a class=\"btn btn-success btn-sm\" href=\"");
-        buf.append(WebClient.URL);
-        buf.append("?href=");
-        buf.append(Util.ue(requestContext.getUrl()));
+        buf.append(Util.he(requestContext.getRedirectorUrl()));
         buf.append("\">View in Web Client</a>");
         return new SafeString(buf);
     }
@@ -195,25 +192,21 @@ public class MoeraHelperSource {
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"alert alert-info mt-3\">To react or comment&nbsp; ");
         buf.append("<a class=\"btn btn-success btn-sm\" href=\"");
-        buf.append(WebClient.URL);
-        buf.append("?href=");
-        buf.append(Util.ue(requestContext.getUrl()));
+        buf.append(Util.he(requestContext.getRedirectorUrl()));
         buf.append("\">View in Web Client</a></div>");
         return new SafeString(buf);
     }
 
     public CharSequence buttonsInvitation(Long moment) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromHttpUrl(requestContext.getUrl());
+                .fromHttpUrl(requestContext.getRedirectorUrl());
         if (moment != null) {
             builder.replaceQuery("before=" + moment);
         }
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"buttons-invitation\">To react or comment&nbsp; ");
         buf.append("<a class=\"btn btn-outline-success btn-sm\" href=\"");
-        buf.append(WebClient.URL);
-        buf.append("?href=");
-        buf.append(Util.ue(builder.toUriString()));
+        buf.append(Util.he(builder.toUriString()));
         buf.append("\">View in Web Client</a></div>");
         return new SafeString(buf);
     }

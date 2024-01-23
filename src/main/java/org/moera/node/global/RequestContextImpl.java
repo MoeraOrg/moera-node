@@ -1,12 +1,15 @@
 package org.moera.node.global;
 
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.commons.util.UniversalLocation;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
@@ -39,6 +42,7 @@ public class RequestContextImpl implements RequestContext {
     private Avatar avatar;
     private String url;
     private String siteUrl;
+    private String redirectorUrl;
     private String clientId;
     private String clientName;
     private InetAddress localAddr;
@@ -189,6 +193,23 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public String getSiteUrl() {
         return siteUrl;
+    }
+
+    @Override
+    public String getRedirectorUrl() {
+        try {
+            if (redirectorUrl == null) {
+                URI uri = new URI(url);
+                UniversalLocation uni = new UniversalLocation(nodeName(), uri.getScheme(), uri.getAuthority(),
+                        uri.getPath(), uri.getQuery(), uri.getFragment());
+                uri = new URI("https", UniversalLocation.REDIRECTOR, uni.getLocation(), uni.getQuery(),
+                        uri.getFragment());
+                redirectorUrl = uri.toASCIIString();
+            }
+        } catch (URISyntaxException e) {
+            redirectorUrl = "https://" + UniversalLocation.REDIRECTOR;
+        }
+        return redirectorUrl;
     }
 
     @Override

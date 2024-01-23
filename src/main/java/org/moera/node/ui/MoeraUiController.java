@@ -3,10 +3,8 @@ package org.moera.node.ui;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
-import org.moera.node.util.Util;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,9 +15,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 @UiController
 @RequestMapping("/moera")
 public class MoeraUiController {
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private TitleBuilder titleBuilder;
@@ -107,7 +102,6 @@ public class MoeraUiController {
 
     private String openClient(String title, Model model) {
         model.addAttribute("pageTitle", titleBuilder.build(title));
-        model.addAttribute("url", Util.ue(requestContext.getUrl()));
 
         return "client";
     }

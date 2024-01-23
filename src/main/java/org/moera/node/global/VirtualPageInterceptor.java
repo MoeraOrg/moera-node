@@ -5,7 +5,6 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.moera.node.util.Util;
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
@@ -38,7 +37,7 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
             return false;
         }
         if (isAutoClient()) {
-            response.sendRedirect(WebClient.URL + "?href=" + Util.ue(requestContext.getUrl()));
+            response.sendRedirect(requestContext.getRedirectorUrl());
             return false;
         }
 

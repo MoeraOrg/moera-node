@@ -66,6 +66,8 @@ public interface RequestContext extends AccessChecker {
 
     void setSiteUrl(String siteUrl);
 
+    String getRedirectorUrl();
+
     String getClientId();
 
     void setClientId(String clientId);
