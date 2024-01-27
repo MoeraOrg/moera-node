@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.naming.rpc.NodeName;
 import org.moera.node.fingerprint.CarteFingerprint;
 
 public class Carte {
@@ -20,8 +21,10 @@ public class Carte {
 
     public static String generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey,
                                   String nodeName, long authCategory) {
-        CarteFingerprint fingerprint =
-                new CarteFingerprint(ownerName, address, beginning, getDeadline(beginning), nodeName, authCategory);
+        CarteFingerprint fingerprint = new CarteFingerprint(
+                NodeName.expand(ownerName), address, beginning, getDeadline(beginning), NodeName.expand(nodeName),
+                authCategory
+        );
         byte[] content = CryptoUtil.fingerprint(fingerprint);
         byte[] signature = CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey);
         byte[] carte = new byte[content.length + signature.length];
