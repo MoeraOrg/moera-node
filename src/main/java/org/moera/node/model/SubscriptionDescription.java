@@ -4,6 +4,7 @@ import java.util.Map;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import org.moera.naming.rpc.NodeName;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionType;
@@ -92,7 +93,7 @@ public class SubscriptionDescription {
     public void toUserSubscription(UserSubscription subscription) {
         subscription.setSubscriptionType(type);
         subscription.setFeedName(feedName);
-        subscription.setRemoteNodeName(remoteNodeName);
+        subscription.setRemoteNodeName(NodeName.expand(remoteNodeName));
         subscription.setRemoteFeedName(remoteFeedName);
         subscription.setRemoteEntryId(remotePostingId);
         subscription.setReason(reason);
