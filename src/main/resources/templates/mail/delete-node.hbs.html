@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mail>
+    <headers>
+        <subject>Request to delete node</subject>
+    </headers>
+    <content>
+        <p>
+            Administrator of the node '{{nodeName}}' ({{domainName}}) just asked to delete their node.
+        </p>
+        <p>
+            === MESSAGE FROM THE ADMINISTRATOR ({{email}}) ===
+        </p>
+        {{#if adminMessage}}
+            <p>
+                {{adminMessage}}
+            </p>
+        {{/if}}
+        <p>
+            === END OF MESSAGE ===
+        </p>
+        <p>
+            Automatically yours,<br/>
+            Moera node mailing service
+        </p>
+    </content>
+</mail>

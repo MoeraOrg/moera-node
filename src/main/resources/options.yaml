@@ -630,3 +630,8 @@
   type: string
   defaultValue: ""
   internal: true
+
+- name: delete-node.requested
+  type: bool
+  defaultValue: false
+  internal: true
