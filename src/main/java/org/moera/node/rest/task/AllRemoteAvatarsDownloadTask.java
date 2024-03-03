@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.DomainUpgradeRepository;

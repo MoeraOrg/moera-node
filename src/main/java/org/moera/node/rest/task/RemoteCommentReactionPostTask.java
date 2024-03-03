@@ -6,7 +6,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;

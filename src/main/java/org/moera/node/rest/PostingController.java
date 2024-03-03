@@ -52,7 +52,7 @@ import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
-import org.moera.node.naming.NamingCache;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.FeedOperations;

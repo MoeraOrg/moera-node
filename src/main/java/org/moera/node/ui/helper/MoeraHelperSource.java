@@ -19,7 +19,7 @@ import org.moera.node.model.AvatarInfo;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsInfo;
-import org.moera.node.naming.NamingCache;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;

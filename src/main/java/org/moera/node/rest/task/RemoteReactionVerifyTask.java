@@ -6,7 +6,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
-import org.moera.node.api.NodeApiNotFoundException;
+import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;

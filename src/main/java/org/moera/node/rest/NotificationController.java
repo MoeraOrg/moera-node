@@ -23,7 +23,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.NotificationType;
-import org.moera.node.naming.NamingClient;
+import org.moera.node.api.naming.NamingClient;
 import org.moera.node.notification.NotificationPacket;
 import org.moera.node.notification.receive.NotificationRouter;
 import org.slf4j.Logger;

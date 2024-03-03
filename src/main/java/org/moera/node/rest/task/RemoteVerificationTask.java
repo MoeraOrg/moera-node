@@ -3,9 +3,9 @@ package org.moera.node.rest.task;
 import java.util.Locale;
 import javax.inject.Inject;
 
-import org.moera.node.api.NodeApiErrorStatusException;
-import org.moera.node.api.NodeApiNotFoundException;
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiErrorStatusException;
+import org.moera.node.api.node.NodeApiNotFoundException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.task.Task;
 import org.springframework.context.MessageSource;
 

@@ -8,8 +8,8 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
-import org.moera.node.api.NodeApiException;
-import org.moera.node.api.NodeApiNotFoundException;
+import org.moera.node.api.node.NodeApiException;
+import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.VerificationStatus;

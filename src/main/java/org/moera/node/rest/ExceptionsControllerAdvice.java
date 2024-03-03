@@ -14,7 +14,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.naming.NamingNotAvailableException;
+import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.option.exception.OptionValueException;
 import org.moera.node.plugin.PluginInvocationException;
 import org.slf4j.Logger;

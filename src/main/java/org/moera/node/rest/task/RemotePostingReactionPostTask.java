@@ -5,8 +5,8 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.node.api.NodeApiException;
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;

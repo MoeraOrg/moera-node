@@ -32,7 +32,7 @@ import org.moera.node.model.SheriffOrderCategory;
 import org.moera.node.model.SheriffOrderDetails;
 import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.naming.NamingCache;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;

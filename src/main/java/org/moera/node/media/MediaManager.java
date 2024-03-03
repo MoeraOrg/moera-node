@@ -12,8 +12,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
-import org.moera.node.api.NodeApi;
-import org.moera.node.api.NodeApiException;
+import org.moera.node.api.node.NodeApi;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.EntryAttachmentRepository;

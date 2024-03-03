@@ -1,4 +1,4 @@
-package org.moera.node.naming;
+package org.moera.node.api.naming;
 
 public class NamingNotAvailableException extends RuntimeException {
 

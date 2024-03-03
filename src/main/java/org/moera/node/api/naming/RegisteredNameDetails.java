@@ -1,4 +1,4 @@
-package org.moera.node.naming;
+package org.moera.node.api.naming;
 
 import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;

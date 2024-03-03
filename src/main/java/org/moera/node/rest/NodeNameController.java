@@ -36,7 +36,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.naming.NamingClient;
+import org.moera.node.api.naming.NamingClient;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;

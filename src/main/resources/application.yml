@@ -54,4 +54,4 @@ node:
   root-secret:
   mock-network-latency: false
   multi: none
-
+  fcm-relay: https://fcm.moera.org/moera-push-relay

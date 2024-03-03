@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;

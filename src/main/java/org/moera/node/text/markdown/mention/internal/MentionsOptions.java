@@ -4,7 +4,7 @@ import com.vladsch.flexmark.util.data.DataHolder;
 import com.vladsch.flexmark.util.data.MutableDataHolder;
 import com.vladsch.flexmark.util.data.MutableDataSetter;
 import org.jetbrains.annotations.NotNull;
-import org.moera.node.naming.NamingCache;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.text.markdown.mention.MentionsExtension;
 
 class MentionsOptions implements MutableDataSetter {

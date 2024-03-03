@@ -3,7 +3,7 @@ package org.moera.node.rest.task;
 import java.util.List;
 import javax.inject.Inject;
 
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.ContactUpgrade;
 import org.moera.node.data.ContactUpgradeRepository;
 import org.moera.node.data.MediaFile;

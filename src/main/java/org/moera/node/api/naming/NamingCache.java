@@ -1,4 +1,4 @@
-package org.moera.node.naming;
+package org.moera.node.api.naming;
 
 import java.time.Duration;
 import java.time.Instant;

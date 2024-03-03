@@ -18,6 +18,7 @@ public class Config {
     private MailConfig mail = new MailConfig();
     private MediaConfig media = new MediaConfig();
     private OptionConfig[] options = new OptionConfig[0];
+    private String fcmRelay;
 
     public String getRootSecret() {
         return rootSecret;
@@ -110,6 +111,14 @@ public class Config {
 
     public void setOptions(OptionConfig[] options) {
         this.options = options;
+    }
+
+    public String getFcmRelay() {
+        return fcmRelay;
+    }
+
+    public void setFcmRelay(String fcmRelay) {
+        this.fcmRelay = fcmRelay;
     }
 
 }

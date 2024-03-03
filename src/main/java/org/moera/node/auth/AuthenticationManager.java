@@ -25,7 +25,7 @@ import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.naming.NamingCache;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;

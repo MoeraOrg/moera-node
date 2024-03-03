@@ -6,8 +6,8 @@ import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.node.api.NodeApiException;
-import org.moera.node.api.NodeApiNotFoundException;
+import org.moera.node.api.node.NodeApiException;
+import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;

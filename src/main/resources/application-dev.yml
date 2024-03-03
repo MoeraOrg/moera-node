@@ -2,3 +2,4 @@ node:
   options:
     - name: naming.location
       defaultValue: https://naming-dev.moera.org/moera-naming
+  fcm-relay: http://localhost:8101/moera-push-relay

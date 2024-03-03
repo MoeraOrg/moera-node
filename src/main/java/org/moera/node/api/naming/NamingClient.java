@@ -1,4 +1,4 @@
-package org.moera.node.naming;
+package org.moera.node.api.naming;
 
 import java.net.MalformedURLException;
 import java.net.URL;

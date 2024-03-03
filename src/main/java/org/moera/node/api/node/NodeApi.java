@@ -1,4 +1,4 @@
-package org.moera.node.api;
+package org.moera.node.api.node;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -49,8 +49,8 @@ import org.moera.node.model.UserListItemInfo;
 import org.moera.node.model.UserListSliceInfo;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.model.body.BodyMappingException;
-import org.moera.node.naming.NamingCache;
-import org.moera.node.naming.RegisteredNameDetails;
+import org.moera.node.api.naming.NamingCache;
+import org.moera.node.api.naming.RegisteredNameDetails;
 import org.moera.node.notification.NotificationPacket;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.UriUtil;

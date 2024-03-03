@@ -174,7 +174,7 @@ public class PostingOperations {
             revisionUpdater.accept(current);
         }
 
-        if (media.size() > 0) {
+        if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
             int ordinal = 0;
             for (MediaFileOwner mfo : media) {

@@ -7,7 +7,7 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.UniversalLocation;
 import org.moera.node.global.PageNotFoundException;
-import org.moera.node.naming.NamingCache;
+import org.moera.node.api.naming.NamingCache;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;

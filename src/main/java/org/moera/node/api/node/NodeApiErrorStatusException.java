@@ -1,4 +1,4 @@
-package org.moera.node.api;
+package org.moera.node.api.node;
 
 import java.io.IOException;
 

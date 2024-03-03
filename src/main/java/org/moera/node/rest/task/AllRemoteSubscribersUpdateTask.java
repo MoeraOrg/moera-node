@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.node.api.NodeApiException;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;

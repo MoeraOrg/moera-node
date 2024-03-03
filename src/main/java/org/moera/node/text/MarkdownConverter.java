@@ -16,7 +16,7 @@ import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.data.DataHolder;
 import com.vladsch.flexmark.util.data.MutableDataSet;
-import org.moera.node.naming.NamingCache;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.text.markdown.mention.MentionsExtension;
 import org.moera.node.text.markdown.spoiler.SpoilerExtension;
 import org.springframework.stereotype.Component;

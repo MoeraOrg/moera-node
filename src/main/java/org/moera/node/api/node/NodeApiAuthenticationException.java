@@ -1,4 +1,4 @@
-package org.moera.node.api;
+package org.moera.node.api.node;
 
 public class NodeApiAuthenticationException extends NodeApiErrorStatusException {
 

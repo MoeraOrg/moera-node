@@ -2,7 +2,7 @@ package org.moera.node.media;
 
 import javax.inject.Inject;
 
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;

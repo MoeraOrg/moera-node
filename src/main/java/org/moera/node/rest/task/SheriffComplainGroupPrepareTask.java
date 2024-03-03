@@ -7,9 +7,9 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 
-import org.moera.node.api.NodeApiException;
-import org.moera.node.api.NodeApiNotFoundException;
-import org.moera.node.api.NodeApiUnknownNameException;
+import org.moera.node.api.node.NodeApiException;
+import org.moera.node.api.node.NodeApiNotFoundException;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffComplainGroupRepository;
 import org.moera.node.data.SheriffComplainStatus;
