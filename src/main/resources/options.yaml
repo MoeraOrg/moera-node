@@ -468,6 +468,11 @@
     min: 10d
     max: 180d
 
+- name: push-relay.fcm.active
+  type: bool
+  defaultValue: false
+  internal: true
+
 - name: media.max-size
   type: int
   privileged: true

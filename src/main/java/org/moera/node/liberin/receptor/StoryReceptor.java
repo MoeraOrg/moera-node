@@ -50,7 +50,11 @@ public class StoryReceptor extends LiberinReceptorBase {
             send(liberin, new StoryUpdatedEvent(story, false));
         }
         send(liberin, new StoryUpdatedEvent(story, true));
-        push(story);
+        if (!story.isViewed()) {
+            push(story);
+        } else {
+            deletePush(story.getFeedName(), story.getId());
+        }
         feedStatusUpdated(story.getFeedName());
     }
 

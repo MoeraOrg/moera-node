@@ -2,15 +2,24 @@ package org.moera.node.api.pushrelay;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import com.googlecode.jsonrpc4j.JsonRpcClientException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
+import org.moera.node.domain.Domains;
+import org.moera.node.push.PushContent;
+import org.moera.node.push.PushContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,9 +28,13 @@ public class FcmRelay {
     private static final Logger log = LoggerFactory.getLogger(FcmRelay.class);
 
     private PushRelayService service;
+    private final BlockingQueue<Pair<UUID, PushContent>> queue = new LinkedBlockingQueue<>();
 
     @Inject
     private Config config;
+
+    @Inject
+    private Domains domains;
 
     @PostConstruct
     public void init() {
@@ -32,10 +45,79 @@ public class FcmRelay {
             log.error("Malformed FCM relay service URL: {}", LogUtil.format(config.getFcmRelay()));
             System.exit(1);
         }
+
+        Thread thread = new Thread(this::deliver);
+        thread.setDaemon(true);
+        thread.start();
     }
 
-    public PushRelayService getService() {
-        return service;
+    private void deliver() {
+        try {
+            while (true) {
+                Pair<UUID, PushContent> packet = queue.take();
+                UUID nodeId = packet.getFirst();
+                String nodeName = domains.getDomainOptions(nodeId).nodeName();
+                PushContent content = packet.getSecond();
+                log.info("Sending {} to the FCM relay to the clients of node {} ({})",
+                        LogUtil.format(content.getType().getValue()), LogUtil.format(nodeId), LogUtil.format(nodeName));
+                int retry = 0;
+                do {
+                    try {
+                        switch (content.getType()) {
+                            case FEED_UPDATED ->
+                                service.feedStatus(content.getFeedStatus().getFeedName(),
+                                        content.getFeedStatus().getNotViewed(), nodeName, new byte[0]);
+                            case STORY_ADDED ->
+                                service.storyAdded(content.getStory(), nodeName, new byte[0]);
+                            case STORY_DELETED ->
+                                service.storyDeleted(content.getId(), nodeName, new byte[0]);
+                        }
+                    } catch (JsonRpcClientException e) {
+                        log.error("RPC error {} returned from FCM relay call", e.getCode());
+                        switch (e.getCode()) {
+                            case PushRelayError.NODE_NAME_UNKNOWN -> {
+                                // Maybe a temporary error
+                                if (retry == 0) {
+                                    retry = 3;
+                                }
+                            }
+                            case PushRelayError.NO_CLIENTS ->
+                                domains.getDomainOptions(nodeId).set("push-relay.fcm.active", false);
+                        }
+                    } catch (Exception e) {
+                        log.error("Error sending to the FCM relay: {}", e.getMessage());
+                        if (retry == 0) {
+                            retry = 20;
+                        }
+                    }
+
+                    retry--;
+                    if (retry > 0) {
+                        Thread.sleep(90000);
+                    } else if (retry == 0) {
+                        log.error("Permanent error from the FCM relay, giving up");
+                    }
+                } while (retry > 0);
+            }
+        } catch (InterruptedException e) {
+            // just exit
+        }
+    }
+
+    public void register(String clientId, String nodeName, String lang, byte[] signature) {
+        service.register(clientId, nodeName, lang, signature);
+    }
+
+    public void send(UUID nodeId, PushContent pushContent) {
+        if (pushContent.getType() == PushContentType.FEED_UPDATED
+                && !Objects.equals(pushContent.getFeedStatus().getFeedName(), "news")) {
+            return;
+        }
+
+        boolean active = domains.getDomainOptions(nodeId).getBool("push-relay.fcm.active");
+        if (active) {
+            queue.offer(Pair.of(nodeId, pushContent));
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package org.moera.node.liberin.receptor;
 
 import org.moera.node.data.Feed;
+import org.moera.node.data.Story;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -10,6 +11,7 @@ import org.moera.node.model.event.FeedSheriffDataUpdatedEvent;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoriesStatusUpdatedEvent;
 import org.moera.node.push.PushContent;
+import org.springframework.util.ObjectUtils;
 
 @LiberinReceptor
 public class FeedReceptor extends LiberinReceptorBase {
@@ -23,6 +25,18 @@ public class FeedReceptor extends LiberinReceptorBase {
         }
         if (liberin.getChange() != null) {
             send(liberin, new StoriesStatusUpdatedEvent(liberin.getFeedName(), liberin.getChange()));
+            if (!ObjectUtils.isEmpty(liberin.getInstantsUpdated())) {
+                if (liberin.getChange().getViewed()) {
+                    liberin.getInstantsUpdated().stream()
+                            .map(Story::getId)
+                            .map(PushContent::storyDeleted)
+                            .forEach(this::send);
+                } else {
+                    liberin.getInstantsUpdated().stream()
+                            .map(PushContent::storyAdded)
+                            .forEach(this::send);
+                }
+            }
         }
         send(PushContent.feedUpdated(liberin.getFeedName(), liberin.getStatus()));
     }

@@ -2,6 +2,7 @@ package org.moera.node.liberin;
 
 import javax.inject.Inject;
 
+import org.moera.node.api.pushrelay.FcmRelay;
 import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.mail.Mail;
@@ -30,6 +31,9 @@ public abstract class LiberinReceptorBase {
     @Inject
     private PushService pushService;
 
+    @Inject
+    private FcmRelay fcmRelay;
+
     protected void send(Liberin subLiberin) {
         universalContext.send(subLiberin);
     }
@@ -52,6 +56,7 @@ public abstract class LiberinReceptorBase {
 
     protected void send(PushContent pushContent) {
         pushService.send(universalContext.nodeId(), pushContent);
+        fcmRelay.send(universalContext.nodeId(), pushContent);
     }
 
 }

@@ -58,10 +58,8 @@ import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.PostingOperations;
-import org.moera.node.operations.UserListOperations;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.push.PushContent;
-import org.moera.node.push.PushService;
+import org.moera.node.operations.UserListOperations;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -112,9 +110,6 @@ public class FeedController {
 
     @Inject
     private PlatformTransactionManager txManager;
-
-    @Inject
-    private PushService pushService;
 
     @Inject
     @PersistenceContext
@@ -203,22 +198,9 @@ public class FeedController {
             return null;
         });
 
-        if (!instantsUpdated.isEmpty()) {
-            if (change.getViewed()) {
-                instantsUpdated.stream()
-                        .map(Story::getId)
-                        .map(PushContent::storyDeleted)
-                        .forEach(content -> pushService.send(requestContext.nodeId(), content));
-            } else {
-                instantsUpdated.stream()
-                        .map(PushContent::storyAdded)
-                        .forEach(content -> pushService.send(requestContext.nodeId(), content));
-            }
-        }
-
         FeedStatus feedStatus = storyOperations.getFeedStatus(feedName, true);
 
-        requestContext.send(new FeedStatusUpdatedLiberin(feedName, feedStatus, change));
+        requestContext.send(new FeedStatusUpdatedLiberin(feedName, feedStatus, change, instantsUpdated));
 
         return feedStatus;
     }

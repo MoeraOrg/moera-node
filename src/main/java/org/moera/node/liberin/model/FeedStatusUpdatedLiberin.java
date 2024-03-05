@@ -1,7 +1,9 @@
 package org.moera.node.liberin.model;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.moera.node.data.Story;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
@@ -11,15 +13,18 @@ public class FeedStatusUpdatedLiberin extends Liberin {
     private String feedName;
     private FeedStatus status;
     private FeedStatusChange change;
+    private Set<Story> instantsUpdated;
 
     public FeedStatusUpdatedLiberin(String feedName, FeedStatus status) {
-        this(feedName, status, null);
+        this(feedName, status, null, null);
     }
 
-    public FeedStatusUpdatedLiberin(String feedName, FeedStatus status, FeedStatusChange change) {
+    public FeedStatusUpdatedLiberin(String feedName, FeedStatus status, FeedStatusChange change,
+                                    Set<Story> instantsUpdated) {
         this.feedName = feedName;
         this.status = status;
         this.change = change;
+        this.instantsUpdated = instantsUpdated;
     }
 
     public String getFeedName() {
@@ -46,12 +51,21 @@ public class FeedStatusUpdatedLiberin extends Liberin {
         this.change = change;
     }
 
+    public Set<Story> getInstantsUpdated() {
+        return instantsUpdated;
+    }
+
+    public void setInstantsUpdated(Set<Story> instantsUpdated) {
+        this.instantsUpdated = instantsUpdated;
+    }
+
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("feedName", feedName);
         model.put("status", status);
         model.put("change", change);
+        model.put("instantsUpdated", instantsUpdated);
     }
 
 }

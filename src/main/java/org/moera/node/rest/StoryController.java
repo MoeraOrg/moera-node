@@ -20,8 +20,6 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.push.PushContent;
-import org.moera.node.push.PushService;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +49,6 @@ public class StoryController {
 
     @Inject
     private PlatformTransactionManager txManager;
-
-    @Inject
-    private PushService pushService;
 
     @GetMapping("/{id}")
     @Transactional
@@ -100,16 +95,6 @@ public class StoryController {
 
             return Pair.of(story, storyInfo);
         });
-
-        if (storyAttributes.getViewed() != null) {
-            PushContent content;
-            if (storyAttributes.getViewed()) {
-                content = PushContent.storyDeleted(id);
-            } else {
-                content = PushContent.storyAdded(info.getFirst());
-            }
-            pushService.send(requestContext.nodeId(), content);
-        }
 
         requestContext.send(new StoryUpdatedLiberin(info.getFirst()));
 

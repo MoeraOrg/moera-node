@@ -59,7 +59,7 @@ public class PushRelayController {
                 pushRelayClientAttributes.getLang());
         byte[] signature = CryptoUtil.sign(fingerprint, getSigningKey());
         try {
-            fcmRelay.getService().register(
+            fcmRelay.register(
                     pushRelayClientAttributes.getClientId(),
                     requestContext.nodeName(),
                     pushRelayClientAttributes.getLang(),
@@ -68,6 +68,8 @@ public class PushRelayController {
             log.warn("Error calling push relay service: " + e.getMessage());
             throw new OperationFailure("push-relay.error");
         }
+
+        requestContext.getOptions().set("push-relay.fcm.active", true);
 
         return Result.OK;
     }
