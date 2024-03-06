@@ -2,6 +2,8 @@ package org.moera.node.api.pushrelay;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.interfaces.ECPrivateKey;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
@@ -12,6 +14,7 @@ import javax.inject.Inject;
 import com.googlecode.jsonrpc4j.JsonRpcClientException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
+import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
@@ -62,15 +65,23 @@ public class FcmRelay {
                         LogUtil.format(content.getType().getValue()), LogUtil.format(nodeId), LogUtil.format(nodeName));
                 int retry = 0;
                 do {
+                    long now = Instant.now().getEpochSecond();
+                    byte[] signature = getSignature(nodeId, now);
+
                     try {
                         switch (content.getType()) {
                             case FEED_UPDATED ->
-                                service.feedStatus(content.getFeedStatus().getFeedName(),
-                                        content.getFeedStatus().getNotViewed(), nodeName, new byte[0]);
+                                service.feedStatus(
+                                        content.getFeedStatus().getFeedName(),
+                                        content.getFeedStatus().getNotViewed(),
+                                        content.getFeedStatus().getNotViewedMoment(),
+                                        nodeName,
+                                        now,
+                                        signature);
                             case STORY_ADDED ->
-                                service.storyAdded(content.getStory(), nodeName, new byte[0]);
+                                service.storyAdded(content.getStory(), nodeName, now, signature);
                             case STORY_DELETED ->
-                                service.storyDeleted(content.getId(), nodeName, new byte[0]);
+                                service.storyDeleted(content.getId(), nodeName, now, signature);
                         }
                     } catch (JsonRpcClientException e) {
                         log.error("RPC error {} returned from FCM relay call", e.getCode());
@@ -104,8 +115,15 @@ public class FcmRelay {
         }
     }
 
-    public void register(String clientId, String nodeName, String lang, byte[] signature) {
-        service.register(clientId, nodeName, lang, signature);
+    private byte[] getSignature(UUID nodeId, long signedAt) {
+        ECPrivateKey signingKey =
+                (ECPrivateKey) domains.getDomainOptions(nodeId).getPrivateKey("profile.signing-key");
+        PushRelayMessageFingerprint fingerprint = new PushRelayMessageFingerprint(signedAt);
+        return CryptoUtil.sign(fingerprint, signingKey);
+    }
+
+    public void register(String clientId, String nodeName, String lang, long signedAt, byte[] signature) {
+        service.register(clientId, nodeName, lang, signedAt, signature);
     }
 
     public void send(UUID nodeId, PushContent pushContent) {

@@ -5,6 +5,8 @@ public class FeedWithStatus {
     private String feedName;
     private int notViewed;
     private int notRead;
+    private Long notViewedMoment;
+    private Long notReadMoment;
 
     public FeedWithStatus() {
     }
@@ -13,6 +15,8 @@ public class FeedWithStatus {
         this.feedName = feedName;
         notViewed = feedStatus.getNotViewed();
         notRead = feedStatus.getNotRead();
+        notViewedMoment = feedStatus.getNotViewedMoment();
+        notReadMoment = feedStatus.getNotReadMoment();
     }
 
     public String getFeedName() {
@@ -37,6 +41,22 @@ public class FeedWithStatus {
 
     public void setNotRead(int notRead) {
         this.notRead = notRead;
+    }
+
+    public Long getNotViewedMoment() {
+        return notViewedMoment;
+    }
+
+    public void setNotViewedMoment(Long notViewedMoment) {
+        this.notViewedMoment = notViewedMoment;
+    }
+
+    public Long getNotReadMoment() {
+        return notReadMoment;
+    }
+
+    public void setNotReadMoment(Long notReadMoment) {
+        this.notReadMoment = notReadMoment;
     }
 
 }

@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.security.interfaces.ECPrivateKey;
+import java.time.Instant;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
@@ -53,16 +54,18 @@ public class PushRelayController {
             throw new ValidationFailure("pushRelayClientAttributes.type.unknown");
         }
 
+        long now = Instant.now().getEpochSecond();
         PushRelayRegisterFingerprint fingerprint = new PushRelayRegisterFingerprint(
                 pushRelayClientAttributes.getClientId(),
-                requestContext.nodeName(),
-                pushRelayClientAttributes.getLang());
+                pushRelayClientAttributes.getLang(),
+                now);
         byte[] signature = CryptoUtil.sign(fingerprint, getSigningKey());
         try {
             fcmRelay.register(
                     pushRelayClientAttributes.getClientId(),
                     requestContext.nodeName(),
                     pushRelayClientAttributes.getLang(),
+                    now,
                     signature);
         } catch (Exception e) {
             log.warn("Error calling push relay service: " + e.getMessage());
