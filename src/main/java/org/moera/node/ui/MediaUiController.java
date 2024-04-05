@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
+import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.AuthenticationCategory;
 import org.moera.node.auth.principal.Principal;
@@ -20,6 +21,8 @@ import org.moera.node.global.UiController;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.operations.FeedOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
@@ -32,6 +35,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @UiController
 @RequestMapping("/moera/media")
 public class MediaUiController {
+
+    private static final Logger log = LoggerFactory.getLogger(MediaUiController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -55,11 +60,17 @@ public class MediaUiController {
     public ResponseEntity<Resource> getDataPublic(@PathVariable String id,
                                                   @RequestParam(required = false) Integer width,
                                                   @RequestParam(required = false) Boolean download) {
+        log.info("GET MEDIA /media/public/{id}.ext (id = {})", LogUtil.format(id));
+
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null || !mediaFile.isExposed()) {
             throw new PageNotFoundException();
         }
         return mediaOperations.serve(mediaFile, width, download);
+    }
+
+    private boolean includesAdmin(Principal viewPrincipal) {
+        return viewPrincipal.includes(true, requestContext.nodeName(), false, new String[0]);
     }
 
     @GetMapping("/private/{id}.{ext}")
@@ -70,14 +81,16 @@ public class MediaUiController {
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
                                                    @RequestParam(required = false) Integer width,
                                                    @RequestParam(required = false) Boolean download) {
+        log.info("GET MEDIA /media/private/{id}.ext (id = {})", LogUtil.format(id));
+
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
         if (!requestContext.isPrincipal(viewPrincipal)
                 && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)
-                && !(viewPrincipal.isAdmin()) && requestContext.isClient(requestContext.nodeName())) {
-                // The exception above is made to allow to authenticate with a carte as admin to view admin-only
-                // media. This allows to avoid passing admin tokens in parameters
+                && !(includesAdmin(viewPrincipal) && requestContext.isClient(requestContext.nodeName()))) {
+                // The exception above is made to allow authentication with a carte as admin to view admin-only
+                // media instead of passing admin tokens in parameters
             throw new PageNotFoundException();
         }
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, download);
@@ -86,6 +99,8 @@ public class MediaUiController {
     @GetMapping("/private/{id}/caption")
     @Transactional
     public String getCaptionPrivate(@PathVariable UUID id, Model model) {
+        log.info("GET MEDIA /media/private/{id}/caption (id = {})", LogUtil.format(id));
+
         MediaFileOwner mediaFileOwner =  mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(PageNotFoundException::new);
         Posting posting = mediaFileOwner.getPosting(null);
@@ -94,7 +109,7 @@ public class MediaUiController {
         }
         if (!requestContext.isPrincipal(posting.getViewE())
                 && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), posting.getViewE())
-                && !(posting.getViewE().isAdmin()) && requestContext.isClient(requestContext.nodeName())) {
+                && !(includesAdmin(posting.getViewE()) && requestContext.isClient(requestContext.nodeName()))) {
                 // See the comment above
             throw new PageNotFoundException();
         }
