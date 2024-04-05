@@ -438,6 +438,7 @@ public class MediaOperations {
         if (download) {
             headers.setContentDisposition(ContentDisposition.attachment().build());
         }
+        headers.setAccessControlAllowOrigin("*");
 
         switch (config.getMedia().getServe().toLowerCase()) {
             default:
