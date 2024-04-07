@@ -168,7 +168,7 @@ public class ContactOperations {
     @Transactional
     public void closenessMaintenance() {
         Collection<Contact> contacts = contactRepository.findAllUpdatedBefore(
-                Timestamp.from(Instant.now().minus(30, ChronoUnit.DAYS)));
+                Timestamp.from(Instant.now().minus(14, ChronoUnit.DAYS)));
         for (Contact contact : contacts) {
             contact.setCloseness(contact.getCloseness() - 0.2f * contact.getClosenessBase());
             contact.setClosenessBase(contact.getCloseness());
