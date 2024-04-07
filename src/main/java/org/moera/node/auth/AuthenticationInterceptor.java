@@ -147,13 +147,11 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             requestContext.setRootAdmin(true);
             requestContext.setAdmin(true);
             requestContext.setAuthCategory(AuthCategory.ALL);
-            MDC.put("auth", "!");
         } else {
             Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
             requestContext.setAdmin(token != null);
             requestContext.setAuthCategory(token != null ? token.getAuthCategory() : AuthCategory.ALL);
             requestContext.setTokenId(token != null ? token.getId() : null);
-            MDC.put("auth", requestContext.isAdmin() ? "#" : "$");
         }
         try {
             CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, UriUtil.remoteAddress(request));
@@ -166,12 +164,25 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");
         }
-        if (!requestContext.isAdmin() && !ObjectUtils.isEmpty(requestContext.getClientName())) {
-            log.info("Authorized with node name {}", requestContext.getClientName());
-        }
+        logAuthStatus();
         if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
             requestContext.setPossibleSheriff(
                     feedOperations.getAllPossibleSheriffs().stream().anyMatch(requestContext::isClient));
+        }
+    }
+
+    private void logAuthStatus() {
+        if (requestContext.isRootAdmin()) {
+            MDC.put("auth", "!");
+        } else if (requestContext.isAdmin()) {
+            MDC.put("auth", "#");
+        } else if (requestContext.isClient(requestContext.nodeName())) {
+            MDC.put("auth", "$#");
+        } else if (requestContext.getClientName() != null) {
+            MDC.put("auth", "$$");
+            log.info("Authorized with node name {}", requestContext.getClientName());
+        } else {
+            MDC.put("auth", "$-");
         }
     }
 
