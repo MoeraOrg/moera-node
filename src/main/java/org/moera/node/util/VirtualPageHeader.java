@@ -12,7 +12,7 @@ public class VirtualPageHeader {
         StringBuilder buf = new StringBuilder();
         if (!ObjectUtils.isEmpty(nodeName)) {
             buf.append("name=");
-            buf.append(nodeName);
+            buf.append(Util.ue(nodeName));
         }
         if (!ObjectUtils.isEmpty(page)) {
             if (!buf.isEmpty()) {
