@@ -24,7 +24,7 @@ public class NetworkLatencyInterceptor implements HandlerInterceptor {
 
     @PostConstruct
     public void init() {
-        if (config.isMockNetworkLatency()) {
+        if (config.getDebug().isMockNetworkLatency()) {
             log.info("Emulation of network latency is enabled."
                     + " Random delay of 200ms up to 2s will be added to all responses");
         }
@@ -32,7 +32,7 @@ public class NetworkLatencyInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        if (!config.isMockNetworkLatency()) {
+        if (!config.getDebug().isMockNetworkLatency()) {
             return true;
         }
         if (!(handler instanceof HandlerMethod)) {

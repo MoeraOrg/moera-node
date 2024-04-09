@@ -10,7 +10,6 @@ public class Config {
 
     private String rootSecret;
     private String address;
-    private boolean mockNetworkLatency;
     private PoolsConfig pools = new PoolsConfig();
     private MultiHost multi = MultiHost.NONE;
     private String domain;
@@ -19,6 +18,7 @@ public class Config {
     private MediaConfig media = new MediaConfig();
     private OptionConfig[] options = new OptionConfig[0];
     private String fcmRelay;
+    private DebugConfig debug = new DebugConfig();
 
     public String getRootSecret() {
         return rootSecret;
@@ -34,14 +34,6 @@ public class Config {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public boolean isMockNetworkLatency() {
-        return mockNetworkLatency;
-    }
-
-    public void setMockNetworkLatency(boolean mockNetworkLatency) {
-        this.mockNetworkLatency = mockNetworkLatency;
     }
 
     public PoolsConfig getPools() {
@@ -119,6 +111,14 @@ public class Config {
 
     public void setFcmRelay(String fcmRelay) {
         this.fcmRelay = fcmRelay;
+    }
+
+    public DebugConfig getDebug() {
+        return debug;
+    }
+
+    public void setDebug(DebugConfig debug) {
+        this.debug = debug;
     }
 
 }

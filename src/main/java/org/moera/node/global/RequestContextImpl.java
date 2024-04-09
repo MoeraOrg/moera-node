@@ -1,6 +1,7 @@
 package org.moera.node.global;
 
 import java.net.InetAddress;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -52,6 +53,7 @@ public class RequestContextImpl implements RequestContext {
     private final List<FriendCacheInvalidation> friendCacheInvalidations = new ArrayList<>();
     private final List<Nodes> subscribedCacheInvalidations = new ArrayList<>();
     private boolean blockedUsersUpdated;
+    private Instant startedAt;
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -380,6 +382,16 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public boolean isBlockedUsersUpdated() {
         return blockedUsersUpdated;
+    }
+
+    @Override
+    public Instant getStartedAt() {
+        return startedAt;
+    }
+
+    @Override
+    public void setStartedAt(Instant startedAt) {
+        this.startedAt = startedAt;
     }
 
 }

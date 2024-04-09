@@ -1,6 +1,7 @@
 package org.moera.node.global;
 
 import java.net.InetAddress;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -129,5 +130,9 @@ public interface RequestContext extends AccessChecker {
     void blockedUsersUpdated();
 
     boolean isBlockedUsersUpdated();
+
+    Instant getStartedAt();
+
+    void setStartedAt(Instant startedAt);
 
 }
