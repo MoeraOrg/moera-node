@@ -22,7 +22,6 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
-import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -73,9 +72,6 @@ public class PostingReactionController {
 
     @Inject
     private ReactionRepository reactionRepository;
-
-    @Inject
-    private ReactionTotalRepository reactionTotalRepository;
 
     @Inject
     private OwnReactionRepository ownReactionRepository;
@@ -318,7 +314,7 @@ public class PostingReactionController {
         }
 
         reactionRepository.deleteAllByEntryId(postingId, Util.now());
-        reactionTotalRepository.deleteAllByEntryId(postingId);
+        reactionTotalOperations.deleteAllByEntryId(postingId);
 
         requestContext.send(new PostingReactionsDeletedAllLiberin(posting));
 

@@ -15,7 +15,6 @@ import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
-import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -65,9 +64,6 @@ public class CommentReactionController {
 
     @Inject
     private ReactionRepository reactionRepository;
-
-    @Inject
-    private ReactionTotalRepository reactionTotalRepository;
 
     @Inject
     private CommentRepository commentRepository;
@@ -306,7 +302,7 @@ public class CommentReactionController {
         }
 
         reactionRepository.deleteAllByEntryId(commentId, Util.now());
-        reactionTotalRepository.deleteAllByEntryId(commentId);
+        reactionTotalOperations.deleteAllByEntryId(commentId);
 
         requestContext.send(new CommentReactionsDeletedAllLiberin(comment));
 

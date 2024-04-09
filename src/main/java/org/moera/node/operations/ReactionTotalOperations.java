@@ -88,8 +88,13 @@ public class ReactionTotalOperations {
     @Inject
     private ReactionTotalRepository reactionTotalRepository;
 
+    public void deleteAllByEntryId(UUID entryId) {
+        reactionTotalRepository.deleteAllByEntryId(entryId);
+        reactionTotalRepository.deleteAllByRevisionsOfEntryId(entryId);
+    }
+
     public void replaceAll(Posting posting, ReactionTotalsInfo reactionTotalsInfo) {
-        reactionTotalRepository.deleteAllByEntryId(posting.getId());
+        deleteAllByEntryId(posting.getId());
         replaceAll(posting, false, reactionTotalsInfo.getPositive());
         replaceAll(posting, true, reactionTotalsInfo.getNegative());
     }
