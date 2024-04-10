@@ -53,7 +53,7 @@ public class RequestContextImpl implements RequestContext {
     private final List<FriendCacheInvalidation> friendCacheInvalidations = new ArrayList<>();
     private final List<Nodes> subscribedCacheInvalidations = new ArrayList<>();
     private boolean blockedUsersUpdated;
-    private Instant startedAt;
+    private final Instant[] times = new Instant[3];
 
     @Inject
     private AvatarRepository avatarRepository;
@@ -385,13 +385,13 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public Instant getStartedAt() {
-        return startedAt;
+    public Instant getTimes(int item) {
+        return times[item];
     }
 
     @Override
-    public void setStartedAt(Instant startedAt) {
-        this.startedAt = startedAt;
+    public void setTimes(int item, Instant time) {
+        this.times[item] = time;
     }
 
 }

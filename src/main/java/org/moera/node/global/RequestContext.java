@@ -15,6 +15,14 @@ import org.moera.node.option.Options;
 
 public interface RequestContext extends AccessChecker {
 
+    class Times {
+
+        public static final int RECEIVED = 0;
+        public static final int STARTED = 1;
+        public static final int FINISHED = 2;
+
+    }
+
     boolean isRegistrar();
 
     void setRegistrar(boolean registrar);
@@ -131,8 +139,8 @@ public interface RequestContext extends AccessChecker {
 
     boolean isBlockedUsersUpdated();
 
-    Instant getStartedAt();
+    Instant getTimes(int item);
 
-    void setStartedAt(Instant startedAt);
+    void setTimes(int item, Instant time);
 
 }
