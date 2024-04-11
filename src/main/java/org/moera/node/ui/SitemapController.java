@@ -106,12 +106,12 @@ public class SitemapController {
         applicationStartedAt = Instant.now();
     }
 
-    @Scheduled(fixedDelayString = "PT1M")
+    @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void refresh() {
         for (String domainName : domains.getAllDomainNames()) {
             MDC.put("domain", domainName);
-            log.debug("Refreshing sitemap");
+            log.debug("Refreshing sitemap of {}", domainName);
 
             UUID nodeId = domains.getDomainNodeId(domainName);
             Collection<Posting> postings = sitemapRecordRepository.findUpdated(nodeId);
@@ -122,12 +122,13 @@ public class SitemapController {
             Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(nodeId);
             Sitemap sitemap = findAvailableSitemap(sitemaps);
             for (Posting posting : postings) {
-                if (posting.getSitemapRecord() != null) {
-                    posting.getSitemapRecord().update(posting);
+                SitemapRecord record = sitemapRecordRepository.findByEntryId(nodeId, posting.getId());
+                if (record != null) {
+                    record.update(posting);
                     log.debug("Updated posting {}", posting.getId());
                 } else {
-                    SitemapRecord record = new SitemapRecord(sitemap.getId(), posting);
-                    sitemapRecordRepository.save(record);
+                    record = new SitemapRecord(sitemap.getId(), posting);
+                    record = sitemapRecordRepository.save(record);
                     log.debug("Created record {} in sitemap {} for posting {}",
                             record.getId(), record.getSitemapId(), posting.getId());
                 }
