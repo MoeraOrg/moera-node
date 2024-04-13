@@ -129,26 +129,16 @@ public class Util {
     }
 
     public static Duration toDuration(String s) {
-        if (s == null || s.equals("")) {
+        if (s == null || s.isEmpty()) {
             return null;
         }
-        ChronoUnit unit;
-        switch (s.charAt(s.length() - 1)) {
-            case 's':
-                unit = ChronoUnit.SECONDS;
-                break;
-            case 'm':
-                unit = ChronoUnit.MINUTES;
-                break;
-            case 'h':
-                unit = ChronoUnit.HOURS;
-                break;
-            case 'd':
-                unit = ChronoUnit.DAYS;
-                break;
-            default:
-                throw new DurationFormatException(s);
-        }
+        ChronoUnit unit = switch (s.charAt(s.length() - 1)) {
+            case 's' -> ChronoUnit.SECONDS;
+            case 'm' -> ChronoUnit.MINUTES;
+            case 'h' -> ChronoUnit.HOURS;
+            case 'd' -> ChronoUnit.DAYS;
+            default -> throw new DurationFormatException(s);
+        };
         long amount;
         try {
             amount = Long.parseLong(s.substring(0, s.length() - 1));
@@ -199,7 +189,7 @@ public class Util {
     public static String dump(byte[] bytes) {
         StringBuilder buf = new StringBuilder();
         for (byte b : bytes) {
-            if (buf.length() > 0) {
+            if (!buf.isEmpty()) {
                 buf.append(' ');
             }
             buf.append(hexByte(b));
