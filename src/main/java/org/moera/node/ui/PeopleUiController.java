@@ -24,12 +24,16 @@ import org.moera.node.global.VirtualPage;
 import org.moera.node.model.PeopleGeneralInfo;
 import org.moera.node.model.SubscriberInfo;
 import org.moera.node.model.SubscriptionInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @UiController
 public class PeopleUiController {
+
+    private static final Logger log = LoggerFactory.getLogger(PeopleUiController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -65,6 +69,8 @@ public class PeopleUiController {
     @VirtualPage
     @Transactional
     public String subscribers(Model model) {
+        log.info("UI /people/subscribers");
+
         PeopleGeneralInfo totals = getTotals();
         Comparator<Subscriber> comparator = Comparator.comparing(
                 sr -> sr.getContact().getRemoteFullName() != null
@@ -95,6 +101,8 @@ public class PeopleUiController {
     @VirtualPage
     @Transactional
     public String subscriptions(Model model) {
+        log.info("UI /people/subscriptions");
+
         PeopleGeneralInfo totals = getTotals();
         Comparator<UserSubscription> comparator = Comparator.comparing(
                 sr -> sr.getContact().getRemoteFullName() != null

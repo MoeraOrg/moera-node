@@ -10,7 +10,9 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.commons.util.UniversalLocation;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -31,10 +33,11 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
-import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
 import org.moera.node.util.VirtualPageHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,6 +48,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @UiController
 public class TimelineUiController {
+
+    private static final Logger log = LoggerFactory.getLogger(TimelineUiController.class);
 
     @Inject
     private RequestContext requestContext;
@@ -76,7 +81,9 @@ public class TimelineUiController {
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
     @VirtualPage
     @Transactional
-    public String timeline(@RequestParam(required = false) Long before, HttpServletResponse response, Model model) {
+    public String timeline(@RequestParam(required = false) Long before, Model model) {
+        log.info("UI /timeline (before = {})", LogUtil.format(before));
+
         String canonicalUrl = "/timeline" + (before != null ? "?before=" + before : "");
 
         before = before != null ? before : Long.MAX_VALUE;
@@ -111,6 +118,9 @@ public class TimelineUiController {
                           @RequestParam(name = "comment", required = false) UUID commentId,
                           @RequestParam(name = "media", required = false) UUID mediaId,
                           HttpServletResponse response, Model model) {
+        log.info("UI /post/{id} (id = {}, before = {}, comment = {}, media = {})",
+                LogUtil.format(id), LogUtil.format(before), LogUtil.format(commentId), LogUtil.format(mediaId));
+
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/post/" + id);
         if (commentId != null) {
             builder = builder.queryParam("comment", commentId);

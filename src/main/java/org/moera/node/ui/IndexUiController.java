@@ -1,12 +1,13 @@
 package org.moera.node.ui;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletResponse;
 
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.ProfileInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @UiController
 public class IndexUiController {
 
+    private static final Logger log = LoggerFactory.getLogger(IndexUiController.class);
+
     @Inject
     private RequestContext requestContext;
 
@@ -25,13 +28,15 @@ public class IndexUiController {
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/")
     @VirtualPage
-    public String index(Model model) {
+    public String index() {
         return !requestContext.isRegistrar() ? "redirect:/timeline" : "redirect:/registrar";
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/profile")
     @VirtualPage
-    public String profile(Model model, HttpServletResponse response) {
+    public String profile(Model model) {
+        log.info("UI /profile");
+
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
         model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), false));
