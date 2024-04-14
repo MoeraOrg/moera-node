@@ -2,7 +2,6 @@ package org.moera.node.global;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Random;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -11,7 +10,6 @@ import org.moera.node.config.Config;
 import org.moera.node.global.RequestContext.Times;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -28,8 +26,6 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        int rid = new Random().nextInt(65536);
-        MDC.put("rid", String.format("%04x", rid));
         requestContext.setTimes(Times.RECEIVED, Instant.now());
         return true;
     }
@@ -37,10 +33,6 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
                                 Exception ex) {
-        if (!config.getDebug().isLogSlowRequests()) {
-            return;
-        }
-
         Instant now = Instant.now();
         Instant receivedAt = requestContext.getTimes(Times.RECEIVED);
         Instant startedAt = requestContext.getTimes(Times.STARTED);

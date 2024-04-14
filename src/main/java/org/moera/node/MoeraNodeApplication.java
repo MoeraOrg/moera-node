@@ -8,6 +8,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.moera.node.auth.AuthenticationInterceptor;
 import org.moera.node.config.Config;
 import org.moera.node.domain.DomainInterceptor;
+import org.moera.node.global.RequestRateInterceptor;
 import org.moera.node.global.SlowRequestsInnerInterceptor;
 import org.moera.node.global.SlowRequestsInterceptor;
 import org.moera.node.liberin.AfterCommitLiberinsInterceptor;
@@ -74,6 +75,9 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     private SlowRequestsInnerInterceptor slowRequestsInnerInterceptor;
 
     @Inject
+    private RequestRateInterceptor requestRateInterceptor;
+
+    @Inject
     private ApplicationContext applicationContext;
 
     @Bean
@@ -90,7 +94,10 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(slowRequestsInterceptor).order(-3);
+        registry.addInterceptor(requestRateInterceptor).order(-4);
+        if (config.getDebug().isLogSlowRequests()) {
+            registry.addInterceptor(slowRequestsInterceptor).order(-3);
+        }
         registry.addInterceptor(domainInterceptor).order(-2);
         registry.addInterceptor(authenticationInterceptor).order(-1);
         registry.addInterceptor(virtualPageInterceptor);
@@ -99,7 +106,9 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         registry.addInterceptor(clientIdInterceptor);
         registry.addInterceptor(afterCommitLiberinsInterceptor);
         registry.addInterceptor(entitledInterceptor);
-        registry.addInterceptor(slowRequestsInnerInterceptor).order(1);
+        if (config.getDebug().isLogSlowRequests()) {
+            registry.addInterceptor(slowRequestsInnerInterceptor).order(1);
+        }
     }
 
     @Override
