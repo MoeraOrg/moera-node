@@ -30,12 +30,12 @@ import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
-import org.moera.node.data.Posting;
 import org.moera.node.data.QEntry;
 import org.moera.node.data.QEntryAttachment;
 import org.moera.node.data.QEntryRevision;
 import org.moera.node.data.QMediaFile;
 import org.moera.node.data.QMediaFileOwner;
+import org.moera.node.data.QMediaFilePreview;
 import org.moera.node.data.QStory;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
@@ -324,6 +324,7 @@ public class FeedController {
         QEntryAttachment attachment = QEntryAttachment.entryAttachment;
         QMediaFileOwner attachmentMedia = QMediaFileOwner.mediaFileOwner;
         QMediaFile attachmentMediaFile = new QMediaFile("attachmentMediaFile");
+        QMediaFilePreview preview = QMediaFilePreview.mediaFilePreview;
         List<StoryInfo> stories = new JPAQueryFactory(entityManager)
                 .selectFrom(story)
                 .distinct()
@@ -334,7 +335,8 @@ public class FeedController {
                 .leftJoin(currentRevision.attachments, attachment).fetchJoin()
                 .leftJoin(attachment.mediaFileOwner, attachmentMedia).fetchJoin()
                 .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
-                .leftJoin(attachmentMediaFile.previews).fetchJoin()
+                .leftJoin(attachmentMediaFile.previews, preview).fetchJoin()
+                .leftJoin(preview.mediaFile).fetchJoin()
                 .leftJoin(entry.reactionTotals).fetchJoin()
                 .leftJoin(entry.sources).fetchJoin()
                 .leftJoin(entry.ownerAvatarMediaFile).fetchJoin()
@@ -468,7 +470,7 @@ public class FeedController {
         return StoryInfo.build(
                 story,
                 requestContext.isAdmin(),
-                t -> new PostingInfo((Posting) t.getEntry(), List.of(t), requestContext, requestContext.getOptions())
+                t -> new PostingInfo(t.getEntry(), List.of(t), requestContext, requestContext.getOptions())
         );
     }
 

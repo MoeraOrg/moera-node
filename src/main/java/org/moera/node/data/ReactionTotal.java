@@ -2,6 +2,7 @@ package org.moera.node.data;
 
 import java.util.UUID;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -14,10 +15,10 @@ public class ReactionTotal {
     @Id
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Entry entry;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private EntryRevision entryRevision;
 
     @NotNull

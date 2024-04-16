@@ -7,6 +7,7 @@ import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -26,7 +27,7 @@ public class EntryRevision {
     @Size(max = 40)
     private String receiverRevisionId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @NotNull
     private Entry entry;
 
@@ -81,7 +82,7 @@ public class EntryRevision {
 
     private byte[] digest;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private EntryRevision parent;
 
     private Timestamp deadline;

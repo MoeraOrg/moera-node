@@ -7,6 +7,7 @@ import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -43,7 +44,7 @@ public class Story {
     @Enumerated
     private StoryType storyType = StoryType.POSTING_ADDED;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Story parent;
 
     @NotNull
@@ -124,7 +125,7 @@ public class Story {
     @Size(max = 40)
     private String remoteParentMediaId;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Entry entry;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")

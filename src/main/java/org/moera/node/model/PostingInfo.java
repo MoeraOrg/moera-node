@@ -18,12 +18,12 @@ import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.OwnPosting;
-import org.moera.node.data.Posting;
 import org.moera.node.data.SheriffMark;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
@@ -106,28 +106,28 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     public PostingInfo() {
     }
 
-    public PostingInfo(Posting posting, AccessChecker accessChecker) {
+    public PostingInfo(Entry posting, AccessChecker accessChecker) {
         this(posting, posting.getCurrentRevision(), null, false, accessChecker, null);
     }
 
-    public PostingInfo(Posting posting, boolean includeSource, AccessChecker accessChecker) {
+    public PostingInfo(Entry posting, boolean includeSource, AccessChecker accessChecker) {
         this(posting, posting.getCurrentRevision(), null, includeSource, accessChecker, null);
     }
 
-    public PostingInfo(Posting posting, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {
+    public PostingInfo(Entry posting, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {
         this(posting, revision, null, includeSource, accessChecker, null);
     }
 
-    public PostingInfo(Posting posting, Collection<Story> stories, AccessChecker accessChecker, Options options) {
+    public PostingInfo(Entry posting, Collection<Story> stories, AccessChecker accessChecker, Options options) {
         this(posting, posting.getCurrentRevision(), stories, false, accessChecker, options);
     }
 
-    public PostingInfo(Posting posting, Collection<Story> stories, boolean includeSource, AccessChecker accessChecker,
+    public PostingInfo(Entry posting, Collection<Story> stories, boolean includeSource, AccessChecker accessChecker,
                        Options options) {
         this(posting, posting.getCurrentRevision(), stories, includeSource, accessChecker, options);
     }
 
-    public PostingInfo(Posting posting, EntryRevision revision, Collection<Story> stories, boolean includeSource,
+    public PostingInfo(Entry posting, EntryRevision revision, Collection<Story> stories, boolean includeSource,
                        AccessChecker accessChecker, Options options) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
@@ -317,7 +317,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         }
     }
 
-    private void fillSheriffs(Posting posting, Options options) {
+    private void fillSheriffs(Entry posting, Options options) {
         if (posting.isOriginal()) {
             fillFeedSheriffs(options);
             SheriffUtil.deserializeSheriffMarks(posting.getSheriffMarks()).ifPresent(marks -> {
@@ -356,11 +356,11 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         }
     }
 
-    public static PostingInfo forUi(Posting posting) {
+    public static PostingInfo forUi(Entry posting) {
         return forUi(posting, null, null);
     }
 
-    public static PostingInfo forUi(Posting posting, List<Story> stories, Options options) {
+    public static PostingInfo forUi(Entry posting, List<Story> stories, Options options) {
         PostingInfo info = new PostingInfo(posting, stories, AccessCheckers.PUBLIC, options);
         String saneBodyPreview = posting.getCurrentRevision().getSaneBodyPreview();
         if (saneBodyPreview != null) {
@@ -869,7 +869,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         this.totalComments = totalComments;
     }
 
-    public void toPickedPosting(Posting posting) {
+    public void toPickedPosting(Entry posting) {
         posting.setEditedAt(Util.toTimestamp(editedAt));
         posting.setReceiverEntryId(isOriginal() ? id : receiverPostingId);
         posting.setOwnerName(ownerName);

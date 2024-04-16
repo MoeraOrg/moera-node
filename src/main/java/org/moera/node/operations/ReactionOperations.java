@@ -282,7 +282,7 @@ public class ReactionOperations {
                             entry.getId(),
                             reaction.getOwnerName(),
                             PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
-                    if (replaced.size() > 0) {
+                    if (!replaced.isEmpty()) {
                         Reaction next = replaced.get(0);
                         next.setDeletedAt(null);
                         next.setReplaced(false);

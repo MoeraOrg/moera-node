@@ -586,6 +586,7 @@ public class CommentController {
                 .leftJoin(attachment.mediaFileOwner, attachmentMedia).fetchJoin()
                 .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
                 .leftJoin(attachmentMediaFile.previews).fetchJoin()
+                .leftJoin(comment.reactionTotals).fetchJoin()
                 .distinct()
                 .where(commentFilter(
                         requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore(), sheriff

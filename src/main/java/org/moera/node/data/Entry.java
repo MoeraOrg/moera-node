@@ -10,6 +10,7 @@ import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -22,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.TypeDef;
+import org.hibernate.type.PostgresUUIDType;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalType;
 import org.moera.node.util.Util;
@@ -30,6 +32,7 @@ import org.moera.node.util.Util;
 @Table(name = "entries")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "entryType", discriminatorType = DiscriminatorType.INTEGER)
+@TypeDef(name = "pg-uuid", typeClass = PostgresUUIDType.class, defaultForType = UUID.class)
 @TypeDef(name = "Principal", typeClass = PrincipalType.class, defaultForType = Principal.class)
 @TypeDef(name = "ChildOperations", typeClass = ChildOperationsType.class, defaultForType = ChildOperations.class)
 public class Entry {
@@ -112,10 +115,10 @@ public class Entry {
     @Size(max = 255)
     private String acceptedReactionsNegative = "";
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Entry parent;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private MediaFileOwner parentMedia;
 
     @NotNull
@@ -123,10 +126,10 @@ public class Entry {
 
     private Long moment;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Entry repliedTo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private EntryRevision repliedToRevision;
 
     @Size(max = 63)
@@ -138,7 +141,7 @@ public class Entry {
     @Size(max = 31)
     private String repliedToGender;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private MediaFile repliedToAvatarMediaFile;
 
     @Size(max = 8)
