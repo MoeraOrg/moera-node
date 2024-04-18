@@ -91,7 +91,7 @@ public class StoryController {
             }
 
             StoryInfo storyInfo = StoryInfo.build(story, requestContext.isAdmin(),
-                    t -> new PostingInfo((Posting) t.getEntry(), requestContext));
+                    t -> new PostingInfo(t.getEntry(), requestContext));
 
             return Pair.of(story, storyInfo);
         });
