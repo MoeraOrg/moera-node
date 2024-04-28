@@ -144,11 +144,6 @@
             <version>2.15.2</version>
         </dependency>
         <dependency>
-            <groupId>io.github.novacrypto</groupId>
-            <artifactId>BIP39</artifactId>
-            <version>2019.01.27</version>
-        </dependency>
-        <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-lts8on</artifactId>
             <version>2.73.3</version>
@@ -251,24 +246,6 @@
     </dependencies>
 
     <repositories>
-        <repository>
-            <id>novacrypto.bip</id>
-            <name>Nova Crypto BIP</name>
-            <layout>default</layout>
-            <url>https://dl.bintray.com/novacrypto/BIP/</url>
-        </repository>
-        <repository>
-            <id>novacrypto.general</id>
-            <name>Nova Crypto General</name>
-            <layout>default</layout>
-            <url>https://dl.bintray.com/novacrypto/General/</url>
-        </repository>
-        <repository>
-            <id>novacrypto.hashing</id>
-            <name>Nova Crypto Hashing</name>
-            <layout>default</layout>
-            <url>https://dl.bintray.com/novacrypto/Hashing/</url>
-        </repository>
         <repository>
             <id>moera-commons</id>
             <name>MoeraOrg/moera-commons</name>

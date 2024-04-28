@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import io.github.novacrypto.bip39.JavaxPBKDF2WithHmacSHA512;
+import io.github.novacrypto.bip39.JavaxPbkdf2WithHmacSha512;
 import io.github.novacrypto.bip39.MnemonicGenerator;
 import io.github.novacrypto.bip39.SeedCalculator;
 import io.github.novacrypto.bip39.Words;
@@ -99,7 +99,7 @@ public class NodeNameController {
                 random.nextBytes(entropy);
                 StringBuilder mnemonic = new StringBuilder();
                 new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, mnemonic::append);
-                byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE)
+                byte[] seed = new SeedCalculator(JavaxPbkdf2WithHmacSha512.INSTANCE)
                         .calculateSeed(mnemonic.toString(), "");
 
                 secretInfo.setSecret(Util.base64encode(entropy));
@@ -157,7 +157,7 @@ public class NodeNameController {
         } else {
             mnemonic = String.join(" ", registeredNameSecret.getMnemonic());
         }
-        byte[] seed = new SeedCalculator(JavaxPBKDF2WithHmacSHA512.INSTANCE).calculateSeed(mnemonic, "");
+        byte[] seed = new SeedCalculator(JavaxPbkdf2WithHmacSha512.INSTANCE).calculateSeed(mnemonic, "");
 
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
