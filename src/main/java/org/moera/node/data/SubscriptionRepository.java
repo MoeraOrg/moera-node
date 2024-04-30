@@ -16,9 +16,11 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
             + " where s.nodeId = ?1 and s.remoteNodeName = ?2 and s.remoteSubscriberId = ?3 and s.usageCount > 0")
     Optional<Subscription> findBySubscriber(UUID nodeId, String remoteNodeName, String remoteSubscriberId);
 
-    @Query("select s from Subscription s"
-            + " where s.status = org.moera.node.data.SubscriptionStatus.PENDING or s.usageCount = 0")
+    @Query("select s from Subscription s where s.status = org.moera.node.data.SubscriptionStatus.PENDING")
     Collection<Subscription> findPending();
+
+    @Query("select s from Subscription s where s.usageCount = 0")
+    Collection<Subscription> findUnused();
 
     @Query("select s from Subscription s where s.nodeId = ?1 and s.subscriptionType = ?2")
     List<Subscription> findAllByType(UUID nodeId, SubscriptionType subscriptionType);

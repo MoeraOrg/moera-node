@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,8 +68,10 @@ public class SubscriptionManager {
             return;
         }
 
+        Collection<Subscription> list = subscriptionRepository.findPending();
+        list.addAll(subscriptionRepository.findUnused());
         synchronized (lock) {
-            subscriptionRepository.findPending().forEach(this::add);
+            list.forEach(this::add);
         }
     }
 
