@@ -92,10 +92,9 @@ public class UserListUpdateTask extends Task {
             }
             var items = slice.getItems();
             try {
-                inTransaction(() -> {
-                    items.forEach(item -> userListOperations.addToList(listNodeName, listName, item.getNodeName()));
-                    return null;
-                });
+                tx.executeWrite(() ->
+                    items.forEach(item -> userListOperations.addToList(listNodeName, listName, item.getNodeName()))
+                );
             } catch (Throwable e) {
                 log.error("Error creating user list", e);
                 break;
@@ -105,8 +104,8 @@ public class UserListUpdateTask extends Task {
     }
 
     private void deleteList() {
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 Page<RemoteUserListItem> page;
                 Pageable pageable = PageRequest.of(0, LIST_PAGE_SIZE, Sort.Direction.ASC, "cachedAt");
                 do {
@@ -117,26 +116,22 @@ public class UserListUpdateTask extends Task {
                                     listNodeName, listName, sheriffFeedNames, item.getNodeName()));
                     pageable = pageable.next();
                 } while (page.hasNext());
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error deleting user list", e);
-        }
+            },
+            e -> log.error("Error deleting user list", e)
+        );
     }
 
     private void updateListItem() {
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 if (!delete) {
                     userListOperations.addToList(listNodeName, listName, nodeName);
                 } else {
                     userListOperations.deleteFromList(listNodeName, listName, sheriffFeedNames, nodeName);
                 }
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error updating user list item", e);
-        }
+            },
+            e -> log.error("Error updating user list item", e)
+        );
     }
 
 }

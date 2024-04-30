@@ -30,7 +30,6 @@ import org.moera.node.util.Util;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class StoryOperations {
@@ -57,7 +56,7 @@ public class StoryOperations {
     private LiberinManager liberinManager;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
@@ -127,7 +126,7 @@ public class StoryOperations {
     }
 
     @Scheduled(fixedDelayString = "P1D")
-    public void purgeExpired() throws Throwable {
+    public void purgeExpired() throws Exception {
         for (String domainName : domains.getAllDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
             purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
@@ -138,11 +137,11 @@ public class StoryOperations {
     }
 
     private void purgeExpired(UUID nodeId, String domainName, String feedName, String optionName,
-                              boolean viewed, boolean purgePinned) throws Throwable {
+                              boolean viewed, boolean purgePinned) throws Exception {
         Duration lifetime = domains.getDomainOptions(domainName).getDuration(optionName).getDuration();
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
         List<Liberin> liberins = new ArrayList<>();
-        Transaction.execute(txManager, () -> {
+        tx.executeWrite(() -> {
             mediaFileOwnerRepository.lockExclusive();
             List<Story> stories = viewed
                 ? storyRepository.findExpiredViewed(nodeId, feedName, createdBefore)
@@ -154,7 +153,6 @@ public class StoryOperations {
                 storyRepository.delete(story);
                 liberins.add(new StoryDeletedLiberin(story).withNodeId(nodeId));
             });
-            return null;
         });
         liberins.forEach(liberinManager::send);
     }

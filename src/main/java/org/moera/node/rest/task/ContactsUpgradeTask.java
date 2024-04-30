@@ -45,10 +45,10 @@ public class ContactsUpgradeTask extends Task {
         List<ContactUpgrade> upgrades;
         try {
             do {
-                upgrades = inTransaction(() ->
+                upgrades = tx.executeWrite(() ->
                         contactUpgradeRepository.findPending(UpgradeType.PROFILE_DOWNLOAD, pageable));
                 upgrades.forEach(this::download);
-            } while (upgrades.size() > 0);
+            } while (!upgrades.isEmpty());
         } catch (Throwable e) {
             log.error("Cannot fetch contact upgrades", e);
         }
@@ -78,14 +78,10 @@ public class ContactsUpgradeTask extends Task {
     }
 
     private void success(ContactUpgrade upgrade) {
-        try {
-            inTransaction(() -> {
-                contactUpgradeRepository.delete(upgrade);
-                return null;
-            });
-        } catch (Throwable e) {
-            error(upgrade, e);
-        }
+        tx.executeWriteQuietly(
+            () -> contactUpgradeRepository.delete(upgrade),
+            e -> error(upgrade, e)
+        );
         log.info("Succeeded to download the profile of node {}", upgrade.getRemoteNodeName());
     }
 

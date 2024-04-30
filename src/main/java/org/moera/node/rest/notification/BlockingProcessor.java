@@ -25,7 +25,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @NotificationProcessor
 public class BlockingProcessor {
@@ -48,7 +47,7 @@ public class BlockingProcessor {
     private ContactOperations contactOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @NotificationMapping(NotificationType.BLOCKING_ADDED)
     @Transactional
@@ -79,8 +78,8 @@ public class BlockingProcessor {
     }
 
     private void updateAvatarsAndSend(AvatarImage avatarImage, Contact contact, BlockedByUserLiberin liberin) {
-        try {
-            Transaction.execute(txManager, () -> {
+        tx.executeWriteQuietly(
+            () -> {
                 if (avatarImage != null) {
                     contactRepository.updateRemoteAvatar(
                             universalContext.nodeId(),
@@ -93,11 +92,9 @@ public class BlockingProcessor {
                 }
                 liberin.getBlockedByUser().setContact(contact);
                 universalContext.send(liberin);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error saving the downloaded avatar: {}", e.getMessage());
-        }
+            },
+            e -> log.error("Error saving the downloaded avatar: {}", e.getMessage())
+        );
     }
 
     @NotificationMapping(NotificationType.BLOCKING_DELETED)

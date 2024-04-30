@@ -50,7 +50,6 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -89,14 +88,14 @@ public class PostingReactionController {
     private BlockedUserOperations blockedUserOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private final ParametrizedLock<UUID> lock = new ParametrizedLock<>();
 
     @PostMapping("/{postingId}/reactions")
     public ResponseEntity<ReactionCreated> post(
             @PathVariable UUID postingId,
-            @Valid @RequestBody ReactionDescription reactionDescription) throws Throwable {
+            @Valid @RequestBody ReactionDescription reactionDescription) throws Exception {
 
         log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {})",
                 LogUtil.format(postingId),
@@ -105,7 +104,7 @@ public class PostingReactionController {
 
         lock.lock(postingId);
         try {
-            return Transaction.execute(txManager, () -> {
+            return tx.executeWrite(() -> {
                 Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
                 if (posting.getCurrentRevision().getSignature() == null) {
@@ -323,7 +322,7 @@ public class PostingReactionController {
 
     @DeleteMapping("/{postingId}/reactions/{ownerName}")
     @Transactional
-    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) throws Throwable {
+    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) throws Exception {
         log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
@@ -338,7 +337,7 @@ public class PostingReactionController {
                 throw new UserBlockedException();
             }
 
-            ReactionTotalsInfo info = Transaction.execute(txManager, () -> {
+            ReactionTotalsInfo info = tx.executeWrite(() -> {
                 if (posting.isOriginal()) {
                     return deleteFromOriginal(ownerName, posting);
                 } else {

@@ -54,14 +54,10 @@ public class AllRemoteAvatarsDownloadTask extends Task {
                 delay = delay.multipliedBy(2);
             }
         }
-        try {
-            inTransaction(() -> {
-                domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.AVATAR_DOWNLOAD, nodeId);
-                return null;
-            });
-        } catch (Throwable t) {
-            log.error("Error deleting domain upgrade record: {}", t.getMessage());
-        }
+        tx.executeWriteQuietly(
+            () -> domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.AVATAR_DOWNLOAD, nodeId),
+            e -> log.error("Error deleting domain upgrade record: {}", e.getMessage())
+        );
     }
 
     private Set<String> getTargetNodeNames() {
@@ -70,14 +66,12 @@ public class AllRemoteAvatarsDownloadTask extends Task {
                 .collect(Collectors.toSet());
     }
 
-    private void download(String targetNodeName) throws Throwable {
+    private void download(String targetNodeName) throws Exception {
         AvatarImage targetAvatar = nodeApi.whoAmI(targetNodeName).getAvatar();
         MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar);
         if (mediaFile != null) {
-            inTransaction(() -> {
-                contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape());
-                return null;
-            });
+            tx.executeWrite(() ->
+                    contactRepository.updateRemoteAvatar(nodeId, targetNodeName, mediaFile, targetAvatar.getShape()));
         }
     }
 

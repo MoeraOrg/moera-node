@@ -24,7 +24,6 @@ import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -48,7 +47,7 @@ public class StoryController {
     private StoryOperations storyOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @GetMapping("/{id}")
     @Transactional
@@ -69,7 +68,7 @@ public class StoryController {
 
     @PutMapping("/{id}")
     @Admin
-    public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) throws Throwable {
+    public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) throws Exception {
         log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
                 LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
@@ -77,7 +76,7 @@ public class StoryController {
                 LogUtil.format(storyAttributes.getViewed()),
                 LogUtil.format(storyAttributes.getRead()));
 
-        Pair<Story, StoryInfo> info = Transaction.execute(txManager, () -> {
+        Pair<Story, StoryInfo> info = tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                     .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
             if (story.getEntry() != null && !requestContext.isPrincipal(story.getViewPrincipalFilter())) {

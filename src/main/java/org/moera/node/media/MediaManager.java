@@ -39,7 +39,6 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class MediaManager {
@@ -70,7 +69,7 @@ public class MediaManager {
     private MediaOperations mediaOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     @PersistenceContext
@@ -314,9 +313,8 @@ public class MediaManager {
     }
 
     public void cacheUploadedRemoteMedia(String remoteNodeName, String remoteMediaId, byte[] digest) {
-        boolean cached = remoteMediaCacheRepository
-                .findByMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId)
-                .size() > 0;
+        boolean cached = !remoteMediaCacheRepository
+                .findByMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId).isEmpty();
         if (!cached) {
             cacheRemoteMedia(universalContext.nodeId(), remoteNodeName, remoteMediaId, digest, null);
         }
@@ -325,7 +323,7 @@ public class MediaManager {
     private void cacheRemoteMedia(UUID nodeId, String remoteNodeName, String remoteMediaId, byte[] digest,
                                   MediaFile mediaFile) {
         try {
-            Transaction.execute(txManager, () -> {
+            tx.executeWrite(() -> {
                 RemoteMediaCache cache = new RemoteMediaCache();
                 cache.setId(UUID.randomUUID());
                 cache.setNodeId(nodeId);
@@ -335,7 +333,6 @@ public class MediaManager {
                 cache.setMediaFile(mediaFile);
                 cache.setDeadline(Timestamp.from(Instant.now().plus(REMOTE_MEDIA_CACHE_TTL, ChronoUnit.DAYS)));
                 remoteMediaCacheRepository.save(cache);
-                return null;
             });
         } catch (DataIntegrityViolationException e) {
             // already created in another thread, ignore

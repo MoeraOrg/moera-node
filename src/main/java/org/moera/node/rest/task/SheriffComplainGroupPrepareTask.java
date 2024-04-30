@@ -158,7 +158,7 @@ public class SheriffComplainGroupPrepareTask extends Task {
 
     private void updateComplainGroup(Consumer<SheriffComplainGroup> updater) {
         try {
-            var liberin = inTransaction(() -> {
+            var liberin = tx.executeWrite(() -> {
                 SheriffComplainGroup complainGroup = sheriffComplainGroupRepository.findByNodeIdAndId(nodeId, groupId)
                         .orElse(null);
                 if (complainGroup == null) {

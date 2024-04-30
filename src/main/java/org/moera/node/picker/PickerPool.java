@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
@@ -24,7 +23,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
 public class PickerPool {
@@ -51,7 +49,7 @@ public class PickerPool {
     private UniversalContext universalContext;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     private PickRepository pickRepository;
@@ -113,26 +111,22 @@ public class PickerPool {
         pickers.remove(new PickingDirection(nodeId, nodeName));
     }
 
-    private Pick storePick(final Pick detachedPick) throws Throwable {
+    private Pick storePick(final Pick detachedPick) throws Exception {
         detachedPick.setId(UUID.randomUUID());
         if (detachedPick.getNodeId() == null) {
             detachedPick.setNodeId(universalContext.nodeId());
         }
-        Pick pick = inTransaction(() -> pickRepository.saveAndFlush(detachedPick));
+        Pick pick = tx.executeWrite(() -> pickRepository.saveAndFlush(detachedPick));
         pending.put(pick.getId(), pick);
         return pick;
     }
 
     private void deletePick(Pick pick) {
         pending.remove(pick.getId());
-        try {
-            inTransaction(() -> {
-                pickRepository.findById(pick.getId()).ifPresent(pickRepository::delete);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error deleting pick", e);
-        }
+        tx.executeWriteQuietly(
+            () -> pickRepository.findById(pick.getId()).ifPresent(pickRepository::delete),
+            e -> log.error("Error deleting pick", e)
+        );
     }
 
     void pickSucceeded(Pick pick) {
@@ -162,19 +156,13 @@ public class PickerPool {
 
         log.info("Pick {} failed, retrying in {}s", pick.getId(), delay.getSeconds());
         pick.setRetryAt(Timestamp.from(pick.getRetryAt().toInstant().plus(delay)));
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 pickRepository.saveAndFlush(pick);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error updating pick", e);
-        }
+            },
+            e -> log.error("Error updating pick", e)
+        );
         pick.setRunning(false);
-    }
-
-    private <T> T inTransaction(Callable<T> inside) throws Throwable {
-        return Transaction.execute(txManager, inside);
     }
 
 }

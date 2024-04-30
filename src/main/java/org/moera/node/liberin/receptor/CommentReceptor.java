@@ -43,7 +43,6 @@ import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.UserListOperations;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.Transaction;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @LiberinReceptor
 public class CommentReceptor extends LiberinReceptorBase {
@@ -61,7 +60,7 @@ public class CommentReceptor extends LiberinReceptorBase {
     private UserListOperations userListOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     private EntityManager entityManager;
@@ -120,7 +119,7 @@ public class CommentReceptor extends LiberinReceptorBase {
 
     private void notifySubscribersCommentAdded(Posting posting, Comment comment) {
         if (comment.getCurrentRevision().getSignature() != null) {
-            Transaction.executeQuietly(txManager, () -> {
+            tx.executeWriteQuietly(() -> {
                 Posting aposting = entityManager.merge(posting);
                 Comment acomment = entityManager.merge(comment);
                 PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), AccessCheckers.ADMIN,
@@ -138,7 +137,6 @@ public class CommentReceptor extends LiberinReceptorBase {
                                 comment.getOwnerGender(), commentInfo.getOwnerAvatar(), commentInfo.getHeading(),
                                 commentInfo.getSheriffMarks(), repliedToId));
                 commentInstants.added(comment);
-                return null;
             });
         }
     }
@@ -148,7 +146,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 || comment.getTotalRevisions() > 1) {
             return;
         }
-        Transaction.executeQuietly(txManager, () -> {
+        tx.executeWriteQuietly(() -> {
             Posting aposting = entityManager.merge(posting);
             Comment acomment = entityManager.merge(comment);
             PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), AccessCheckers.ADMIN,
@@ -164,7 +162,6 @@ public class CommentReceptor extends LiberinReceptorBase {
                             postingInfo.getSheriffMarks(), acomment.getOwnerName(), acomment.getOwnerFullName(),
                             acomment.getOwnerGender(), commentInfo.getOwnerAvatar(), commentInfo.getHeading(),
                             commentInfo.getSheriffMarks(), acomment.getRepliedToHeading()));
-            return null;
         });
     }
 

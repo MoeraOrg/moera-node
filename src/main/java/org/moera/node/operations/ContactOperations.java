@@ -22,7 +22,6 @@ import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class ContactOperations {
@@ -34,7 +33,7 @@ public class ContactOperations {
     private ContactRepository contactRepository;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private final ParametrizedLock<Pair<UUID, String>> lock = new ParametrizedLock<>();
 
@@ -45,7 +44,7 @@ public class ContactOperations {
 
         lock.lock(Pair.of(nodeId, remoteNodeName));
         try {
-            return Transaction.execute(txManager, () -> {
+            return tx.executeWrite(() -> {
                 Contact contact = contactRepository.findByRemoteNode(nodeId, remoteNodeName).orElse(null);
                 if (contact == null) {
                     contact = new Contact();

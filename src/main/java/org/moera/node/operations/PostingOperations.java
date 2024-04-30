@@ -49,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 
 @Component
@@ -91,7 +90,7 @@ public class PostingOperations {
     private LiberinManager liberinManager;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private Posting newPosting(String ownerName) {
         Posting posting = new Posting();
@@ -283,28 +282,27 @@ public class PostingOperations {
     }
 
     @Scheduled(fixedDelayString = "PT1H")
-    public void purgeUnlinked() throws Throwable {
+    public void purgeUnlinked() throws Exception {
         for (String domainName : domains.getAllDomainNames()) {
             Options options = domains.getDomainOptions(domainName);
             List<Liberin> liberinList = new ArrayList<>();
-            Transaction.execute(txManager, () -> {
+            tx.executeWrite(() ->
                 postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
                     log.info("Deleting unlinked posting {}", posting.getId());
                     EntryRevision latest = posting.getCurrentRevision();
                     deletePosting(posting, options);
                     liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
-                });
-                return null;
-            });
+                })
+            );
             liberinList.forEach(liberinManager::send);
         }
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Throwable {
+    public void purgeExpired() throws Exception {
         List<Liberin> liberins = new ArrayList<>();
 
-        Transaction.execute(txManager, () -> {
+        tx.executeWrite(() -> {
             List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
             for (Posting posting : postings) {
                 universalContext.associate(posting.getNodeId());
@@ -330,8 +328,6 @@ public class PostingOperations {
                     }
                 }
             }
-
-            return null;
         });
 
         liberins.forEach(liberinManager::send);

@@ -68,7 +68,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -109,7 +108,7 @@ public class FeedController {
     private UserListOperations userListOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     @PersistenceContext
@@ -172,7 +171,7 @@ public class FeedController {
     @Admin
     @Transactional
     public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change)
-            throws Throwable {
+            throws Exception {
         log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
                 LogUtil.format(feedName), LogUtil.format(change.getViewed()), LogUtil.format(change.getRead()),
                 LogUtil.format(change.getBefore()));
@@ -182,7 +181,7 @@ public class FeedController {
         }
 
         Set<Story> instantsUpdated = new HashSet<>();
-        Transaction.execute(txManager, () -> {
+        tx.executeWrite(() -> {
             if (change.getViewed() != null) {
                 if (feedName.equals(Feed.INSTANT)) {
                     instantsUpdated.addAll(storyRepository.findViewed(requestContext.nodeId(), feedName,
@@ -195,7 +194,6 @@ public class FeedController {
                 storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(),
                         change.getBefore(), !change.getRead());
             }
-            return null;
         });
 
         FeedStatus feedStatus = storyOperations.getFeedStatus(feedName, true);

@@ -80,7 +80,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 
 @Component
@@ -117,7 +116,7 @@ public class MediaOperations {
     private StoryRepository storyRepository;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     public TemporaryFile tmpFile() {
         while (true) {
@@ -533,17 +532,11 @@ public class MediaOperations {
     }
 
     @Scheduled(fixedDelayString = "PT6H")
-    public void purgeUnused() throws Throwable {
+    public void purgeUnused() throws Exception {
         Timestamp now = Util.now();
-        Transaction.execute(txManager, () -> {
-            mediaFileOwnerRepository.deleteUnused(now);
-            return null;
-        });
+        tx.executeWrite(() -> mediaFileOwnerRepository.deleteUnused(now));
         List<Path> fileNames = mediaFileRepository.findUnused(now).stream().map(this::getPath).toList();
-        Transaction.execute(txManager, () -> {
-            mediaFileRepository.deleteUnused(now);
-            return null;
-        });
+        tx.executeWrite(() -> mediaFileRepository.deleteUnused(now));
         for (Path path : fileNames) {
             try {
                 Files.deleteIfExists(path);

@@ -414,7 +414,7 @@ public class UserListOperations {
     }
 
     @OptionHook("sheriffs.timeline")
-    public void timelineSheriffChanged(OptionValueChange change) throws Throwable {
+    public void timelineSheriffChanged(OptionValueChange change) throws Exception {
         universalContext.associate(change.getNodeId());
         Function<String, String> prevOptions =
                 name -> name.equals(change.getName())

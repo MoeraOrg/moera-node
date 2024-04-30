@@ -40,7 +40,6 @@ import org.slf4j.MDC;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
 public class NamingClient {
@@ -62,7 +61,7 @@ public class NamingClient {
     private TaskScheduler taskScheduler;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     private LiberinManager liberinManager;
@@ -125,11 +124,10 @@ public class NamingClient {
                 return;
             }
 
-            Transaction.executeQuietly(txManager, () -> {
+            tx.executeWriteQuietly(() -> {
                 retries.set(0);
                 if (info.getStatus() == null) {
                     unknownOperationStatus(options);
-                    return null;
                 }
                 log.info("Naming operation {}, status is {}", id, info.getStatus().name());
                 updateOperationStatus(options, info.getStatus());
@@ -151,7 +149,6 @@ public class NamingClient {
                         options.reset("naming.operation.id");
                         break;
                 }
-                return null;
             });
 
             if (options.getUuid("naming.operation.id") == null) {

@@ -29,7 +29,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @NotificationProcessor
 public class FriendProcessor {
@@ -52,7 +51,7 @@ public class FriendProcessor {
     private ContactOperations contactOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @NotificationMapping(NotificationType.FRIENDSHIP_UPDATED)
     @Transactional
@@ -101,8 +100,8 @@ public class FriendProcessor {
     }
 
     private void updateAvatarsAndSend(AvatarImage avatarImage, Contact contact, RemoteFriendshipUpdatedLiberin liberin) {
-        try {
-            Transaction.execute(txManager, () -> {
+        tx.executeWriteQuietly(
+            () -> {
                 if (avatarImage != null) {
                     contactRepository.updateRemoteAvatar(
                             universalContext.nodeId(),
@@ -115,11 +114,9 @@ public class FriendProcessor {
                 }
                 liberin.setContact(contact);
                 universalContext.send(liberin);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error saving the downloaded avatar: {}", e.getMessage());
-        }
+            },
+            e -> log.error("Error saving the downloaded avatar: {}", e.getMessage())
+        );
     }
 
     @NotificationMapping(NotificationType.FRIEND_GROUP_UPDATED)

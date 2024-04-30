@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.method.HandlerMethod;
 
 @Service
@@ -38,7 +37,7 @@ public class LiberinManager implements Runnable {
     private Plugins plugins;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @PostConstruct
     public void init() {
@@ -97,15 +96,11 @@ public class LiberinManager implements Runnable {
                 liberin.setPluginContext(universalContext);
             }
 
-            try {
-                Liberin lb = liberin;
-                Transaction.execute(txManager, () -> {
-                    plugins.send(lb);
-                    return null;
-                });
-            } catch (Throwable e) {
-                log.error(String.format("Error sending liberin %s to plugins:", liberin.getClass().getSimpleName()), e);
-            }
+            Liberin lb = liberin;
+            tx.executeWriteQuietly(
+                () -> plugins.send(lb),
+                e -> log.error(String.format("Error sending liberin %s to plugins:", lb.getClass().getSimpleName()), e)
+            );
 
             log.debug("Delivering liberin {}", liberin.getClass().getSimpleName());
             HandlerMethod handler = handlers.get(liberin.getClass());
@@ -113,15 +108,13 @@ public class LiberinManager implements Runnable {
                 log.debug("Mapping for liberin {} not found, skipping", liberin.getClass().getSimpleName());
                 continue;
             }
-            try {
-                Liberin lb = liberin;
-                Transaction.execute(txManager, () -> {
+
+            tx.executeWriteQuietly(
+                () -> {
                     handler.getMethod().invoke(handler.getBean(), lb);
-                    return null;
-                });
-            } catch (Throwable e) {
-                log.error(String.format("Error handling liberin %s:", liberin.getClass().getSimpleName()), e);
-            }
+                },
+                e -> log.error(String.format("Error handling liberin %s:", lb.getClass().getSimpleName()), e)
+            );
         }
     }
 

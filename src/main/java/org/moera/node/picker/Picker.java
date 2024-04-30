@@ -143,13 +143,13 @@ public class Picker extends Task {
         remoteAvatarShape = remote.getAvatar() != null ? remote.getAvatar().getShape() : null;
     }
 
-    private void download(Pick pick) throws Throwable {
+    private void download(Pick pick) throws Exception {
         log.info("Downloading pick {} from node {}, postingId = {}",
                 LogUtil.format(pick.getId()), LogUtil.format(remoteNodeName), LogUtil.format(pick.getRemotePostingId()));
 
         List<Liberin> liberins = new ArrayList<>();
         List<Pick> picks = new ArrayList<>();
-        Posting posting = inTransaction(() -> {
+        Posting posting = tx.executeWrite(() -> {
             Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(),
                     liberins, picks);
             saveSources(p, pick);

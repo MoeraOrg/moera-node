@@ -174,8 +174,8 @@ public class RemoteCommentPostTask extends Task {
     }
 
     private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) {
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 OwnComment ownComment = ownCommentRepository
                         .findByRemoteCommentId(nodeId, targetNodeName, postingId, commentId)
                         .orElse(null);
@@ -199,11 +199,9 @@ public class RemoteCommentPostTask extends Task {
                 }
                 info.toOwnComment(ownComment);
                 ownComment.setPostingHeading(postingInfo.getHeading());
-                return null;
-            });
-        } catch (Throwable e) {
-            error(e);
-        }
+            },
+            this::error
+        );
     }
 
     private void success() {

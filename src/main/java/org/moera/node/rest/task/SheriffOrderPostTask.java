@@ -108,14 +108,12 @@ public class SheriffOrderPostTask extends Task {
         }
         nodeApi.postSheriffOrder(remoteNodeName, sheriffOrderDetails);
 
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 sheriffOrderRepository.save(sheriffOrder);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Could not store sheriff order", e);
-        }
+            },
+            e -> log.error("Could not store sheriff order", e)
+        );
 
         send(new SheriffOrderSentLiberin(nodeName(), sheriffOrder));
     }

@@ -18,7 +18,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class PushClients {
@@ -42,7 +41,7 @@ public class PushClients {
     private TaskAutowire taskAutowire;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     public PushClients(UUID nodeId) {
         this.nodeId = nodeId;
@@ -112,8 +111,8 @@ public class PushClients {
     }
 
     private void storePacket(PushPacket packet) {
-        try {
-            Transaction.execute(txManager, () -> {
+        tx.executeWriteQuietly(
+            () -> {
                 for (PushClient client : clients.values()) {
                     PushNotification pn = new PushNotification();
                     pn.setId(UUID.randomUUID());
@@ -122,11 +121,9 @@ public class PushClients {
                     pn.setContent(packet.getContent());
                     pushNotificationRepository.save(pn);
                 }
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error storing a push packet", e);
-        }
+            },
+            e -> log.error("Error storing a push packet", e)
+        );
     }
 
     public void send(String content) {

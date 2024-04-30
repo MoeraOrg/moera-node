@@ -32,7 +32,6 @@ import org.moera.node.option.type.OptionTypeBase;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -59,7 +58,7 @@ public class SettingsController {
     private OptionsOperations optionsOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private List<SettingInfo> getOptions(Predicate<String> nameFilter) {
         List<SettingInfo> list = new ArrayList<>();
@@ -108,10 +107,10 @@ public class SettingsController {
     @PutMapping("/node/metadata")
     @RootAdmin
     @Transactional
-    public Result putMetadata(@RequestBody @Valid List<SettingMetaAttributes> metaAttributes) throws Throwable {
+    public Result putMetadata(@RequestBody @Valid List<SettingMetaAttributes> metaAttributes) throws Exception {
         log.info("PUT /settings/node/metadata");
 
-        boolean metaChanged = Transaction.execute(txManager, () -> {
+        boolean metaChanged = tx.executeWrite(() -> {
             boolean changed = false;
 
             for (SettingMetaAttributes meta : metaAttributes) {

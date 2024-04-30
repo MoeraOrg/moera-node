@@ -49,14 +49,10 @@ public class AllRemoteGendersDownloadTask extends Task {
                 delay = delay.multipliedBy(2);
             }
         }
-        try {
-            inTransaction(() -> {
-                domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.GENDER_DOWNLOAD, nodeId);
-                return null;
-            });
-        } catch (Throwable t) {
-            log.error("Error deleting domain upgrade record: {}", t.getMessage());
-        }
+        tx.executeWriteQuietly(
+            () -> domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.GENDER_DOWNLOAD, nodeId),
+            e -> log.error("Error deleting domain upgrade record: {}", e.getMessage())
+        );
     }
 
     private Set<String> getTargetNodeNames() {
@@ -65,15 +61,13 @@ public class AllRemoteGendersDownloadTask extends Task {
                 .collect(Collectors.toSet());
     }
 
-    private void download(String targetNodeName) throws Throwable {
+    private void download(String targetNodeName) throws Exception {
         WhoAmI target = nodeApi.whoAmI(targetNodeName);
         String targetFullName = target.getFullName();
         String targetGender = target.getGender();
         if (targetGender != null) {
-            inTransaction(() -> {
-                contactRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName, targetFullName, targetGender);
-                return null;
-            });
+            tx.executeWrite(() ->
+                contactRepository.updateRemoteFullNameAndGender(nodeId, targetNodeName, targetFullName, targetGender));
         }
     }
 

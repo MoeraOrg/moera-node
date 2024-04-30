@@ -31,7 +31,6 @@ import org.moera.node.util.Util;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 
 @Component
@@ -60,7 +59,7 @@ public class BlockedUserOperations {
     private EntityManager entityManager;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private static <E> List<E> single(E e) {
         return e != null ? List.of(e) : null;
@@ -194,9 +193,9 @@ public class BlockedUserOperations {
     }
 
     @Scheduled(fixedDelayString = "PT1H")
-    public void purgeExpired() throws Throwable {
+    public void purgeExpired() throws Exception {
         List<Liberin> liberinList = new ArrayList<>();
-        Transaction.execute(txManager, () -> {
+        tx.executeWrite(() -> {
             Set<UUID> nodeIds = new HashSet<>();
             blockedUserRepository.findExpired(Util.now()).forEach(blockedUser -> {
                 nodeIds.add(blockedUser.getNodeId());
@@ -206,7 +205,6 @@ public class BlockedUserOperations {
                 liberinList.add(new BlockedUserDeletedLiberin(blockedUser).withNodeId(blockedUser.getNodeId()));
             });
             nodeIds.forEach(this::recalculateChecksums);
-            return null;
         });
         liberinList.forEach(liberinManager::send);
     }

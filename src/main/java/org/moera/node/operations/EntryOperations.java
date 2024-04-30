@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class EntryOperations {
@@ -30,10 +29,10 @@ public class EntryOperations {
     private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Scheduled(fixedDelayString = "P1D")
-    public void purgeOutdatedRevisions() throws Throwable {
+    public void purgeOutdatedRevisions() throws Exception {
         for (String domainName : domains.getAllDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
             purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, true, "posting.revision.lifetime");
@@ -43,7 +42,7 @@ public class EntryOperations {
     }
 
     private void purgeOutdatedRevisions(UUID nodeId, String domainName, EntryType entryType, boolean original,
-                                        String optionName) throws Throwable {
+                                        String optionName) throws Exception {
         MDC.put("domain", domainName);
 
         ExtendedDuration lifetime = domains.getDomainOptions(domainName).getDuration(optionName);
@@ -56,10 +55,9 @@ public class EntryOperations {
                 : entryRevisionRepository.findNotOriginalEntriesWithOutdated(nodeId, entryType, createdBefore);
         for (UUID entryId : entryIds) {
             log.info("Purging revisions of entry {}", entryId);
-            Transaction.execute(txManager, () -> {
+            tx.executeWrite(() -> {
                 entryRevisionRepository.deleteOutdated(entryId, createdBefore);
                 entryRevisionRepository.updateTotalRevisions(entryId);
-                return null;
             });
         }
     }

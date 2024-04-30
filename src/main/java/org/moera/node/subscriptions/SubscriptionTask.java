@@ -58,8 +58,8 @@ public class SubscriptionTask extends Task {
     protected void execute() {
         log.info("Establishing/closing subscription {}", subscriptionId);
         try {
-            Subscription subscription = inTransaction(
-                    () -> subscriptionRepository.findById(subscriptionId).orElse(null)
+            Subscription subscription = tx.executeRead(
+                () -> subscriptionRepository.findById(subscriptionId).orElse(null)
             );
             if (subscription == null) {
                 log.info("Subscription does not exist, ignoring");

@@ -95,8 +95,8 @@ public class RemotePostingReactionPostTask extends Task {
     }
 
     private void saveReaction(ReactionInfo info) {
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 OwnReaction ownReaction = ownReactionRepository
                         .findByRemotePostingId(nodeId, targetNodeName, postingId)
                         .orElse(null);
@@ -115,11 +115,9 @@ public class RemotePostingReactionPostTask extends Task {
                 }
                 info.toOwnReaction(ownReaction);
                 ownReaction.setPostingHeading(postingInfo.getHeading());
-                return null;
-            });
-        } catch (Throwable e) {
-            error(e);
-        }
+            },
+            this::error
+        );
         send(new RemotePostingReactionAddedLiberin(targetNodeName, postingId, info));
     }
 

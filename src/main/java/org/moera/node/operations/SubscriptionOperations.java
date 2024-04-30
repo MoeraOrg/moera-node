@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 
 @Component
@@ -38,7 +37,7 @@ public class SubscriptionOperations {
     private ContactOperations contactOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -47,10 +46,10 @@ public class SubscriptionOperations {
     @Inject
     private TaskAutowire taskAutowire;
 
-    public UserSubscription subscribe(Consumer<UserSubscription> toUserSubscription) throws Throwable {
+    public UserSubscription subscribe(Consumer<UserSubscription> toUserSubscription) throws Exception {
         UserSubscription subscription;
         try {
-            subscription = Transaction.execute(txManager, () -> {
+            subscription = tx.executeWrite(() -> {
                 UserSubscription userSubscription = new UserSubscription();
                 userSubscription.setId(UUID.randomUUID());
                 userSubscription.setNodeId(universalContext.nodeId());
@@ -91,7 +90,7 @@ public class SubscriptionOperations {
         return subscription;
     }
 
-    public void autoSubscribe() throws Throwable {
+    public void autoSubscribe() throws Exception {
         String remoteNodeName = universalContext.getOptions().getString("subscription.auto.node");
         if (ObjectUtils.isEmpty(remoteNodeName)) {
             return;

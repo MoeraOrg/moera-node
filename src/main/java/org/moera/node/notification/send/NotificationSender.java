@@ -183,10 +183,7 @@ public class NotificationSender extends Task {
         if (notification.getPendingNotificationId() == null) {
             return;
         }
-        inTransactionQuietly(() -> {
-            pendingNotificationRepository.deleteById(notification.getPendingNotificationId());
-            return null;
-        });
+        tx.executeWriteQuietly(() -> pendingNotificationRepository.deleteById(notification.getPendingNotificationId()));
     }
 
     private void succeeded(Result result) {

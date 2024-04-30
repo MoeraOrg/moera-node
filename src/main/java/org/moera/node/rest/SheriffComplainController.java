@@ -34,7 +34,6 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,14 +63,14 @@ public class SheriffComplainController {
     private TaskAutowire taskAutowire;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
     @PostMapping
     @Transactional
     public ResponseEntity<SheriffComplainInfo> post(@Valid @RequestBody SheriffComplainText sheriffComplainText)
-            throws Throwable {
+            throws Exception {
 
         log.info("POST /sheriff/complains"
                         + " (nodeName = {}, feedName = {}, postingId = {}, commentId = {}, reasonCode = {})",
@@ -116,13 +115,13 @@ public class SheriffComplainController {
     }
 
     private Pair<SheriffComplainGroup, Boolean> findOrCreateComplainGroup(SheriffComplainText sheriffComplainText)
-            throws Throwable {
+            throws Exception {
         SheriffComplainGroup group = findComplainGroup(sheriffComplainText).orElse(null);
         if (group != null) {
             return Pair.of(group, false);
         }
         try {
-            return Transaction.execute(txManager, () -> {
+            return tx.executeWrite(() -> {
                 SheriffComplainGroup grp = new SheriffComplainGroup();
                 grp.setId(UUID.randomUUID());
                 grp.setNodeId(requestContext.nodeId());

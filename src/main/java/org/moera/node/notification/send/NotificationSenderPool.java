@@ -44,7 +44,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
 public class NotificationSenderPool {
@@ -95,7 +94,7 @@ public class NotificationSenderPool {
     private ObjectMapper objectMapper;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @EventListener(DomainsConfiguredEvent.class)
     public void init() {
@@ -225,7 +224,7 @@ public class NotificationSenderPool {
     }
 
     void unsubscribe(UUID subscriberId) {
-        Subscriber subscriber = Transaction.executeQuietly(txManager, () -> {
+        Subscriber subscriber = tx.executeWriteQuietly(() -> {
             Subscriber subscr = subscriberRepository.findById(subscriberId).orElse(null);
             if (subscr != null) {
                 subscriberRepository.delete(subscr);
@@ -253,10 +252,9 @@ public class NotificationSenderPool {
         if (notification instanceof SubscriberNotification) {
             pending.setSubscriptionCreatedAt(((SubscriberNotification) notification).getSubscriptionCreatedAt());
         }
-        Transaction.executeQuietly(txManager, () -> {
+        tx.executeWriteQuietly(() -> {
             pendingNotificationRepository.save(pending);
             notification.setPendingNotificationId(pending.getId());
-            return null;
         });
     }
 

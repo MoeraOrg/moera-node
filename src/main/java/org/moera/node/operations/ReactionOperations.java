@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
@@ -38,7 +39,6 @@ import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfo;
 import org.moera.node.model.ReactionsSliceInfo;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.api.naming.NamingCache;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
@@ -53,7 +53,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 
 @Component
@@ -89,7 +88,7 @@ public class ReactionOperations {
     private BlockedUserOperations blockedUserOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private final MomentFinder momentFinder = new MomentFinder();
 
@@ -270,9 +269,9 @@ public class ReactionOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Throwable {
+    public void purgeExpired() throws Exception {
         Set<Entry> changed = new HashSet<>();
-        Transaction.execute(txManager, () -> {
+        tx.executeWrite(() ->
             reactionRepository.findExpired(Util.now()).forEach(reaction -> {
                 log.debug("Purging reaction {}, deletedAt = {}",
                         LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
@@ -297,9 +296,8 @@ public class ReactionOperations {
                     changed.add(entry);
                 }
                 reactionRepository.delete(reaction);
-            });
-            return null;
-        });
+            })
+        );
         for (Entry entry : changed) {
             switch (entry.getEntryType()) {
                 case POSTING: {

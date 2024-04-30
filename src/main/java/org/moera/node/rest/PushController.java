@@ -22,8 +22,8 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.sse.StreamEmitter;
 import org.moera.node.push.PushService;
+import org.moera.node.sse.StreamEmitter;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -60,7 +59,7 @@ public class PushController {
     private PushClientRepository pushClientRepository;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     @PersistenceContext
@@ -71,7 +70,7 @@ public class PushController {
     public StreamEmitter get(@PathVariable String clientId,
                              @RequestParam(name = "after", required = false) Long after,
                              @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
-            throws Throwable {
+            throws Exception {
 
         log.info("GET /push/{clientId} (clientId = {}, after = {}, Last-Event-ID = {})",
                 LogUtil.format(clientId), LogUtil.format(after), LogUtil.format(lastEventId));
@@ -95,7 +94,7 @@ public class PushController {
         return emitter;
     }
 
-    private PushClient getClient(String clientId) throws Throwable {
+    private PushClient getClient(String clientId) throws Exception {
         PushClient client = pushClientRepository.findByClientId(requestContext.nodeId(), clientId).orElse(null);
         if (client != null) {
             return client;
@@ -107,7 +106,7 @@ public class PushController {
         }
 
         try {
-            client = Transaction.execute(txManager, () -> {
+            client = tx.executeWrite(() -> {
                 PushClient clt = new PushClient();
                 clt.setId(UUID.randomUUID());
                 clt.setNodeId(requestContext.nodeId());
@@ -121,11 +120,10 @@ public class PushController {
         return client;
     }
 
-    private void updateLastSeenAt(PushClient client) throws Throwable {
-        Transaction.execute(txManager, () -> {
+    private void updateLastSeenAt(PushClient client) throws Exception {
+        tx.executeWrite(() -> {
             client.setLastSeenAt(Util.now());
             pushClientRepository.save(client);
-            return null;
         });
     }
 

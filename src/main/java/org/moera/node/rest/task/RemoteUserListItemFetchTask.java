@@ -76,7 +76,7 @@ public class RemoteUserListItemFetchTask extends Task {
     }
 
     private void save(boolean absent) {
-        inTransactionQuietly(() -> { // If exception occurs, it means the record is already saved by a parallel task
+        tx.executeWriteQuietly(() -> { // If exception occurs, it means the record is already saved by a parallel task
             RemoteUserListItem item = new RemoteUserListItem();
             item.setId(UUID.randomUUID());
             item.setNodeId(getNodeId());
@@ -87,13 +87,12 @@ public class RemoteUserListItemFetchTask extends Task {
             Duration ttl = item.isAbsent() ? UserListOperations.ABSENT_TTL : UserListOperations.PRESENT_TTL;
             item.setDeadline(Timestamp.from(Instant.now().plus(ttl)));
             remoteUserListItemRepository.save(item);
-            return null;
         });
     }
 
     private void updateEntry() {
         for (int i = 0; i < MAX_UPDATE_RETRIES; i++) {
-            Boolean success = inTransactionQuietly(() -> {
+            Boolean success = tx.executeWriteQuietly(() -> {
                 Entry liveEntry = entryRepository.findByNodeIdAndId(universalContext.nodeId(), entry.getId())
                         .orElse(null);
                 if (liveEntry == null) {

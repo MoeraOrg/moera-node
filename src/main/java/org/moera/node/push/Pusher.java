@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class Pusher extends SseTask {
@@ -27,7 +26,7 @@ public class Pusher extends SseTask {
     private final PushClient client;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     private PushNotificationRepository pushNotificationRepository;
@@ -45,16 +44,14 @@ public class Pusher extends SseTask {
     @Override
     public void setLastSentMoment(long lastSentMoment) {
         super.setLastSentMoment(lastSentMoment);
-        try {
-            Transaction.execute(txManager, () -> {
+        tx.executeWriteQuietly(
+            () -> {
                 Long moment = pushNotificationRepository.findLastMoment(client.getId());
                 lastOfflineMoment = moment != null ? moment : 0;
                 pushNotificationRepository.deleteTill(client.getId(), lastSentMoment);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error initializing SSE pusher", e);
-        }
+            },
+            e -> log.error("Error initializing SSE pusher", e)
+        );
     }
 
     @Override

@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Component
 public class CommentOperations {
@@ -76,7 +75,7 @@ public class CommentOperations {
     private UserListOperations userListOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     private LiberinManager liberinManager;
@@ -176,7 +175,7 @@ public class CommentOperations {
             revisionUpdater.accept(current);
         }
 
-        if (media.size() > 0) {
+        if (!media.isEmpty()) {
             Set<String> embedded = MediaExtractor.extractMediaFileIds(new Body(current.getBody()));
             int ordinal = 0;
             for (MediaFileOwner mfo : media) {
@@ -291,10 +290,10 @@ public class CommentOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Throwable {
+    public void purgeExpired() throws Exception {
         List<Liberin> liberins = new ArrayList<>();
 
-        Transaction.execute(txManager, () -> {
+        tx.executeWrite(() -> {
             try {
                 List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
                 comments.addAll(commentRepository.findExpired(Util.now()));
@@ -330,8 +329,6 @@ public class CommentOperations {
             } catch (Exception e) {
                 log.error("Error purging", e);
             }
-
-            return null;
         });
 
         liberins.forEach(liberinManager::send);

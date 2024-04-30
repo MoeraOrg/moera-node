@@ -4,24 +4,22 @@ import java.net.InetAddress;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import javax.inject.Inject;
 
 import org.moera.naming.rpc.NodeName;
 import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Avatar;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.api.naming.NamingClient;
 import org.moera.node.option.Options;
 import org.moera.node.util.Carte;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 
 public abstract class Task implements Runnable {
 
@@ -37,10 +35,10 @@ public abstract class Task implements Runnable {
     protected NodeApi nodeApi;
 
     @Inject
-    private NamingClient namingClient;
+    protected Transaction tx;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private NamingClient namingClient;
 
     public UUID getNodeId() {
         return nodeId;
@@ -97,14 +95,6 @@ public abstract class Task implements Runnable {
 
     protected void send(Liberin liberin) {
         universalContext.send(liberin);
-    }
-
-    protected <T> T inTransaction(Callable<T> inside) throws Throwable {
-        return Transaction.execute(txManager, inside);
-    }
-
-    protected <T> T inTransactionQuietly(Callable<T> inside) {
-        return Transaction.executeQuietly(txManager, inside);
     }
 
     @Override

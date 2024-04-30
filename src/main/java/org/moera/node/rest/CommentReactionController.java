@@ -42,7 +42,6 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -78,14 +77,14 @@ public class CommentReactionController {
     private BlockedUserOperations blockedUserOperations;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     private final ParametrizedLock<UUID> lock = new ParametrizedLock<>();
 
     @PostMapping
     public ResponseEntity<ReactionCreated> post(
             @PathVariable UUID postingId, @PathVariable UUID commentId,
-            @Valid @RequestBody ReactionDescription reactionDescription) throws Throwable {
+            @Valid @RequestBody ReactionDescription reactionDescription) throws Exception {
 
         log.info("POST /postings/{postingId}/comments/{commentId}/reactions"
                         + " (postingId = {}, commentId = {}, negative = {}, emoji = {})",
@@ -96,7 +95,7 @@ public class CommentReactionController {
 
         lock.lock(postingId);
         try {
-            return Transaction.execute(txManager, () -> {
+            return tx.executeWrite(() -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
                 if (!comment.getPosting().getId().equals(postingId)) {
@@ -311,7 +310,7 @@ public class CommentReactionController {
 
     @DeleteMapping("/{ownerName}")
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                                     @PathVariable String ownerName) throws Throwable {
+                                     @PathVariable String ownerName) throws Exception {
 
         log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
                         + " (postingId = {}, commentId = {}, ownerName = {})",
@@ -319,7 +318,7 @@ public class CommentReactionController {
 
         lock.lock(postingId);
         try {
-            return Transaction.execute(txManager, () -> {
+            return tx.executeWrite(() -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
                 if (!requestContext.isPrincipal(comment.getViewE())) {

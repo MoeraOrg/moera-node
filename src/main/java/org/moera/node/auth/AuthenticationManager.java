@@ -17,6 +17,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.crypto.FingerprintException;
 import org.moera.commons.crypto.RestoredObject;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.fingerprint.CarteFingerprint;
@@ -25,14 +26,12 @@ import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.api.naming.NamingCache;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ObjectUtils;
 
 @Component
@@ -54,7 +53,7 @@ public class AuthenticationManager {
     private NamingCache namingCache;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @Inject
     private EntityManager entityManager;
@@ -84,8 +83,8 @@ public class AuthenticationManager {
     private void stampToken(Token token) {
         Duration lifetime = Duration.between(token.getCreatedAt().toInstant(), token.getDeadline().toInstant());
         if (Instant.now().plus(lifetime).isAfter(token.getDeadline().toInstant().plus(1, ChronoUnit.HOURS))) {
-            try {
-                Transaction.execute(txManager, () -> {
+            tx.executeWriteQuietly(
+                () -> {
                     Token tk = entityManager.merge(token);
                     tk.setDeadline(Timestamp.from(Instant.now().plus(lifetime)));
                     if (!universalContext.isBackground()) {
@@ -95,11 +94,9 @@ public class AuthenticationManager {
                             tk.setLastUsedIp(new Inet(requestContext.getRemoteAddr().getHostAddress()));
                         }
                     }
-                    return null;
-                });
-            } catch (Throwable e) {
-                log.error("Could not stamp token {}: {}", LogUtil.format(token.getId()), e.getMessage());
-            }
+                },
+                e -> log.error("Could not stamp token {}: {}", LogUtil.format(token.getId()), e.getMessage())
+            );
         }
     }
 

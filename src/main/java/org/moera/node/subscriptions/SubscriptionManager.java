@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 
@@ -26,7 +25,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Service
 public class SubscriptionManager {
@@ -55,7 +53,7 @@ public class SubscriptionManager {
     private TaskAutowire taskAutowire;
 
     @Inject
-    private PlatformTransactionManager txManager;
+    private Transaction tx;
 
     @EventListener(DomainsConfiguredEvent.class)
     public void init() {
@@ -111,28 +109,20 @@ public class SubscriptionManager {
         synchronized (lock) {
             running.remove(subscriptionId);
         }
-        try {
-            inTransaction(() -> {
-                subscriptionRepository.updateRemoteSubscriberIdById(subscriptionId, remoteSubscriberId);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error updating subscription remote subscriber", e);
-        }
+        tx.executeWriteQuietly(
+            () -> subscriptionRepository.updateRemoteSubscriberIdById(subscriptionId, remoteSubscriberId),
+            e -> log.error("Error updating subscription remote subscriber", e)
+        );
     }
 
     void succeededUnsubscribe(UUID subscriptionId) {
         synchronized (lock) {
             running.remove(subscriptionId);
         }
-        try {
-            inTransaction(() -> {
-                subscriptionRepository.deleteById(subscriptionId);
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error deleting subscription", e);
-        }
+        tx.executeWriteQuietly(
+            () -> subscriptionRepository.deleteById(subscriptionId),
+            e -> log.error("Error deleting subscription", e)
+        );
     }
 
     void failed(Subscription subscription) {
@@ -150,26 +140,20 @@ public class SubscriptionManager {
         }
         if (!fatal) {
             Timestamp retryAtTs = Timestamp.from(retryAt);
-            try {
-                inTransaction(() -> {
-                    subscriptionRepository.updateRetryAtById(subscription.getId(), retryAtTs);
-                    return null;
-                });
-            } catch (Throwable e) {
-                log.error("Error updating subscription retry timestamp", e);
-            }
+            tx.executeWriteQuietly(
+                () -> subscriptionRepository.updateRetryAtById(subscription.getId(), retryAtTs),
+                e -> log.error("Error updating subscription retry timestamp", e)
+            );
         } else {
             log.info("Subscription {} cannot be established", subscription.getId());
-            try {
-                inTransaction(() -> {
+            tx.executeWriteQuietly(
+                () -> {
                     subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
                     subscriptionOperations.deleteParents(subscription);
                     // The subscription itself becomes a pending unused subscription and will be removed by trigger
-                    return null;
-                });
-            } catch (Throwable e) {
-                log.error("Error deleting hopeless subscription", e);
-            }
+                },
+                e -> log.error("Error deleting hopeless subscription", e)
+            );
         }
     }
 
@@ -179,16 +163,14 @@ public class SubscriptionManager {
         synchronized (lock) {
             running.remove(subscription.getId());
         }
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
                 subscriptionOperations.deleteParents(subscription);
                 // The subscription itself becomes a pending unused subscription and will be removed by trigger
-                return null;
-            });
-        } catch (Throwable e) {
-            log.error("Error deleting invalid subscription", e);
-        }
+            },
+            e -> log.error("Error deleting invalid subscription", e)
+        );
     }
 
     public void rescan() {
@@ -220,10 +202,6 @@ public class SubscriptionManager {
                 taskExecutor.execute(task);
             }
         }
-    }
-
-    private <T> T inTransaction(Callable<T> inside) throws Throwable {
-        return Transaction.execute(txManager, inside);
     }
 
 }

@@ -135,8 +135,8 @@ public class RemotePostingPostTask extends Task {
             return;
         }
 
-        try {
-            inTransaction(() -> {
+        tx.executeWriteQuietly(
+            () -> {
                 OwnPosting ownPosting = ownPostingRepository
                         .findByRemotePostingId(nodeId, targetNodeName, postingId)
                         .orElse(null);
@@ -154,11 +154,9 @@ public class RemotePostingPostTask extends Task {
                     contactOperations.updateCloseness(nodeId, targetNodeName, 1);
                 }
                 info.toOwnPosting(ownPosting);
-                return null;
-            });
-        } catch (Throwable e) {
-            error(e);
-        }
+            },
+            this::error
+        );
     }
 
     private void success() {
