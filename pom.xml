@@ -218,6 +218,11 @@
             <artifactId>hibernate-types-55</artifactId>
             <version>2.21.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>3.1.12</version>
+        </dependency>
 
         <dependency>
             <groupId>org.moera</groupId>

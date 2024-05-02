@@ -8,15 +8,44 @@
     <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(%4.4X{rid:-****}){magenta} %clr(---){faint} %clr([%15.15t]){faint}[%1.2X{auth:--}] %clr(%.-10X{domain:-}){blue} - %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
     <property name="FILE_LOG_PATTERN" value="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} %4.4X{rid:-****} --- [%t][%1.2X{auth:--}] %X{domain:-} - %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- deny all events with a level below INFO, that is TRACE and DEBUG -->
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <encoder>
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-        </encoder>
-    </appender>
+    <springProfile name="dev">
+        <!-- to log all bound parameters in SQL -->
+        <!--
+        <logger name="org.hibernate.type.descriptor.sql" level="TRACE"/>
+        <logger name="org.springframework.transaction.interceptor" level="TRACE"/>
+        -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <encoder>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+    <springProfile name="prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+                <evaluator>
+                    <expression>
+                        return mdc.get("rid") == null
+                            &amp;&amp; !logger.endsWith(".NamingClient")
+                            &amp;&amp; !logger.endsWith(".EventManager")
+                            &amp;&amp; !logger.endsWith(".NotificationSender");
+                    </expression>
+                </evaluator>
+                <OnMismatch>DENY</OnMismatch>
+                <OnMatch>NEUTRAL</OnMatch>
+            </filter>
+            <encoder>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+    </springProfile>
+
     <appender name="FILE_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
