@@ -10,11 +10,11 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.moera.node.data.Sitemap;
 
-@JacksonXmlRootElement(localName = "sitemapindex", namespace = "http://www.sitemaps.org/schemas/sitemap/0.9")
+@JacksonXmlRootElement(localName = "sitemapindex", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
 public class SitemapIndex {
 
     @JacksonXmlElementWrapper(useWrapping = false)
-    @JacksonXmlProperty(localName = "sitemap")
+    @JacksonXmlProperty(localName = "sitemap", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
     private List<SitemapIndexItem> items;
 
     public SitemapIndex(String siteUrl, Collection<Sitemap> sitemaps, Instant earliestModified) {

@@ -9,11 +9,11 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.moera.node.data.SitemapRecord;
 
-@JacksonXmlRootElement(localName = "urlset", namespace = "http://www.sitemaps.org/schemas/sitemap/0.9")
+@JacksonXmlRootElement(localName = "urlset", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
 public class SitemapUrlSet {
 
     @JacksonXmlElementWrapper(useWrapping = false)
-    @JacksonXmlProperty(localName = "url")
+    @JacksonXmlProperty(localName = "url", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
     private List<SitemapUrl> items;
 
     public SitemapUrlSet(List<SitemapUrl> items) {

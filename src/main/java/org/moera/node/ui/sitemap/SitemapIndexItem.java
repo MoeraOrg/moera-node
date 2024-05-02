@@ -8,10 +8,10 @@ import org.moera.node.util.Util;
 
 public class SitemapIndexItem {
 
-    @JacksonXmlProperty(localName = "loc")
+    @JacksonXmlProperty(localName = "loc", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
     private String location;
 
-    @JacksonXmlProperty(localName = "lastmod")
+    @JacksonXmlProperty(localName = "lastmod", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
     private String lastModified;
 
     public SitemapIndexItem(String siteUrl, String location, Instant lastModified) {

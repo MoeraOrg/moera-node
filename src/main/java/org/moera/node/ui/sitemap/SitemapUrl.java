@@ -2,19 +2,21 @@ package org.moera.node.ui.sitemap;
 
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.moera.node.data.SitemapRecord;
 import org.moera.node.util.Util;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SitemapUrl {
 
-    @JacksonXmlProperty(localName = "loc")
+    @JacksonXmlProperty(localName = "loc", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
     private String location;
 
-    @JacksonXmlProperty(localName = "lastmod")
+    @JacksonXmlProperty(localName = "lastmod", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
     private String lastModified;
 
-    @JacksonXmlProperty(localName = "changefreq")
+    @JacksonXmlProperty(localName = "changefreq", namespace = org.moera.node.ui.sitemap.Sitemap.NAMESPACE)
     private String changeFrequency;
 
     public SitemapUrl(String siteUrl, String location, String changeFrequency) {
