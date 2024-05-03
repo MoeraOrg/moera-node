@@ -13,6 +13,7 @@ import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Avatar;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
@@ -39,6 +40,9 @@ public abstract class Task implements Runnable {
 
     @Inject
     private NamingClient namingClient;
+
+    @Inject
+    private RequestCounter requestCounter;
 
     public UUID getNodeId() {
         return nodeId;
@@ -99,10 +103,30 @@ public abstract class Task implements Runnable {
 
     @Override
     public final void run() {
-        universalContext.associate(this);
-        execute();
+        try {
+            beforeExecute();
+            execute();
+        } catch (Throwable e) {
+            unhandledException(e);
+        } finally {
+            afterExecute();
+        }
     }
 
-    protected abstract void execute();
+    protected void beforeExecute() {
+        universalContext.associate(this);
+        requestCounter.allot();
+        log.info("Executing task {}", this.getClass().getSimpleName());
+    }
+
+    protected abstract void execute() throws Exception;
+
+    protected void unhandledException(Throwable e) {
+        log.error("Error executing task {}", this.getClass().getSimpleName(), e);
+    }
+
+    protected void afterExecute() {
+        requestCounter.free();
+    }
 
 }

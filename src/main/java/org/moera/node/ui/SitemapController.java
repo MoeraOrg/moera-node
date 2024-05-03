@@ -146,7 +146,7 @@ public class SitemapController {
                     }
                 }
             } catch (Exception e) {
-                log.error(String.format("Error refreshing sitemap of %s", domainName), e);
+                log.error("Error refreshing sitemap of {}", domainName, e);
             }
         }
         refreshPosition += sliceLength;
