@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.method.HandlerMethod;
 
@@ -26,6 +27,8 @@ public class LiberinManager implements Runnable {
 
     private final Map<Class<? extends Liberin>, HandlerMethod> handlers = new HashMap<>();
     private final BlockingQueue<Liberin> queue = new LinkedBlockingQueue<>();
+
+    private Thread deliveryThread;
 
     @Inject
     private ApplicationContext applicationContext;
@@ -60,7 +63,23 @@ public class LiberinManager implements Runnable {
             }
         }
 
-        new Thread(this).start();
+        startThread();
+    }
+
+    private void startThread() {
+        if (deliveryThread != null) {
+            log.warn("Liberin delivery thread died, restarting");
+        }
+        deliveryThread = new Thread(this);
+        deliveryThread.setUncaughtExceptionHandler((thread, throwable) -> startThread());
+        deliveryThread.start();
+    }
+
+    @Scheduled(fixedDelayString = "PT1M")
+    private void checkThreadIsAlive() {
+        if (deliveryThread != null && !deliveryThread.isAlive()) {
+            startThread();
+        }
     }
 
     public void send(Liberin... liberins) {
