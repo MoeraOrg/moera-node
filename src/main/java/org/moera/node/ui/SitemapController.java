@@ -53,6 +53,8 @@ public class SitemapController {
 
     private static final Logger log = LoggerFactory.getLogger(SitemapController.class);
 
+    private int refreshPosition = 0;
+
     @Inject
     private RequestContext requestContext;
 
@@ -109,34 +111,47 @@ public class SitemapController {
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void refresh() {
-        for (String domainName : domains.getAllDomainNames()) {
+        List<String> names = domains.getAllDomainNames().stream().sorted().toList();
+        int sliceLength = names.size() < 50 ? names.size() : names.size() / 24;
+        for (int i = 0; i < sliceLength && refreshPosition + i < names.size(); i++) {
+            String domainName = names.get(refreshPosition + i);
+
             MDC.put("domain", domainName);
             log.debug("Refreshing sitemap of {}", domainName);
 
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            Collection<Posting> postings = sitemapRecordRepository.findUpdated(nodeId);
-            if (postings.isEmpty()) {
-                return;
-            }
+            try {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                Collection<Posting> postings = sitemapRecordRepository.findUpdated(nodeId);
+                log.debug("{} postings to update", postings.size());
+                if (postings.isEmpty()) {
+                    continue;
+                }
 
-            Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(nodeId);
-            Sitemap sitemap = findAvailableSitemap(sitemaps);
-            for (Posting posting : postings) {
-                SitemapRecord record = sitemapRecordRepository.findByEntryId(nodeId, posting.getId());
-                if (record != null) {
-                    record.update(posting);
-                    log.debug("Updated posting {}", posting.getId());
-                } else {
-                    record = new SitemapRecord(sitemap.getId(), posting);
-                    record = sitemapRecordRepository.save(record);
-                    log.debug("Created record {} in sitemap {} for posting {}",
-                            record.getId(), record.getSitemapId(), posting.getId());
+                Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(nodeId);
+                Sitemap sitemap = findAvailableSitemap(sitemaps);
+                for (Posting posting : postings) {
+                    SitemapRecord record = sitemapRecordRepository.findByEntryId(nodeId, posting.getId());
+                    if (record != null) {
+                        record.update(posting);
+                        log.debug("Updated posting {}", posting.getId());
+                    } else {
+                        record = new SitemapRecord(sitemap.getId(), posting);
+                        record = sitemapRecordRepository.save(record);
+                        log.debug("Created record {} in sitemap {} for posting {}",
+                                record.getId(), record.getSitemapId(), posting.getId());
+                    }
+                    sitemap.setTotal(sitemap.getTotal() + 1);
+                    if (sitemap.getTotal() >= MAX_SITEMAP_RECORD) {
+                        sitemap = findAvailableSitemap(sitemaps);
+                    }
                 }
-                sitemap.setTotal(sitemap.getTotal() + 1);
-                if (sitemap.getTotal() >= MAX_SITEMAP_RECORD) {
-                    sitemap = findAvailableSitemap(sitemaps);
-                }
+            } catch (Exception e) {
+                log.error(String.format("Error refreshing sitemap of %s", domainName), e);
             }
+        }
+        refreshPosition += sliceLength;
+        if (refreshPosition >= names.size()) {
+            refreshPosition = 0;
         }
     }
 
