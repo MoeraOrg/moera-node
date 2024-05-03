@@ -190,7 +190,7 @@ public class UserListOperations {
         }
     }
 
-    public void fillSheriffListMarks(Posting posting, List<CommentInfo> comments) {
+    public void fillSheriffListMarks(Entry posting, List<CommentInfo> comments) {
         if (posting == null || ObjectUtils.isEmpty(posting.getStories())) {
             return;
         }
@@ -235,7 +235,7 @@ public class UserListOperations {
         }
     }
 
-    public void fillSheriffListMarks(Posting posting, CommentInfo commentInfo) {
+    public void fillSheriffListMarks(Entry posting, CommentInfo commentInfo) {
         if (posting == null || ObjectUtils.isEmpty(posting.getStories())) {
             return;
         }

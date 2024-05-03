@@ -33,6 +33,7 @@ import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
@@ -316,7 +317,7 @@ public class CommentController {
                 comment.getPosting().getOwnerName()));
     }
 
-    private byte[] validateCommentText(Posting posting, Comment comment, CommentText commentText, String ownerName,
+    private byte[] validateCommentText(Entry posting, Comment comment, CommentText commentText, String ownerName,
                                        byte[] repliedToDigest) {
 
         boolean isSenior = requestContext.isPrincipal(posting.getOverrideCommentE());
@@ -657,7 +658,7 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        Posting posting = comment.getPosting();
+        Entry posting = comment.getPosting();
         List<Story> stories = requestContext.isPossibleSheriff()
                 ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
                 : Collections.emptyList();
@@ -787,7 +788,7 @@ public class CommentController {
         return commentInfo;
     }
 
-    private CommentInfo withSheriffUserListMarks(CommentInfo commentInfo, Posting posting) {
+    private CommentInfo withSheriffUserListMarks(CommentInfo commentInfo, Entry posting) {
         userListOperations.fillSheriffListMarks(posting, commentInfo);
         return commentInfo;
     }

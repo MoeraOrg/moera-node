@@ -131,7 +131,7 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
             } else {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
                 for (Entry entry : entries) {
-                    Posting parentPosting = entry instanceof Comment ? ((Comment) entry).getPosting() : (Posting) entry;
+                    Entry parentPosting = entry instanceof Comment ? ((Comment) entry).getPosting() : entry;
                     AvatarImage parentPostingAvatar = new AvatarImage(parentPosting.getOwnerAvatarMediaFile(),
                             parentPosting.getOwnerAvatarShape());
                     UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;

@@ -11,8 +11,8 @@ public class Comment extends Entry {
         setEntryType(EntryType.COMMENT);
     }
 
-    public Posting getPosting() {
-        return (Posting) getParent();
+    public Entry getPosting() {
+        return getParent();
     }
 
     public void setPosting(Posting posting) {

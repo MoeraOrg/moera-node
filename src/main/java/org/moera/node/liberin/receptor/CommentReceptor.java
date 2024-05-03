@@ -13,6 +13,7 @@ import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
+import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.friends.FriendCache;
@@ -84,7 +85,7 @@ public class CommentReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void updated(CommentUpdatedLiberin liberin) {
         Comment comment = liberin.getComment();
-        Posting posting = comment.getPosting();
+        Entry posting = comment.getPosting();
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
@@ -97,7 +98,7 @@ public class CommentReceptor extends LiberinReceptorBase {
     @LiberinMapping
     public void deleted(CommentDeletedLiberin liberin) {
         Comment comment = liberin.getComment();
-        Posting posting = comment.getPosting();
+        Entry posting = comment.getPosting();
 
         commentInstants.deleted(comment);
         notifyReplyDeleted(posting, comment);
@@ -117,10 +118,10 @@ public class CommentReceptor extends LiberinReceptorBase {
         send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
     }
 
-    private void notifySubscribersCommentAdded(Posting posting, Comment comment) {
+    private void notifySubscribersCommentAdded(Entry posting, Comment comment) {
         if (comment.getCurrentRevision().getSignature() != null) {
             tx.executeWriteQuietly(() -> {
-                Posting aposting = entityManager.merge(posting);
+                Entry aposting = entityManager.merge(posting);
                 Comment acomment = entityManager.merge(comment);
                 PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), AccessCheckers.ADMIN,
                         universalContext.getOptions());
@@ -141,13 +142,13 @@ public class CommentReceptor extends LiberinReceptorBase {
         }
     }
 
-    private void notifyReplyAdded(Posting posting, Comment comment) {
+    private void notifyReplyAdded(Entry posting, Comment comment) {
         if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null
                 || comment.getTotalRevisions() > 1) {
             return;
         }
         tx.executeWriteQuietly(() -> {
-            Posting aposting = entityManager.merge(posting);
+            Entry aposting = entityManager.merge(posting);
             Comment acomment = entityManager.merge(comment);
             PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), AccessCheckers.ADMIN,
                     universalContext.getOptions());
@@ -165,7 +166,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         });
     }
 
-    private void notifyReplyDeleted(Posting posting, Comment comment) {
+    private void notifyReplyDeleted(Entry posting, Comment comment) {
         if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null) {
             return;
         }
@@ -175,7 +176,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                         new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
     }
 
-    private void notifyMentioned(Posting posting, Comment comment, EntryRevision current, Principal currentView,
+    private void notifyMentioned(Entry posting, Comment comment, EntryRevision current, Principal currentView,
                                  EntryRevision latest, Principal latestView) {
         // TODO it is better to do this only for signed revisions. But it this case 'latest' should be the latest
         // signed revision
@@ -219,11 +220,11 @@ public class CommentReceptor extends LiberinReceptorBase {
                 .collect(Collectors.toSet());
     }
 
-    private PrincipalExpression generalVisibilityFilter(Posting posting) {
+    private PrincipalExpression generalVisibilityFilter(Entry posting) {
         return posting.getViewE().a().and(posting.getViewCommentsE());
     }
 
-    private PrincipalFilter visibilityFilter(Posting posting, Comment comment) {
+    private PrincipalFilter visibilityFilter(Entry posting, Comment comment) {
         return generalVisibilityFilter(posting).and(comment.getViewE());
     }
 

@@ -150,7 +150,7 @@ public class CommentOperations {
         return principal != null ? principal : Principal.UNSET;
     }
 
-    public Comment createOrUpdateComment(Posting posting, Comment comment, EntryRevision revision,
+    public Comment createOrUpdateComment(Entry posting, Comment comment, EntryRevision revision,
                                          List<MediaFileOwner> media, Predicate<EntryRevision> isNothingChanged,
                                          Consumer<EntryRevision> revisionUpdater,
                                          Consumer<Entry> mediaEntryUpdater) {
@@ -299,7 +299,7 @@ public class CommentOperations {
                 comments.addAll(commentRepository.findExpired(Util.now()));
                 for (Comment comment : comments) {
                     EntryRevision latest = comment.getCurrentRevision();
-                    Posting posting = comment.getPosting();
+                    Entry posting = comment.getPosting();
                     if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
                         if (comment.getDeletedAt() == null) {
                             log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
