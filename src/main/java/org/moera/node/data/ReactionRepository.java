@@ -28,7 +28,7 @@ public interface ReactionRepository extends JpaRepository<Reaction, UUID> {
             + " and r.deletedAt is not null and r.replaced = true")
     List<Reaction> findReplacedByEntryIdAndOwner(UUID entryId, String ownerName, Pageable pageable);
 
-    @Query("select r from Reaction r left join r.entryRevision where r.deadline < ?1")
+    @Query("select r from Reaction r left join fetch r.entryRevision er left join fetch er.entry where r.deadline < ?1")
     List<Reaction> findExpired(Timestamp deadline);
 
     @Query("select r from Reaction r"
