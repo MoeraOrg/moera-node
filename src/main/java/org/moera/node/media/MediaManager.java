@@ -14,6 +14,7 @@ import javax.transaction.Transactional;
 
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.api.node.NodeApiLocalStorageException;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -115,7 +116,8 @@ public class MediaManager {
 
                 return mediaFile;
             } catch (IOException e) {
-                throw new NodeApiException(String.format("Error storing public media %s: %s", id, e.getMessage()));
+                throw new NodeApiLocalStorageException(
+                        String.format("Error storing public media %s: %s", id, e.getMessage()));
             } finally {
                 try {
                     Files.deleteIfExists(tmp.getPath());
@@ -260,7 +262,8 @@ public class MediaManager {
 
                 return mediaFileOwner;
             } catch (IOException e) {
-                throw new NodeApiException(String.format("Error storing private media %s: %s", id, e.getMessage()));
+                throw new NodeApiLocalStorageException(
+                        String.format("Error storing private media %s: %s", id, e.getMessage()));
             }
         } finally {
             mediaFileLocks.unlock(mediaFileId);

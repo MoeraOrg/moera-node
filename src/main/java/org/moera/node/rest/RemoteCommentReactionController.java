@@ -18,7 +18,6 @@ import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.rest.task.RemoteCommentReactionPostJob;
-import org.moera.node.rest.task.RemoteCommentReactionPostJobParameters;
 import org.moera.node.rest.task.RemoteReactionVerifyTask;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.TaskAutowire;
@@ -68,8 +67,10 @@ public class RemoteCommentReactionController {
                 attributes.isNegative() ? "yes" : "no",
                 LogUtil.format(attributes.getEmoji()));
 
-        var parameters = new RemoteCommentReactionPostJobParameters(nodeName, postingId, commentId, attributes);
-        jobs.run(RemoteCommentReactionPostJob.class, parameters, requestContext.nodeId());
+        jobs.run(
+                RemoteCommentReactionPostJob.class,
+                new RemoteCommentReactionPostJob.Parameters(nodeName, postingId, commentId, attributes),
+                requestContext.nodeId());
 
         return Result.OK;
     }

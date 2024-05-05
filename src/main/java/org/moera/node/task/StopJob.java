@@ -2,6 +2,6 @@ package org.moera.node.task;
 
 public enum StopJob {
 
-    SUCCESS
+    SUCCESS, FAILURE, RETRY
 
 }

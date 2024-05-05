@@ -11,6 +11,7 @@ import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
+import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Avatar;
 import org.moera.node.global.RequestCounter;
@@ -103,30 +104,47 @@ public abstract class Task implements Runnable {
 
     @Override
     public final void run() {
+        universalContext.associate(this);
+        requestCounter.allot();
+        started();
+
+        boolean exceptionThrown = false;
         try {
-            beforeExecute();
             execute();
         } catch (Throwable e) {
-            unhandledException(e);
+            handleException(e);
+            exceptionThrown = true;
         } finally {
-            afterExecute();
+            if (!exceptionThrown) {
+                succeeded();
+            }
+            requestCounter.free();
         }
     }
 
-    protected void beforeExecute() {
-        universalContext.associate(this);
-        requestCounter.allot();
+    protected void started() {
         log.info("Executing task {}", this.getClass().getSimpleName());
     }
 
     protected abstract void execute() throws Exception;
 
-    protected void unhandledException(Throwable e) {
-        log.error("Error executing task {}", this.getClass().getSimpleName(), e);
+    protected void handleException(Throwable e) {
+        unhandledException(e);
     }
 
-    protected void afterExecute() {
-        requestCounter.free();
+    protected void unhandledException(Throwable e) {
+        if (e instanceof NodeApiUnknownNameException ex) {
+            log.error("Cannot find a node {}", ex.getNodeName());
+        } else {
+            log.error("Error executing task {}: {}", this.getClass().getSimpleName(), e.getMessage());
+        }
+        failed();
+    }
+
+    protected void succeeded() {
+    }
+
+    protected void failed() {
     }
 
 }

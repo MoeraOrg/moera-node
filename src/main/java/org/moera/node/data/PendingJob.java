@@ -31,6 +31,9 @@ public class PendingJob {
     @NotNull
     private Timestamp createdAt = Util.now();
 
+    @NotNull
+    private int retries;
+
     private Timestamp waitUntil;
 
     public UUID getId() {
@@ -79,6 +82,14 @@ public class PendingJob {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getRetries() {
+        return retries;
+    }
+
+    public void setRetries(int retries) {
+        this.retries = retries;
     }
 
     public Timestamp getWaitUntil() {
