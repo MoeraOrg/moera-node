@@ -123,6 +123,7 @@ public class NotificationSender extends Task {
                     try {
                         Thread.sleep(delay.toMillis());
                     } catch (InterruptedException e) {
+                        // ignore
                     }
                 } else {
                     pausedTill = Instant.now().plus(delay);
@@ -201,8 +202,7 @@ public class NotificationSender extends Task {
     private NotificationSenderError error(Throwable e, Notification notification) {
         var errorType = NotificationSenderError.REGULAR;
 
-        if (isUnsubscribeError(e) && notification instanceof SubscriberNotification) {
-            SubscriberNotification sn = (SubscriberNotification) notification;
+        if (isUnsubscribeError(e) && notification instanceof SubscriberNotification sn) {
             if (sn.getSubscriptionCreatedAt() != null
                     && sn.getSubscriptionCreatedAt().toInstant().plus(SUBSCRIPTION_DELAY).isAfter(Instant.now())) {
                 // Subscription may not be registered by the node yet
