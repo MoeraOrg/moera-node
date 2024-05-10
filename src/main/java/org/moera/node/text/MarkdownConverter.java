@@ -68,9 +68,11 @@ public class MarkdownConverter {
     }
 
     private static List<String> htmlBlockTags() {
-        return Parser.HTML_BLOCK_TAGS.get(null).stream()
+        List<String> list = Parser.HTML_BLOCK_TAGS.get(null).stream()
                 .filter(tag -> !BLOCK_TAGS_MARKDOWN_ALLOWED.contains(tag.toLowerCase()))
                 .collect(Collectors.toList());
+        list.add("mr-spoiler");
+        return list;
     }
 
     public String toHtml(String source) {

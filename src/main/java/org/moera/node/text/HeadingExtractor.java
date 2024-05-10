@@ -88,10 +88,9 @@ public class HeadingExtractor {
         public FilterResult head(Node node, int depth) {
             if (ignoreContent <= 0) {
                 String text = null;
-                if (node instanceof TextNode) {
-                    text = clear(((TextNode) node).text().trim());
-                } else if (node instanceof Element) {
-                    Element element = (Element) node;
+                if (node instanceof TextNode textNode) {
+                    text = clear(textNode.text().trim());
+                } else if (node instanceof Element element) {
                     if (element.normalName().equals("mr-spoiler")) {
                         ignoreContent++;
                         text = element.hasAttr("title") ? element.attr("title") : "spoiler!";
@@ -117,7 +116,7 @@ public class HeadingExtractor {
 
         private boolean appendText(String text) {
             if (!ObjectUtils.isEmpty(text)) {
-                if (result.length() > 0) {
+                if (!result.isEmpty()) {
                     result.append(' ');
                 }
                 result.append(text);
