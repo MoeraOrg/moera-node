@@ -21,16 +21,12 @@ public class TextConverter {
     private MarkdownConverter markdownConverter;
 
     public String toHtml(SourceFormat format, String source) {
-        switch (format) {
-            case PLAIN_TEXT:
-                return PlainTextConverter.toHtml(source);
-            case HTML:
-                return source;
-            case MARKDOWN:
-                return markdownConverter.toHtml(source);
-            default:
-                throw new IllegalArgumentException("Unknown source format: " + format.name());
-        }
+        return switch (format) {
+            case PLAIN_TEXT -> PlainTextConverter.toHtml(source);
+            case HTML -> source;
+            case MARKDOWN -> markdownConverter.toHtml(source);
+            default -> throw new IllegalArgumentException("Unknown source format: " + format.name());
+        };
     }
 
     public Body toHtml(SourceFormat format, Body source) {
