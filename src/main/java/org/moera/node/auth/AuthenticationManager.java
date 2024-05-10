@@ -81,7 +81,7 @@ public class AuthenticationManager {
     }
 
     private void stampToken(Token token) {
-        Duration lifetime = requestContext.getOptions().getDuration("token.lifetime").getDuration();
+        Duration lifetime = universalContext.getOptions().getDuration("token.lifetime").getDuration();
         if (Instant.now().plus(lifetime).isAfter(token.getDeadline().toInstant().plus(1, ChronoUnit.HOURS))) {
             tx.executeWriteQuietly(
                 () -> {
