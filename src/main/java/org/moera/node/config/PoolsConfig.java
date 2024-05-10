@@ -4,9 +4,9 @@ public class PoolsConfig {
 
     private int naming = 16;
     private int remoteTask = 16;
-    private int notificationSender = 64;
+    private int notificationSender = 32;
     private int picker = 12;
-    private int push = 64;
+    private int push = 4;
 
     public int getNaming() {
         return naming;

@@ -18,7 +18,7 @@ import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.rest.task.RemoteCommentReactionPostJob;
-import org.moera.node.rest.task.RemoteReactionVerifyTask;
+import org.moera.node.rest.task.verification.RemoteReactionVerifyTask;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;

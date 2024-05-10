@@ -21,8 +21,9 @@ import org.moera.node.model.AsyncOperationCreated;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.operations.ContactOperations;
-import org.moera.node.rest.task.RemotePostingReactionPostTask;
-import org.moera.node.rest.task.RemoteReactionVerifyTask;
+import org.moera.node.rest.task.RemotePostingReactionPostJob;
+import org.moera.node.rest.task.verification.RemoteReactionVerifyTask;
+import org.moera.node.task.Jobs;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,14 +43,7 @@ public class RemotePostingReactionController {
     private static final Logger log = LoggerFactory.getLogger(RemotePostingReactionController.class);
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private TaskAutowire taskAutowire;
 
     @Inject
     private RemoteReactionVerificationRepository remoteReactionVerificationRepository;
@@ -59,6 +53,16 @@ public class RemotePostingReactionController {
 
     @Inject
     private ContactOperations contactOperations;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
+
+    @Inject
+    private Jobs jobs;
 
     @PostMapping
     @Admin
@@ -72,9 +76,10 @@ public class RemotePostingReactionController {
                 attributes.isNegative() ? "yes" : "no",
                 LogUtil.format(attributes.getEmoji()));
 
-        var task = new RemotePostingReactionPostTask(nodeName, postingId, attributes);
-        taskAutowire.autowire(task);
-        taskExecutor.execute(task);
+        jobs.run(
+                RemotePostingReactionPostJob.class,
+                new RemotePostingReactionPostJob.Parameters(nodeName, postingId, attributes),
+                requestContext.nodeId());
 
         return Result.OK;
     }

@@ -26,8 +26,9 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.SubscriptionOperations;
-import org.moera.node.rest.task.RemoteCommentPostTask;
-import org.moera.node.rest.task.RemoteCommentVerifyTask;
+import org.moera.node.rest.task.RemoteCommentPostJob;
+import org.moera.node.rest.task.verification.RemoteCommentVerifyTask;
+import org.moera.node.task.Jobs;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +49,7 @@ public class RemoteCommentController {
     private static final Logger log = LoggerFactory.getLogger(RemoteCommentController.class);
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private TaskAutowire taskAutowire;
 
     @Inject
     private RemoteCommentVerificationRepository remoteCommentVerificationRepository;
@@ -71,6 +65,16 @@ public class RemoteCommentController {
 
     @Inject
     private SubscriptionOperations subscriptionOperations;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
+
+    @Inject
+    private Jobs jobs;
 
     @PostMapping
     @Admin
@@ -114,9 +118,10 @@ public class RemoteCommentController {
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
-        var postTask = new RemoteCommentPostTask(nodeName, postingId, commentId, commentText);
-        taskAutowire.autowire(postTask);
-        taskExecutor.execute(postTask);
+        jobs.run(
+                RemoteCommentPostJob.class,
+                new RemoteCommentPostJob.Parameters(nodeName, postingId, commentId, commentText),
+                requestContext.nodeId());
         if (!nodeName.equals(requestContext.nodeName())) {
             subscriptionOperations.subscribeToPostingComments(nodeName, postingId, SubscriptionReason.COMMENT);
         }

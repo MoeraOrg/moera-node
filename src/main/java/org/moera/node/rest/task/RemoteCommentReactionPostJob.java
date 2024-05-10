@@ -35,6 +35,9 @@ public class RemoteCommentReactionPostJob
         private String commentId;
         private ReactionAttributes attributes;
 
+        public Parameters() {
+        }
+
         public Parameters(String targetNodeName, String postingId, String commentId, ReactionAttributes attributes) {
             this.targetNodeName = targetNodeName;
             this.postingId = postingId;
@@ -81,6 +84,9 @@ public class RemoteCommentReactionPostJob
         private PostingInfo postingInfo;
         private PostingRevisionInfo postingRevisionInfo;
         private CommentInfo commentInfo;
+
+        public State() {
+        }
 
         public PostingInfo getPostingInfo() {
             return postingInfo;

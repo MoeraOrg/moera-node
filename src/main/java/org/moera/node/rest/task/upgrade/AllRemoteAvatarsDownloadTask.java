@@ -1,4 +1,4 @@
-package org.moera.node.rest.task;
+package org.moera.node.rest.task.upgrade;
 
 import java.time.Duration;
 import java.util.Set;

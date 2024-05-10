@@ -24,8 +24,9 @@ import org.moera.node.model.PostingSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
-import org.moera.node.rest.task.RemotePostingPostTask;
-import org.moera.node.rest.task.RemotePostingVerifyTask;
+import org.moera.node.rest.task.RemotePostingPostJob;
+import org.moera.node.rest.task.verification.RemotePostingVerifyTask;
+import org.moera.node.task.Jobs;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,14 +47,7 @@ public class RemotePostingController {
     private static final Logger log = LoggerFactory.getLogger(RemotePostingController.class);
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
     private RequestContext requestContext;
-
-    @Inject
-    private TaskAutowire taskAutowire;
 
     @Inject
     private OwnPostingRepository ownPostingRepository;
@@ -66,6 +60,16 @@ public class RemotePostingController {
 
     @Inject
     private ContactOperations contactOperations;
+
+    @Inject
+    @Qualifier("remoteTaskExecutor")
+    private TaskExecutor taskExecutor;
+
+    @Inject
+    private TaskAutowire taskAutowire;
+
+    @Inject
+    private Jobs jobs;
 
     @PostMapping
     @Admin
@@ -105,9 +109,10 @@ public class RemotePostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        var postTask = new RemotePostingPostTask(nodeName, postingId, postingText);
-        taskAutowire.autowire(postTask);
-        taskExecutor.execute(postTask);
+        jobs.run(
+                RemotePostingPostJob.class,
+                new RemotePostingPostJob.Parameters(nodeName, postingId, postingText),
+                requestContext.nodeId());
     }
 
     @DeleteMapping("/{postingId}")
@@ -143,7 +148,7 @@ public class RemotePostingController {
     @Admin
     @Transactional
     public AsyncOperationCreated verifyRevision(@PathVariable String nodeName, @PathVariable String id,
-                                 @PathVariable String revisionId) {
+                                                @PathVariable String revisionId) {
         log.info("POST /nodes/{name}/postings/{id}/revisions/{revisionId}/verify, (name = {}, id = {}, revisionId = {})",
                 LogUtil.format(nodeName), LogUtil.format(id), LogUtil.format(revisionId));
 

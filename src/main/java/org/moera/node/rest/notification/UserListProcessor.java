@@ -15,11 +15,8 @@ import org.moera.node.model.notification.UserListItemNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.operations.FeedOperations;
-import org.moera.node.operations.UserListOperations;
-import org.moera.node.rest.task.UserListUpdateTask;
-import org.moera.node.task.TaskAutowire;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
+import org.moera.node.rest.task.UserListUpdateJob;
+import org.moera.node.task.Jobs;
 
 @NotificationProcessor
 public class UserListProcessor {
@@ -31,17 +28,10 @@ public class UserListProcessor {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
-    private UserListOperations userListOperations;
-
-    @Inject
     private FeedOperations feedOperations;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private Jobs jobs;
 
     @NotificationMapping(NotificationType.USER_LIST_ITEM_ADDED)
     @Transactional
@@ -58,19 +48,21 @@ public class UserListProcessor {
     private void updated(UserListItemNotification notification, boolean delete) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
                 requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
-        if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.USER_LIST
+        if (subscription == null
+                || subscription.getSubscriptionType() != SubscriptionType.USER_LIST
                 || !notification.getListName().equals(subscription.getRemoteFeedName())) {
             throw new UnsubscribeFailure();
         }
 
-        var updateTask = new UserListUpdateTask(
-                notification.getSenderNodeName(),
-                notification.getListName(),
-                feedOperations.getSheriffFeeds(notification.getSenderNodeName()),
-                notification.getNodeName(),
-                delete);
-        taskAutowire.autowire(updateTask);
-        taskExecutor.execute(updateTask);
+        jobs.run(
+                UserListUpdateJob.class,
+                new UserListUpdateJob.Parameters(
+                        notification.getSenderNodeName(),
+                        notification.getListName(),
+                        feedOperations.getSheriffFeeds(notification.getSenderNodeName()),
+                        notification.getNodeName(),
+                        delete),
+                requestContext.nodeId());
     }
 
 }

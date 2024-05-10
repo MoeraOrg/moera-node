@@ -39,13 +39,11 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
-import org.moera.node.rest.task.RemoteUserListItemFetchTask;
-import org.moera.node.rest.task.UserListUpdateTask;
-import org.moera.node.task.TaskAutowire;
+import org.moera.node.rest.task.RemoteUserListItemFetchJob;
+import org.moera.node.rest.task.UserListUpdateJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -81,11 +79,7 @@ public class UserListOperations {
     private SubscriptionOperations subscriptionOperations;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private Jobs jobs;
 
     public void sheriffListReference(Story story) {
         FeedOperations.getFeedSheriffs(universalContext.getOptions(), story.getFeedName())
@@ -113,9 +107,10 @@ public class UserListOperations {
             RemoteUserListItem item = remoteUserListItemRepository.findByListAndNodeName(
                     universalContext.nodeId(), sheriffName, UserList.SHERIFF_HIDE, entry.getOwnerName()).orElse(null);
             if (item == null) {
-                var fetchTask = new RemoteUserListItemFetchTask(sheriffName, entry);
-                taskAutowire.autowire(fetchTask);
-                taskExecutor.execute(fetchTask);
+                jobs.run(
+                        RemoteUserListItemFetchJob.class,
+                        new RemoteUserListItemFetchJob.Parameters(sheriffName, entry.getOwnerName(), entry.getId()),
+                        universalContext.nodeId());
                 return;
             }
             Duration ttl = item.isAbsent() ? ABSENT_TTL : PRESENT_TTL;
@@ -432,14 +427,15 @@ public class UserListOperations {
                     subscription.setRemoteFeedName(UserList.SHERIFF_HIDE);
                     subscription.setReason(SubscriptionReason.USER);
                 });
-                var updateTask = new UserListUpdateTask(
-                        sheriffName,
-                        UserList.SHERIFF_HIDE,
-                        feedOperations.getSheriffFeeds(sheriffName),
-                        null,
-                        false);
-                taskAutowire.autowireWithoutRequest(updateTask, change.getNodeId());
-                taskExecutor.execute(updateTask);
+                jobs.run(
+                        UserListUpdateJob.class,
+                        new UserListUpdateJob.Parameters(
+                                sheriffName,
+                                UserList.SHERIFF_HIDE,
+                                feedOperations.getSheriffFeeds(sheriffName),
+                                null,
+                                false),
+                        change.getNodeId());
             }
         }
         for (String sheriffName : prevSheriffs) {
@@ -448,14 +444,15 @@ public class UserListOperations {
                             universalContext.nodeId(), SubscriptionType.USER_LIST, sheriffName, UserList.SHERIFF_HIDE)
                         .forEach(us -> userSubscriptionRepository.delete(us));
 
-                var updateTask = new UserListUpdateTask(
-                        sheriffName,
-                        UserList.SHERIFF_HIDE,
-                        FeedOperations.getSheriffFeeds(prevOptions, sheriffName),
-                        null,
-                        true);
-                taskAutowire.autowireWithoutRequest(updateTask, change.getNodeId());
-                taskExecutor.execute(updateTask);
+                jobs.run(
+                        UserListUpdateJob.class,
+                        new UserListUpdateJob.Parameters(
+                                sheriffName,
+                                UserList.SHERIFF_HIDE,
+                                FeedOperations.getSheriffFeeds(prevOptions, sheriffName),
+                                null,
+                                true),
+                        change.getNodeId());
             }
         }
     }

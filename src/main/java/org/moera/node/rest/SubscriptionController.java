@@ -42,12 +42,10 @@ import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
-import org.moera.node.rest.task.AllRemoteSubscribersUpdateTask;
-import org.moera.node.task.TaskAutowire;
+import org.moera.node.rest.task.AllRemoteSubscribersUpdateJob;
+import org.moera.node.task.Jobs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -82,11 +80,7 @@ public class SubscriptionController {
     private EntityManager entityManager;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private Jobs jobs;
 
     @GetMapping
     @Transactional
@@ -262,9 +256,10 @@ public class SubscriptionController {
         Principal ourView = (Principal) change.getNewValue();
         Principal theirView = ourView.isAdmin() ? Principal.PRIVATE : ourView;
 
-        var task = new AllRemoteSubscribersUpdateTask(change.getNodeId(), theirView);
-        taskAutowire.autowire(task);
-        taskExecutor.execute(task);
+        jobs.run(
+                AllRemoteSubscribersUpdateJob.class,
+                new AllRemoteSubscribersUpdateJob.Parameters(theirView),
+                change.getNodeId());
     }
 
 }

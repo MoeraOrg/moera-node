@@ -1,4 +1,4 @@
-package org.moera.node.rest.task;
+package org.moera.node.rest.task.upgrade;
 
 import java.util.List;
 import javax.inject.Inject;

@@ -1,4 +1,4 @@
-package org.moera.node.rest.task;
+package org.moera.node.rest.task.verification;
 
 import java.util.Locale;
 import javax.inject.Inject;

@@ -22,15 +22,13 @@ import org.moera.node.liberin.model.SheriffComplainGroupAddedLiberin;
 import org.moera.node.model.SheriffComplainInfo;
 import org.moera.node.model.SheriffComplainText;
 import org.moera.node.model.SheriffOrderReason;
-import org.moera.node.rest.task.SheriffComplainGroupPrepareTask;
-import org.moera.node.task.TaskAutowire;
+import org.moera.node.rest.task.SheriffComplainGroupPrepareJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
@@ -56,11 +54,7 @@ public class SheriffComplainController {
     private SheriffComplainGroupRepository sheriffComplainGroupRepository;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private Jobs jobs;
 
     @Inject
     private Transaction tx;
@@ -102,10 +96,15 @@ public class SheriffComplainController {
         if (groupCreated) {
             requestContext.send(new SheriffComplainGroupAddedLiberin(group));
 
-            var prepareTask = new SheriffComplainGroupPrepareTask(group.getId(), group.getRemoteNodeName(),
-                    group.getRemoteFeedName(), group.getRemotePostingId(), group.getRemoteCommentId());
-            taskAutowire.autowire(prepareTask);
-            taskExecutor.execute(prepareTask);
+            jobs.run(
+                    SheriffComplainGroupPrepareJob.class,
+                    new SheriffComplainGroupPrepareJob.Parameters(
+                            group.getId(),
+                            group.getRemoteNodeName(),
+                            group.getRemoteFeedName(),
+                            group.getRemotePostingId(),
+                            group.getRemoteCommentId()),
+                    requestContext.nodeId());
         }
 
         requestContext.send(new SheriffComplainAddedLiberin(sheriffComplain, group));

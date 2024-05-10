@@ -1,4 +1,4 @@
-package org.moera.node.rest.task;
+package org.moera.node.rest.task.verification;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +22,7 @@ import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
+import org.moera.node.rest.task.RepliedToDigestVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -15,11 +15,9 @@ import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.rest.task.RemoteFeedFetchTask;
-import org.moera.node.task.TaskAutowire;
+import org.moera.node.rest.task.RemoteFeedFetchJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.util.Transaction;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -40,11 +38,7 @@ public class SubscriptionOperations {
     private Transaction tx;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private Jobs jobs;
 
     public UserSubscription subscribe(Consumer<UserSubscription> toUserSubscription) throws Exception {
         UserSubscription subscription;
@@ -81,10 +75,13 @@ public class SubscriptionOperations {
         universalContext.send(new SubscriptionAddedLiberin(subscription));
 
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
-            var fetchTask = new RemoteFeedFetchTask(subscription.getFeedName(), subscription.getRemoteNodeName(),
-                    subscription.getRemoteFeedName());
-            taskAutowire.autowire(fetchTask);
-            taskExecutor.execute(fetchTask);
+            jobs.run(
+                    RemoteFeedFetchJob.class,
+                    new RemoteFeedFetchJob.Parameters(
+                            subscription.getFeedName(),
+                            subscription.getRemoteNodeName(),
+                            subscription.getRemoteFeedName()),
+                    universalContext.nodeId());
         }
 
         return subscription;

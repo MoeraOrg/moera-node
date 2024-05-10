@@ -20,12 +20,10 @@ import org.moera.node.model.SheriffOrderAttributes;
 import org.moera.node.model.SheriffOrderCategory;
 import org.moera.node.model.SheriffOrderInfo;
 import org.moera.node.model.SheriffOrderReason;
-import org.moera.node.rest.task.SheriffOrderPostTask;
-import org.moera.node.task.TaskAutowire;
+import org.moera.node.rest.task.SheriffOrderPostJob;
+import org.moera.node.task.Jobs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,11 +44,7 @@ public class RemoteSheriffOrderController {
     private SheriffOrderRepository sheriffOrderRepository;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private Jobs jobs;
 
     @PostMapping
     @Admin
@@ -71,9 +65,10 @@ public class RemoteSheriffOrderController {
             sheriffOrderAttributes.setReasonCode(SheriffOrderReason.OTHER);
         }
 
-        var postTask = new SheriffOrderPostTask(nodeName, sheriffOrderAttributes, null);
-        taskAutowire.autowire(postTask);
-        taskExecutor.execute(postTask);
+        jobs.run(
+                SheriffOrderPostJob.class,
+                new SheriffOrderPostJob.Parameters(nodeName, sheriffOrderAttributes, null),
+                requestContext.nodeId());
 
         return Result.OK;
     }

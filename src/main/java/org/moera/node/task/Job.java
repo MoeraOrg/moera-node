@@ -22,7 +22,7 @@ public abstract class Job<P, S> extends Task {
     protected P parameters;
     protected S state;
 
-    private Jobs jobs;
+    protected Jobs jobs;
 
     private UUID id;
     private int retries;
@@ -105,19 +105,19 @@ public abstract class Job<P, S> extends Task {
         setRetryPolicy(new JobExponentialRetryPolicy(this, minPeriod, maxPeriod));
     }
 
-    public void success() {
+    public final void success() {
         throw new StopJobException(StopJob.SUCCESS);
     }
 
-    public void fail() {
+    public final void fail() {
         throw new StopJobException(StopJob.FAILURE);
     }
 
-    public void retry() {
+    public final void retry() {
         throw new StopJobException(StopJob.RETRY);
     }
 
-    public void checkpoint() {
+    public final void checkpoint() {
         retries = 0;
         waitUntil = null;
         jobs.checkpoint(this);

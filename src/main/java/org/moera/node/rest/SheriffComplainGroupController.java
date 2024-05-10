@@ -27,13 +27,11 @@ import org.moera.node.model.SheriffComplainInfo;
 import org.moera.node.model.SheriffOrderAttributes;
 import org.moera.node.model.SheriffOrderCategory;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.rest.task.SheriffOrderPostTask;
-import org.moera.node.task.TaskAutowire;
+import org.moera.node.rest.task.SheriffOrderPostJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.util.SafeInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -64,11 +62,7 @@ public class SheriffComplainGroupController {
     private SheriffComplainRepository sheriffComplainRepository;
 
     @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
+    private Jobs jobs;
 
     @GetMapping
     @Transactional
@@ -221,12 +215,16 @@ public class SheriffComplainGroupController {
         sheriffComplainDecisionText.toSheriffComplainGroup(sheriffComplainGroup);
 
         if (!noOrder) {
-            SheriffOrderAttributes attributes = new SheriffOrderAttributes(
-                    sheriffComplainGroup, SheriffOrderCategory.VISIBILITY, sheriffComplainDecisionText);
-            var orderTask = new SheriffOrderPostTask(
-                    sheriffComplainGroup.getRemoteNodeName(), attributes, sheriffComplainGroup);
-            taskAutowire.autowire(orderTask);
-            taskExecutor.execute(orderTask);
+            jobs.run(
+                    SheriffOrderPostJob.class,
+                    new SheriffOrderPostJob.Parameters(
+                            sheriffComplainGroup.getRemoteNodeName(),
+                            new SheriffOrderAttributes(
+                                    sheriffComplainGroup,
+                                    SheriffOrderCategory.VISIBILITY,
+                                    sheriffComplainDecisionText),
+                            sheriffComplainGroup.getId()),
+                    requestContext.nodeId());
         }
 
         requestContext.send(new SheriffComplainGroupUpdatedLiberin(sheriffComplainGroup, prevStatus));
