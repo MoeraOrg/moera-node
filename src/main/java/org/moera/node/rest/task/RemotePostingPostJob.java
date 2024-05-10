@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.data.MediaFile;
+import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.OwnPostingRepository;
 import org.moera.node.fingerprint.PostingFingerprint;
@@ -78,7 +79,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     public static class State {
 
         private WhoAmI target;
-        private MediaFile targetAvatarMediaFile;
+        private String targetAvatarMediaFileId;
         private boolean targetAvatarMediaFileLoaded;
         private boolean ownerAvatarUploaded;
         private PostingInfo prevPostingInfo;
@@ -96,12 +97,12 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
             this.target = target;
         }
 
-        public MediaFile getTargetAvatarMediaFile() {
-            return targetAvatarMediaFile;
+        public String getTargetAvatarMediaFileId() {
+            return targetAvatarMediaFileId;
         }
 
-        public void setTargetAvatarMediaFile(MediaFile targetAvatarMediaFile) {
-            this.targetAvatarMediaFile = targetAvatarMediaFile;
+        public void setTargetAvatarMediaFileId(String targetAvatarMediaFileId) {
+            this.targetAvatarMediaFileId = targetAvatarMediaFileId;
         }
 
         public boolean isTargetAvatarMediaFileLoaded() {
@@ -155,6 +156,9 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     private OwnPostingRepository ownPostingRepository;
 
     @Inject
+    private MediaFileRepository mediaFileRepository;
+
+    @Inject
     private ContactOperations contactOperations;
 
     @Inject
@@ -188,9 +192,10 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         }
 
         if (!state.targetAvatarMediaFileLoaded) {
-            state.targetAvatarMediaFile = mediaManager.downloadPublicMedia(
+            MediaFile mediaFile = mediaManager.downloadPublicMedia(
                     parameters.targetNodeName,
                     state.target.getAvatar());
+            state.targetAvatarMediaFileId = mediaFile != null ? mediaFile.getId() : null;
             state.targetAvatarMediaFileLoaded = true;
             checkpoint();
         }
@@ -300,8 +305,9 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
                     ownPosting.setNodeId(nodeId);
                     ownPosting.setRemoteNodeName(parameters.targetNodeName);
                     ownPosting.setRemoteFullName(state.target.getFullName());
-                    if (state.targetAvatarMediaFile != null) {
-                        ownPosting.setRemoteAvatarMediaFile(state.targetAvatarMediaFile);
+                    if (state.targetAvatarMediaFileId != null) {
+                        MediaFile mediaFile = mediaFileRepository.findById(state.targetAvatarMediaFileId).orElse(null);
+                        ownPosting.setRemoteAvatarMediaFile(mediaFile);
                         ownPosting.setRemoteAvatarShape(state.target.getAvatar().getShape());
                     }
                     ownPosting = ownPostingRepository.save(ownPosting);
