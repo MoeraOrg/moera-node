@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -84,7 +85,7 @@ public class RemoteFeedFetchJob extends Job<RemoteFeedFetchJob.Parameters, Objec
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         FeedSliceInfo sliceInfo = nodeApi.getFeedStories(
                 parameters.remoteNodeName,
                 parameters.remoteFeedName,

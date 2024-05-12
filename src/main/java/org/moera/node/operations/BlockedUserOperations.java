@@ -193,7 +193,7 @@ public class BlockedUserOperations {
     }
 
     @Scheduled(fixedDelayString = "PT1H")
-    public void purgeExpired() throws Exception {
+    public void purgeExpired() {
         List<Liberin> liberinList = new ArrayList<>();
         tx.executeWrite(() -> {
             Set<UUID> nodeIds = new HashSet<>();

@@ -248,7 +248,7 @@ public class PluginController {
     public StreamEmitter getEvents(@PathVariable String pluginName,
                                    @RequestParam(name = "after", required = false) Long after,
                                    @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
-            throws Exception {
+            throws IOException {
 
         log.info("GET /plugins/{pluginName}/events (pluginName = {}, after = {}, Last-Event-ID = {})",
                 LogUtil.format(pluginName), LogUtil.format(after), LogUtil.format(lastEventId));

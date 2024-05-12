@@ -63,9 +63,7 @@ public class SheriffComplainController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<SheriffComplainInfo> post(@Valid @RequestBody SheriffComplainText sheriffComplainText)
-            throws Exception {
-
+    public ResponseEntity<SheriffComplainInfo> post(@Valid @RequestBody SheriffComplainText sheriffComplainText) {
         log.info("POST /sheriff/complains"
                         + " (nodeName = {}, feedName = {}, postingId = {}, commentId = {}, reasonCode = {})",
                 LogUtil.format(sheriffComplainText.getNodeName()),
@@ -113,8 +111,7 @@ public class SheriffComplainController {
                 .body(new SheriffComplainInfo(sheriffComplain, true));
     }
 
-    private Pair<SheriffComplainGroup, Boolean> findOrCreateComplainGroup(SheriffComplainText sheriffComplainText)
-            throws Exception {
+    private Pair<SheriffComplainGroup, Boolean> findOrCreateComplainGroup(SheriffComplainText sheriffComplainText) {
         SheriffComplainGroup group = findComplainGroup(sheriffComplainText).orElse(null);
         if (group != null) {
             return Pair.of(group, false);

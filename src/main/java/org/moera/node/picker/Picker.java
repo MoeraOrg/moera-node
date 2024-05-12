@@ -149,7 +149,7 @@ public class Picker extends Task {
 
         List<Liberin> liberins = new ArrayList<>();
         List<Pick> picks = new ArrayList<>();
-        Posting posting = tx.executeWrite(() -> {
+        Posting posting = tx.executeWriteWithExceptions(() -> {
             Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(),
                     liberins, picks);
             saveSources(p, pick);

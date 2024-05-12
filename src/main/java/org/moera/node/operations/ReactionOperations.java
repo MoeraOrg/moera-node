@@ -269,7 +269,7 @@ public class ReactionOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Exception {
+    public void purgeExpired() {
         Set<Entry> changed = new HashSet<>();
         tx.executeWrite(() ->
             reactionRepository.findExpired(Util.now()).forEach(reaction -> {

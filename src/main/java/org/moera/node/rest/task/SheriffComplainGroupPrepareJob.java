@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.SheriffComplainGroup;
@@ -174,7 +175,7 @@ public class SheriffComplainGroupPrepareJob
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         try {
             if (!state.prepared) {
                 prepare();
@@ -193,7 +194,7 @@ public class SheriffComplainGroupPrepareJob
         }
     }
 
-    private void prepare() throws Exception {
+    private void prepare() throws NodeApiException {
         if (state.whoAmI == null) {
             state.whoAmI = nodeApi.whoAmI(parameters.nodeName);
             checkpoint();
@@ -260,7 +261,7 @@ public class SheriffComplainGroupPrepareJob
         });
     }
 
-    private void autoDecide() throws Exception {
+    private void autoDecide() {
         List<SheriffOrder> orders;
         PageRequest page = PageRequest.of(0, 1, Sort.Direction.DESC, "createdAt");
         if (parameters.postingId == null) {
@@ -286,7 +287,7 @@ public class SheriffComplainGroupPrepareJob
         }
     }
 
-    private void updateComplainGroup(Consumer<SheriffComplainGroup> updater) throws Exception {
+    private void updateComplainGroup(Consumer<SheriffComplainGroup> updater) {
         var liberin = tx.executeWrite(() -> {
             SheriffComplainGroup complainGroup =
                     sheriffComplainGroupRepository.findByNodeIdAndId(nodeId, parameters.groupId).orElse(null);
@@ -303,7 +304,7 @@ public class SheriffComplainGroupPrepareJob
         }
     }
 
-    private void updateComplainGroupStatus(SheriffComplainStatus status) throws Exception {
+    private void updateComplainGroupStatus(SheriffComplainStatus status) {
         updateComplainGroup(c -> c.setStatus(status));
     }
 

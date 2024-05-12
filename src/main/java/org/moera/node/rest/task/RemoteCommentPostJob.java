@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnComment;
@@ -229,7 +230,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         if (state.target == null) {
             state.target = nodeApi.whoAmI(parameters.targetNodeName);
             checkpoint();
@@ -397,7 +398,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                 null);
     }
 
-    private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) throws Exception {
+    private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) {
         tx.executeWrite(
             () -> {
                 OwnComment ownComment = ownCommentRepository

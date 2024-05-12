@@ -119,7 +119,7 @@ public class SubscriptionController {
     @Admin
     @Entitled
     @Transactional
-    public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) throws Exception {
+    public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) {
         log.info("POST /people/subscriptions (type = {}, feedName = {}, remoteNodeName = {}, remotePostingId = {})",
                 LogUtil.format(SubscriptionType.toValue(subscriptionDescription.getType())),
                 LogUtil.format(subscriptionDescription.getFeedName()),

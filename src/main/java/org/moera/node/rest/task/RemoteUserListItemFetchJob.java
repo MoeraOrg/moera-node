@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;
@@ -122,7 +123,7 @@ public class RemoteUserListItemFetchJob
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         if (state.absent == null) {
             try {
                 state.absent = nodeApi.getUserListItem(

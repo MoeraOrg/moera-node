@@ -68,7 +68,7 @@ public class StoryController {
 
     @PutMapping("/{id}")
     @Admin
-    public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) throws Exception {
+    public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) {
         log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
                 LogUtil.formatTimestamp(storyAttributes.getPublishAt()),

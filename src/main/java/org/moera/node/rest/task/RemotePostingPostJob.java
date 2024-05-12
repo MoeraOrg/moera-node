@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnPosting;
@@ -185,7 +186,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         if (state.target == null) {
             state.target = nodeApi.whoAmI(parameters.targetNodeName);
             checkpoint();
@@ -289,7 +290,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
                 null);
     }
 
-    private void savePosting() throws Exception {
+    private void savePosting() {
         if (state.postingInfo.getParentMediaId() != null) {
             return;
         }

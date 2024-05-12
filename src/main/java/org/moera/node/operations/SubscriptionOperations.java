@@ -40,7 +40,7 @@ public class SubscriptionOperations {
     @Inject
     private Jobs jobs;
 
-    public UserSubscription subscribe(Consumer<UserSubscription> toUserSubscription) throws Exception {
+    public UserSubscription subscribe(Consumer<UserSubscription> toUserSubscription) {
         UserSubscription subscription;
         try {
             subscription = tx.executeWrite(() -> {
@@ -87,7 +87,7 @@ public class SubscriptionOperations {
         return subscription;
     }
 
-    public void autoSubscribe() throws Exception {
+    public void autoSubscribe() {
         String remoteNodeName = universalContext.getOptions().getString("subscription.auto.node");
         if (ObjectUtils.isEmpty(remoteNodeName)) {
             return;

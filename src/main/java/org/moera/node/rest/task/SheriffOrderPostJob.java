@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.SheriffComplainGroup;
 import org.moera.node.data.SheriffComplainGroupRepository;
 import org.moera.node.data.SheriffOrder;
@@ -164,7 +165,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         if (state.sheriffOrderId == null) {
             state.sheriffOrderId = UUID.randomUUID();
             checkpoint();

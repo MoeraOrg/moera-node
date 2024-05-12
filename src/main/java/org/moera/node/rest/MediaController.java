@@ -104,7 +104,7 @@ public class MediaController {
     private EntityManager entityManager;
 
     @PostConstruct
-    public void init() throws Exception {
+    public void init() throws MediaPathNotSetException {
         if (ObjectUtils.isEmpty(config.getMedia().getPath())) {
             throw new MediaPathNotSetException("Path not set");
         }

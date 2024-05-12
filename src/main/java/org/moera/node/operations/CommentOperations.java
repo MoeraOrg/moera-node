@@ -290,7 +290,7 @@ public class CommentOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Exception {
+    public void purgeExpired() {
         List<Liberin> liberins = new ArrayList<>();
 
         tx.executeWrite(() -> {

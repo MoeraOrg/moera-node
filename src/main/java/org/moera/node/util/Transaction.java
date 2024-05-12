@@ -17,17 +17,25 @@ public class Transaction {
     @Inject
     private PlatformTransactionManager txManager;
 
-    public <T> T executeRead(Callable<T> inside) throws Exception {
+    public <T> T executeReadWithExceptions(Callable<T> inside) throws Exception {
+        return executeWithExceptions(inside, true);
+    }
+
+    public <T> T executeRead(CallableNoExceptions<T> inside) {
         return execute(inside, true);
     }
 
-    public void executeRead(CallableVoid inside) throws Exception {
+    public void executeReadWithExceptions(CallableVoid inside) throws Exception {
+        executeWithExceptions(inside, true);
+    }
+
+    public void executeRead(Runnable inside) {
         execute(inside, true);
     }
 
     public <T> T executeReadQuietly(Callable<T> inside, T defaultValue) {
         try {
-            return execute(inside, true);
+            return executeWithExceptions(inside, true);
         } catch (Throwable e) {
             return defaultValue;
         }
@@ -35,7 +43,7 @@ public class Transaction {
 
     public <T> T executeReadQuietly(Callable<T> inside, Function<Throwable, T> onError) {
         try {
-            return execute(inside, true);
+            return executeWithExceptions(inside, true);
         } catch (Throwable e) {
             if (onError != null) {
                 return onError.apply(e);
@@ -46,7 +54,7 @@ public class Transaction {
 
     public <T> T executeReadQuietly(Callable<T> inside, CallableNoExceptions<T> onError) {
         try {
-            return execute(inside, true);
+            return executeWithExceptions(inside, true);
         } catch (Throwable e) {
             if (onError != null) {
                 return onError.call();
@@ -57,7 +65,7 @@ public class Transaction {
 
     public void executeReadQuietly(CallableVoid inside, Consumer<Throwable> onError) {
         try {
-            execute(inside, true);
+            executeWithExceptions(inside, true);
         } catch (Throwable e) {
             if (onError != null) {
                 onError.accept(e);
@@ -67,7 +75,7 @@ public class Transaction {
 
     public void executeReadQuietly(CallableVoid inside, Runnable onError) {
         try {
-            execute(inside, true);
+            executeWithExceptions(inside, true);
         } catch (Throwable e) {
             if (onError != null) {
                 onError.run();
@@ -83,17 +91,25 @@ public class Transaction {
         executeReadQuietly(inside, (Runnable) null);
     }
 
-    public <T> T executeWrite(Callable<T> inside) throws Exception {
+    public <T> T executeWriteWithExceptions(Callable<T> inside) throws Exception {
+        return executeWithExceptions(inside, false);
+    }
+
+    public <T> T executeWrite(CallableNoExceptions<T> inside) {
         return execute(inside, false);
     }
 
-    public void executeWrite(CallableVoid inside) throws Exception {
+    public void executeWriteWithExceptions(CallableVoid inside) throws Exception {
+        executeWithExceptions(inside, false);
+    }
+
+    public void executeWrite(Runnable inside) {
         execute(inside, false);
     }
 
     public <T> T executeWriteQuietly(Callable<T> inside, T defaultValue) {
         try {
-            return execute(inside, false);
+            return executeWithExceptions(inside, false);
         } catch (Throwable e) {
             return defaultValue;
         }
@@ -101,7 +117,7 @@ public class Transaction {
 
     public <T> T executeWriteQuietly(Callable<T> inside, Function<Throwable, T> onError) {
         try {
-            return execute(inside, false);
+            return executeWithExceptions(inside, false);
         } catch (Throwable e) {
             if (onError != null) {
                 return onError.apply(e);
@@ -112,7 +128,7 @@ public class Transaction {
 
     public <T> T executeWriteQuietly(Callable<T> inside, CallableNoExceptions<T> onError) {
         try {
-            return execute(inside, false);
+            return executeWithExceptions(inside, false);
         } catch (Throwable e) {
             if (onError != null) {
                 return onError.call();
@@ -123,7 +139,7 @@ public class Transaction {
 
     public void executeWriteQuietly(CallableVoid inside, Consumer<Throwable> onError) {
         try {
-            execute(inside, false);
+            executeWithExceptions(inside, false);
         } catch (Throwable e) {
             if (onError != null) {
                 onError.accept(e);
@@ -134,7 +150,7 @@ public class Transaction {
 
     public void executeWriteQuietly(CallableVoid inside, Runnable onError) {
         try {
-            execute(inside, false);
+            executeWithExceptions(inside, false);
         } catch (Throwable e) {
             if (onError != null) {
                 onError.run();
@@ -151,7 +167,7 @@ public class Transaction {
         executeWriteQuietly(inside, (Runnable) null);
     }
 
-    private <T> T execute(Callable<T> inside, boolean readOnly) throws Exception {
+    private <T> T executeWithExceptions(Callable<T> inside, boolean readOnly) throws Exception {
         TransactionStatus status = beginTransaction(readOnly);
         T result;
         try {
@@ -166,10 +182,38 @@ public class Transaction {
         return result;
     }
 
-    private void execute(CallableVoid inside, boolean readOnly) throws Exception {
+    private <T> T execute(CallableNoExceptions<T> inside, boolean readOnly) {
+        TransactionStatus status = beginTransaction(readOnly);
+        T result;
+        try {
+            result = inside.call();
+            commitTransaction(status);
+        } catch (Throwable e) {
+            if (!isCompleted(status)) {
+                rollbackTransaction(status);
+            }
+            throw e;
+        }
+        return result;
+    }
+
+    private void executeWithExceptions(CallableVoid inside, boolean readOnly) throws Exception {
         TransactionStatus status = beginTransaction(readOnly);
         try {
             inside.call();
+            commitTransaction(status);
+        } catch (Throwable e) {
+            if (!isCompleted(status)) {
+                rollbackTransaction(status);
+            }
+            throw e;
+        }
+    }
+
+    private void execute(Runnable inside, boolean readOnly) {
+        TransactionStatus status = beginTransaction(readOnly);
+        try {
+            inside.run();
             commitTransaction(status);
         } catch (Throwable e) {
             if (!isCompleted(status)) {

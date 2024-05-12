@@ -84,7 +84,7 @@ public class CommentReactionController {
     @PostMapping
     public ResponseEntity<ReactionCreated> post(
             @PathVariable UUID postingId, @PathVariable UUID commentId,
-            @Valid @RequestBody ReactionDescription reactionDescription) throws Exception {
+            @Valid @RequestBody ReactionDescription reactionDescription) {
 
         log.info("POST /postings/{postingId}/comments/{commentId}/reactions"
                         + " (postingId = {}, commentId = {}, negative = {}, emoji = {})",
@@ -310,7 +310,7 @@ public class CommentReactionController {
 
     @DeleteMapping("/{ownerName}")
     public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                                     @PathVariable String ownerName) throws Exception {
+                                     @PathVariable String ownerName) {
 
         log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
                         + " (postingId = {}, commentId = {}, ownerName = {})",

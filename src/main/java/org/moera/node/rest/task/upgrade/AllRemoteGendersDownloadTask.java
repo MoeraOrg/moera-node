@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
@@ -61,7 +62,7 @@ public class AllRemoteGendersDownloadTask extends Task {
                 .collect(Collectors.toSet());
     }
 
-    private void download(String targetNodeName) throws Exception {
+    private void download(String targetNodeName) throws NodeApiException {
         WhoAmI target = nodeApi.whoAmI(targetNodeName);
         String targetFullName = target.getFullName();
         String targetGender = target.getGender();

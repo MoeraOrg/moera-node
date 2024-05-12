@@ -170,8 +170,7 @@ public class FeedController {
     @PutMapping("/{feedName}/status")
     @Admin
     @Transactional
-    public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change)
-            throws Exception {
+    public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change) {
         log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
                 LogUtil.format(feedName), LogUtil.format(change.getViewed()), LogUtil.format(change.getRead()),
                 LogUtil.format(change.getBefore()));

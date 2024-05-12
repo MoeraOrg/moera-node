@@ -4,6 +4,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingMediaReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
@@ -104,7 +105,7 @@ public class RemoteMediaReactionFailedJob
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         if (state.parentPosting == null) {
             EntryInfo[] parents = nodeApi.getPrivateMediaParent(
                     parameters.targetNodeName,

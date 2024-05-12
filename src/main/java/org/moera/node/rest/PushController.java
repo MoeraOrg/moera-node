@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -70,7 +71,7 @@ public class PushController {
     public StreamEmitter get(@PathVariable String clientId,
                              @RequestParam(name = "after", required = false) Long after,
                              @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
-            throws Exception {
+            throws IOException {
 
         log.info("GET /push/{clientId} (clientId = {}, after = {}, Last-Event-ID = {})",
                 LogUtil.format(clientId), LogUtil.format(after), LogUtil.format(lastEventId));
@@ -94,7 +95,7 @@ public class PushController {
         return emitter;
     }
 
-    private PushClient getClient(String clientId) throws Exception {
+    private PushClient getClient(String clientId) {
         PushClient client = pushClientRepository.findByClientId(requestContext.nodeId(), clientId).orElse(null);
         if (client != null) {
             return client;
@@ -120,7 +121,7 @@ public class PushController {
         return client;
     }
 
-    private void updateLastSeenAt(PushClient client) throws Exception {
+    private void updateLastSeenAt(PushClient client) {
         tx.executeWrite(() -> {
             client.setLastSeenAt(Util.now());
             pushClientRepository.save(client);

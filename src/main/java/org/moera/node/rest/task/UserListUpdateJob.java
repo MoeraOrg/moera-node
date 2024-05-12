@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
@@ -148,7 +149,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
     }
 
     @Override
-    protected void execute() throws Exception {
+    protected void execute() throws NodeApiException {
         if (parameters.nodeName == null) {
             if (!parameters.delete) {
                 addList();
@@ -164,7 +165,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
         }
     }
 
-    private void addList() throws Exception {
+    private void addList() throws NodeApiException {
         if (entryRepository.countNotOwnedBy(universalContext.nodeId(), universalContext.nodeName()) == 0) {
             return;
         }
@@ -188,7 +189,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
         } while (slice.getTotalInPast() > 0);
     }
 
-    private void deleteList() throws Exception {
+    private void deleteList() {
         tx.executeWrite(
             () -> {
                 Page<RemoteUserListItem> page;
@@ -208,13 +209,13 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
         );
     }
 
-    private void addListItem() throws Exception {
+    private void addListItem() {
         tx.executeWrite(
             () -> userListOperations.addToList(parameters.listNodeName, parameters.listName, parameters.nodeName)
         );
     }
 
-    private void deleteListItem() throws Exception {
+    private void deleteListItem() {
         tx.executeWrite(
             () -> userListOperations.deleteFromList(
                     parameters.listNodeName,

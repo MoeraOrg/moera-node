@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -107,7 +108,7 @@ public class SettingsController {
     @PutMapping("/node/metadata")
     @RootAdmin
     @Transactional
-    public Result putMetadata(@RequestBody @Valid List<SettingMetaAttributes> metaAttributes) throws Exception {
+    public Result putMetadata(@RequestBody @Valid List<SettingMetaAttributes> metaAttributes) throws IOException {
         log.info("PUT /settings/node/metadata");
 
         boolean metaChanged = tx.executeWrite(() -> {

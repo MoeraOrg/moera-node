@@ -32,7 +32,7 @@ public class EntryOperations {
     private Transaction tx;
 
     @Scheduled(fixedDelayString = "P1D")
-    public void purgeOutdatedRevisions() throws Exception {
+    public void purgeOutdatedRevisions() {
         for (String domainName : domains.getAllDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
             purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, true, "posting.revision.lifetime");
@@ -42,7 +42,7 @@ public class EntryOperations {
     }
 
     private void purgeOutdatedRevisions(UUID nodeId, String domainName, EntryType entryType, boolean original,
-                                        String optionName) throws Exception {
+                                        String optionName) {
         MDC.put("domain", domainName);
 
         ExtendedDuration lifetime = domains.getDomainOptions(domainName).getDuration(optionName);

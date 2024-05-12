@@ -111,7 +111,7 @@ public class PickerPool {
         pickers.remove(new PickingDirection(nodeId, nodeName));
     }
 
-    private Pick storePick(final Pick detachedPick) throws Exception {
+    private Pick storePick(final Pick detachedPick) {
         detachedPick.setId(UUID.randomUUID());
         if (detachedPick.getNodeId() == null) {
             detachedPick.setNodeId(universalContext.nodeId());

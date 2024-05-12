@@ -126,7 +126,7 @@ public class StoryOperations {
     }
 
     @Scheduled(fixedDelayString = "P1D")
-    public void purgeExpired() throws Exception {
+    public void purgeExpired() {
         for (String domainName : domains.getAllDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
             purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
@@ -137,7 +137,7 @@ public class StoryOperations {
     }
 
     private void purgeExpired(UUID nodeId, String domainName, String feedName, String optionName,
-                              boolean viewed, boolean purgePinned) throws Exception {
+                              boolean viewed, boolean purgePinned) {
         Duration lifetime = domains.getDomainOptions(domainName).getDuration(optionName).getDuration();
         Timestamp createdBefore = Timestamp.from(Instant.now().minus(lifetime));
         List<Liberin> liberins = new ArrayList<>();

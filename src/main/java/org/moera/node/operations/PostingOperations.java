@@ -282,7 +282,7 @@ public class PostingOperations {
     }
 
     @Scheduled(fixedDelayString = "PT1H")
-    public void purgeUnlinked() throws Exception {
+    public void purgeUnlinked() {
         for (String domainName : domains.getAllDomainNames()) {
             Options options = domains.getDomainOptions(domainName);
             List<Liberin> liberinList = new ArrayList<>();
@@ -299,7 +299,7 @@ public class PostingOperations {
     }
 
     @Scheduled(fixedDelayString = "PT15M")
-    public void purgeExpired() throws Exception {
+    public void purgeExpired() {
         List<Liberin> liberins = new ArrayList<>();
 
         tx.executeWrite(() -> {

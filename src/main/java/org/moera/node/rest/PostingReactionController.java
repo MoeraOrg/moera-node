@@ -95,7 +95,7 @@ public class PostingReactionController {
     @PostMapping("/{postingId}/reactions")
     public ResponseEntity<ReactionCreated> post(
             @PathVariable UUID postingId,
-            @Valid @RequestBody ReactionDescription reactionDescription) throws Exception {
+            @Valid @RequestBody ReactionDescription reactionDescription) {
 
         log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {})",
                 LogUtil.format(postingId),
@@ -322,7 +322,7 @@ public class PostingReactionController {
 
     @DeleteMapping("/{postingId}/reactions/{ownerName}")
     @Transactional
-    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) throws Exception {
+    public ReactionTotalsInfo delete(@PathVariable UUID postingId, @PathVariable String ownerName) {
         log.info("DELETE /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
                 LogUtil.format(postingId), LogUtil.format(ownerName));
 
