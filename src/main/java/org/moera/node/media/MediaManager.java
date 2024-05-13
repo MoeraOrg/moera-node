@@ -29,14 +29,11 @@ import org.moera.node.model.AvatarImage;
 import org.moera.node.model.PostingFeatures;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
-import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -76,13 +73,6 @@ public class MediaManager {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Inject
-    @Qualifier("remoteTaskExecutor")
-    private TaskExecutor taskExecutor;
-
-    @Inject
-    private TaskAutowire taskAutowire;
-
     private final ParametrizedLock<String> mediaFileLocks = new ParametrizedLock<>();
 
     public MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws NodeApiException {
@@ -97,7 +87,7 @@ public class MediaManager {
 
         mediaFileLocks.lock(id);
         try {
-            // Could appear in meantime
+            // Could appear in the meantime
             mediaFile = mediaFileRepository.findById(id).orElse(null);
             if (mediaFile != null && mediaFile.isExposed()) {
                 return mediaFile;
@@ -140,37 +130,32 @@ public class MediaManager {
                 universalContext.getOptions().getInt("avatar.max-size"));
     }
 
-    public void asyncDownloadPublicMedia(String nodeName, AvatarImage[] avatarImages, Runnable callback) {
-        if (avatarImages == null) {
-            callback.run();
+    public void downloadAvatar(String nodeName, AvatarImage avatarImage) throws NodeApiException {
+        int maxSize = universalContext.getOptions().getInt("avatar.max-size");
+
+        String id = avatarImage != null ? avatarImage.getMediaId() : null;
+        if (id == null) {
             return;
         }
 
-        boolean all = true;
-        for (AvatarImage avatarImage : avatarImages) {
-            String id = avatarImage != null ? avatarImage.getMediaId() : null;
-            if (id == null) {
-                continue;
-            }
-            if (avatarImage.getMediaFile() != null) {
-                MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
-                if (mediaFile != null && mediaFile.isExposed()) {
-                    avatarImage.setMediaFile(mediaFile);
-                    continue;
-                }
-            }
-            all = false;
+        if (avatarImage.getMediaFile() == null) {
+            return;
         }
-
-        if (all) {
-            callback.run();
+        MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
+        if (mediaFile != null && mediaFile.isExposed()) {
+            avatarImage.setMediaFile(mediaFile);
             return;
         }
 
-        var downloadTask = new PublicMediaDownloadTask(nodeName, avatarImages,
-                universalContext.getOptions().getInt("avatar.max-size"), callback);
-        taskAutowire.autowire(downloadTask);
-        taskExecutor.execute(downloadTask);
+        avatarImage.setMediaFile(downloadPublicMedia(nodeName, id, maxSize));
+    }
+
+    public void downloadAvatars(String nodeName, AvatarImage[] avatarImages) throws NodeApiException {
+        if (avatarImages != null) {
+            for (AvatarImage avatarImage : avatarImages) {
+                downloadAvatar(nodeName, avatarImage);
+            }
+        }
     }
 
     public void uploadPublicMedia(String nodeName, String carte, MediaFile mediaFile) throws NodeApiException {

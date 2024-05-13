@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.api.node.NodeApiValidationException;
@@ -16,9 +17,8 @@ import org.moera.node.data.UserSubscription;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.model.SubscriberInfo;
-import org.moera.node.model.WhoAmI;
-import org.moera.node.api.naming.NamingNotAvailableException;
-import org.moera.node.rest.notification.ProfileProcessor;
+import org.moera.node.rest.notification.ProfileUpdateJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -41,10 +41,10 @@ public class SubscriptionTask extends Task {
     private SubscriptionManager subscriptionManager;
 
     @Inject
-    private ProfileProcessor profileProcessor;
+    private MediaManager mediaManager;
 
     @Inject
-    private MediaManager mediaManager;
+    private Jobs jobs;
 
     public SubscriptionTask(UUID subscriptionId) {
         this.subscriptionId = subscriptionId;
@@ -123,13 +123,7 @@ public class SubscriptionTask extends Task {
             return;
         }
 
-        try {
-            WhoAmI target = nodeApi.whoAmI(targetNodeName);
-            profileProcessor.updateProfileDetails(target.getNodeName(), target.getFullName(), target.getGender(),
-                    target.getAvatar());
-        } catch (NodeApiException e) {
-            log.warn("Error updating details of node {}: {}", targetNodeName, e.getMessage());
-        }
+        jobs.run(ProfileUpdateJob.class, new ProfileUpdateJob.Parameters(targetNodeName), nodeId);
     }
 
     private void unsubscribe(Subscription subscription) {

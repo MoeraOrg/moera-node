@@ -2,21 +2,17 @@ package org.moera.node.rest.notification;
 
 import javax.inject.Inject;
 
-import org.moera.node.data.MediaFile;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
-import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
-import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarImage;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
-import org.moera.node.operations.ContactOperations;
+import org.moera.node.task.Jobs;
+import org.moera.node.util.Transaction;
 
 @NotificationProcessor
 public class ProfileProcessor {
@@ -28,10 +24,10 @@ public class ProfileProcessor {
     private SubscriptionRepository subscriptionRepository;
 
     @Inject
-    private ContactOperations contactOperations;
+    private Transaction tx;
 
     @Inject
-    private MediaManager mediaManager;
+    private Jobs jobs;
 
     private void validateSubscription(ProfileUpdatedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
@@ -43,27 +39,11 @@ public class ProfileProcessor {
 
     @NotificationMapping(NotificationType.PROFILE_UPDATED)
     public void profileUpdated(ProfileUpdatedNotification notification) {
-        validateSubscription(notification);
-        updateProfileDetails(notification.getSenderNodeName(), notification.getSenderFullName(),
-                notification.getSenderGender(), notification.getSenderAvatar());
-    }
-
-    public void updateProfileDetails(String nodeName, String fullName, String gender, AvatarImage avatar) {
-        contactOperations.updateDetails(nodeName, fullName, gender);
-        universalContext.send(new RemoteNodeFullNameChangedLiberin(nodeName, fullName));
-
-        mediaManager.asyncDownloadPublicMedia(nodeName,
-                new AvatarImage[] {avatar},
-                () -> {
-                    if (avatar != null && avatar.getMediaFile() != null) {
-                        this.saveAvatar(nodeName, avatar.getMediaFile(), avatar.getShape());
-                    }
-                });
-    }
-
-    private void saveAvatar(String nodeName, MediaFile mediaFile, String shape) {
-        contactOperations.updateAvatar(nodeName, mediaFile, shape);
-        universalContext.send(new RemoteNodeAvatarChangedLiberin(nodeName, new AvatarImage(mediaFile, shape)));
+        tx.executeRead(() -> validateSubscription(notification));
+        jobs.run(
+                ProfileUpdateJob.class,
+                new ProfileUpdateJob.Parameters(notification.getSenderNodeName()),
+                universalContext.nodeId());
     }
 
 }
