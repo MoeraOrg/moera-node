@@ -91,7 +91,7 @@ public class NamingClient {
         MDC.put("domain", domains.getDomainName(options.nodeId()));
         UUID operationId = options.getUuid("naming.operation.id");
         if (operationId == null) {
-            log.info("No pending naming operation");
+            log.debug("No pending naming operation");
             return;
         }
         NamingService namingService = getNamingService(options);
