@@ -93,6 +93,10 @@ public class Jobs {
         taskExecutor.execute(job);
     }
 
+    public boolean isRunning(Class<?> klass) {
+        return tx.executeRead(() -> pendingJobRepository.countByType(klass.getCanonicalName())) > 0;
+    }
+
     @Scheduled(fixedDelayString = "PT1H")
     public void load() {
         if (!initialized) {

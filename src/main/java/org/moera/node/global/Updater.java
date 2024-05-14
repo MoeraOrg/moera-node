@@ -32,6 +32,8 @@ import org.moera.node.option.Options;
 import org.moera.node.rest.task.upgrade.AllRemoteAvatarsDownloadTask;
 import org.moera.node.rest.task.upgrade.AllRemoteGendersDownloadTask;
 import org.moera.node.rest.task.upgrade.ContactsUpgradeTask;
+import org.moera.node.rest.task.upgrade.MediaFileRenamePaddedIdsJob;
+import org.moera.node.task.Jobs;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +87,9 @@ public class Updater {
     @Inject
     private TaskAutowire taskAutowire;
 
+    @Inject
+    private Jobs jobs;
+
     @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void execute() {
@@ -123,7 +128,7 @@ public class Updater {
         do {
             upgrades = entryRevisionUpgradeRepository.findPending(pageable);
             upgrades.forEach(this::process);
-        } while (upgrades.size() > 0);
+        } while (!upgrades.isEmpty());
     }
 
     private void process(EntryRevisionUpgrade upgrade) {
@@ -187,6 +192,7 @@ public class Updater {
     private void executeMediaUpgrades() {
         updateMediaFileDigests();
         createMediaPostings();
+        renamePaddedIds();
     }
 
     private void updateMediaFileDigests() {
@@ -195,7 +201,7 @@ public class Updater {
         do {
             mediaFiles = mediaFileRepository.findWithNoDigest(pageable);
             mediaFiles.forEach(this::updateDigest);
-        } while (mediaFiles.size() > 0);
+        } while (!mediaFiles.isEmpty());
     }
 
     private void updateDigest(MediaFile mediaFile) {
@@ -222,6 +228,12 @@ public class Updater {
                 log.info("Created posting {} for media {}",
                         mediaFileOwner.getPosting(null).getId(), mediaFileOwner.getId());
             }
+        }
+    }
+
+    private void renamePaddedIds() {
+        if (mediaFileRepository.countIdWithPadding() > 0 && !jobs.isRunning(MediaFileRenamePaddedIdsJob.class)) {
+            jobs.run(MediaFileRenamePaddedIdsJob.class, new MediaFileRenamePaddedIdsJob.Parameters());
         }
     }
 

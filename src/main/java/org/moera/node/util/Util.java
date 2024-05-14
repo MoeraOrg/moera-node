@@ -171,7 +171,7 @@ public class Util {
     }
 
     public static String base64urlencode(byte[] bytes) {
-        return bytes != null ? Base64.getUrlEncoder().encodeToString(bytes) : null;
+        return bytes != null ? Base64.getUrlEncoder().withoutPadding().encodeToString(bytes) : null;
     }
 
     public static byte[] base64urldecode(String s) {

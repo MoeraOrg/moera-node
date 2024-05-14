@@ -15,6 +15,10 @@ spring:
     baseline-on-migrate: true
     validate-on-migrate: false # To be able to adjust DB schema without validation errors
 
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
   jpa:
     open-in-view: false
     show-sql: false  # Show or not log for each sql query
