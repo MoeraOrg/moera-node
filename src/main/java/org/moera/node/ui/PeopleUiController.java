@@ -65,7 +65,8 @@ public class PeopleUiController {
         return "redirect:/people/subscribers";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscribers")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscribers",
+            produces = "text/html")
     @VirtualPage
     @Transactional
     public String subscribers(Model model) {
@@ -97,7 +98,8 @@ public class PeopleUiController {
         return "subscribers";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscriptions")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/people/subscriptions",
+            produces = "text/html")
     @VirtualPage
     @Transactional
     public String subscriptions(Model model) {

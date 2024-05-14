@@ -12,6 +12,7 @@ public enum UserAgent {
     DOLPHIN("Dolphin"),
     GOOGLEBOT("Googlebot"),
     PETALBOT("PetalBot"),
+    SEMRUSHBOT("SemrushBot"),
     IE("IE"),
     EDGE("Edge"),
     SAFARI("Safari");

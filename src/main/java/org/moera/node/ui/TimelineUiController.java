@@ -78,7 +78,7 @@ public class TimelineUiController {
     @Inject
     private NamingCache namingCache;
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline", produces = "text/html")
     @VirtualPage
     @Transactional
     public String timeline(@RequestParam(required = false) Long before, Model model) {
@@ -112,7 +112,7 @@ public class TimelineUiController {
         return "timeline";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}", produces = "text/html")
     @Transactional
     public String posting(@PathVariable UUID id, @RequestParam(required = false) Long before,
                           @RequestParam(name = "comment", required = false) UUID commentId,

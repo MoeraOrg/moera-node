@@ -46,7 +46,7 @@ public class MoeraUiController {
         return builder.build().toUriString();
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/compose")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/compose", produces = "text/html")
     @VirtualPage
     public String compose(Model model) {
         return openClient("New Post", model);
@@ -58,19 +58,19 @@ public class MoeraUiController {
         return "redirect:/profile";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/settings")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/settings", produces = "text/html")
     @VirtualPage
     public String settings(Model model) {
         return openClient("Settings", model);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/settings/{tab}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/settings/{tab}", produces = "text/html")
     @VirtualPage
     public String settingsTab(@PathVariable String tab, Model model) {
         return openClient("Settings", model);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/news")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/news", produces = "text/html")
     @VirtualPage
     public String news(Model model) {
         return openClient("News", model);
@@ -88,13 +88,13 @@ public class MoeraUiController {
         return "redirect:/people/" + tab;
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains", produces = "text/html")
     @VirtualPage
     public String complains(Model model) {
         return openClient("Complaints", model);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains/{id}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains/{id}", produces = "text/html")
     @VirtualPage
     public String complainsGroup(@PathVariable String id, Model model) {
         return openClient("Complaints", model);

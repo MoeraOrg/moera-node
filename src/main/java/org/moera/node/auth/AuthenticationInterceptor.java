@@ -200,6 +200,8 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             requestContext.setUserAgent(UserAgent.GOOGLEBOT);
         } else if (userAgent.contains("PetalBot")) {
             requestContext.setUserAgent(UserAgent.PETALBOT);
+        } else if (userAgent.contains("SemrushBot")) {
+            requestContext.setUserAgent(UserAgent.SEMRUSHBOT);
         } else if (userAgent.contains("Chrome")) {
             if (userAgent.contains("YaBrowser")) {
                 requestContext.setUserAgent(UserAgent.YANDEX);

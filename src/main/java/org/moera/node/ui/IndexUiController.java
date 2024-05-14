@@ -32,7 +32,7 @@ public class IndexUiController {
         return !requestContext.isRegistrar() ? "redirect:/timeline" : "redirect:/registrar";
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/profile")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/profile", produces = "text/html")
     @VirtualPage
     public String profile(Model model) {
         log.info("UI /profile");

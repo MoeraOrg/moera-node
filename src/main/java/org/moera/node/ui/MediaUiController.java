@@ -96,7 +96,7 @@ public class MediaUiController {
         return mediaOperations.serve(mediaFileOwner.getMediaFile(), width, download);
     }
 
-    @GetMapping("/private/{id}/caption")
+    @GetMapping(path = "/private/{id}/caption", produces = "text/html")
     @Transactional
     public String getCaptionPrivate(@PathVariable UUID id, Model model) {
         log.info("GET MEDIA /media/private/{id}/caption (id = {})", LogUtil.format(id));
