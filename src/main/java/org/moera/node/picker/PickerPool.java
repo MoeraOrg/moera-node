@@ -2,6 +2,7 @@ package org.moera.node.picker;
 
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,6 +61,8 @@ public class PickerPool {
     }
 
     public void pick(Pick pick) {
+        Instant startedTime = Instant.now();
+
         pick.setRunning(true);
         if (pick.getId() == null) {
             try {
@@ -69,6 +72,8 @@ public class PickerPool {
                 return;
             }
         }
+
+        Instant storedTime = Instant.now();
 
         try {
             while (true) {
@@ -89,6 +94,14 @@ public class PickerPool {
         } catch (RejectedExecutionException e) {
             log.warn("Picker was rejected by task executor");
             pickFailed(pick, false);
+        } finally {
+            Instant finishedTime = Instant.now();
+            long fullDuration = startedTime.until(finishedTime, ChronoUnit.MILLIS);
+            if (fullDuration > 500) {
+                long storeDuration = startedTime.until(storedTime, ChronoUnit.MILLIS);
+                long runDuration = storedTime.until(finishedTime, ChronoUnit.MILLIS);
+                log.warn("Slow adding picker: {}ms ({}ms..{}ms)", fullDuration, storeDuration, runDuration);
+            }
         }
     }
 
