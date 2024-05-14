@@ -30,7 +30,7 @@ public class Carte {
         byte[] carte = new byte[content.length + signature.length];
         System.arraycopy(content, 0, carte, 0, content.length);
         System.arraycopy(signature, 0, carte, content.length, signature.length);
-        return Util.base64encode(carte);
+        return Util.base64urlencode(carte);
     }
 
 }
