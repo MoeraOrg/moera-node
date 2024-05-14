@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
+-- Dumped from database version 14.11 (Ubuntu 14.11-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.11 (Ubuntu 14.11-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1342,6 +1342,24 @@ CREATE TABLE public.password_reset_tokens (
 ALTER TABLE public.password_reset_tokens OWNER TO moera;
 
 --
+-- Name: pending_jobs; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.pending_jobs (
+    id uuid NOT NULL,
+    node_id uuid,
+    job_type character varying(63) NOT NULL,
+    parameters text NOT NULL,
+    state text,
+    created_at timestamp without time zone NOT NULL,
+    wait_until timestamp without time zone,
+    retries integer NOT NULL
+);
+
+
+ALTER TABLE public.pending_jobs OWNER TO moera;
+
+--
 -- Name: pending_notifications; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1670,7 +1688,6 @@ CREATE TABLE public.stories (
     published_at timestamp without time zone DEFAULT now() NOT NULL,
     pinned boolean DEFAULT false NOT NULL,
     summary text DEFAULT ''::character varying NOT NULL,
-    tracking_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     remote_node_name character varying(63),
     remote_posting_id character varying(40),
     parent_id uuid,
@@ -2018,6 +2035,14 @@ ALTER TABLE ONLY public.own_reactions
 
 ALTER TABLE ONLY public.password_reset_tokens
     ADD CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (token);
+
+
+--
+-- Name: pending_jobs pending_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.pending_jobs
+    ADD CONSTRAINT pending_jobs_pkey PRIMARY KEY (id);
 
 
 --
@@ -2721,6 +2746,20 @@ CREATE INDEX password_reset_tokens_node_id_idx ON public.password_reset_tokens U
 
 
 --
+-- Name: pending_jobs_job_type_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX pending_jobs_job_type_idx ON public.pending_jobs USING btree (job_type);
+
+
+--
+-- Name: pending_jobs_wait_until_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX pending_jobs_wait_until_idx ON public.pending_jobs USING btree (wait_until);
+
+
+--
 -- Name: pending_notifications_created_at_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3057,13 +3096,6 @@ CREATE INDEX stories_remote_posting_avatar_media_file_id_idx ON public.stories U
 
 
 --
--- Name: stories_tracking_id_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE UNIQUE INDEX stories_tracking_id_idx ON public.stories USING btree (tracking_id);
-
-
---
 -- Name: subscribers_contact_id_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -3145,6 +3177,20 @@ CREATE UNIQUE INDEX user_list_items_name_idx ON public.user_list_items USING btr
 --
 
 CREATE INDEX user_subscriptions_contact_id_idx ON public.user_subscriptions USING btree (contact_id);
+
+
+--
+-- Name: user_subscriptions_remote_entry_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX user_subscriptions_remote_entry_idx ON public.user_subscriptions USING btree (node_id, subscription_type, remote_entry_id);
+
+
+--
+-- Name: user_subscriptions_remote_node_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX user_subscriptions_remote_node_idx ON public.user_subscriptions USING btree (node_id, remote_node_name);
 
 
 --
