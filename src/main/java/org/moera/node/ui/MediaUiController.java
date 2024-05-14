@@ -62,6 +62,9 @@ public class MediaUiController {
                                                   @RequestParam(required = false) Boolean download) {
         log.info("GET MEDIA /media/public/{id}.ext (id = {})", LogUtil.format(id));
 
+        if (id.endsWith("=")) { // backward compatibility
+            id = id.substring(0, id.length() - 1);
+        }
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null || !mediaFile.isExposed()) {
             throw new PageNotFoundException();

@@ -224,6 +224,9 @@ public class MediaController {
     }
 
     private MediaFile getMediaFile(String id) {
+        if (id.endsWith("=")) { // backward compatibility
+            id = id.substring(0, id.length() - 1);
+        }
         MediaFile mediaFile = mediaFileRepository.findById(id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         if (mediaFile.isExposed()) {

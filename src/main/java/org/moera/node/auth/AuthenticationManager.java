@@ -116,7 +116,9 @@ public class AuthenticationManager {
         if (ObjectUtils.isEmpty(carteS)) {
             return null;
         }
-        byte[] carte = carteS.endsWith("=") ? Util.base64decode(carteS) : Util.base64urldecode(carteS);
+        byte[] carte = carteS.endsWith("=")
+                ? Util.base64decode(carteS) // backward compatibility, remove later
+                : Util.base64urldecode(carteS);
         if (carte.length == 0) {
             return null;
         }
