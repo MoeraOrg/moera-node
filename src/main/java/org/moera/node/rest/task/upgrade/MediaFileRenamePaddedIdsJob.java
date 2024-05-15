@@ -1,5 +1,7 @@
 package org.moera.node.rest.task.upgrade;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -72,12 +74,25 @@ public class MediaFileRenamePaddedIdsJob extends Job<MediaFileRenamePaddedIdsJob
 
     private void rename(MediaFile mediaFile) throws IOException {
         String newId = mediaFile.getId().substring(0, mediaFile.getId().length() - 1);
-        tx.executeWrite(() -> mediaFileRepository.updateId(mediaFile.getId(), newId));
+        try {
+            log.debug("Quering media file {}", newId);
+            var dupMediaFile = tx.executeRead(() -> mediaFileRepository.findById(newId).orElse(null));
+            if (dupMediaFile != null) {
+                log.warn("Duplicate media file {}", dupMediaFile.getId());
+                tx.executeWrite(() -> mediaFileRepository.deleteById(dupMediaFile.getId()));
+                log.debug("Removed {} successfully", dupMediaFile.getId());
+            }
+            log.debug("Renaming {} -> {}", mediaFile.getId(), newId);
+            tx.executeWrite(() -> mediaFileRepository.updateId(mediaFile.getId(), newId));
+        } catch (RuntimeException e) {
+            log.error("Error renaming {} -> {}", mediaFile.getId(), newId);
+            throw e;
+        }
         Path oldPath = FileSystems.getDefault().getPath(
                 config.getMedia().getPath(), MimeUtils.fileName(mediaFile.getId(), mediaFile.getMimeType()));
         Path newPath = FileSystems.getDefault().getPath(
                 config.getMedia().getPath(), MimeUtils.fileName(newId, mediaFile.getMimeType()));
-        Files.move(oldPath, newPath);
+        Files.move(oldPath, newPath, REPLACE_EXISTING);
     }
 
     @Override
