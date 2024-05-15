@@ -65,6 +65,10 @@ public class Jobs {
     }
 
     public <P, T extends Job<P, ?>> void run(Class<T> klass, P parameters, UUID nodeId) {
+        if (!initialized) {
+            throw new JobsManagerNotInitializedException();
+        }
+
         T job = null;
         try {
             job = klass.getConstructor().newInstance();
