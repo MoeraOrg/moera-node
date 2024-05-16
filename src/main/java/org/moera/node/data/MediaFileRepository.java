@@ -32,4 +32,7 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, String> {
     @Query("update MediaFile mf set mf.id = ?2 where mf.id = ?1")
     void updateId(String oldId, String newId);
 
+    @Query("select mf from MediaFile mf where mf.exposed = true")
+    Page<MediaFile> findAllExposed(Pageable pageable);
+
 }

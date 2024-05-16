@@ -22,6 +22,7 @@ import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,6 +38,9 @@ public class Jobs {
             new PriorityBlockingQueue<>(8, Comparator.comparing(Job::getWaitUntil));
 
     private boolean initialized = false;
+
+    @Inject
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @Inject
     private PendingJobRepository pendingJobRepository;
@@ -58,6 +62,7 @@ public class Jobs {
     public void init() {
         initialized = true;
         load();
+        applicationEventPublisher.publishEvent(new JobsManagerInitializedEvent(this));
     }
 
     public <P, T extends Job<P, ?>> void run(Class<T> klass, P parameters) {

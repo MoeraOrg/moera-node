@@ -100,9 +100,9 @@ public class MediaManager {
                     log.warn("Public media {} has hash {}", id, tmpMedia.getMediaFileId());
                     return null;
                 }
-                mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath(), null);
-                mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
-                mediaFile.setExposed(true);
+                mediaFile = mediaOperations.putInPlace(id, tmpMedia.getContentType(), tmp.getPath(), null, true);
+                // the entity is detached after putInPlace() transaction closed
+                mediaFile = entityManager.merge(mediaFile);
 
                 return mediaFile;
             } catch (IOException e) {
@@ -229,7 +229,7 @@ public class MediaManager {
                             return null;
                         }
                         mediaFile = mediaOperations.putInPlace(
-                                mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null);
+                                mediaFileId, tmpMedia.getContentType(), tmp.getPath(), null, false);
                     } finally {
                         try {
                             Files.deleteIfExists(tmp.getPath());

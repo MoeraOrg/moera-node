@@ -5,6 +5,7 @@ public class MediaConfig {
     private String path;
     private String serve = "stream"; // stream, sendfile, accel
     private String accelPrefix = "/";
+    private boolean directServe;
 
     public String getPath() {
         return path;
@@ -28,6 +29,14 @@ public class MediaConfig {
 
     public void setAccelPrefix(String accelPrefix) {
         this.accelPrefix = accelPrefix;
+    }
+
+    public boolean isDirectServe() {
+        return directServe;
+    }
+
+    public void setDirectServe(boolean directServe) {
+        this.directServe = directServe;
     }
 
 }

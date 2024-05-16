@@ -162,8 +162,7 @@ public class MediaController {
         try {
             DigestingOutputStream out = transfer(in, tmp.getOutputStream(), contentLength);
             MediaFile mediaFile = mediaOperations.putInPlace(
-                    out.getHash(), toContentType(mediaType), tmp.getPath(), out.getDigest());
-            mediaFile.setExposed(true);
+                    out.getHash(), toContentType(mediaType), tmp.getPath(), out.getDigest(), true);
             mediaFile = mediaFileRepository.save(mediaFile);
 
             return new PublicMediaFileInfo(mediaFile);
@@ -205,8 +204,10 @@ public class MediaController {
             String id = out.getHash();
             byte[] digest = out.getDigest();
 
-            MediaFile mediaFile = mediaOperations.putInPlace(id, toContentType(mediaType), tmp.getPath(), digest);
-            mediaFile = entityManager.merge(mediaFile); // entity is detached after putInPlace() transaction closed
+            MediaFile mediaFile = mediaOperations.putInPlace(
+                    id, toContentType(mediaType), tmp.getPath(), digest, false);
+            // the entity is detached after putInPlace() transaction closed
+            mediaFile = entityManager.merge(mediaFile);
             MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile,
                     requestContext.isAdmin() ? null : requestContext.getClientName());
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));

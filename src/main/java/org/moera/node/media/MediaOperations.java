@@ -13,7 +13,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,11 +68,14 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
 import org.moera.node.model.PostingFeatures;
+import org.moera.node.task.Jobs;
+import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -86,6 +91,7 @@ import org.springframework.util.ObjectUtils;
 public class MediaOperations {
 
     public static final String TMP_DIR = "tmp";
+    public static final String PUBLIC_DIR = "public";
 
     private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
@@ -118,6 +124,9 @@ public class MediaOperations {
     @Inject
     private Transaction tx;
 
+    @Inject
+    private Jobs jobs;
+
     public TemporaryFile tmpFile() {
         while (true) {
             Path path;
@@ -135,6 +144,21 @@ public class MediaOperations {
 
     public Path getPath(MediaFile mediaFile) {
         return FileSystems.getDefault().getPath(config.getMedia().getPath(), mediaFile.getFileName());
+    }
+
+    public Path getPublicServingPath() {
+        return FileSystems.getDefault().getPath(config.getMedia().getPath(), PUBLIC_DIR);
+    }
+
+    public Path getPublicServingPath(MediaFile mediaFile) {
+        return getPublicServingPath().resolve(mediaFile.getFileName());
+    }
+
+    public void createPublicServingLink(MediaFile mediaFile) throws IOException {
+        Path publicPath = getPublicServingPath(mediaFile);
+        if (!Files.exists(publicPath, LinkOption.NOFOLLOW_LINKS)) {
+            Files.createSymbolicLink(publicPath, Paths.get("..", mediaFile.getFileName()));
+        }
     }
 
     public static DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength,
@@ -182,7 +206,8 @@ public class MediaOperations {
     }
 
     @Transactional(REQUIRES_NEW)
-    public MediaFile putInPlace(String id, String contentType, Path tmpPath, byte[] digest) throws IOException {
+    public MediaFile putInPlace(String id, String contentType, Path tmpPath, byte[] digest,
+                                boolean exposed) throws IOException {
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
         if (mediaFile == null) {
             if (digest == null) {
@@ -205,7 +230,12 @@ public class MediaOperations {
             mediaFile.setOrientation(getImageOrientation(mediaPath));
             mediaFile.setFileSize(Files.size(mediaPath));
             mediaFile.setDigest(digest);
+            mediaFile.setExposed(exposed);
             mediaFile = mediaFileRepository.save(mediaFile);
+
+            if (config.getMedia().isDirectServe() && exposed) {
+                createPublicServingLink(mediaFile);
+            }
         }
         return mediaFile;
     }
@@ -275,8 +305,8 @@ public class MediaOperations {
                     .size(region.width, region.height)
                     .toOutputStream(out);
 
-            MediaFile cropped = putInPlace(out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest());
-            cropped.setExposed(false);
+            MediaFile cropped = putInPlace(
+                    out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false);
             cropped = mediaFileRepository.save(cropped);
 
             return cropped;
@@ -318,8 +348,8 @@ public class MediaOperations {
                     }
                     // otherwise original will be used in preview
                 } else {
-                    previewFile = putInPlace(out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest());
-                    previewFile.setExposed(false);
+                    previewFile = putInPlace(
+                            out.getHash(), previewFormat.mimeType, tmp.getPath(), out.getDigest(), false);
                     previewFile = mediaFileRepository.save(previewFile);
                 }
             } finally {
@@ -535,14 +565,22 @@ public class MediaOperations {
     public void purgeUnused() {
         Timestamp now = Util.now();
         tx.executeWrite(() -> mediaFileOwnerRepository.deleteUnused(now));
-        List<Path> fileNames = mediaFileRepository.findUnused(now).stream().map(this::getPath).toList();
+        Collection<MediaFile> mediaFiles = tx.executeRead(() -> mediaFileRepository.findUnused(now));
         tx.executeWrite(() -> mediaFileRepository.deleteUnused(now));
-        for (Path path : fileNames) {
+        for (MediaFile mediaFile : mediaFiles) {
+            Path path = getPath(mediaFile);
             try {
                 Files.deleteIfExists(path);
             } catch (IOException e) {
                 log.warn("Error deleting {}: {}", path, e.getMessage());
-                // ignore
+            }
+            if (config.getMedia().isDirectServe() && mediaFile.isExposed()) {
+                Path publicPath = getPublicServingPath(mediaFile);
+                try {
+                    Files.deleteIfExists(publicPath);
+                } catch (IOException e) {
+                    log.warn("Error deleting {}: {}", publicPath, e.getMessage());
+                }
             }
         }
     }
@@ -551,6 +589,18 @@ public class MediaOperations {
     @Transactional
     public void refreshPermissions() {
         mediaFileOwnerRepository.findOutdatedPermissions().forEach(this::updatePermissions);
+    }
+
+    @EventListener(JobsManagerInitializedEvent.class)
+    public void prepareDirectServing() throws IOException {
+        if (!config.getMedia().isDirectServe()) {
+            return;
+        }
+        Path publicDir = getPublicServingPath();
+        if (!Files.exists(publicDir)) {
+            Files.createDirectory(publicDir);
+            jobs.run(PrepareDirectServingJob.class, new PrepareDirectServingJob.Parameters());
+        }
     }
 
 }
