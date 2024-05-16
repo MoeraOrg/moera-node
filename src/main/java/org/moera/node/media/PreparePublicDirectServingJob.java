@@ -14,7 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-public class PrepareDirectServingJob extends Job<PrepareDirectServingJob.Parameters, Object> {
+public class PreparePublicDirectServingJob extends Job<PreparePublicDirectServingJob.Parameters, Object> {
 
     public static class Parameters {
 
@@ -23,7 +23,7 @@ public class PrepareDirectServingJob extends Job<PrepareDirectServingJob.Paramet
 
     }
 
-    private static final Logger log = LoggerFactory.getLogger(PrepareDirectServingJob.class);
+    private static final Logger log = LoggerFactory.getLogger(PreparePublicDirectServingJob.class);
 
     private static final int PAGE_SIZE = 1024;
 
@@ -33,7 +33,7 @@ public class PrepareDirectServingJob extends Job<PrepareDirectServingJob.Paramet
     @Inject
     private MediaOperations mediaOperations;
 
-    public PrepareDirectServingJob() {
+    public PreparePublicDirectServingJob() {
     }
 
     @Override
@@ -49,7 +49,7 @@ public class PrepareDirectServingJob extends Job<PrepareDirectServingJob.Paramet
     @Override
     protected void started() {
         super.started();
-        log.info("Creating links for serving media files directly");
+        log.info("Creating links for serving public media files directly");
     }
 
     @Override

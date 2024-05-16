@@ -16,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.TypeDef;
+import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalType;
 import org.moera.node.media.MimeUtils;
@@ -61,6 +62,14 @@ public class MediaFileOwner {
     @NotNull
     private Timestamp permissionsUpdatedAt = Util.now();
 
+    @Size(max = 32)
+    private String nonce;
+
+    @Size(max = 32)
+    private String prevNonce;
+
+    private Timestamp nonceDeadline;
+
     public UUID getId() {
         return id;
     }
@@ -71,6 +80,18 @@ public class MediaFileOwner {
 
     public String getFileName() {
         return MimeUtils.fileName(id.toString(), getMediaFile().getMimeType());
+    }
+
+    public String getDirectFileName() {
+        return nonce != null
+                ? MimeUtils.fileName(id.toString() + '_' + nonce, getMediaFile().getMimeType())
+                : null;
+    }
+
+    public String getPrevDirectFileName() {
+        return prevNonce != null
+                ? MimeUtils.fileName(id.toString() + '_' + prevNonce, getMediaFile().getMimeType())
+                : null;
     }
 
     public UUID getNodeId() {
@@ -160,6 +181,34 @@ public class MediaFileOwner {
 
     public void setPermissionsUpdatedAt(Timestamp permissionsUpdatedAt) {
         this.permissionsUpdatedAt = permissionsUpdatedAt;
+    }
+
+    public static String generateNonce() {
+        return CryptoUtil.token().substring(0, 32);
+    }
+
+    public String getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(String nonce) {
+        this.nonce = nonce;
+    }
+
+    public String getPrevNonce() {
+        return prevNonce;
+    }
+
+    public void setPrevNonce(String prevNonce) {
+        this.prevNonce = prevNonce;
+    }
+
+    public Timestamp getNonceDeadline() {
+        return nonceDeadline;
+    }
+
+    public void setNonceDeadline(Timestamp nonceDeadline) {
+        this.nonceDeadline = nonceDeadline;
     }
 
 }

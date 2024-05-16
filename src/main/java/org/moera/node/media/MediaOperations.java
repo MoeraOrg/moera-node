@@ -17,6 +17,9 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -78,6 +81,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -90,8 +96,11 @@ import org.springframework.util.ObjectUtils;
 @Component
 public class MediaOperations {
 
+    public static final Duration NONCE_REFRESH_INTERVAL = Duration.of(120, ChronoUnit.DAYS);
+
     public static final String TMP_DIR = "tmp";
-    public static final String PUBLIC_DIR = "public";
+    private static final String PUBLIC_DIR = "public";
+    private static final String PRIVATE_DIR = "private";
 
     private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
@@ -155,9 +164,24 @@ public class MediaOperations {
     }
 
     public void createPublicServingLink(MediaFile mediaFile) throws IOException {
-        Path publicPath = getPublicServingPath(mediaFile);
-        if (!Files.exists(publicPath, LinkOption.NOFOLLOW_LINKS)) {
-            Files.createSymbolicLink(publicPath, Paths.get("..", mediaFile.getFileName()));
+        Path servingPath = getPublicServingPath(mediaFile);
+        if (!Files.exists(servingPath, LinkOption.NOFOLLOW_LINKS)) {
+            Files.createSymbolicLink(servingPath, Paths.get("..", mediaFile.getFileName()));
+        }
+    }
+
+    public Path getPrivateServingPath() {
+        return FileSystems.getDefault().getPath(config.getMedia().getPath(), PRIVATE_DIR);
+    }
+
+    public Path getPrivateServingPath(MediaFileOwner mediaFileOwner) {
+        return getPrivateServingPath().resolve(mediaFileOwner.getDirectFileName());
+    }
+
+    public void createPrivateServingLink(MediaFileOwner mediaFileOwner) throws IOException {
+        Path servingPath = getPrivateServingPath(mediaFileOwner);
+        if (!Files.exists(servingPath, LinkOption.NOFOLLOW_LINKS)) {
+            Files.createSymbolicLink(servingPath, Paths.get("..", mediaFileOwner.getMediaFile().getFileName()));
         }
     }
 
@@ -599,8 +623,47 @@ public class MediaOperations {
         Path publicDir = getPublicServingPath();
         if (!Files.exists(publicDir)) {
             Files.createDirectory(publicDir);
-            jobs.run(PrepareDirectServingJob.class, new PrepareDirectServingJob.Parameters());
+            jobs.run(PreparePublicDirectServingJob.class, new PreparePublicDirectServingJob.Parameters());
         }
+        Path privateDir = getPrivateServingPath();
+        if (!Files.exists(privateDir)) {
+            Files.createDirectory(privateDir);
+            jobs.run(PreparePrivateDirectServingJob.class, new PreparePrivateDirectServingJob.Parameters());
+        }
+    }
+
+    @Scheduled(fixedDelayString = "PT3H")
+    public void refreshNonce() {
+        if (!config.getMedia().isDirectServe()) {
+            return;
+        }
+
+        Timestamp deadline = Timestamp.from(Instant.now().plus(MediaOperations.NONCE_REFRESH_INTERVAL));
+
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<MediaFileOwner> page;
+        do {
+            page = tx.executeRead(() -> mediaFileOwnerRepository.findOutdatedNonce(Util.now(), pageable));
+            for (MediaFileOwner mediaFileOwner : page.getContent()) {
+                String prevNonce = mediaFileOwner.getPrevNonce();
+                String nonce = MediaFileOwner.generateNonce();
+                tx.executeWrite(() -> mediaFileOwnerRepository.replaceNonce(mediaFileOwner.getId(), nonce, deadline));
+                if (prevNonce != null) {
+                    Path prevPath = getPrivateServingPath().resolve(mediaFileOwner.getPrevDirectFileName());
+                    try {
+                        Files.deleteIfExists(prevPath);
+                    } catch (IOException e) {
+                        log.error("Cannot remove existing link {}: {}", prevPath, e.getMessage());
+                    }
+                }
+                mediaFileOwner.setNonce(nonce);
+                try {
+                    createPrivateServingLink(mediaFileOwner);
+                } catch (IOException e) {
+                    log.error("Could not create a link for {}: {}", mediaFileOwner.getDirectFileName(), e.getMessage());
+                }
+            }
+        } while (!page.isEmpty());
     }
 
 }

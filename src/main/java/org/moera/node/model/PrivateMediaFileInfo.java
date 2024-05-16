@@ -29,7 +29,10 @@ public class PrivateMediaFileInfo {
     public PrivateMediaFileInfo(MediaFileOwner mediaFileOwner, String receiverName) {
         id = mediaFileOwner.getId().toString();
         hash = mediaFileOwner.getMediaFile().getId();
-        path = "private/" + mediaFileOwner.getFileName();
+        String fileName = mediaFileOwner.getDirectFileName() != null
+                ? mediaFileOwner.getDirectFileName()
+                : mediaFileOwner.getFileName();
+        path = "private/" + fileName;
         mimeType = mediaFileOwner.getMediaFile().getMimeType();
         width = mediaFileOwner.getMediaFile().getSizeX();
         height = mediaFileOwner.getMediaFile().getSizeY();

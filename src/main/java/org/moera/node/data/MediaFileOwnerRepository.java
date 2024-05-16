@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -45,6 +47,18 @@ public interface MediaFileOwnerRepository extends JpaRepository<MediaFileOwner, 
             + ")")
     @Modifying
     void updateUsageOfCommentAttachments(UUID nodeId, UUID postingId, Timestamp now);
+
+    @Query("select mo from MediaFileOwner mo where mo.nonce is null")
+    Page<MediaFileOwner> findAllWithoutNonce(Pageable pageable);
+
+    @Query("update MediaFileOwner mo"
+            + " set mo.prevNonce = mo.nonce, mo.nonce = ?2, mo.nonceDeadline = ?3"
+            + " where mo.id = ?1")
+    @Modifying
+    void replaceNonce(UUID id, String nonce, Timestamp nonceDeadline);
+
+    @Query("select mo from MediaFileOwner mo where mo.nonceDeadline < ?1 and mo.viewPrincipal != 'public'")
+    Page<MediaFileOwner> findOutdatedNonce(Timestamp now, Pageable pageable);
 
     @Query(value = "lock table only media_file_owners in exclusive mode", nativeQuery = true)
     @Modifying
