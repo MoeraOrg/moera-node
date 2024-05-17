@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -629,6 +630,19 @@ public class MediaOperations {
                     log.warn("Error deleting {}: {}", publicPath, e.getMessage());
                 }
             }
+        }
+
+        try (DirectoryStream<Path> directory = Files.newDirectoryStream(getPrivateServingPath())) {
+            for (Path path : directory) {
+                if (Files.isSymbolicLink(path)) {
+                    Path target = Files.readSymbolicLink(path);
+                    if (!Files.exists(path.resolveSibling(target))) {
+                        Files.delete(path);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            log.warn("Error deleting stale symlinks: {}", e.getMessage());
         }
     }
 
