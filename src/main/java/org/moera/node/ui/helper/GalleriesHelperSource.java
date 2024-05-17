@@ -143,9 +143,11 @@ public class GalleriesHelperSource {
             buf.append(String.format("<div class=\"count\">+%d</div>", count));
         }
 
-        String mediaLocation = "/moera/media/" + mediaFile.getPath();
+        boolean directServing = mediaFile.getDirectPath() != null;
+        String mediaLocation = "/moera/media/" + (directServing ? mediaFile.getDirectPath() : mediaFile.getPath());
         buf.append("<img");
-        HelperUtil.appendAttr(buf, "src", MediaUtil.mediaPreview(mediaLocation, 900));
+        HelperUtil.appendAttr(buf, "src",
+                directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900));
         HelperUtil.appendAttr(buf, "srcset",
                 MediaUtil.mediaSourcesInfo(mediaLocation, Arrays.asList(mediaFile.getPreviews())));
         HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));

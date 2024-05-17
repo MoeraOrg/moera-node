@@ -178,10 +178,21 @@ public class MediaOperations {
         return getPrivateServingPath().resolve(mediaFileOwner.getDirectFileName());
     }
 
+    public Path getPrivateServingPath(MediaFilePreview mediaFilePreview, String originalFileName) {
+        return getPrivateServingPath().resolve(mediaFilePreview.getDirectFileName(originalFileName));
+    }
+
     public void createPrivateServingLink(MediaFileOwner mediaFileOwner) throws IOException {
         Path servingPath = getPrivateServingPath(mediaFileOwner);
         if (!Files.exists(servingPath, LinkOption.NOFOLLOW_LINKS)) {
             Files.createSymbolicLink(servingPath, Paths.get("..", mediaFileOwner.getMediaFile().getFileName()));
+        }
+    }
+
+    public void createPrivateServingLink(MediaFilePreview mediaFilePreview, String originalFileName) throws IOException {
+        Path servingPath = getPrivateServingPath(mediaFilePreview, originalFileName);
+        if (!Files.exists(servingPath, LinkOption.NOFOLLOW_LINKS)) {
+            Files.createSymbolicLink(servingPath, Paths.get("..", mediaFilePreview.getMediaFile().getFileName()));
         }
     }
 
@@ -648,6 +659,7 @@ public class MediaOperations {
                 String prevNonce = mediaFileOwner.getPrevNonce();
                 String nonce = MediaFileOwner.generateNonce();
                 tx.executeWrite(() -> mediaFileOwnerRepository.replaceNonce(mediaFileOwner.getId(), nonce, deadline));
+
                 if (prevNonce != null) {
                     Path prevPath = getPrivateServingPath().resolve(mediaFileOwner.getPrevDirectFileName());
                     try {
@@ -661,6 +673,26 @@ public class MediaOperations {
                     createPrivateServingLink(mediaFileOwner);
                 } catch (IOException e) {
                     log.error("Could not create a link for {}: {}", mediaFileOwner.getDirectFileName(), e.getMessage());
+                }
+
+                Collection<MediaFilePreview> previews =
+                        mediaFilePreviewRepository.findByOriginalId(mediaFileOwner.getMediaFile().getId());
+                for (MediaFilePreview preview : previews) {
+                    if (prevNonce != null) {
+                        Path prevPath = getPrivateServingPath().resolve(
+                                preview.getDirectFileName(mediaFileOwner.getPrevDirectFileName()));
+                        try {
+                            Files.deleteIfExists(prevPath);
+                        } catch (IOException e) {
+                            log.error("Cannot remove existing link {}: {}", prevPath, e.getMessage());
+                        }
+                    }
+                    try {
+                        createPrivateServingLink(preview, mediaFileOwner.getDirectFileName());
+                    } catch (IOException e) {
+                        log.error("Could not create a link for preview {} {}w: {}",
+                                mediaFileOwner.getDirectFileName(), preview.getWidth(), e.getMessage());
+                    }
                 }
             }
         } while (!page.isEmpty());

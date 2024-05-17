@@ -7,6 +7,7 @@ import org.moera.node.data.MediaFilePreview;
 public class MediaFilePreviewInfo {
 
     private int targetWidth;
+    private String directPath;
     private int width;
     private int height;
     private boolean original;
@@ -14,11 +15,12 @@ public class MediaFilePreviewInfo {
     public MediaFilePreviewInfo() {
     }
 
-    public MediaFilePreviewInfo(MediaFilePreview preview) {
+    public MediaFilePreviewInfo(MediaFilePreview preview, String originalDirectPath) {
         targetWidth = preview.getWidth();
         width = preview.getMediaFile().getSizeX();
         height = preview.getMediaFile().getSizeY();
         original = preview.isOriginal();
+        directPath = preview.getDirectPath(originalDirectPath);
     }
 
     public int getTargetWidth() {
@@ -27,6 +29,14 @@ public class MediaFilePreviewInfo {
 
     public void setTargetWidth(int targetWidth) {
         this.targetWidth = targetWidth;
+    }
+
+    public String getDirectPath() {
+        return directPath;
+    }
+
+    public void setDirectPath(String directPath) {
+        this.directPath = directPath;
     }
 
     public int getWidth() {

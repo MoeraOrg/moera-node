@@ -6,9 +6,10 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.util.MediaUtil;
 
 @Entity
 @Table(name = "media_file_previews")
@@ -59,9 +60,25 @@ public class MediaFilePreview {
         this.mediaFile = mediaFile;
     }
 
-    @JsonIgnore
+    @Transient
     public boolean isOriginal() {
         return mediaFile != null && mediaFile.getId().equals(originalMediaFile.getId());
+    }
+
+    public String getDirectFileName(String originalDirectFileName) {
+        if (originalDirectFileName != null) {
+            return isOriginal() ? originalDirectFileName : MediaUtil.mediaPreviewDirect(originalDirectFileName, width);
+        } else {
+            return null;
+        }
+    }
+
+    public String getDirectPath(String originalDirectPath) {
+        if (originalDirectPath != null) {
+            return isOriginal() ? originalDirectPath : MediaUtil.mediaPreviewDirect(originalDirectPath, width);
+        } else {
+            return null;
+        }
     }
 
 }

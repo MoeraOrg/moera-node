@@ -17,7 +17,12 @@ public class MediaUtil {
         return String.format("%s?width=%d", location, width);
     }
 
-    public static String mediaSources(String location, Collection<MediaFilePreview> previews) {
+    public static String mediaPreviewDirect(String location, int width) {
+        int pos = location.lastIndexOf('.');
+        return String.format("%s_%d%s", location.substring(0, pos), width, location.substring(pos));
+    }
+
+    public static String mediaSources(String location, Collection<MediaFilePreview> previews, boolean directServing) {
         if (ObjectUtils.isEmpty(previews)) {
             return "";
         }
@@ -25,14 +30,18 @@ public class MediaUtil {
                 location,
                 previews.stream()
                         .filter(preview -> preview.getMediaFile() != null)
-                        .map(MediaFilePreviewInfo::new)
+                        .map(preview -> new MediaFilePreviewInfo(preview, directServing ? location : null))
                         .collect(Collectors.toList()));
     }
 
     public static String mediaSourcesInfo(String location, Collection<MediaFilePreviewInfo> previews) {
         List<String> sources = new ArrayList<>();
         for (MediaFilePreviewInfo preview : previews) {
-            String url = preview.isOriginal() ? location : mediaPreview(location, preview.getTargetWidth());
+            String url = preview.isOriginal()
+                    ? location
+                    : (preview.getDirectPath() != null
+                        ? preview.getDirectPath()
+                        : mediaPreview(location, preview.getTargetWidth()));
             sources.add(String.format("%s %dw", url, preview.getWidth()));
         }
         return String.join(",", sources);

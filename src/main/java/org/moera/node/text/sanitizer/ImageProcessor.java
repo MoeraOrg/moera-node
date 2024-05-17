@@ -90,7 +90,9 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 return;
             }
 
-            String mediaLocation = "/moera/media/private/" + mediaFileOwner.getFileName();
+            boolean directServing = mediaFileOwner.getDirectFileName() != null;
+            String mediaLocation = "/moera/media/private/"
+                    + (directServing ? mediaFileOwner.getDirectFileName() : mediaFileOwner.getFileName());
 
             super.openTag("a", new ArrayList<>(List.of(
                     "href", mediaLocation,
@@ -99,9 +101,10 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             )));
 
             newAttrs.add("src");
-            newAttrs.add(MediaUtil.mediaPreview(mediaLocation, 900));
+            newAttrs.add(directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900));
             newAttrs.add("srcset");
-            newAttrs.add(MediaUtil.mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews()));
+            newAttrs.add(
+                    MediaUtil.mediaSources(mediaLocation, mediaFileOwner.getMediaFile().getPreviews(), directServing));
             newAttrs.add("sizes");
             newAttrs.add(MediaUtil.mediaSizes(mediaFileOwner.getMediaFile()));
 

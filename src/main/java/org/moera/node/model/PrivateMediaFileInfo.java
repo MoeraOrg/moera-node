@@ -14,6 +14,7 @@ public class PrivateMediaFileInfo {
     private String id;
     private String hash;
     private String path;
+    private String directPath;
     private String mimeType;
     private Integer width;
     private Integer height;
@@ -29,10 +30,8 @@ public class PrivateMediaFileInfo {
     public PrivateMediaFileInfo(MediaFileOwner mediaFileOwner, String receiverName) {
         id = mediaFileOwner.getId().toString();
         hash = mediaFileOwner.getMediaFile().getId();
-        String fileName = mediaFileOwner.getDirectFileName() != null
-                ? mediaFileOwner.getDirectFileName()
-                : mediaFileOwner.getFileName();
-        path = "private/" + fileName;
+        path = "private/" + mediaFileOwner.getFileName();
+        directPath = mediaFileOwner.getDirectFileName() != null ? "private/" + mediaFileOwner.getDirectFileName() : null;
         mimeType = mediaFileOwner.getMediaFile().getMimeType();
         width = mediaFileOwner.getMediaFile().getSizeX();
         height = mediaFileOwner.getMediaFile().getSizeY();
@@ -42,7 +41,7 @@ public class PrivateMediaFileInfo {
         postingId = posting != null ? posting.getId().toString() : null;
         previews = mediaFileOwner.getMediaFile().getPreviews().stream()
                 .filter(pw -> pw.getMediaFile() != null)
-                .map(MediaFilePreviewInfo::new)
+                .map(pw -> new MediaFilePreviewInfo(pw, directPath))
                 .toArray(MediaFilePreviewInfo[]::new);
         operations = new HashMap<>();
         putOperation(operations, "view",
@@ -78,6 +77,14 @@ public class PrivateMediaFileInfo {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public String getDirectPath() {
+        return directPath;
+    }
+
+    public void setDirectPath(String directPath) {
+        this.directPath = directPath;
     }
 
     public String getMimeType() {

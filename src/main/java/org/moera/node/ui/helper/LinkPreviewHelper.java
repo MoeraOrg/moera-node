@@ -50,14 +50,16 @@ public class LinkPreviewHelper {
                 "link-preview" + (large ? " large" : "") + (small ? " small" : ""));
         buf.append('>');
         if (mediaFile != null) {
-            String mediaLocation = "/moera/media/" + mediaFile.getPath();
+            boolean directServing = mediaFile.getDirectPath() != null;
+            String mediaLocation = "/moera/media/" + (directServing ? mediaFile.getDirectPath() : mediaFile.getPath());
 
             MediaFilePreviewInfo preview = mediaFile.findLargerPreview(800);
             int imageWidth = preview != null ? preview.getWidth() : mediaFile.getWidth();
             int imageHeight = preview != null ? preview.getHeight() : mediaFile.getHeight();
 
             buf.append("<img");
-            HelperUtil.appendAttr(buf, "src", MediaUtil.mediaPreview(mediaLocation, 800));
+            HelperUtil.appendAttr(buf, "src",
+                    directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 800));
             HelperUtil.appendAttr(buf, "srcset",
                     MediaUtil.mediaSourcesInfo(mediaLocation, Arrays.asList(mediaFile.getPreviews())));
             HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
