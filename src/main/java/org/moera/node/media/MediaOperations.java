@@ -413,7 +413,19 @@ public class MediaOperations {
         mediaFileOwner.setOwnerName(ownerName);
         mediaFileOwner.setMediaFile(mediaFile);
 
-        return mediaFileOwnerRepository.save(mediaFileOwner);
+        mediaFileOwner = mediaFileOwnerRepository.save(mediaFileOwner);
+
+        if (config.getMedia().isDirectServe()) {
+            mediaFileOwner.setNonce(MediaFileOwner.generateNonce());
+            Timestamp deadline = Timestamp.from(Instant.now().plus(MediaOperations.NONCE_REFRESH_INTERVAL));
+            mediaFileOwner.setNonceDeadline(deadline);
+            createPrivateServingLink(mediaFileOwner);
+            for (var preview : mediaFile.getPreviews()) {
+                createPrivateServingLink(preview, mediaFileOwner.getDirectFileName());
+            }
+        }
+
+        return mediaFileOwner;
     }
 
     private Principal entryViewPrincipal(Entry entry) {
