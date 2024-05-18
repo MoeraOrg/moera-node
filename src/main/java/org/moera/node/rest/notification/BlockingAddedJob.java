@@ -12,6 +12,7 @@ import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.liberin.model.BlockedByUserAddedLiberin;
+import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.operations.ContactOperations;
@@ -193,8 +194,13 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
     @Override
     protected void execute() throws Exception {
         if (!state.contactDetailsUpdated) {
-            state.contact = contactOperations.updateDetails(parameters.senderNodeName, parameters.senderFullName,
-                    parameters.senderGender);
+            state.contact = contactOperations.updateDetails(
+                    parameters.senderNodeName,
+                    parameters.senderFullName,
+                    parameters.senderGender,
+                    () -> universalContext.send(
+                            new RemoteNodeFullNameChangedLiberin(parameters.senderNodeName, parameters.senderFullName))
+            );
             state.contactDetailsUpdated = true;
             checkpoint();
         }

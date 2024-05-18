@@ -91,8 +91,13 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
         }
 
         if (!state.detailsUpdated) {
-            contactOperations.updateDetails(parameters.nodeName, state.whoAmI.getFullName(), state.whoAmI.getGender());
-            universalContext.send(new RemoteNodeFullNameChangedLiberin(parameters.nodeName, state.whoAmI.getFullName()));
+            contactOperations.updateDetails(
+                    parameters.nodeName,
+                    state.whoAmI.getFullName(),
+                    state.whoAmI.getGender(),
+                    () -> universalContext.send(
+                            new RemoteNodeFullNameChangedLiberin(parameters.nodeName, state.whoAmI.getFullName()))
+            );
             state.detailsUpdated = true;
             checkpoint();
         }
@@ -101,9 +106,13 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
         if (state.whoAmI.getAvatar() != null && state.whoAmI.getAvatar().getMediaFile() != null) {
             MediaFile mediaFile = state.whoAmI.getAvatar().getMediaFile();
             String shape = state.whoAmI.getAvatar().getShape();
-            contactOperations.updateAvatar(parameters.nodeName, mediaFile, shape);
-            universalContext.send(
-                    new RemoteNodeAvatarChangedLiberin(parameters.nodeName, new AvatarImage(mediaFile, shape)));
+            contactOperations.updateAvatar(
+                    parameters.nodeName,
+                    mediaFile,
+                    shape,
+                    () -> universalContext.send(
+                            new RemoteNodeAvatarChangedLiberin(parameters.nodeName, new AvatarImage(mediaFile, shape)))
+            );
         }
     }
 

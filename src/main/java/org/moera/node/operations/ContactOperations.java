@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -150,16 +151,41 @@ public class ContactOperations {
     }
 
     public Contact updateDetails(String remoteNodeName, String remoteFullName, String remoteGender) {
+        return updateDetails(remoteNodeName, remoteFullName, remoteGender, null);
+    }
+
+    public Contact updateDetails(String remoteNodeName, String remoteFullName, String remoteGender, Runnable changed) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName, contact -> {
-            contact.setRemoteFullName(remoteFullName);
-            contact.setRemoteGender(remoteGender);
+            if (!Objects.equals(contact.getRemoteFullName(), remoteFullName)
+                    || !Objects.equals(contact.getRemoteGender(), remoteGender)) {
+                contact.setRemoteFullName(remoteFullName);
+                contact.setRemoteGender(remoteGender);
+                if (changed != null) {
+                    changed.run();
+                }
+            }
         });
     }
 
     public Contact updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape) {
+        return updateAvatar(remoteNodeName, remoteAvatarMediaFile, remoteAvatarShape, null);
+    }
+
+    public Contact updateAvatar(String remoteNodeName, MediaFile remoteAvatarMediaFile, String remoteAvatarShape,
+                                Runnable changed) {
         return updateAtomically(universalContext.nodeId(), remoteNodeName, contact -> {
-            contact.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
-            contact.setRemoteAvatarShape(remoteAvatarShape);
+            String oldMediaFileId = contact.getRemoteAvatarMediaFile() != null
+                    ? contact.getRemoteAvatarMediaFile().getId()
+                    : null;
+            String newMediaFileId = remoteAvatarMediaFile != null ? remoteAvatarMediaFile.getId() : null;
+            if (!Objects.equals(oldMediaFileId, newMediaFileId)
+                    || !Objects.equals(contact.getRemoteAvatarShape(), remoteAvatarShape)) {
+                contact.setRemoteAvatarMediaFile(remoteAvatarMediaFile);
+                contact.setRemoteAvatarShape(remoteAvatarShape);
+                if (changed != null) {
+                    changed.run();
+                }
+            }
         });
     }
 
