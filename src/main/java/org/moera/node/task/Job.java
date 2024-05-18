@@ -152,6 +152,8 @@ public abstract class Job<P, S> extends Task {
                 case FAILURE -> failed();
                 case RETRY -> recover(null);
             }
+        } else if (e instanceof InterruptedException) {
+            recover(e);
         } else if (e instanceof NodeApiException ex && isRecoverableError(ex)) {
             recover(e);
         } else {
