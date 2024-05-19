@@ -85,6 +85,7 @@
     <logger name="org.hibernate.engine.jdbc.env.internal" level="WARN"/>
     <logger name="org.moera" level="DEBUG"/>
 
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
     <springProfile name="dev">
         <!-- to log all bound parameters in SQL -->
         <!--
@@ -92,6 +93,5 @@
         <logger name="org.springframework.transaction.interceptor" level="TRACE"/>
         -->
 
-        <logger name="org.hibernate.SQL" level="DEBUG"/>
     </springProfile>
 </configuration>
