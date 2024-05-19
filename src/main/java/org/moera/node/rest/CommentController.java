@@ -26,6 +26,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.UserBlockedException;
@@ -41,10 +42,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.QComment;
-import org.moera.node.data.QEntryAttachment;
 import org.moera.node.data.QEntryRevision;
-import org.moera.node.data.QMediaFile;
-import org.moera.node.data.QMediaFileOwner;
 import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
@@ -73,10 +71,10 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
-import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.UserListOperations;
@@ -138,6 +136,9 @@ public class CommentController {
 
     @Inject
     private CommentOperations commentOperations;
+
+    @Inject
+    private EntryOperations entryOperations;
 
     @Inject
     private ContactOperations contactOperations;
@@ -241,7 +242,8 @@ public class CommentController {
 
         var blockedOperations = blockedUserOperations.findBlockedOperations(postingId);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
-                .body(new CommentCreated(comment, posting.getTotalChildren(), requestContext, blockedOperations));
+                .body(new CommentCreated(
+                        comment, posting.getTotalChildren(), entryOperations, requestContext, blockedOperations));
     }
 
     @PutMapping("/{commentId}")
@@ -313,8 +315,10 @@ public class CommentController {
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
 
-        return withBlockings(withSeniorReaction(withClientReaction(new CommentInfo(comment, requestContext)),
-                comment.getPosting().getOwnerName()));
+        return withBlockings(withSeniorReaction(
+                withClientReaction(new CommentInfo(comment, entryOperations, requestContext)),
+                comment.getPosting().getOwnerName()
+        ));
     }
 
     private byte[] validateCommentText(Entry posting, Comment comment, CommentText commentText, String ownerName,
@@ -576,17 +580,10 @@ public class CommentController {
     private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit, boolean sheriff) {
         QComment comment = QComment.comment;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;
-        QEntryAttachment attachment = QEntryAttachment.entryAttachment;
-        QMediaFileOwner attachmentMedia = QMediaFileOwner.mediaFileOwner;
-        QMediaFile attachmentMediaFile = new QMediaFile("attachmentMediaFile");
         List<CommentInfo> comments = new JPAQueryFactory(entityManager)
                 .selectFrom(comment)
                 .leftJoin(comment.currentRevision, currentRevision).fetchJoin()
                 .leftJoin(comment.ownerAvatarMediaFile).fetchJoin()
-                .leftJoin(currentRevision.attachments, attachment).fetchJoin()
-                .leftJoin(attachment.mediaFileOwner, attachmentMedia).fetchJoin()
-                .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
-                .leftJoin(attachmentMediaFile.previews).fetchJoin()
                 .leftJoin(comment.reactionTotals).fetchJoin()
                 .distinct()
                 .where(commentFilter(
@@ -596,7 +593,7 @@ public class CommentController {
                 .stream()
                 // This should be unnecessary, but let it be for reliability
                 .filter(c -> requestContext.isPrincipal(c.getViewE()) || sheriff)
-                .map(c -> new CommentInfo(c, requestContext))
+                .map(c -> new CommentInfo(c, entryOperations, requestContext))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
 
@@ -679,8 +676,11 @@ public class CommentController {
         }
 
         return withSheriffUserListMarks(withBlockings(withSeniorReaction(
-                withClientReaction(new CommentInfo(comment, includeSet.contains("source"), requestContext)),
-                posting.getOwnerName())), posting);
+                withClientReaction(
+                        new CommentInfo(comment, entryOperations, includeSet.contains("source"), requestContext)
+                ),
+                posting.getOwnerName()
+        )), posting);
     }
 
     @DeleteMapping("/{commentId}")

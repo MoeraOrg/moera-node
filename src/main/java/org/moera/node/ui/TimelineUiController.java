@@ -16,7 +16,6 @@ import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -30,6 +29,7 @@ import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
+import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
@@ -167,7 +167,7 @@ public class TimelineUiController {
                             .stream()
                             .filter(Comment::isMessage)
                             .filter(c -> c.getViewCompound().isPublic())
-                            .map(CommentInfo::forUi)
+                            .map(c -> CommentInfo.forUi(c, entryOperations))
                             .sorted(Comparator.comparing(CommentInfo::getMoment))
                             .collect(Collectors.toList());
                 }
@@ -194,17 +194,11 @@ public class TimelineUiController {
         Entry entry = comment != null ? comment : posting;
         String heading = entry.getCurrentRevision().getHeading();
         model.addAttribute("ogTitle", !ObjectUtils.isEmpty(heading) ? heading : "(no title)");
-        EntryAttachment attachment = entry.getCurrentRevision().getAttachments().stream()
-                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .filter(ea -> mediaId == null || ea.getMediaFileOwner().getId().equals(mediaId))
-                .filter(ea -> ea.getMediaFileOwner().getMediaFile().getSizeX() != null) // an image
-                .findFirst()
-                .orElse(null);
-        if (attachment != null) {
-            PrivateMediaFileInfo image =
-                    new PrivateMediaFileInfo(attachment.getMediaFileOwner(), posting.getReceiverName());
+        MediaAttachment[] attachments = entryOperations.getMediaAttachments(entry.getCurrentRevision(), null);
+        PrivateMediaFileInfo image = attachments.length > 0 ? attachments[0].getMedia() : null;
+        if (image != null) {
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + image.getPath());
-            model.addAttribute("ogImageType", attachment.getMediaFileOwner().getMediaFile().getMimeType());
+            model.addAttribute("ogImageType", image.getMimeType());
             model.addAttribute("ogImageWidth", image.getWidth());
             model.addAttribute("ogImageHeight", image.getHeight());
         } else if (entry.getOwnerAvatarMediaFile() != null) {

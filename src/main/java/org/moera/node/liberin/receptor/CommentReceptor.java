@@ -127,7 +127,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(),
                         MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, universalContext.getOptions());
                 userListOperations.fillSheriffListMarks(postingInfo);
-                CommentInfo commentInfo = new CommentInfo(acomment, AccessCheckers.ADMIN);
+                CommentInfo commentInfo = new CommentInfo(acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN);
                 userListOperations.fillSheriffListMarks(aposting, commentInfo);
                 UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
                 send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(),
@@ -154,7 +154,7 @@ public class CommentReceptor extends LiberinReceptorBase {
             PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), MediaAttachmentsProvider.NONE,
                     AccessCheckers.ADMIN, universalContext.getOptions());
             userListOperations.fillSheriffListMarks(postingInfo);
-            CommentInfo commentInfo = new CommentInfo(acomment, AccessCheckers.ADMIN);
+            CommentInfo commentInfo = new CommentInfo(acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN);
             userListOperations.fillSheriffListMarks(aposting, commentInfo);
             send(Directions.single(
                     acomment.getNodeId(), acomment.getRepliedToName(), visibilityFilter(aposting, acomment)),
@@ -193,7 +193,7 @@ public class CommentReceptor extends LiberinReceptorBase {
             PostingInfo postingInfo = new PostingInfo(posting, posting.getStories(), MediaAttachmentsProvider.NONE,
                     AccessCheckers.ADMIN, universalContext.getOptions());
             userListOperations.fillSheriffListMarks(postingInfo);
-            CommentInfo commentInfo = new CommentInfo(comment, AccessCheckers.ADMIN);
+            CommentInfo commentInfo = new CommentInfo(comment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN);
             userListOperations.fillSheriffListMarks(posting, commentInfo);
             currentMentions.stream()
                     .filter(m -> !latestMentions.contains(m))

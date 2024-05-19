@@ -303,7 +303,7 @@ public class MediaController {
                 parents.add(new EntryInfo(new PostingInfo(entry, entryOperations, requestContext)));
             }
             if (entry instanceof Comment) {
-                parents.add(new EntryInfo(new CommentInfo((Comment) entry, requestContext)));
+                parents.add(new EntryInfo(new CommentInfo((Comment) entry, entryOperations, requestContext)));
             }
         }
 

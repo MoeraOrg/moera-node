@@ -17,9 +17,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Queryds
 
     @Query("select c from Comment c"
             + " join fetch c.currentRevision cr left join fetch c.ownerAvatarMediaFile"
-            + " left join fetch cr.attachments cra left join fetch cra.mediaFileOwner mfo"
-            + " left join fetch mfo.mediaFile mf left join fetch mf.previews left join fetch c.reactionTotals"
-            + " left join fetch c.parent"
+            + " left join fetch c.reactionTotals left join fetch c.parent"
             + " where c.nodeId = ?1 and c.id = ?2 and c.deletedAt is null")
     Optional<Comment> findFullByNodeIdAndId(UUID nodeId, UUID id);
 
@@ -28,8 +26,7 @@ public interface CommentRepository extends JpaRepository<Comment, UUID>, Queryds
 
     @Query("select c from Comment c"
             + " left join fetch c.currentRevision cr left join fetch c.ownerAvatarMediaFile"
-            + " left join fetch c.reactionTotals left join fetch cr.attachments cra"
-            + " left join fetch cra.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
+            + " left join fetch c.reactionTotals"
             + " where c.nodeId = ?1 and c.parent.id = ?2 and c.moment > ?3 and c.moment <= ?4 and c.deletedAt is null")
     Set<Comment> findInRange(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment);
 

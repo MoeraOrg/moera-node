@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
+import org.moera.node.operations.MediaAttachmentsProvider;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CommentCreated {
@@ -16,10 +17,10 @@ public class CommentCreated {
     public CommentCreated() {
     }
 
-    public CommentCreated(Comment comment, Integer total, AccessChecker accessChecker,
-                          List<BlockedOperation> blockedOperations) {
+    public CommentCreated(Comment comment, Integer total, MediaAttachmentsProvider mediaAttachmentsProvider,
+                          AccessChecker accessChecker, List<BlockedOperation> blockedOperations) {
         if (comment != null) {
-            this.comment = new CommentInfo(comment, accessChecker);
+            this.comment = new CommentInfo(comment, mediaAttachmentsProvider, accessChecker);
             this.comment.putBlockedOperations(blockedOperations);
         }
         this.total = total;

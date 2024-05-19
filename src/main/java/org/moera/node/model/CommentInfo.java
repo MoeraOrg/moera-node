@@ -1,6 +1,5 @@
 package org.moera.node.model;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,12 +14,12 @@ import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.SheriffMark;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
 
@@ -80,15 +79,23 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
     public CommentInfo() {
     }
 
+    // for liberins
     public CommentInfo(Comment comment, AccessChecker accessChecker) {
-        this(comment, comment.getCurrentRevision(), false, accessChecker);
+        this(comment, comment.getCurrentRevision(), MediaAttachmentsProvider.RELATIONS, false, accessChecker);
     }
 
-    public CommentInfo(Comment comment, boolean includeSource, AccessChecker accessChecker) {
-        this(comment, comment.getCurrentRevision(), includeSource, accessChecker);
+    public CommentInfo(Comment comment, MediaAttachmentsProvider mediaAttachmentsProvider,
+                       AccessChecker accessChecker) {
+        this(comment, comment.getCurrentRevision(), mediaAttachmentsProvider, false, accessChecker);
     }
 
-    public CommentInfo(Comment comment, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {
+    public CommentInfo(Comment comment, MediaAttachmentsProvider mediaAttachmentsProvider, boolean includeSource,
+                       AccessChecker accessChecker) {
+        this(comment, comment.getCurrentRevision(), mediaAttachmentsProvider, includeSource, accessChecker);
+    }
+
+    public CommentInfo(Comment comment, EntryRevision revision, MediaAttachmentsProvider mediaAttachmentsProvider,
+                       boolean includeSource, AccessChecker accessChecker) {
         id = comment.getId().toString();
         ownerName = comment.getOwnerName();
         ownerFullName = comment.getOwnerFullName();
@@ -108,10 +115,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
-        media = revision.getAttachments().stream()
-                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> new MediaAttachment(ea, null))
-                .toArray(MediaAttachment[]::new);
+        media = mediaAttachmentsProvider.getMediaAttachments(revision, null);
         heading = revision.getHeading();
         if (comment.getRepliedTo() != null) {
             repliedTo = new RepliedTo(comment);
@@ -222,8 +226,8 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         }
     }
 
-    public static CommentInfo forUi(Comment comment) {
-        CommentInfo info = new CommentInfo(comment, AccessCheckers.PUBLIC);
+    public static CommentInfo forUi(Comment comment, MediaAttachmentsProvider mediaAttachmentsProvider) {
+        CommentInfo info = new CommentInfo(comment, mediaAttachmentsProvider, AccessCheckers.PUBLIC);
         String saneBodyPreview = comment.getCurrentRevision().getSaneBodyPreview();
         info.setSaneBodyPreview(saneBodyPreview != null ? saneBodyPreview : info.getBodyPreview().getText());
         String saneBody = comment.getCurrentRevision().getSaneBody();
