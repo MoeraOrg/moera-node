@@ -10,8 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment, UUID> {
 
     @Query("select ea from EntryAttachment ea"
-            + " left join fetch ea.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
-            + " left join fetch mfo.postings"
+            + " left join fetch ea.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews mfp"
+            + " left join fetch mfp.mediaFile left join fetch mfo.postings"
             + " where ea.entryRevision.id = ?1")
     Set<EntryAttachment> findByEntryRevision(UUID entryRevisionId);
 
