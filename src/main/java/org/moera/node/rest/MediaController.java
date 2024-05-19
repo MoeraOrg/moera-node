@@ -50,6 +50,7 @@ import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.DigestingOutputStream;
@@ -92,6 +93,9 @@ public class MediaController {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private EntryOperations entryOperations;
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
@@ -296,7 +300,7 @@ public class MediaController {
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {
             if (entry instanceof Posting) {
-                parents.add(new EntryInfo(new PostingInfo((Posting) entry, requestContext)));
+                parents.add(new EntryInfo(new PostingInfo(entry, entryOperations, requestContext)));
             }
             if (entry instanceof Comment) {
                 parents.add(new EntryInfo(new CommentInfo((Comment) entry, requestContext)));

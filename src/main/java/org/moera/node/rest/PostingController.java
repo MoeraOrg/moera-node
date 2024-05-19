@@ -55,6 +55,7 @@ import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
@@ -111,6 +112,9 @@ public class PostingController {
 
     @Inject
     private PostingOperations postingOperations;
+
+    @Inject
+    private EntryOperations entryOperations;
 
     @Inject
     private MediaOperations mediaOperations;
@@ -183,7 +187,8 @@ public class PostingController {
         requestContext.send(new PostingAddedLiberin(posting));
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
-                .body(withBlockings(new PostingInfo(posting, stories, requestContext, requestContext.getOptions())));
+                .body(withBlockings(new PostingInfo(
+                        posting, stories, entryOperations, requestContext, requestContext.getOptions())));
     }
 
     @PutMapping("/{id}")
@@ -246,7 +251,7 @@ public class PostingController {
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
         return withBlockings(withClientReaction(
-                new PostingInfo(posting, stories, requestContext, requestContext.getOptions())));
+                new PostingInfo(posting, stories, entryOperations, requestContext, requestContext.getOptions())));
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
@@ -332,7 +337,7 @@ public class PostingController {
 
         Set<String> includeSet = Util.setParam(include);
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
+        Posting posting = postingRepository.findNoAttachmentsByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
         if (!requestContext.isPrincipal(posting.getViewE())
@@ -343,7 +348,7 @@ public class PostingController {
         requestContext.send(new PostingReadLiberin(id));
 
         return withSheriffUserListMarks(withBlockings(withClientReaction(
-                new PostingInfo(posting, stories, includeSet.contains("source"), requestContext,
+                new PostingInfo(posting, stories, entryOperations, includeSet.contains("source"), requestContext,
                         requestContext.getOptions()))));
     }
 

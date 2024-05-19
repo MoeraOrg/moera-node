@@ -4,12 +4,12 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.principal.AccessCheckers;
-import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedWithStatus;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.operations.MediaAttachmentsProvider;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PushContent {
@@ -61,7 +61,7 @@ public class PushContent {
     public static PushContent storyAdded(Story story) {
         PushContent packet = new PushContent(PushContentType.STORY_ADDED);
         packet.setStory(StoryInfo.build(story, true,
-                t -> new PostingInfo((Posting) t.getEntry(), AccessCheckers.ADMIN)));
+                t -> new PostingInfo(t.getEntry(), MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN)));
         return packet;
     }
 

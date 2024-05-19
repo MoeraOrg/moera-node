@@ -87,6 +87,8 @@ public class EntryRevision {
 
     private Timestamp deadline;
 
+    private String attachmentsCache;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "entryRevision")
     private Set<EntryAttachment> attachments = new HashSet<>();
 
@@ -292,6 +294,14 @@ public class EntryRevision {
 
     public void setDeadline(Timestamp deadline) {
         this.deadline = deadline;
+    }
+
+    public String getAttachmentsCache() {
+        return attachmentsCache;
+    }
+
+    public void setAttachmentsCache(String attachmentsCache) {
+        this.attachmentsCache = attachmentsCache;
     }
 
     public Set<EntryAttachment> getAttachments() {

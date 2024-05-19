@@ -8,7 +8,6 @@ import javax.validation.Valid;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
-import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
@@ -19,6 +18,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.StoryInfo;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
@@ -47,6 +47,9 @@ public class StoryController {
     private StoryOperations storyOperations;
 
     @Inject
+    private EntryOperations entryOperations;
+
+    @Inject
     private Transaction tx;
 
     @GetMapping("/{id}")
@@ -63,7 +66,7 @@ public class StoryController {
         }
 
         return StoryInfo.build(story, requestContext.isAdmin(),
-                t -> new PostingInfo((Posting) t.getEntry(), requestContext));
+                t -> new PostingInfo(t.getEntry(), entryOperations, requestContext));
     }
 
     @PutMapping("/{id}")
@@ -90,7 +93,7 @@ public class StoryController {
             }
 
             StoryInfo storyInfo = StoryInfo.build(story, requestContext.isAdmin(),
-                    t -> new PostingInfo(t.getEntry(), requestContext));
+                    t -> new PostingInfo(t.getEntry(), entryOperations, requestContext));
 
             return Pair.of(story, storyInfo);
         });

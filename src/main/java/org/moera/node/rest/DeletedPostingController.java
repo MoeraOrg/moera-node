@@ -23,6 +23,7 @@ import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -56,6 +57,9 @@ public class DeletedPostingController {
     @Inject
     private PostingOperations postingOperations;
 
+    @Inject
+    private EntryOperations entryOperations;
+
     @GetMapping
     @Admin
     @Transactional
@@ -78,7 +82,7 @@ public class DeletedPostingController {
         return postingRepository.findDeleted(requestContext.nodeId(),
                 PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
                 .stream()
-                .map(p -> new PostingInfo(p, requestContext))
+                .map(p -> new PostingInfo(p, entryOperations, requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -91,7 +95,7 @@ public class DeletedPostingController {
         Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
-        return new PostingInfo(posting, requestContext);
+        return new PostingInfo(posting, entryOperations, requestContext);
     }
 
     @PostMapping("/{id}/restore")
@@ -115,7 +119,7 @@ public class DeletedPostingController {
         requestContext.send(new PostingRestoredLiberin(posting));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
-        return new PostingInfo(posting, stories, requestContext, requestContext.getOptions());
+        return new PostingInfo(posting, stories, entryOperations, requestContext, requestContext.getOptions());
     }
 
     @Scheduled(fixedDelayString = "P1D")

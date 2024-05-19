@@ -31,11 +31,7 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.data.QEntry;
-import org.moera.node.data.QEntryAttachment;
 import org.moera.node.data.QEntryRevision;
-import org.moera.node.data.QMediaFile;
-import org.moera.node.data.QMediaFileOwner;
-import org.moera.node.data.QMediaFilePreview;
 import org.moera.node.data.QStory;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.Story;
@@ -57,6 +53,7 @@ import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.operations.UserListOperations;
@@ -97,6 +94,9 @@ public class FeedController {
 
     @Inject
     private StoryOperations storyOperations;
+
+    @Inject
+    private EntryOperations entryOperations;
 
     @Inject
     private BlockedUserOperations blockedUserOperations;
@@ -318,10 +318,6 @@ public class FeedController {
         QStory story = QStory.story;
         QEntry entry = QEntry.entry;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;
-        QEntryAttachment attachment = QEntryAttachment.entryAttachment;
-        QMediaFileOwner attachmentMedia = QMediaFileOwner.mediaFileOwner;
-        QMediaFile attachmentMediaFile = new QMediaFile("attachmentMediaFile");
-        QMediaFilePreview preview = QMediaFilePreview.mediaFilePreview;
         List<StoryInfo> stories = new JPAQueryFactory(entityManager)
                 .selectFrom(story)
                 .distinct()
@@ -329,11 +325,6 @@ public class FeedController {
                 .leftJoin(story.remoteOwnerAvatarMediaFile).fetchJoin()
                 .leftJoin(story.entry, entry).fetchJoin()
                 .leftJoin(entry.currentRevision, currentRevision).fetchJoin()
-                .leftJoin(currentRevision.attachments, attachment).fetchJoin()
-                .leftJoin(attachment.mediaFileOwner, attachmentMedia).fetchJoin()
-                .leftJoin(attachmentMedia.mediaFile, attachmentMediaFile).fetchJoin()
-                .leftJoin(attachmentMediaFile.previews, preview).fetchJoin()
-                .leftJoin(preview.mediaFile).fetchJoin()
                 .leftJoin(entry.reactionTotals).fetchJoin()
                 .leftJoin(entry.sources).fetchJoin()
                 .leftJoin(entry.ownerAvatarMediaFile).fetchJoin()
@@ -345,7 +336,7 @@ public class FeedController {
                 // This should be unnecessary, but let it be for reliability
                 .filter(this::isStoryVisible)
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
-                .collect(Collectors.toList());
+                .toList();
 
         String clientName = requestContext.getClientName();
         if (!ObjectUtils.isEmpty(clientName)) {
@@ -467,7 +458,8 @@ public class FeedController {
         return StoryInfo.build(
                 story,
                 requestContext.isAdmin(),
-                t -> new PostingInfo(t.getEntry(), List.of(t), requestContext, requestContext.getOptions())
+                t -> new PostingInfo(
+                        t.getEntry(), List.of(t), entryOperations, requestContext, requestContext.getOptions())
         );
     }
 

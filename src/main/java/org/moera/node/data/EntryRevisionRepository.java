@@ -51,4 +51,11 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
             + " where e.id = ?1")
     void updateTotalRevisions(UUID entryId);
 
+    @Modifying
+    @Query("update EntryRevision r set r.attachmentsCache = null"
+            + " where exists("
+            + "select ea from EntryAttachment ea where ea.entryRevision.id = r.id and ea.mediaFileOwner = ?1"
+            + ")")
+    void clearAttachmentsCache(UUID mediaFileOwnerId);
+
 }

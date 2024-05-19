@@ -60,6 +60,7 @@ import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRepository;
+import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.MediaFileOwnerRepository;
@@ -127,6 +128,9 @@ public class MediaOperations {
 
     @Inject
     private EntryRepository entryRepository;
+
+    @Inject
+    private EntryRevisionRepository entryRevisionRepository;
 
     @Inject
     private StoryRepository storyRepository;
@@ -684,7 +688,10 @@ public class MediaOperations {
             for (MediaFileOwner mediaFileOwner : page.getContent()) {
                 String prevNonce = mediaFileOwner.getPrevNonce();
                 String nonce = MediaFileOwner.generateNonce();
-                tx.executeWrite(() -> mediaFileOwnerRepository.replaceNonce(mediaFileOwner.getId(), nonce, deadline));
+                tx.executeWrite(() -> {
+                    mediaFileOwnerRepository.replaceNonce(mediaFileOwner.getId(), nonce, deadline);
+                    entryRevisionRepository.clearAttachmentsCache(mediaFileOwner.getId());
+                });
 
                 if (prevNonce != null) {
                     Path prevPath = getPrivateServingPath().resolve(mediaFileOwner.getPrevDirectFileName());

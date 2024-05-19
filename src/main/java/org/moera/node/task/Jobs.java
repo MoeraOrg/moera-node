@@ -66,10 +66,22 @@ public class Jobs {
     }
 
     public <P, T extends Job<P, ?>> void run(Class<T> klass, P parameters) {
-        run(klass, parameters, null);
+        run(klass, parameters, null, true);
     }
 
     public <P, T extends Job<P, ?>> void run(Class<T> klass, P parameters, UUID nodeId) {
+        run(klass, parameters, nodeId, true);
+    }
+
+    public <P, T extends Job<P, ?>> void runNoPersist(Class<T> klass, P parameters) {
+        run(klass, parameters, null, false);
+    }
+
+    public <P, T extends Job<P, ?>> void runNoPersist(Class<T> klass, P parameters, UUID nodeId) {
+        run(klass, parameters, nodeId, false);
+    }
+
+    private <P, T extends Job<P, ?>> void run(Class<T> klass, P parameters, UUID nodeId, boolean persistent) {
         if (!initialized) {
             throw new JobsManagerNotInitializedException();
         }
@@ -89,9 +101,11 @@ public class Jobs {
         job.setParameters(parameters);
         job.setJobs(this);
 
-        persist(job, nodeId);
-        if (job.getId() != null) {
-            all.put(job.getId(), job);
+        if (persistent) {
+            persist(job, nodeId);
+            if (job.getId() != null) {
+                all.put(job.getId(), job);
+            }
         }
 
         if (nodeId != null) {

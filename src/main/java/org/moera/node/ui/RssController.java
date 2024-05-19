@@ -54,7 +54,7 @@ public class RssController {
                     rcp.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment()).stream()
                     .filter(t -> t.getEntry().isMessage())
                     .sorted(Collections.reverseOrder(Comparator.comparingLong(Story::getMoment)))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         SyndFeed feed = new SyndFeedImpl();

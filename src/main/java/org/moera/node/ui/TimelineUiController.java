@@ -34,6 +34,7 @@ import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.operations.CommentPublicPageOperations;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
 import org.moera.node.util.VirtualPageHeader;
 import org.slf4j.Logger;
@@ -70,6 +71,9 @@ public class TimelineUiController {
     private CommentRepository commentRepository;
 
     @Inject
+    private EntryOperations entryOperations;
+
+    @Inject
     private TimelinePublicPageOperations timelinePublicPageOperations;
 
     @Inject
@@ -95,9 +99,9 @@ public class TimelineUiController {
                     .stream()
                     .filter(t -> t.getEntry().isMessage())
                     .filter(t -> t.getEntry().getViewCompound().isPublic())
-                    .map(s -> StoryInfo.build(s, false, t -> PostingInfo.forUi((Posting) t.getEntry())))
+                    .map(s -> StoryInfo.build(s, false, t -> PostingInfo.forUi(t.getEntry(), entryOperations)))
                     .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         model.addAttribute("pageTitle", titleBuilder.build("Timeline"));
@@ -131,7 +135,7 @@ public class TimelineUiController {
         }
         VirtualPageHeader.put(response, requestContext.nodeName(), builder.build().toUriString());
 
-        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findNoAttachmentsByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null || !posting.isMessage() || posting.getParentMedia() != null
                 || !posting.getViewCompound().isPublic()) {
             throw new PageNotFoundException();
@@ -140,7 +144,8 @@ public class TimelineUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build(posting.getCurrentRevision().getHeading()));
         model.addAttribute("menuIndex", "timeline");
-        model.addAttribute("posting", PostingInfo.forUi(posting, stories, requestContext.getOptions()));
+        model.addAttribute("posting",
+                PostingInfo.forUi(posting, stories, entryOperations, requestContext.getOptions()));
         model.addAttribute("canonicalUrl", canonicalUrl);
         model.addAttribute("openComments", commentId != null || before != null);
         model.addAttribute("openMediaPostingId", id.toString());

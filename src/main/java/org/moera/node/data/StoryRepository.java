@@ -58,12 +58,10 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     void deleteByRemotePostingId(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName,
                                            String remotePostingId);
 
-    @Query("select s from Story s left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
-            + " left join fetch s.entry e"
-            + " left join fetch e.currentRevision cr left join fetch cr.attachments cra"
-            + " left join fetch cra.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
-            + " left join fetch e.reactionTotals left join fetch e.sources"
-            + " left join fetch e.ownerAvatarMediaFile"
+    @Query("select s from Story s"
+            + " left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"
+            + " left join fetch s.entry e left join fetch e.currentRevision cr left join fetch e.reactionTotals"
+            + " left join fetch e.sources left join fetch e.ownerAvatarMediaFile"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
     Set<Story> findInRange(UUID nodeId, String feedName, long afterMoment, long beforeMoment);
 

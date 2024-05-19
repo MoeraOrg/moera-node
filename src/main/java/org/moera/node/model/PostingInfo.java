@@ -3,7 +3,6 @@ package org.moera.node.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +28,7 @@ import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.model.body.Body;
 import org.moera.node.operations.FeedOperations;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.option.Options;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
@@ -106,28 +106,79 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     public PostingInfo() {
     }
 
+    // for liberin models
     public PostingInfo(Entry posting, AccessChecker accessChecker) {
-        this(posting, posting.getCurrentRevision(), null, false, accessChecker, null);
+        this(
+                posting,
+                posting.getCurrentRevision(),
+                null,
+                MediaAttachmentsProvider.RELATIONS,
+                false,
+                accessChecker,
+                null);
     }
 
+    public PostingInfo(Entry posting, MediaAttachmentsProvider mediaAttachmentsProvider, AccessChecker accessChecker) {
+        this(
+                posting,
+                posting.getCurrentRevision(),
+                null,
+                mediaAttachmentsProvider,
+                false,
+                accessChecker,
+                null);
+    }
+
+    // for postings attached to media
     public PostingInfo(Entry posting, boolean includeSource, AccessChecker accessChecker) {
-        this(posting, posting.getCurrentRevision(), null, includeSource, accessChecker, null);
+        this(
+                posting,
+                posting.getCurrentRevision(),
+                null,
+                MediaAttachmentsProvider.NONE,
+                includeSource,
+                accessChecker,
+                null);
     }
 
+    // for fingerprints
     public PostingInfo(Entry posting, EntryRevision revision, boolean includeSource, AccessChecker accessChecker) {
-        this(posting, revision, null, includeSource, accessChecker, null);
+        this(
+                posting,
+                revision,
+                null,
+                MediaAttachmentsProvider.RELATIONS,
+                includeSource,
+                accessChecker,
+                null);
     }
 
-    public PostingInfo(Entry posting, Collection<Story> stories, AccessChecker accessChecker, Options options) {
-        this(posting, posting.getCurrentRevision(), stories, false, accessChecker, options);
+    public PostingInfo(Entry posting, Collection<Story> stories, MediaAttachmentsProvider mediaAttachmentsProvider,
+                       AccessChecker accessChecker, Options options) {
+        this(
+                posting,
+                posting.getCurrentRevision(),
+                stories,
+                mediaAttachmentsProvider,
+                false,
+                accessChecker,
+                options);
     }
 
-    public PostingInfo(Entry posting, Collection<Story> stories, boolean includeSource, AccessChecker accessChecker,
-                       Options options) {
-        this(posting, posting.getCurrentRevision(), stories, includeSource, accessChecker, options);
+    public PostingInfo(Entry posting, Collection<Story> stories, MediaAttachmentsProvider mediaAttachmentsProvider,
+                       boolean includeSource, AccessChecker accessChecker, Options options) {
+        this(
+                posting,
+                posting.getCurrentRevision(),
+                stories,
+                mediaAttachmentsProvider,
+                includeSource,
+                accessChecker,
+                options);
     }
 
-    public PostingInfo(Entry posting, EntryRevision revision, Collection<Story> stories, boolean includeSource,
+    public PostingInfo(Entry posting, EntryRevision revision, Collection<Story> stories,
+                       MediaAttachmentsProvider mediaAttachmentsProvider, boolean includeSource,
                        AccessChecker accessChecker, Options options) {
         id = posting.getId().toString();
         revisionId = revision.getId().toString();
@@ -157,10 +208,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
-        media = revision.getAttachments().stream()
-                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> new MediaAttachment(ea, receiverName))
-                .toArray(MediaAttachment[]::new);
+        media = mediaAttachmentsProvider.getMediaAttachments(revision, receiverName);
         heading = revision.getHeading();
         if (!UpdateInfo.isEmpty(revision)) {
             updateInfo = new UpdateInfo(revision);
@@ -356,12 +404,13 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         }
     }
 
-    public static PostingInfo forUi(Entry posting) {
-        return forUi(posting, null, null);
+    public static PostingInfo forUi(Entry posting, MediaAttachmentsProvider mediaAttachmentsProvider) {
+        return forUi(posting, null, mediaAttachmentsProvider, null);
     }
 
-    public static PostingInfo forUi(Entry posting, List<Story> stories, Options options) {
-        PostingInfo info = new PostingInfo(posting, stories, AccessCheckers.PUBLIC, options);
+    public static PostingInfo forUi(Entry posting, List<Story> stories,
+                                    MediaAttachmentsProvider mediaAttachmentsProvider, Options options) {
+        PostingInfo info = new PostingInfo(posting, stories, mediaAttachmentsProvider, AccessCheckers.PUBLIC, options);
         String saneBodyPreview = posting.getCurrentRevision().getSaneBodyPreview();
         if (saneBodyPreview != null) {
             info.setSaneBodyPreview(saneBodyPreview);

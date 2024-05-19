@@ -9,6 +9,12 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment, UUID> {
 
+    @Query("select ea from EntryAttachment ea"
+            + " left join fetch ea.mediaFileOwner mfo left join fetch mfo.mediaFile mf left join fetch mf.previews"
+            + " left join fetch mfo.postings"
+            + " where ea.entryRevision.id = ?1")
+    Set<EntryAttachment> findByEntryRevision(UUID entryRevisionId);
+
     @Query("select count(*) from EntryAttachment ea left join ea.entryRevision er left join er.entry e"
             + " where e.nodeId = ?1 and er.entry.id = ?2 and ea.mediaFileOwner.id = ?3")
     int countByEntryIdAndMedia(UUID nodeId, UUID entryId, UUID mediaId);

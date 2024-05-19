@@ -41,6 +41,7 @@ import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.ReplyCommentAddedNotification;
 import org.moera.node.model.notification.ReplyCommentDeletedNotification;
 import org.moera.node.notification.send.Directions;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.UserListOperations;
 import org.moera.node.text.MentionsExtractor;
 import org.moera.node.util.Transaction;
@@ -123,8 +124,8 @@ public class CommentReceptor extends LiberinReceptorBase {
             tx.executeWriteQuietly(() -> {
                 Entry aposting = entityManager.merge(posting);
                 Comment acomment = entityManager.merge(comment);
-                PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), AccessCheckers.ADMIN,
-                        universalContext.getOptions());
+                PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(),
+                        MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, universalContext.getOptions());
                 userListOperations.fillSheriffListMarks(postingInfo);
                 CommentInfo commentInfo = new CommentInfo(acomment, AccessCheckers.ADMIN);
                 userListOperations.fillSheriffListMarks(aposting, commentInfo);
@@ -150,8 +151,8 @@ public class CommentReceptor extends LiberinReceptorBase {
         tx.executeWriteQuietly(() -> {
             Entry aposting = entityManager.merge(posting);
             Comment acomment = entityManager.merge(comment);
-            PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), AccessCheckers.ADMIN,
-                    universalContext.getOptions());
+            PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), MediaAttachmentsProvider.NONE,
+                    AccessCheckers.ADMIN, universalContext.getOptions());
             userListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = new CommentInfo(acomment, AccessCheckers.ADMIN);
             userListOperations.fillSheriffListMarks(aposting, commentInfo);
@@ -189,8 +190,8 @@ public class CommentReceptor extends LiberinReceptorBase {
                 ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
                 : Collections.emptySet();
         if (!currentMentions.isEmpty()) {
-            PostingInfo postingInfo = new PostingInfo(posting, posting.getStories(), AccessCheckers.ADMIN,
-                    universalContext.getOptions());
+            PostingInfo postingInfo = new PostingInfo(posting, posting.getStories(), MediaAttachmentsProvider.NONE,
+                    AccessCheckers.ADMIN, universalContext.getOptions());
             userListOperations.fillSheriffListMarks(postingInfo);
             CommentInfo commentInfo = new CommentInfo(comment, AccessCheckers.ADMIN);
             userListOperations.fillSheriffListMarks(posting, commentInfo);
