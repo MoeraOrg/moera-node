@@ -96,7 +96,7 @@ public class RemotePostingReactionController {
                 postingId).orElse(null);
         if (ownReaction != null) {
             ownReactionRepository.delete(ownReaction);
-            contactOperations.updateCloseness(nodeName, -0.25f);
+            contactOperations.asyncUpdateCloseness(nodeName, -0.25f);
             requestContext.send(new RemotePostingReactionDeletedLiberin(nodeName, postingId));
         }
 

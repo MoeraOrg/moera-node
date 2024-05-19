@@ -140,8 +140,8 @@ public class RemoteCommentController {
         OwnComment ownComment = ownCommentRepository.findByRemoteCommentId(requestContext.nodeId(), nodeName,
                 postingId, commentId).orElse(null);
         if (ownComment != null) {
-            contactOperations.updateCloseness(nodeName, -1);
-            contactOperations.updateCloseness(ownComment.getRemoteRepliedToName(), -1);
+            contactOperations.asyncUpdateCloseness(nodeName, -1);
+            contactOperations.asyncUpdateCloseness(ownComment.getRemoteRepliedToName(), -1);
             requestContext.send(new RemoteCommentUpdatedLiberin(nodeName, postingId, commentId));
         }
 

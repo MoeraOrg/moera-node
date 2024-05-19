@@ -127,7 +127,7 @@ public class RemotePostingController {
                 .findByRemotePostingId(requestContext.nodeId(), nodeName, postingId)
                 .orElse(null);
         if (ownPosting != null) {
-            contactOperations.updateCloseness(nodeName, -1);
+            contactOperations.asyncUpdateCloseness(nodeName, -1);
             requestContext.send(new RemotePostingUpdatedLiberin(nodeName, postingId));
         }
 

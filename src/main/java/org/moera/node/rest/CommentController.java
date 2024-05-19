@@ -233,9 +233,9 @@ public class CommentController {
 
         if (comment.getCurrentRevision().getSignature() != null) {
             if (comment.getOwnerName().equals(requestContext.nodeName())) {
-                contactOperations.updateCloseness(comment.getRepliedToName(), 1);
+                contactOperations.asyncUpdateCloseness(comment.getRepliedToName(), 1);
             } else {
-                contactOperations.updateCloseness(comment.getOwnerName(), 1);
+                contactOperations.asyncUpdateCloseness(comment.getOwnerName(), 1);
             }
         }
 
@@ -719,9 +719,9 @@ public class CommentController {
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         commentOperations.deleteComment(comment);
         if (comment.getOwnerName().equals(requestContext.nodeName())) {
-            contactOperations.updateCloseness(comment.getRepliedToName(), -1);
+            contactOperations.asyncUpdateCloseness(comment.getRepliedToName(), -1);
         } else {
-            contactOperations.updateCloseness(comment.getOwnerName(), -1);
+            contactOperations.asyncUpdateCloseness(comment.getOwnerName(), -1);
         }
 
         requestContext.send(new CommentDeletedLiberin(comment, latest));

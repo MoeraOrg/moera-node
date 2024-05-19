@@ -17,6 +17,7 @@ import org.moera.node.data.ContactRelated;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.task.Jobs;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -35,6 +36,9 @@ public class ContactOperations {
 
     @Inject
     private Transaction tx;
+
+    @Inject
+    private Jobs jobs;
 
     private final ParametrizedLock<Pair<UUID, String>> lock = new ParametrizedLock<>();
 
@@ -78,6 +82,14 @@ public class ContactOperations {
 
     public Contact updateCloseness(UUID nodeId, String remoteNodeName, float delta) {
         return updateAtomically(nodeId, remoteNodeName, contact -> contact.updateCloseness(delta));
+    }
+
+    public void asyncUpdateCloseness(String remoteNodeName, float delta) {
+        asyncUpdateCloseness(universalContext.nodeId(), remoteNodeName, delta);
+    }
+
+    public void asyncUpdateCloseness(UUID nodeId, String remoteNodeName, float delta) {
+        jobs.runNoPersist(UpdateClosenessJob.class, new UpdateClosenessJob.Parameters(remoteNodeName, delta), nodeId);
     }
 
     public Contact assignCloseness(String remoteNodeName, float closeness) {
