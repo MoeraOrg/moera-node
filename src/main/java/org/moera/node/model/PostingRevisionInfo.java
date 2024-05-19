@@ -1,15 +1,13 @@
 package org.moera.node.model;
 
-import java.util.Comparator;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.auth.principal.AccessChecker;
-import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -38,7 +36,8 @@ public class PostingRevisionInfo implements RevisionInfo {
     public PostingRevisionInfo() {
     }
 
-    public PostingRevisionInfo(Posting posting, EntryRevision revision, String receiverName,
+    public PostingRevisionInfo(Posting posting, EntryRevision revision,
+                               MediaAttachmentsProvider mediaAttachmentsProvider, String receiverName,
                                AccessChecker accessChecker) {
         id = revision.getId().toString();
         receiverId = revision.getReceiverRevisionId();
@@ -49,10 +48,7 @@ public class PostingRevisionInfo implements RevisionInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
-        media = revision.getAttachments().stream()
-                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> new MediaAttachment(ea, receiverName))
-                .toArray(MediaAttachment[]::new);
+        media = mediaAttachmentsProvider.getMediaAttachments(revision, receiverName);
         heading = revision.getHeading();
         if (!UpdateInfo.isEmpty(revision)) {
             updateInfo = new UpdateInfo(revision);

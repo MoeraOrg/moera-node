@@ -337,7 +337,7 @@ public class PostingController {
 
         Set<String> includeSet = Util.setParam(include);
 
-        Posting posting = postingRepository.findNoAttachmentsByNodeIdAndId(requestContext.nodeId(), id)
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
         if (!requestContext.isPrincipal(posting.getViewE())

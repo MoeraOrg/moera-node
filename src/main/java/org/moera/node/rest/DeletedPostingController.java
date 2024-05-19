@@ -105,7 +105,7 @@ public class DeletedPostingController {
     public PostingInfo restore(@PathVariable UUID id) {
         log.info("POST /deleted-postings/{id}/restore (id = {})", LogUtil.format(id));
 
-        Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id)
+        Posting posting = postingRepository.findDeletedWithAttachmentsById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         posting.setDeletedAt(null);

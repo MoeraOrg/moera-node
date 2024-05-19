@@ -22,6 +22,7 @@ import org.moera.node.liberin.Liberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.PostingOperations;
 import org.slf4j.Logger;
 import org.springframework.data.domain.PageRequest;
@@ -47,6 +48,9 @@ public abstract class PostingRevisionControllerBase {
     @Inject
     private PostingOperations postingOperations;
 
+    @Inject
+    private EntryOperations entryOperations;
+
     protected abstract Logger getLog();
 
     protected abstract String getDirectory();
@@ -64,8 +68,15 @@ public abstract class PostingRevisionControllerBase {
 
     protected abstract Optional<EntryRevision> findRevision(UUID postingId, UUID id);
 
+    protected abstract Optional<EntryRevision> findRevisionWithAttachments(UUID postingId, UUID id);
+
     private EntryRevision getRevision(UUID postingId, UUID id) {
         return findRevision(postingId, id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"));
+    }
+
+    private EntryRevision getRevisionWithAttachments(UUID postingId, UUID id) {
+        return findRevisionWithAttachments(postingId, id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"));
     }
 
@@ -89,7 +100,8 @@ public abstract class PostingRevisionControllerBase {
         return entryRevisionRepository.findAllByEntryId(requestContext.nodeId(), postingId,
                 PageRequest.of(0, limit, Sort.Direction.DESC, "createdAt"))
                 .get()
-                .map(r -> new PostingRevisionInfo(posting, r, posting.getReceiverName(), requestContext))
+                .map(r ->
+                        new PostingRevisionInfo(posting, r, entryOperations, posting.getReceiverName(), requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -104,7 +116,7 @@ public abstract class PostingRevisionControllerBase {
         Posting posting = getPosting(postingId);
         EntryRevision revision = getRevision(postingId, id);
 
-        return new PostingRevisionInfo(posting, revision, posting.getReceiverName(), requestContext);
+        return new PostingRevisionInfo(posting, revision, entryOperations, posting.getReceiverName(), requestContext);
     }
 
     @PostMapping("/{id}/restore")
@@ -122,7 +134,7 @@ public abstract class PostingRevisionControllerBase {
             throw new ValidationFailure("posting-revision.already-current");
         }
         EntryRevision latest = posting.getCurrentRevision();
-        EntryRevision revision = getRevision(postingId, id);
+        EntryRevision revision = getRevisionWithAttachments(postingId, id);
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
@@ -134,7 +146,7 @@ public abstract class PostingRevisionControllerBase {
 
         requestContext.send(getRestorationLiberin(posting, latest));
 
-        return new PostingRevisionInfo(posting, revision, posting.getReceiverName(), requestContext);
+        return new PostingRevisionInfo(posting, revision, entryOperations, posting.getReceiverName(), requestContext);
     }
 
 }

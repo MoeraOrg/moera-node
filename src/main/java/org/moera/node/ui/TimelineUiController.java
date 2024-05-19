@@ -135,7 +135,7 @@ public class TimelineUiController {
         }
         VirtualPageHeader.put(response, requestContext.nodeName(), builder.build().toUriString());
 
-        Posting posting = postingRepository.findNoAttachmentsByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
+        Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null || !posting.isMessage() || posting.getParentMedia() != null
                 || !posting.getViewCompound().isPublic()) {
             throw new PageNotFoundException();

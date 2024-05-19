@@ -39,6 +39,11 @@ public class PostingRevisionController extends PostingRevisionControllerBase {
     }
 
     @Override
+    protected Optional<EntryRevision> findRevisionWithAttachments(UUID postingId, UUID id) {
+        return entryRevisionRepository.findWithAttachmentsByEntryIdAndId(requestContext.nodeId(), postingId, id);
+    }
+
+    @Override
     protected Liberin getRestorationLiberin(Posting posting, EntryRevision latest) {
         return new PostingUpdatedLiberin(posting, latest, posting.getViewE());
     }

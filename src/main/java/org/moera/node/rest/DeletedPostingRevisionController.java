@@ -41,6 +41,11 @@ public class DeletedPostingRevisionController extends PostingRevisionControllerB
     }
 
     @Override
+    protected Optional<EntryRevision> findRevisionWithAttachments(UUID postingId, UUID id) {
+        return entryRevisionRepository.findWithAttachmentsByDeletedEntryIdAndId(requestContext.nodeId(), postingId, id);
+    }
+
+    @Override
     protected Liberin getRestorationLiberin(Posting posting, EntryRevision latest) {
         return new PostingRestoredLiberin(posting);
     }

@@ -20,16 +20,24 @@ public interface EntryRevisionRepository extends JpaRepository<EntryRevision, UU
             + " and not exists(select rt from ReactionTotal rt where rt.entryRevision.id = r.id)";
 
     @Query("select r from EntryRevision r"
-            + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
-            + " left join fetch mfo.mediaFile mf left join fetch mf.previews"
             + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is null and r.id = ?3")
     Optional<EntryRevision> findByEntryIdAndId(UUID nodeId, UUID entryId, UUID id);
 
     @Query("select r from EntryRevision r"
             + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
             + " left join fetch mfo.mediaFile mf left join fetch mf.previews"
+            + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is null and r.id = ?3")
+    Optional<EntryRevision> findWithAttachmentsByEntryIdAndId(UUID nodeId, UUID entryId, UUID id);
+
+    @Query("select r from EntryRevision r"
             + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is not null and r.id = ?3")
     Optional<EntryRevision> findByDeletedEntryIdAndId(UUID nodeId, UUID entryId, UUID id);
+
+    @Query("select r from EntryRevision r"
+            + " left join fetch r.attachments ra left join fetch ra.mediaFileOwner mfo"
+            + " left join fetch mfo.mediaFile mf left join fetch mf.previews"
+            + " where r.entry.nodeId = ?1 and r.entry.id = ?2 and r.entry.deletedAt is not null and r.id = ?3")
+    Optional<EntryRevision> findWithAttachmentsByDeletedEntryIdAndId(UUID nodeId, UUID entryId, UUID id);
 
     @Query("select r from EntryRevision r where r.entry.nodeId = ?1 and r.entry.id = ?2")
     Page<EntryRevision> findAllByEntryId(UUID nodeId, UUID entryId, Pageable pageable);
