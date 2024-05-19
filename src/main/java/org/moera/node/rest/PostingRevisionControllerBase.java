@@ -23,6 +23,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.EntryOperations;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.PostingOperations;
 import org.slf4j.Logger;
 import org.springframework.data.domain.PageRequest;
@@ -146,7 +147,8 @@ public abstract class PostingRevisionControllerBase {
 
         requestContext.send(getRestorationLiberin(posting, latest));
 
-        return new PostingRevisionInfo(posting, revision, entryOperations, posting.getReceiverName(), requestContext);
+        return new PostingRevisionInfo(posting, revision, MediaAttachmentsProvider.RELATIONS, posting.getReceiverName(),
+                requestContext);
     }
 
 }

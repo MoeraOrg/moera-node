@@ -57,6 +57,7 @@ import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FeedOperations;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.UserListOperations;
@@ -188,7 +189,12 @@ public class PostingController {
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
                 .body(withBlockings(new PostingInfo(
-                        posting, stories, entryOperations, requestContext, requestContext.getOptions())));
+                        posting,
+                        stories,
+                        MediaAttachmentsProvider.RELATIONS,
+                        requestContext,
+                        requestContext.getOptions()
+                )));
     }
 
     @PutMapping("/{id}")
@@ -251,7 +257,14 @@ public class PostingController {
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
         return withBlockings(withClientReaction(
-                new PostingInfo(posting, stories, entryOperations, requestContext, requestContext.getOptions())));
+                new PostingInfo(
+                        posting,
+                        stories,
+                        MediaAttachmentsProvider.RELATIONS,
+                        requestContext,
+                        requestContext.getOptions()
+                )
+        ));
     }
 
     private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {

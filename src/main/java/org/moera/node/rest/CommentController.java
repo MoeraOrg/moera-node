@@ -76,6 +76,7 @@ import org.moera.node.operations.CommentOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.FeedOperations;
+import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.UserListOperations;
 import org.moera.node.text.TextConverter;
@@ -243,7 +244,12 @@ public class CommentController {
         var blockedOperations = blockedUserOperations.findBlockedOperations(postingId);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
                 .body(new CommentCreated(
-                        comment, posting.getTotalChildren(), entryOperations, requestContext, blockedOperations));
+                        comment,
+                        posting.getTotalChildren(),
+                        MediaAttachmentsProvider.RELATIONS,
+                        requestContext,
+                        blockedOperations
+                ));
     }
 
     @PutMapping("/{commentId}")
@@ -316,7 +322,7 @@ public class CommentController {
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
 
         return withBlockings(withSeniorReaction(
-                withClientReaction(new CommentInfo(comment, entryOperations, requestContext)),
+                withClientReaction(new CommentInfo(comment, MediaAttachmentsProvider.RELATIONS, requestContext)),
                 comment.getPosting().getOwnerName()
         ));
     }
