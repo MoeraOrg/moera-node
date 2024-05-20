@@ -51,6 +51,7 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
             stat.minDuration.accumulateAndGet(fullDuration, Math::min);
             stat.maxDuration.accumulateAndGet(fullDuration, Math::max);
             stat.totalDuration.addAndGet(fullDuration);
+            stat.medianDuration.add(fullDuration);
             stat.count.incrementAndGet();
         }
         if (fullDuration < config.getDebug().getSlowRequestDuration()) {
@@ -82,10 +83,12 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
                     if (total == 0) {
                         return;
                     }
-                    double avg = (double) stat.totalDuration.get() / total;
+                    long avg = (long) ((double) stat.totalDuration.get() / total);
+                    long med = stat.medianDuration.getMedian();
                     long min = stat.minDuration.get();
                     long max = stat.maxDuration.get();
-                    log.debug("{}: avg = {}ms, min = {}ms, max = {}ms, total = {}", name, (long) avg, min, max, total);
+                    log.debug("{}: avg = {}ms, med = {}ms, min = {}ms, max = {}ms, total = {}",
+                            name, avg, med, min, max, total);
                 });
     }
 

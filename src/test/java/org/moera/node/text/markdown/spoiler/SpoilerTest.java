@@ -1,5 +1,7 @@
 package org.moera.node.text.markdown.spoiler;
 
+import java.util.Collections;
+
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.test.util.TestUtils;
@@ -7,11 +9,8 @@ import com.vladsch.flexmark.util.ast.Node;
 import com.vladsch.flexmark.util.data.DataHolder;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
-
-import static org.junit.Assert.assertEquals;
 
 class SpoilerTest {
     final private static DataHolder OPTIONS = new MutableDataSet()
@@ -21,7 +20,7 @@ class SpoilerTest {
     final private static @NotNull HtmlRenderer RENDERER = HtmlRenderer.builder(OPTIONS).build();
 
     private void assertRendering(String input, String expectedResult) {
-        assertEquals(expectedResult, RENDERER.render(PARSER.parse(input)));
+        Assertions.assertEquals(expectedResult, RENDERER.render(PARSER.parse(input)));
     }
 
     @Test
@@ -79,8 +78,11 @@ class SpoilerTest {
     @Test
     public void delimited() {
         Node document = PARSER.parse("||foo||");
-        Spoiler strikethrough = (Spoiler) document.getFirstChild().getFirstChild();
-        assertEquals("||", strikethrough.getOpeningMarker().toString());
-        assertEquals("||", strikethrough.getClosingMarker().toString());
+        Node firstChild = document.getFirstChild();
+        Assertions.assertNotNull(firstChild);
+        Spoiler strikethrough = (Spoiler) firstChild.getFirstChild();
+        Assertions.assertNotNull(strikethrough);
+        Assertions.assertEquals("||", strikethrough.getOpeningMarker().toString());
+        Assertions.assertEquals("||", strikethrough.getClosingMarker().toString());
     }
 }
