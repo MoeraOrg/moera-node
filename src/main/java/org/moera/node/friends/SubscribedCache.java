@@ -34,7 +34,7 @@ public class SubscribedCache {
     }
 
     public boolean isSubscribed(UUID nodeId, String remoteNodeName) {
-        if (ObjectUtils.isEmpty(remoteNodeName)) {
+        if (nodeId == null || ObjectUtils.isEmpty(remoteNodeName)) {
             return false;
         }
 
