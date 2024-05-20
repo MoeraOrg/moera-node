@@ -11,5 +11,6 @@ public class RequestStatistics {
     public final AtomicLong totalDuration = new AtomicLong(0);
     public final AtomicMedian medianDuration = new AtomicMedian(0, 5000, 20);
     public final AtomicLong count = new AtomicLong(0);
+    public final AtomicLong slowCount = new AtomicLong(0);
 
 }

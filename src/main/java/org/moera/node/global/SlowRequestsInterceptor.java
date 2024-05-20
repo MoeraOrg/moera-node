@@ -53,6 +53,9 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
             stat.totalDuration.addAndGet(fullDuration);
             stat.medianDuration.add(fullDuration);
             stat.count.incrementAndGet();
+            if (fullDuration >= config.getDebug().getSlowRequestDuration()) {
+                stat.slowCount.incrementAndGet();
+            }
         }
         if (fullDuration < config.getDebug().getSlowRequestDuration()) {
             return;
@@ -87,8 +90,10 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
                     long med = stat.medianDuration.getMedian();
                     long min = stat.minDuration.get();
                     long max = stat.maxDuration.get();
-                    log.debug("{}: avg = {}ms, med = {}ms, min = {}ms, max = {}ms, total = {}",
-                            name, avg, med, min, max, total);
+                    long slow = stat.slowCount.get();
+                    String slowPercent = String.format("%.3f", (double) slow / total);
+                    log.debug("{}: avg = {}ms, med = {}ms, min = {}ms, max = {}ms, total = {}, slow = {} ({}%)",
+                            name, avg, med, min, max, total, slow, slowPercent);
                 });
     }
 
