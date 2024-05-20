@@ -53,7 +53,8 @@ public class RemoteCommentInstants extends InstantsCreator {
         boolean isNewStory = false;
         Story story = storyRepository.findFullByRemotePostingId(nodeId(), Feed.INSTANT, StoryType.REMOTE_COMMENT_ADDED,
                 nodeName, postingId).stream().findFirst().orElse(null);
-        if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+        if (story == null
+                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
             story.setFeedName(Feed.INSTANT);
@@ -135,7 +136,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         story.setRemoteOwnerFullName(stories.get(0).getRemoteOwnerFullName());
         story.setRemoteOwnerAvatarMediaFile(stories.get(0).getRemoteOwnerAvatarMediaFile());
         story.setRemoteOwnerAvatarShape(stories.get(0).getRemoteOwnerAvatarShape());
-        story.setRemoteCommentId(stories.get(0).getRemoteCommentId());
+        story.setRemoteCommentId(stories.get(stories.size() - 1).getRemoteCommentId());
         story.setPublishedAt(Util.now());
         if (isAdded) {
             story.setRead(false);

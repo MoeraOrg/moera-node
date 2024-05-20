@@ -52,7 +52,8 @@ public class CommentMediaReactionInstants extends InstantsCreator {
         Story story = storyRepository.findFullByRemotePostingId(
                         nodeId(), Feed.INSTANT, storyType, nodeName, mediaPostingId).stream()
                 .findFirst().orElse(null);
-        if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+        if (story == null
+                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);

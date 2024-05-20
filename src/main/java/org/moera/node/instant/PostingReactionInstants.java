@@ -47,7 +47,8 @@ public class PostingReactionInstants extends InstantsCreator {
         boolean isNewStory = false;
         Story story = storyRepository.findFullByFeedAndTypeAndEntryId(
                 nodeId(), Feed.INSTANT, storyType, posting.getId()).stream().findFirst().orElse(null);
-        if (story == null || story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+        if (story == null
+                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
