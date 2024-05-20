@@ -75,7 +75,7 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
         log.debug("Requests statistics:");
         byRequest.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .forEach((entry) -> {
+                .forEach(entry -> {
                     String name = entry.getKey();
                     RequestStatistics stat = entry.getValue();
                     long total = stat.count.get();
