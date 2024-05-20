@@ -91,7 +91,7 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
                     long min = stat.minDuration.get();
                     long max = stat.maxDuration.get();
                     long slow = stat.slowCount.get();
-                    String slowPercent = String.format("%.3f", (double) slow / total);
+                    String slowPercent = String.format("%.1f", slow * 100f / total);
                     log.debug("{}: avg = {}ms, med = {}ms, min = {}ms, max = {}ms, total = {}, slow = {} ({}%)",
                             name, avg, med, min, max, total, slow, slowPercent);
                 });
