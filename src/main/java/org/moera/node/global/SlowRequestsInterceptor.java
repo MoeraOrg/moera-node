@@ -73,16 +73,20 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
     @Scheduled(fixedDelayString = "PT1H")
     public void reportStatistics() {
         log.debug("Requests statistics:");
-        byRequest.forEach((name, stat) -> {
-            long total = stat.count.get();
-            if (total == 0) {
-                return;
-            }
-            double avg = (double) stat.totalDuration.get() / total;
-            long min = stat.minDuration.get();
-            long max = stat.maxDuration.get();
-            log.debug("{}: avg{}ms, min = {}ms, max = {}ms, total = {}", name, avg, min, max, total);
-        });
+        byRequest.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach((entry) -> {
+                    String name = entry.getKey();
+                    RequestStatistics stat = entry.getValue();
+                    long total = stat.count.get();
+                    if (total == 0) {
+                        return;
+                    }
+                    double avg = (double) stat.totalDuration.get() / total;
+                    long min = stat.minDuration.get();
+                    long max = stat.maxDuration.get();
+                    log.debug("{}: avg = {}ms, min = {}ms, max = {}ms, total = {}", name, (long) avg, min, max, total);
+                });
     }
 
 }
