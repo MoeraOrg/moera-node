@@ -3,6 +3,7 @@ package org.moera.node.data;
 import java.sql.Timestamp;
 import java.util.UUID;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -23,7 +24,7 @@ public class SitemapRecord {
     @NotNull
     private UUID sitemapId;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     private Entry entry;
 
     @NotNull
