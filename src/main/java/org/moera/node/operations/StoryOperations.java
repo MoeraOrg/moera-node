@@ -66,6 +66,12 @@ public class StoryOperations {
                 !story.isPinned() ? story.getPublishedAt() : PINNED_TIME));
     }
 
+    public void updateMoment(Story story, UUID nodeId, long momentBase) {
+        story.setMoment(momentFinder.find(
+                moment -> storyRepository.countMoments(nodeId, story.getFeedName(), moment) == 0,
+                momentBase));
+    }
+
     public void publish(Entry posting, List<StoryAttributes> publications) {
         publish(posting, publications, universalContext.nodeId(), universalContext::send);
     }

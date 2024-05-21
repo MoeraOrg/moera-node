@@ -6,19 +6,22 @@ import java.util.function.Predicate;
 
 public class MomentFinder {
 
-    private AtomicInteger nonce = new AtomicInteger(0);
+    private final AtomicInteger nonce = new AtomicInteger(0);
 
     public long find(Predicate<Long> isFree, Timestamp timestamp) {
-        long base = Util.toEpochSecond(timestamp) * 1000;
+        return find(isFree, Util.toEpochSecond(timestamp) * 1000);
+    }
+
+    public long find(Predicate<Long> isFree, long momentBase) {
         int n = 0;
         while (true) {
-            long moment = base + nonce.getAndIncrement() % 1000;
+            long moment = momentBase + nonce.getAndIncrement() % 1000;
             if (isFree.test(moment)) {
                 return moment;
             }
             if (++n >= 1000) {
                 n = 0;
-                base += 1000;
+                momentBase += 1000;
             }
         }
 
