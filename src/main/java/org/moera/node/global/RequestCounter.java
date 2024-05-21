@@ -11,14 +11,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class RequestCounter {
 
+    public class AutoFree implements AutoCloseable {
+
+        @Override
+        public void close() {
+            free();
+        }
+
+    }
+
     private static final Logger log = LoggerFactory.getLogger(RequestCounter.class);
 
+    private final AutoFree autoFree = new AutoFree();
     private final AtomicInteger total = new AtomicInteger(0);
 
-    public void allot() {
+    public AutoFree allot() {
         defineRequestId();
         int count = total.incrementAndGet();
         logCount(count);
+        return autoFree;
     }
 
     public void free() {

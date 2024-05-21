@@ -55,8 +55,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
 
     @Scheduled(fixedDelayString = "P1D")
     public void purgeOutdatedRevisions() {
-        try {
-            requestCounter.allot();
+        try (var ignored = requestCounter.allot()) {
             log.info("Purging outdated revisions");
 
             for (String domainName : domains.getAllDomainNames()) {
@@ -65,8 +64,6 @@ public class EntryOperations implements MediaAttachmentsProvider {
                 purgeOutdatedRevisions(nodeId, domainName, EntryType.POSTING, false, "posting.picked.revision.lifetime");
                 purgeOutdatedRevisions(nodeId, domainName, EntryType.COMMENT, true, "comment.revision.lifetime");
             }
-        } finally {
-            requestCounter.free();
         }
     }
 

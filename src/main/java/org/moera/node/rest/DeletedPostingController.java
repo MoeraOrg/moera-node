@@ -19,6 +19,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
@@ -48,6 +49,9 @@ public class DeletedPostingController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private StoryRepository storyRepository;
@@ -128,7 +132,11 @@ public class DeletedPostingController {
     @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void purgeExpired() {
-        postingRepository.deleteExpired(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired deleted postings");
+
+            postingRepository.deleteExpired(Util.now());
+        }
     }
 
 }
