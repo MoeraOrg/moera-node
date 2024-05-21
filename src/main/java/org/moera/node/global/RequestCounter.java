@@ -24,11 +24,16 @@ public class RequestCounter {
     public void free() {
         int count = total.decrementAndGet();
         logCount(count);
+        undefineRequestId();
     }
 
     private void defineRequestId() {
         int rid = new Random().nextInt(0x1000000);
         MDC.put("rid", String.format("%06x", rid));
+    }
+
+    private void undefineRequestId() {
+        MDC.put("rid", null);
     }
 
     private void logCount(int count) {
