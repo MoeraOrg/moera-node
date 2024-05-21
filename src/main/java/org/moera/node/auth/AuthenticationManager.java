@@ -77,6 +77,7 @@ public class AuthenticationManager {
             throw new InvalidTokenException();
         }
         stampToken(token);
+        lastUsedToken(token);
         return token;
     }
 
@@ -87,15 +88,29 @@ public class AuthenticationManager {
                 () -> {
                     Token tk = entityManager.merge(token);
                     tk.setDeadline(Timestamp.from(Instant.now().plus(lifetime)));
-                    if (!universalContext.isBackground()) {
-                        tk.setLastUsedAt(Util.now());
-                        tk.setLastUsedBrowser(getUserAgentString());
-                        if (requestContext.getRemoteAddr() != null) {
-                            tk.setLastUsedIp(new Inet(requestContext.getRemoteAddr().getHostAddress()));
-                        }
-                    }
                 },
                 e -> log.error("Could not stamp token {}: {}", LogUtil.format(token.getId()), e.getMessage())
+            );
+        }
+    }
+
+    private void lastUsedToken(Token token) {
+        if (universalContext.isBackground()) {
+            return;
+        }
+        if (token.getLastUsedAt() == null
+                || token.getLastUsedAt().toInstant().plus(10, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+            tx.executeWriteQuietly(
+                () -> {
+                    Token tk = entityManager.merge(token);
+                    tk.setLastUsedAt(Util.now());
+                    tk.setLastUsedBrowser(getUserAgentString());
+                    if (requestContext.getRemoteAddr() != null) {
+                        tk.setLastUsedIp(new Inet(requestContext.getRemoteAddr().getHostAddress()));
+                    }
+                },
+                e -> log.error("Could not record the last usage of token {}: {}",
+                        LogUtil.format(token.getId()), e.getMessage())
             );
         }
     }
