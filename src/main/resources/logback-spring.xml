@@ -5,8 +5,8 @@
     <springProperty name="PROFILE" source="spring.profiles.active"/>
     <property name="LOG_FILE_INFO" value="log/node.log"/>
     <property name="LOG_FILE_DEBUG" value="log/node-debug.log"/>
-    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(%4.4X{rid:-****}){magenta} %clr(---){faint} %clr([%15.15t]){faint}[%1.2X{auth:--}] %clr(%.-10X{domain:-}){blue} - %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
-    <property name="FILE_LOG_PATTERN" value="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} %4.4X{rid:-****} --- [%t][%1.2X{auth:--}] %X{domain:-} - %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(%6.6X{rid:-******}){magenta} %clr(---){faint} %clr([%15.15t]){faint}[%1.2X{auth:--}] %clr(%.-10X{domain:-}){blue} - %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+    <property name="FILE_LOG_PATTERN" value="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} %6.6X{rid:-******} --- [%t][%1.2X{auth:--}] %X{domain:-} - %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
     <springProfile name="dev">
         <!-- to log all bound parameters in SQL -->

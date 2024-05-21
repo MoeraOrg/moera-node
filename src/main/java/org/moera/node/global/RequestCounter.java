@@ -27,8 +27,8 @@ public class RequestCounter {
     }
 
     private void defineRequestId() {
-        int rid = new Random().nextInt(65536);
-        MDC.put("rid", String.format("%04x", rid));
+        int rid = new Random().nextInt(0x1000000);
+        MDC.put("rid", String.format("%06x", rid));
     }
 
     private void logCount(int count) {
