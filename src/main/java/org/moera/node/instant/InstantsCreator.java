@@ -103,7 +103,11 @@ public class InstantsCreator {
     }
 
     protected void updateMoment(Story story) {
-        storyOperations.updateMoment(story, nodeId(), findFeedPosition(story));
+        if (universalContext.getOptions().getBool("instants.prioritize")) {
+            storyOperations.updateMoment(story, nodeId(), findFeedPosition(story));
+        } else {
+            storyOperations.updateMoment(story, nodeId());
+        }
     }
 
     private long findFeedPosition(Story story) {
