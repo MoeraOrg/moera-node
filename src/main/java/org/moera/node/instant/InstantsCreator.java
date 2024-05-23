@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
@@ -19,11 +20,15 @@ import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ObjectUtils;
 
 public class InstantsCreator {
+
+    private static final Logger log = LoggerFactory.getLogger(InstantsCreator.class);
 
     @Inject
     protected UniversalContext universalContext;
@@ -111,25 +116,37 @@ public class InstantsCreator {
     }
 
     private long findFeedPosition(Story story) {
+        log.debug("Finding position for story {}, node {}",
+                LogUtil.format(story.getId()), LogUtil.format(story.getNodeId()));
         long momentBase = Util.toEpochSecond(story.getPublishedAt()) * 1000;
+        log.debug("Moment base is {}", momentBase);
 
         boolean top = true;
         PageRequest page = PageRequest.of(0, 20, Sort.Direction.DESC, "moment");
         List<Story> stories = storyRepository.findByFeed(nodeId(), story.getFeedName(), page);
+        log.debug("Fetched {} stories", stories.size());
         while (!stories.isEmpty()) {
             for (Story prev : stories) {
+                log.debug("Probing story {}, type {}, priority {}, viewed {}",
+                        LogUtil.format(prev.getId()), LogUtil.format(prev.getStoryType().getValue()),
+                        prev.getStoryType().getPriority(), LogUtil.format(prev.isViewed()));
                 if (prev.getId().equals(story.getId())) {
+                    log.debug("Skipping ourselves");
                     continue;
                 }
                 if (prev.isViewed() || prev.getStoryType().getPriority() <= story.getStoryType().getPriority()) {
+                    log.debug("Found position: {}", top ? momentBase : prev.getMoment());
                     return top ? momentBase : prev.getMoment();
                 }
                 top = false;
                 momentBase = prev.getMoment() - 1000;
+                log.debug("Next moment base is {}", momentBase);
             }
             page = page.next();
             stories = storyRepository.findByFeed(nodeId(), story.getFeedName(), page);
+            log.debug("Fetched next {} stories", stories.size());
         }
+        log.debug("Found nothing, placing at {}", momentBase);
         return momentBase;
     }
 
