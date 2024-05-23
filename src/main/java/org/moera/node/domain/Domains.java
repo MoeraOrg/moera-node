@@ -1,6 +1,7 @@
 package org.moera.node.domain;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -85,9 +86,14 @@ public class Domains {
     }
 
     private void configureDomain(Domain domain) {
-        domains.put(domain.getNodeId(), new DomainInfo(domain));
-        Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository, optionHookManager);
-        domainOptions.put(domain.getName(), options);
+        lockWrite();
+        try {
+            domains.put(domain.getNodeId(), new DomainInfo(domain));
+            Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository, optionHookManager);
+            domainOptions.put(domain.getName(), options);
+        } finally {
+            unlockWrite();
+        }
     }
 
     public boolean isDomainDefined(String name) {
@@ -136,7 +142,7 @@ public class Domains {
     public Set<String> getAllDomainNames() {
         lockRead();
         try {
-            return domainOptions.keySet();
+            return new HashSet<>(domainOptions.keySet());
         } finally {
             unlockRead();
         }
@@ -190,8 +196,13 @@ public class Domains {
         domainRepository.delete(domain);
         domainRepository.flush();
         log.info("Deleted domain {}", domain.getName());
-        domains.remove(domain.getNodeId());
-        domainOptions.remove(name);
+        lockWrite();
+        try {
+            domains.remove(domain.getNodeId());
+            domainOptions.remove(name);
+        } finally {
+            unlockWrite();
+        }
     }
 
 }
