@@ -319,4 +319,8 @@ public class Options {
         return getString("profile.node-name");
     }
 
+    public boolean isFrozen() {
+        return getBool("frozen");
+    }
+
 }

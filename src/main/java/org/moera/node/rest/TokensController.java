@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -17,12 +18,14 @@ import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthCategory;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
+import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.TokenAddedLiberin;
 import org.moera.node.liberin.model.TokenDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
+import org.moera.node.model.DomainInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -57,6 +60,9 @@ public class TokensController {
     @Inject
     private TokenRepository tokenRepository;
 
+    @Inject
+    private Domains domains;
+
     @PostMapping
     @Transactional
     public ResponseEntity<TokenInfo> post(@Valid @RequestBody TokenAttributes attributes) {
@@ -81,6 +87,11 @@ public class TokensController {
         token.setDeadline(Timestamp.from(Instant.now().plus(
                 options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
+
+        if (requestContext.getOptions().isFrozen()) {
+            requestContext.getOptions().set("frozen", false);
+            // TODO notify the user
+        }
 
         requestContext.send(new TokenAddedLiberin(token));
 
@@ -148,6 +159,20 @@ public class TokensController {
     @Transactional
     public void purgeExpired() {
         tokenRepository.deleteExpired(Util.now());
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    @Transactional
+    public void freeze() {
+        domains.getAllDomainNames().stream()
+                .map(domains::getDomain)
+                .filter(info ->
+                        Instant.ofEpochSecond(info.getCreatedAt()).plus(1, ChronoUnit.YEARS).isBefore(Instant.now()))
+                .map(DomainInfo::getNodeId)
+                .map(domains::getDomainOptions)
+                .filter(options -> !options.isFrozen())
+                .filter(options -> tokenRepository.countAllByNodeId(options.nodeId(), Util.now()) == 0)
+                .forEach(options -> options.set("frozen", true));
     }
 
 }

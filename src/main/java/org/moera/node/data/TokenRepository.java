@@ -17,6 +17,9 @@ public interface TokenRepository extends JpaRepository<Token, UUID> {
     @Query("select t from Token t where t.nodeId = ?1 and t.token = ?2 and (t.deadline is null or t.deadline >= ?3)")
     Optional<Token> findByToken(UUID nodeId, String token, Timestamp deadline);
 
+    @Query("select count(*) from Token t where t.nodeId = ?1 and (t.deadline is null or t.deadline >= ?2)")
+    int countAllByNodeId(UUID nodeId, Timestamp deadline);
+
     @Query("select t from Token t where t.nodeId = ?1 and (t.deadline is null or t.deadline >= ?2)"
             + " order by t.createdAt desc")
     List<Token> findAllByNodeId(UUID nodeId, Timestamp deadline);

@@ -97,7 +97,7 @@ public class FeaturesController {
 
     @Scheduled(fixedDelayString = "P1D")
     public void askHistoryTimeElapsed() {
-        domains.getAllDomainNames().forEach(domainName ->
+        domains.getWarmDomainNames().forEach(domainName ->
             liberinManager.send(new AskSubjectsChangedLiberin().withNodeId(domains.getDomainNodeId(domainName)))
         );
     }

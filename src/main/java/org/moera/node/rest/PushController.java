@@ -145,7 +145,7 @@ public class PushController {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void purgeInactive() {
-        for (String domainName : domains.getAllDomainNames()) {
+        for (String domainName : domains.getWarmDomainNames()) {
             UUID nodeId = domains.getDomainNodeId(domainName);
             Duration ttl = domains.getDomainOptions(domainName).getDuration("push.client.lifetime").getDuration();
             Timestamp lastSeenAt = Timestamp.from(Instant.now().minus(ttl));

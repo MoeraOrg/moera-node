@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.commons.util.LogUtil;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Sitemap;
 import org.moera.node.data.SitemapRecord;
@@ -70,6 +71,8 @@ public class SitemapController {
     @Transactional
     @ResponseBody
     public SitemapIndex index() {
+        log.info("GET /sitemaps");
+
         Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(requestContext.nodeId());
         SitemapIndex sitemapIndex = new SitemapIndex(requestContext.getSiteUrl(), sitemaps, SITEMAPS_UPGRADE_DATE);
         sitemapIndex.getItems().add(
@@ -80,6 +83,8 @@ public class SitemapController {
     @GetMapping(path = "/static", produces = MediaType.TEXT_XML_VALUE)
     @ResponseBody
     public SitemapUrlSet sitemapStatic() {
+        log.info("GET /sitemaps/static");
+
         return new SitemapUrlSet(STATIC_PAGES.stream()
                 .map(p -> new SitemapUrl(requestContext.getSiteUrl(), p.getFirst(), p.getSecond()))
                 .collect(Collectors.toList()));
@@ -89,6 +94,8 @@ public class SitemapController {
     @Transactional
     @ResponseBody
     public SitemapUrlSet sitemap(@PathVariable UUID id) {
+        log.info("GET /sitemaps/{id} (id = {})", LogUtil.format(id));
+
         Collection<SitemapRecord> records = sitemapRecordRepository.findRecords(requestContext.nodeId(), id);
         if (records.isEmpty()) {
             throw new PageNotFoundException();
@@ -111,7 +118,7 @@ public class SitemapController {
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void refresh() {
-        List<String> names = domains.getAllDomainNames().stream().sorted().toList();
+        List<String> names = domains.getWarmDomainNames().stream().sorted().toList();
         int sliceLength = names.size() < 50 ? names.size() : names.size() / 24;
         for (int i = 0; i < sliceLength && refreshPosition + i < names.size(); i++) {
             String domainName = names.get(refreshPosition + i);

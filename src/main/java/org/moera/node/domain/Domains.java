@@ -1,9 +1,9 @@
 package org.moera.node.domain;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -139,10 +139,22 @@ public class Domains {
         return getDomainOptions(getDomainName(nodeId));
     }
 
-    public Set<String> getAllDomainNames() {
+    public List<String> getAllDomainNames() {
         lockRead();
         try {
-            return new HashSet<>(domainOptions.keySet());
+            return new ArrayList<>(domainOptions.keySet());
+        } finally {
+            unlockRead();
+        }
+    }
+
+    public List<String> getWarmDomainNames() {
+        lockRead();
+        try {
+            return domainOptions.entrySet().stream()
+                    .filter(e -> !e.getValue().isFrozen())
+                    .map(Map.Entry::getKey)
+                    .toList();
         } finally {
             unlockRead();
         }

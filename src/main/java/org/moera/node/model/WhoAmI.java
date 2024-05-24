@@ -13,6 +13,7 @@ public class WhoAmI {
     private String gender;
     private String title;
     private AvatarImage avatar;
+    private Boolean frozen;
 
     public WhoAmI() {
     }
@@ -29,6 +30,9 @@ public class WhoAmI {
         title = requestContext.getOptions().getString("profile.title");
         if (requestContext.getAvatar() != null) {
             avatar = new AvatarImage(requestContext.getAvatar());
+        }
+        if (requestContext.getOptions().getBool("frozen")) {
+            frozen = true;
         }
     }
 
@@ -78,6 +82,14 @@ public class WhoAmI {
 
     public void setAvatar(AvatarImage avatar) {
         this.avatar = avatar;
+    }
+
+    public Boolean getFrozen() {
+        return frozen;
+    }
+
+    public void setFrozen(Boolean frozen) {
+        this.frozen = frozen;
     }
 
 }
