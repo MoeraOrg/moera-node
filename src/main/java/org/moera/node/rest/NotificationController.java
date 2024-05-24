@@ -2,11 +2,15 @@ package org.moera.node.rest;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
@@ -14,6 +18,8 @@ import org.moera.commons.util.LogUtil;
 import org.moera.naming.rpc.NodeName;
 import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.node.data.FrozenNotification;
+import org.moera.node.data.FrozenNotificationRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
@@ -40,10 +46,15 @@ import org.springframework.web.method.HandlerMethod;
 @NoCache
 public class NotificationController {
 
+    private static final Duration FREEZING_PERIOD = Duration.of(7, ChronoUnit.DAYS);
+
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private FrozenNotificationRepository frozenNotificationRepository;
 
     @Inject
     private NotificationRouter notificationRouter;
@@ -91,6 +102,12 @@ public class NotificationController {
 
         validate(notification, errors);
 
+        if (requestContext.getOptions().isFrozen()) {
+            freeze(packet);
+            // TODO set X-Moera-Frozen header
+            return Result.OK;
+        }
+
         notification.setSenderNodeName(packet.getNodeName());
         notification.setSenderFullName(packet.getFullName());
         notification.setSenderGender(packet.getGender());
@@ -132,6 +149,15 @@ public class NotificationController {
         RegisteredNameInfo nameInfo =
                 namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), namingLocation);
         return nameInfo != null ? nameInfo.getSigningKey() : null;
+    }
+
+    private void freeze(NotificationPacket packet) throws JsonProcessingException {
+        FrozenNotification frozenNotification = new FrozenNotification();
+        frozenNotification.setId(UUID.randomUUID());
+        frozenNotification.setNodeId(requestContext.nodeId());
+        frozenNotification.setPacket(objectMapper.writeValueAsString(packet));
+        frozenNotification.setDeadline(Timestamp.from(Instant.now().plus(FREEZING_PERIOD)));
+        frozenNotificationRepository.save(frozenNotification);
     }
 
 }
