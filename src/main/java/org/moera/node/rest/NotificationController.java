@@ -32,8 +32,11 @@ import org.moera.node.model.notification.NotificationType;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.notification.NotificationPacket;
 import org.moera.node.notification.receive.NotificationRouter;
+import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -70,6 +73,9 @@ public class NotificationController {
 
     @Inject
     private Validator validator;
+
+    @Inject
+    private Transaction tx;
 
     @PostMapping
     public Result post(@Valid @RequestBody NotificationPacket packet, Errors errors) throws Throwable {
@@ -158,6 +164,11 @@ public class NotificationController {
         frozenNotification.setPacket(objectMapper.writeValueAsString(packet));
         frozenNotification.setDeadline(Timestamp.from(Instant.now().plus(FREEZING_PERIOD)));
         frozenNotificationRepository.save(frozenNotification);
+    }
+
+    @Scheduled(fixedDelayString = "P1D")
+    public void deleteExpiredFrozen() {
+        tx.executeWrite(() -> frozenNotificationRepository.deleteExpired(Util.now()));
     }
 
 }
