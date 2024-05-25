@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -113,7 +114,11 @@ public class Jobs {
         } else {
             taskAutowire.autowireWithoutRequestAndDomain(job);
         }
-        taskExecutor.execute(job);
+        try {
+            taskExecutor.execute(job);
+        } catch (RejectedExecutionException e) {
+            // ignore, the job was persisted
+        }
     }
 
     public boolean isRunning(Class<?> klass) {
@@ -172,7 +177,12 @@ public class Jobs {
         if (job.getWaitUntil() != null && job.getWaitUntil().isAfter(Instant.now())) {
             pending.add(job);
         } else {
-            taskExecutor.execute(job);
+            try {
+                taskExecutor.execute(job);
+            } catch (Exception e) {
+                // No space in the executor, wait a bit
+                pending.add(job);
+            }
         }
     }
 
@@ -238,7 +248,13 @@ public class Jobs {
         var job = pending.peek();
         while (job != null && job.getWaitUntil().isBefore(Instant.now())) {
             pending.remove();
-            taskExecutor.execute(job);
+            try {
+                taskExecutor.execute(job);
+            } catch (RejectedExecutionException e) {
+                // No space in the executor, wait a bit
+                pending.add(job);
+                return;
+            }
             job = pending.peek();
         }
     }
