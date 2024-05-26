@@ -18,6 +18,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.naming.rpc.NodeName;
 import org.moera.naming.rpc.RegisteredName;
 import org.moera.naming.rpc.RegisteredNameInfo;
+import org.moera.node.api.naming.NamingClient;
 import org.moera.node.data.FrozenNotification;
 import org.moera.node.data.FrozenNotificationRepository;
 import org.moera.node.domain.Domains;
@@ -29,13 +30,15 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.NotificationType;
-import org.moera.node.api.naming.NamingClient;
 import org.moera.node.notification.NotificationPacket;
 import org.moera.node.notification.receive.NotificationRouter;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -78,7 +81,7 @@ public class NotificationController {
     private Transaction tx;
 
     @PostMapping
-    public Result post(@Valid @RequestBody NotificationPacket packet, Errors errors) throws Throwable {
+    public ResponseEntity<Result> post(@Valid @RequestBody NotificationPacket packet, Errors errors) throws Throwable {
         log.info("POST /notifications (nodeName = {}, id = {}, type = {})",
                 LogUtil.format(packet.getNodeName()), LogUtil.format(packet.getId()), LogUtil.format(packet.getType()));
 
@@ -88,7 +91,7 @@ public class NotificationController {
         }
         HandlerMethod handler = notificationRouter.getHandler(type);
         if (handler == null) {
-            return Result.OK;
+            return new ResponseEntity<>(Result.OK, HttpStatus.OK);
         }
         if (packet.getCreatedAt() == null
                 || Instant.ofEpochSecond(packet.getCreatedAt()).plus(10, ChronoUnit.MINUTES).isBefore(Instant.now())) {
@@ -110,8 +113,9 @@ public class NotificationController {
 
         if (requestContext.getOptions().isFrozen()) {
             freeze(packet);
-            // TODO set X-Moera-Frozen header
-            return Result.OK;
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("X-Moera-Frozen", "true");
+            return new ResponseEntity<>(Result.OK, headers, HttpStatus.OK);
         }
 
         notification.setSenderNodeName(packet.getNodeName());
@@ -124,7 +128,7 @@ public class NotificationController {
             throw e.getCause();
         }
 
-        return Result.OK;
+        return new ResponseEntity<>(Result.OK, HttpStatus.OK);
     }
 
     private void validate(Notification notification, Errors errors) {
