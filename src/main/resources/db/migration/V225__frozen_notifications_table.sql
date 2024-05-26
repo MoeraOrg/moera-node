@@ -5,5 +5,5 @@ CREATE TABLE frozen_notifications (
     received_at timestamp without time zone NOT NULL,
     deadline timestamp without time zone NOT NULL
 );
-CREATE INDEX ON frozen_notifications(node_id);
-CREATE INDEX ON frozen_notifications(deadline);
+CREATE INDEX frozen_notifications_node_id_idx ON frozen_notifications(node_id);
+CREATE INDEX frozen_notifications_deadline_idx ON frozen_notifications(deadline);

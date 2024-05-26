@@ -17,6 +17,8 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.config.Config;
+import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendRepository;
 import org.moera.node.data.PendingNotification;
@@ -34,6 +36,7 @@ import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.RemoteConnectivityOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
@@ -41,19 +44,24 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NotificationSenderPool {
 
     private static final Duration EXECUTION_REJECTED_DELAY = Duration.of(5, ChronoUnit.MINUTES);
+    private static final Duration FROZEN_DELAY = Duration.of(10, ChronoUnit.MINUTES);
+    private static final float FROZEN_DELIVERY_LOAD_THRESHOLD = 0.25f;
 
     private static final Logger log = LoggerFactory.getLogger(NotificationSenderPool.class);
 
     private final ConcurrentMap<SingleDirection, NotificationSender> senders = new ConcurrentHashMap<>();
     private final List<NotificationSender> pausedSenders = Collections.synchronizedList(new ArrayList<>());
+
+    @Inject
+    private Config config;
 
     @Inject
     private UniversalContext universalContext;
@@ -63,7 +71,7 @@ public class NotificationSenderPool {
 
     @Inject
     @Qualifier("notificationSenderTaskExecutor")
-    private TaskExecutor taskExecutor;
+    private ThreadPoolTaskExecutor taskExecutor;
 
     @Inject
     private TaskAutowire taskAutowire;
@@ -85,6 +93,9 @@ public class NotificationSenderPool {
 
     @Inject
     private ContactOperations contactOperations;
+
+    @Inject
+    private RemoteConnectivityOperations remoteConnectivityOperations;
 
     @Inject
     @Lazy
@@ -123,14 +134,12 @@ public class NotificationSenderPool {
 
     public void send(Direction direction, Notification notification) {
         log.info("Sending notification {}", notification.toLogMessage());
-        if (direction instanceof SingleDirection) {
-            log.info("Sending to node '{}' only, if {}",
-                    ((SingleDirection) direction).getNodeName(), direction.getPrincipalFilter());
-            sendSingle((SingleDirection) direction, notification);
+        if (direction instanceof SingleDirection sd) {
+            log.info("Sending to node '{}' only, if {}", sd.getNodeName(), direction.getPrincipalFilter());
+            sendSingle(sd, notification);
             return;
         }
         if (direction instanceof SubscribersDirection sd) {
-
             log.info("Sending to '{}' subscribers (feedName = {}, postingId = {}), if {}",
                     sd.getSubscriptionType().getValue(),
                     LogUtil.format(sd.getFeedName()),
@@ -209,6 +218,13 @@ public class NotificationSenderPool {
         } else {
             taskAutowire.autowireWithoutRequest(sender, nodeId);
         }
+
+        if (isFrozenNode(sender.getReceiverNodeName())) {
+            sender.setPausedTill(Instant.now().plus(FROZEN_DELAY));
+            pauseSender(sender);
+            return sender;
+        }
+
         try {
             taskExecutor.execute(sender);
         } catch (RejectedExecutionException e) {
@@ -221,6 +237,12 @@ public class NotificationSenderPool {
 
     void deleteSender(UUID nodeId, String nodeName) {
         senders.remove(new SingleDirection(nodeId, nodeName));
+    }
+
+    private boolean isFrozenNode(String nodeName) {
+        var connectivityStatus = remoteConnectivityOperations.getStatus(nodeName);
+        float load = (float) taskExecutor.getActiveCount() / config.getPools().getNotificationSender();
+        return connectivityStatus == ConnectivityStatus.FROZEN && load > FROZEN_DELIVERY_LOAD_THRESHOLD;
     }
 
     void unsubscribe(UUID subscriberId) {
@@ -270,6 +292,7 @@ public class NotificationSenderPool {
     public void resumeSenders() {
         List<NotificationSender> resumed = pausedSenders.stream()
                 .filter(sender -> Instant.now().compareTo(sender.getPausedTill()) >= 0)
+                .filter(sender -> !isFrozenNode(sender.getReceiverNodeName()))
                 .toList();
         resumed.forEach(sender -> {
             resumeSender(sender);

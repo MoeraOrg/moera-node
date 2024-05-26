@@ -36,9 +36,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -81,7 +78,7 @@ public class NotificationController {
     private Transaction tx;
 
     @PostMapping
-    public ResponseEntity<Result> post(@Valid @RequestBody NotificationPacket packet, Errors errors) throws Throwable {
+    public Result post(@Valid @RequestBody NotificationPacket packet, Errors errors) throws Throwable {
         log.info("POST /notifications (nodeName = {}, id = {}, type = {})",
                 LogUtil.format(packet.getNodeName()), LogUtil.format(packet.getId()), LogUtil.format(packet.getType()));
 
@@ -91,7 +88,7 @@ public class NotificationController {
         }
         HandlerMethod handler = notificationRouter.getHandler(type);
         if (handler == null) {
-            return new ResponseEntity<>(Result.OK, HttpStatus.OK);
+            return Result.OK;
         }
         if (packet.getCreatedAt() == null
                 || Instant.ofEpochSecond(packet.getCreatedAt()).plus(10, ChronoUnit.MINUTES).isBefore(Instant.now())) {
@@ -113,9 +110,7 @@ public class NotificationController {
 
         if (requestContext.getOptions().isFrozen()) {
             freeze(packet);
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("X-Moera-Frozen", "true");
-            return new ResponseEntity<>(Result.OK, headers, HttpStatus.OK);
+            return Result.FROZEN;
         }
 
         notification.setSenderNodeName(packet.getNodeName());
@@ -128,7 +123,7 @@ public class NotificationController {
             throw e.getCause();
         }
 
-        return new ResponseEntity<>(Result.OK, HttpStatus.OK);
+        return Result.OK;
     }
 
     private void validate(Notification notification, Errors errors) {

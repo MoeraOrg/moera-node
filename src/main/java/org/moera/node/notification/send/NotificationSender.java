@@ -19,6 +19,7 @@ import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiOperationException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.api.node.NodeApiValidationException;
+import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprint;
 import org.moera.node.model.AvatarImage;
@@ -26,6 +27,7 @@ import org.moera.node.model.Result;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.notification.NotificationPacket;
+import org.moera.node.operations.RemoteConnectivityOperations;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -38,12 +40,14 @@ public class NotificationSender extends Task {
     private static final Duration RETRY_PERIOD = Duration.of(7, ChronoUnit.DAYS);
     private static final Duration RETRY_NAME_PERIOD = Duration.of(3, ChronoUnit.HOURS);
     private static final Duration SUBSCRIPTION_DELAY = Duration.of(7, ChronoUnit.MINUTES);
+    private static final Duration FAILING_MIN_DELAY = Duration.of(2, ChronoUnit.HOURS);
 
     private static final Logger log = LoggerFactory.getLogger(NotificationSender.class);
 
     private final String receiverNodeName;
     private final BlockingQueue<Notification> queue = new LinkedBlockingQueue<>();
     private Notification notification;
+    private ConnectivityStatus connectivityStatus;
     private Duration delay;
     private boolean stopped = false;
     private Instant pausedTill;
@@ -55,6 +59,9 @@ public class NotificationSender extends Task {
     @Inject
     private PendingNotificationRepository pendingNotificationRepository;
 
+    @Inject
+    private RemoteConnectivityOperations remoteConnectivityOperations;
+
     public NotificationSender(NotificationSenderPool pool, String receiverNodeName) {
         this.pool = pool;
         this.receiverNodeName = receiverNodeName;
@@ -62,6 +69,18 @@ public class NotificationSender extends Task {
 
     public String getReceiverNodeName() {
         return receiverNodeName;
+    }
+
+    private ConnectivityStatus getConnectivityStatus() {
+        if (connectivityStatus == null) {
+            connectivityStatus = remoteConnectivityOperations.getStatus(receiverNodeName);
+        }
+        return connectivityStatus;
+    }
+
+    private void setConnectivityStatus(ConnectivityStatus connectivityStatus) {
+        this.connectivityStatus = connectivityStatus;
+        remoteConnectivityOperations.setStatus(receiverNodeName, connectivityStatus);
     }
 
     public boolean isStopped() {
@@ -91,7 +110,7 @@ public class NotificationSender extends Task {
             if (notification == null) {
                 try {
                     notification = queue.poll(1, TimeUnit.MINUTES);
-                    delay = null;
+                    delay = getConnectivityStatus() == ConnectivityStatus.FAILING ? FAILING_MIN_DELAY : null;
                 } catch (InterruptedException e) {
                     continue;
                 }
@@ -149,11 +168,9 @@ public class NotificationSender extends Task {
 
             Duration totalPeriod = Duration.between(notification.getCreatedAt().toInstant(), Instant.now());
             if (totalPeriod.compareTo(getRetryPeriod(errorType)) < 0) {
-                delay = delay == null ? RETRY_MIN_DELAY : delay.multipliedBy(2);
-                delay = delay.compareTo(RETRY_MAX_DELAY) < 0 ? delay : RETRY_MAX_DELAY;
-                log.info("Notification delivery failed, retry in {}s", delay.toSeconds());
+                retrying();
             } else {
-                log.info("Notification delivery failed, giving up");
+                givingUp();
                 break;
             }
         } while (true);
@@ -188,19 +205,16 @@ public class NotificationSender extends Task {
     }
 
     private void succeeded(Result result) {
-        if (result.isOk()) {
+        if (result.isOk() || result.isFrozen()) {
             log.info("Notification delivered successfully");
         } else {
             log.info("Receiving node returned error: {}", result.getMessage());
         }
-    }
-
-    private Duration getRetryPeriod(NotificationSenderError errorType) {
-        return errorType == NotificationSenderError.NAMING ? RETRY_NAME_PERIOD : RETRY_PERIOD;
+        setConnectivityStatus(result.isFrozen() ? ConnectivityStatus.FROZEN : ConnectivityStatus.NORMAL);
     }
 
     private NotificationSenderError error(Throwable e, Notification notification) {
-        var errorType = NotificationSenderError.REGULAR;
+        NotificationSenderError errorType;
 
         if (isUnsubscribeError(e) && notification instanceof SubscriberNotification sn) {
             if (sn.getSubscriptionCreatedAt() != null
@@ -215,8 +229,10 @@ public class NotificationSender extends Task {
             errorType = NotificationSenderError.NAMING;
         } else if (isFatalError(e)) {
             errorType = NotificationSenderError.FATAL;
+        } else {
+            errorType = NotificationSenderError.REGULAR;
         }
-        failed(e.getMessage());
+        log.error(e.getMessage());
 
         return errorType;
     }
@@ -246,8 +262,19 @@ public class NotificationSender extends Task {
         return false;
     }
 
-    private void failed(String message) {
-        log.error(message);
+    private Duration getRetryPeriod(NotificationSenderError errorType) {
+        return errorType == NotificationSenderError.NAMING ? RETRY_NAME_PERIOD : RETRY_PERIOD;
+    }
+
+    private void retrying() {
+        delay = delay == null ? RETRY_MIN_DELAY : delay.multipliedBy(2);
+        delay = delay.compareTo(RETRY_MAX_DELAY) < 0 ? delay : RETRY_MAX_DELAY;
+        log.info("Notification delivery failed, retry in {}s", delay.toSeconds());
+    }
+
+    private void givingUp() {
+        log.info("Notification delivery failed, giving up");
+        setConnectivityStatus(ConnectivityStatus.FAILING);
     }
 
 }

@@ -29,6 +29,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewResolverRegistry;
@@ -133,7 +134,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     }
 
     @Bean
-    public TaskExecutor notificationSenderTaskExecutor() {
+    public ThreadPoolTaskExecutor notificationSenderTaskExecutor() {
         return buildTaskExecutor(config.getPools().getNotificationSender());
     }
 
@@ -147,7 +148,7 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
         return buildTaskExecutor(config.getPools().getPush());
     }
 
-    private TaskExecutor buildTaskExecutor(int size) {
+    private ThreadPoolTaskExecutor buildTaskExecutor(int size) {
         return new TaskExecutorBuilder().corePoolSize(size).maxPoolSize(size).build();
     }
 
