@@ -17,7 +17,7 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
@@ -52,7 +52,7 @@ public class PostingProcessor {
     }
 
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private PostingRepository postingRepository;
@@ -82,7 +82,7 @@ public class PostingProcessor {
     @Transactional
     public void added(StoryAddedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+                universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
         if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.FEED
                 || !notification.getFeedName().equals(subscription.getRemoteFeedName())) {
             throw new UnsubscribeFailure();
@@ -93,7 +93,7 @@ public class PostingProcessor {
         }
 
         List<UserSubscription> userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
-                requestContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
+                universalContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
                 subscription.getRemoteFeedName());
 
         for (UserSubscription userSubscription : userSubscriptions) {
@@ -109,12 +109,12 @@ public class PostingProcessor {
     private void withValidPostingSubscription(PostingSubscriberNotification notification,
                                               PostingSubscriptionRunnable runnable) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+                universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
         if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.POSTING
                 || !notification.getPostingId().equals(subscription.getRemoteEntryId())) {
             throw new UnsubscribeFailure();
         }
-        Posting posting = postingRepository.findByReceiverId(requestContext.nodeId(), subscription.getRemoteNodeName(),
+        Posting posting = postingRepository.findByReceiverId(universalContext.nodeId(), subscription.getRemoteNodeName(),
                 notification.getPostingId()).orElseThrow(UnsubscribeFailure::new);
 
         runnable.run(subscription, posting);
@@ -136,18 +136,18 @@ public class PostingProcessor {
     public void deleted(PostingDeletedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) -> {
             EntryRevision latest = posting.getCurrentRevision();
-            if (requestContext.getOptions().getBool("posting.picked.hide-on-delete")) {
+            if (universalContext.getOptions().getBool("posting.picked.hide-on-delete")) {
                 Principal latestView = posting.getViewE();
                 posting.setViewPrincipal(Principal.ADMIN);
                 posting.setEditedAt(Util.now());
                 posting.setReceiverDeletedAt(Util.now());
 
-                requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
+                universalContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
             } else {
                 postingOperations.deletePosting(posting);
                 storyOperations.unpublish(posting.getId());
 
-                requestContext.send(new PostingDeletedLiberin(posting, latest));
+                universalContext.send(new PostingDeletedLiberin(posting, latest));
             }
         });
     }
@@ -160,7 +160,7 @@ public class PostingProcessor {
             if (!reactionTotalOperations.isSame(reactionTotals, notification.getTotals())) {
                 reactionTotalOperations.replaceAll(posting, notification.getTotals());
 
-                requestContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals()));
+                universalContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals()));
             }
         });
     }
@@ -174,7 +174,7 @@ public class PostingProcessor {
                         LogUtil.format(posting.getId()), LogUtil.format(notification.getTotal()));
                 posting.setTotalChildren(notification.getTotal());
 
-                requestContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal()));
+                universalContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal()));
             }
         });
     }

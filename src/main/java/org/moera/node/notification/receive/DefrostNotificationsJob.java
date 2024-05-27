@@ -89,6 +89,8 @@ public class DefrostNotificationsJob extends Job<DefrostNotificationsJob.Paramet
         }
         Notification notification = objectMapper.readValue(packet.getNotification(), type.getStructure());
 
+        universalContext.authenticatedWithSignature(packet.getNodeName());
+
         notification.setSenderNodeName(packet.getNodeName());
         notification.setSenderFullName(packet.getFullName());
         notification.setSenderGender(packet.getGender());

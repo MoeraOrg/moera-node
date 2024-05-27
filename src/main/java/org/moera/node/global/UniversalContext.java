@@ -1,11 +1,15 @@
 package org.moera.node.global;
 
+import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.domain.Domains;
+import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
@@ -23,6 +27,11 @@ public class UniversalContext {
     private final ThreadLocal<UUID> nodeId = new ThreadLocal<>();
     private final ThreadLocal<Avatar> avatar = new ThreadLocal<>();
 
+    private final ThreadLocal<Boolean> admin = ThreadLocal.withInitial(() -> false);
+    private final ThreadLocal<Boolean> subscribedToClient = ThreadLocal.withInitial(() -> false);
+    private final ThreadLocal<String[]> friendGroups = new ThreadLocal<>();
+    private final ThreadLocal<String> clientName = new ThreadLocal<>();
+
     @Inject
     private RequestContext requestContext;
 
@@ -36,6 +45,10 @@ public class UniversalContext {
     @Inject
     @Lazy
     private SubscriptionManager subscriptionManager;
+
+    @Inject
+    @Lazy
+    private FriendCache friendCache;
 
     @Inject
     @Lazy
@@ -101,6 +114,51 @@ public class UniversalContext {
 
     public void associate(Task task) {
         associate(task.getNodeId());
+    }
+
+    public boolean isAdmin() {
+        return isBackground() ? admin.get() : requestContext.isAdmin();
+    }
+
+    public boolean isSubscribedToClient() {
+        return isBackground() ? subscribedToClient.get() : requestContext.isSubscribedToClient();
+    }
+
+    public String[] getFriendGroups() {
+        return isBackground() ? friendGroups.get() : requestContext.getFriendGroups();
+    }
+
+    public String getClientName() {
+        return isBackground() ? clientName.get() : requestContext.getClientName();
+    }
+
+    public boolean isMemberOf(UUID friendGroupId) {
+        String targetId = friendGroupId.toString();
+        for (String id : getFriendGroups()) {
+            if (id.equals(targetId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public long getAuthCategory() {
+        return isBackground() ? AuthCategory.ALL : requestContext.getAuthCategory();
+    }
+
+    public boolean isPrincipal(PrincipalFilter principal) {
+        return principal.includes(isAdmin(), getClientName(), isSubscribedToClient(), getFriendGroups());
+    }
+
+    public void authenticatedWithSignature(String nodeName) {
+        if (!isBackground()) {
+            requestContext.authenticatedWithSignature(nodeName);
+        } else {
+            admin.set(Objects.equals(nodeName, nodeName()));
+            clientName.set(nodeName);
+            friendGroups.set(friendCache.getClientGroupIds(nodeName));
+            subscribedToClient.set(subscribedCache.isSubscribed(nodeName));
+        }
     }
 
     public void send(Liberin liberin) {

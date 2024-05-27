@@ -6,7 +6,7 @@ import javax.transaction.Transactional;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.SubscriptionType;
-import org.moera.node.global.RequestContext;
+import org.moera.node.global.UniversalContext;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.UserListItemAddedNotification;
@@ -22,7 +22,7 @@ import org.moera.node.task.Jobs;
 public class UserListProcessor {
 
     @Inject
-    private RequestContext requestContext;
+    private UniversalContext universalContext;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
@@ -47,7 +47,8 @@ public class UserListProcessor {
 
     private void updated(UserListItemNotification notification, boolean delete) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                requestContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+                    universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId())
+                .orElse(null);
         if (subscription == null
                 || subscription.getSubscriptionType() != SubscriptionType.USER_LIST
                 || !notification.getListName().equals(subscription.getRemoteFeedName())) {
@@ -62,7 +63,7 @@ public class UserListProcessor {
                         feedOperations.getSheriffFeeds(notification.getSenderNodeName()),
                         notification.getNodeName(),
                         delete),
-                requestContext.nodeId());
+                universalContext.nodeId());
     }
 
 }

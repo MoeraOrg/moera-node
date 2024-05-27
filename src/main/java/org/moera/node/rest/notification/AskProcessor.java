@@ -10,7 +10,6 @@ import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.AskHistoryRepository;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
-import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ValidationFailure;
@@ -23,9 +22,6 @@ import org.moera.node.util.Transaction;
 
 @NotificationProcessor
 public class AskProcessor {
-
-    @Inject
-    private RequestContext requestContext;
 
     @Inject
     private UniversalContext universalContext;
@@ -47,13 +43,13 @@ public class AskProcessor {
         tx.executeRead(() -> {
             int total = askHistoryRepository.countByRemoteNode(
                     universalContext.nodeId(), notification.getSenderNodeName());
-            if (total >= requestContext.getOptions().getInt("ask.total.max")) {
+            if (total >= universalContext.getOptions().getInt("ask.total.max")) {
                 throw new OperationFailure("ask.too-many");
             }
             Timestamp last = askHistoryRepository.findLastCreatedAt(universalContext.nodeId(),
                     notification.getSenderNodeName(), notification.getSubject());
             if (last != null) {
-                Duration askInterval = requestContext.getOptions().getDuration("ask.interval").getDuration();
+                Duration askInterval = universalContext.getOptions().getDuration("ask.interval").getDuration();
                 if (last.toInstant().plus(askInterval).isAfter(Instant.now())) {
                     throw new OperationFailure("ask.too-often");
                 }
@@ -62,7 +58,7 @@ public class AskProcessor {
 
         switch (notification.getSubject()) {
             case SUBSCRIBE:
-                if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("ask.subscribe.allowed"))) {
+                if (!universalContext.isPrincipal(universalContext.getOptions().getPrincipal("ask.subscribe.allowed"))) {
                     throw new AuthenticationException();
                 }
 
@@ -79,7 +75,7 @@ public class AskProcessor {
                 break;
 
             case FRIEND: {
-                if (!requestContext.isPrincipal(requestContext.getOptions().getPrincipal("ask.friend.allowed"))) {
+                if (!universalContext.isPrincipal(universalContext.getOptions().getPrincipal("ask.friend.allowed"))) {
                     throw new AuthenticationException();
                 }
 
@@ -90,7 +86,7 @@ public class AskProcessor {
                     throw new ValidationFailure("friend-group.not-found");
                 }
 
-                if (requestContext.isMemberOf(friendGroupId)) {
+                if (universalContext.isMemberOf(friendGroupId)) {
                     break;
                 }
 
