@@ -22,6 +22,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.DefrostLiberin;
 import org.moera.node.liberin.model.TokenAddedLiberin;
 import org.moera.node.liberin.model.TokenDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
@@ -32,7 +33,9 @@ import org.moera.node.model.Result;
 import org.moera.node.model.TokenAttributes;
 import org.moera.node.model.TokenInfo;
 import org.moera.node.model.TokenName;
+import org.moera.node.notification.receive.DefrostNotificationsJob;
 import org.moera.node.option.Options;
+import org.moera.node.task.Jobs;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +66,9 @@ public class TokensController {
     @Inject
     private Domains domains;
 
+    @Inject
+    private Jobs jobs;
+
     @PostMapping
     @Transactional
     public ResponseEntity<TokenInfo> post(@Valid @RequestBody TokenAttributes attributes) {
@@ -90,7 +96,8 @@ public class TokensController {
 
         if (requestContext.getOptions().isFrozen()) {
             requestContext.getOptions().set("frozen", false);
-            // TODO notify the user
+            jobs.run(DefrostNotificationsJob.class, new DefrostNotificationsJob.Parameters(), options.nodeId());
+            requestContext.send(new DefrostLiberin());
         }
 
         requestContext.send(new TokenAddedLiberin(token));
