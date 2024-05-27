@@ -40,7 +40,7 @@ public class MediaUtil {
             String url = preview.isOriginal()
                     ? location
                     : (preview.getDirectPath() != null
-                        ? preview.getDirectPath()
+                        ? "/moera/media/" + preview.getDirectPath()
                         : mediaPreview(location, preview.getTargetWidth()));
             sources.add(String.format("%s %dw", url, preview.getWidth()));
         }
