@@ -42,7 +42,7 @@ public class StoryInfo {
     public StoryInfo() {
     }
 
-    private StoryInfo(Story story, boolean isAdmin) {
+    private StoryInfo(Story story, boolean isAdmin) { // See also StoryEvent constructor
         id = story.getId().toString();
         feedName = story.getFeedName();
         storyType = story.getStoryType();
@@ -57,6 +57,8 @@ public class StoryInfo {
         }
         if (story.getSummary().startsWith("{")) {
             summaryData = story.getSummaryData();
+        } else if (story.getSummary().isEmpty()) {
+            summaryData = new StorySummaryData();
         } else {
             summary = story.getSummary();
         }
@@ -268,6 +270,17 @@ public class StoryInfo {
                 if (story.getRemoteAvatarMediaFile() != null) {
                     info.setSummaryAvatar(
                             new AvatarImage(story.getRemoteAvatarMediaFile(), story.getRemoteAvatarShape()));
+                }
+                break;
+
+            case DEFROSTING:
+                info.setSummaryNodeName(story.getRemoteOwnerName());
+                info.setSummaryFullName(story.getRemoteOwnerFullName());
+                if (story.getRemoteOwnerAvatarMediaFile() != null) {
+                    info.setSummaryAvatar(
+                            new AvatarImage(
+                                    story.getRemoteOwnerAvatarMediaFile(),
+                                    story.getRemoteOwnerAvatarShape()));
                 }
                 break;
         }

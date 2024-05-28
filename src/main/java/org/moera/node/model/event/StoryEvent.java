@@ -43,7 +43,7 @@ public class StoryEvent extends Event {
         super(type);
     }
 
-    protected StoryEvent(EventType type, Story story, boolean isAdmin) {
+    protected StoryEvent(EventType type, Story story, boolean isAdmin) { // See also StoryInfo constructor
         super(type, isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN));
         StoryInfo storyInfo = StoryInfo.build(story, isAdmin, st -> null);
         id = story.getId().toString();
@@ -67,6 +67,8 @@ public class StoryEvent extends Event {
         summaryAvatar = storyInfo.getSummaryAvatar();
         if (story.getSummary().startsWith("{")) {
             summaryData = story.getSummaryData();
+        } else if (story.getSummary().isEmpty()) {
+            summaryData = new StorySummaryData();
         } else {
             summary = story.getSummary();
         }

@@ -43,7 +43,8 @@ public enum StoryType {
     SHERIFF_MARKED(0),                        // 35
     SHERIFF_UNMARKED(0),                      // 36
     SHERIFF_COMPLAIN_ADDED(0),                // 37
-    SHERIFF_COMPLAIN_DECIDED(0);              // 38
+    SHERIFF_COMPLAIN_DECIDED(0),              // 38
+    DEFROSTING(0);                            // 39
 
     private final int priority;
 
