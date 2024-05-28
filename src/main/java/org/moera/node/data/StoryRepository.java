@@ -115,10 +115,6 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     Timestamp findFirstCreatedAt(UUID nodeId, String feedName);
 
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
-            + " and s.remoteNodeName = ?4 order by s.moment desc")
-    List<Story> findByRemoteNodeName(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName);
-
-    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
             + " and s.remoteNodeName = ?4 and s.remotePostingId = ?5 order by s.moment desc")
     List<Story> findByRemotePostingId(UUID nodeId, String feedName, StoryType storyType,
                                       String remoteNodeName, String remotePostingId);
