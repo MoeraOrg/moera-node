@@ -1,7 +1,9 @@
 package org.moera.node.rest;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -62,7 +64,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ObjectUtils;
@@ -245,12 +246,12 @@ public class FeedController {
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
-            Page<Story> page = findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE, sliceBefore,
+            List<Long> slice = findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE, sliceBefore,
                     limit + 1, Sort.Direction.DESC);
-            if (page.getNumberOfElements() < limit + 1) {
+            if (slice.size() < limit + 1) {
                 sliceInfo.setAfter(SafeInteger.MIN_VALUE);
             } else {
-                sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+                sliceInfo.setAfter(slice.get(limit));
             }
             fillSlice(sliceInfo, feedName, limit);
             sliceBefore = sliceInfo.getAfter();
@@ -263,12 +264,12 @@ public class FeedController {
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
-            Page<Story> page = findSlice(requestContext.nodeId(), feedName, sliceAfter, SafeInteger.MAX_VALUE,
+            List<Long> slice = findSlice(requestContext.nodeId(), feedName, sliceAfter, SafeInteger.MAX_VALUE,
                     limit + 1, Sort.Direction.ASC);
-            if (page.getNumberOfElements() < limit + 1) {
+            if (slice.size() < limit + 1) {
                 sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             } else {
-                sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
+                sliceInfo.setBefore(slice.get(limit - 1));
             }
             fillSlice(sliceInfo, feedName, limit);
             sliceAfter = sliceInfo.getBefore();
@@ -307,11 +308,37 @@ public class FeedController {
         return where;
     }
 
-    private Page<Story> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
-                                  Sort.Direction direction) {
-        return storyRepository.findAll(
-                storyFilter(nodeId, feedName, afterMoment, beforeMoment),
-                PageRequest.of(0, limit + 1, direction, "moment"));
+    private List<Long> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
+                                 Sort.Direction direction) {
+        PageRequest pageRequest = PageRequest.of(0, limit + 1, direction, "moment");
+
+        if (requestContext.isAdmin()) {
+            return storyRepository.findSliceAdmin(nodeId, feedName, afterMoment, beforeMoment, pageRequest);
+        }
+
+        List<Long> slice = new ArrayList<>();
+        List<Principal> principals = new ArrayList<>();
+
+        principals.add(Principal.PUBLIC);
+        if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+            principals.add(Principal.SIGNED);
+            slice.addAll(storyRepository.findSlicePrivate(nodeId, feedName, afterMoment, beforeMoment,
+                    requestContext.getClientName(), pageRequest));
+        }
+        if (requestContext.isSubscribedToClient()) {
+            principals.add(Principal.SUBSCRIBED);
+        }
+        if (requestContext.getFriendGroups() != null) {
+            for (String friendGroupName : requestContext.getFriendGroups()) {
+                principals.add(Principal.ofFriendGroup(friendGroupName));
+            }
+        }
+        slice.addAll(storyRepository.findSliceNotAdmin(nodeId, feedName, afterMoment, beforeMoment,
+                principals, pageRequest));
+
+        Collections.sort(slice);
+
+        return slice.size() <= limit ? slice : slice.subList(0, limit);
     }
 
     private void fillSlice(FeedSliceInfo sliceInfo, String feedName, int limit) {
