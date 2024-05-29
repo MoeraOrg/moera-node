@@ -69,9 +69,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
     List<Long> findSlicePrivate(UUID nodeId, String feedName, long afterMoment, long beforeMoment, String ownerName,
                                 Pageable pageable);
 
-    @Query("select s.moment from Story s left join s.entry e"
+    @Query("select s.moment from Story s"
             + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4"
-            + " and e.viewPrincipal in (?5)")
+            + " and s.entry.viewPrincipal in (?5)")
     List<Long> findSliceNotAdmin(UUID nodeId, String feedName, long afterMoment, long beforeMoment,
                                  Collection<Principal> ownerName, Pageable pageable);
 

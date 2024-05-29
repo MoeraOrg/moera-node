@@ -277,37 +277,6 @@ public class FeedController {
         return sliceInfo;
     }
 
-    private Predicate storyFilter(UUID nodeId, String feedName, long afterMoment, long beforeMoment) {
-        QStory story = QStory.story;
-        BooleanBuilder where = new BooleanBuilder();
-        where.and(story.nodeId.eq(nodeId))
-                .and(story.feedName.eq(feedName))
-                .and(story.moment.gt(afterMoment))
-                .and(story.moment.loe(beforeMoment));
-        if (!requestContext.isAdmin()) {
-            var viewPrincipal = story.entry.viewPrincipal;
-            BooleanBuilder visibility = new BooleanBuilder();
-            visibility.or(viewPrincipal.eq(Principal.PUBLIC));
-            if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
-                visibility.or(viewPrincipal.eq(Principal.SIGNED));
-                BooleanBuilder priv = new BooleanBuilder();
-                priv.and(viewPrincipal.eq(Principal.PRIVATE));
-                priv.and(story.entry.ownerName.eq(requestContext.getClientName()));
-                visibility.or(priv);
-            }
-            if (requestContext.isSubscribedToClient()) {
-                visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
-            }
-            if (requestContext.getFriendGroups() != null) {
-                for (String friendGroupName : requestContext.getFriendGroups()) {
-                    visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
-                }
-            }
-            where.and(visibility);
-        }
-        return where;
-    }
-
     private List<Long> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
                                  Sort.Direction direction) {
         PageRequest pageRequest = PageRequest.of(0, limit + 1, direction, "moment");
@@ -336,9 +305,9 @@ public class FeedController {
         slice.addAll(storyRepository.findSliceNotAdmin(nodeId, feedName, afterMoment, beforeMoment,
                 principals, pageRequest));
 
-        Collections.sort(slice);
+        slice.sort(Collections.reverseOrder());
 
-        return slice.size() <= limit ? slice : slice.subList(0, limit);
+        return slice;
     }
 
     private void fillSlice(FeedSliceInfo sliceInfo, String feedName, int limit) {
@@ -405,9 +374,37 @@ public class FeedController {
         userListOperations.fillSheriffListMarks(feedName, stories);
 
         sliceInfo.getStories().addAll(stories);
-        if (sliceInfo.getStories().size() > limit) {
-            sliceInfo.getStories().remove(limit);
+    }
+
+    private Predicate storyFilter(UUID nodeId, String feedName, long afterMoment, long beforeMoment) {
+        QStory story = QStory.story;
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(story.nodeId.eq(nodeId))
+                .and(story.feedName.eq(feedName))
+                .and(story.moment.gt(afterMoment))
+                .and(story.moment.loe(beforeMoment));
+        if (!requestContext.isAdmin()) {
+            var viewPrincipal = story.entry.viewPrincipal;
+            BooleanBuilder visibility = new BooleanBuilder();
+            visibility.or(viewPrincipal.eq(Principal.PUBLIC));
+            if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+                visibility.or(viewPrincipal.eq(Principal.SIGNED));
+                BooleanBuilder priv = new BooleanBuilder();
+                priv.and(viewPrincipal.eq(Principal.PRIVATE));
+                priv.and(story.entry.ownerName.eq(requestContext.getClientName()));
+                visibility.or(priv);
+            }
+            if (requestContext.isSubscribedToClient()) {
+                visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
+            }
+            if (requestContext.getFriendGroups() != null) {
+                for (String friendGroupName : requestContext.getFriendGroups()) {
+                    visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
+                }
+            }
+            where.and(visibility);
         }
+        return where;
     }
 
     private void calcSliceTotals(FeedSliceInfo sliceInfo, String feedName) {
