@@ -15,7 +15,4 @@ public interface OwnReactionRepository extends JpaRepository<OwnReaction, UUID> 
     @Query("select r from OwnReaction r where r.nodeId = ?1 and r.remoteNodeName = ?2 and r.remotePostingId = ?3")
     Optional<OwnReaction> findByRemotePostingId(UUID nodeId, String remoteNodeName, String remotePostingId);
 
-    @Query("select count(*) from OwnReaction r where r.nodeId = ?1 and r.remoteNodeName = ?2")
-    int countByRemoteNode(UUID nodeId, String remoteNodeName);
-
 }
