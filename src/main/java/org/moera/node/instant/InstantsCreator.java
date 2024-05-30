@@ -19,11 +19,13 @@ import org.moera.node.model.FeedStatus;
 import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.util.Pair;
 import org.springframework.util.ObjectUtils;
 
 public class InstantsCreator {
@@ -109,15 +111,17 @@ public class InstantsCreator {
 
     protected void updateMoment(Story story) {
         if (universalContext.getOptions().getBool("instants.prioritize")) {
-            storyOperations.updateMoment(story, nodeId(), findFeedPosition(story));
+            log.debug("Finding position for story {}, node {}",
+                    LogUtil.format(story.getId()), LogUtil.format(story.getNodeId()));
+            Pair<Long, Long> feedPosition = findFeedPosition(story);
+            storyOperations.updateMoment(story, nodeId(), feedPosition.getFirst(), feedPosition.getSecond());
+            log.debug("Final position is {}", story.getMoment());
         } else {
             storyOperations.updateMoment(story, nodeId());
         }
     }
 
-    private long findFeedPosition(Story story) {
-        log.debug("Finding position for story {}, node {}",
-                LogUtil.format(story.getId()), LogUtil.format(story.getNodeId()));
+    private Pair<Long, Long> findFeedPosition(Story story) {
         long momentBase = Util.toEpochSecond(story.getPublishedAt()) * 1000;
         log.debug("Moment base is {}", momentBase);
 
@@ -135,19 +139,21 @@ public class InstantsCreator {
                     continue;
                 }
                 if (prev.isViewed() || prev.getStoryType().getPriority() <= story.getStoryType().getPriority()) {
-                    log.debug("Found position: {}", top ? momentBase : prev.getMoment());
-                    return top ? momentBase : prev.getMoment();
+                    log.debug("Found position: {}..{}",
+                            top ? momentBase : prev.getMoment(),
+                            top ? SafeInteger.MAX_VALUE : momentBase);
+                    return top ? Pair.of(momentBase, SafeInteger.MAX_VALUE) : Pair.of(prev.getMoment(), momentBase);
                 }
                 top = false;
-                momentBase = prev.getMoment() - 1000;
+                momentBase = prev.getMoment();
                 log.debug("Next moment base is {}", momentBase);
             }
             page = page.next();
             stories = storyRepository.findByFeed(nodeId(), story.getFeedName(), page);
             log.debug("Fetched next {} stories", stories.size());
         }
-        log.debug("Found nothing, placing at {}", momentBase);
-        return momentBase;
+        log.debug("Found nothing, placing at {}..{}", momentBase - 2000, momentBase);
+        return Pair.of(momentBase - 2000, momentBase);
     }
 
 }
