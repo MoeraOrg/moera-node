@@ -1,9 +1,7 @@
 package org.moera.node.rest;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +18,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.util.LogUtil;
@@ -64,7 +64,6 @@ import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -253,7 +252,7 @@ public class FeedController {
             } else {
                 sliceInfo.setAfter(slice.get(limit));
             }
-            fillSlice(sliceInfo, feedName, limit);
+            fillSlice(sliceInfo, feedName);
             sliceBefore = sliceInfo.getAfter();
         } while (sliceBefore > SafeInteger.MIN_VALUE && sliceInfo.getStories().size() < limit / 2);
         return sliceInfo;
@@ -271,7 +270,7 @@ public class FeedController {
             } else {
                 sliceInfo.setBefore(slice.get(limit - 1));
             }
-            fillSlice(sliceInfo, feedName, limit);
+            fillSlice(sliceInfo, feedName);
             sliceAfter = sliceInfo.getBefore();
         } while (sliceAfter < SafeInteger.MAX_VALUE && sliceInfo.getStories().size() < limit / 2);
         return sliceInfo;
@@ -279,38 +278,17 @@ public class FeedController {
 
     private List<Long> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
                                  Sort.Direction direction) {
-        PageRequest pageRequest = PageRequest.of(0, limit + 1, direction, "moment");
-
-        if (requestContext.isAdmin()) {
-            return storyRepository.findSliceAdmin(nodeId, feedName, afterMoment, beforeMoment, pageRequest);
-        }
-
-        List<Long> slice = new ArrayList<>();
-        List<Principal> principals = new ArrayList<>();
-
-        principals.add(Principal.PUBLIC);
-        if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
-            principals.add(Principal.SIGNED);
-            slice.addAll(storyRepository.findSlicePrivate(nodeId, feedName, afterMoment, beforeMoment,
-                    requestContext.getClientName(), pageRequest));
-        }
-        if (requestContext.isSubscribedToClient()) {
-            principals.add(Principal.SUBSCRIBED);
-        }
-        if (requestContext.getFriendGroups() != null) {
-            for (String friendGroupName : requestContext.getFriendGroups()) {
-                principals.add(Principal.ofFriendGroup(friendGroupName));
-            }
-        }
-        slice.addAll(storyRepository.findSliceNotAdmin(nodeId, feedName, afterMoment, beforeMoment,
-                principals, pageRequest));
-
-        slice.sort(Collections.reverseOrder());
-
-        return slice;
+        QStory story = QStory.story;
+        return new JPAQueryFactory(entityManager)
+                .select(story.moment)
+                .from(story)
+                .where(storyFilter(nodeId, feedName, afterMoment, beforeMoment))
+                .orderBy(new OrderSpecifier<>(direction.isAscending() ? Order.ASC : Order.DESC, story.moment))
+                .limit(limit + 1)
+                .fetch();
     }
 
-    private void fillSlice(FeedSliceInfo sliceInfo, String feedName, int limit) {
+    private void fillSlice(FeedSliceInfo sliceInfo, String feedName) {
         QStory story = QStory.story;
         QEntry entry = QEntry.entry;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;

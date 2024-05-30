@@ -1,13 +1,11 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import org.moera.node.auth.principal.Principal;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -59,21 +57,6 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
             + " and s.remotePostingId = ?5")
     void deleteByRemotePostingId(UUID nodeId, String feedName, StoryType storyType, String remoteNodeName,
                                            String remotePostingId);
-
-    @Query("select s.moment from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4")
-    List<Long> findSliceAdmin(UUID nodeId, String feedName, long afterMoment, long beforeMoment, Pageable pageable);
-
-    @Query("select s.moment from Story s"
-            + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4 and s.entry.ownerName = ?5"
-            + " and s.entry.viewPrincipal = 'private'")
-    List<Long> findSlicePrivate(UUID nodeId, String feedName, long afterMoment, long beforeMoment, String ownerName,
-                                Pageable pageable);
-
-    @Query("select s.moment from Story s"
-            + " where s.nodeId = ?1 and s.feedName = ?2 and s.moment > ?3 and s.moment <= ?4"
-            + " and s.entry.viewPrincipal in (?5)")
-    List<Long> findSliceNotAdmin(UUID nodeId, String feedName, long afterMoment, long beforeMoment,
-                                 Collection<Principal> ownerName, Pageable pageable);
 
     @Query("select s from Story s"
             + " left join fetch s.remoteAvatarMediaFile left join fetch s.remoteOwnerAvatarMediaFile"

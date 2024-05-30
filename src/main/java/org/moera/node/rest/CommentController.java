@@ -20,6 +20,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -499,12 +501,12 @@ public class CommentController {
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
-            Page<Comment> page = findSlice(requestContext.nodeId(), posting.getId(), SafeInteger.MIN_VALUE, sliceBefore,
+            List<Long> slice = findSlice(requestContext.nodeId(), posting.getId(), SafeInteger.MIN_VALUE, sliceBefore,
                     limit + 1, Sort.Direction.DESC, sheriff);
-            if (page.getNumberOfElements() < limit + 1) {
+            if (slice.size() < limit + 1) {
                 sliceInfo.setAfter(SafeInteger.MIN_VALUE);
             } else {
-                sliceInfo.setAfter(page.getContent().get(limit).getMoment());
+                sliceInfo.setAfter(slice.get(limit));
             }
             fillSlice(sliceInfo, posting, limit, sheriff);
             sliceBefore = sliceInfo.getAfter();
@@ -517,12 +519,12 @@ public class CommentController {
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
-            Page<Comment> page = findSlice(requestContext.nodeId(), posting.getId(), sliceAfter, SafeInteger.MAX_VALUE,
+            List<Long> slice = findSlice(requestContext.nodeId(), posting.getId(), sliceAfter, SafeInteger.MAX_VALUE,
                     limit + 1, Sort.Direction.ASC, sheriff);
-            if (page.getNumberOfElements() < limit + 1) {
+            if (slice.size() < limit + 1) {
                 sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             } else {
-                sliceInfo.setBefore(page.getContent().get(limit - 1).getMoment());
+                sliceInfo.setBefore(slice.get(limit - 1));
             }
             fillSlice(sliceInfo, posting, limit, sheriff);
             sliceAfter = sliceInfo.getBefore();
@@ -576,11 +578,16 @@ public class CommentController {
         return visibility;
     }
 
-    private Page<Comment> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
-                                    Sort.Direction direction, boolean sheriff) {
-        return commentRepository.findAll(
-                commentFilter(nodeId, parentId, afterMoment, beforeMoment, sheriff),
-                PageRequest.of(0, limit + 1, direction, "moment"));
+    private List<Long> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
+                                 Sort.Direction direction, boolean sheriff) {
+        QComment comment = QComment.comment;
+        return new JPAQueryFactory(entityManager)
+                .select(comment.moment)
+                .from(comment)
+                .where(commentFilter(nodeId, parentId, afterMoment, beforeMoment, sheriff))
+                .orderBy(new OrderSpecifier<>(direction.isAscending() ? Order.ASC : Order.DESC, comment.moment))
+                .limit(limit + 1)
+                .fetch();
     }
 
     private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit, boolean sheriff) {
