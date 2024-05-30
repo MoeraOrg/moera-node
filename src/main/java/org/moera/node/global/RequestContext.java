@@ -103,6 +103,8 @@ public interface RequestContext extends AccessChecker {
 
     void setUserAgentOs(UserAgentOs userAgentOs);
 
+    boolean isAutoClient();
+
     RequestContext getPublic();
 
     UUID nodeId();

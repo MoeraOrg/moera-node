@@ -113,6 +113,8 @@ public class TimelineUiController {
 
         model.addAttribute("ogUrl", requestContext.getSiteUrl());
 
+        model.addAttribute("noIndex", true);
+
         return "timeline";
     }
 
@@ -122,9 +124,6 @@ public class TimelineUiController {
                           @RequestParam(name = "comment", required = false) UUID commentId,
                           @RequestParam(name = "media", required = false) UUID mediaId,
                           HttpServletResponse response, Model model) {
-        log.info("UI /post/{id} (id = {}, before = {}, comment = {}, media = {})",
-                LogUtil.format(id), LogUtil.format(before), LogUtil.format(commentId), LogUtil.format(mediaId));
-
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/post/" + id);
         if (commentId != null) {
             builder = builder.queryParam("comment", commentId);
@@ -134,6 +133,12 @@ public class TimelineUiController {
             builder = builder.queryParam("media", mediaId);
         }
         VirtualPageHeader.put(response, requestContext.nodeName(), builder.build().toUriString());
+        if (requestContext.isAutoClient()) {
+            return "redirect:" + requestContext.getRedirectorUrl();
+        }
+
+        log.info("UI /post/{id} (id = {}, before = {}, comment = {}, media = {})",
+                LogUtil.format(id), LogUtil.format(before), LogUtil.format(commentId), LogUtil.format(mediaId));
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (posting == null || !posting.isMessage() || posting.getParentMedia() != null

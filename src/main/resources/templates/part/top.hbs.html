@@ -62,6 +62,9 @@
         {{#if ogImage}}
             <meta name="twitter:image" content="{{ogImage}}">
         {{/if}}
+        {{#if noIndex}}
+            <meta name="robots" content="noindex, follow">
+        {{/if}}
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
         <link rel="icon" href="/pics/icon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/pics/icon-apple-touch.png">

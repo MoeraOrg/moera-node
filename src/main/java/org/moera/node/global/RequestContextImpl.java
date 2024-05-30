@@ -274,6 +274,26 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
+    public boolean isAutoClient() {
+        Boolean webUiEnabled = getOptions().getBool("webui.enabled");
+        Boolean redirectToClient = getOptions().getBool("webui.redirect-to-client");
+        if (!webUiEnabled) {
+            if (redirectToClient) {
+                return true;
+            } else {
+                throw new PageNotFoundException();
+            }
+        }
+        if (!redirectToClient) {
+            return false;
+        }
+        return switch (getUserAgent()) {
+            case FIREFOX, CHROME, YANDEX, BRAVE -> true;
+            default -> false;
+        };
+    }
+
+    @Override
     public RequestContext getPublic() {
         RequestContextImpl context = new RequestContextImpl();
         context.admin = false;

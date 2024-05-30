@@ -36,31 +36,12 @@ public class VirtualPageInterceptor implements HandlerInterceptor {
             // No redirect and no content, because a Moera client is making this request
             return false;
         }
-        if (isAutoClient()) {
+        if (requestContext.isAutoClient()) {
             response.sendRedirect(requestContext.getRedirectorUrl());
             return false;
         }
 
         return true;
-    }
-
-    private boolean isAutoClient() {
-        Boolean webUiEnabled = requestContext.getOptions().getBool("webui.enabled");
-        Boolean redirectToClient = requestContext.getOptions().getBool("webui.redirect-to-client");
-        if (!webUiEnabled) {
-            if (redirectToClient) {
-                return true;
-            } else {
-                throw new PageNotFoundException();
-            }
-        }
-        if (!redirectToClient) {
-            return false;
-        }
-        return switch (requestContext.getUserAgent()) {
-            case FIREFOX, CHROME, YANDEX, BRAVE -> true;
-            default -> false;
-        };
     }
 
 }
