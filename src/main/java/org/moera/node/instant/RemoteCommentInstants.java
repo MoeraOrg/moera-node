@@ -54,7 +54,8 @@ public class RemoteCommentInstants extends InstantsCreator {
         Story story = storyRepository.findFullByRemotePostingId(nodeId(), Feed.INSTANT, StoryType.REMOTE_COMMENT_ADDED,
                 nodeName, postingId).stream().findFirst().orElse(null);
         if (story == null
-                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+                || story.isViewed() && !story.isRead()
+                    && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), StoryType.REMOTE_COMMENT_ADDED);
             story.setFeedName(Feed.INSTANT);

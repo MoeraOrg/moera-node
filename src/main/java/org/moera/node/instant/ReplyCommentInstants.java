@@ -53,7 +53,8 @@ public class ReplyCommentInstants extends InstantsCreator {
         Story story = storyRepository.findFullByRemotePostingAndRepliedToId(nodeId(), Feed.INSTANT,
                 StoryType.REPLY_COMMENT, nodeName, postingId, repliedToId).stream().findFirst().orElse(null);
         if (story == null
-                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+                || story.isViewed() && !story.isRead()
+                    && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), StoryType.REPLY_COMMENT);
             story.setFeedName(Feed.INSTANT);
