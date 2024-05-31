@@ -2,10 +2,10 @@ package org.moera.node.model;
 
 import javax.validation.constraints.Size;
 
-import org.moera.node.data.SheriffComplainGroup;
-import org.moera.node.data.SheriffComplainStatus;
+import org.moera.node.data.SheriffComplaintGroup;
+import org.moera.node.data.SheriffComplaintStatus;
 
-public class SheriffComplainDecisionText {
+public class SheriffComplaintDecisionText {
 
     private boolean reject;
 
@@ -48,17 +48,17 @@ public class SheriffComplainDecisionText {
         this.anonymous = anonymous;
     }
 
-    public void toSheriffComplainGroup(SheriffComplainGroup sheriffComplainGroup) {
+    public void toSheriffComplaintGroup(SheriffComplaintGroup sheriffComplaintGroup) {
         if (reject) {
-            sheriffComplainGroup.setStatus(SheriffComplainStatus.REJECTED);
-            sheriffComplainGroup.setDecisionCode(null);
+            sheriffComplaintGroup.setStatus(SheriffComplaintStatus.REJECTED);
+            sheriffComplaintGroup.setDecisionCode(null);
         } else {
-            sheriffComplainGroup.setStatus(SheriffComplainStatus.APPROVED);
-            sheriffComplainGroup.setDecisionCode(decisionCode);
+            sheriffComplaintGroup.setStatus(SheriffComplaintStatus.APPROVED);
+            sheriffComplaintGroup.setDecisionCode(decisionCode);
         }
-        sheriffComplainGroup.setDecisionDetails(decisionDetails);
+        sheriffComplaintGroup.setDecisionDetails(decisionDetails);
         if (anonymous != null) {
-            sheriffComplainGroup.setAnonymous(anonymous);
+            sheriffComplaintGroup.setAnonymous(anonymous);
         }
     }
 

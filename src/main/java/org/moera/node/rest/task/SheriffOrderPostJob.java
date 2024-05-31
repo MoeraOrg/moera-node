@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.node.NodeApiException;
-import org.moera.node.data.SheriffComplainGroup;
-import org.moera.node.data.SheriffComplainGroupRepository;
+import org.moera.node.data.SheriffComplaintGroup;
+import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.fingerprint.Fingerprints;
@@ -34,15 +34,15 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
 
         private String remoteNodeName;
         private SheriffOrderAttributes attributes;
-        private UUID complainGroupId;
+        private UUID complaintGroupId;
 
         public Parameters() {
         }
 
-        public Parameters(String remoteNodeName, SheriffOrderAttributes attributes, UUID complainGroupId) {
+        public Parameters(String remoteNodeName, SheriffOrderAttributes attributes, UUID complaintGroupId) {
             this.remoteNodeName = remoteNodeName;
             this.attributes = attributes;
-            this.complainGroupId = complainGroupId;
+            this.complaintGroupId = complaintGroupId;
         }
 
         public String getRemoteNodeName() {
@@ -61,12 +61,12 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
             this.attributes = attributes;
         }
 
-        public UUID getComplainGroupId() {
-            return complainGroupId;
+        public UUID getComplaintGroupId() {
+            return complaintGroupId;
         }
 
-        public void setComplainGroupId(UUID complainGroupId) {
-            this.complainGroupId = complainGroupId;
+        public void setComplaintGroupId(UUID complaintGroupId) {
+            this.complaintGroupId = complaintGroupId;
         }
 
     }
@@ -139,7 +139,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
     private SheriffOrderRepository sheriffOrderRepository;
 
     @Inject
-    private SheriffComplainGroupRepository sheriffComplainGroupRepository;
+    private SheriffComplaintGroupRepository sheriffComplaintGroupRepository;
 
     @Inject
     private MediaManager mediaManager;
@@ -229,12 +229,12 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         try {
             SheriffOrder sheriffOrder = tx.executeWrite(
                 () -> {
-                    SheriffComplainGroup complainGroup = parameters.complainGroupId != null
-                            ? sheriffComplainGroupRepository.findByNodeIdAndId(nodeId, parameters.complainGroupId)
+                    SheriffComplaintGroup complaintGroup = parameters.complaintGroupId != null
+                            ? sheriffComplaintGroupRepository.findByNodeIdAndId(nodeId, parameters.complaintGroupId)
                                     .orElse(null)
                             : null;
 
-                    SheriffOrder order = buildSheriffOrder(complainGroup);
+                    SheriffOrder order = buildSheriffOrder(complaintGroup);
                     state.sheriffOrderDetails.toSheriffOrder(order);
                     return sheriffOrderRepository.save(order);
                 }
@@ -246,9 +246,9 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         }
     }
 
-    private SheriffOrder buildSheriffOrder(SheriffComplainGroup complainGroup) {
+    private SheriffOrder buildSheriffOrder(SheriffComplaintGroup complaintGroup) {
         SheriffOrder order = new SheriffOrder(state.sheriffOrderId, nodeId, parameters.remoteNodeName);
-        order.setComplainGroup(complainGroup);
+        order.setComplaintGroup(complaintGroup);
         order.setRemoteNodeFullName(state.whoAmI.getFullName());
         if (state.postingInfo != null) {
             order.setRemotePosting(state.postingInfo);

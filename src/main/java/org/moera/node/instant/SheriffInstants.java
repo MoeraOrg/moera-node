@@ -66,27 +66,27 @@ public class SheriffInstants extends InstantsCreator {
                 sheriffName, sheriffAvatar, orderId, null);
     }
 
-    public void complainAdded(String sheriffName, AvatarImage sheriffAvatar, String complainId) {
-        buildStory(StoryType.SHERIFF_COMPLAIN_ADDED, null, null, null,
+    public void complaintAdded(String sheriffName, AvatarImage sheriffAvatar, String complaintId) {
+        buildStory(StoryType.SHERIFF_COMPLAINT_ADDED, null, null, null,
                 null, null, null, null,
                 null, null, null, sheriffName, sheriffAvatar, null,
-                complainId);
+                complaintId);
     }
 
-    public void complainDecided(String remoteNodeName, String remoteFeedName, String postingOwnerName,
-                            String postingOwnerFullName, String postingHeading, String postingId,
-                            String commentOwnerName, String commentOwnerFullName, String commentHeading,
-                            String commentId, String sheriffName, AvatarImage sheriffAvatar, String complainId) {
-        buildStory(StoryType.SHERIFF_COMPLAIN_DECIDED, remoteNodeName, remoteFeedName, postingOwnerName,
+    public void complaintDecided(String remoteNodeName, String remoteFeedName, String postingOwnerName,
+                                 String postingOwnerFullName, String postingHeading, String postingId,
+                                 String commentOwnerName, String commentOwnerFullName, String commentHeading,
+                                 String commentId, String sheriffName, AvatarImage sheriffAvatar, String complaintId) {
+        buildStory(StoryType.SHERIFF_COMPLAINT_DECIDED, remoteNodeName, remoteFeedName, postingOwnerName,
                 postingOwnerFullName, postingHeading, postingId, commentOwnerName, commentOwnerFullName, commentHeading,
-                commentId, sheriffName, sheriffAvatar, null, complainId);
+                commentId, sheriffName, sheriffAvatar, null, complaintId);
     }
 
     private void buildStory(StoryType storyType, String remoteNodeName, String remoteFeedName, String postingOwnerName,
                             String postingOwnerFullName, String postingHeading, String postingId,
                             String commentOwnerName, String commentOwnerFullName, String commentHeading,
                             String commentId, String sheriffName, AvatarImage sheriffAvatar, String orderId,
-                            String complainId) {
+                            String complaintId) {
         if (isBlocked(storyType)) {
             return;
         }
@@ -100,7 +100,7 @@ public class SheriffInstants extends InstantsCreator {
         story.setRemotePostingId(postingId);
         story.setRemoteCommentId(commentId);
         story.setSummaryData(buildSummary(remoteFeedName, postingOwnerName, postingOwnerFullName, postingHeading,
-                null, null, commentHeading, sheriffName, orderId, complainId));
+                null, null, commentHeading, sheriffName, orderId, complaintId));
         story.setPublishedAt(Util.now());
         story.setRead(false);
         story.setViewed(false);
@@ -113,7 +113,7 @@ public class SheriffInstants extends InstantsCreator {
                                                  String postingOwnerFullName, String postingHeading,
                                                  String commentOwnerName, String commentOwnerFullName,
                                                  String commentHeading, String sheriffName, String orderId,
-                                                 String complainId) {
+                                                 String complaintId) {
         StorySummaryData summaryData = new StorySummaryData();
         if (postingHeading != null) {
             summaryData.setPosting(new StorySummaryEntry(postingOwnerName, postingOwnerFullName, null, postingHeading));
@@ -122,7 +122,7 @@ public class SheriffInstants extends InstantsCreator {
             summaryData.setComment(new StorySummaryEntry(commentOwnerName, commentOwnerFullName, null, commentHeading));
         }
         summaryData.setFeedName(remoteFeedName);
-        summaryData.setSheriff(new StorySummarySheriff(sheriffName, orderId, complainId));
+        summaryData.setSheriff(new StorySummarySheriff(sheriffName, orderId, complaintId));
         return summaryData;
     }
 

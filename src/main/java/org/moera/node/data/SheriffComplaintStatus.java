@@ -3,7 +3,7 @@ package org.moera.node.data;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum SheriffComplainStatus {
+public enum SheriffComplaintStatus {
 
     POSTED,
     PREPARED,
@@ -20,11 +20,11 @@ public enum SheriffComplainStatus {
         return name().toLowerCase().replace('_', '-');
     }
 
-    public static String toValue(SheriffComplainStatus reason) {
+    public static String toValue(SheriffComplaintStatus reason) {
         return reason != null ? reason.getValue() : null;
     }
 
-    public static SheriffComplainStatus forValue(String value) {
+    public static SheriffComplaintStatus forValue(String value) {
         try {
             return parse(value);
         } catch (IllegalArgumentException e) {
@@ -33,7 +33,7 @@ public enum SheriffComplainStatus {
     }
 
     @JsonCreator
-    public static SheriffComplainStatus parse(String value) {
+    public static SheriffComplaintStatus parse(String value) {
         return valueOf(value.toUpperCase().replace('-', '_'));
     }
 

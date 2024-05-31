@@ -1,45 +1,67 @@
-package org.moera.node.model;
+package org.moera.node.data;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.data.SheriffComplain;
+import java.sql.Timestamp;
+import java.util.UUID;
+import javax.persistence.Entity;
+import javax.persistence.Enumerated;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.util.Util;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class SheriffComplainInfo {
+@Entity
+@Table(name = "sheriff_complaints")
+public class SheriffComplaint {
 
-    private String id;
+    @Id
+    private UUID id;
+
+    @NotNull
+    private UUID nodeId;
+
+    @Size(max = 63)
     private String ownerName;
+
+    @Size(max = 96)
     private String ownerFullName;
+
+    @Size(max = 31)
     private String ownerGender;
-    private SheriffComplainGroupInfo group;
+
+    @NotNull
+    @ManyToOne
+    private SheriffComplaintGroup group;
+
+    @NotNull
+    @Enumerated
     private SheriffOrderReason reasonCode;
+
     private String reasonDetails;
+
+    @NotNull
     private boolean anonymousRequested;
-    private long createdAt;
 
-    public SheriffComplainInfo() {
-    }
+    @NotNull
+    private Timestamp createdAt = Util.now();
 
-    public SheriffComplainInfo(SheriffComplain sheriffComplain, boolean withGroup) {
-        id = sheriffComplain.getId().toString();
-        ownerName = sheriffComplain.getOwnerName();
-        ownerFullName = sheriffComplain.getOwnerFullName();
-        ownerGender = sheriffComplain.getOwnerGender();
-        if (withGroup && sheriffComplain.getGroup() != null) {
-            group = new SheriffComplainGroupInfo(sheriffComplain.getGroup());
-        }
-        reasonCode = sheriffComplain.getReasonCode();
-        reasonDetails = sheriffComplain.getReasonDetails();
-        anonymousRequested = sheriffComplain.isAnonymousRequested();
-        createdAt = Util.toEpochSecond(sheriffComplain.getCreatedAt());
-    }
-
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(UUID nodeId) {
+        this.nodeId = nodeId;
     }
 
     public String getOwnerName() {
@@ -66,11 +88,11 @@ public class SheriffComplainInfo {
         this.ownerGender = ownerGender;
     }
 
-    public SheriffComplainGroupInfo getGroup() {
+    public SheriffComplaintGroup getGroup() {
         return group;
     }
 
-    public void setGroup(SheriffComplainGroupInfo group) {
+    public void setGroup(SheriffComplaintGroup group) {
         this.group = group;
     }
 
@@ -98,11 +120,11 @@ public class SheriffComplainInfo {
         this.anonymousRequested = anonymousRequested;
     }
 
-    public long getCreatedAt() {
+    public Timestamp getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(long createdAt) {
+    public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
 

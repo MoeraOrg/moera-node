@@ -7,7 +7,7 @@ import javax.validation.constraints.Size;
 import org.moera.commons.util.LogUtil;
 import org.springframework.data.util.Pair;
 
-public class SheriffComplainDecidedNotification extends Notification {
+public class SheriffComplaintDecidedNotification extends Notification {
 
     @NotBlank
     @Size(max = 63)
@@ -43,17 +43,17 @@ public class SheriffComplainDecidedNotification extends Notification {
 
     @NotBlank
     @Size(max = 40)
-    private String complainGroupId;
+    private String complaintGroupId;
 
-    public SheriffComplainDecidedNotification() {
-        super(NotificationType.SHERIFF_COMPLAIN_DECIDED);
+    public SheriffComplaintDecidedNotification() {
+        super(NotificationType.SHERIFF_COMPLAINT_DECIDED);
     }
 
-    public SheriffComplainDecidedNotification(String remoteNodeName, String remoteFeedName, String postingOwnerName,
-                                              String postingOwnerFullName, String postingHeading, String postingId,
-                                              String commentOwnerName, String commentOwnerFullName,
-                                              String commentHeading, String commentId, String complainGroupId) {
-        super(NotificationType.SHERIFF_COMPLAIN_DECIDED);
+    public SheriffComplaintDecidedNotification(String remoteNodeName, String remoteFeedName, String postingOwnerName,
+                                               String postingOwnerFullName, String postingHeading, String postingId,
+                                               String commentOwnerName, String commentOwnerFullName,
+                                               String commentHeading, String commentId, String complaintGroupId) {
+        super(NotificationType.SHERIFF_COMPLAINT_DECIDED);
         this.remoteNodeName = remoteNodeName;
         this.remoteFeedName = remoteFeedName;
         this.postingOwnerName = postingOwnerName;
@@ -64,7 +64,7 @@ public class SheriffComplainDecidedNotification extends Notification {
         this.commentOwnerFullName = commentOwnerFullName;
         this.commentHeading = commentHeading;
         this.commentId = commentId;
-        this.complainGroupId = complainGroupId;
+        this.complaintGroupId = complaintGroupId;
     }
 
     public String getRemoteNodeName() {
@@ -147,12 +147,12 @@ public class SheriffComplainDecidedNotification extends Notification {
         this.commentId = commentId;
     }
 
-    public String getComplainGroupId() {
-        return complainGroupId;
+    public String getComplaintGroupId() {
+        return complaintGroupId;
     }
 
-    public void setComplainGroupId(String complainGroupId) {
-        this.complainGroupId = complainGroupId;
+    public void setComplaintGroupId(String complaintGroupId) {
+        this.complaintGroupId = complaintGroupId;
     }
 
     @Override
@@ -168,7 +168,7 @@ public class SheriffComplainDecidedNotification extends Notification {
         parameters.add(Pair.of("commentOwnerFullName", LogUtil.format(commentOwnerFullName)));
         parameters.add(Pair.of("commentHeading", LogUtil.format(commentHeading)));
         parameters.add(Pair.of("commentId", LogUtil.format(commentId)));
-        parameters.add(Pair.of("complainGroupId", LogUtil.format(complainGroupId)));
+        parameters.add(Pair.of("complaintGroupId", LogUtil.format(complaintGroupId)));
     }
 
 }

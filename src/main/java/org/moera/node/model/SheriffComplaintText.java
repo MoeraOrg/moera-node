@@ -3,10 +3,10 @@ package org.moera.node.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import org.moera.node.data.SheriffComplain;
-import org.moera.node.data.SheriffComplainGroup;
+import org.moera.node.data.SheriffComplaint;
+import org.moera.node.data.SheriffComplaintGroup;
 
-public class SheriffComplainText {
+public class SheriffComplaintText {
 
     @Size(max = 96)
     private String ownerFullName;
@@ -206,30 +206,30 @@ public class SheriffComplainText {
         this.anonymous = anonymous;
     }
 
-    public void toSheriffComplain(SheriffComplain sheriffComplain) {
-        sheriffComplain.setOwnerFullName(ownerFullName);
-        sheriffComplain.setOwnerGender(ownerGender);
-        sheriffComplain.setReasonCode(reasonCode != null ? reasonCode : SheriffOrderReason.OTHER);
-        sheriffComplain.setReasonDetails(reasonDetails);
+    public void toSheriffComplaint(SheriffComplaint sheriffComplaint) {
+        sheriffComplaint.setOwnerFullName(ownerFullName);
+        sheriffComplaint.setOwnerGender(ownerGender);
+        sheriffComplaint.setReasonCode(reasonCode != null ? reasonCode : SheriffOrderReason.OTHER);
+        sheriffComplaint.setReasonDetails(reasonDetails);
         if (anonymous != null) {
-            sheriffComplain.setAnonymousRequested(anonymous);
+            sheriffComplaint.setAnonymousRequested(anonymous);
         }
     }
 
-    public void toSheriffComplainGroup(SheriffComplainGroup sheriffComplainGroup) {
-        sheriffComplainGroup.setRemoteNodeName(nodeName);
-        sheriffComplainGroup.setRemoteNodeFullName(fullName);
-        sheriffComplainGroup.setRemoteFeedName(feedName);
-        sheriffComplainGroup.setRemotePostingOwnerName(postingOwnerName);
-        sheriffComplainGroup.setRemotePostingOwnerFullName(postingOwnerFullName);
-        sheriffComplainGroup.setRemotePostingOwnerGender(postingOwnerGender);
-        sheriffComplainGroup.setRemotePostingHeading(postingHeading);
-        sheriffComplainGroup.setRemotePostingId(postingId);
-        sheriffComplainGroup.setRemoteCommentOwnerName(commentOwnerName);
-        sheriffComplainGroup.setRemoteCommentOwnerFullName(commentOwnerFullName);
-        sheriffComplainGroup.setRemoteCommentOwnerGender(commentOwnerGender);
-        sheriffComplainGroup.setRemoteCommentHeading(commentHeading);
-        sheriffComplainGroup.setRemoteCommentId(commentId);
+    public void toSheriffComplaintGroup(SheriffComplaintGroup sheriffComplaintGroup) {
+        sheriffComplaintGroup.setRemoteNodeName(nodeName);
+        sheriffComplaintGroup.setRemoteNodeFullName(fullName);
+        sheriffComplaintGroup.setRemoteFeedName(feedName);
+        sheriffComplaintGroup.setRemotePostingOwnerName(postingOwnerName);
+        sheriffComplaintGroup.setRemotePostingOwnerFullName(postingOwnerFullName);
+        sheriffComplaintGroup.setRemotePostingOwnerGender(postingOwnerGender);
+        sheriffComplaintGroup.setRemotePostingHeading(postingHeading);
+        sheriffComplaintGroup.setRemotePostingId(postingId);
+        sheriffComplaintGroup.setRemoteCommentOwnerName(commentOwnerName);
+        sheriffComplaintGroup.setRemoteCommentOwnerFullName(commentOwnerFullName);
+        sheriffComplaintGroup.setRemoteCommentOwnerGender(commentOwnerGender);
+        sheriffComplaintGroup.setRemoteCommentHeading(commentHeading);
+        sheriffComplaintGroup.setRemoteCommentId(commentId);
     }
 
 }

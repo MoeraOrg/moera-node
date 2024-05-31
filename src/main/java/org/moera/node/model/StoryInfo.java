@@ -254,7 +254,7 @@ public class StoryInfo {
 
             case SHERIFF_MARKED:
             case SHERIFF_UNMARKED:
-            case SHERIFF_COMPLAIN_DECIDED:
+            case SHERIFF_COMPLAINT_DECIDED:
                 info.setRemoteNodeName(story.getRemoteNodeName());
                 info.setSummaryNodeName(story.getSummaryData().getSheriff().getSheriffName());
                 if (story.getRemoteAvatarMediaFile() != null) {
@@ -265,7 +265,7 @@ public class StoryInfo {
                 info.setRemoteCommentId(story.getRemoteCommentId());
                 break;
 
-            case SHERIFF_COMPLAIN_ADDED:
+            case SHERIFF_COMPLAINT_ADDED:
                 info.setSummaryNodeName(story.getSummaryData().getSheriff().getSheriffName());
                 if (story.getRemoteAvatarMediaFile() != null) {
                     info.setSummaryAvatar(

@@ -3,11 +3,11 @@ package org.moera.node.mail;
 import java.util.Map;
 import java.util.UUID;
 
-public class ComplainAddedMail extends Mail {
+public class ComplaintAddedMail extends Mail {
 
     private UUID id;
 
-    public ComplainAddedMail(UUID id) {
+    public ComplaintAddedMail(UUID id) {
         this.id = id;
     }
 
@@ -21,7 +21,7 @@ public class ComplainAddedMail extends Mail {
 
     @Override
     String getTemplateName() {
-        return "complain-added";
+        return "complaint-added";
     }
 
     @Override

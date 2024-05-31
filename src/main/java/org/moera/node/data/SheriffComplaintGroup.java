@@ -13,8 +13,8 @@ import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.util.Util;
 
 @Entity
-@Table(name = "sheriff_complain_groups")
-public class SheriffComplainGroup {
+@Table(name = "sheriff_complaint_groups")
+public class SheriffComplaintGroup {
 
     @Id
     private UUID id;
@@ -77,7 +77,7 @@ public class SheriffComplainGroup {
 
     @NotNull
     @Enumerated
-    private SheriffComplainStatus status = SheriffComplainStatus.POSTED;
+    private SheriffComplaintStatus status = SheriffComplaintStatus.POSTED;
 
     @Enumerated
     private SheriffOrderReason decisionCode;
@@ -241,11 +241,11 @@ public class SheriffComplainGroup {
         this.moment = moment;
     }
 
-    public SheriffComplainStatus getStatus() {
+    public SheriffComplaintStatus getStatus() {
         return status;
     }
 
-    public void setStatus(SheriffComplainStatus status) {
+    public void setStatus(SheriffComplaintStatus status) {
         this.status = status;
     }
 

@@ -5,9 +5,9 @@ import javax.persistence.EntityManager;
 
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;
-import org.moera.node.model.notification.SheriffComplainDecidedNotification;
+import org.moera.node.model.notification.SheriffComplaintDecidedNotification;
 
-public class RemoteSheriffComplainDecidedLiberin extends Liberin {
+public class RemoteSheriffComplaintDecidedLiberin extends Liberin {
 
     private String remoteNodeName;
     private String remoteFeedName;
@@ -21,9 +21,9 @@ public class RemoteSheriffComplainDecidedLiberin extends Liberin {
     private String commentId;
     private String sheriffName;
     private AvatarImage sheriffAvatar;
-    private String complainGroupId;
+    private String complaintGroupId;
 
-    public RemoteSheriffComplainDecidedLiberin(SheriffComplainDecidedNotification notification) {
+    public RemoteSheriffComplaintDecidedLiberin(SheriffComplaintDecidedNotification notification) {
         remoteNodeName = notification.getRemoteNodeName();
         remoteFeedName = notification.getRemoteFeedName();
         postingOwnerName = notification.getPostingOwnerName();
@@ -34,7 +34,7 @@ public class RemoteSheriffComplainDecidedLiberin extends Liberin {
         commentId = notification.getCommentId();
         sheriffName = notification.getSenderNodeName();
         sheriffAvatar = notification.getSenderAvatar();
-        complainGroupId = notification.getComplainGroupId();
+        complaintGroupId = notification.getComplaintGroupId();
     }
 
     public String getRemoteNodeName() {
@@ -133,12 +133,12 @@ public class RemoteSheriffComplainDecidedLiberin extends Liberin {
         this.sheriffAvatar = sheriffAvatar;
     }
 
-    public String getComplainGroupId() {
-        return complainGroupId;
+    public String getComplaintGroupId() {
+        return complaintGroupId;
     }
 
-    public void setComplainGroupId(String complainGroupId) {
-        this.complainGroupId = complainGroupId;
+    public void setComplaintGroupId(String complaintGroupId) {
+        this.complaintGroupId = complaintGroupId;
     }
 
     @Override
@@ -155,7 +155,7 @@ public class RemoteSheriffComplainDecidedLiberin extends Liberin {
         model.put("commentHeading", commentHeading);
         model.put("commentId", commentId);
         model.put("sheriffName", sheriffName);
-        model.put("complainGroupId", complainGroupId);
+        model.put("complaintGroupId", complaintGroupId);
     }
 
 }

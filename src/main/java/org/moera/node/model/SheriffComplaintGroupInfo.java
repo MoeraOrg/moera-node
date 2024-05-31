@@ -1,12 +1,12 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.data.SheriffComplainGroup;
-import org.moera.node.data.SheriffComplainStatus;
+import org.moera.node.data.SheriffComplaintGroup;
+import org.moera.node.data.SheriffComplaintStatus;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SheriffComplainGroupInfo {
+public class SheriffComplaintGroupInfo {
 
     private String id;
     private String remoteNodeName;
@@ -26,39 +26,39 @@ public class SheriffComplainGroupInfo {
     private String remoteCommentRevisionId;
     private long createdAt;
     private long moment;
-    private SheriffComplainStatus status;
+    private SheriffComplaintStatus status;
     private SheriffOrderReason decisionCode;
     private String decisionDetails;
     private Long decidedAt;
     private boolean anonymous;
 
-    public SheriffComplainGroupInfo() {
+    public SheriffComplaintGroupInfo() {
     }
 
-    public SheriffComplainGroupInfo(SheriffComplainGroup sheriffComplainGroup) {
-        id = sheriffComplainGroup.getId().toString();
-        remoteNodeName = sheriffComplainGroup.getRemoteNodeName();
-        remoteNodeFullName = sheriffComplainGroup.getRemoteNodeFullName();
-        remoteFeedName = sheriffComplainGroup.getRemoteFeedName();
-        remotePostingOwnerName = sheriffComplainGroup.getRemotePostingOwnerName();
-        remotePostingOwnerFullName = sheriffComplainGroup.getRemotePostingOwnerFullName();
-        remotePostingOwnerGender = sheriffComplainGroup.getRemotePostingOwnerGender();
-        remotePostingHeading = sheriffComplainGroup.getRemotePostingHeading();
-        remotePostingId = sheriffComplainGroup.getRemotePostingId();
-        remotePostingRevisionId = sheriffComplainGroup.getRemotePostingRevisionId();
-        remoteCommentOwnerName = sheriffComplainGroup.getRemoteCommentOwnerName();
-        remoteCommentOwnerFullName = sheriffComplainGroup.getRemoteCommentOwnerFullName();
-        remoteCommentOwnerGender = sheriffComplainGroup.getRemoteCommentOwnerGender();
-        remoteCommentHeading = sheriffComplainGroup.getRemoteCommentHeading();
-        remoteCommentId = sheriffComplainGroup.getRemoteCommentId();
-        remoteCommentRevisionId = sheriffComplainGroup.getRemoteCommentRevisionId();
-        createdAt = Util.toEpochSecond(sheriffComplainGroup.getCreatedAt());
-        moment = sheriffComplainGroup.getMoment();
-        status = sheriffComplainGroup.getStatus();
-        decisionCode = sheriffComplainGroup.getDecisionCode();
-        decisionDetails = sheriffComplainGroup.getDecisionDetails();
-        decidedAt = Util.toEpochSecond(sheriffComplainGroup.getDecidedAt());
-        anonymous = sheriffComplainGroup.isAnonymous();
+    public SheriffComplaintGroupInfo(SheriffComplaintGroup sheriffComplaintGroup) {
+        id = sheriffComplaintGroup.getId().toString();
+        remoteNodeName = sheriffComplaintGroup.getRemoteNodeName();
+        remoteNodeFullName = sheriffComplaintGroup.getRemoteNodeFullName();
+        remoteFeedName = sheriffComplaintGroup.getRemoteFeedName();
+        remotePostingOwnerName = sheriffComplaintGroup.getRemotePostingOwnerName();
+        remotePostingOwnerFullName = sheriffComplaintGroup.getRemotePostingOwnerFullName();
+        remotePostingOwnerGender = sheriffComplaintGroup.getRemotePostingOwnerGender();
+        remotePostingHeading = sheriffComplaintGroup.getRemotePostingHeading();
+        remotePostingId = sheriffComplaintGroup.getRemotePostingId();
+        remotePostingRevisionId = sheriffComplaintGroup.getRemotePostingRevisionId();
+        remoteCommentOwnerName = sheriffComplaintGroup.getRemoteCommentOwnerName();
+        remoteCommentOwnerFullName = sheriffComplaintGroup.getRemoteCommentOwnerFullName();
+        remoteCommentOwnerGender = sheriffComplaintGroup.getRemoteCommentOwnerGender();
+        remoteCommentHeading = sheriffComplaintGroup.getRemoteCommentHeading();
+        remoteCommentId = sheriffComplaintGroup.getRemoteCommentId();
+        remoteCommentRevisionId = sheriffComplaintGroup.getRemoteCommentRevisionId();
+        createdAt = Util.toEpochSecond(sheriffComplaintGroup.getCreatedAt());
+        moment = sheriffComplaintGroup.getMoment();
+        status = sheriffComplaintGroup.getStatus();
+        decisionCode = sheriffComplaintGroup.getDecisionCode();
+        decisionDetails = sheriffComplaintGroup.getDecisionDetails();
+        decidedAt = Util.toEpochSecond(sheriffComplaintGroup.getDecidedAt());
+        anonymous = sheriffComplaintGroup.isAnonymous();
     }
 
     public String getId() {
@@ -205,11 +205,11 @@ public class SheriffComplainGroupInfo {
         this.moment = moment;
     }
 
-    public SheriffComplainStatus getStatus() {
+    public SheriffComplaintStatus getStatus() {
         return status;
     }
 
-    public void setStatus(SheriffComplainStatus status) {
+    public void setStatus(SheriffComplaintStatus status) {
         this.status = status;
     }
 

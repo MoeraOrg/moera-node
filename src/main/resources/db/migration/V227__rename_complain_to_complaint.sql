@@ -1,0 +1,12 @@
+ALTER TABLE sheriff_complains RENAME TO sheriff_complaints;
+ALTER TABLE sheriff_complain_groups RENAME TO sheriff_complaint_groups;
+ALTER TABLE sheriff_orders RENAME COLUMN complain_group_id TO complaint_group_id;
+ALTER INDEX sheriff_complains_pkey RENAME TO sheriff_complaints_pkey;
+ALTER INDEX sheriff_complain_groups_pkey RENAME TO sheriff_complaint_groups_pkey;
+ALTER INDEX sheriff_complain_groups_moment_idx RENAME TO sheriff_complaint_groups_moment_idx;
+ALTER INDEX sheriff_complain_groups_target_idx RENAME TO sheriff_complaint_groups_target_idx;
+ALTER INDEX sheriff_complains_group_idx RENAME TO sheriff_complaints_group_idx;
+ALTER INDEX sheriff_orders_complain_group_idx RENAME TO sheriff_orders_complaint_group_idx;
+ALTER TABLE sheriff_complaints RENAME CONSTRAINT sheriff_complains_group_id_fkey TO sheriff_complaints_group_id_fkey;
+ALTER TABLE sheriff_orders
+    RENAME CONSTRAINT sheriff_orders_complain_group_id_fkey TO sheriff_orders_complaint_group_id_fkey;

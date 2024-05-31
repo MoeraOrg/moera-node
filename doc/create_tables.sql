@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.11 (Ubuntu 14.11-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.11 (Ubuntu 14.11-0ubuntu0.22.04.1)
+-- Dumped from database version 14.12 (Ubuntu 14.12-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.12 (Ubuntu 14.12-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1090,7 +1090,8 @@ CREATE TABLE public.entry_revisions (
     sane_body_preview text,
     update_important boolean DEFAULT false NOT NULL,
     update_description character varying(128) DEFAULT ''::character varying NOT NULL,
-    description character varying(255) DEFAULT ''::character varying NOT NULL
+    description character varying(255) DEFAULT ''::character varying NOT NULL,
+    attachments_cache text
 );
 
 
@@ -1166,6 +1167,21 @@ CREATE TABLE public.friends (
 ALTER TABLE public.friends OWNER TO moera;
 
 --
+-- Name: frozen_notifications; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.frozen_notifications (
+    id uuid NOT NULL,
+    node_id uuid NOT NULL,
+    packet text NOT NULL,
+    received_at timestamp without time zone NOT NULL,
+    deadline timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.frozen_notifications OWNER TO moera;
+
+--
 -- Name: hibernate_sequence; Type: SEQUENCE; Schema: public; Owner: moera
 --
 
@@ -1193,7 +1209,10 @@ CREATE TABLE public.media_file_owners (
     deadline timestamp without time zone,
     view_principal character varying(70) DEFAULT 'public'::character varying NOT NULL,
     usage_updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL
+    permissions_updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    nonce character varying(32),
+    prev_nonce character varying(32),
+    nonce_deadline timestamp without time zone
 );
 
 
@@ -1488,6 +1507,20 @@ CREATE TABLE public.reactions (
 ALTER TABLE public.reactions OWNER TO moera;
 
 --
+-- Name: remote_connectivity; Type: TABLE; Schema: public; Owner: moera
+--
+
+CREATE TABLE public.remote_connectivity (
+    id uuid NOT NULL,
+    remote_node_name character varying(63) NOT NULL,
+    status smallint NOT NULL,
+    updated_at timestamp without time zone NOT NULL
+);
+
+
+ALTER TABLE public.remote_connectivity OWNER TO moera;
+
+--
 -- Name: remote_media_cache; Type: TABLE; Schema: public; Owner: moera
 --
 
@@ -1565,10 +1598,10 @@ CREATE TABLE public.schema_history (
 ALTER TABLE public.schema_history OWNER TO moera;
 
 --
--- Name: sheriff_complain_groups; Type: TABLE; Schema: public; Owner: moera
+-- Name: sheriff_complaint_groups; Type: TABLE; Schema: public; Owner: moera
 --
 
-CREATE TABLE public.sheriff_complain_groups (
+CREATE TABLE public.sheriff_complaint_groups (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     remote_node_name character varying(63) NOT NULL,
@@ -1596,13 +1629,13 @@ CREATE TABLE public.sheriff_complain_groups (
 );
 
 
-ALTER TABLE public.sheriff_complain_groups OWNER TO moera;
+ALTER TABLE public.sheriff_complaint_groups OWNER TO moera;
 
 --
--- Name: sheriff_complains; Type: TABLE; Schema: public; Owner: moera
+-- Name: sheriff_complaints; Type: TABLE; Schema: public; Owner: moera
 --
 
-CREATE TABLE public.sheriff_complains (
+CREATE TABLE public.sheriff_complaints (
     id uuid NOT NULL,
     node_id uuid NOT NULL,
     owner_name character varying(63),
@@ -1616,7 +1649,7 @@ CREATE TABLE public.sheriff_complains (
 );
 
 
-ALTER TABLE public.sheriff_complains OWNER TO moera;
+ALTER TABLE public.sheriff_complaints OWNER TO moera;
 
 --
 -- Name: sheriff_orders; Type: TABLE; Schema: public; Owner: moera
@@ -1647,7 +1680,7 @@ CREATE TABLE public.sheriff_orders (
     remote_comment_heading character varying(255),
     remote_comment_revision_id character varying(40),
     remote_node_full_name character varying(96),
-    complain_group_id uuid
+    complaint_group_id uuid
 );
 
 
@@ -1958,6 +1991,14 @@ ALTER TABLE ONLY public.friends
 
 
 --
+-- Name: frozen_notifications frozen_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.frozen_notifications
+    ADD CONSTRAINT frozen_notifications_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: media_file_owners media_file_owners_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2102,6 +2143,14 @@ ALTER TABLE ONLY public.reactions
 
 
 --
+-- Name: remote_connectivity remote_connectivity_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+--
+
+ALTER TABLE ONLY public.remote_connectivity
+    ADD CONSTRAINT remote_connectivity_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: remote_media_cache remote_media_cache_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
@@ -2134,19 +2183,19 @@ ALTER TABLE ONLY public.schema_history
 
 
 --
--- Name: sheriff_complain_groups sheriff_complain_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+-- Name: sheriff_complaint_groups sheriff_complaint_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
-ALTER TABLE ONLY public.sheriff_complain_groups
-    ADD CONSTRAINT sheriff_complain_groups_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.sheriff_complaint_groups
+    ADD CONSTRAINT sheriff_complaint_groups_pkey PRIMARY KEY (id);
 
 
 --
--- Name: sheriff_complains sheriff_complains_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
+-- Name: sheriff_complaints sheriff_complaints_pkey; Type: CONSTRAINT; Schema: public; Owner: moera
 --
 
-ALTER TABLE ONLY public.sheriff_complains
-    ADD CONSTRAINT sheriff_complains_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.sheriff_complaints
+    ADD CONSTRAINT sheriff_complaints_pkey PRIMARY KEY (id);
 
 
 --
@@ -2613,6 +2662,20 @@ CREATE INDEX friends_node_name_idx ON public.friends USING btree (remote_node_na
 
 
 --
+-- Name: frozen_notifications_deadline_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX frozen_notifications_deadline_idx ON public.frozen_notifications USING btree (deadline);
+
+
+--
+-- Name: frozen_notifications_node_id_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX frozen_notifications_node_id_idx ON public.frozen_notifications USING btree (node_id);
+
+
+--
 -- Name: media_file_owners_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2631,6 +2694,13 @@ CREATE INDEX media_file_owners_media_file_id_idx ON public.media_file_owners USI
 --
 
 CREATE INDEX media_file_owners_node_id_owner_name_media_file_id_idx ON public.media_file_owners USING btree (node_id, owner_name, media_file_id);
+
+
+--
+-- Name: media_file_owners_nonce_deadline_view_principal_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX media_file_owners_nonce_deadline_view_principal_idx ON public.media_file_owners USING btree (nonce_deadline, view_principal);
 
 
 --
@@ -2900,6 +2970,13 @@ CREATE INDEX reactions_owner_avatar_media_file_id_idx ON public.reactions USING 
 
 
 --
+-- Name: remote_connectivity_remote_node_name_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE UNIQUE INDEX remote_connectivity_remote_node_name_idx ON public.remote_connectivity USING btree (remote_node_name);
+
+
+--
 -- Name: remote_media_cache_deadline_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
@@ -2970,31 +3047,31 @@ CREATE INDEX schema_history_s_idx ON public.schema_history USING btree (success)
 
 
 --
--- Name: sheriff_complain_groups_moment_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: sheriff_complaint_groups_moment_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX sheriff_complain_groups_moment_idx ON public.sheriff_complain_groups USING btree (moment);
-
-
---
--- Name: sheriff_complain_groups_target_idx; Type: INDEX; Schema: public; Owner: moera
---
-
-CREATE UNIQUE INDEX sheriff_complain_groups_target_idx ON public.sheriff_complain_groups USING btree (node_id, remote_node_name, remote_feed_name, COALESCE(remote_posting_id, ''::character varying), COALESCE(remote_comment_id, ''::character varying));
+CREATE INDEX sheriff_complaint_groups_moment_idx ON public.sheriff_complaint_groups USING btree (moment);
 
 
 --
--- Name: sheriff_complains_group_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: sheriff_complaint_groups_target_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX sheriff_complains_group_idx ON public.sheriff_complains USING btree (group_id);
+CREATE UNIQUE INDEX sheriff_complaint_groups_target_idx ON public.sheriff_complaint_groups USING btree (node_id, remote_node_name, remote_feed_name, COALESCE(remote_posting_id, ''::character varying), COALESCE(remote_comment_id, ''::character varying));
 
 
 --
--- Name: sheriff_orders_complain_group_idx; Type: INDEX; Schema: public; Owner: moera
+-- Name: sheriff_complaints_group_idx; Type: INDEX; Schema: public; Owner: moera
 --
 
-CREATE INDEX sheriff_orders_complain_group_idx ON public.sheriff_complain_groups USING btree (id);
+CREATE INDEX sheriff_complaints_group_idx ON public.sheriff_complaints USING btree (group_id);
+
+
+--
+-- Name: sheriff_orders_complaint_group_idx; Type: INDEX; Schema: public; Owner: moera
+--
+
+CREATE INDEX sheriff_orders_complaint_group_idx ON public.sheriff_complaint_groups USING btree (id);
 
 
 --
@@ -3725,19 +3802,19 @@ ALTER TABLE ONLY public.remote_media_cache
 
 
 --
--- Name: sheriff_complains sheriff_complains_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: sheriff_complaints sheriff_complaints_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
-ALTER TABLE ONLY public.sheriff_complains
-    ADD CONSTRAINT sheriff_complains_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.sheriff_complain_groups(id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY public.sheriff_complaints
+    ADD CONSTRAINT sheriff_complaints_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.sheriff_complaint_groups(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
--- Name: sheriff_orders sheriff_orders_complain_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
+-- Name: sheriff_orders sheriff_orders_complaint_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: moera
 --
 
 ALTER TABLE ONLY public.sheriff_orders
-    ADD CONSTRAINT sheriff_orders_complain_group_id_fkey FOREIGN KEY (complain_group_id) REFERENCES public.sheriff_complain_groups(id) ON UPDATE CASCADE ON DELETE SET NULL;
+    ADD CONSTRAINT sheriff_orders_complaint_group_id_fkey FOREIGN KEY (complaint_group_id) REFERENCES public.sheriff_complaint_groups(id) ON UPDATE CASCADE ON DELETE SET NULL;
 
 
 --

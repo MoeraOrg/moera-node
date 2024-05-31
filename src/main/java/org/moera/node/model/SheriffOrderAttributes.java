@@ -3,7 +3,7 @@ package org.moera.node.model;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import org.moera.node.data.SheriffComplainGroup;
+import org.moera.node.data.SheriffComplaintGroup;
 
 public class SheriffOrderAttributes {
 
@@ -27,8 +27,8 @@ public class SheriffOrderAttributes {
     public SheriffOrderAttributes() {
     }
 
-    public SheriffOrderAttributes(SheriffComplainGroup group, SheriffOrderCategory category,
-                                  SheriffComplainDecisionText decisionText) {
+    public SheriffOrderAttributes(SheriffComplaintGroup group, SheriffOrderCategory category,
+                                  SheriffComplaintDecisionText decisionText) {
         delete = decisionText.isReject();
         feedName = group.getRemoteFeedName();
         postingId = group.getRemotePostingId();

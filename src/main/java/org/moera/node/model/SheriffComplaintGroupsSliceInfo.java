@@ -2,16 +2,16 @@ package org.moera.node.model;
 
 import java.util.List;
 
-public class SheriffComplainGroupsSliceInfo {
+public class SheriffComplaintGroupsSliceInfo {
 
     private long before;
     private long after;
-    private List<SheriffComplainGroupInfo> groups;
+    private List<SheriffComplaintGroupInfo> groups;
     private int total;
     private int totalInPast;
     private int totalInFuture;
 
-    public SheriffComplainGroupsSliceInfo() {
+    public SheriffComplaintGroupsSliceInfo() {
     }
 
     public long getBefore() {
@@ -30,11 +30,11 @@ public class SheriffComplainGroupsSliceInfo {
         this.after = after;
     }
 
-    public List<SheriffComplainGroupInfo> getGroups() {
+    public List<SheriffComplaintGroupInfo> getGroups() {
         return groups;
     }
 
-    public void setGroups(List<SheriffComplainGroupInfo> groups) {
+    public void setGroups(List<SheriffComplaintGroupInfo> groups) {
         this.groups = groups;
     }
 

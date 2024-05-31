@@ -4,29 +4,29 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.node.liberin.model.RemoteSheriffComplainDecidedLiberin;
+import org.moera.node.liberin.model.RemoteSheriffComplaintDecidedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.notification.SheriffComplainDecidedNotification;
+import org.moera.node.model.notification.SheriffComplaintDecidedNotification;
 import org.moera.node.task.Job;
 
-public class SheriffComplainDecidedJob extends Job<SheriffComplainDecidedJob.Parameters, Object> {
+public class SheriffComplaintDecidedJob extends Job<SheriffComplaintDecidedJob.Parameters, Object> {
 
     public static class Parameters {
 
-        private SheriffComplainDecidedNotification notification;
+        private SheriffComplaintDecidedNotification notification;
 
         public Parameters() {
         }
 
-        public Parameters(SheriffComplainDecidedNotification notification) {
+        public Parameters(SheriffComplaintDecidedNotification notification) {
             this.notification = notification;
         }
 
-        public SheriffComplainDecidedNotification getNotification() {
+        public SheriffComplaintDecidedNotification getNotification() {
             return notification;
         }
 
-        public void setNotification(SheriffComplainDecidedNotification notification) {
+        public void setNotification(SheriffComplaintDecidedNotification notification) {
             this.notification = notification;
         }
 
@@ -35,7 +35,7 @@ public class SheriffComplainDecidedJob extends Job<SheriffComplainDecidedJob.Par
     @Inject
     private MediaManager mediaManager;
 
-    public SheriffComplainDecidedJob() {
+    public SheriffComplaintDecidedJob() {
     }
 
     @Override
@@ -54,7 +54,7 @@ public class SheriffComplainDecidedJob extends Job<SheriffComplainDecidedJob.Par
                 mediaManager.downloadAvatar(
                         parameters.notification.getSenderNodeName(),
                         parameters.notification.getSenderAvatar()));
-        universalContext.send(new RemoteSheriffComplainDecidedLiberin(parameters.notification));
+        universalContext.send(new RemoteSheriffComplaintDecidedLiberin(parameters.notification));
     }
 
 }

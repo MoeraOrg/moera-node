@@ -4,7 +4,7 @@ import javax.inject.Inject;
 
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.notification.NotificationType;
-import org.moera.node.model.notification.SheriffComplainDecidedNotification;
+import org.moera.node.model.notification.SheriffComplaintDecidedNotification;
 import org.moera.node.model.notification.SheriffOrderForCommentAddedNotification;
 import org.moera.node.model.notification.SheriffOrderForCommentDeletedNotification;
 import org.moera.node.model.notification.SheriffOrderForPostingAddedNotification;
@@ -54,11 +54,11 @@ public class SheriffProcessor {
                 universalContext.nodeId());
     }
 
-    @NotificationMapping(NotificationType.SHERIFF_COMPLAIN_DECIDED)
-    public void complainDecided(SheriffComplainDecidedNotification notification) {
+    @NotificationMapping(NotificationType.SHERIFF_COMPLAINT_DECIDED)
+    public void complaintDecided(SheriffComplaintDecidedNotification notification) {
         jobs.run(
-                SheriffComplainDecidedJob.class,
-                new SheriffComplainDecidedJob.Parameters(notification),
+                SheriffComplaintDecidedJob.class,
+                new SheriffComplaintDecidedJob.Parameters(notification),
                 universalContext.nodeId());
     }
 

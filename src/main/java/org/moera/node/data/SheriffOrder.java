@@ -96,7 +96,7 @@ public class SheriffOrder {
     private short signatureVersion;
 
     @ManyToOne
-    private SheriffComplainGroup complainGroup;
+    private SheriffComplaintGroup complaintGroup;
 
     public SheriffOrder() {
     }
@@ -319,12 +319,12 @@ public class SheriffOrder {
         this.signatureVersion = signatureVersion;
     }
 
-    public SheriffComplainGroup getComplainGroup() {
-        return complainGroup;
+    public SheriffComplaintGroup getComplaintGroup() {
+        return complaintGroup;
     }
 
-    public void setComplainGroup(SheriffComplainGroup complainGroup) {
-        this.complainGroup = complainGroup;
+    public void setComplaintGroup(SheriffComplaintGroup complaintGroup) {
+        this.complaintGroup = complaintGroup;
     }
 
 }

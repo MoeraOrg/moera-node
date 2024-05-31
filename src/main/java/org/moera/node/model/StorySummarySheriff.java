@@ -7,15 +7,15 @@ public class StorySummarySheriff {
 
     private String sheriffName;
     private String orderId;
-    private String complainId;
+    private String complaintId;
 
     public StorySummarySheriff() {
     }
 
-    public StorySummarySheriff(String sheriffName, String orderId, String complainId) {
+    public StorySummarySheriff(String sheriffName, String orderId, String complaintId) {
         this.sheriffName = sheriffName;
         this.orderId = orderId;
-        this.complainId = complainId;
+        this.complaintId = complaintId;
     }
 
     public String getSheriffName() {
@@ -34,12 +34,12 @@ public class StorySummarySheriff {
         this.orderId = orderId;
     }
 
-    public String getComplainId() {
-        return complainId;
+    public String getComplaintId() {
+        return complaintId;
     }
 
-    public void setComplainId(String complainId) {
-        this.complainId = complainId;
+    public void setComplaintId(String complaintId) {
+        this.complaintId = complaintId;
     }
 
 }

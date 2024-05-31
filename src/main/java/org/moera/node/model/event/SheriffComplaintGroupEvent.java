@@ -4,30 +4,30 @@ import java.util.List;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.SheriffComplainGroup;
-import org.moera.node.data.SheriffComplainStatus;
-import org.moera.node.model.SheriffComplainGroupInfo;
+import org.moera.node.data.SheriffComplaintGroup;
+import org.moera.node.data.SheriffComplaintStatus;
+import org.moera.node.model.SheriffComplaintGroupInfo;
 import org.moera.node.model.SheriffOrderReason;
 import org.springframework.data.util.Pair;
 
-public class SheriffComplainGroupEvent extends Event {
+public class SheriffComplaintGroupEvent extends Event {
 
-    private SheriffComplainGroupInfo group;
+    private SheriffComplaintGroupInfo group;
 
-    protected SheriffComplainGroupEvent(EventType type) {
+    protected SheriffComplaintGroupEvent(EventType type) {
         super(type, Principal.ADMIN);
     }
 
-    protected SheriffComplainGroupEvent(EventType type, SheriffComplainGroup group) {
+    protected SheriffComplaintGroupEvent(EventType type, SheriffComplaintGroup group) {
         super(type, Principal.ADMIN);
-        this.group = new SheriffComplainGroupInfo(group);
+        this.group = new SheriffComplaintGroupInfo(group);
     }
 
-    public SheriffComplainGroupInfo getGroup() {
+    public SheriffComplaintGroupInfo getGroup() {
         return group;
     }
 
-    public void setGroup(SheriffComplainGroupInfo group) {
+    public void setGroup(SheriffComplaintGroupInfo group) {
         this.group = group;
     }
 
@@ -43,7 +43,7 @@ public class SheriffComplainGroupEvent extends Event {
         parameters.add(Pair.of("remoteCommentOwnerName", LogUtil.format(group.getRemoteCommentOwnerName())));
         parameters.add(Pair.of("remoteCommentId", LogUtil.format(group.getRemoteCommentId())));
         parameters.add(Pair.of("remoteCommentRevisionId", LogUtil.format(group.getRemoteCommentRevisionId())));
-        parameters.add(Pair.of("status", LogUtil.format(SheriffComplainStatus.toValue(group.getStatus()))));
+        parameters.add(Pair.of("status", LogUtil.format(SheriffComplaintStatus.toValue(group.getStatus()))));
         parameters.add(Pair.of("decisionCode", LogUtil.format(SheriffOrderReason.toValue(group.getDecisionCode()))));
     }
 

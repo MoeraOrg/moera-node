@@ -11,12 +11,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
-import org.moera.node.data.SheriffComplainGroup;
-import org.moera.node.data.SheriffComplainGroupRepository;
-import org.moera.node.data.SheriffComplainStatus;
+import org.moera.node.data.SheriffComplaintGroup;
+import org.moera.node.data.SheriffComplaintGroupRepository;
+import org.moera.node.data.SheriffComplaintStatus;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
-import org.moera.node.liberin.model.SheriffComplainGroupUpdatedLiberin;
+import org.moera.node.liberin.model.SheriffComplaintGroupUpdatedLiberin;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.FeedInfo;
 import org.moera.node.model.PostingInfo;
@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-public class SheriffComplainGroupPrepareJob
-        extends Job<SheriffComplainGroupPrepareJob.Parameters, SheriffComplainGroupPrepareJob.State> {
+public class SheriffComplaintGroupPrepareJob
+        extends Job<SheriffComplaintGroupPrepareJob.Parameters, SheriffComplaintGroupPrepareJob.State> {
 
     public static class Parameters {
 
@@ -145,15 +145,15 @@ public class SheriffComplainGroupPrepareJob
 
     }
 
-    private static final Logger log = LoggerFactory.getLogger(SheriffComplainGroupPrepareJob.class);
+    private static final Logger log = LoggerFactory.getLogger(SheriffComplaintGroupPrepareJob.class);
 
     @Inject
-    private SheriffComplainGroupRepository sheriffComplainGroupRepository;
+    private SheriffComplaintGroupRepository sheriffComplaintGroupRepository;
 
     @Inject
     private SheriffOrderRepository sheriffOrderRepository;
 
-    public SheriffComplainGroupPrepareJob() {
+    public SheriffComplaintGroupPrepareJob() {
         state = new State();
         retryCount(6, "PT10M");
     }
@@ -171,7 +171,7 @@ public class SheriffComplainGroupPrepareJob
     @Override
     protected void started() {
         super.started();
-        log.info("Preparing complain group {}", parameters.groupId);
+        log.info("Preparing complaint group {}", parameters.groupId);
     }
 
     @Override
@@ -184,12 +184,12 @@ public class SheriffComplainGroupPrepareJob
             }
             autoDecide();
         } catch (NodeApiUnknownNameException e) {
-            updateComplainGroupStatus(SheriffComplainStatus.NOT_FOUND);
+            updateComplaintGroupStatus(SheriffComplaintStatus.NOT_FOUND);
         } catch (NodeApiNotFoundException e) {
             if (e.getResult() != null && Objects.equals(e.getResult().getErrorCode(), "comment.wrong-posting")) {
-                updateComplainGroupStatus(SheriffComplainStatus.INVALID_TARGET);
+                updateComplaintGroupStatus(SheriffComplaintStatus.INVALID_TARGET);
             } else {
-                updateComplainGroupStatus(SheriffComplainStatus.NOT_FOUND);
+                updateComplaintGroupStatus(SheriffComplaintStatus.NOT_FOUND);
             }
         }
     }
@@ -203,7 +203,7 @@ public class SheriffComplainGroupPrepareJob
         if (!state.feedSheriffChecked) {
             FeedInfo feedInfo = nodeApi.getFeed(parameters.nodeName, parameters.feedName);
             if (feedInfo.getSheriffs() == null || !feedInfo.getSheriffs().contains(nodeName())) {
-                updateComplainGroupStatus(SheriffComplainStatus.NOT_SHERIFF);
+                updateComplaintGroupStatus(SheriffComplaintStatus.NOT_SHERIFF);
                 return;
             }
             state.feedSheriffChecked = true;
@@ -219,11 +219,11 @@ public class SheriffComplainGroupPrepareJob
                 boolean inFeed = state.postingInfo.getFeedReferences().stream()
                         .anyMatch(fr -> fr.getFeedName().equals(parameters.feedName));
                 if (!inFeed) {
-                    updateComplainGroupStatus(SheriffComplainStatus.INVALID_TARGET);
+                    updateComplaintGroupStatus(SheriffComplaintStatus.INVALID_TARGET);
                     return;
                 }
                 if (!state.postingInfo.isOriginal()) {
-                    updateComplainGroupStatus(SheriffComplainStatus.NOT_ORIGINAL);
+                    updateComplaintGroupStatus(SheriffComplaintStatus.NOT_ORIGINAL);
                     return;
                 }
             }
@@ -239,25 +239,25 @@ public class SheriffComplainGroupPrepareJob
             checkpoint();
         }
 
-        updateComplainGroup(complainGroup -> {
-            if (complainGroup.getRemoteNodeFullName() == null) {
-                complainGroup.setRemoteNodeFullName(state.whoAmI.getFullName());
+        updateComplaintGroup(complaintGroup -> {
+            if (complaintGroup.getRemoteNodeFullName() == null) {
+                complaintGroup.setRemoteNodeFullName(state.whoAmI.getFullName());
             }
             if (state.postingInfo != null) {
-                complainGroup.setRemotePostingOwnerName(state.postingInfo.getOwnerName());
-                complainGroup.setRemotePostingOwnerFullName(state.postingInfo.getOwnerFullName());
-                complainGroup.setRemotePostingOwnerGender(state.postingInfo.getOwnerGender());
-                complainGroup.setRemotePostingHeading(state.postingInfo.getHeading());
-                complainGroup.setRemotePostingRevisionId(state.postingInfo.getRevisionId());
+                complaintGroup.setRemotePostingOwnerName(state.postingInfo.getOwnerName());
+                complaintGroup.setRemotePostingOwnerFullName(state.postingInfo.getOwnerFullName());
+                complaintGroup.setRemotePostingOwnerGender(state.postingInfo.getOwnerGender());
+                complaintGroup.setRemotePostingHeading(state.postingInfo.getHeading());
+                complaintGroup.setRemotePostingRevisionId(state.postingInfo.getRevisionId());
             }
             if (state.commentInfo != null) {
-                complainGroup.setRemoteCommentOwnerName(state.commentInfo.getOwnerName());
-                complainGroup.setRemoteCommentOwnerFullName(state.commentInfo.getOwnerFullName());
-                complainGroup.setRemoteCommentOwnerGender(state.commentInfo.getOwnerGender());
-                complainGroup.setRemoteCommentHeading(state.commentInfo.getHeading());
-                complainGroup.setRemoteCommentRevisionId(state.commentInfo.getRevisionId());
+                complaintGroup.setRemoteCommentOwnerName(state.commentInfo.getOwnerName());
+                complaintGroup.setRemoteCommentOwnerFullName(state.commentInfo.getOwnerFullName());
+                complaintGroup.setRemoteCommentOwnerGender(state.commentInfo.getOwnerGender());
+                complaintGroup.setRemoteCommentHeading(state.commentInfo.getHeading());
+                complaintGroup.setRemoteCommentRevisionId(state.commentInfo.getRevisionId());
             }
-            complainGroup.setStatus(SheriffComplainStatus.PREPARED);
+            complaintGroup.setStatus(SheriffComplaintStatus.PREPARED);
         });
     }
 
@@ -277,42 +277,42 @@ public class SheriffComplainGroupPrepareJob
         if (!orders.isEmpty()) {
             SheriffOrder order = orders.get(0);
             if (!order.isDelete()) {
-                updateComplainGroup(complainGroup -> {
-                    complainGroup.setStatus(SheriffComplainStatus.APPROVED);
-                    complainGroup.setDecisionCode(order.getReasonCode());
-                    complainGroup.setDecisionDetails(order.getReasonDetails());
-                    complainGroup.setDecidedAt(Util.now());
+                updateComplaintGroup(complaintGroup -> {
+                    complaintGroup.setStatus(SheriffComplaintStatus.APPROVED);
+                    complaintGroup.setDecisionCode(order.getReasonCode());
+                    complaintGroup.setDecisionDetails(order.getReasonDetails());
+                    complaintGroup.setDecidedAt(Util.now());
                 });
             }
         }
     }
 
-    private void updateComplainGroup(Consumer<SheriffComplainGroup> updater) {
+    private void updateComplaintGroup(Consumer<SheriffComplaintGroup> updater) {
         var liberin = tx.executeWrite(() -> {
-            SheriffComplainGroup complainGroup =
-                    sheriffComplainGroupRepository.findByNodeIdAndId(nodeId, parameters.groupId).orElse(null);
-            if (complainGroup == null) {
+            SheriffComplaintGroup complaintGroup =
+                    sheriffComplaintGroupRepository.findByNodeIdAndId(nodeId, parameters.groupId).orElse(null);
+            if (complaintGroup == null) {
                 return null;
             }
-            SheriffComplainStatus prevStatus = complainGroup.getStatus();
-            updater.accept(complainGroup);
-            complainGroup = sheriffComplainGroupRepository.save(complainGroup);
-            return new SheriffComplainGroupUpdatedLiberin(complainGroup, prevStatus);
+            SheriffComplaintStatus prevStatus = complaintGroup.getStatus();
+            updater.accept(complaintGroup);
+            complaintGroup = sheriffComplaintGroupRepository.save(complaintGroup);
+            return new SheriffComplaintGroupUpdatedLiberin(complaintGroup, prevStatus);
         });
         if (liberin != null) {
             send(liberin);
         }
     }
 
-    private void updateComplainGroupStatus(SheriffComplainStatus status) {
-        updateComplainGroup(c -> c.setStatus(status));
+    private void updateComplaintGroupStatus(SheriffComplaintStatus status) {
+        updateComplaintGroup(c -> c.setStatus(status));
     }
 
     @Override
     protected void failed() {
         super.failed();
         try {
-            updateComplainGroupStatus(SheriffComplainStatus.PREPARE_FAILED);
+            updateComplaintGroupStatus(SheriffComplaintStatus.PREPARE_FAILED);
         } catch (Exception e) {
             log.error("Error saving PREPARE_FAILED status", e);
         }

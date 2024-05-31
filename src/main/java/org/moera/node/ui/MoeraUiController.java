@@ -88,15 +88,15 @@ public class MoeraUiController {
         return "redirect:/people/" + tab;
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains", produces = "text/html")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complaints", produces = "text/html")
     @VirtualPage
-    public String complains(Model model) {
+    public String complaints(Model model) {
         return openClient("Complaints", model);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complains/{id}", produces = "text/html")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/complaints/{id}", produces = "text/html")
     @VirtualPage
-    public String complainsGroup(@PathVariable String id, Model model) {
+    public String complaintsGroup(@PathVariable String id, Model model) {
         return openClient("Complaints", model);
     }
 
