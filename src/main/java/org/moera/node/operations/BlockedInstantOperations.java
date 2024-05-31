@@ -12,12 +12,20 @@ import org.moera.node.data.BlockedInstant;
 import org.moera.node.data.BlockedInstantRepository;
 import org.moera.node.data.QBlockedInstant;
 import org.moera.node.data.StoryType;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BlockedInstantOperations {
+
+    private static final Logger log = LoggerFactory.getLogger(BlockedInstantOperations.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private BlockedInstantRepository blockedInstantRepository;
@@ -126,7 +134,11 @@ public class BlockedInstantOperations {
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void purgeExpired() {
-        blockedInstantRepository.deleteExpired(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired blockings of instants");
+
+            blockedInstantRepository.deleteExpired(Util.now());
+        }
     }
 
 }

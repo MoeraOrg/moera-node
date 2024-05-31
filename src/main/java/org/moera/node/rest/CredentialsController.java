@@ -15,6 +15,7 @@ import org.moera.node.data.PasswordResetTokenRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PasswordResetLiberin;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.CredentialsChange;
@@ -43,6 +44,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class CredentialsController {
 
     private static final Logger log = LoggerFactory.getLogger(CredentialsController.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -149,7 +153,11 @@ public class CredentialsController {
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void purgeExpired() {
-        passwordResetTokenRepository.deleteExpired(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired password reset tokens");
+
+            passwordResetTokenRepository.deleteExpired(Util.now());
+        }
     }
 
 }

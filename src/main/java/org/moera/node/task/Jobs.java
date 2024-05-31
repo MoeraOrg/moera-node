@@ -19,6 +19,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.data.PendingJob;
 import org.moera.node.data.PendingJobRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,9 @@ public class Jobs {
 
     @Inject
     private ApplicationEventPublisher applicationEventPublisher;
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private PendingJobRepository pendingJobRepository;
@@ -130,8 +134,13 @@ public class Jobs {
         if (!initialized) {
             return;
         }
-        Timestamp timestamp = Timestamp.from(Instant.now().plus(1, ChronoUnit.HOURS));
-        pendingJobRepository.findAllBefore(timestamp).forEach(this::load);
+
+        try (var ignored = requestCounter.allot()) {
+            log.info("Loading pending jobs");
+
+            Timestamp timestamp = Timestamp.from(Instant.now().plus(1, ChronoUnit.HOURS));
+            pendingJobRepository.findAllBefore(timestamp).forEach(this::load);
+        }
     }
 
     private void load(PendingJob pendingJob) {

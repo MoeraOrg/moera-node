@@ -28,6 +28,7 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.fingerprint.CommentFingerprint;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
@@ -52,6 +53,9 @@ public class CommentOperations {
     private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
 
     private static final Logger log = LoggerFactory.getLogger(CommentOperations.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -291,47 +295,51 @@ public class CommentOperations {
 
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() {
-        List<Liberin> liberins = new ArrayList<>();
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired unsigned comments");
 
-        tx.executeWrite(() -> {
-            try {
-                List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
-                comments.addAll(commentRepository.findExpired(Util.now()));
-                for (Comment comment : comments) {
-                    EntryRevision latest = comment.getCurrentRevision();
-                    Entry posting = comment.getPosting();
-                    if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
-                        if (comment.getDeletedAt() == null) {
-                            log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
-                                    LogUtil.format(posting.getId()),
-                                    LogUtil.format(posting.getTotalChildren()),
-                                    LogUtil.format(comment.getId()));
-                            posting.setTotalChildren(posting.getTotalChildren() - 1);
-                        }
-                        commentRepository.delete(comment);
+            List<Liberin> liberins = new ArrayList<>();
 
-                        liberins.add(new CommentDeletedLiberin(comment, latest).withNodeId(posting.getNodeId()));
-                    } else {
-                        EntryRevision revision = comment.getRevisions().stream()
-                                .min(Comparator.comparing(EntryRevision::getCreatedAt))
-                                .orElse(null);
-                        if (revision != null) { // always
-                            revision.setDeletedAt(null);
-                            entryRevisionRepository.delete(comment.getCurrentRevision());
-                            comment.setCurrentRevision(revision);
-                            comment.setTotalRevisions(comment.getTotalRevisions() - 1);
+            tx.executeWrite(() -> {
+                try {
+                    List<Comment> comments = commentRepository.findExpiredUnsigned(Util.now());
+                    comments.addAll(commentRepository.findExpired(Util.now()));
+                    for (Comment comment : comments) {
+                        EntryRevision latest = comment.getCurrentRevision();
+                        Entry posting = comment.getPosting();
+                        if (comment.getDeletedAt() != null || comment.getTotalRevisions() <= 1) {
+                            if (comment.getDeletedAt() == null) {
+                                log.debug("Total comments for posting {} = {} - 1: purging expired unsigned comment {}",
+                                        LogUtil.format(posting.getId()),
+                                        LogUtil.format(posting.getTotalChildren()),
+                                        LogUtil.format(comment.getId()));
+                                posting.setTotalChildren(posting.getTotalChildren() - 1);
+                            }
+                            commentRepository.delete(comment);
 
-                            liberins.add(new CommentUpdatedLiberin(comment, latest, comment.getViewE())
-                                    .withNodeId(posting.getNodeId()));
+                            liberins.add(new CommentDeletedLiberin(comment, latest).withNodeId(posting.getNodeId()));
+                        } else {
+                            EntryRevision revision = comment.getRevisions().stream()
+                                    .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                                    .orElse(null);
+                            if (revision != null) { // always
+                                revision.setDeletedAt(null);
+                                entryRevisionRepository.delete(comment.getCurrentRevision());
+                                comment.setCurrentRevision(revision);
+                                comment.setTotalRevisions(comment.getTotalRevisions() - 1);
+
+                                liberins.add(new CommentUpdatedLiberin(comment, latest, comment.getViewE())
+                                        .withNodeId(posting.getNodeId()));
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    log.error("Error purging", e);
                 }
-            } catch (Exception e) {
-                log.error("Error purging", e);
-            }
-        });
+            });
 
-        liberins.forEach(liberinManager::send);
+            liberins.forEach(liberinManager::send);
+        }
     }
 
 }

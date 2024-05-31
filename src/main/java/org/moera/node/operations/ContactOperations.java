@@ -10,23 +10,32 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRelated;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.MediaFile;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ContactOperations {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationManager.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -204,12 +213,16 @@ public class ContactOperations {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void closenessMaintenance() {
-        Collection<Contact> contacts = contactRepository.findAllUpdatedBefore(
-                Timestamp.from(Instant.now().minus(14, ChronoUnit.DAYS)));
-        for (Contact contact : contacts) {
-            contact.setCloseness(contact.getCloseness() - 0.2f * contact.getClosenessBase());
-            contact.setClosenessBase(contact.getCloseness());
-            contact.setUpdatedAt(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Recalculating closeness of contacts");
+
+            Collection<Contact> contacts = contactRepository.findAllUpdatedBefore(
+                    Timestamp.from(Instant.now().minus(14, ChronoUnit.DAYS)));
+            for (Contact contact : contacts) {
+                contact.setCloseness(contact.getCloseness() - 0.2f * contact.getClosenessBase());
+                contact.setClosenessBase(contact.getCloseness());
+                contact.setUpdatedAt(Util.now());
+            }
         }
     }
 

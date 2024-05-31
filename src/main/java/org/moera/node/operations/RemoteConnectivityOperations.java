@@ -14,8 +14,11 @@ import javax.inject.Inject;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.RemoteConnectivity;
 import org.moera.node.data.RemoteConnectivityRepository;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -34,10 +37,15 @@ public class RemoteConnectivityOperations {
 
     }
 
+    private static final Logger log = LoggerFactory.getLogger(RemoteConnectivityOperations.class);
+
     private static final Duration TTL = Duration.of(1, ChronoUnit.HOURS);
 
     private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
     private final Map<String, Record> cache = new HashMap<>();
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RemoteConnectivityRepository remoteConnectivityRepository;
@@ -111,23 +119,27 @@ public class RemoteConnectivityOperations {
 
     @Scheduled(fixedDelayString = "PT1H")
     public void clearCache() {
-        List<String> remove;
-        cacheLock.readLock().lock();
-        try {
-            remove = cache.entrySet().stream()
-                    .filter(e -> e.getValue().lastUsedAt.plus(TTL).isBefore(Instant.now()))
-                    .map(Map.Entry::getKey)
-                    .toList();
-        } finally {
-            cacheLock.readLock().unlock();
-        }
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging remote nodes connectivity cache");
 
-        if (!remove.isEmpty()) {
-            cacheLock.writeLock().lock();
+            List<String> remove;
+            cacheLock.readLock().lock();
             try {
-                remove.forEach(cache::remove);
+                remove = cache.entrySet().stream()
+                        .filter(e -> e.getValue().lastUsedAt.plus(TTL).isBefore(Instant.now()))
+                        .map(Map.Entry::getKey)
+                        .toList();
             } finally {
-                cacheLock.writeLock().unlock();
+                cacheLock.readLock().unlock();
+            }
+
+            if (!remove.isEmpty()) {
+                cacheLock.writeLock().lock();
+                try {
+                    remove.forEach(cache::remove);
+                } finally {
+                    cacheLock.writeLock().unlock();
+                }
             }
         }
     }

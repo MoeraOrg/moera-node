@@ -14,6 +14,7 @@ import org.moera.node.data.PushClient;
 import org.moera.node.data.PushClientRepository;
 import org.moera.node.data.PushNotificationRepository;
 import org.moera.node.domain.Domains;
+import org.moera.node.global.RequestCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -30,6 +31,9 @@ public class PushService {
 
     @Inject
     private AutowireCapableBeanFactory autowireCapableBeanFactory;
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private Domains domains;
@@ -80,19 +84,25 @@ public class PushService {
     @Scheduled(fixedDelayString = "PT1M")
     @Transactional
     public void updateLastSeenAt() {
-        nodeClients.values().forEach(PushClients::updateLastSeenAt);
+        try (var ignored = requestCounter.allot()) {
+            nodeClients.values().forEach(PushClients::updateLastSeenAt);
+        }
     }
 
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void purgeUnsent() {
-        for (String domainName : domains.getAllDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            Duration ttl = domains.getDomainOptions(domainName)
-                    .getDuration("push.notification.lifetime").getDuration();
-            long lastMoment = Instant.now().minus(ttl).getEpochSecond() * 1000;
-            pushClientRepository.findAllByNodeId(nodeId)
-                    .forEach(client -> pushNotificationRepository.deleteTill(client.getId(), lastMoment));
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging unsent push messages");
+
+            for (String domainName : domains.getAllDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                Duration ttl = domains.getDomainOptions(domainName)
+                        .getDuration("push.notification.lifetime").getDuration();
+                long lastMoment = Instant.now().minus(ttl).getEpochSecond() * 1000;
+                pushClientRepository.findAllByNodeId(nodeId)
+                        .forEach(client -> pushNotificationRepository.deleteTill(client.getId(), lastMoment));
+            }
         }
     }
 

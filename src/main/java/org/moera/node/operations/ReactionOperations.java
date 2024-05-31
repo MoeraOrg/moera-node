@@ -31,6 +31,7 @@ import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
@@ -62,6 +63,9 @@ public class ReactionOperations {
     public static final int MAX_REACTIONS_PER_REQUEST = 200;
 
     private static final Logger log = LoggerFactory.getLogger(ReactionOperations.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -270,50 +274,55 @@ public class ReactionOperations {
 
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() {
-        Set<Entry> changed = new HashSet<>();
-        tx.executeWrite(() ->
-            reactionRepository.findExpired(Util.now()).forEach(reaction -> {
-                log.debug("Purging reaction {}, deletedAt = {}",
-                        LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
-                Entry entry = reaction.getEntryRevision().getEntry();
-                if (reaction.getDeletedAt() == null) { // it's the current active reaction of the user to the entry
-                    List<Reaction> replaced = reactionRepository.findReplacedByEntryIdAndOwner(
-                            entry.getId(),
-                            reaction.getOwnerName(),
-                            PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
-                    if (!replaced.isEmpty()) {
-                        Reaction next = replaced.get(0);
-                        next.setDeletedAt(null);
-                        next.setReplaced(false);
-                        if (next.getSignature() != null) {
-                            next.setDeadline(null);
-                        }
-                        log.debug("Restored reaction {}, deadline {}",
-                                LogUtil.format(next.getId()), LogUtil.format(next.getDeadline()));
-                        reactionTotalOperations.changeTotals(entry, next, 1);
-                    }
-                    reactionTotalOperations.changeTotals(entry, reaction, -1);
-                    changed.add(entry);
-                }
-                reactionRepository.delete(reaction);
-            })
-        );
-        for (Entry entry : changed) {
-            switch (entry.getEntryType()) {
-                case POSTING: {
-                    Posting posting = (Posting) entry;
-                    var totalsInfo = reactionTotalOperations.getInfo(posting);
-                    liberinManager.send(
-                            new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
-                                    .withNodeId(posting.getNodeId()));
-                    break;
-                }
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired unsigned reactions");
 
-                case COMMENT: {
-                    Comment comment = (Comment) entry;
-                    liberinManager.send(
-                            new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId()));
-                    break;
+            Set<Entry> changed = new HashSet<>();
+            tx.executeWrite(() ->
+                    reactionRepository.findExpired(Util.now()).forEach(reaction -> {
+                        log.debug("Purging reaction {}, deletedAt = {}",
+                                LogUtil.format(reaction.getId()), LogUtil.format(reaction.getDeletedAt()));
+                        Entry entry = reaction.getEntryRevision().getEntry();
+                        if (reaction.getDeletedAt() == null) {
+                            // it's the current active reaction of the user to the entry
+                            List<Reaction> replaced = reactionRepository.findReplacedByEntryIdAndOwner(
+                                    entry.getId(),
+                                    reaction.getOwnerName(),
+                                    PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "deletedAt")));
+                            if (!replaced.isEmpty()) {
+                                Reaction next = replaced.get(0);
+                                next.setDeletedAt(null);
+                                next.setReplaced(false);
+                                if (next.getSignature() != null) {
+                                    next.setDeadline(null);
+                                }
+                                log.debug("Restored reaction {}, deadline {}",
+                                        LogUtil.format(next.getId()), LogUtil.format(next.getDeadline()));
+                                reactionTotalOperations.changeTotals(entry, next, 1);
+                            }
+                            reactionTotalOperations.changeTotals(entry, reaction, -1);
+                            changed.add(entry);
+                        }
+                        reactionRepository.delete(reaction);
+                    })
+            );
+            for (Entry entry : changed) {
+                switch (entry.getEntryType()) {
+                    case POSTING: {
+                        Posting posting = (Posting) entry;
+                        var totalsInfo = reactionTotalOperations.getInfo(posting);
+                        liberinManager.send(
+                                new PostingReactionTotalsUpdatedLiberin(posting, totalsInfo.getPublicInfo())
+                                        .withNodeId(posting.getNodeId()));
+                        break;
+                    }
+
+                    case COMMENT: {
+                        Comment comment = (Comment) entry;
+                        liberinManager.send(
+                                new CommentReactionTotalsUpdatedLiberin(comment).withNodeId(comment.getNodeId()));
+                        break;
+                    }
                 }
             }
         }

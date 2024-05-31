@@ -30,6 +30,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.DraftAddedLiberin;
 import org.moera.node.liberin.model.DraftDeletedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
@@ -72,6 +73,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class DraftController {
 
     private static final Logger log = LoggerFactory.getLogger(DraftController.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -344,7 +348,11 @@ public class DraftController {
     @EventListener(DomainsConfiguredEvent.class)
     @Transactional
     public void purgeExpired() {
-        draftRepository.deleteExpired(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired drafts");
+
+            draftRepository.deleteExpired(Util.now());
+        }
     }
 
 }

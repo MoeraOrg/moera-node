@@ -24,6 +24,7 @@ import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.RemoteMediaCache;
 import org.moera.node.data.RemoteMediaCacheRepository;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.PostingFeatures;
@@ -44,6 +45,9 @@ public class MediaManager {
     private static final Logger log = LoggerFactory.getLogger(MediaManager.class);
 
     private static final int REMOTE_MEDIA_CACHE_TTL = 365; // days
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -332,7 +336,11 @@ public class MediaManager {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void purgeExpiredRemoteMedia() {
-        remoteMediaCacheRepository.deleteExpired(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging remote media cache");
+
+            remoteMediaCacheRepository.deleteExpired(Util.now());
+        }
     }
 
 }

@@ -30,6 +30,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
@@ -62,6 +63,9 @@ public class NotificationSenderPool {
 
     @Inject
     private Config config;
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -290,14 +294,18 @@ public class NotificationSenderPool {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void resumeSenders() {
-        List<NotificationSender> resumed = pausedSenders.stream()
-                .filter(sender -> Instant.now().compareTo(sender.getPausedTill()) >= 0)
-                .filter(sender -> !isFrozenNode(sender.getReceiverNodeName()))
-                .toList();
-        resumed.forEach(sender -> {
-            resumeSender(sender);
-            taskExecutor.execute(sender);
-        });
+        try (var ignored = requestCounter.allot()) {
+            log.debug("Resuming paused notification senders");
+
+            List<NotificationSender> resumed = pausedSenders.stream()
+                    .filter(sender -> Instant.now().compareTo(sender.getPausedTill()) >= 0)
+                    .filter(sender -> !isFrozenNode(sender.getReceiverNodeName()))
+                    .toList();
+            resumed.forEach(sender -> {
+                resumeSender(sender);
+                taskExecutor.execute(sender);
+            });
+        }
     }
 
 }

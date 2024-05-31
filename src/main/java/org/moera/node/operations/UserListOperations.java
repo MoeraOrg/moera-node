@@ -32,6 +32,7 @@ import org.moera.node.data.UserList;
 import org.moera.node.data.UserListItem;
 import org.moera.node.data.UserListItemRepository;
 import org.moera.node.data.UserSubscriptionRepository;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.CommentInfo;
@@ -44,6 +45,8 @@ import org.moera.node.rest.task.UserListUpdateJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -53,6 +56,11 @@ public class UserListOperations {
 
     public static final Duration ABSENT_TTL = Duration.ofDays(3);
     public static final Duration PRESENT_TTL = Duration.ofDays(30);
+
+    private static final Logger log = LoggerFactory.getLogger(UserListOperations.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -382,28 +390,32 @@ public class UserListOperations {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void purgeExpired() {
-        // TODO this is for SHERIFF_HIDE user lists only
-        remoteUserListItemRepository.deleteExpiredAbsent(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired user list entries");
 
-        Collection<RemoteUserListItem> expired = remoteUserListItemRepository.findExpiredNotAbsent(Util.now());
-        for (RemoteUserListItem item : expired) {
-            universalContext.associate(item.getNodeId());
-            List<String> feeds = feedOperations.getSheriffFeeds(item.getListNodeName());
-            boolean used = false;
-            for (String feedName : feeds) {
-                int count = postingRepository.countByOwnerNameAndFeed(item.getNodeId(), item.getNodeName(), feedName);
-                if (count > 0) {
-                    used = true;
-                    break;
+            // TODO this is for SHERIFF_HIDE user lists only
+            remoteUserListItemRepository.deleteExpiredAbsent(Util.now());
+
+            Collection<RemoteUserListItem> expired = remoteUserListItemRepository.findExpiredNotAbsent(Util.now());
+            for (RemoteUserListItem item : expired) {
+                universalContext.associate(item.getNodeId());
+                List<String> feeds = feedOperations.getSheriffFeeds(item.getListNodeName());
+                boolean used = false;
+                for (String feedName : feeds) {
+                    int count = postingRepository.countByOwnerNameAndFeed(item.getNodeId(), item.getNodeName(), feedName);
+                    if (count > 0) {
+                        used = true;
+                        break;
+                    }
+                    count = commentRepository.countByOwnerNameAndFeed(item.getNodeId(), item.getNodeName(), feedName);
+                    if (count > 0) {
+                        used = true;
+                        break;
+                    }
                 }
-                count = commentRepository.countByOwnerNameAndFeed(item.getNodeId(), item.getNodeName(), feedName);
-                if (count > 0) {
-                    used = true;
-                    break;
+                if (!used) {
+                    remoteUserListItemRepository.delete(item);
                 }
-            }
-            if (!used) {
-                remoteUserListItemRepository.delete(item);
             }
         }
     }

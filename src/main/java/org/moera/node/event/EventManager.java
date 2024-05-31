@@ -27,6 +27,7 @@ import org.moera.node.data.Token;
 import org.moera.node.domain.Domains;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PingEvent;
@@ -56,6 +57,9 @@ public class EventManager {
     private static final String USER_PREFIX = "/user";
     private static final String EVENT_DESTINATION = "/queue";
     private static final String TOKEN_HEADER = "token";
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -248,8 +252,12 @@ public class EventManager {
 
     @Scheduled(fixedDelayString = "PT1M")
     public void everyMinute() {
-        retryDelivery();
-        pingAll();
+        try (var ignored = requestCounter.allot()) {
+            log.debug("Retrying event delivery");
+
+            retryDelivery();
+            pingAll();
+        }
     }
 
     private void retryDelivery() {

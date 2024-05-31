@@ -19,6 +19,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -46,6 +47,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class PushController {
 
     private static final Logger log = LoggerFactory.getLogger(PushController.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -145,14 +149,18 @@ public class PushController {
     @Scheduled(fixedDelayString = "P1D")
     @Transactional
     public void purgeInactive() {
-        for (String domainName : domains.getWarmDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            Duration ttl = domains.getDomainOptions(domainName).getDuration("push.client.lifetime").getDuration();
-            Timestamp lastSeenAt = Timestamp.from(Instant.now().minus(ttl));
-            Collection<PushClient> clients = pushClientRepository.findInactive(nodeId, lastSeenAt);
-            for (PushClient client : clients) {
-                pushService.delete(nodeId, client.getClientId());
-                pushClientRepository.delete(client);
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging inactive push service clients");
+
+            for (String domainName : domains.getWarmDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                Duration ttl = domains.getDomainOptions(domainName).getDuration("push.client.lifetime").getDuration();
+                Timestamp lastSeenAt = Timestamp.from(Instant.now().minus(ttl));
+                Collection<PushClient> clients = pushClientRepository.findInactive(nodeId, lastSeenAt);
+                for (PushClient client : clients) {
+                    pushService.delete(nodeId, client.getClientId());
+                    pushClientRepository.delete(client);
+                }
             }
         }
     }

@@ -19,6 +19,7 @@ import org.moera.node.data.SitemapRecordRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.ui.sitemap.SitemapIndex;
 import org.moera.node.ui.sitemap.SitemapIndexItem;
 import org.moera.node.ui.sitemap.SitemapUrl;
@@ -55,6 +56,9 @@ public class SitemapController {
     private static final Logger log = LoggerFactory.getLogger(SitemapController.class);
 
     private int refreshPosition = 0;
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -118,47 +122,51 @@ public class SitemapController {
     @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void refresh() {
-        List<String> names = domains.getWarmDomainNames().stream().sorted().toList();
-        int sliceLength = names.size() < 50 ? names.size() : names.size() / 24;
-        for (int i = 0; i < sliceLength && refreshPosition + i < names.size(); i++) {
-            String domainName = names.get(refreshPosition + i);
+        try (var ignored = requestCounter.allot()) {
+            log.info("Refreshing sitemaps");
 
-            MDC.put("domain", domainName);
-            log.debug("Refreshing sitemap of {}", domainName);
+            List<String> names = domains.getWarmDomainNames().stream().sorted().toList();
+            int sliceLength = names.size() < 50 ? names.size() : names.size() / 24;
+            for (int i = 0; i < sliceLength && refreshPosition + i < names.size(); i++) {
+                String domainName = names.get(refreshPosition + i);
 
-            try {
-                UUID nodeId = domains.getDomainNodeId(domainName);
-                Collection<Posting> postings = sitemapRecordRepository.findUpdated(nodeId);
-                log.debug("{} postings to update", postings.size());
-                if (postings.isEmpty()) {
-                    continue;
-                }
+                MDC.put("domain", domainName);
+                log.debug("Refreshing sitemap of {}", domainName);
 
-                Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(nodeId);
-                Sitemap sitemap = findAvailableSitemap(sitemaps);
-                for (Posting posting : postings) {
-                    SitemapRecord record = sitemapRecordRepository.findByEntryId(nodeId, posting.getId());
-                    if (record != null) {
-                        record.update(posting);
-                        log.debug("Updated posting {}", posting.getId());
-                    } else {
-                        record = new SitemapRecord(sitemap.getId(), posting);
-                        record = sitemapRecordRepository.save(record);
-                        log.debug("Created record {} in sitemap {} for posting {}",
-                                record.getId(), record.getSitemapId(), posting.getId());
+                try {
+                    UUID nodeId = domains.getDomainNodeId(domainName);
+                    Collection<Posting> postings = sitemapRecordRepository.findUpdated(nodeId);
+                    log.debug("{} postings to update", postings.size());
+                    if (postings.isEmpty()) {
+                        continue;
                     }
-                    sitemap.setTotal(sitemap.getTotal() + 1);
-                    if (sitemap.getTotal() >= MAX_SITEMAP_RECORD) {
-                        sitemap = findAvailableSitemap(sitemaps);
+
+                    Collection<Sitemap> sitemaps = sitemapRecordRepository.findSitemaps(nodeId);
+                    Sitemap sitemap = findAvailableSitemap(sitemaps);
+                    for (Posting posting : postings) {
+                        SitemapRecord record = sitemapRecordRepository.findByEntryId(nodeId, posting.getId());
+                        if (record != null) {
+                            record.update(posting);
+                            log.debug("Updated posting {}", posting.getId());
+                        } else {
+                            record = new SitemapRecord(sitemap.getId(), posting);
+                            record = sitemapRecordRepository.save(record);
+                            log.debug("Created record {} in sitemap {} for posting {}",
+                                    record.getId(), record.getSitemapId(), posting.getId());
+                        }
+                        sitemap.setTotal(sitemap.getTotal() + 1);
+                        if (sitemap.getTotal() >= MAX_SITEMAP_RECORD) {
+                            sitemap = findAvailableSitemap(sitemaps);
+                        }
                     }
+                } catch (Exception e) {
+                    log.error("Error refreshing sitemap of {}", domainName, e);
                 }
-            } catch (Exception e) {
-                log.error("Error refreshing sitemap of {}", domainName, e);
             }
-        }
-        refreshPosition += sliceLength;
-        if (refreshPosition >= names.size()) {
-            refreshPosition = 0;
+            refreshPosition += sliceLength;
+            if (refreshPosition >= names.size()) {
+                refreshPosition = 0;
+            }
         }
     }
 

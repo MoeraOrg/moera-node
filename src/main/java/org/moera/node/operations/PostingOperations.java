@@ -31,6 +31,7 @@ import org.moera.node.data.Story;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
@@ -58,6 +59,9 @@ public class PostingOperations {
     private static final Duration UNSIGNED_TTL = Duration.of(15, ChronoUnit.MINUTES);
 
     private static final Logger log = LoggerFactory.getLogger(PostingOperations.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -283,54 +287,62 @@ public class PostingOperations {
 
     @Scheduled(fixedDelayString = "PT1H")
     public void purgeUnlinked() {
-        for (String domainName : domains.getAllDomainNames()) {
-            Options options = domains.getDomainOptions(domainName);
-            List<Liberin> liberinList = new ArrayList<>();
-            tx.executeWrite(() ->
-                postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
-                    log.info("Deleting unlinked posting {}", posting.getId());
-                    EntryRevision latest = posting.getCurrentRevision();
-                    deletePosting(posting, options);
-                    liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
-                })
-            );
-            liberinList.forEach(liberinManager::send);
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging unlinked postings");
+
+            for (String domainName : domains.getAllDomainNames()) {
+                Options options = domains.getDomainOptions(domainName);
+                List<Liberin> liberinList = new ArrayList<>();
+                tx.executeWrite(() ->
+                        postingRepository.findUnlinked(options.nodeId()).forEach(posting -> {
+                            log.info("Deleting unlinked posting {}", posting.getId());
+                            EntryRevision latest = posting.getCurrentRevision();
+                            deletePosting(posting, options);
+                            liberinList.add(new PostingDeletedLiberin(posting, latest).withNodeId(options.nodeId()));
+                        })
+                );
+                liberinList.forEach(liberinManager::send);
+            }
         }
     }
 
     @Scheduled(fixedDelayString = "PT15M")
     public void purgeExpired() {
-        List<Liberin> liberins = new ArrayList<>();
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired unsigned postings");
 
-        tx.executeWrite(() -> {
-            List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
-            for (Posting posting : postings) {
-                universalContext.associate(posting.getNodeId());
-                EntryRevision latest = posting.getCurrentRevision();
-                if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
-                    log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
-                    storyOperations.unpublish(posting.getId(), posting.getNodeId(), liberins::add);
-                    postingRepository.delete(posting);
+            List<Liberin> liberins = new ArrayList<>();
 
-                    liberins.add(new PostingDeletedLiberin(posting, latest).withNodeId(posting.getNodeId()));
-                } else {
-                    EntryRevision revision = posting.getRevisions().stream()
-                            .min(Comparator.comparing(EntryRevision::getCreatedAt))
-                            .orElse(null);
-                    if (revision != null) { // always
-                        revision.setDeletedAt(null);
-                        entryRevisionRepository.delete(posting.getCurrentRevision());
-                        posting.setCurrentRevision(revision);
-                        posting.setTotalRevisions(posting.getTotalRevisions() - 1);
+            tx.executeWrite(() -> {
+                List<Posting> postings = postingRepository.findExpiredUnsigned(Util.now());
+                for (Posting posting : postings) {
+                    universalContext.associate(posting.getNodeId());
+                    EntryRevision latest = posting.getCurrentRevision();
+                    if (posting.getDeletedAt() != null || posting.getTotalRevisions() <= 1) {
+                        log.debug("Purging expired unsigned posting {}", LogUtil.format(posting.getId()));
+                        storyOperations.unpublish(posting.getId(), posting.getNodeId(), liberins::add);
+                        postingRepository.delete(posting);
 
-                        liberins.add(new PostingUpdatedLiberin(posting, latest, posting.getViewE())
-                                .withNodeId(posting.getNodeId()));
+                        liberins.add(new PostingDeletedLiberin(posting, latest).withNodeId(posting.getNodeId()));
+                    } else {
+                        EntryRevision revision = posting.getRevisions().stream()
+                                .min(Comparator.comparing(EntryRevision::getCreatedAt))
+                                .orElse(null);
+                        if (revision != null) { // always
+                            revision.setDeletedAt(null);
+                            entryRevisionRepository.delete(posting.getCurrentRevision());
+                            posting.setCurrentRevision(revision);
+                            posting.setTotalRevisions(posting.getTotalRevisions() - 1);
+
+                            liberins.add(new PostingUpdatedLiberin(posting, latest, posting.getViewE())
+                                    .withNodeId(posting.getNodeId()));
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        liberins.forEach(liberinManager::send);
+            liberins.forEach(liberinManager::send);
+        }
     }
 
 }

@@ -70,6 +70,7 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
 import org.moera.node.model.PostingFeatures;
@@ -107,6 +108,9 @@ public class MediaOperations {
     private static final Logger log = LoggerFactory.getLogger(MediaOperations.class);
 
     private static final int[] PREVIEW_SIZES = {1400, 900, 150};
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -615,45 +619,53 @@ public class MediaOperations {
 
     @Scheduled(fixedDelayString = "PT6H")
     public void purgeUnused() {
-        Timestamp now = Util.now();
-        tx.executeWrite(() -> mediaFileOwnerRepository.deleteUnused(now));
-        Collection<MediaFile> mediaFiles = tx.executeRead(() -> mediaFileRepository.findUnused(now));
-        tx.executeWrite(() -> mediaFileRepository.deleteUnused(now));
-        for (MediaFile mediaFile : mediaFiles) {
-            Path path = getPath(mediaFile);
-            try {
-                Files.deleteIfExists(path);
-            } catch (IOException e) {
-                log.warn("Error deleting {}: {}", path, e.getMessage());
-            }
-            if (config.getMedia().isDirectServe() && mediaFile.isExposed()) {
-                Path publicPath = getPublicServingPath(mediaFile);
-                try {
-                    Files.deleteIfExists(publicPath);
-                } catch (IOException e) {
-                    log.warn("Error deleting {}: {}", publicPath, e.getMessage());
-                }
-            }
-        }
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging unused media files");
 
-        try (DirectoryStream<Path> directory = Files.newDirectoryStream(getPrivateServingPath())) {
-            for (Path path : directory) {
-                if (Files.isSymbolicLink(path)) {
-                    Path target = Files.readSymbolicLink(path);
-                    if (!Files.exists(path.resolveSibling(target))) {
-                        Files.delete(path);
+            Timestamp now = Util.now();
+            tx.executeWrite(() -> mediaFileOwnerRepository.deleteUnused(now));
+            Collection<MediaFile> mediaFiles = tx.executeRead(() -> mediaFileRepository.findUnused(now));
+            tx.executeWrite(() -> mediaFileRepository.deleteUnused(now));
+            for (MediaFile mediaFile : mediaFiles) {
+                Path path = getPath(mediaFile);
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException e) {
+                    log.warn("Error deleting {}: {}", path, e.getMessage());
+                }
+                if (config.getMedia().isDirectServe() && mediaFile.isExposed()) {
+                    Path publicPath = getPublicServingPath(mediaFile);
+                    try {
+                        Files.deleteIfExists(publicPath);
+                    } catch (IOException e) {
+                        log.warn("Error deleting {}: {}", publicPath, e.getMessage());
                     }
                 }
             }
-        } catch (IOException e) {
-            log.warn("Error deleting stale symlinks: {}", e.getMessage());
+
+            try (DirectoryStream<Path> directory = Files.newDirectoryStream(getPrivateServingPath())) {
+                for (Path path : directory) {
+                    if (Files.isSymbolicLink(path)) {
+                        Path target = Files.readSymbolicLink(path);
+                        if (!Files.exists(path.resolveSibling(target))) {
+                            Files.delete(path);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                log.warn("Error deleting stale symlinks: {}", e.getMessage());
+            }
         }
     }
 
     @Scheduled(fixedDelayString = "PT15M")
     @Transactional
     public void refreshPermissions() {
-        mediaFileOwnerRepository.findOutdatedPermissions().forEach(this::updatePermissions);
+        try (var ignored = requestCounter.allot()) {
+            log.info("Refreshing permissions of media file owners");
+
+            mediaFileOwnerRepository.findOutdatedPermissions().forEach(this::updatePermissions);
+        }
     }
 
     @EventListener(JobsManagerInitializedEvent.class)
@@ -679,56 +691,61 @@ public class MediaOperations {
             return;
         }
 
-        Timestamp deadline = Timestamp.from(Instant.now().plus(MediaOperations.NONCE_REFRESH_INTERVAL));
+        try (var ignored = requestCounter.allot()) {
+            log.info("Changing direct serving names of private media files");
 
-        Pageable pageable = PageRequest.of(0, 100);
-        Page<MediaFileOwner> page;
-        do {
-            page = tx.executeRead(() -> mediaFileOwnerRepository.findOutdatedNonce(Util.now(), pageable));
-            for (MediaFileOwner mediaFileOwner : page.getContent()) {
-                String prevNonce = mediaFileOwner.getPrevNonce();
-                String nonce = MediaFileOwner.generateNonce();
-                tx.executeWrite(() -> {
-                    mediaFileOwnerRepository.replaceNonce(mediaFileOwner.getId(), nonce, deadline);
-                    entryRevisionRepository.clearAttachmentsCache(mediaFileOwner.getId());
-                });
+            Timestamp deadline = Timestamp.from(Instant.now().plus(MediaOperations.NONCE_REFRESH_INTERVAL));
 
-                if (prevNonce != null) {
-                    Path prevPath = getPrivateServingPath().resolve(mediaFileOwner.getPrevDirectFileName());
-                    try {
-                        Files.deleteIfExists(prevPath);
-                    } catch (IOException e) {
-                        log.error("Cannot remove existing link {}: {}", prevPath, e.getMessage());
-                    }
-                }
-                mediaFileOwner.setNonce(nonce);
-                try {
-                    createPrivateServingLink(mediaFileOwner);
-                } catch (IOException e) {
-                    log.error("Could not create a link for {}: {}", mediaFileOwner.getDirectFileName(), e.getMessage());
-                }
+            Pageable pageable = PageRequest.of(0, 100);
+            Page<MediaFileOwner> page;
+            do {
+                page = tx.executeRead(() -> mediaFileOwnerRepository.findOutdatedNonce(Util.now(), pageable));
+                for (MediaFileOwner mediaFileOwner : page.getContent()) {
+                    String prevNonce = mediaFileOwner.getPrevNonce();
+                    String nonce = MediaFileOwner.generateNonce();
+                    tx.executeWrite(() -> {
+                        mediaFileOwnerRepository.replaceNonce(mediaFileOwner.getId(), nonce, deadline);
+                        entryRevisionRepository.clearAttachmentsCache(mediaFileOwner.getId());
+                    });
 
-                Collection<MediaFilePreview> previews =
-                        mediaFilePreviewRepository.findByOriginalId(mediaFileOwner.getMediaFile().getId());
-                for (MediaFilePreview preview : previews) {
                     if (prevNonce != null) {
-                        Path prevPath = getPrivateServingPath().resolve(
-                                preview.getDirectFileName(mediaFileOwner.getPrevDirectFileName()));
+                        Path prevPath = getPrivateServingPath().resolve(mediaFileOwner.getPrevDirectFileName());
                         try {
                             Files.deleteIfExists(prevPath);
                         } catch (IOException e) {
                             log.error("Cannot remove existing link {}: {}", prevPath, e.getMessage());
                         }
                     }
+                    mediaFileOwner.setNonce(nonce);
                     try {
-                        createPrivateServingLink(preview, mediaFileOwner.getDirectFileName());
+                        createPrivateServingLink(mediaFileOwner);
                     } catch (IOException e) {
-                        log.error("Could not create a link for preview {} {}w: {}",
-                                mediaFileOwner.getDirectFileName(), preview.getWidth(), e.getMessage());
+                        log.error("Could not create a link for {}: {}",
+                                mediaFileOwner.getDirectFileName(), e.getMessage());
+                    }
+
+                    Collection<MediaFilePreview> previews =
+                            mediaFilePreviewRepository.findByOriginalId(mediaFileOwner.getMediaFile().getId());
+                    for (MediaFilePreview preview : previews) {
+                        if (prevNonce != null) {
+                            Path prevPath = getPrivateServingPath().resolve(
+                                    preview.getDirectFileName(mediaFileOwner.getPrevDirectFileName()));
+                            try {
+                                Files.deleteIfExists(prevPath);
+                            } catch (IOException e) {
+                                log.error("Cannot remove existing link {}: {}", prevPath, e.getMessage());
+                            }
+                        }
+                        try {
+                            createPrivateServingLink(preview, mediaFileOwner.getDirectFileName());
+                        } catch (IOException e) {
+                            log.error("Could not create a link for preview {} {}w: {}",
+                                    mediaFileOwner.getDirectFileName(), preview.getWidth(), e.getMessage());
+                        }
                     }
                 }
-            }
-        } while (!page.isEmpty());
+            } while (!page.isEmpty());
+        }
     }
 
 }

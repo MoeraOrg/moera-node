@@ -16,6 +16,7 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
@@ -27,6 +28,8 @@ import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -34,7 +37,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class StoryOperations {
 
+    private static final Logger log = LoggerFactory.getLogger(StoryOperations.class);
+
     private static final Timestamp PINNED_TIME = Util.toTimestamp(9000000000000L); // 9E+12
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private UniversalContext universalContext;
@@ -134,12 +142,16 @@ public class StoryOperations {
 
     @Scheduled(fixedDelayString = "P1D")
     public void purgeExpired() {
-        for (String domainName : domains.getAllDomainNames()) {
-            UUID nodeId = domains.getDomainNodeId(domainName);
-            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
-            purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true, true);
-            purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", false,
-                    domains.getDomainOptions(nodeId).getBool("news.purge-pinned"));
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging old stories");
+
+            for (String domainName : domains.getAllDomainNames()) {
+                UUID nodeId = domains.getDomainNodeId(domainName);
+                purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.lifetime", false, true);
+                purgeExpired(nodeId, domainName, Feed.INSTANT, "instants.viewed.lifetime", true, true);
+                purgeExpired(nodeId, domainName, Feed.NEWS, "news.lifetime", false,
+                        domains.getDomainOptions(nodeId).getBool("news.purge-pinned"));
+            }
         }
     }
 

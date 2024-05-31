@@ -26,6 +26,7 @@ import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.notification.Notification;
@@ -52,6 +53,9 @@ public class NotificationController {
     private static final Duration FREEZING_PERIOD = Duration.of(7, ChronoUnit.DAYS);
 
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -167,7 +171,11 @@ public class NotificationController {
 
     @Scheduled(fixedDelayString = "P1D")
     public void deleteExpiredFrozen() {
-        tx.executeWrite(() -> frozenNotificationRepository.deleteExpired(Util.now()));
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired frozen notifications");
+
+            tx.executeWrite(() -> frozenNotificationRepository.deleteExpired(Util.now()));
+        }
     }
 
 }

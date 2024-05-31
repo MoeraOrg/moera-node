@@ -22,12 +22,15 @@ import org.moera.node.data.QBlockedUser;
 import org.moera.node.data.QContact;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -35,6 +38,11 @@ import org.springframework.util.ObjectUtils;
 
 @Component
 public class BlockedUserOperations {
+
+    private static final Logger log = LoggerFactory.getLogger(BlockedUserOperations.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -194,19 +202,23 @@ public class BlockedUserOperations {
 
     @Scheduled(fixedDelayString = "PT1H")
     public void purgeExpired() {
-        List<Liberin> liberinList = new ArrayList<>();
-        tx.executeWrite(() -> {
-            Set<UUID> nodeIds = new HashSet<>();
-            blockedUserRepository.findExpired(Util.now()).forEach(blockedUser -> {
-                nodeIds.add(blockedUser.getNodeId());
-                universalContext.associate(blockedUser.getNodeId());
-                contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
-                blockedUserRepository.delete(blockedUser);
-                liberinList.add(new BlockedUserDeletedLiberin(blockedUser).withNodeId(blockedUser.getNodeId()));
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired blockings of users");
+
+            List<Liberin> liberinList = new ArrayList<>();
+            tx.executeWrite(() -> {
+                Set<UUID> nodeIds = new HashSet<>();
+                blockedUserRepository.findExpired(Util.now()).forEach(blockedUser -> {
+                    nodeIds.add(blockedUser.getNodeId());
+                    universalContext.associate(blockedUser.getNodeId());
+                    contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
+                    blockedUserRepository.delete(blockedUser);
+                    liberinList.add(new BlockedUserDeletedLiberin(blockedUser).withNodeId(blockedUser.getNodeId()));
+                });
+                nodeIds.forEach(this::recalculateChecksums);
             });
-            nodeIds.forEach(this::recalculateChecksums);
-        });
-        liberinList.forEach(liberinManager::send);
+            liberinList.forEach(liberinManager::send);
+        }
     }
 
 }

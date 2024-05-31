@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.domain.DomainsConfiguredEvent;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
@@ -39,6 +40,9 @@ public class SubscriptionManager {
     private final Map<UUID, PendingSubscription> pending = new HashMap<>();
     private final Object lock = new Object();
     private final AtomicBoolean rescan = new AtomicBoolean(false);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private SubscriptionRepository subscriptionRepository;
@@ -68,10 +72,14 @@ public class SubscriptionManager {
             return;
         }
 
-        Collection<Subscription> list = subscriptionRepository.findPending();
-        list.addAll(subscriptionRepository.findUnused());
-        synchronized (lock) {
-            list.forEach(this::add);
+        try (var ignored = requestCounter.allot()) {
+            log.info("Rescanning subscriptions to be realized");
+
+            Collection<Subscription> list = subscriptionRepository.findPending();
+            list.addAll(subscriptionRepository.findUnused());
+            synchronized (lock) {
+                list.forEach(this::add);
+            }
         }
     }
 

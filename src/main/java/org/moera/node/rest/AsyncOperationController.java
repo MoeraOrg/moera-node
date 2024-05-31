@@ -14,6 +14,7 @@ import org.moera.node.data.RemoteVerificationRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.RequestCounter;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.RemotePostingVerificationInfo;
 import org.moera.node.model.RemoteReactionVerificationInfo;
@@ -31,6 +32,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AsyncOperationController {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncOperationController.class);
+
+    @Inject
+    private RequestCounter requestCounter;
 
     @Inject
     private RequestContext requestContext;
@@ -73,7 +77,11 @@ public class AsyncOperationController {
     @Scheduled(fixedDelayString = "PT30M")
     @Transactional
     public void purgeExpiredVerifications() {
-        remoteVerificationRepository.deleteExpired(Util.now());
+        try (var ignored = requestCounter.allot()) {
+            log.info("Purging expired deleted verifications");
+
+            remoteVerificationRepository.deleteExpired(Util.now());
+        }
     }
 
 }
