@@ -1,0 +1,3 @@
+DROP INDEX own_reactions_node_id_remote_node_name_remote_posting_id_idx;
+CREATE UNIQUE INDEX own_reactions_node_id_remote_posting_id_node_name_idx
+    ON own_reactions(node_id, remote_posting_id, remote_node_name);
