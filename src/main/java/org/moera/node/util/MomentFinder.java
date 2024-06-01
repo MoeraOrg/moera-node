@@ -24,9 +24,13 @@ public class MomentFinder {
                 int newStart = momentLimit - momentBase >= 200 ? 100 : (int) (momentLimit - momentBase) / 2;
                 nonce.getAndAdd(1000 - nonce.get() % 1000 + newStart);
             }
-            if (++n >= 1000 && momentBase + 1000 < momentLimit) {
+            if (++n >= 1000) {
                 n = 0;
                 momentBase += 1000;
+                if (momentBase >= momentLimit) {
+                    momentLimit += 1000;
+                    // ignore momentLimit, because 1000 iterations mean that there is no free slot in the given range
+                }
             }
         }
 
