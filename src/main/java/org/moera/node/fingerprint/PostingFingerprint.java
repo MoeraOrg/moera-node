@@ -1,7 +1,6 @@
 package org.moera.node.fingerprint;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -33,7 +32,7 @@ public class PostingFingerprint extends EntryFingerprint {
     public String bodyFormat;
     public long createdAt;
     public byte permissions; // TODO for future use
-    public List<Digest<Fingerprint>> attachments = Collections.emptyList();
+    public List<Digest<Fingerprint>> attachments;
 
     public PostingFingerprint(Posting posting, EntryRevision revision) {
         super(1);
