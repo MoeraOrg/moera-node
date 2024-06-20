@@ -325,7 +325,7 @@ public class NamingClient {
                     info.getName(),
                     info.getGeneration(),
                     null,
-                    null,
+                    nodeUri,
                     signingKey != null ? signingKeyR : null,
                     signingKey != null ? validFrom : null,
                     info.getDigest(),
