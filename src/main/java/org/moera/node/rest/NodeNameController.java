@@ -25,6 +25,7 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.moera.commons.crypto.CryptoException;
 import org.moera.naming.rpc.Rules;
+import org.moera.node.api.naming.NamingClient;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -36,7 +37,6 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.api.naming.NamingClient;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
 import org.moera.node.util.Util;
@@ -94,6 +94,7 @@ public class NodeNameController {
             ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(Rules.EC_CURVE);
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
 
+            BigInteger p = ecSpec.getCurve().getField().getCharacteristic();
             BigInteger d = BigInteger.ZERO;
             while (d.equals(BigInteger.ZERO)) {
                 random.nextBytes(entropy);
@@ -105,7 +106,7 @@ public class NodeNameController {
                 secretInfo.setSecret(Util.base64encode(entropy));
                 secretInfo.setMnemonic(mnemonic.toString().split(" "));
 
-                d = new BigInteger(1, seed).remainder(ecSpec.getN());
+                d = new BigInteger(1, seed).remainder(p);
             }
             ECPoint q = ecSpec.getG().multiply(d);
             ECPublicKeySpec pubSpec = new ECPublicKeySpec(q, ecSpec);
@@ -163,7 +164,8 @@ public class NodeNameController {
             KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
             ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(Rules.EC_CURVE);
 
-            BigInteger d = new BigInteger(1, seed).remainder(ecSpec.getN());
+            BigInteger p = ecSpec.getCurve().getField().getCharacteristic();
+            BigInteger d = new BigInteger(1, seed).remainder(p);
             ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
             ECPrivateKey privateUpdatingKey = (ECPrivateKey) keyFactory.generatePrivate(privateKeySpec);
 
