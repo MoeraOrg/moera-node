@@ -184,8 +184,9 @@ public class TokensController {
 
             domains.getAllDomainNames().stream()
                     .map(domains::getDomain)
-                    .filter(info ->
-                            Instant.ofEpochSecond(info.getCreatedAt()).plus(1, ChronoUnit.YEARS).isBefore(Instant.now()))
+                    .filter(info -> Instant.ofEpochSecond(info.getCreatedAt())
+                            .plus(365, ChronoUnit.DAYS)
+                            .isBefore(Instant.now()))
                     .map(DomainInfo::getNodeId)
                     .map(domains::getDomainOptions)
                     .filter(options -> !options.isFrozen())
