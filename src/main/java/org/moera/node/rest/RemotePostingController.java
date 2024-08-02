@@ -8,6 +8,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.OwnPostingRepository;
 import org.moera.node.data.RemotePostingVerification;
@@ -73,6 +75,7 @@ public class RemotePostingController {
 
     @PostMapping
     @Admin
+    @AuthScope(Scope.REMOTE_ADD_POST)
     @Entitled
     @Transactional
     public Result post(@PathVariable String nodeName, @Valid @RequestBody PostingSourceText postingText) {
@@ -88,6 +91,7 @@ public class RemotePostingController {
 
     @PutMapping("/{postingId}")
     @Admin
+    @AuthScope(Scope.REMOTE_UPDATE_POST)
     @Entitled
     @Transactional
     public Result put(@PathVariable String nodeName, @PathVariable String postingId,
@@ -117,6 +121,7 @@ public class RemotePostingController {
 
     @DeleteMapping("/{postingId}")
     @Admin
+    @AuthScope(Scope.REMOTE_DELETE_CONTENT)
     @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId) {
         log.info("DELETE /nodes/{nodeName}/postings/{postingId} (nodeName = {}, postingId = {})",
@@ -136,6 +141,7 @@ public class RemotePostingController {
 
     @PostMapping("/{id}/verify")
     @Admin
+    @AuthScope(Scope.OTHER)
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String id) {
         log.info("POST /nodes/{name}/postings/{id}/verify, (name = {}, id = {})",
@@ -146,6 +152,7 @@ public class RemotePostingController {
 
     @PostMapping("/{id}/revisions/{revisionId}/verify")
     @Admin
+    @AuthScope(Scope.OTHER)
     @Transactional
     public AsyncOperationCreated verifyRevision(@PathVariable String nodeName, @PathVariable String id,
                                                 @PathVariable String revisionId) {

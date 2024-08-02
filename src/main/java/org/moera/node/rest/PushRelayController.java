@@ -10,6 +10,8 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.api.pushrelay.FcmRelay;
 import org.moera.node.api.pushrelay.PushRelayRegisterFingerprint;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -40,6 +42,7 @@ public class PushRelayController {
 
     @PostMapping
     @Admin
+    @AuthScope(Scope.OTHER)
     @Entitled
     public Result post(@Valid @RequestBody PushRelayClientAttributes pushRelayClientAttributes) {
         log.info("POST /push-relay (type = {}, clientId = {}, lang = {})",

@@ -16,6 +16,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftRepository;
 import org.moera.node.data.DraftType;
@@ -97,6 +99,7 @@ public class DraftController {
 
     @GetMapping
     @Admin
+    @AuthScope(Scope.VIEW_DRAFTS)
     @Transactional
     public List<DraftInfo> getAll(
             @RequestParam DraftType draftType,
@@ -164,6 +167,7 @@ public class DraftController {
 
     @PostMapping
     @Admin
+    @AuthScope(Scope.USE_DRAFTS)
     @Entitled
     @Transactional
     public ResponseEntity<DraftInfo> post(@Valid @RequestBody DraftText draftText) {
@@ -215,6 +219,7 @@ public class DraftController {
 
     @PutMapping("/{id}")
     @Admin
+    @AuthScope(Scope.USE_DRAFTS)
     @Entitled
     @Transactional
     public DraftInfo put(@PathVariable UUID id, @Valid @RequestBody DraftText draftText) {
@@ -319,6 +324,7 @@ public class DraftController {
 
     @GetMapping("/{id}")
     @Admin
+    @AuthScope(Scope.VIEW_DRAFTS)
     @Transactional
     public DraftInfo get(@PathVariable UUID id) {
         log.info("GET /drafts/{id}, (id = {})", LogUtil.format(id));
@@ -331,6 +337,7 @@ public class DraftController {
 
     @DeleteMapping("/{id}")
     @Admin
+    @AuthScope(Scope.USE_DRAFTS)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /drafts/{id}, (id = {})", LogUtil.format(id));

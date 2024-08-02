@@ -5,11 +5,11 @@ import org.moera.node.fingerprint.CarteProperties;
 public class CarteAuthInfo {
 
     private String clientName;
-    private long authCategory;
+    private long authScope;
 
     public CarteAuthInfo(CarteProperties properties) {
         clientName = properties.getOwnerName();
-        authCategory = properties.getAuthCategory();
+        authScope = properties.getAuthScope();
     }
 
     public String getClientName() {
@@ -20,12 +20,12 @@ public class CarteAuthInfo {
         this.clientName = clientName;
     }
 
-    public long getAuthCategory() {
-        return authCategory;
+    public long getAuthScope() {
+        return authScope;
     }
 
-    public void setAuthCategory(long authCategory) {
-        this.authCategory = authCategory;
+    public void setAuthScope(long authScope) {
+        this.authScope = authScope;
     }
 
 }

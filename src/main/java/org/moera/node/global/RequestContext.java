@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Avatar;
 import org.moera.node.friends.FriendCacheInvalidation;
@@ -51,9 +52,11 @@ public interface RequestContext extends AccessChecker {
 
     boolean isMemberOf(UUID friendGroupId);
 
-    long getAuthCategory();
+    long getAuthScope();
 
-    void setAuthCategory(long authCategory);
+    void setAuthScope(long authScope);
+
+    boolean hasAuthScope(Scope scope);
 
     UUID getTokenId();
 

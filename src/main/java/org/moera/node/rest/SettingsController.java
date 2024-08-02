@@ -13,8 +13,10 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.OptionDefault;
 import org.moera.node.data.OptionDefaultRepository;
 import org.moera.node.global.ApiController;
@@ -76,6 +78,7 @@ public class SettingsController {
 
     @GetMapping("/node")
     @Admin
+    @AuthScope(Scope.VIEW_SETTINGS)
     public List<SettingInfo> getForNode(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node");
 
@@ -85,6 +88,7 @@ public class SettingsController {
 
     @GetMapping("/client")
     @Admin
+    @AuthScope(Scope.VIEW_SETTINGS)
     public List<SettingInfo> getForClient(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/client");
 
@@ -94,6 +98,7 @@ public class SettingsController {
 
     @GetMapping("/node/metadata")
     @Admin
+    @AuthScope(Scope.VIEW_SETTINGS)
     public List<SettingMetaInfo> getMetadata(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node/metadata");
 

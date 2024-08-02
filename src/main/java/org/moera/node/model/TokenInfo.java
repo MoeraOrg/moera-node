@@ -1,7 +1,9 @@
 package org.moera.node.model;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Token;
 import org.moera.node.util.Util;
 
@@ -11,7 +13,7 @@ public class TokenInfo {
     private String id;
     private String token;
     private String name;
-    private String[] permissions;
+    private List<String> permissions;
     private String pluginName;
     private Long createdAt;
     private Long deadline;
@@ -29,7 +31,7 @@ public class TokenInfo {
         if (!includeToken) {
             token = token.substring(0, 4) + '\u2026';
         }
-        permissions = AuthCategory.toStrings(tokenData.getAuthCategory());
+        permissions = Scope.toValues(tokenData.getAuthScope());
         pluginName = tokenData.getPluginName();
         createdAt = Util.toEpochSecond(tokenData.getCreatedAt());
         deadline = Util.toEpochSecond(tokenData.getDeadline());
@@ -64,11 +66,11 @@ public class TokenInfo {
         this.token = token;
     }
 
-    public String[] getPermissions() {
+    public List<String> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(String[] permissions) {
+    public void setPermissions(List<String> permissions) {
         this.permissions = permissions;
     }
 

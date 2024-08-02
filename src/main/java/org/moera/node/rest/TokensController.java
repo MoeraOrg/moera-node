@@ -15,7 +15,8 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Password;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.domain.Domains;
@@ -93,7 +94,9 @@ public class TokensController {
         token.setNodeId(options.nodeId());
         token.setName(attributes.getName());
         token.setToken(CryptoUtil.token());
-        token.setAuthCategory(attributes.getAuthCategory() != null ? attributes.getAuthCategory() : AuthCategory.ALL);
+        token.setAuthScope(attributes.getPermissions() != null
+                ? Scope.forValues(attributes.getPermissions())
+                : Scope.ALL.getMask());
         token.setDeadline(Timestamp.from(Instant.now().plus(
                 options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
@@ -111,6 +114,7 @@ public class TokensController {
 
     @PutMapping("/{id}")
     @Admin
+    @AuthScope(Scope.MANAGE_TOKENS)
     @Transactional
     public TokenInfo put(@PathVariable UUID id, @Valid @RequestBody TokenName tokenName) {
         log.info("PUT /tokens/{} (name = {})", id, LogUtil.format(tokenName.getName()));
@@ -128,6 +132,7 @@ public class TokensController {
 
     @DeleteMapping("/{id}")
     @Admin
+    @AuthScope(Scope.MANAGE_TOKENS)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /tokens/{}", id);
@@ -145,6 +150,7 @@ public class TokensController {
 
     @GetMapping
     @Admin
+    @AuthScope(Scope.MANAGE_TOKENS)
     @Transactional
     public List<TokenInfo> getAll() {
         log.info("GET /tokens");
@@ -155,6 +161,7 @@ public class TokensController {
 
     @GetMapping("/{id}")
     @Admin
+    @AuthScope(Scope.MANAGE_TOKENS)
     @Transactional
     public TokenInfo get(@PathVariable UUID id) {
         log.info("GET /tokens/{}", id);

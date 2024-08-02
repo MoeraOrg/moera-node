@@ -8,6 +8,8 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
@@ -67,6 +69,7 @@ public class DeletedPostingController {
 
     @GetMapping
     @Admin
+    @AuthScope(Scope.UNDELETE_OWN_CONTENT)
     @Transactional
     public List<PostingInfo> getAll(
             @RequestParam(required = false) Integer page,
@@ -93,6 +96,7 @@ public class DeletedPostingController {
 
     @GetMapping("/{id}")
     @Admin
+    @AuthScope(Scope.UNDELETE_OWN_CONTENT)
     @Transactional
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /deleted-postings/{id}, (id = {})", LogUtil.format(id));
@@ -105,6 +109,7 @@ public class DeletedPostingController {
 
     @PostMapping("/{id}/restore")
     @Admin
+    @AuthScope(Scope.UNDELETE_OWN_CONTENT)
     @Entitled
     @Transactional
     public PostingInfo restore(@PathVariable UUID id) {

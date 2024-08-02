@@ -18,11 +18,11 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.AuthCategory;
 import org.moera.node.auth.AuthSecrets;
 import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.auth.CarteAuthInfo;
 import org.moera.node.auth.InvalidTokenException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Token;
 import org.moera.node.domain.Domains;
 import org.moera.node.friends.FriendCache;
@@ -100,18 +100,19 @@ public class EventManager {
 
         AuthSecrets secrets = new AuthSecrets(accessor.getFirstNativeHeader(TOKEN_HEADER));
         boolean admin = false;
+        long authScope = Scope.ALL.getMask();
         String clientName = null;
         try {
             Token token = authenticationManager.getToken(secrets.token, nodeId);
             if (token != null) {
-                if (token.getAuthCategory() == AuthCategory.ALL) {
-                    admin = true;
-                    clientName = universalContext.nodeName();
-                }
+                admin = true;
+                authScope = token.getAuthScope() != 0 ? token.getAuthScope() : Scope.ALL.getMask();
+                clientName = universalContext.nodeName();
             } else if (secrets.carte != null) {
                 CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, getRemoteAddress(accessor));
-                if (carteAuthInfo != null && carteAuthInfo.getAuthCategory() == AuthCategory.ALL) {
+                if (carteAuthInfo != null) {
                     clientName = carteAuthInfo.getClientName();
+                    authScope = carteAuthInfo.getAuthScope();
                 }
             }
         } catch (InvalidTokenException | UnknownHostException e) {
@@ -125,6 +126,7 @@ public class EventManager {
         subscriber.setOptions(domains.getDomainOptions(nodeId));
         subscriber.setSessionId(accessor.getSessionId());
         subscriber.setAdmin(admin);
+        subscriber.setAuthScope(authScope);
         subscriber.setClientName(clientName);
         subscriber.setSubscribedToClient(subscribedCache.isSubscribed(clientName));
         subscriber.setFriendGroups(friendCache.getClientGroupIds(clientName));

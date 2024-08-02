@@ -9,7 +9,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.commons.util.UniversalLocation;
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
@@ -34,7 +34,7 @@ public class RequestContextImpl implements RequestContext {
     private boolean possibleSheriff;
     private boolean subscribedToClient;
     private String[] friendGroups;
-    private long authCategory;
+    private long authScope;
     private UUID tokenId;
     private String domainName;
     private Options options;
@@ -141,13 +141,18 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public long getAuthCategory() {
-        return authCategory;
+    public long getAuthScope() {
+        return authScope;
     }
 
     @Override
-    public void setAuthCategory(long authCategory) {
-        this.authCategory = authCategory;
+    public void setAuthScope(long authScope) {
+        this.authScope = authScope;
+    }
+
+    @Override
+    public boolean hasAuthScope(Scope scope) {
+        return (this.authScope & scope.getMask()) == scope.getMask();
     }
 
     @Override
@@ -361,7 +366,7 @@ public class RequestContextImpl implements RequestContext {
         setFriendGroups(friendCache.getClientGroupIds(nodeName));
         setSubscribedToClient(subscribedCache.isSubscribed(nodeName));
 
-        setAuthCategory(AuthCategory.ALL);
+        setAuthScope(Scope.ALL.getMask());
     }
 
     @Override

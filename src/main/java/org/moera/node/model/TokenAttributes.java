@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import java.util.List;
 import javax.validation.constraints.NotBlank;
 
 public class TokenAttributes {
@@ -10,7 +11,7 @@ public class TokenAttributes {
     @NotBlank
     private String password;
 
-    private Long authCategory;
+    private List<String> permissions;
 
     private String name;
 
@@ -30,12 +31,12 @@ public class TokenAttributes {
         this.password = password;
     }
 
-    public Long getAuthCategory() {
-        return authCategory;
+    public List<String> getPermissions() {
+        return permissions;
     }
 
-    public void setAuthCategory(Long authCategory) {
-        this.authCategory = authCategory;
+    public void setPermissions(List<String> permissions) {
+        this.permissions = permissions;
     }
 
     public String getName() {

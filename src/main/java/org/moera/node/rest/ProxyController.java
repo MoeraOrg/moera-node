@@ -16,6 +16,7 @@ import org.jsoup.select.Elements;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.config.Config;
+import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.linkpreviewnet.LinkPreviewNet;
 import org.moera.node.linkpreviewnet.LinkPreviewNetException;
@@ -53,7 +54,7 @@ public class ProxyController {
     private LinkPreviewNet linkPreviewNet;
 
     @GetMapping("/media")
-    @Admin
+    @Admin(Scope.OTHER)
     public ResponseEntity<Resource> getMedia(@RequestParam String url) {
         log.info("GET /proxy/media, (url = {})", LogUtil.format(url));
 
@@ -97,7 +98,7 @@ public class ProxyController {
     }
 
     @GetMapping("/link-preview")
-    @Admin
+    @Admin(Scope.OTHER)
     public LinkPreviewInfo getLinkPreview(@RequestParam String url) {
         log.info("GET /proxy/link-preview, (url = {})", LogUtil.format(url));
 

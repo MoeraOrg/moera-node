@@ -13,7 +13,9 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.Friend;
@@ -147,6 +149,7 @@ public class FriendController {
 
     @PutMapping
     @Admin
+    @AuthScope(Scope.FRIEND)
     @Transactional
     public List<FriendInfo> put(@Valid @RequestBody FriendDescription[] friendDescriptions) {
         log.info("PUT /people/friends");

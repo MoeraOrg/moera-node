@@ -31,7 +31,7 @@ public class Token {
     private String name;
 
     @NotNull
-    private long authCategory;
+    private long authScope;
 
     private Inet ip;
 
@@ -81,12 +81,12 @@ public class Token {
         this.name = name;
     }
 
-    public long getAuthCategory() {
-        return authCategory;
+    public long getAuthScope() {
+        return authScope;
     }
 
-    public void setAuthCategory(long authCategory) {
-        this.authCategory = authCategory;
+    public void setAuthScope(long authScope) {
+        this.authScope = authScope;
     }
 
     public Inet getIp() {

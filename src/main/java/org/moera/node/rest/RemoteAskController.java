@@ -5,6 +5,8 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -34,6 +36,7 @@ public class RemoteAskController {
 
     @PostMapping
     @Admin
+    @AuthScope(Scope.OTHER)
     @Entitled
     public Result post(@PathVariable String nodeName, @Valid @RequestBody AskDescription askDescription) {
         log.info("POST /nodes/{nodeName}/ask (nodeName = {}, subject = {})",

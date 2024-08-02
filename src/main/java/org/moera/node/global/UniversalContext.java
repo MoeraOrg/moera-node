@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
@@ -142,8 +142,12 @@ public class UniversalContext {
         return false;
     }
 
-    public long getAuthCategory() {
-        return isBackground() ? AuthCategory.ALL : requestContext.getAuthCategory();
+    public long getAuthScope() {
+        return isBackground() ? Scope.ALL.getMask() : requestContext.getAuthScope();
+    }
+
+    public boolean hasAuthScope(Scope scope) {
+        return isBackground() || requestContext.hasAuthScope(scope);
     }
 
     public boolean isPrincipal(PrincipalFilter principal) {

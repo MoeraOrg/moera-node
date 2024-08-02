@@ -6,6 +6,8 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.RemoteReactionVerification;
@@ -50,6 +52,7 @@ public class AsyncOperationController {
 
     @GetMapping("/remote-posting-verification/{id}")
     @Admin
+    @AuthScope(Scope.OTHER)
     @Transactional
     public RemotePostingVerificationInfo getRemotePostingVerification(@PathVariable UUID id) {
         log.info("GET /async-operations/remote-posting-verification/{id}, (id = {})", LogUtil.format(id));
@@ -63,6 +66,7 @@ public class AsyncOperationController {
 
     @GetMapping("/remote-reaction-verification/{id}")
     @Admin
+    @AuthScope(Scope.OTHER)
     @Transactional
     public RemoteReactionVerificationInfo getRemoteReactionVerification(@PathVariable UUID id) {
         log.info("GET /async-operations/remote-reaction-verification/{id}, (id = {})", LogUtil.format(id));

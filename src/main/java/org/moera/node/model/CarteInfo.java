@@ -3,8 +3,9 @@ package org.moera.node.model;
 import java.net.InetAddress;
 import java.security.PrivateKey;
 import java.time.Instant;
+import java.util.List;
 
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.Scope;
 import org.moera.node.util.Carte;
 
 public class CarteInfo {
@@ -12,15 +13,15 @@ public class CarteInfo {
     private String carte;
     private long beginning;
     private long deadline;
-    private String[] permissions;
+    private List<String> permissions;
 
     public static CarteInfo generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey,
-                                     String nodeName, long authCategory) {
+                                     String nodeName, long authScope) {
         CarteInfo carteInfo = new CarteInfo();
-        carteInfo.setCarte(Carte.generate(ownerName, address, beginning, signingKey, nodeName, authCategory));
+        carteInfo.setCarte(Carte.generate(ownerName, address, beginning, signingKey, nodeName, authScope));
         carteInfo.setBeginning(beginning.getEpochSecond());
         carteInfo.setDeadline(Carte.getDeadline(beginning).getEpochSecond());
-        carteInfo.setPermissions(AuthCategory.toStrings(authCategory));
+        carteInfo.setPermissions(Scope.toValues(authScope));
         return carteInfo;
     }
 
@@ -48,11 +49,11 @@ public class CarteInfo {
         this.deadline = deadline;
     }
 
-    public String[] getPermissions() {
+    public List<String> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(String[] permissions) {
+    public void setPermissions(List<String> permissions) {
         this.permissions = permissions;
     }
 

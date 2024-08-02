@@ -13,6 +13,8 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.PushClient;
 import org.moera.node.data.PushClientRepository;
 import org.moera.node.domain.Domains;
@@ -72,6 +74,7 @@ public class PushController {
 
     @GetMapping(value = "/{clientId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Admin
+    @AuthScope(Scope.OTHER)
     public StreamEmitter get(@PathVariable String clientId,
                              @RequestParam(name = "after", required = false) Long after,
                              @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
@@ -134,6 +137,7 @@ public class PushController {
 
     @DeleteMapping("/{clientId}")
     @Admin
+    @AuthScope(Scope.OTHER)
     @Transactional
     public Result delete(@PathVariable String clientId) {
         log.info("DELETE /push/{clientId} (clientId = {})", LogUtil.format(clientId));

@@ -12,7 +12,7 @@ import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiUnknownNameException;
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Avatar;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
@@ -90,8 +90,12 @@ public abstract class Task implements Runnable {
     }
 
     protected String generateCarte(String targetNodeName) {
+        return generateCarte(targetNodeName, Scope.ALL);
+    }
+
+    protected String generateCarte(String targetNodeName, Scope scope) {
         try {
-            return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, AuthCategory.ALL);
+            return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, scope.getMask());
         } catch (Exception e) {
             log.info("Error generating carte by {} {}", nodeId, universalContext.nodeId());
             throw e;

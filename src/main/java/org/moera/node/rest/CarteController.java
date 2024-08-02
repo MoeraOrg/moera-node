@@ -12,7 +12,8 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -43,6 +44,7 @@ public class CarteController {
 
     @GetMapping
     @Admin
+    @AuthScope(Scope.REMOTE_IDENTIFY)
     @Entitled
     @Transactional
     public CarteSet get(@RequestParam(required = false) Integer limit, HttpServletRequest request) {
@@ -67,15 +69,16 @@ public class CarteController {
         }
     }
 
+    // TODO take admin scope into account when setting scope for cartes
     private List<CarteInfo> generateCarteList(String ownerName, PrivateKey signingKey, InetAddress remoteAddress,
                                               int limit) {
         List<CarteInfo> cartes = new ArrayList<>();
         Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
         for (int i = 0; i < limit; i++) {
             CarteInfo carteAll = CarteInfo.generate(ownerName, remoteAddress, beginning, signingKey, null,
-                    AuthCategory.ALL);
+                    Scope.ALL.getMask());
             CarteInfo carteViewMedia = CarteInfo.generate(ownerName, remoteAddress, beginning, signingKey, null,
-                    AuthCategory.VIEW_MEDIA);
+                    Scope.VIEW_MEDIA.getMask());
             cartes.add(carteAll);
             cartes.add(carteViewMedia);
             beginning = Instant.ofEpochSecond(carteAll.getDeadline());

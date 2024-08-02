@@ -23,6 +23,9 @@
     <module name="TreeWalker">
         <property name="tabWidth" value="4"/>
 
+        <!-- Suppression -->
+        <module name="SuppressionCommentFilter"/>
+
         <!-- Annotation -->
         <module name="AnnotationLocation"/>
         <module name="AnnotationUseStyle"/>

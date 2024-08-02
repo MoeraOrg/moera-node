@@ -8,6 +8,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
 import org.moera.node.global.ApiController;
@@ -37,6 +39,7 @@ public class ActivityReactionController {
 
     @PostMapping("/search")
     @Admin
+    @AuthScope(Scope.VIEW_CONTENT)
     @Transactional
     public List<ActivityReactionInfo> search(@Valid @RequestBody ActivityReactionFilter filter) {
         log.info("POST /activity/reactions/search");

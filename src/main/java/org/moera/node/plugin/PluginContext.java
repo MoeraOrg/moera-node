@@ -1,6 +1,7 @@
 package org.moera.node.plugin;
 
 import java.net.http.HttpRequest;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,7 +9,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.AuthCategory;
+import org.moera.node.auth.Scope;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.option.Options;
@@ -18,7 +19,7 @@ public class PluginContext {
 
     private boolean rootAdmin;
     private boolean admin;
-    private String[] authCategories;
+    private List<String> authScope;
     private String clientName;
     private String remoteAddress;
     private String userAgent;
@@ -36,7 +37,7 @@ public class PluginContext {
     public PluginContext(RequestContext requestContext) {
         rootAdmin = requestContext.isRootAdmin();
         admin = requestContext.isAdmin();
-        authCategories = AuthCategory.toStrings(requestContext.getAuthCategory());
+        authScope = Scope.toValues(requestContext.getAuthScope());
         clientName = Optional.ofNullable(requestContext.getClientName()).orElse("");
         remoteAddress = getRemoteAddress(requestContext);
         userAgent = requestContext.getUserAgent().name().toLowerCase();
@@ -75,12 +76,12 @@ public class PluginContext {
         this.admin = admin;
     }
 
-    public String[] getAuthCategories() {
-        return authCategories;
+    public List<String> getAuthScope() {
+        return authScope;
     }
 
-    public void setAuthCategories(String[] authCategories) {
-        this.authCategories = authCategories;
+    public void setAuthScope(List<String> authScope) {
+        this.authScope = authScope;
     }
 
     public String getClientName() {
@@ -159,7 +160,7 @@ public class PluginContext {
         var vars = Map.<String, Object>of(
                 "root-admin", rootAdmin,
                 "admin", admin,
-                "auth-category", authCategories != null ? String.join(",", authCategories) : "",
+                "auth-scope", authScope != null ? String.join(",", authScope) : "",
                 "client-name", Optional.ofNullable(clientName).orElse(""),
                 "remote-address", Optional.ofNullable(remoteAddress).orElse(""),
                 "user-agent", Optional.ofNullable(userAgent).orElse("unknown"),

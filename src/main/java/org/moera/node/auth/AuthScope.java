@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AuthenticationCategory {
+public @interface AuthScope {
 
-    long value();
+    Scope value();
 
 }

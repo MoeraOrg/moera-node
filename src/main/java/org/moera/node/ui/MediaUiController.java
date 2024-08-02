@@ -6,8 +6,8 @@ import javax.transaction.Transactional;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.AuthCategory;
-import org.moera.node.auth.AuthenticationCategory;
+import org.moera.node.auth.Scope;
+import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
@@ -78,7 +78,7 @@ public class MediaUiController {
     }
 
     @GetMapping("/private/{id}.{ext}")
-    @AuthenticationCategory(AuthCategory.VIEW_MEDIA)
+    @AuthScope(Scope.VIEW_MEDIA)
     @MaxCache
     @Transactional
     @ResponseBody

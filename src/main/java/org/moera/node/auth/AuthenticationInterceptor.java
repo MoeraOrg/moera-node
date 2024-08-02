@@ -77,10 +77,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             processUserAgent(request);
             processAuthParameters(request);
 
-            if (!(handler instanceof HandlerMethod)) {
+            if (!(handler instanceof HandlerMethod handlerMethod)) {
                 return true;
             }
-            HandlerMethod handlerMethod = (HandlerMethod) handler;
             if (handlerMethod.hasMethodAnnotation(RootAdmin.class) && !requestContext.isRootAdmin()) {
                 throw new AuthenticationException();
             }
@@ -88,18 +87,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                     || handlerMethod.getBeanType().isAnnotationPresent(Admin.class)) && !requestContext.isAdmin()) {
                 throw new AuthenticationException();
             }
-            if (requestContext.getAuthCategory() != AuthCategory.ALL) {
-                AuthenticationCategory authenticationCategory =
-                        handlerMethod.getMethodAnnotation(AuthenticationCategory.class);
-                if (authenticationCategory != null) {
-                    long authCategory = authenticationCategory.value();
-                    if ((authCategory & requestContext.getAuthCategory()) != authCategory) {
-                        throw new AuthenticationException();
-                    }
-                } else {
-                    if ((AuthCategory.OTHER & requestContext.getAuthCategory()) == 0) {
-                        throw new AuthenticationException();
-                    }
+            if (!requestContext.hasAuthScope(Scope.ALL)) {
+                AuthScope scope = handlerMethod.getMethodAnnotation(AuthScope.class);
+                if (!requestContext.hasAuthScope(scope != null ? scope.value() : Scope.OTHER)) {
+                    throw new AuthenticationException();
                 }
             }
 
@@ -146,11 +137,13 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {
             requestContext.setRootAdmin(true);
             requestContext.setAdmin(true);
-            requestContext.setAuthCategory(AuthCategory.ALL);
+            requestContext.setAuthScope(Scope.ALL.getMask());
         } else {
             Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
             requestContext.setAdmin(token != null);
-            requestContext.setAuthCategory(token != null ? token.getAuthCategory() : AuthCategory.ALL);
+            requestContext.setAuthScope(token != null && token.getAuthScope() != 0
+                    ? token.getAuthScope()
+                    : Scope.ALL.getMask());
             requestContext.setTokenId(token != null ? token.getId() : null);
         }
         try {
@@ -159,7 +152,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 requestContext.setClientName(carteAuthInfo.getClientName());
                 requestContext.setFriendGroups(friendCache.getClientGroupIds(carteAuthInfo.getClientName()));
                 requestContext.setSubscribedToClient(subscribedCache.isSubscribed(carteAuthInfo.getClientName()));
-                requestContext.setAuthCategory(carteAuthInfo.getAuthCategory());
+                requestContext.setAuthScope(carteAuthInfo.getAuthScope());
             }
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");

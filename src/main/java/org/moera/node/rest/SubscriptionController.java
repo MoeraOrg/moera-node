@@ -14,7 +14,9 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
 import org.moera.node.data.QContact;
@@ -117,6 +119,7 @@ public class SubscriptionController {
 
     @PostMapping
     @Admin
+    @AuthScope(Scope.SUBSCRIBE)
     @Entitled
     @Transactional
     public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) {
@@ -180,6 +183,7 @@ public class SubscriptionController {
 
     @DeleteMapping("/{id}")
     @Admin
+    @AuthScope(Scope.SUBSCRIBE)
     @Transactional
     public ContactInfo delete(@PathVariable UUID id) {
         log.info("DELETE /people/subscriptions/{id} (id = {})", LogUtil.format(id));

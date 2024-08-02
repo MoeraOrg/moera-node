@@ -2,6 +2,7 @@ package org.moera.node.event;
 
 import java.util.UUID;
 
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.option.Options;
@@ -13,6 +14,7 @@ public class EventSubscriber implements AccessChecker {
     private String sessionId;
     private int lastEventSeen;
     private boolean admin;
+    private long authScope;
     private String clientName;
     private boolean subscribedToClient;
     private String[] friendGroups;
@@ -56,6 +58,18 @@ public class EventSubscriber implements AccessChecker {
 
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    public long getAuthScope() {
+        return authScope;
+    }
+
+    public void setAuthScope(long authScope) {
+        this.authScope = authScope;
+    }
+
+    public boolean hasAuthScope(Scope scope) {
+        return (this.authScope & scope.getMask()) == scope.getMask();
     }
 
     public String getClientName() {
