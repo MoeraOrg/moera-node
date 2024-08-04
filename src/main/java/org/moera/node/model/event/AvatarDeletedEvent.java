@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Avatar;
 import org.springframework.data.util.Pair;
 
@@ -12,11 +13,11 @@ public class AvatarDeletedEvent extends Event {
     private String mediaId;
 
     public AvatarDeletedEvent() {
-        super(EventType.AVATAR_DELETED);
+        super(EventType.AVATAR_DELETED, Scope.VIEW_PROFILE);
     }
 
     public AvatarDeletedEvent(Avatar avatar) {
-        super(EventType.AVATAR_DELETED);
+        super(EventType.AVATAR_DELETED, Scope.VIEW_PROFILE);
         this.id = avatar.getId().toString();
         this.mediaId = avatar.getMediaFile().getId();
     }

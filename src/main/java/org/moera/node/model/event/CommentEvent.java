@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.springframework.data.util.Pair;
@@ -14,15 +15,15 @@ public class CommentEvent extends Event {
     private Long moment;
 
     protected CommentEvent(EventType type) {
-        super(type);
+        super(type, Scope.VIEW_CONTENT);
     }
 
     protected CommentEvent(EventType type, PrincipalFilter filter) {
-        super(type, filter);
+        super(type, Scope.VIEW_CONTENT, filter);
     }
 
     protected CommentEvent(EventType type, Comment comment, PrincipalFilter filter) {
-        super(type, filter);
+        super(type, Scope.VIEW_CONTENT, filter);
         this.id = comment.getId().toString();
         this.postingId = comment.getPosting().getId().toString();
         this.moment = comment.getMoment();

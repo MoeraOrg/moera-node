@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.springframework.data.util.Pair;
 
 public class RemoteNodeFullNameChangedEvent extends Event {
@@ -11,7 +12,7 @@ public class RemoteNodeFullNameChangedEvent extends Event {
     private String fullName;
 
     public RemoteNodeFullNameChangedEvent() {
-        super(EventType.REMOTE_NODE_FULL_NAME_CHANGED);
+        super(EventType.REMOTE_NODE_FULL_NAME_CHANGED, Scope.VIEW_PEOPLE);
     }
 
     public RemoteNodeFullNameChangedEvent(String name, String fullName) {

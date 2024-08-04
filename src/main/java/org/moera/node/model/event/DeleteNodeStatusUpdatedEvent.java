@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.springframework.data.util.Pair;
 
@@ -11,7 +12,7 @@ public class DeleteNodeStatusUpdatedEvent extends Event {
     private boolean requested;
 
     public DeleteNodeStatusUpdatedEvent() {
-        super(EventType.DELETE_NODE_STATUS_UPDATED, Principal.ADMIN);
+        super(EventType.DELETE_NODE_STATUS_UPDATED, Scope.OTHER, Principal.ADMIN);
     }
 
     public DeleteNodeStatusUpdatedEvent(boolean requested) {

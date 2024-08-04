@@ -18,6 +18,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
@@ -123,11 +124,11 @@ public class ReactionOperations {
         }
 
         if (entry.isOriginal()) {
-            if (!requestContext.isPrincipal(entry.getAddReactionE())) {
+            if (!requestContext.isPrincipal(entry.getAddReactionE(), Scope.REACT)) {
                 throw new AuthenticationException();
             }
             if (reactionDescription.isNegative()
-                    && !requestContext.isPrincipal(entry.getAddNegativeReactionE())) {
+                    && !requestContext.isPrincipal(entry.getAddNegativeReactionE(), Scope.REACT)) {
                 throw new AuthenticationException();
             }
             UUID postingId = entry.getParent() != null ? entry.getParent().getId() : entry.getId();
@@ -234,7 +235,7 @@ public class ReactionOperations {
         }
         sliceInfo.setTotal(getTotal(entryId, negative, emoji));
         sliceInfo.setReactions(page.stream()
-                .filter(r -> requestContext.isPrincipal(r.getViewE()))
+                .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
                 .map(r -> new ReactionInfo(r, requestContext))
                 .collect(Collectors.toList()));
         return sliceInfo;
@@ -254,7 +255,12 @@ public class ReactionOperations {
     public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), ownerName);
         if (reaction != null) {
-            if (!requestContext.isPrincipal(reaction.getDeleteE())) {
+            if (requestContext.isClient(reaction.getOwnerName())
+                    && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
+                throw new AuthenticationException();
+            }
+            if (!requestContext.isClient(reaction.getOwnerName())
+                    && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
                 throw new AuthenticationException();
             }
 

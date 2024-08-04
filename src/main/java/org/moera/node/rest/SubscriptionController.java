@@ -92,7 +92,8 @@ public class SubscriptionController {
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
         if (type == SubscriptionType.FEED) {
-            if (!requestContext.isPrincipal(UserSubscription.getViewAllE(requestContext.getOptions()))) {
+            if (!requestContext.isPrincipal(
+                    UserSubscription.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
                 throw new AuthenticationException();
             }
         } else {
@@ -112,7 +113,7 @@ public class SubscriptionController {
         }
 
         return fetchSubscriptions(where).stream()
-                .filter(sr -> requestContext.isPrincipal(sr.getViewE()))
+                .filter(sr -> requestContext.isPrincipal(sr.getViewE(), Scope.VIEW_PEOPLE))
                 .map(sr -> new SubscriptionInfo(sr, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
@@ -164,7 +165,7 @@ public class SubscriptionController {
         if (subscription.getSubscriptionType() != SubscriptionType.FEED) {
             throw new ObjectNotFoundFailure("not-supported");
         }
-        if (!requestContext.isPrincipal(subscription.getEditOperationsE())) {
+        if (!requestContext.isPrincipal(subscription.getEditOperationsE(), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
         OperationsValidator.validateOperations(subscriptionOverride::getPrincipal,
@@ -191,7 +192,7 @@ public class SubscriptionController {
         UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
                         requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
-        if (!requestContext.isPrincipal(subscription.getDeleteE(requestContext.getOptions()))) {
+        if (!requestContext.isPrincipal(subscription.getDeleteE(requestContext.getOptions()), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
         userSubscriptionRepository.delete(subscription);

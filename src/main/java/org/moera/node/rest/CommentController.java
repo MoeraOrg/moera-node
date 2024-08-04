@@ -31,6 +31,7 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
@@ -182,7 +183,7 @@ public class CommentController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (posting.getCurrentRevision().getSignature() == null) {
@@ -193,7 +194,7 @@ public class CommentController {
             repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentText.getRepliedToId())
                     .orElse(null);
             if (repliedTo == null || !repliedTo.getPosting().getId().equals(posting.getId())
-                    || !requestContext.isPrincipal(repliedTo.getViewE())) {
+                    || !requestContext.isPrincipal(repliedTo.getViewE(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("commentText.repliedToId.not-found");
             }
         }
@@ -203,10 +204,10 @@ public class CommentController {
         if (commentText.getSignature() != null) {
             requestContext.authenticatedWithSignature(commentText.getOwnerName());
         }
-        if (!requestContext.isPrincipal(posting.getViewCommentsE())) {
+        if (!requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new AuthenticationException();
         }
-        if (!requestContext.isPrincipal(posting.getAddCommentE())) {
+        if (!requestContext.isPrincipal(posting.getAddCommentE(), Scope.ADD_COMMENT)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
@@ -220,7 +221,8 @@ public class CommentController {
                 commentText.getMedia(),
                 () -> new ValidationFailure("commentText.media.not-found"),
                 () -> new ValidationFailure("commentText.media.not-compressed"),
-                requestContext.isAdmin(),
+                requestContext.isAdmin(Scope.VIEW_CONTENT),
+                requestContext.isAdmin(Scope.ADD_COMMENT),
                 commentText.getOwnerName());
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
@@ -280,13 +282,13 @@ public class CommentController {
         if (commentText.getSignature() != null) {
             requestContext.authenticatedWithSignature(commentText.getOwnerName());
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
@@ -296,16 +298,16 @@ public class CommentController {
                 commentText.getOwnerAvatar(),
                 commentText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
-        boolean isAdmin = requestContext.isAdmin() || comment.getOwnerName().equals(requestContext.nodeName());
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
                 commentText.getMedia(),
                 () -> new ValidationFailure("commentText.media.not-found"),
                 () -> new ValidationFailure("commentText.media.not-compressed"),
-                isAdmin,
+                requestContext.isAdmin(Scope.VIEW_CONTENT),
+                requestContext.isAdmin(Scope.UPDATE_COMMENT),
                 comment.getOwnerName());
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
-        if (requestContext.isPrincipal(comment.getEditE())) {
+        if (requestContext.isPrincipal(comment.getEditE(), Scope.UPDATE_COMMENT)) {
             commentText.toEntry(comment);
             try {
                 comment = commentOperations.createOrUpdateComment(comment.getPosting(), comment,
@@ -332,7 +334,7 @@ public class CommentController {
     private byte[] validateCommentText(Entry posting, Comment comment, CommentText commentText, String ownerName,
                                        byte[] repliedToDigest) {
 
-        boolean isSenior = requestContext.isPrincipal(posting.getOverrideCommentE());
+        boolean isSenior = requestContext.isPrincipal(posting.getOverrideCommentE(), Scope.DELETE_OTHERS_CONTENT);
 
         byte[] digest = null;
         if (commentText.getSignature() == null) {
@@ -408,10 +410,10 @@ public class CommentController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getOverrideCommentE())) {
+        if (!requestContext.isPrincipal(posting.getOverrideCommentE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
@@ -458,11 +460,11 @@ public class CommentController {
         List<Story> stories = requestContext.isPossibleSheriff()
                 ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
                 : Collections.emptyList();
-        if (!requestContext.isPrincipal(posting.getViewE())
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
                 && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewCommentsE())
+        if (!requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)
                 && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())) {
             CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
             sliceInfo.setBefore(SafeInteger.MAX_VALUE);
@@ -540,7 +542,7 @@ public class CommentController {
                 .and(comment.moment.gt(afterMoment))
                 .and(comment.moment.loe(beforeMoment))
                 .and(comment.deletedAt.isNull());
-        if (!requestContext.isAdmin()) {
+        if (!requestContext.isAdmin(Scope.VIEW_CONTENT)) {
             BooleanBuilder visibility = new BooleanBuilder();
             visibility.or(visibilityFilter(comment, comment.parentViewPrincipal, sheriff));
             BooleanBuilder expr = new BooleanBuilder();
@@ -605,7 +607,7 @@ public class CommentController {
                 .fetch()
                 .stream()
                 // This should be unnecessary, but let it be for reliability
-                .filter(c -> requestContext.isPrincipal(c.getViewE()) || sheriff)
+                .filter(c -> requestContext.isPrincipal(c.getViewE(), Scope.VIEW_CONTENT) || sheriff)
                 .map(c -> new CommentInfo(c, entryOperations, requestContext))
                 .sorted(Comparator.comparing(CommentInfo::getMoment))
                 .collect(Collectors.toList());
@@ -672,15 +674,15 @@ public class CommentController {
         List<Story> stories = requestContext.isPossibleSheriff()
                 ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
                 : Collections.emptyList();
-        if (!requestContext.isPrincipal(comment.getViewE())
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)
                 && !feedOperations.isSheriffAllowed(stories, comment.getViewE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewE())
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
                 && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewCommentsE())
+        if (!requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)
                 && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
@@ -705,19 +707,24 @@ public class CommentController {
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!requestContext.isPrincipal(comment.getDeleteE())) {
+        if (requestContext.isClient(comment.getOwnerName())
+                && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
+            throw new AuthenticationException();
+        }
+        if (!requestContext.isClient(comment.getOwnerName())
+                && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
@@ -744,13 +751,13 @@ public class CommentController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!comment.getPosting().getId().equals(postingId)) {

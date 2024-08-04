@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Entry;
@@ -67,7 +68,7 @@ public class ReactionInfo {
         operations = new HashMap<>();
         putOperation(operations, "view", reaction.getViewCompound(), Principal.PUBLIC);
         putOperation(operations, "delete", reaction.getDeleteCompound(), Principal.PRIVATE);
-        if (accessChecker.isPrincipal(reaction.getViewOperationsE())) {
+        if (accessChecker.isPrincipal(reaction.getViewOperationsE(), Scope.VIEW_CONTENT)) {
             ownerOperations = new HashMap<>();
             putOperation(ownerOperations, "view", reaction.getViewPrincipal(), Principal.PUBLIC);
             putOperation(ownerOperations, "delete", reaction.getDeletePrincipal(), Principal.PRIVATE);

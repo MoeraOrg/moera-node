@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Avatar;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.option.Options;
@@ -17,7 +18,7 @@ public class NodeNameChangedEvent extends Event {
     private AvatarImage avatar;
 
     public NodeNameChangedEvent() {
-        super(EventType.NODE_NAME_CHANGED);
+        super(EventType.NODE_NAME_CHANGED, Scope.IDENTIFY);
     }
 
     public NodeNameChangedEvent(String name, Options options, Avatar avatar) {

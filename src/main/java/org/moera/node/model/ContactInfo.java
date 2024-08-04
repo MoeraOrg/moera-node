@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedByUser;
@@ -84,20 +85,20 @@ public class ContactInfo {
 
     public void protect(AccessChecker accessChecker) {
         hasFeedSubscriber = hasFeedSubscriber
-                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFeedSubscriber", Principal.PUBLIC))
-                && accessChecker.isPrincipal(getPrincipalE(operations, "viewFeedSubscriber", Principal.PUBLIC));
+                && isPrincipal(accessChecker, adminOperations, "viewFeedSubscriber", Principal.PUBLIC)
+                && isPrincipal(accessChecker, operations, "viewFeedSubscriber", Principal.PUBLIC);
         hasFeedSubscription = hasFeedSubscription
-                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFeedSubscription", Principal.PUBLIC))
-                && accessChecker.isPrincipal(getPrincipalE(operations, "viewFeedSubscription", Principal.PUBLIC));
+                && isPrincipal(accessChecker, adminOperations, "viewFeedSubscription", Principal.PUBLIC)
+                && isPrincipal(accessChecker, operations, "viewFeedSubscription", Principal.PUBLIC);
         hasFriend = hasFriend
-                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFriend", Principal.PUBLIC))
-                && accessChecker.isPrincipal(getPrincipalE(operations, "viewFriend", Principal.PUBLIC));
+                && isPrincipal(accessChecker, adminOperations, "viewFriend", Principal.PUBLIC)
+                && isPrincipal(accessChecker, operations, "viewFriend", Principal.PUBLIC);
         hasFriendOf = hasFriendOf
-                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewFriendOf", Principal.PUBLIC));
+                && isPrincipal(accessChecker, adminOperations, "viewFriendOf", Principal.PUBLIC);
         hasBlock = hasBlock
-                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewBlock", Principal.PUBLIC));
+                && isPrincipal(accessChecker, adminOperations, "viewBlock", Principal.PUBLIC);
         hasBlockBy = hasBlockBy
-                && accessChecker.isPrincipal(getPrincipalE(adminOperations, "viewBlockBy", Principal.PUBLIC));
+                && isPrincipal(accessChecker, adminOperations, "viewBlockBy", Principal.PUBLIC);
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,
@@ -107,8 +108,10 @@ public class ContactInfo {
         }
     }
 
-    private Principal getPrincipalE(Map<String, Principal> operations, String operationName, Principal defaultValue) {
-        return operations.getOrDefault(operationName, defaultValue).withOwner(getNodeName());
+    private boolean isPrincipal(AccessChecker accessChecker, Map<String, Principal> operations, String operationName,
+                                Principal defaultValue) {
+        Principal principalE = operations.getOrDefault(operationName, defaultValue).withOwner(getNodeName());
+        return accessChecker.isPrincipal(principalE, Scope.VIEW_PEOPLE);
     }
 
     public String getNodeName() {

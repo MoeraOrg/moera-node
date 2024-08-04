@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Entry;
 import org.moera.node.data.ReactionTotal;
@@ -56,38 +57,38 @@ public class ReactionTotalsInfo {
     private static boolean isTotalsVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
             return accessChecker.isPrincipal(entry.getViewReactionsE().a()
-                    .or(entry.getViewReactionTotalsE()));
+                    .or(entry.getViewReactionTotalsE()), Scope.VIEW_CONTENT);
         } else {
             return accessChecker.isPrincipal(entry.getReceiverViewReactionsE().a()
-                    .or(entry.getReceiverViewReactionTotalsE()));
+                    .or(entry.getReceiverViewReactionTotalsE()), Scope.VIEW_CONTENT);
         }
     }
 
     private static boolean isNegativeTotalsVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
             return accessChecker.isPrincipal(entry.getViewReactionsE().a()
-                    .or(entry.getViewNegativeReactionsE()))
-                    || accessChecker.isPrincipal(entry.getViewNegativeReactionTotalsE());
+                    .or(entry.getViewNegativeReactionsE()), Scope.VIEW_CONTENT)
+                    || accessChecker.isPrincipal(entry.getViewNegativeReactionTotalsE(), Scope.VIEW_CONTENT);
         } else {
             return accessChecker.isPrincipal(entry.getReceiverViewReactionsE().a()
-                    .or(entry.getReceiverViewNegativeReactionsE()))
-                    || accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionTotalsE());
+                    .or(entry.getReceiverViewNegativeReactionsE()), Scope.VIEW_CONTENT)
+                    || accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionTotalsE(), Scope.VIEW_CONTENT);
         }
     }
 
     private static boolean isRatiosVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
-            return accessChecker.isPrincipal(entry.getViewReactionRatiosE());
+            return accessChecker.isPrincipal(entry.getViewReactionRatiosE(), Scope.VIEW_CONTENT);
         } else {
-            return accessChecker.isPrincipal(entry.getReceiverViewReactionRatiosE());
+            return accessChecker.isPrincipal(entry.getReceiverViewReactionRatiosE(), Scope.VIEW_CONTENT);
         }
     }
 
     private static boolean isNegativeRatiosVisible(Entry entry, AccessChecker accessChecker) {
         if (entry.isOriginal()) {
-            return accessChecker.isPrincipal(entry.getViewNegativeReactionRatiosE());
+            return accessChecker.isPrincipal(entry.getViewNegativeReactionRatiosE(), Scope.VIEW_CONTENT);
         } else {
-            return accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionRatiosE());
+            return accessChecker.isPrincipal(entry.getReceiverViewNegativeReactionRatiosE(), Scope.VIEW_CONTENT);
         }
     }
 

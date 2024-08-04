@@ -8,7 +8,9 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
@@ -105,13 +107,13 @@ public class CommentReactionController {
                     throw new ValidationFailure("comment.not-signed");
                 }
                 reactionOperations.validate(reactionDescription, comment);
-                if (!requestContext.isPrincipal(comment.getViewE())) {
+                if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
-                if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+                if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("posting.not-found");
                 }
-                if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+                if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
                 if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
@@ -147,13 +149,13 @@ public class CommentReactionController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!comment.getPosting().getId().equals(postingId)) {
@@ -170,14 +172,15 @@ public class CommentReactionController {
                 OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
                 "reactionOverride.operations.wrong-principal");
         if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
-                && !requestContext.isPrincipal(comment.getOverrideReactionE())) {
+                && !requestContext.isPrincipal(comment.getOverrideReactionE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
         OperationsValidator.validateOperations(reactionOverride::getSeniorPrincipal,
                 OperationsValidator.COMMENT_REACTION_OPERATIONS, true,
                 "reactionOverride.seniorOperations.wrong-principal");
         if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
-                && !requestContext.isPrincipal(comment.getPosting().getOverrideCommentReactionE())) {
+                && !requestContext.isPrincipal(
+                        comment.getPosting().getOverrideCommentReactionE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
         OperationsValidator.validateOperations(reactionOverride::getMajorPrincipal,
@@ -212,22 +215,22 @@ public class CommentReactionController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!requestContext.isPrincipal(comment.getViewReactionsE())) {
+        if (!requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)) {
             return ReactionsSliceInfo.EMPTY;
         }
-        if (negative && !requestContext.isPrincipal(comment.getViewNegativeReactionsE())) {
+        if (negative && !requestContext.isPrincipal(comment.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
             return ReactionsSliceInfo.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
@@ -248,27 +251,29 @@ public class CommentReactionController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (!requestContext.isPrincipal(comment.getViewReactionsE()) && !requestContext.isClient(ownerName)) {
+        if (!requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)
+                && !requestContext.isClient(ownerName)) {
             return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentId, ownerName);
 
         if (reaction == null
-                || !requestContext.isPrincipal(reaction.getViewE())
-                || reaction.isNegative() && !requestContext.isPrincipal(comment.getViewNegativeReactionsE())) {
+                || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
+                || reaction.isNegative()
+                    && !requestContext.isPrincipal(comment.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
             return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
         }
 
@@ -277,6 +282,7 @@ public class CommentReactionController {
 
     @DeleteMapping
     @Admin
+    @AuthScope(Scope.DELETE_OTHERS_CONTENT)
     @Transactional
     public Result deleteAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
         log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions (postingId = {}, commentId = {})",
@@ -284,13 +290,13 @@ public class CommentReactionController {
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-        if (!requestContext.isPrincipal(comment.getViewE())) {
+        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+        if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!comment.getPosting().getId().equals(postingId)) {
@@ -321,13 +327,13 @@ public class CommentReactionController {
             return tx.executeWrite(() -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
                         .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-                if (!requestContext.isPrincipal(comment.getViewE())) {
+                if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
-                if (!requestContext.isPrincipal(comment.getPosting().getViewE())) {
+                if (!requestContext.isPrincipal(comment.getPosting().getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("posting.not-found");
                 }
-                if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE())) {
+                if (!requestContext.isPrincipal(comment.getPosting().getViewCommentsE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("comment.not-found");
                 }
                 if (!comment.getPosting().getId().equals(postingId)) {

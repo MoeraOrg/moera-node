@@ -9,6 +9,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.global.ApiController;
@@ -50,7 +51,7 @@ public class BlockedByUserController {
         BlockedByUser blockedByUser = blockedByUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("blocked-by-user.not-found"));
 
-        if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()))
+        if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
                 && !requestContext.isClient(blockedByUser.getRemoteNodeName())) {
             throw new AuthenticationException();
         }
@@ -63,7 +64,7 @@ public class BlockedByUserController {
     public List<BlockedByUserInfo> search(@Valid @RequestBody BlockedByUserFilter blockedByUserFilter) {
         log.info("POST /people/blocked-by-users/search");
 
-        if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()))) {
+        if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 

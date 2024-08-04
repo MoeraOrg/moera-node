@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.springframework.data.util.Pair;
 
@@ -11,7 +12,7 @@ public class FriendGroupDeletedEvent extends Event {
     private String friendGroupId;
 
     public FriendGroupDeletedEvent(String friendGroupId, PrincipalFilter filter) {
-        super(EventType.FRIEND_GROUP_DELETED, filter);
+        super(EventType.FRIEND_GROUP_DELETED, Scope.VIEW_PEOPLE, filter);
         this.friendGroupId = friendGroupId;
     }
 

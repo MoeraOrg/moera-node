@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffMark;
 import org.springframework.data.util.Pair;
 
@@ -13,11 +14,11 @@ public class FeedSheriffDataUpdatedEvent extends Event {
     private List<SheriffMark> sheriffMarks;
 
     public FeedSheriffDataUpdatedEvent() {
-        super(EventType.FEED_SHERIFF_DATA_UPDATED);
+        super(EventType.FEED_SHERIFF_DATA_UPDATED, Scope.VIEW_CONTENT);
     }
 
     public FeedSheriffDataUpdatedEvent(String feedName, List<String> sheriffs, List<SheriffMark> sheriffMarks) {
-        super(EventType.FEED_SHERIFF_DATA_UPDATED);
+        super(EventType.FEED_SHERIFF_DATA_UPDATED, Scope.VIEW_CONTENT);
         this.feedName = feedName;
         this.sheriffs = sheriffs;
         this.sheriffMarks = sheriffMarks;

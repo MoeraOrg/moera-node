@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Friend;
@@ -27,7 +28,7 @@ public class Features {
             this.plugins = plugins;
         }
         feedWidth = options.getInt("feed.width");
-        friendGroups = accessChecker.isPrincipal(Principal.ADMIN)
+        friendGroups = accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_PEOPLE)
                 ? FriendGroupsFeatures.forAdmin(nodeGroups)
                 : FriendGroupsFeatures.forRegular(nodeGroups, clientGroups);
         this.ask = ask;

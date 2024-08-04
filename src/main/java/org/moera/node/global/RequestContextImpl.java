@@ -90,8 +90,8 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public boolean isAdmin() {
-        return admin;
+    public boolean isAdmin(Scope scope) {
+        return admin && hasAuthScope(scope);
     }
 
     @Override
@@ -225,7 +225,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public String getClientName() {
-        return isAdmin() ? nodeName() : clientName;
+        return admin ? nodeName() : clientName;
     }
 
     @Override
@@ -345,8 +345,8 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public boolean isPrincipal(PrincipalFilter principal) {
-        return principal.includes(isAdmin(), getClientName(), isSubscribedToClient(), getFriendGroups());
+    public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
+        return principal.includes(isAdmin(scope), getClientName(), isSubscribedToClient(), getFriendGroups());
     }
 
     @Override

@@ -14,6 +14,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.OwnReaction;
@@ -111,7 +112,7 @@ public class PostingReactionController {
                     throw new ValidationFailure("posting.not-signed");
                 }
                 reactionOperations.validate(reactionDescription, posting);
-                if (!requestContext.isPrincipal(posting.getViewE())) {
+                if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("posting.not-found");
                 }
                 OperationsValidator.validateOperations(reactionDescription::getPrincipal,
@@ -120,7 +121,7 @@ public class PostingReactionController {
 
                 if (posting.isOriginal()) {
                     return postToOriginal(reactionDescription, posting);
-                } else if (requestContext.isAdmin()) {
+                } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
                     return postToPickedAtHome(reactionDescription, posting);
                 } else {
                     return postToPicked(reactionDescription, posting);
@@ -176,7 +177,7 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
@@ -190,7 +191,7 @@ public class PostingReactionController {
                 OperationsValidator.POSTING_REACTION_OPERATIONS, false,
                 "reactionOverride.operations.wrong-principal");
         if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
-                && !requestContext.isPrincipal(posting.getOverrideReactionE())) {
+                && !requestContext.isPrincipal(posting.getOverrideReactionE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
         OperationsValidator.validateOperations(reactionOverride::getSeniorPrincipal,
@@ -225,13 +226,13 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewReactionsE())) {
+        if (!requestContext.isPrincipal(posting.getViewReactionsE(), Scope.VIEW_CONTENT)) {
             return ReactionsSliceInfo.EMPTY;
         }
-        if (negative && !requestContext.isPrincipal(posting.getViewNegativeReactionsE())) {
+        if (negative && !requestContext.isPrincipal(posting.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
             return ReactionsSliceInfo.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
@@ -251,18 +252,20 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewReactionsE()) && !requestContext.isClient(ownerName)) {
+        if (!requestContext.isPrincipal(posting.getViewReactionsE(), Scope.VIEW_CONTENT)
+                && !requestContext.isClient(ownerName)) {
             return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
 
         if (reaction == null
-                || !requestContext.isPrincipal(reaction.getViewE())
-                || reaction.isNegative() && !requestContext.isPrincipal(posting.getViewNegativeReactionsE())) {
+                || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
+                || reaction.isNegative()
+                    && !requestContext.isPrincipal(posting.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
             return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 
@@ -282,15 +285,15 @@ public class PostingReactionController {
         boolean own = requestContext.isClient(filter.getOwnerName());
         Map<UUID, Posting> postings = postingRepository.findByNodeIdAndIds(requestContext.nodeId(), filter.getPostings())
                 .stream()
-                .filter(p -> requestContext.isPrincipal(p.getViewE()))
-                .filter(p -> requestContext.isPrincipal(p.getViewReactionsE()) || own)
+                .filter(p -> requestContext.isPrincipal(p.getViewE(), Scope.VIEW_CONTENT))
+                .filter(p -> requestContext.isPrincipal(p.getViewReactionsE(), Scope.VIEW_CONTENT) || own)
                 .collect(Collectors.toMap(Posting::getId, Function.identity()));
 
         return reactionRepository.findByEntryIdsAndOwner(postings.keySet(), filter.getOwnerName()).stream()
-                .filter(r -> requestContext.isPrincipal(r.getViewE()))
+                .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
                 .filter(r -> !r.isNegative()
                         || requestContext.isPrincipal(postings.get(r.getEntryRevision().getEntry().getId())
-                                                        .getViewNegativeReactionsE()))
+                                                        .getViewNegativeReactionsE(), Scope.VIEW_CONTENT))
                 .map(r -> new ReactionInfo(r, requestContext))
                 .collect(Collectors.toList());
     }
@@ -302,10 +305,10 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isAdmin() && !requestContext.isClient(posting.getOwnerName())) {
+        if (!requestContext.isAdmin(Scope.DELETE_OTHERS_CONTENT) && !requestContext.isClient(posting.getOwnerName())) {
             throw new AuthenticationException();
         }
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
@@ -330,7 +333,7 @@ public class PostingReactionController {
         try {
             Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                     .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-            if (!requestContext.isPrincipal(posting.getViewE())) {
+            if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("posting.not-found");
             }
             if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
@@ -364,7 +367,7 @@ public class PostingReactionController {
     }
 
     private void deleteFromPickedAtHome(Posting posting) {
-        if (!requestContext.isAdmin()) {
+        if (!requestContext.isAdmin(Scope.REMOTE_DELETE_CONTENT)) {
             throw new AuthenticationException();
         }
 

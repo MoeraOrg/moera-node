@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.naming.rpc.NodeName;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.FriendOfRepository;
@@ -81,7 +82,7 @@ public class PeopleUiController {
         if (Subscriber.getViewAllE(requestContext.getOptions()).isPublic()) {
             subscribers = subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
                     .sorted(comparator)
-                    .filter(s -> requestContext.isPrincipal(s.getViewE()))
+                    .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
                     .map(s -> new SubscriberInfo(s, requestContext.getOptions(), requestContext))
                     .collect(Collectors.toList());
         }
@@ -115,7 +116,7 @@ public class PeopleUiController {
             subscriptions = userSubscriptionRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED)
                     .stream()
                     .sorted(comparator)
-                    .filter(s -> requestContext.isPrincipal(s.getViewE()))
+                    .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
                     .map(s -> new SubscriptionInfo(s, requestContext.getOptions(), requestContext))
                     .collect(Collectors.toList());
         }

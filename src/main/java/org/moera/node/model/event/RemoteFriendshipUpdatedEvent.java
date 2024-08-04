@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.FriendOfInfo;
@@ -13,7 +14,7 @@ public class RemoteFriendshipUpdatedEvent extends Event {
     private FriendOfInfo friendOf;
 
     public RemoteFriendshipUpdatedEvent(FriendOfInfo friendOf, PrincipalFilter filter) {
-        super(EventType.REMOTE_FRIENDSHIP_UPDATED, filter);
+        super(EventType.REMOTE_FRIENDSHIP_UPDATED, Scope.VIEW_PEOPLE, filter);
         this.friendOf = friendOf;
     }
 

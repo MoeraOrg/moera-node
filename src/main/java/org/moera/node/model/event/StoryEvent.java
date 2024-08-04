@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
@@ -40,11 +41,12 @@ public class StoryEvent extends Event {
     private Map<String, Principal> operations;
 
     protected StoryEvent(EventType type) {
-        super(type);
+        super(type, Scope.VIEW_FEEDS);
     }
 
     protected StoryEvent(EventType type, Story story, boolean isAdmin) { // See also StoryInfo constructor
-        super(type, isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN));
+        super(type, Scope.VIEW_FEEDS,
+                isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN));
         StoryInfo storyInfo = StoryInfo.build(story, isAdmin, st -> null);
         id = story.getId().toString();
         storyType = story.getStoryType();

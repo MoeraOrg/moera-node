@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.FriendInfo;
@@ -13,7 +14,8 @@ public class FriendshipUpdatedEvent extends Event {
     private FriendInfo friend;
 
     public FriendshipUpdatedEvent(FriendInfo friend) {
-        super(EventType.FRIENDSHIP_UPDATED, Principal.ADMIN.a().or(Principal.ofNode(friend.getNodeName())));
+        super(EventType.FRIENDSHIP_UPDATED, Scope.VIEW_PEOPLE,
+                Principal.ADMIN.a().or(Principal.ofNode(friend.getNodeName())));
         this.friend = friend;
     }
 

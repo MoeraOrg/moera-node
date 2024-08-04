@@ -3,6 +3,7 @@ package org.moera.node.model;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.global.RequestContext;
@@ -30,7 +31,7 @@ public class ProfileInfo {
         fullName = requestContext.fullName();
         gender = options.getString("profile.gender");
         Principal viewEmail = options.getPrincipal("profile.email.view");
-        if (requestContext.isPrincipal(viewEmail)) {
+        if (requestContext.isPrincipal(viewEmail, Scope.VIEW_PROFILE)) {
             email = options.getString("profile.email");
         }
         title = options.getString("profile.title");

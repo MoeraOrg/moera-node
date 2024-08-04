@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.springframework.data.util.Pair;
 
@@ -11,11 +12,11 @@ public class SubscribersTotalChangedEvent extends Event {
     private int feedSubscribersTotal;
 
     public SubscribersTotalChangedEvent() {
-        super(EventType.SUBSCRIBERS_TOTAL_CHANGED);
+        super(EventType.SUBSCRIBERS_TOTAL_CHANGED, Scope.VIEW_PEOPLE);
     }
 
     public SubscribersTotalChangedEvent(PrincipalFilter filter) {
-        super(EventType.SUBSCRIBERS_TOTAL_CHANGED, filter);
+        super(EventType.SUBSCRIBERS_TOTAL_CHANGED, Scope.VIEW_PEOPLE, filter);
     }
 
     public SubscribersTotalChangedEvent(int feedSubscribersTotal, PrincipalFilter filter) {

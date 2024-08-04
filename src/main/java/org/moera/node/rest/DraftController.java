@@ -273,9 +273,13 @@ public class DraftController {
                 throw new ValidationFailure("draftText.media.not-found");
             }
 
-            return mediaOperations.validateAttachments(ids,
+            return mediaOperations.validateAttachments(
+                    ids,
                     () -> new ValidationFailure("draftText.media.not-found"),
-                    null, requestContext.isAdmin(), requestContext.getClientName());
+                    null,
+                    requestContext.isAdmin(Scope.VIEW_CONTENT),
+                    requestContext.isAdmin(Scope.USE_DRAFTS),
+                    requestContext.getClientName());
         } else {
             return Collections.emptyList();
         }

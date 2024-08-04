@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.model.FeedStatus;
 import org.springframework.data.util.Pair;
@@ -13,11 +14,11 @@ public class FeedStatusUpdatedEvent extends Event {
     private FeedStatus status;
 
     public FeedStatusUpdatedEvent() {
-        super(EventType.FEED_STATUS_UPDATED);
+        super(EventType.FEED_STATUS_UPDATED, Scope.VIEW_FEEDS);
     }
 
     public FeedStatusUpdatedEvent(String feedName, FeedStatus status, boolean isAdmin) {
-        super(EventType.FEED_STATUS_UPDATED, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
+        super(EventType.FEED_STATUS_UPDATED, Scope.VIEW_FEEDS, isAdmin ? Principal.ADMIN : Principal.PUBLIC);
 
         this.feedName = feedName;
         this.status = status;

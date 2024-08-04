@@ -19,6 +19,7 @@ import javax.validation.Valid;
 import com.vladmihalcea.hibernate.type.basic.Inet;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.domain.Domains;
@@ -105,7 +106,7 @@ public class PluginController {
         UUID nodeId;
         if (requestContext.isRootAdmin()) {
             nodeId = null;
-        } else if (requestContext.isAdmin()) {
+        } else if (requestContext.isAdmin(Scope.PLUGINS)) {
             nodeId = requestContext.nodeId();
         } else {
             throw new AuthenticationException();
@@ -294,7 +295,7 @@ public class PluginController {
             if (descriptor.getNodeId() == null && !requestContext.isRootAdmin()) {
                 throw new AuthenticationException();
             }
-            if (!requestContext.isAdmin()) {
+            if (!requestContext.isAdmin(Scope.PLUGINS)) {
                 throw new AuthenticationException();
             }
         }

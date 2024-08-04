@@ -68,7 +68,7 @@ public class FriendGroupController {
 
         return Arrays.stream(friendCache.getNodeGroups())
                 .filter(this::isFriendGroupVisible)
-                .map(fg -> new FriendGroupInfo(fg, requestContext.isAdmin()))
+                .map(fg -> new FriendGroupInfo(fg, requestContext.isAdmin(Scope.VIEW_PEOPLE)))
                 .collect(Collectors.toList());
     }
 
@@ -83,11 +83,11 @@ public class FriendGroupController {
             throw new AuthenticationException();
         }
 
-        return new FriendGroupInfo(friendGroup, requestContext.isAdmin());
+        return new FriendGroupInfo(friendGroup, requestContext.isAdmin(Scope.VIEW_PEOPLE));
     }
 
     private boolean isFriendGroupVisible(FriendGroup friendGroup) {
-        return requestContext.isAdmin()
+        return requestContext.isAdmin(Scope.VIEW_PEOPLE)
                 || friendGroup.getViewPrincipal().isPublic()
                 || friendGroup.getViewPrincipal().isPrivate() && requestContext.isMemberOf(friendGroup.getId());
     }

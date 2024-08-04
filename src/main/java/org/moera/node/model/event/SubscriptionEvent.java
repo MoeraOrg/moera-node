@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.SubscriptionInfo;
@@ -15,11 +16,11 @@ public class SubscriptionEvent extends Event {
     private SubscriptionInfo subscription;
 
     public SubscriptionEvent(EventType type) {
-        super(type);
+        super(type, Scope.VIEW_PEOPLE);
     }
 
     public SubscriptionEvent(EventType type, SubscriptionInfo subscription, PrincipalFilter filter) {
-        super(type, filter);
+        super(type, Scope.VIEW_PEOPLE, filter);
         this.subscription = subscription;
     }
 

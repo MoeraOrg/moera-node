@@ -213,7 +213,7 @@ public class MediaController {
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
             MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile,
-                    requestContext.isAdmin() ? null : requestContext.getClientName());
+                    requestContext.isAdmin(Scope.IDENTIFY) ? null : requestContext.getClientName());
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
             return new PrivateMediaFileInfo(mediaFileOwner, null);
@@ -245,7 +245,7 @@ public class MediaController {
         MediaFileOwner mediaFileOwner = mediaFileOwnerRepository.findFullById(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("media.not-found"));
         Principal viewPrincipal = mediaFileOwner.getViewE(requestContext.nodeName());
-        if (!requestContext.isPrincipal(viewPrincipal)
+        if (!requestContext.isPrincipal(viewPrincipal, Scope.VIEW_MEDIA)
                 && !feedOperations.isSheriffAllowed(() -> mediaOperations.getParentStories(id), viewPrincipal)) {
             throw new ObjectNotFoundFailure("media.not-found");
         }

@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Avatar;
 import org.springframework.data.util.Pair;
 
@@ -13,11 +14,11 @@ public class AvatarOrderedEvent extends Event {
     private int ordinal;
 
     public AvatarOrderedEvent() {
-        super(EventType.AVATAR_ORDERED);
+        super(EventType.AVATAR_ORDERED, Scope.VIEW_PROFILE);
     }
 
     public AvatarOrderedEvent(Avatar avatar) {
-        super(EventType.AVATAR_ORDERED);
+        super(EventType.AVATAR_ORDERED, Scope.VIEW_PROFILE);
         this.id = avatar.getId().toString();
         this.mediaId = avatar.getMediaFile().getId();
         this.ordinal = avatar.getOrdinal();

@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum Scope {
 
     //CHECKSTYLE:OFF
-    ALL                     (0x3fffffff, false),
+    IDENTIFY                (0x00000000, false),
     OTHER                   (0x00000001, true),
     VIEW_MEDIA              (0x00000002, true),
     VIEW_CONTENT            (0x00000004, true),
@@ -45,7 +45,8 @@ public enum Scope {
     REMOTE_ADD_COMMENT      (0x00008020, false),
     REMOTE_UPDATE_COMMENT   (0x00008040, false),
     REMOTE_REACT            (0x00008080, false),
-    REMOTE_DELETE_CONTENT   (0x00008100, false);
+    REMOTE_DELETE_CONTENT   (0x00008100, false),
+    ALL                     (0x3fffffff, false);
     //CHECKSTYLE:ON
 
     private final long mask;

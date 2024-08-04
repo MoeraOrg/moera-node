@@ -183,7 +183,7 @@ public class SettingsController {
                 if (descriptor.isInternal()) {
                     throw new OperationFailure("setting.internal");
                 }
-                if (!descriptor.isPrivileged() && !requestContext.isAdmin()
+                if (!descriptor.isPrivileged() && !requestContext.isAdmin(Scope.UPDATE_SETTINGS)
                         || descriptor.isPrivileged() && !requestContext.isRootAdmin()) {
                     throw new AuthenticationException();
                 }

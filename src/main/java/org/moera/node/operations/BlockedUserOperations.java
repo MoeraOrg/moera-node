@@ -15,6 +15,7 @@ import javax.persistence.EntityManager;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.BlockedUserRepository;
@@ -176,7 +177,7 @@ public class BlockedUserOperations {
     }
 
     public List<BlockedOperation> findBlockedOperations(UUID postingId) {
-        if (requestContext.isAdmin()) {
+        if (requestContext.isAdmin(Scope.IDENTIFY)) {
             return Collections.emptyList();
         }
         String clientName = requestContext.getClientName();

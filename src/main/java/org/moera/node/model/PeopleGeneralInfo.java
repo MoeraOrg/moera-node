@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedByUser;
@@ -44,16 +45,16 @@ public class PeopleGeneralInfo {
         Principal viewFriendsTotal = Friend.getViewTotalE(options);
         Principal viewFriendOfsTotal = FriendOf.getViewTotalE(options);
 
-        this.feedSubscribersTotal = accessChecker.isPrincipal(viewSubscribers)
-                || accessChecker.isPrincipal(viewSubscribersTotal) ? feedSubscribersTotal : null;
-        this.feedSubscriptionsTotal = accessChecker.isPrincipal(viewSubscriptions)
-                || accessChecker.isPrincipal(viewSubscriptionsTotal) ? feedSubscriptionsTotal : null;
-        this.friendsTotal = accessChecker.isPrincipal(viewFriends)
-                || accessChecker.isPrincipal(viewFriendsTotal) ? friendsTotal : null;
-        this.friendOfsTotal = accessChecker.isPrincipal(viewFriendOfs)
-                || accessChecker.isPrincipal(viewFriendOfsTotal) ? friendOfsTotal : null;
-        this.blockedTotal = accessChecker.isPrincipal(viewBlocked) ? blockedTotal : null;
-        this.blockedByTotal = accessChecker.isPrincipal(viewBlockedBy) ? blockedByTotal : null;
+        this.feedSubscribersTotal = accessChecker.isPrincipal(viewSubscribers, Scope.VIEW_PEOPLE)
+                || accessChecker.isPrincipal(viewSubscribersTotal, Scope.VIEW_PEOPLE) ? feedSubscribersTotal : null;
+        this.feedSubscriptionsTotal = accessChecker.isPrincipal(viewSubscriptions, Scope.VIEW_PEOPLE)
+                || accessChecker.isPrincipal(viewSubscriptionsTotal, Scope.VIEW_PEOPLE) ? feedSubscriptionsTotal : null;
+        this.friendsTotal = accessChecker.isPrincipal(viewFriends, Scope.VIEW_PEOPLE)
+                || accessChecker.isPrincipal(viewFriendsTotal, Scope.VIEW_PEOPLE) ? friendsTotal : null;
+        this.friendOfsTotal = accessChecker.isPrincipal(viewFriendOfs, Scope.VIEW_PEOPLE)
+                || accessChecker.isPrincipal(viewFriendOfsTotal, Scope.VIEW_PEOPLE) ? friendOfsTotal : null;
+        this.blockedTotal = accessChecker.isPrincipal(viewBlocked, Scope.VIEW_PEOPLE) ? blockedTotal : null;
+        this.blockedByTotal = accessChecker.isPrincipal(viewBlockedBy, Scope.VIEW_PEOPLE) ? blockedByTotal : null;
         operations = new HashMap<>();
         putOperation(operations, "viewSubscribers", viewSubscribers, Principal.PUBLIC);
         putOperation(operations, "viewSubscriptions", viewSubscriptions, Principal.PUBLIC);

@@ -52,8 +52,8 @@ public class EventSubscriber implements AccessChecker {
         this.lastEventSeen = lastEventSeen;
     }
 
-    public boolean isAdmin() {
-        return admin;
+    public boolean isAdmin(Scope scope) {
+        return admin && hasAuthScope(scope);
     }
 
     public void setAdmin(boolean admin) {
@@ -105,8 +105,8 @@ public class EventSubscriber implements AccessChecker {
     }
 
     @Override
-    public boolean isPrincipal(PrincipalFilter principal) {
-        return principal.includes(admin, clientName, subscribedToClient, friendGroups);
+    public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
+        return principal.includes(isAdmin(scope), clientName, subscribedToClient, friendGroups);
     }
 
 }

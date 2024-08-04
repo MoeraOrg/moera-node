@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
@@ -228,7 +229,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         if (!ObjectUtils.isEmpty(stories)) {
             feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
         }
-        if (accessChecker.isPrincipal(Principal.ADMIN)
+        if (accessChecker.isPrincipal(Principal.ADMIN, Scope.OTHER)
                 && posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()) {
             blockedInstants = posting.getBlockedInstants().stream()
                     .map(BlockedPostingInstantInfo::new)
@@ -355,7 +356,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         Principal viewComments = posting.isOriginal()
                 ? posting.getViewCommentsE()
                 : posting.getReceiverViewCommentsE();
-        totalComments = accessChecker.isPrincipal(viewComments) ? posting.getTotalChildren() : 0;
+        totalComments = accessChecker.isPrincipal(viewComments, Scope.VIEW_CONTENT) ? posting.getTotalChildren() : 0;
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,

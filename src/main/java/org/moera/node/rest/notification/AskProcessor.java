@@ -7,6 +7,8 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.AskHistoryRepository;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
@@ -58,7 +60,8 @@ public class AskProcessor {
 
         switch (notification.getSubject()) {
             case SUBSCRIBE:
-                if (!universalContext.isPrincipal(universalContext.getOptions().getPrincipal("ask.subscribe.allowed"))) {
+                Principal askSubscribeAllowed = universalContext.getOptions().getPrincipal("ask.subscribe.allowed");
+                if (!universalContext.isPrincipal(askSubscribeAllowed, Scope.OTHER)) {
                     throw new AuthenticationException();
                 }
 
@@ -75,7 +78,8 @@ public class AskProcessor {
                 break;
 
             case FRIEND: {
-                if (!universalContext.isPrincipal(universalContext.getOptions().getPrincipal("ask.friend.allowed"))) {
+                Principal askFriendAllowed = universalContext.getOptions().getPrincipal("ask.friend.allowed");
+                if (!universalContext.isPrincipal(askFriendAllowed, Scope.OTHER)) {
                     throw new AuthenticationException();
                 }
 

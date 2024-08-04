@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
@@ -54,7 +55,7 @@ public class BlockedUserInfo {
 
     public void protect(AccessChecker accessChecker) {
         contact.protect(accessChecker);
-        if (!accessChecker.isPrincipal(Principal.ADMIN)) {
+        if (!accessChecker.isPrincipal(Principal.ADMIN, Scope.VIEW_PEOPLE)) {
             reasonSrc = null;
             reasonSrcFormat = null;
         }

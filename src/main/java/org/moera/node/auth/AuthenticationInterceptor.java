@@ -84,7 +84,8 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 throw new AuthenticationException();
             }
             if ((handlerMethod.hasMethodAnnotation(Admin.class)
-                    || handlerMethod.getBeanType().isAnnotationPresent(Admin.class)) && !requestContext.isAdmin()) {
+                    || handlerMethod.getBeanType().isAnnotationPresent(Admin.class))
+                        && !requestContext.isAdmin(Scope.IDENTIFY)) {
                 throw new AuthenticationException();
             }
             if (!requestContext.hasAuthScope(Scope.ALL)) {
@@ -167,8 +168,11 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     private void logAuthStatus() {
         if (requestContext.isRootAdmin()) {
             MDC.put("auth", "!");
-        } else if (requestContext.isAdmin()) {
+        } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
             MDC.put("auth", "#");
+            if (!requestContext.isAdmin(Scope.ALL)) {
+                log.info("Admin scope is ({})", String.join(", ", Scope.toValues(requestContext.getAuthScope())));
+            }
         } else if (requestContext.isClient(requestContext.nodeName())) {
             MDC.put("auth", "$#");
         } else if (requestContext.getClientName() != null) {

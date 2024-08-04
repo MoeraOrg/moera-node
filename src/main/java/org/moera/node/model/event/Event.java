@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;
@@ -14,14 +15,17 @@ public abstract class Event {
 
     private EventType type;
     @JsonIgnore
+    private Scope scope;
+    @JsonIgnore
     private PrincipalFilter filter;
 
-    protected Event(EventType type) {
-        this(type, Principal.PUBLIC);
+    protected Event(EventType type, Scope scope) {
+        this(type, scope, Principal.PUBLIC);
     }
 
-    protected Event(EventType type, PrincipalFilter filter) {
+    protected Event(EventType type, Scope scope, PrincipalFilter filter) {
         this.type = type;
+        this.scope = scope;
         this.filter = filter;
     }
 
@@ -45,13 +49,13 @@ public abstract class Event {
     }
 
     public boolean isPermitted(EventSubscriber subscriber) {
-        return subscriber.isPrincipal(filter);
+        return subscriber.isPrincipal(filter, scope);
     }
 
     public final String toLogMessage() {
         List<Pair<String, String>> parameters = new ArrayList<>();
         logParameters(parameters);
-        if (parameters.size() == 0) {
+        if (parameters.isEmpty()) {
             return getType().toString();
         }
         String params = parameters.stream()

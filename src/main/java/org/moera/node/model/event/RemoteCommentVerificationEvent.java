@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.RemoteCommentVerification;
 import org.springframework.data.util.Pair;
@@ -15,11 +16,11 @@ public abstract class RemoteCommentVerificationEvent extends Event {
     private String commentId;
 
     protected RemoteCommentVerificationEvent(EventType type) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.OTHER, Principal.ADMIN);
     }
 
     protected RemoteCommentVerificationEvent(EventType type, RemoteCommentVerification data) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.OTHER, Principal.ADMIN);
         id = data.getId().toString();
         nodeName = data.getNodeName();
         postingId = data.getPostingId();

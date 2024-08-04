@@ -9,6 +9,7 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.global.ApiController;
@@ -41,7 +42,7 @@ public class FriendOfController {
     public List<FriendOfInfo> getAll() {
         log.info("GET /people/friend-ofs");
 
-        if (!requestContext.isPrincipal(FriendOf.getViewAllE(requestContext.getOptions()))) {
+        if (!requestContext.isPrincipal(FriendOf.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 
@@ -72,7 +73,7 @@ public class FriendOfController {
     public FriendOfInfo get(@PathVariable("name") String nodeName) {
         log.info("GET /people/friend-ofs/{name} (name = {})", LogUtil.format(nodeName));
 
-        if (!requestContext.isPrincipal(FriendOf.getViewAllE(requestContext.getOptions()))
+        if (!requestContext.isPrincipal(FriendOf.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
                 && !requestContext.isClient(nodeName)) {
             throw new AuthenticationException();
         }

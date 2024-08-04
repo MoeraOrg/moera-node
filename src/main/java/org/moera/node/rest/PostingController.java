@@ -19,6 +19,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BlockedOperation;
@@ -153,14 +154,16 @@ public class PostingController {
                 LogUtil.format(postingText.getBodySrc(), 64),
                 LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
 
-        if (!requestContext.isAdmin() && !requestContext.getOptions().getBool("posting.non-admin.allowed")) {
+        if (!requestContext.isAdmin(Scope.ADD_POST)
+                && !requestContext.getOptions().getBool("posting.non-admin.allowed")) {
             throw new AuthenticationException();
         }
         mediaOperations.validateAvatar(
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
+        byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName(),
+                requestContext.isAdmin(Scope.ADD_POST));
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
         }
@@ -171,7 +174,8 @@ public class PostingController {
                 postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
                 () -> new ValidationFailure("postingText.media.not-compressed"),
-                requestContext.isAdmin(),
+                requestContext.isAdmin(Scope.VIEW_CONTENT),
+                requestContext.isAdmin(Scope.ADD_POST),
                 requestContext.getClientName());
 
         Posting posting = postingOperations.newPosting(postingText);
@@ -217,11 +221,12 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName());
+        byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName(),
+                requestContext.isAdmin(Scope.UPDATE_POST));
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
         }
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
@@ -234,7 +239,8 @@ public class PostingController {
                 postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
                 () -> new ValidationFailure("postingText.media.not-compressed"),
-                requestContext.isAdmin(),
+                requestContext.isAdmin(Scope.VIEW_CONTENT),
+                requestContext.isAdmin(Scope.UPDATE_POST),
                 requestContext.getClientName());
 
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
@@ -267,10 +273,10 @@ public class PostingController {
         ));
     }
 
-    private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
+    private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName, boolean isAdmin) {
         byte[] digest = null;
         if (postingText.getSignature() == null) {
-            if (!requestContext.isAdmin()) {
+            if (!isAdmin) {
                 String clientName = requestContext.getClientName();
                 if (ObjectUtils.isEmpty(clientName)) {
                     throw new AuthenticationException();
@@ -353,7 +359,7 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
-        if (!requestContext.isPrincipal(posting.getViewE())
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
                 && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -373,7 +379,12 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         EntryRevision latest = posting.getCurrentRevision();
-        if (!requestContext.isPrincipal(posting.getDeleteE())) {
+        if (requestContext.isClient(posting.getOwnerName())
+                && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
+            throw new AuthenticationException();
+        }
+        if (!requestContext.isClient(posting.getOwnerName())
+                && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
@@ -395,7 +406,7 @@ public class PostingController {
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         List<Posting> attached = posting.isOriginal()
@@ -417,7 +428,7 @@ public class PostingController {
             Reaction reaction = reactionRepository.findByEntryIdAndOwner(
                     UUID.fromString(postingInfo.getId()), clientName);
             postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
-        } else if (requestContext.isAdmin()) {
+        } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
             OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(
                     requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId())
                     .orElse(null);
@@ -430,7 +441,7 @@ public class PostingController {
         if (postingInfo.isOriginal()) {
             postingInfo.putBlockedOperations(
                     blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
-        } else if (requestContext.isAdmin()) {
+        } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
             postingInfo.putBlockedOperations(
                     blockedByUserOperations.findBlockedOperations(
                             postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()));

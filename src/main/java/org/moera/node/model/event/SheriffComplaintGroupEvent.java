@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintStatus;
@@ -15,11 +16,11 @@ public class SheriffComplaintGroupEvent extends Event {
     private SheriffComplaintGroupInfo group;
 
     protected SheriffComplaintGroupEvent(EventType type) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.SHERIFF, Principal.ADMIN);
     }
 
     protected SheriffComplaintGroupEvent(EventType type, SheriffComplaintGroup group) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.SHERIFF, Principal.ADMIN);
         this.group = new SheriffComplaintGroupInfo(group);
     }
 

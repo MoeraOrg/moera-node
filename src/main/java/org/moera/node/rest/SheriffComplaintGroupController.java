@@ -188,7 +188,7 @@ public class SheriffComplaintGroupController {
         return sheriffComplaints.stream()
                 .filter(sc ->
                         !sheriffComplaintGroup.isAnonymous()
-                                || requestContext.isAdmin()
+                                || requestContext.isAdmin(Scope.SHERIFF)
                                 || requestContext.isClient(sc.getOwnerName()))
                 .map(sc -> new SheriffComplaintInfo(sc, false))
                 .collect(Collectors.toList());

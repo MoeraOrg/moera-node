@@ -55,9 +55,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @ApiController
 @RequestMapping("/moera/api/tokens")
 @NoCache
-public class TokensController {
+public class TokenController {
 
-    private static final Logger log = LoggerFactory.getLogger(TokensController.class);
+    private static final Logger log = LoggerFactory.getLogger(TokenController.class);
 
     @Inject
     private RequestCounter requestCounter;

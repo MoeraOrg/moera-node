@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.naming.rpc.OperationStatus;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
@@ -28,7 +29,7 @@ public class NodeNameInfo {
             return;
         }
         name = options.nodeName();
-        if (requestContext.isAdmin()) {
+        if (requestContext.isAdmin(Scope.NAME)) {
             operationStatus = options.getString("naming.operation.status");
             OperationStatus status = OperationStatus.forValue(operationStatus);
             if (status != null) {

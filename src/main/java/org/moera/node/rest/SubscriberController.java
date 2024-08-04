@@ -14,6 +14,7 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
@@ -85,7 +86,7 @@ public class SubscriberController {
                 LogUtil.format(nodeName), LogUtil.format(SubscriptionType.toValue(type)));
 
         if (type == SubscriptionType.FEED) {
-            if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))) {
+            if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
                 throw new AuthenticationException();
             }
         } else {
@@ -111,7 +112,7 @@ public class SubscriberController {
         }
 
         return fetchSubscribers(where).stream()
-                .filter(s -> requestContext.isPrincipal(s.getViewE()))
+                .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
                 .map(s -> new SubscriberInfo(s, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
@@ -124,9 +125,9 @@ public class SubscriberController {
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()))
+            if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
                     && !requestContext.isClient(subscriber.getRemoteNodeName())
-                    || !requestContext.isPrincipal(subscriber.getViewE())) {
+                    || !requestContext.isPrincipal(subscriber.getViewE(), Scope.VIEW_PEOPLE)) {
                 throw new AuthenticationException();
             }
         } else {
@@ -165,7 +166,7 @@ public class SubscriberController {
             Posting posting = postingRepository.findByNodeIdAndId(
                     requestContext.nodeId(), subscriberDescription.getPostingId())
                     .orElseThrow(() -> new ValidationFailure("subscriberDescription.postingId.not-found"));
-            if (!requestContext.isPrincipal(posting.getViewE())) {
+            if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("posting.not-found");
             }
             subscriber.setEntry(posting);
@@ -243,7 +244,7 @@ public class SubscriberController {
                 OperationsValidator.SUBSCRIBER_OPERATIONS, false,
                 "subscriberOverride.operations.wrong-principal");
         if (subscriberOverride.getAdminOperations() != null && !subscriberOverride.getAdminOperations().isEmpty()
-                && !requestContext.isPrincipal(Subscriber.getOverrideE())) {
+                && !requestContext.isPrincipal(Subscriber.getOverrideE(), Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
         OperationsValidator.validateOperations(subscriberOverride::getAdminPrincipal,
@@ -267,7 +268,7 @@ public class SubscriberController {
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
-        if (!requestContext.isPrincipal(subscriber.getDeleteE())) {
+        if (!requestContext.isPrincipal(subscriber.getDeleteE(), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
 

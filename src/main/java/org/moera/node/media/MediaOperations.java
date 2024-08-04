@@ -574,7 +574,8 @@ public class MediaOperations {
 
     public List<MediaFileOwner> validateAttachments(UUID[] ids, Supplier<RuntimeException> notFound,
                                                     Supplier<RuntimeException> notCompressed,
-                                                    boolean isAdmin, String clientName) {
+                                                    boolean isAdminViewContent, boolean isAdminUncompressedMedia,
+                                                    String clientName) {
         if (ObjectUtils.isEmpty(ids)) {
             return Collections.emptyList();
         }
@@ -594,12 +595,13 @@ public class MediaOperations {
             if (mediaFileOwner == null) {
                 throw notFound.get();
             }
-            if (mediaFileOwner.getOwnerName() == null && !isAdmin
+            if (mediaFileOwner.getOwnerName() == null && !isAdminViewContent
                     || mediaFileOwner.getOwnerName() != null
                         && !mediaFileOwner.getOwnerName().equals(clientName)) {
                 throw notFound.get();
             }
-            if (notCompressed != null && !isAdmin && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
+            if (notCompressed != null && !isAdminUncompressedMedia
+                    && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
                 throw notCompressed.get();
             }
             attached.add(mediaFileOwner);

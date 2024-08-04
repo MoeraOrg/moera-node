@@ -121,7 +121,7 @@ public class FeedController {
     public Collection<FeedInfo> getAll() {
         log.info("GET /feeds");
 
-        return Feed.getAllStandard(requestContext.isAdmin())
+        return Feed.getAllStandard(requestContext.isAdmin(Scope.VIEW_FEEDS))
                 .stream()
                 .map(FeedInfo::clone)
                 .peek(this::fillFeedTotals)
@@ -134,7 +134,7 @@ public class FeedController {
     public FeedInfo get(@PathVariable String feedName) {
         log.info("GET /feeds/{feedName} (feedName = {})", LogUtil.format(feedName));
 
-        if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin())) {
+        if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin(Scope.VIEW_FEEDS))) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
 
@@ -162,11 +162,11 @@ public class FeedController {
         if (!Feed.isStandard(feedName)) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
-        if (Feed.isAdmin(feedName) && !requestContext.isAdmin()) {
+        if (Feed.isAdmin(feedName) && !requestContext.isAdmin(Scope.VIEW_FEEDS)) {
             throw new AuthenticationException();
         }
 
-        return storyOperations.getFeedStatus(feedName, requestContext.isAdmin());
+        return storyOperations.getFeedStatus(feedName, requestContext.isAdmin(Scope.VIEW_FEEDS));
     }
 
     @PutMapping("/{feedName}/status")
@@ -216,7 +216,7 @@ public class FeedController {
         log.info("GET /feeds/{feedName}/stories (feedName = {}, before = {}, after = {}, limit = {})",
                 LogUtil.format(feedName), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
 
-        if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin())) {
+        if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin(Scope.VIEW_FEEDS))) {
             throw new ObjectNotFoundFailure("feed.not-found");
         }
         if (before != null && after != null) {
@@ -327,7 +327,7 @@ public class FeedController {
                     .map(ClientReactionInfo::new)
                     .filter(r -> postingMap.containsKey(r.getEntryId()))
                     .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
-            if (requestContext.isAdmin()) {
+            if (requestContext.isAdmin(Scope.IDENTIFY)) {
                 fillOwnInfo(stories, postingMap);
             } else {
                 List<BlockedUser> blockedUsers = blockedUserOperations.search(
@@ -364,7 +364,7 @@ public class FeedController {
                 .and(story.feedName.eq(feedName))
                 .and(story.moment.gt(afterMoment))
                 .and(story.moment.loe(beforeMoment));
-        if (!requestContext.isAdmin()) {
+        if (!requestContext.isAdmin(Scope.VIEW_CONTENT)) {
             var viewPrincipal = story.entry.viewPrincipal;
             BooleanBuilder visibility = new BooleanBuilder();
             visibility.or(viewPrincipal.eq(Principal.PUBLIC));
@@ -462,7 +462,7 @@ public class FeedController {
     private StoryInfo buildStoryInfo(Story story) {
         return StoryInfo.build(
                 story,
-                requestContext.isAdmin(),
+                requestContext.isAdmin(Scope.VIEW_FEEDS),
                 t -> new PostingInfo(
                         t.getEntry(), List.of(t), entryOperations, requestContext, requestContext.getOptions())
         );
@@ -475,8 +475,8 @@ public class FeedController {
         }
         Principal viewPrincipal = postingInfo.getOperations() != null
                 ? postingInfo.getOperations().getOrDefault("view", Principal.PUBLIC)
-                : Principal.PUBLIC;
-        return requestContext.isPrincipal(viewPrincipal.withOwner(postingInfo.getOwnerName()));
+                : Principal.PUBLIC; // FIXME other types of stories may be invisible by default and require VIEW_FEEDS
+        return requestContext.isPrincipal(viewPrincipal.withOwner(postingInfo.getOwnerName()), Scope.VIEW_CONTENT);
     }
 
 }

@@ -34,7 +34,7 @@ public interface RequestContext extends AccessChecker {
 
     void setRootAdmin(boolean rootAdmin);
 
-    boolean isAdmin();
+    boolean isAdmin(Scope scope);
 
     void setAdmin(boolean admin);
 

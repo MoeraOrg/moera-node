@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscriber;
@@ -43,7 +44,7 @@ public class SubscriberInfo {
         putOperation(operations, "view", subscriber.getViewCompound(), Principal.PUBLIC);
         putOperation(operations, "delete", subscriber.getDeletePrincipal(), Principal.PRIVATE);
 
-        if (accessChecker.isPrincipal(subscriber.getViewOperationsE())) {
+        if (accessChecker.isPrincipal(subscriber.getViewOperationsE(), Scope.SUBSCRIBE)) {
             ownerOperations = new HashMap<>();
             putOperation(ownerOperations, "view", subscriber.getViewPrincipal(), Principal.PUBLIC);
 

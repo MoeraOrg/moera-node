@@ -9,6 +9,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.global.ApiController;
@@ -49,7 +50,7 @@ public class PostingReactionTotalsController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE())) {
+        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
@@ -67,7 +68,7 @@ public class PostingReactionTotalsController {
 
         List<Posting> postings = postingRepository.findByNodeIdAndIds(requestContext.nodeId(), filter.getPostings())
                 .stream()
-                .filter(p -> requestContext.isPrincipal(p.getViewE()))
+                .filter(p -> requestContext.isPrincipal(p.getViewE(), Scope.VIEW_CONTENT))
                 .collect(Collectors.toList());
         return reactionTotalOperations.getInfo(postings).stream()
                 .map(ReactionTotalOperations.ReactionTotalsData::getClientInfo)

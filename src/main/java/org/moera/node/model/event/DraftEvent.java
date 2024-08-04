@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Draft;
 import org.moera.node.data.DraftType;
@@ -17,11 +18,11 @@ public class DraftEvent extends Event {
     private String receiverCommentId;
 
     protected DraftEvent(EventType type) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.VIEW_DRAFTS, Principal.ADMIN);
     }
 
     protected DraftEvent(EventType type, Draft draft) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.VIEW_DRAFTS, Principal.ADMIN);
         id = draft.getId().toString();
         draftType = draft.getDraftType();
         receiverName = draft.getReceiverName();

@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import javax.imageio.ImageIO;
 
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SourceFormat;
@@ -16,7 +17,8 @@ public class PostingFeatures {
     private int imageRecommendedPixels;
 
     public PostingFeatures(Options options, AccessChecker accessChecker) {
-        post = accessChecker.isPrincipal(Principal.ADMIN) || options.getBool("posting.non-admin.allowed");
+        post = accessChecker.isPrincipal(Principal.ADMIN, Scope.ADD_POST)
+                || options.getBool("posting.non-admin.allowed");
         subjectPresent = options.getBool("posting.subject.present");
         int maxSize = options.getInt("media.max-size");
         mediaMaxSize = Math.min(maxSize, options.getInt("posting.media.max-size"));

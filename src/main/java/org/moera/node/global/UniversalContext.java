@@ -116,8 +116,8 @@ public class UniversalContext {
         associate(task.getNodeId());
     }
 
-    public boolean isAdmin() {
-        return isBackground() ? admin.get() : requestContext.isAdmin();
+    public boolean isAdmin(Scope scope) {
+        return isBackground() ? admin.get() : requestContext.isAdmin(scope);
     }
 
     public boolean isSubscribedToClient() {
@@ -150,8 +150,8 @@ public class UniversalContext {
         return isBackground() || requestContext.hasAuthScope(scope);
     }
 
-    public boolean isPrincipal(PrincipalFilter principal) {
-        return principal.includes(isAdmin(), getClientName(), isSubscribedToClient(), getFriendGroups());
+    public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
+        return principal.includes(isAdmin(scope), getClientName(), isSubscribedToClient(), getFriendGroups());
     }
 
     public void authenticatedWithSignature(String nodeName) {

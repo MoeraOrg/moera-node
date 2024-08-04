@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.model.SheriffComplaintInfo;
@@ -16,11 +17,11 @@ public class SheriffComplaintAddedEvent extends Event {
     private String groupId;
 
     public SheriffComplaintAddedEvent() {
-        super(EventType.SHERIFF_COMPLAINT_ADDED, Principal.ADMIN);
+        super(EventType.SHERIFF_COMPLAINT_ADDED, Scope.SHERIFF, Principal.ADMIN);
     }
 
     public SheriffComplaintAddedEvent(SheriffComplaint complaint, UUID groupId) {
-        super(EventType.SHERIFF_COMPLAINT_ADDED, Principal.ADMIN);
+        super(EventType.SHERIFF_COMPLAINT_ADDED, Scope.SHERIFF, Principal.ADMIN);
         this.complaint = new SheriffComplaintInfo(complaint, false);
         this.groupId = groupId.toString();
     }

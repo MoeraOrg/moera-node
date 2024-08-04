@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
@@ -12,7 +13,7 @@ public class RemoteNodeAvatarChangedEvent extends Event {
     private AvatarImage avatar;
 
     public RemoteNodeAvatarChangedEvent() {
-        super(EventType.REMOTE_NODE_AVATAR_CHANGED);
+        super(EventType.REMOTE_NODE_AVATAR_CHANGED, Scope.VIEW_PEOPLE);
     }
 
     public RemoteNodeAvatarChangedEvent(String name, AvatarImage avatar) {

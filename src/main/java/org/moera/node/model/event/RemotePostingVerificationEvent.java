@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.RemotePostingVerification;
 import org.springframework.data.util.Pair;
@@ -16,11 +17,11 @@ public abstract class RemotePostingVerificationEvent extends Event {
     private String revisionId;
 
     protected RemotePostingVerificationEvent(EventType type) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.OTHER, Principal.ADMIN);
     }
 
     protected RemotePostingVerificationEvent(EventType type, RemotePostingVerification data) {
-        super(type, Principal.ADMIN);
+        super(type, Scope.OTHER, Principal.ADMIN);
         id = data.getId().toString();
         nodeName = data.getNodeName();
         receiverName = data.getOwnerName();

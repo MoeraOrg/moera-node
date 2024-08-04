@@ -3,6 +3,7 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.model.FriendGroupInfo;
 import org.springframework.data.util.Pair;
@@ -12,12 +13,12 @@ public class FriendGroupEvent extends Event {
     private FriendGroupInfo friendGroup;
 
     public FriendGroupEvent(EventType type, FriendGroupInfo friendGroup) {
-        super(type);
+        super(type, Scope.VIEW_PEOPLE);
         this.friendGroup = friendGroup;
     }
 
     public FriendGroupEvent(EventType type, FriendGroupInfo friendGroup, PrincipalFilter filter) {
-        super(type, filter);
+        super(type, Scope.VIEW_PEOPLE, filter);
         this.friendGroup = friendGroup;
     }
 

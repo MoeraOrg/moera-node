@@ -121,7 +121,7 @@ public class BlockedUserController {
         BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
 
-        if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()))
+        if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
                 && !requestContext.isClient(blockedUser.getRemoteNodeName())) {
             throw new AuthenticationException();
         }
@@ -152,7 +152,7 @@ public class BlockedUserController {
     public List<BlockedUserInfo> search(@Valid @RequestBody BlockedUserFilter blockedUserFilter) {
         log.info("POST /people/blocked-users/search");
 
-        if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()))
+        if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
                 && (blockedUserFilter.getNodeName() == null
                     || !requestContext.isClient(blockedUserFilter.getNodeName()))) {
             throw new AuthenticationException();

@@ -9,6 +9,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.commons.crypto.CryptoUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
@@ -160,7 +161,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         putOperation(reactionOperations, "delete",
                 comment.getReactionOperations().getDelete(), Principal.UNSET);
 
-        if (accessChecker.isPrincipal(comment.getViewOperationsE())) {
+        if (accessChecker.isPrincipal(comment.getViewOperationsE(), Scope.VIEW_CONTENT)) {
             ownerOperations = new HashMap<>();
             putOperation(ownerOperations, "view",
                     comment.getViewPrincipal(), Principal.PUBLIC);

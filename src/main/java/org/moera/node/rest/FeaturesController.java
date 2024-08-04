@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
+import org.moera.node.auth.Scope;
 import org.moera.node.data.AskHistoryRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.friends.FriendCache;
@@ -63,7 +64,7 @@ public class FeaturesController {
     }
 
     private List<AskSubject> getAsks(Options options) {
-        if (requestContext.isAdmin() || requestContext.getClientName() == null) {
+        if (requestContext.isAdmin(Scope.IDENTIFY) || requestContext.getClientName() == null) {
             return null;
         }
 

@@ -60,14 +60,15 @@ public class StoryController {
         log.info("GET /stories/{id}, (id = {})", LogUtil.format(id));
 
         Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
-        if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin()) {
+        if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin(Scope.VIEW_FEEDS)) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
-        if (story.getEntry() != null && !requestContext.isPrincipal(story.getViewPrincipalFilter())) {
+        if (story.getEntry() != null
+                && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
 
-        return StoryInfo.build(story, requestContext.isAdmin(),
+        return StoryInfo.build(story, requestContext.isAdmin(Scope.VIEW_FEEDS),
                 t -> new PostingInfo(t.getEntry(), entryOperations, requestContext));
     }
 
@@ -85,7 +86,8 @@ public class StoryController {
         Pair<Story, StoryInfo> info = tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                     .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-            if (story.getEntry() != null && !requestContext.isPrincipal(story.getViewPrincipalFilter())) {
+            if (story.getEntry() != null
+                    && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("story.not-found");
             }
             storyAttributes.toStory(story);
@@ -95,7 +97,7 @@ public class StoryController {
                 storyOperations.updateMoment(story, requestContext.nodeId());
             }
 
-            StoryInfo storyInfo = StoryInfo.build(story, requestContext.isAdmin(),
+            StoryInfo storyInfo = StoryInfo.build(story, requestContext.isAdmin(Scope.VIEW_FEEDS),
                     t -> new PostingInfo(t.getEntry(), entryOperations, requestContext));
 
             return Pair.of(story, storyInfo);
