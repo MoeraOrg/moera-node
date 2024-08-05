@@ -70,7 +70,7 @@ public class BlockedUserController {
 
     @PostMapping
     @Admin
-    @AuthScope(Scope.BLOCK_PEOPLE)
+    @AuthScope(Scope.BLOCK)
     @Transactional
     public ResponseEntity<BlockedUserInfo> post(
             @Valid @RequestBody BlockedUserAttributes blockedUserAttributes) {
@@ -131,7 +131,7 @@ public class BlockedUserController {
 
     @DeleteMapping("/{id}")
     @Admin
-    @AuthScope(Scope.BLOCK_PEOPLE)
+    @AuthScope(Scope.BLOCK)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /people/blocked-users/{id}, (id = {})", LogUtil.format(id));

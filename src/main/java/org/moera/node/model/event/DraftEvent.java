@@ -18,11 +18,11 @@ public class DraftEvent extends Event {
     private String receiverCommentId;
 
     protected DraftEvent(EventType type) {
-        super(type, Scope.VIEW_DRAFTS, Principal.ADMIN);
+        super(type, Scope.DRAFTS, Principal.ADMIN);
     }
 
     protected DraftEvent(EventType type, Draft draft) {
-        super(type, Scope.VIEW_DRAFTS, Principal.ADMIN);
+        super(type, Scope.DRAFTS, Principal.ADMIN);
         id = draft.getId().toString();
         draftType = draft.getDraftType();
         receiverName = draft.getReceiverName();

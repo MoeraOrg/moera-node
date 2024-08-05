@@ -13,7 +13,7 @@ public class TokenUpdatedEvent extends Event {
     private TokenInfo token;
 
     public TokenUpdatedEvent(TokenInfo token) {
-        super(EventType.TOKEN_UPDATED, Scope.MANAGE_TOKENS, Principal.ADMIN);
+        super(EventType.TOKEN_UPDATED, Scope.TOKENS, Principal.ADMIN);
         this.token = token;
     }
 

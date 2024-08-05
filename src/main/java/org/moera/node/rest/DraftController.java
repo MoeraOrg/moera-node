@@ -99,7 +99,7 @@ public class DraftController {
 
     @GetMapping
     @Admin
-    @AuthScope(Scope.VIEW_DRAFTS)
+    @AuthScope(Scope.DRAFTS)
     @Transactional
     public List<DraftInfo> getAll(
             @RequestParam DraftType draftType,
@@ -167,7 +167,7 @@ public class DraftController {
 
     @PostMapping
     @Admin
-    @AuthScope(Scope.USE_DRAFTS)
+    @AuthScope(Scope.DRAFTS)
     @Entitled
     @Transactional
     public ResponseEntity<DraftInfo> post(@Valid @RequestBody DraftText draftText) {
@@ -219,7 +219,7 @@ public class DraftController {
 
     @PutMapping("/{id}")
     @Admin
-    @AuthScope(Scope.USE_DRAFTS)
+    @AuthScope(Scope.DRAFTS)
     @Entitled
     @Transactional
     public DraftInfo put(@PathVariable UUID id, @Valid @RequestBody DraftText draftText) {
@@ -278,7 +278,7 @@ public class DraftController {
                     () -> new ValidationFailure("draftText.media.not-found"),
                     null,
                     requestContext.isAdmin(Scope.VIEW_MEDIA),
-                    requestContext.isAdmin(Scope.USE_DRAFTS),
+                    requestContext.isAdmin(Scope.DRAFTS),
                     requestContext.getClientName(Scope.VIEW_MEDIA));
         } else {
             return Collections.emptyList();
@@ -328,7 +328,7 @@ public class DraftController {
 
     @GetMapping("/{id}")
     @Admin
-    @AuthScope(Scope.VIEW_DRAFTS)
+    @AuthScope(Scope.DRAFTS)
     @Transactional
     public DraftInfo get(@PathVariable UUID id) {
         log.info("GET /drafts/{id}, (id = {})", LogUtil.format(id));
@@ -341,7 +341,7 @@ public class DraftController {
 
     @DeleteMapping("/{id}")
     @Admin
-    @AuthScope(Scope.USE_DRAFTS)
+    @AuthScope(Scope.DRAFTS)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /drafts/{id}, (id = {})", LogUtil.format(id));

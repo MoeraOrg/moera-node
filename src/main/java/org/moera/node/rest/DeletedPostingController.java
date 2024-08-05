@@ -69,7 +69,7 @@ public class DeletedPostingController {
 
     @GetMapping
     @Admin
-    @AuthScope(Scope.UNDELETE_OWN_CONTENT)
+    @AuthScope(Scope.DELETE_OWN_CONTENT)
     @Transactional
     public List<PostingInfo> getAll(
             @RequestParam(required = false) Integer page,
@@ -96,7 +96,7 @@ public class DeletedPostingController {
 
     @GetMapping("/{id}")
     @Admin
-    @AuthScope(Scope.UNDELETE_OWN_CONTENT)
+    @AuthScope(Scope.DELETE_OWN_CONTENT)
     @Transactional
     public PostingInfo get(@PathVariable UUID id) {
         log.info("GET /deleted-postings/{id}, (id = {})", LogUtil.format(id));
@@ -109,7 +109,7 @@ public class DeletedPostingController {
 
     @PostMapping("/{id}/restore")
     @Admin
-    @AuthScope(Scope.UNDELETE_OWN_CONTENT)
+    @AuthScope(Scope.DELETE_OWN_CONTENT)
     @Entitled
     @Transactional
     public PostingInfo restore(@PathVariable UUID id) {

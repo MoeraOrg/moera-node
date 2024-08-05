@@ -12,7 +12,7 @@ public class TokenDeletedEvent extends Event {
     private String id;
 
     public TokenDeletedEvent(String id) {
-        super(EventType.TOKEN_DELETED, Scope.MANAGE_TOKENS, Principal.ADMIN);
+        super(EventType.TOKEN_DELETED, Scope.TOKENS, Principal.ADMIN);
         this.id = id;
     }
 

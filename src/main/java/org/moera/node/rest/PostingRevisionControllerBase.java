@@ -124,7 +124,7 @@ public abstract class PostingRevisionControllerBase {
 
     @PostMapping("/{id}/restore")
     @Admin
-    @AuthScope(Scope.UNDELETE_OWN_CONTENT)
+    @AuthScope(Scope.DELETE_OWN_CONTENT)
     @Entitled
     @Transactional
     public PostingRevisionInfo restore(@PathVariable UUID postingId, @PathVariable UUID id) {
