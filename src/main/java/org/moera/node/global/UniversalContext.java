@@ -120,21 +120,21 @@ public class UniversalContext {
         return isBackground() ? admin.get() : requestContext.isAdmin(scope);
     }
 
-    public boolean isSubscribedToClient() {
-        return isBackground() ? subscribedToClient.get() : requestContext.isSubscribedToClient();
+    public boolean isSubscribedToClient(Scope scope) {
+        return isBackground() ? subscribedToClient.get() : requestContext.isSubscribedToClient(scope);
     }
 
-    public String[] getFriendGroups() {
-        return isBackground() ? friendGroups.get() : requestContext.getFriendGroups();
+    public String[] getFriendGroups(Scope scope) {
+        return isBackground() ? friendGroups.get() : requestContext.getFriendGroups(scope);
     }
 
-    public String getClientName() {
-        return isBackground() ? clientName.get() : requestContext.getClientName();
+    public String getClientName(Scope scope) {
+        return isBackground() ? clientName.get() : requestContext.getClientName(scope);
     }
 
-    public boolean isMemberOf(UUID friendGroupId) {
+    public boolean isMemberOf(UUID friendGroupId, Scope scope) {
         String targetId = friendGroupId.toString();
-        for (String id : getFriendGroups()) {
+        for (String id : getFriendGroups(scope)) {
             if (id.equals(targetId)) {
                 return true;
             }
@@ -151,7 +151,8 @@ public class UniversalContext {
     }
 
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
-        return principal.includes(isAdmin(scope), getClientName(), isSubscribedToClient(), getFriendGroups());
+        return principal.includes(
+                isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope));
     }
 
     public void authenticatedWithSignature(String nodeName) {

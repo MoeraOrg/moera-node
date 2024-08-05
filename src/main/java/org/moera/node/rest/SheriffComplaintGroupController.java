@@ -189,7 +189,7 @@ public class SheriffComplaintGroupController {
                 .filter(sc ->
                         !sheriffComplaintGroup.isAnonymous()
                                 || requestContext.isAdmin(Scope.SHERIFF)
-                                || requestContext.isClient(sc.getOwnerName()))
+                                || requestContext.isClient(sc.getOwnerName(), Scope.IDENTIFY))
                 .map(sc -> new SheriffComplaintInfo(sc, false))
                 .collect(Collectors.toList());
     }

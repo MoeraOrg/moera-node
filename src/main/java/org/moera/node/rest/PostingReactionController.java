@@ -181,7 +181,7 @@ public class PostingReactionController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
-                && !requestContext.isClient(ownerName)) {
+                && !requestContext.isClient(ownerName, Scope.REACT)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
@@ -256,7 +256,7 @@ public class PostingReactionController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (!requestContext.isPrincipal(posting.getViewReactionsE(), Scope.VIEW_CONTENT)
-                && !requestContext.isClient(ownerName)) {
+                && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)) {
             return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
         }
 
@@ -282,7 +282,7 @@ public class PostingReactionController {
             return Collections.emptyList();
         }
 
-        boolean own = requestContext.isClient(filter.getOwnerName());
+        boolean own = requestContext.isClient(filter.getOwnerName(), Scope.VIEW_CONTENT);
         Map<UUID, Posting> postings = postingRepository.findByNodeIdAndIds(requestContext.nodeId(), filter.getPostings())
                 .stream()
                 .filter(p -> requestContext.isPrincipal(p.getViewE(), Scope.VIEW_CONTENT))
@@ -305,7 +305,8 @@ public class PostingReactionController {
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isAdmin(Scope.DELETE_OTHERS_CONTENT) && !requestContext.isClient(posting.getOwnerName())) {
+        if (!requestContext.isAdmin(Scope.DELETE_OTHERS_CONTENT)
+                && !requestContext.isClient(posting.getOwnerName(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {

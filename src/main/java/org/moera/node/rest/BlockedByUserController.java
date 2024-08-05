@@ -52,7 +52,7 @@ public class BlockedByUserController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("blocked-by-user.not-found"));
 
         if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && !requestContext.isClient(blockedByUser.getRemoteNodeName())) {
+                && !requestContext.isClient(blockedByUser.getRemoteNodeName(), Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 

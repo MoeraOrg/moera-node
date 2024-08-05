@@ -111,23 +111,23 @@ public class BlockedUserOperations {
 
     public boolean isBlocked(BlockedOperation[] blockedOperations, UUID entryId, String entryNodeName,
                              String entryPostingId) {
-        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(), entryId,
-                entryNodeName, entryPostingId);
+        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(Scope.IDENTIFY),
+                entryId, entryNodeName, entryPostingId);
     }
 
     public boolean isBlocked(BlockedOperation blockedOperation, UUID entryId) {
         return isBlocked(requestContext.nodeId(), new BlockedOperation[]{blockedOperation},
-                requestContext.getClientName(), entryId, null, null);
+                requestContext.getClientName(Scope.IDENTIFY), entryId, null, null);
     }
 
     public boolean isBlocked(BlockedOperation[] blockedOperations, UUID entryId) {
-        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(), entryId,
-                null, null);
+        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(Scope.IDENTIFY),
+                entryId, null, null);
     }
 
     public boolean isBlocked(BlockedOperation... blockedOperations) {
-        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(), null,
-                null, null);
+        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(Scope.IDENTIFY),
+                null, null, null);
     }
 
     private static BooleanBuilder buildFilter(
@@ -180,7 +180,7 @@ public class BlockedUserOperations {
         if (requestContext.isAdmin(Scope.IDENTIFY)) {
             return Collections.emptyList();
         }
-        String clientName = requestContext.getClientName();
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
         if (ObjectUtils.isEmpty(clientName)) {
             return Collections.emptyList();
         }

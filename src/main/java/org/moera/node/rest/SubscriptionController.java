@@ -97,7 +97,7 @@ public class SubscriptionController {
                 throw new AuthenticationException();
             }
         } else {
-            if (ObjectUtils.isEmpty(nodeName) || !requestContext.isClient(nodeName)) {
+            if (ObjectUtils.isEmpty(nodeName) || !requestContext.isClient(nodeName, Scope.VIEW_PEOPLE)) {
                 throw new AuthenticationException();
             }
         }

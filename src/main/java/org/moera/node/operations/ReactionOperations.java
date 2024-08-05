@@ -104,7 +104,7 @@ public class ReactionOperations {
                 () -> new ValidationFailure("reactionDescription.ownerAvatar.mediaId.not-found"));
 
         if (reactionDescription.getSignature() == null) {
-            String ownerName = requestContext.getClientName();
+            String ownerName = requestContext.getClientName(Scope.REACT);
             if (ObjectUtils.isEmpty(ownerName)) {
                 throw new AuthenticationException();
             }
@@ -255,11 +255,11 @@ public class ReactionOperations {
     public void delete(String ownerName, Entry entry, Consumer<Reaction> reactionDeleted) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(entry.getId(), ownerName);
         if (reaction != null) {
-            if (requestContext.isClient(reaction.getOwnerName())
+            if (requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
                     && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
                 throw new AuthenticationException();
             }
-            if (!requestContext.isClient(reaction.getOwnerName())
+            if (!requestContext.isClient(reaction.getOwnerName(), Scope.IDENTIFY)
                     && !requestContext.isPrincipal(reaction.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
                 throw new AuthenticationException();
             }

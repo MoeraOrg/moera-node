@@ -174,9 +174,9 @@ public class PostingController {
                 postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
                 () -> new ValidationFailure("postingText.media.not-compressed"),
-                requestContext.isAdmin(Scope.VIEW_CONTENT),
+                requestContext.isAdmin(Scope.VIEW_MEDIA),
                 requestContext.isAdmin(Scope.ADD_POST),
-                requestContext.getClientName());
+                requestContext.getClientName(Scope.VIEW_MEDIA));
 
         Posting posting = postingOperations.newPosting(postingText);
         try {
@@ -239,9 +239,9 @@ public class PostingController {
                 postingText.getMedia(),
                 () -> new ValidationFailure("postingText.media.not-found"),
                 () -> new ValidationFailure("postingText.media.not-compressed"),
-                requestContext.isAdmin(Scope.VIEW_CONTENT),
+                requestContext.isAdmin(Scope.VIEW_MEDIA),
                 requestContext.isAdmin(Scope.UPDATE_POST),
-                requestContext.getClientName());
+                requestContext.getClientName(Scope.VIEW_MEDIA));
 
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         boolean sameViewComments = postingText.sameViewComments(posting);
@@ -277,7 +277,8 @@ public class PostingController {
         byte[] digest = null;
         if (postingText.getSignature() == null) {
             if (!isAdmin) {
-                String clientName = requestContext.getClientName();
+                Scope scope = posting == null ? Scope.ADD_POST : Scope.UPDATE_POST;
+                String clientName = requestContext.getClientName(scope);
                 if (ObjectUtils.isEmpty(clientName)) {
                     throw new AuthenticationException();
                 }
@@ -379,11 +380,11 @@ public class PostingController {
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         EntryRevision latest = posting.getCurrentRevision();
-        if (requestContext.isClient(posting.getOwnerName())
+        if (requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
                 && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
             throw new AuthenticationException();
         }
-        if (!requestContext.isClient(posting.getOwnerName())
+        if (!requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
                 && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
@@ -420,15 +421,19 @@ public class PostingController {
     }
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
-        String clientName = requestContext.getClientName();
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
         if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
         if (postingInfo.isOriginal()) {
             Reaction reaction = reactionRepository.findByEntryIdAndOwner(
                     UUID.fromString(postingInfo.getId()), clientName);
-            postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
-        } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
+            if (reaction != null
+                    && (reaction.getViewE().isPublic() || requestContext.hasAuthScope(Scope.VIEW_CONTENT))) {
+                postingInfo.setClientReaction(new ClientReactionInfo(reaction));
+            }
+        } else if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
+            // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
             OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(
                     requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId())
                     .orElse(null);

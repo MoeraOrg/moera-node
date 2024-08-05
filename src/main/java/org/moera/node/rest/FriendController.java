@@ -111,7 +111,7 @@ public class FriendController {
             }
             boolean visible = requestContext.isPrincipal(friend.getViewE(), Scope.VIEW_PEOPLE)
                     && (requestContext.isAdmin(Scope.VIEW_PEOPLE)
-                        || requestContext.isClient(friend.getRemoteNodeName())
+                        || requestContext.isClient(friend.getRemoteNodeName(), Scope.VIEW_PEOPLE)
                         || friend.getFriendGroup().getViewPrincipal().isPublic());
             if (groups != null && visible) {
                 groups.add(new FriendGroupDetails(friend, requestContext.isAdmin(Scope.VIEW_PEOPLE)));
@@ -127,7 +127,7 @@ public class FriendController {
         log.info("GET /people/friends/{name} (name = {})", LogUtil.format(nodeName));
 
         if (!requestContext.isPrincipal(Friend.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && !requestContext.isClient(nodeName)) {
+                && !requestContext.isClient(nodeName, Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 
@@ -135,7 +135,8 @@ public class FriendController {
                 .map(c -> new ContactInfo(c, requestContext.getOptions(), requestContext))
                 .orElse(null);
 
-        boolean privileged = requestContext.isAdmin(Scope.VIEW_PEOPLE) || requestContext.isClient(nodeName);
+        boolean privileged = requestContext.isAdmin(Scope.VIEW_PEOPLE)
+                || requestContext.isClient(nodeName, Scope.VIEW_PEOPLE);
         Map<UUID, Boolean> isPublic = Arrays.stream(friendCache.getNodeGroups())
                 .collect(Collectors.toMap(FriendGroup::getId, fg -> fg.getViewPrincipal().isPublic()));
         List<FriendGroupDetails> groups = Arrays.stream(friendCache.getClientGroups(nodeName))

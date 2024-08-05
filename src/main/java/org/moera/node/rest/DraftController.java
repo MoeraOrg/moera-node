@@ -277,9 +277,9 @@ public class DraftController {
                     ids,
                     () -> new ValidationFailure("draftText.media.not-found"),
                     null,
-                    requestContext.isAdmin(Scope.VIEW_CONTENT),
+                    requestContext.isAdmin(Scope.VIEW_MEDIA),
                     requestContext.isAdmin(Scope.USE_DRAFTS),
-                    requestContext.getClientName());
+                    requestContext.getClientName(Scope.VIEW_MEDIA));
         } else {
             return Collections.emptyList();
         }

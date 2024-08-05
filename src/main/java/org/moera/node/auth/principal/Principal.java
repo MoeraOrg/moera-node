@@ -90,7 +90,7 @@ public class Principal implements Cloneable, PrincipalFilter {
         StringBuilder result = new StringBuilder();
         for (String name : names) {
             if (name != null) {
-                if (result.length() > 0) {
+                if (!result.isEmpty()) {
                     result.append(delimiter);
                 }
                 result.append(name);

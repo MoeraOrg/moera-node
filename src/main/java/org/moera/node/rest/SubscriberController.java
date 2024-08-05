@@ -90,7 +90,7 @@ public class SubscriberController {
                 throw new AuthenticationException();
             }
         } else {
-            if (ObjectUtils.isEmpty(nodeName) || !requestContext.isClient(nodeName)) {
+            if (ObjectUtils.isEmpty(nodeName) || !requestContext.isClient(nodeName, Scope.VIEW_PEOPLE)) {
                 throw new AuthenticationException();
             }
         }
@@ -126,12 +126,12 @@ public class SubscriberController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
             if (!requestContext.isPrincipal(Subscriber.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                    && !requestContext.isClient(subscriber.getRemoteNodeName())
+                    && !requestContext.isClient(subscriber.getRemoteNodeName(), Scope.VIEW_PEOPLE)
                     || !requestContext.isPrincipal(subscriber.getViewE(), Scope.VIEW_PEOPLE)) {
                 throw new AuthenticationException();
             }
         } else {
-            if (!requestContext.isClient(subscriber.getRemoteNodeName())) {
+            if (!requestContext.isClient(subscriber.getRemoteNodeName(), Scope.VIEW_PEOPLE)) {
                 throw new AuthenticationException();
             }
         }
@@ -151,7 +151,7 @@ public class SubscriberController {
         if (subscriberDescription.getType() == null) {
             throw new ValidationFailure("subscriberDescription.type.blank");
         }
-        String ownerName = requestContext.getClientName();
+        String ownerName = requestContext.getClientName(Scope.SUBSCRIBE);
         if (ObjectUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
         }
@@ -237,7 +237,7 @@ public class SubscriberController {
             throw new ObjectNotFoundFailure("not-supported");
         }
         if (subscriberOverride.getOperations() != null && !subscriberOverride.getOperations().isEmpty()
-                && !requestContext.isClient(subscriber.getRemoteNodeName())) {
+                && !requestContext.isClient(subscriber.getRemoteNodeName(), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
         OperationsValidator.validateOperations(subscriberOverride::getPrincipal,

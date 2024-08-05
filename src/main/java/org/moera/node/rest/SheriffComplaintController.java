@@ -9,6 +9,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
@@ -72,7 +73,7 @@ public class SheriffComplaintController {
                 LogUtil.format(sheriffComplaintText.getCommentId()),
                 LogUtil.format(SheriffOrderReason.toValue(sheriffComplaintText.getReasonCode())));
 
-        if (ObjectUtils.isEmpty(requestContext.getClientName())) {
+        if (ObjectUtils.isEmpty(requestContext.getClientName(Scope.IDENTIFY))) {
             throw new AuthenticationException();
         }
 
@@ -83,7 +84,7 @@ public class SheriffComplaintController {
         SheriffComplaintGroup group = groupAndCreated.getFirst();
         boolean groupCreated = groupAndCreated.getSecond();
         sheriffComplaint.setGroup(group);
-        sheriffComplaint.setOwnerName(requestContext.getClientName());
+        sheriffComplaint.setOwnerName(requestContext.getClientName(Scope.IDENTIFY));
         sheriffComplaintText.toSheriffComplaint(sheriffComplaint);
         if (group.getStatus() != SheriffComplaintStatus.APPROVED
                 && group.getStatus() != SheriffComplaintStatus.REJECTED) {

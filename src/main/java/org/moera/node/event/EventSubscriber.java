@@ -72,24 +72,24 @@ public class EventSubscriber implements AccessChecker {
         return (this.authScope & scope.getMask()) == scope.getMask();
     }
 
-    public String getClientName() {
-        return clientName;
+    public String getClientName(Scope scope) {
+        return hasAuthScope(scope) ? (admin ? nodeName() : clientName) : null;
     }
 
     public void setClientName(String clientName) {
         this.clientName = clientName;
     }
 
-    public boolean isSubscribedToClient() {
-        return subscribedToClient;
+    public boolean isSubscribedToClient(Scope scope) {
+        return subscribedToClient && hasAuthScope(scope);
     }
 
     public void setSubscribedToClient(boolean subscribedToClient) {
         this.subscribedToClient = subscribedToClient;
     }
 
-    public String[] getFriendGroups() {
-        return friendGroups;
+    public String[] getFriendGroups(Scope scope) {
+        return hasAuthScope(scope) ? friendGroups : new String[0];
     }
 
     public void setFriendGroups(String[] friendGroups) {
@@ -106,7 +106,12 @@ public class EventSubscriber implements AccessChecker {
 
     @Override
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
-        return principal.includes(isAdmin(scope), clientName, subscribedToClient, friendGroups);
+        return principal.includes(
+                isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope));
+    }
+
+    public String nodeName() {
+        return options != null ? options.nodeName() : null;
     }
 
 }

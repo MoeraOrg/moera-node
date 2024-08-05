@@ -90,7 +90,7 @@ public class AskProcessor {
                     throw new ValidationFailure("friend-group.not-found");
                 }
 
-                if (universalContext.isMemberOf(friendGroupId)) {
+                if (universalContext.isMemberOf(friendGroupId, Scope.IDENTIFY)) {
                     break;
                 }
 

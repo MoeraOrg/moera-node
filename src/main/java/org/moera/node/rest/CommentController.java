@@ -338,7 +338,8 @@ public class CommentController {
 
         byte[] digest = null;
         if (commentText.getSignature() == null) {
-            String clientName = requestContext.getClientName();
+            Scope scope = comment == null ? Scope.ADD_COMMENT : Scope.UPDATE_COMMENT;
+            String clientName = requestContext.getClientName(scope);
             if (ObjectUtils.isEmpty(clientName)) {
                 throw new AuthenticationException();
             }
@@ -557,21 +558,24 @@ public class CommentController {
     private Predicate visibilityFilter(QComment comment, SimplePath<Principal> viewPrincipal, boolean sheriff) {
         BooleanBuilder visibility = new BooleanBuilder();
         visibility.or(viewPrincipal.eq(Principal.PUBLIC));
-        if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+        String clientName = requestContext.getClientName(Scope.VIEW_CONTENT);
+        if (!ObjectUtils.isEmpty(clientName)) {
             visibility.or(viewPrincipal.eq(Principal.SIGNED));
             BooleanBuilder secret = new BooleanBuilder();
             secret.and(viewPrincipal.eq(Principal.SECRET));
-            secret.and(comment.parent.ownerName.eq(requestContext.getClientName()));
+            secret.and(comment.parent.ownerName.eq(clientName));
             visibility.or(secret);
             BooleanBuilder priv = new BooleanBuilder();
             priv.and(viewPrincipal.eq(Principal.PRIVATE));
-            priv.and(comment.ownerName.eq(requestContext.getClientName()));
+            priv.and(comment.ownerName.eq(clientName));
             visibility.or(priv);
         }
-        if (requestContext.isSubscribedToClient() || sheriff) {
+        if (requestContext.isSubscribedToClient(Scope.VIEW_CONTENT) || sheriff) {
             visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
         }
-        String[] friendGroups = sheriff ? friendCache.getNodeGroupIds() : requestContext.getFriendGroups();
+        String[] friendGroups = sheriff
+                ? friendCache.getNodeGroupIds()
+                : requestContext.getFriendGroups(Scope.VIEW_CONTENT);
         if (friendGroups != null) {
             for (String friendGroupName : friendGroups) {
                 visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
@@ -619,11 +623,13 @@ public class CommentController {
         Map<String, CommentInfo> commentMap = comments.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
-        String clientName = requestContext.getClientName();
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        boolean viewContent = requestContext.hasAuthScope(Scope.VIEW_CONTENT);
         if (!ObjectUtils.isEmpty(clientName)) {
             reactionRepository.findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
                             sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
                     .stream()
+                    .filter(r -> r.getViewE().isPublic() || viewContent)
                     .map(ClientReactionInfo::new)
                     .filter(r -> commentMap.containsKey(r.getEntryId()))
                     .forEach(r -> commentMap.get(r.getEntryId()).setClientReaction(r));
@@ -719,11 +725,11 @@ public class CommentController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (requestContext.isClient(comment.getOwnerName())
+        if (requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
                 && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
             throw new AuthenticationException();
         }
-        if (!requestContext.isClient(comment.getOwnerName())
+        if (!requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
                 && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
             throw new AuthenticationException();
         }
@@ -771,12 +777,14 @@ public class CommentController {
     }
 
     private CommentInfo withClientReaction(CommentInfo commentInfo) {
-        String clientName = requestContext.getClientName();
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
         if (ObjectUtils.isEmpty(clientName)) {
             return commentInfo;
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);
-        commentInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        if (reaction != null && (reaction.getViewE().isPublic() || requestContext.hasAuthScope(Scope.VIEW_CONTENT))) {
+            commentInfo.setClientReaction(new ClientReactionInfo(reaction));
+        }
         return commentInfo;
     }
 
@@ -787,12 +795,14 @@ public class CommentController {
     }
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
-        String clientName = requestContext.getClientName();
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
         if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
-        postingInfo.setClientReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        if (reaction != null && (reaction.getViewE().isPublic() || requestContext.hasAuthScope(Scope.VIEW_CONTENT))) {
+            postingInfo.setClientReaction(new ClientReactionInfo(reaction));
+        }
         return postingInfo;
     }
 

@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
 import org.moera.node.data.SheriffMark;
@@ -77,7 +78,8 @@ public class FeedOperations {
     }
 
     public boolean isFeedSheriff(String feedName) {
-        return getFeedSheriffs(feedName).orElse(Collections.emptyList()).stream().anyMatch(requestContext::isClient);
+        return getFeedSheriffs(feedName).orElse(Collections.emptyList()).stream()
+                .anyMatch(nodeName -> requestContext.isClient(nodeName, Scope.SHERIFF));
     }
 
     public static String getFeedSheriffMarksOption(String feedName) {
@@ -98,7 +100,7 @@ public class FeedOperations {
 
     public boolean isSheriffAllowed(Supplier<List<Story>> storiesSupplier, Principal principal) {
         // This method is called after a regular access check and checks for sheriff permissions that override
-        // the regular ones. In any other case it should return false.
+        // the regular ones. In any other case, it should return false.
         if (!principal.isFriends() && !principal.isSubscribed()) {
             return false;
         }
@@ -123,7 +125,7 @@ public class FeedOperations {
         return feedNames.stream()
                 .map(feedName -> getFeedSheriffs(feedName).orElse(Collections.emptyList()))
                 .flatMap(Collection::stream)
-                .anyMatch(requestContext::isClient);
+                .anyMatch(nodeName -> requestContext.isClient(nodeName, Scope.SHERIFF));
     }
 
     @OptionHook({"sheriffs.timeline", "sheriffs.timeline.marks"})

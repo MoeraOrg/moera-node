@@ -89,7 +89,8 @@ public class FriendGroupController {
     private boolean isFriendGroupVisible(FriendGroup friendGroup) {
         return requestContext.isAdmin(Scope.VIEW_PEOPLE)
                 || friendGroup.getViewPrincipal().isPublic()
-                || friendGroup.getViewPrincipal().isPrivate() && requestContext.isMemberOf(friendGroup.getId());
+                || friendGroup.getViewPrincipal().isPrivate()
+                    && requestContext.isMemberOf(friendGroup.getId(), Scope.IDENTIFY);
     }
 
     @PostMapping

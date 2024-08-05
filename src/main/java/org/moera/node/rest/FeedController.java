@@ -315,7 +315,8 @@ public class FeedController {
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .toList();
 
-        String clientName = requestContext.getClientName();
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        boolean viewContent = requestContext.hasAuthScope(Scope.VIEW_CONTENT);
         if (!ObjectUtils.isEmpty(clientName)) {
             Map<String, PostingInfo> postingMap = stories.stream()
                     .map(StoryInfo::getPosting)
@@ -324,6 +325,7 @@ public class FeedController {
             reactionRepository.findByStoriesInRangeAndOwner(
                     requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
                     .stream()
+                    .filter(r -> r.getViewE().isPublic() || viewContent)
                     .map(ClientReactionInfo::new)
                     .filter(r -> postingMap.containsKey(r.getEntryId()))
                     .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
@@ -368,18 +370,20 @@ public class FeedController {
             var viewPrincipal = story.entry.viewPrincipal;
             BooleanBuilder visibility = new BooleanBuilder();
             visibility.or(viewPrincipal.eq(Principal.PUBLIC));
-            if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+            String clientName = requestContext.getClientName(Scope.VIEW_CONTENT);
+            if (!ObjectUtils.isEmpty(clientName)) {
                 visibility.or(viewPrincipal.eq(Principal.SIGNED));
                 BooleanBuilder priv = new BooleanBuilder();
                 priv.and(viewPrincipal.eq(Principal.PRIVATE));
-                priv.and(story.entry.ownerName.eq(requestContext.getClientName()));
+                priv.and(story.entry.ownerName.eq(clientName));
                 visibility.or(priv);
             }
-            if (requestContext.isSubscribedToClient()) {
+            if (requestContext.isSubscribedToClient(Scope.VIEW_CONTENT)) {
                 visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
             }
-            if (requestContext.getFriendGroups() != null) {
-                for (String friendGroupName : requestContext.getFriendGroups()) {
+            String[] friendGroups = requestContext.getFriendGroups(Scope.VIEW_CONTENT);
+            if (friendGroups != null) {
+                for (String friendGroupName : friendGroups) {
                     visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
                 }
             }
@@ -415,7 +419,10 @@ public class FeedController {
                 .map(p -> new RemotePosting(p.getReceiverName(), p.getReceiverPostingId()))
                 .collect(Collectors.toList());
         if (!remotePostings.isEmpty()) {
-            fillOwnReactions(postings, remotePostings);
+            // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
+            if (requestContext.hasAuthScope(Scope.VIEW_CONTENT)) {
+                fillOwnReactions(postings, remotePostings);
+            }
             fillBlockedBy(postings, remotePostings);
         }
     }

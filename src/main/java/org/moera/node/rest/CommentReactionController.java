@@ -162,7 +162,7 @@ public class CommentReactionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
-                && !requestContext.isClient(ownerName)) {
+                && !requestContext.isClient(ownerName, Scope.REACT)) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
@@ -264,7 +264,7 @@ public class CommentReactionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (!requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)
-                && !requestContext.isClient(ownerName)) {
+                && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)) {
             return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
         }
 

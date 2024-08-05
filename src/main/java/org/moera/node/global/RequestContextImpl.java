@@ -110,8 +110,8 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public boolean isSubscribedToClient() {
-        return subscribedToClient;
+    public boolean isSubscribedToClient(Scope scope) {
+        return subscribedToClient && hasAuthScope(scope);
     }
 
     @Override
@@ -120,8 +120,8 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public String[] getFriendGroups() {
-        return friendGroups;
+    public String[] getFriendGroups(Scope scope) {
+        return hasAuthScope(scope) ? friendGroups : new String[0];
     }
 
     @Override
@@ -130,9 +130,9 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public boolean isMemberOf(UUID friendGroupId) {
+    public boolean isMemberOf(UUID friendGroupId, Scope scope) {
         String targetId = friendGroupId.toString();
-        for (String id : friendGroups) {
+        for (String id : getFriendGroups(scope)) {
             if (id.equals(targetId)) {
                 return true;
             }
@@ -224,8 +224,8 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public String getClientName() {
-        return admin ? nodeName() : clientName;
+    public String getClientName(Scope scope) {
+        return hasAuthScope(scope) ? (admin ? nodeName() : clientName) : null;
     }
 
     @Override
@@ -234,8 +234,8 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public boolean isClient(String name) {
-        return Objects.equals(getClientName(), name);
+    public boolean isClient(String name, Scope scope) {
+        return Objects.equals(getClientName(scope), name);
     }
 
     @Override
@@ -346,7 +346,8 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {
-        return principal.includes(isAdmin(scope), getClientName(), isSubscribedToClient(), getFriendGroups());
+        return principal.includes(
+                isAdmin(scope), getClientName(scope), isSubscribedToClient(scope), getFriendGroups(scope));
     }
 
     @Override

@@ -159,9 +159,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             throw new InvalidCarteException("carte.client-address-unknown");
         }
         logAuthStatus();
-        if (!ObjectUtils.isEmpty(requestContext.getClientName())) {
+        if (!ObjectUtils.isEmpty(requestContext.getClientName(Scope.SHERIFF))) {
             requestContext.setPossibleSheriff(
-                    feedOperations.getAllPossibleSheriffs().stream().anyMatch(requestContext::isClient));
+                    feedOperations.getAllPossibleSheriffs().stream()
+                            .anyMatch(nodeName -> requestContext.isClient(nodeName, Scope.SHERIFF)));
         }
     }
 
@@ -170,16 +171,16 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             MDC.put("auth", "!");
         } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
             MDC.put("auth", "#");
-            if (!requestContext.isAdmin(Scope.ALL)) {
-                log.info("Admin scope is ({})", String.join(", ", Scope.toValues(requestContext.getAuthScope())));
-            }
-        } else if (requestContext.isClient(requestContext.nodeName())) {
+        } else if (requestContext.isClient(requestContext.nodeName(), Scope.IDENTIFY)) {
             MDC.put("auth", "$#");
-        } else if (requestContext.getClientName() != null) {
+        } else if (requestContext.getClientName(Scope.IDENTIFY) != null) {
             MDC.put("auth", "$$");
-            log.info("Authorized with node name {}", requestContext.getClientName());
+            log.info("Authorized with node name {}", requestContext.getClientName(Scope.IDENTIFY));
         } else {
             MDC.put("auth", "$-");
+        }
+        if (!requestContext.hasAuthScope(Scope.ALL)) {
+            log.info("Scope is ({})", String.join(", ", Scope.toValues(requestContext.getAuthScope())));
         }
     }
 

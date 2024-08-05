@@ -122,7 +122,7 @@ public class BlockedUserController {
                 .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
 
         if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && !requestContext.isClient(blockedUser.getRemoteNodeName())) {
+                && !requestContext.isClient(blockedUser.getRemoteNodeName(), Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 
@@ -154,7 +154,7 @@ public class BlockedUserController {
 
         if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
                 && (blockedUserFilter.getNodeName() == null
-                    || !requestContext.isClient(blockedUserFilter.getNodeName()))) {
+                    || !requestContext.isClient(blockedUserFilter.getNodeName(), Scope.VIEW_PEOPLE))) {
             throw new AuthenticationException();
         }
 

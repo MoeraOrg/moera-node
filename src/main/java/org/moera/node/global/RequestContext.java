@@ -42,15 +42,15 @@ public interface RequestContext extends AccessChecker {
 
     void setPossibleSheriff(boolean possibleSheriff);
 
-    boolean isSubscribedToClient();
+    boolean isSubscribedToClient(Scope scope);
 
     void setSubscribedToClient(boolean subscribedToClient);
 
-    String[] getFriendGroups();
+    String[] getFriendGroups(Scope scope);
 
     void setFriendGroups(String[] friendGroups);
 
-    boolean isMemberOf(UUID friendGroupId);
+    boolean isMemberOf(UUID friendGroupId, Scope scope);
 
     long getAuthScope();
 
@@ -84,11 +84,11 @@ public interface RequestContext extends AccessChecker {
 
     void setClientId(String clientId);
 
-    String getClientName();
+    String getClientName(Scope scope);
 
     void setClientName(String clientName);
 
-    boolean isClient(String name);
+    boolean isClient(String name, Scope scope);
 
     InetAddress getLocalAddr();
 

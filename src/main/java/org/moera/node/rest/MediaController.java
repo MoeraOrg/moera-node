@@ -155,7 +155,7 @@ public class MediaController {
         log.info("POST /media/public (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
-        if (requestContext.getClientName() == null) {
+        if (requestContext.getClientName(Scope.UPDATE_PROFILE) == null) {
             throw new AuthenticationException();
         }
         if (isBlocked()) {
@@ -195,7 +195,15 @@ public class MediaController {
         log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
-        if (requestContext.getClientName() == null) {
+        boolean mediaUploadScope = requestContext.hasAuthScope(Scope.ADD_POST)
+                || requestContext.hasAuthScope(Scope.UPDATE_POST)
+                || requestContext.hasAuthScope(Scope.ADD_COMMENT)
+                || requestContext.hasAuthScope(Scope.UPDATE_COMMENT);
+        if (!mediaUploadScope) {
+            throw new AuthenticationException();
+        }
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        if (clientName == null) {
             throw new AuthenticationException();
         }
         if (isBlocked()) {
@@ -213,7 +221,7 @@ public class MediaController {
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
             MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile,
-                    requestContext.isAdmin(Scope.IDENTIFY) ? null : requestContext.getClientName());
+                    requestContext.isAdmin(Scope.IDENTIFY) ? null : clientName);
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
             return new PrivateMediaFileInfo(mediaFileOwner, null);

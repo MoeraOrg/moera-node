@@ -74,7 +74,7 @@ public class FriendOfController {
         log.info("GET /people/friend-ofs/{name} (name = {})", LogUtil.format(nodeName));
 
         if (!requestContext.isPrincipal(FriendOf.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && !requestContext.isClient(nodeName)) {
+                && !requestContext.isClient(nodeName, Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 

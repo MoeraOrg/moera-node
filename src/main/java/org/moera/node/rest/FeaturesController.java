@@ -58,25 +58,31 @@ public class FeaturesController {
     public Features get() {
         log.info("GET /features");
 
-        return new Features(requestContext.getOptions(), plugins.getNames(requestContext.nodeId()),
-                friendCache.getNodeGroups(), friendCache.getClientGroups(requestContext.getClientName()),
-                requestContext, getAsks(requestContext.getOptions()), requestContext.isSubscribedToClient());
+        return new Features(
+                requestContext.getOptions(),
+                plugins.getNames(requestContext.nodeId()),
+                friendCache.getNodeGroups(),
+                friendCache.getClientGroups(requestContext.getClientName(Scope.IDENTIFY)),
+                requestContext,
+                getAsks(requestContext.getOptions()),
+                requestContext.isSubscribedToClient(Scope.IDENTIFY));
     }
 
     private List<AskSubject> getAsks(Options options) {
-        if (requestContext.isAdmin(Scope.IDENTIFY) || requestContext.getClientName() == null) {
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        if (requestContext.isAdmin(Scope.IDENTIFY) || clientName == null) {
             return null;
         }
 
-        int asksTotal = askHistoryRepository.countByRemoteNode(requestContext.nodeId(), requestContext.getClientName());
+        int asksTotal = askHistoryRepository.countByRemoteNode(requestContext.nodeId(), clientName);
         if (asksTotal >= options.getInt("ask.total.max")) {
             return Collections.emptyList();
         }
 
-        Timestamp lastAskSubscribe = askHistoryRepository.findLastCreatedAt(requestContext.nodeId(),
-                requestContext.getClientName(), AskSubject.SUBSCRIBE);
-        Timestamp lastAskFriend = askHistoryRepository.findLastCreatedAt(requestContext.nodeId(),
-                requestContext.getClientName(), AskSubject.FRIEND);
+        Timestamp lastAskSubscribe = askHistoryRepository.findLastCreatedAt(requestContext.nodeId(), clientName,
+                AskSubject.SUBSCRIBE);
+        Timestamp lastAskFriend = askHistoryRepository.findLastCreatedAt(requestContext.nodeId(), clientName,
+                AskSubject.FRIEND);
 
         List<AskSubject> ask = new ArrayList<>();
 

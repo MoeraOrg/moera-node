@@ -38,7 +38,7 @@ public class PluginContext {
         rootAdmin = requestContext.isRootAdmin();
         admin = requestContext.isAdmin(Scope.IDENTIFY);
         authScope = Scope.toValues(requestContext.getAuthScope());
-        clientName = Optional.ofNullable(requestContext.getClientName()).orElse("");
+        clientName = Optional.ofNullable(requestContext.getClientName(Scope.IDENTIFY)).orElse("");
         remoteAddress = getRemoteAddress(requestContext);
         userAgent = requestContext.getUserAgent().name().toLowerCase();
         userAgentOs = requestContext.getUserAgentOs().name().toLowerCase();
