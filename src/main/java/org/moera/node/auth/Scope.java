@@ -1,6 +1,7 @@
 package org.moera.node.auth;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -94,7 +95,7 @@ public enum Scope {
         return values;
     }
 
-    public static long forValues(List<String> values) {
+    public static long forValues(Collection<String> values) {
         long mask = 0;
         for (String value : values) {
             Scope scope = forValue(value);
