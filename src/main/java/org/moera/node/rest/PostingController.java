@@ -158,6 +158,9 @@ public class PostingController {
                 && !requestContext.getOptions().getBool("posting.non-admin.allowed")) {
             throw new AuthenticationException();
         }
+        if (!ObjectUtils.isEmpty(postingText.getPublications()) && !requestContext.isAdmin(Scope.UPDATE_FEEDS)) {
+            throw new AuthenticationException();
+        }
         mediaOperations.validateAvatar(
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
