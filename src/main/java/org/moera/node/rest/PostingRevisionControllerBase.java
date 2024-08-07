@@ -60,10 +60,12 @@ public abstract class PostingRevisionControllerBase {
 
     protected abstract Optional<Posting> findPosting(UUID postingId);
 
+    protected abstract boolean isViewPermitted(Posting posting);
+
     private Posting getPosting(UUID postingId) {
         Posting posting = findPosting(postingId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
-        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
+        if (!isViewPermitted(posting)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         return posting;

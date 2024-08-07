@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.moera.node.auth.Scope;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.global.ApiController;
@@ -31,6 +32,11 @@ public class PostingRevisionController extends PostingRevisionControllerBase {
     @Override
     protected Optional<Posting> findPosting(UUID postingId) {
         return postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId);
+    }
+
+    @Override
+    protected boolean isViewPermitted(Posting posting) {
+        return requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT);
     }
 
     @Override

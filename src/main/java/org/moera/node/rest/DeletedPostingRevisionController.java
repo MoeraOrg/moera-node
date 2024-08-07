@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.global.ApiController;
@@ -33,6 +34,11 @@ public class DeletedPostingRevisionController extends PostingRevisionControllerB
     @Override
     protected Optional<Posting> findPosting(UUID postingId) {
         return postingRepository.findDeletedById(requestContext.nodeId(), postingId);
+    }
+
+    @Override
+    protected boolean isViewPermitted(Posting posting) {
+        return requestContext.isAdmin(Scope.DELETE_OWN_CONTENT);
     }
 
     @Override
