@@ -10,7 +10,7 @@ import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Avatar;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;
-import org.moera.node.friends.Nodes;
+import org.moera.node.util.Nodes;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
 

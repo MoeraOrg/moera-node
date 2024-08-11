@@ -16,7 +16,7 @@ import org.moera.node.data.AvatarRepository;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;
-import org.moera.node.friends.Nodes;
+import org.moera.node.util.Nodes;
 import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;

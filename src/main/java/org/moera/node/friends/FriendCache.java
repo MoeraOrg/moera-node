@@ -14,6 +14,7 @@ import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.FriendRepository;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.util.Nodes;
 import org.moera.node.util.ParametrizedLock;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;

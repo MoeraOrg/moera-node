@@ -1,4 +1,4 @@
-package org.moera.node.friends;
+package org.moera.node.util;
 
 import java.util.Objects;
 import java.util.UUID;

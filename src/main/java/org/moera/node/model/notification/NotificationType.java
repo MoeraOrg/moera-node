@@ -35,7 +35,8 @@ public enum NotificationType {
     SHERIFF_ORDER_FOR_COMMENT_DELETED(SheriffOrderForCommentDeletedNotification.class),
     SHERIFF_COMPLAINT_DECIDED(SheriffComplaintDecidedNotification.class),
     USER_LIST_ITEM_ADDED(UserListItemAddedNotification.class),
-    USER_LIST_ITEM_DELETED(UserListItemDeletedNotification.class);
+    USER_LIST_ITEM_DELETED(UserListItemDeletedNotification.class),
+    GRANT_UPDATED(GrantUpdatedNotification.class);
 
     private final Class<? extends Notification> structure;
 

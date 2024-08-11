@@ -38,13 +38,14 @@ public enum Scope {
     SUBSCRIBE               (0x01000000, true),
     TOKENS                  (0x02000000, true),
     USER_LISTS              (0x04000000, true),
+    GRANT                   (0x08000000, true),
     REMOTE_ADD_POST         (0x00002008, false),
     REMOTE_UPDATE_POST      (0x00002010, false),
     REMOTE_ADD_COMMENT      (0x00002020, false),
     REMOTE_UPDATE_COMMENT   (0x00002040, false),
     REMOTE_REACT            (0x00002080, false),
     REMOTE_DELETE_CONTENT   (0x00002100, false),
-    ALL                     (0x07ffffff, false);
+    ALL                     (0x0fffffff, false);
     //CHECKSTYLE:ON
 
     private final long mask;

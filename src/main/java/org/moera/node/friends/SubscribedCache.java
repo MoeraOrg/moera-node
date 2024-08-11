@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.util.Nodes;
 import org.moera.node.util.ParametrizedLock;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
