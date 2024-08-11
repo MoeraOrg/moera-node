@@ -9,7 +9,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.UserListItem;
 import org.moera.node.data.UserListItemRepository;
@@ -171,8 +170,7 @@ public class UserListController {
     }
 
     @PostMapping("/{name}/items")
-    @Admin
-    @AuthScope(Scope.USER_LISTS)
+    @Admin(Scope.USER_LISTS)
     @Transactional
     public ResponseEntity<UserListItemInfo> postItem(
             @PathVariable("name") String listName,
@@ -205,8 +203,7 @@ public class UserListController {
     }
 
     @DeleteMapping("/{name}/items/{nodeName}")
-    @Admin
-    @AuthScope(Scope.USER_LISTS)
+    @Admin(Scope.USER_LISTS)
     @Transactional
     public Result deleteItem(@PathVariable("name") String listName, @PathVariable String nodeName) {
         log.info("DELETE /user-lists/{name}/items/{nodeName} (name = {}, nodeName = {})",

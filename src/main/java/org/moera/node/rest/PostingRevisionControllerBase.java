@@ -9,7 +9,6 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
@@ -125,8 +124,7 @@ public abstract class PostingRevisionControllerBase {
     }
 
     @PostMapping("/{id}/restore")
-    @Admin
-    @AuthScope(Scope.DELETE_OWN_CONTENT)
+    @Admin(Scope.DELETE_OWN_CONTENT)
     @Entitled
     @Transactional
     public PostingRevisionInfo restore(@PathVariable UUID postingId, @PathVariable UUID id) {

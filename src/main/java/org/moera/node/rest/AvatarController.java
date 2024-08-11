@@ -11,7 +11,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
@@ -63,8 +62,7 @@ public class AvatarController {
     private MediaOperations mediaOperations;
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.UPDATE_PROFILE)
+    @Admin(Scope.UPDATE_PROFILE)
     @Transactional
     public AvatarInfo post(@Valid @RequestBody AvatarAttributes avatarAttributes) throws IOException {
         log.info("POST /avatars (mediaId = {}, clipX = {}, clipY = {}, clipSize = {}, shape = {})",
@@ -174,8 +172,7 @@ public class AvatarController {
     }
 
     @PostMapping("/reorder")
-    @Admin
-    @AuthScope(Scope.UPDATE_PROFILE)
+    @Admin(Scope.UPDATE_PROFILE)
     @Transactional
     public AvatarOrdinal[] reorder(@Valid @RequestBody AvatarsOrdered avatarsOrdered) {
         int size = avatarsOrdered.getIds() != null ? avatarsOrdered.getIds().length : 0;
@@ -222,8 +219,7 @@ public class AvatarController {
     }
 
     @DeleteMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.UPDATE_PROFILE)
+    @Admin(Scope.UPDATE_PROFILE)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /avatars/{id} (id = {})", LogUtil.format(id));

@@ -12,7 +12,6 @@ import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -46,8 +45,7 @@ public class CarteController {
 
     // FIXME GET is for backward compatibility only
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST})
-    @Admin
-    @AuthScope(Scope.REMOTE_IDENTIFY)
+    @Admin(Scope.REMOTE_IDENTIFY)
     @Entitled
     @Transactional
     public CarteSet get(@RequestParam(required = false) String scope, @RequestParam(required = false) Integer limit,

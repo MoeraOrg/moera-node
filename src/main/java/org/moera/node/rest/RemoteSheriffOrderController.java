@@ -8,7 +8,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
@@ -49,8 +48,7 @@ public class RemoteSheriffOrderController {
     private Jobs jobs;
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.SHERIFF)
+    @Admin(Scope.SHERIFF)
     @Entitled
     public Result post(@PathVariable String nodeName,
                        @Valid @RequestBody SheriffOrderAttributes sheriffOrderAttributes) {

@@ -8,7 +8,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
@@ -281,8 +280,7 @@ public class CommentReactionController {
     }
 
     @DeleteMapping
-    @Admin
-    @AuthScope(Scope.DELETE_OTHERS_CONTENT)
+    @Admin(Scope.DELETE_OTHERS_CONTENT)
     @Transactional
     public Result deleteAll(@PathVariable UUID postingId, @PathVariable UUID commentId) {
         log.info("DELETE /postings/{postingId}/comments/{commentId}/reactions (postingId = {}, commentId = {})",

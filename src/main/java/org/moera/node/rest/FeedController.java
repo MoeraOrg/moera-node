@@ -24,7 +24,6 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
@@ -170,8 +169,7 @@ public class FeedController {
     }
 
     @PutMapping("/{feedName}/status")
-    @Admin
-    @AuthScope(Scope.UPDATE_FEEDS)
+    @Admin(Scope.UPDATE_FEEDS)
     @Transactional
     public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change) {
         log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",

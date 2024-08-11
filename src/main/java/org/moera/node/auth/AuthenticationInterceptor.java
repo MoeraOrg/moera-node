@@ -83,16 +83,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             if (handlerMethod.hasMethodAnnotation(RootAdmin.class) && !requestContext.isRootAdmin()) {
                 throw new AuthenticationException();
             }
-            if ((handlerMethod.hasMethodAnnotation(Admin.class)
-                    || handlerMethod.getBeanType().isAnnotationPresent(Admin.class))
-                        && !requestContext.isAdmin(Scope.IDENTIFY)) {
+            Admin adminAnnotation = handlerMethod.getMethodAnnotation(Admin.class);
+            if (adminAnnotation != null && !requestContext.isAdmin(adminAnnotation.value())) {
                 throw new AuthenticationException();
-            }
-            if (!requestContext.hasAuthScope(Scope.ALL)) {
-                AuthScope scope = handlerMethod.getMethodAnnotation(AuthScope.class);
-                if (!requestContext.hasAuthScope(scope != null ? scope.value() : Scope.OTHER)) {
-                    throw new AuthenticationException();
-                }
             }
 
             return true;

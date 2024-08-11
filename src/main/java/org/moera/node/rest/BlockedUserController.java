@@ -10,7 +10,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.BlockedUser;
@@ -69,8 +68,7 @@ public class BlockedUserController {
     private TextConverter textConverter;
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.BLOCK)
+    @Admin(Scope.BLOCK)
     @Transactional
     public ResponseEntity<BlockedUserInfo> post(
             @Valid @RequestBody BlockedUserAttributes blockedUserAttributes) {
@@ -130,8 +128,7 @@ public class BlockedUserController {
     }
 
     @DeleteMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.BLOCK)
+    @Admin(Scope.BLOCK)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /people/blocked-users/{id}, (id = {})", LogUtil.format(id));
@@ -167,8 +164,7 @@ public class BlockedUserController {
     }
 
     @GetMapping("/checksums")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public BlockedUsersChecksums checksums() {
         log.info("GET /people/blocked-users/checksums");

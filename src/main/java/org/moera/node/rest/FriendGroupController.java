@@ -10,7 +10,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
@@ -94,8 +93,7 @@ public class FriendGroupController {
     }
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.FRIEND)
+    @Admin(Scope.FRIEND)
     @Transactional
     public FriendGroupInfo post(@Valid @RequestBody FriendGroupDescription friendGroupDescription) {
         log.info("POST /people/friends/groups (title = {}, viewPrincipal = {})",
@@ -119,8 +117,7 @@ public class FriendGroupController {
     }
 
     @PutMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.FRIEND)
+    @Admin(Scope.FRIEND)
     @Transactional
     public FriendGroupInfo put(@PathVariable UUID id,
                                @Valid @RequestBody FriendGroupDescription friendGroupDescription) {
@@ -145,8 +142,7 @@ public class FriendGroupController {
     }
 
     @DeleteMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.FRIEND)
+    @Admin(Scope.FRIEND)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /people/friends/groups/{id} (id = {})", LogUtil.format(id));

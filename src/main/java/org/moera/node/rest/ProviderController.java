@@ -4,7 +4,6 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -34,8 +33,7 @@ public class ProviderController {
     private RequestContext requestContext;
 
     @GetMapping("/delete-node")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     public DeleteNodeStatus deleteNodeStatus() {
         log.info("GET /delete-node");
 
@@ -43,8 +41,7 @@ public class ProviderController {
     }
 
     @PostMapping("/delete-node")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     public DeleteNodeStatus deleteNode(@Valid @RequestBody DeleteNodeText deleteNodeText) {
         log.info("POST /delete-node");
 
@@ -61,8 +58,7 @@ public class ProviderController {
     }
 
     @DeleteMapping("/delete-node")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     public DeleteNodeStatus cancelDeleteNode() {
         log.info("DELETE /delete-node");
 

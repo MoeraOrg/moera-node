@@ -7,7 +7,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -52,8 +51,7 @@ public class ProfileController {
     }
 
     @PutMapping
-    @Admin
-    @AuthScope(Scope.UPDATE_PROFILE)
+    @Admin(Scope.UPDATE_PROFILE)
     @Transactional
     public ProfileInfo put(@Valid @RequestBody ProfileAttributes profileAttributes) {
         log.info("PUT /profile");

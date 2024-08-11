@@ -3,7 +3,6 @@ package org.moera.node.rest;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @ApiController
 @RequestMapping("/moera/api/deleted-postings/{postingId}/revisions")
-@Admin
 public class DeletedPostingRevisionController extends PostingRevisionControllerBase {
 
     private static final Logger log = LoggerFactory.getLogger(DeletedPostingRevisionController.class);

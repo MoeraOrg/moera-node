@@ -19,9 +19,8 @@ import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.Scope;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.AuthenticationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.config.Config;
@@ -269,7 +268,6 @@ public class MediaController {
     }
 
     @GetMapping("/private/{id}/info")
-    @AuthScope(Scope.VIEW_MEDIA)
     @Transactional
     public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
@@ -288,7 +286,6 @@ public class MediaController {
     }
 
     @GetMapping("/private/{id}/data")
-    @AuthScope(Scope.VIEW_MEDIA)
     @Transactional
     public ResponseEntity<Resource> getDataPrivate(@PathVariable UUID id,
                                                    @RequestParam(required = false) Integer width,

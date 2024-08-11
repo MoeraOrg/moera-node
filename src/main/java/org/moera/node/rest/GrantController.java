@@ -6,7 +6,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -39,8 +38,7 @@ public class GrantController {
     private GrantCache grantCache;
 
     @GetMapping("/{nodeName}")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public GrantInfo get(@PathVariable String nodeName) {
         log.info("GET /grants/{nodeName}, (nodeName = {})", LogUtil.format(nodeName));
@@ -51,8 +49,7 @@ public class GrantController {
     }
 
     @PutMapping("/{nodeName}")
-    @Admin
-    @AuthScope(Scope.GRANT)
+    @Admin(Scope.GRANT)
     @Transactional
     public GrantInfo put(@PathVariable String nodeName, @Valid @RequestBody GrantChange change) {
         log.info("PUT /grants/{nodeName}, (nodeName = {})", LogUtil.format(nodeName));
@@ -70,8 +67,7 @@ public class GrantController {
     }
 
     @DeleteMapping("/{nodeName}")
-    @Admin
-    @AuthScope(Scope.GRANT)
+    @Admin(Scope.GRANT)
     @Transactional
     public Result delete(@PathVariable String nodeName) {
         log.info("DELETE /grants/{nodeName}, (nodeName = {})", LogUtil.format(nodeName));

@@ -27,7 +27,6 @@ import org.moera.commons.crypto.CryptoException;
 import org.moera.naming.rpc.Rules;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -73,8 +72,7 @@ public class NodeNameController {
     }
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.NAME)
+    @Admin(Scope.NAME)
     @Transactional
     public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister, HttpServletRequest request) {
         if (!Rules.isNameValid(nameToRegister.getName())) {
@@ -134,8 +132,7 @@ public class NodeNameController {
     }
 
     @PutMapping
-    @Admin
-    @AuthScope(Scope.NAME)
+    @Admin(Scope.NAME)
     @Transactional
     public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret, HttpServletRequest request) {
         log.info("PUT /node-name");
@@ -200,8 +197,7 @@ public class NodeNameController {
     }
 
     @DeleteMapping
-    @Admin
-    @AuthScope(Scope.NAME)
+    @Admin(Scope.NAME)
     @Transactional
     public Result delete() {
         log.info("DELETE /node-name");

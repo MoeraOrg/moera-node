@@ -8,7 +8,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
@@ -79,8 +78,7 @@ public class RemoteCommentController {
     private Jobs jobs;
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.REMOTE_ADD_COMMENT)
+    @Admin(Scope.REMOTE_ADD_COMMENT)
     @Entitled
     @Transactional
     public Result post(@PathVariable String nodeName, @PathVariable String postingId,
@@ -98,8 +96,7 @@ public class RemoteCommentController {
     }
 
     @PutMapping("/{commentId}")
-    @Admin
-    @AuthScope(Scope.REMOTE_UPDATE_COMMENT)
+    @Admin(Scope.REMOTE_UPDATE_COMMENT)
     @Entitled
     @Transactional
     public Result put(@PathVariable String nodeName, @PathVariable String postingId, @PathVariable String commentId,
@@ -132,8 +129,7 @@ public class RemoteCommentController {
     }
 
     @DeleteMapping("/{commentId}")
-    @Admin
-    @AuthScope(Scope.REMOTE_DELETE_CONTENT)
+    @Admin(Scope.REMOTE_DELETE_CONTENT)
     @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId, @PathVariable String commentId) {
         log.info("DELETE /nodes/{nodeName}/postings/{postingId}/comments/{commentId}"
@@ -154,8 +150,7 @@ public class RemoteCommentController {
     }
 
     @PostMapping("/{commentId}/verify")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String postingId,
                                         @PathVariable String commentId) {

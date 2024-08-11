@@ -10,7 +10,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.BlockedInstant;
 import org.moera.node.data.BlockedInstantRepository;
@@ -59,8 +58,7 @@ public class BlockedInstantController {
     private BlockedInstantOperations blockedInstantOperations;
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public ResponseEntity<BlockedInstantInfo> post(
             @Valid @RequestBody BlockedInstantAttributes blockedInstantAttributes) {
@@ -100,8 +98,7 @@ public class BlockedInstantController {
     }
 
     @GetMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public BlockedInstantInfo get(@PathVariable UUID id) {
         log.info("GET /blocked-instants/{id}, (id = {})", LogUtil.format(id));
@@ -113,8 +110,7 @@ public class BlockedInstantController {
     }
 
     @DeleteMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /blocked-instants/{id}, (id = {})", LogUtil.format(id));
@@ -129,8 +125,7 @@ public class BlockedInstantController {
     }
 
     @PostMapping("/search")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public List<BlockedInstantInfo> post(@Valid @RequestBody BlockedInstantFilter blockedInstantFilter) {
         log.info("POST /blocked-instants/search (storyType = {})",

@@ -8,7 +8,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
@@ -67,8 +66,7 @@ public class RemotePostingReactionController {
     private Jobs jobs;
 
     @PostMapping
-    @Admin
-    @AuthScope(Scope.REMOTE_REACT)
+    @Admin(Scope.REMOTE_REACT)
     @Entitled
     public Result post(@PathVariable String nodeName, @PathVariable String postingId,
                        @Valid @RequestBody ReactionAttributes attributes) {
@@ -88,8 +86,7 @@ public class RemotePostingReactionController {
     }
 
     @DeleteMapping
-    @Admin
-    @AuthScope(Scope.REMOTE_REACT)
+    @Admin(Scope.REMOTE_REACT)
     @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId) {
         log.info("DELETE /nodes/{nodeName}/postings/{postingId}/reactions (nodeName = {}, postingId = {})",
@@ -108,8 +105,7 @@ public class RemotePostingReactionController {
     }
 
     @PostMapping("/{ownerName}/verify")
-    @Admin
-    @AuthScope(Scope.OTHER)
+    @Admin(Scope.OTHER)
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String postingId,
                                         @PathVariable String ownerName) {

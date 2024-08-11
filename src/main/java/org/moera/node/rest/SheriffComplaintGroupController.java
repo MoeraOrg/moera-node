@@ -10,7 +10,6 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.data.SheriffComplaintGroup;
@@ -195,8 +194,7 @@ public class SheriffComplaintGroupController {
     }
 
     @PutMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.SHERIFF)
+    @Admin(Scope.SHERIFF)
     @Transactional
     public SheriffComplaintGroupInfo put(@PathVariable UUID id,
                                          @Valid @RequestBody SheriffComplaintDecisionText sheriffComplaintDecisionText) {

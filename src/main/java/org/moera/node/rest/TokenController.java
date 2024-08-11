@@ -15,7 +15,6 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Password;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.AuthScope;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
@@ -113,8 +112,7 @@ public class TokenController {
     }
 
     @PutMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.TOKENS)
+    @Admin(Scope.TOKENS)
     @Transactional
     public TokenInfo put(@PathVariable UUID id, @Valid @RequestBody TokenName tokenName) {
         log.info("PUT /tokens/{} (name = {})", id, LogUtil.format(tokenName.getName()));
@@ -131,8 +129,7 @@ public class TokenController {
     }
 
     @DeleteMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.TOKENS)
+    @Admin(Scope.TOKENS)
     @Transactional
     public Result delete(@PathVariable UUID id) {
         log.info("DELETE /tokens/{}", id);
@@ -149,8 +146,7 @@ public class TokenController {
     }
 
     @GetMapping
-    @Admin
-    @AuthScope(Scope.TOKENS)
+    @Admin(Scope.TOKENS)
     @Transactional
     public List<TokenInfo> getAll() {
         log.info("GET /tokens");
@@ -160,8 +156,7 @@ public class TokenController {
     }
 
     @GetMapping("/{id}")
-    @Admin
-    @AuthScope(Scope.TOKENS)
+    @Admin(Scope.TOKENS)
     @Transactional
     public TokenInfo get(@PathVariable UUID id) {
         log.info("GET /tokens/{}", id);
