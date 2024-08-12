@@ -26,6 +26,7 @@ import org.moera.node.plugin.Plugins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -70,7 +71,7 @@ public class FeaturesController {
 
     private List<AskSubject> getAsks(Options options) {
         String clientName = requestContext.getClientName(Scope.IDENTIFY);
-        if (requestContext.isAdmin(Scope.IDENTIFY) || clientName == null) {
+        if (ObjectUtils.isEmpty(clientName) || requestContext.isOwner()) {
             return null;
         }
 

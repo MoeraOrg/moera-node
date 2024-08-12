@@ -104,15 +104,24 @@ public class ReactionOperations {
                 () -> new ValidationFailure("reactionDescription.ownerAvatar.mediaId.not-found"));
 
         if (reactionDescription.getSignature() == null) {
-            String ownerName = requestContext.getClientName(Scope.REACT);
-            if (ObjectUtils.isEmpty(ownerName)) {
+            String clientName = requestContext.getClientName(Scope.REACT);
+            boolean valid = false;
+            if (!ObjectUtils.isEmpty(reactionDescription.getOwnerName())) {
+                valid = reactionDescription.getOwnerName().equals(clientName)
+                        || reactionDescription.getOwnerName().equals(requestContext.nodeName())
+                            && requestContext.isAdmin(Scope.REACT);
+            } else {
+                if (!ObjectUtils.isEmpty(clientName)) {
+                    reactionDescription.setOwnerName(clientName);
+                    valid = true;
+                } else if (requestContext.isAdmin(Scope.REACT)) {
+                    reactionDescription.setOwnerName(requestContext.nodeName());
+                    valid = true;
+                }
+            }
+            if (!valid) {
                 throw new AuthenticationException();
             }
-            if (!ObjectUtils.isEmpty(reactionDescription.getOwnerName())
-                    && !reactionDescription.getOwnerName().equals(ownerName)) {
-                throw new AuthenticationException();
-            }
-            reactionDescription.setOwnerName(ownerName);
         } else {
             byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
             Fingerprint fingerprint = Fingerprints.reaction(reactionDescription.getSignatureVersion())

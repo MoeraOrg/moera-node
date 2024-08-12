@@ -120,6 +120,10 @@ public class UniversalContext {
         return isBackground() ? admin.get() : requestContext.isAdmin(scope);
     }
 
+    public long getAdminScope() {
+        return isBackground() ? (admin.get() ? Scope.ALL.getMask() : 0) : requestContext.getAdminScope();
+    }
+
     public boolean isSubscribedToClient(Scope scope) {
         return isBackground() ? subscribedToClient.get() : requestContext.isSubscribedToClient(scope);
     }
@@ -132,6 +136,12 @@ public class UniversalContext {
         return isBackground() ? clientName.get() : requestContext.getClientName(scope);
     }
 
+    public boolean isOwner() {
+        return isBackground()
+                ? admin.get() || Objects.equals(clientName.get(), getOptions().nodeName())
+                : requestContext.isOwner();
+    }
+
     public boolean isMemberOf(UUID friendGroupId, Scope scope) {
         String targetId = friendGroupId.toString();
         for (String id : getFriendGroups(scope)) {
@@ -140,14 +150,6 @@ public class UniversalContext {
             }
         }
         return false;
-    }
-
-    public long getAuthScope() {
-        return isBackground() ? Scope.ALL.getMask() : requestContext.getAuthScope();
-    }
-
-    public boolean hasAuthScope(Scope scope) {
-        return isBackground() || requestContext.hasAuthScope(scope);
     }
 
     public boolean isPrincipal(PrincipalFilter principal, Scope scope) {

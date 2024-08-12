@@ -10,9 +10,9 @@ import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Avatar;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;
-import org.moera.node.util.Nodes;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
+import org.moera.node.util.Nodes;
 
 public interface RequestContext extends AccessChecker {
 
@@ -36,7 +36,9 @@ public interface RequestContext extends AccessChecker {
 
     boolean isAdmin(Scope scope);
 
-    void setAdmin(boolean admin);
+    long getAdminScope();
+
+    void setAdminScope(long adminScope);
 
     boolean isPossibleSheriff();
 
@@ -52,11 +54,15 @@ public interface RequestContext extends AccessChecker {
 
     boolean isMemberOf(UUID friendGroupId, Scope scope);
 
-    long getAuthScope();
+    long getClientScope();
 
-    void setAuthScope(long authScope);
+    void setClientScope(long clientScope);
 
-    boolean hasAuthScope(Scope scope);
+    boolean hasClientScope(Scope scope);
+
+    boolean isOwner();
+
+    void setOwner(boolean owner);
 
     UUID getTokenId();
 

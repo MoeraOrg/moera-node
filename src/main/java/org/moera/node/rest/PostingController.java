@@ -424,15 +424,19 @@ public class PostingController {
     }
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
-        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        String clientName = !requestContext.isOwner()
+                ? requestContext.getClientName(Scope.IDENTIFY)
+                : requestContext.nodeName();
+        boolean viewContent = !requestContext.isOwner()
+                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+                : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
         if (postingInfo.isOriginal()) {
             Reaction reaction = reactionRepository.findByEntryIdAndOwner(
                     UUID.fromString(postingInfo.getId()), clientName);
-            if (reaction != null
-                    && (reaction.getViewE().isPublic() || requestContext.hasAuthScope(Scope.VIEW_CONTENT))) {
+            if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
                 postingInfo.setClientReaction(new ClientReactionInfo(reaction));
             }
         } else if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
@@ -449,7 +453,7 @@ public class PostingController {
         if (postingInfo.isOriginal()) {
             postingInfo.putBlockedOperations(
                     blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
-        } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
+        } else if (requestContext.isOwner() && requestContext.isAdmin(Scope.VIEW_PEOPLE)) {
             postingInfo.putBlockedOperations(
                     blockedByUserOperations.findBlockedOperations(
                             postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()));

@@ -55,7 +55,7 @@ public class CarteController {
         limit = limit != null ? limit : DEFAULT_SET_SIZE;
         limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
         long scopeMask = ObjectUtils.isEmpty(scope) ? Scope.ALL.getMask() : Scope.forValues(Util.setParam(scope));
-        scopeMask &= requestContext.getAuthScope();
+        scopeMask &= requestContext.getAdminScope();
 
         String ownerName = requestContext.nodeName();
         PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");

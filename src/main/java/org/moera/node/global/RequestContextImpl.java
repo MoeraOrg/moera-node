@@ -16,10 +16,10 @@ import org.moera.node.data.AvatarRepository;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;
-import org.moera.node.util.Nodes;
 import org.moera.node.friends.SubscribedCache;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.option.Options;
+import org.moera.node.util.Nodes;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
@@ -30,11 +30,12 @@ public class RequestContextImpl implements RequestContext {
 
     private boolean registrar;
     private boolean rootAdmin;
-    private boolean admin;
+    private long adminScope;
     private boolean possibleSheriff;
     private boolean subscribedToClient;
     private String[] friendGroups;
-    private long authScope;
+    private long clientScope;
+    private boolean owner;
     private UUID tokenId;
     private String domainName;
     private Options options;
@@ -91,12 +92,17 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isAdmin(Scope scope) {
-        return admin && hasAuthScope(scope);
+        return (adminScope & scope.getMask()) == scope.getMask();
     }
 
     @Override
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
+    public long getAdminScope() {
+        return adminScope;
+    }
+
+    @Override
+    public void setAdminScope(long adminScope) {
+        this.adminScope = adminScope;
     }
 
     @Override
@@ -111,7 +117,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isSubscribedToClient(Scope scope) {
-        return subscribedToClient && hasAuthScope(scope);
+        return subscribedToClient && hasClientScope(scope);
     }
 
     @Override
@@ -121,7 +127,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public String[] getFriendGroups(Scope scope) {
-        return hasAuthScope(scope) ? friendGroups : new String[0];
+        return hasClientScope(scope) ? friendGroups : new String[0];
     }
 
     @Override
@@ -141,18 +147,28 @@ public class RequestContextImpl implements RequestContext {
     }
 
     @Override
-    public long getAuthScope() {
-        return authScope;
+    public long getClientScope() {
+        return clientScope;
     }
 
     @Override
-    public void setAuthScope(long authScope) {
-        this.authScope = authScope;
+    public void setClientScope(long clientScope) {
+        this.clientScope = clientScope;
     }
 
     @Override
-    public boolean hasAuthScope(Scope scope) {
-        return (this.authScope & scope.getMask()) == scope.getMask();
+    public boolean hasClientScope(Scope scope) {
+        return (clientScope & scope.getMask()) == scope.getMask();
+    }
+
+    @Override
+    public boolean isOwner() {
+        return owner;
+    }
+
+    @Override
+    public void setOwner(boolean owner) {
+        this.owner = owner;
     }
 
     @Override
@@ -225,7 +241,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public String getClientName(Scope scope) {
-        return hasAuthScope(scope) ? (admin ? nodeName() : clientName) : null;
+        return hasClientScope(scope) ? clientName : null;
     }
 
     @Override
@@ -301,7 +317,7 @@ public class RequestContextImpl implements RequestContext {
     @Override
     public RequestContext getPublic() {
         RequestContextImpl context = new RequestContextImpl();
-        context.admin = false;
+        context.adminScope = 0;
         context.options = options;
         context.siteUrl = siteUrl;
         context.avatarRepository = avatarRepository;
@@ -362,12 +378,13 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public void authenticatedWithSignature(String nodeName) {
-        setAdmin(Objects.equals(nodeName, nodeName()));
+        boolean owner = Objects.equals(nodeName, nodeName());
+        setAdminScope(owner ? Scope.ALL.getMask() : 0);
         setClientName(nodeName);
+        setOwner(owner);
         setFriendGroups(friendCache.getClientGroupIds(nodeName));
         setSubscribedToClient(subscribedCache.isSubscribed(nodeName));
-
-        setAuthScope(Scope.ALL.getMask());
+        setClientScope(Scope.ALL.getMask());
     }
 
     @Override

@@ -177,11 +177,8 @@ public class BlockedUserOperations {
     }
 
     public List<BlockedOperation> findBlockedOperations(UUID postingId) {
-        if (requestContext.isAdmin(Scope.IDENTIFY)) {
-            return Collections.emptyList();
-        }
         String clientName = requestContext.getClientName(Scope.IDENTIFY);
-        if (ObjectUtils.isEmpty(clientName)) {
+        if (ObjectUtils.isEmpty(clientName) || requestContext.isOwner()) {
             return Collections.emptyList();
         }
         return search(

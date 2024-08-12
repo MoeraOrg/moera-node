@@ -13,9 +13,10 @@ public class EventSubscriber implements AccessChecker {
     private Options options;
     private String sessionId;
     private int lastEventSeen;
-    private boolean admin;
-    private long authScope;
+    private long adminScope;
+    private long clientScope;
     private String clientName;
+    private boolean owner;
     private boolean subscribedToClient;
     private String[] friendGroups;
     private boolean subscribed;
@@ -53,35 +54,47 @@ public class EventSubscriber implements AccessChecker {
     }
 
     public boolean isAdmin(Scope scope) {
-        return admin && hasAuthScope(scope);
+        return (adminScope & scope.getMask()) == scope.getMask();
     }
 
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
+    public long getAdminScope() {
+        return adminScope;
     }
 
-    public long getAuthScope() {
-        return authScope;
+    public void setAdminScope(long adminScope) {
+        this.adminScope = adminScope;
     }
 
-    public void setAuthScope(long authScope) {
-        this.authScope = authScope;
+    public long getClientScope() {
+        return clientScope;
     }
 
-    public boolean hasAuthScope(Scope scope) {
-        return (this.authScope & scope.getMask()) == scope.getMask();
+    public void setClientScope(long clientScope) {
+        this.clientScope = clientScope;
+    }
+
+    public boolean hasClientScope(Scope scope) {
+        return (clientScope & scope.getMask()) == scope.getMask();
     }
 
     public String getClientName(Scope scope) {
-        return hasAuthScope(scope) ? (admin ? nodeName() : clientName) : null;
+        return hasClientScope(scope) ? clientName : null;
     }
 
     public void setClientName(String clientName) {
         this.clientName = clientName;
     }
 
+    public boolean isOwner() {
+        return owner;
+    }
+
+    public void setOwner(boolean owner) {
+        this.owner = owner;
+    }
+
     public boolean isSubscribedToClient(Scope scope) {
-        return subscribedToClient && hasAuthScope(scope);
+        return subscribedToClient && hasClientScope(scope);
     }
 
     public void setSubscribedToClient(boolean subscribedToClient) {
@@ -89,7 +102,7 @@ public class EventSubscriber implements AccessChecker {
     }
 
     public String[] getFriendGroups(Scope scope) {
-        return hasAuthScope(scope) ? friendGroups : new String[0];
+        return hasClientScope(scope) ? friendGroups : new String[0];
     }
 
     public void setFriendGroups(String[] friendGroups) {

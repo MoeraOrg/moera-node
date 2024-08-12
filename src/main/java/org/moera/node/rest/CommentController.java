@@ -623,8 +623,12 @@ public class CommentController {
         Map<String, CommentInfo> commentMap = comments.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
-        String clientName = requestContext.getClientName(Scope.IDENTIFY);
-        boolean viewContent = requestContext.hasAuthScope(Scope.VIEW_CONTENT);
+        String clientName = !requestContext.isOwner()
+                ? requestContext.getClientName(Scope.IDENTIFY)
+                : requestContext.nodeName();
+        boolean viewContent = !requestContext.isOwner()
+                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+                : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (!ObjectUtils.isEmpty(clientName)) {
             reactionRepository.findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
                             sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
@@ -637,6 +641,7 @@ public class CommentController {
         reactionRepository.findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
                         sliceInfo.getAfter(), sliceInfo.getBefore(), posting.getOwnerName())
                 .stream()
+                .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
                 .map(ClientReactionInfo::new)
                 .filter(r -> commentMap.containsKey(r.getEntryId()))
                 .forEach(r -> commentMap.get(r.getEntryId()).setSeniorReaction(r));
@@ -777,12 +782,17 @@ public class CommentController {
     }
 
     private CommentInfo withClientReaction(CommentInfo commentInfo) {
-        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        String clientName = !requestContext.isOwner()
+                ? requestContext.getClientName(Scope.IDENTIFY)
+                : requestContext.nodeName();
+        boolean viewContent = !requestContext.isOwner()
+                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+                : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (ObjectUtils.isEmpty(clientName)) {
             return commentInfo;
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);
-        if (reaction != null && (reaction.getViewE().isPublic() || requestContext.hasAuthScope(Scope.VIEW_CONTENT))) {
+        if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
             commentInfo.setClientReaction(new ClientReactionInfo(reaction));
         }
         return commentInfo;
@@ -790,17 +800,24 @@ public class CommentController {
 
     private CommentInfo withSeniorReaction(CommentInfo commentInfo, String seniorName) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), seniorName);
-        commentInfo.setSeniorReaction(reaction != null ? new ClientReactionInfo(reaction) : null);
+        if (reaction != null && requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)) {
+            commentInfo.setSeniorReaction(new ClientReactionInfo(reaction));
+        }
         return commentInfo;
     }
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
-        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        String clientName = !requestContext.isOwner()
+                ? requestContext.getClientName(Scope.IDENTIFY)
+                : requestContext.nodeName();
+        boolean viewContent = !requestContext.isOwner()
+                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+                : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
-        if (reaction != null && (reaction.getViewE().isPublic() || requestContext.hasAuthScope(Scope.VIEW_CONTENT))) {
+        if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
             postingInfo.setClientReaction(new ClientReactionInfo(reaction));
         }
         return postingInfo;

@@ -186,26 +186,28 @@ public class MediaController {
                 && blockedUserOperations.isBlocked(BlockedOperation.COMMENT);
     }
 
-    @PostMapping("/private")
+    @PostMapping({"/private", "/private/{clientName}"})
     @Transactional
     public PrivateMediaFileInfo postPrivate(@RequestHeader("Content-Type") MediaType mediaType,
                                             @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+                                            @PathVariable String clientName,
                                             InputStream in) throws IOException {
         log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
-        boolean mediaUploadScope = requestContext.hasAuthScope(Scope.ADD_POST)
-                || requestContext.hasAuthScope(Scope.UPDATE_POST)
-                || requestContext.hasAuthScope(Scope.ADD_COMMENT)
-                || requestContext.hasAuthScope(Scope.UPDATE_COMMENT);
+        boolean mediaUploadScope = clientName == null
+                ? requestContext.isAdmin(Scope.ADD_POST)
+                    || requestContext.isAdmin(Scope.UPDATE_POST)
+                    || requestContext.isAdmin(Scope.ADD_COMMENT)
+                    || requestContext.isAdmin(Scope.UPDATE_COMMENT)
+                : requestContext.isClient(clientName, Scope.ADD_POST)
+                    || requestContext.isClient(clientName, Scope.UPDATE_POST)
+                    || requestContext.isClient(clientName, Scope.ADD_COMMENT)
+                    || requestContext.isClient(clientName, Scope.UPDATE_COMMENT);
         if (!mediaUploadScope) {
             throw new AuthenticationException();
         }
-        String clientName = requestContext.getClientName(Scope.IDENTIFY);
-        if (clientName == null) {
-            throw new AuthenticationException();
-        }
-        if (isBlocked()) {
+        if (clientName != null && isBlocked()) {
             throw new UserBlockedException();
         }
 
@@ -219,8 +221,7 @@ public class MediaController {
                     id, toContentType(mediaType), tmp.getPath(), digest, false);
             // the entity is detached after putInPlace() transaction closed
             mediaFile = entityManager.merge(mediaFile);
-            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile,
-                    requestContext.isAdmin(Scope.IDENTIFY) ? null : clientName);
+            MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName);
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
             return new PrivateMediaFileInfo(mediaFileOwner, null);

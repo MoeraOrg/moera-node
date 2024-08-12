@@ -21,6 +21,7 @@ import org.moera.node.global.UserAgent;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.Result;
 import org.moera.node.operations.FeedOperations;
+import org.moera.node.operations.GrantCache;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,9 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
 
     @Inject
     private SubscribedCache subscribedCache;
+
+    @Inject
+    private GrantCache grantCache;
 
     @Inject
     private RequestContext requestContext;
@@ -130,23 +134,29 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         AuthSecrets secrets = extractSecrets(request);
         if (Objects.equals(config.getRootSecret(), secrets.rootSecret)) {
             requestContext.setRootAdmin(true);
-            requestContext.setAdmin(true);
-            requestContext.setAuthScope(Scope.ALL.getMask());
+            requestContext.setAdminScope(Scope.ALL.getMask());
         } else {
             Token token = authenticationManager.getToken(secrets.token, requestContext.nodeId());
-            requestContext.setAdmin(token != null);
-            requestContext.setAuthScope(token != null && token.getAuthScope() != 0
-                    ? token.getAuthScope()
-                    : Scope.ALL.getMask());
-            requestContext.setTokenId(token != null ? token.getId() : null);
+            if (token != null) {
+                requestContext.setAdminScope(token.getAuthScope() != 0 ? token.getAuthScope() : Scope.ALL.getMask());
+                requestContext.setOwner(true);
+                requestContext.setTokenId(token.getId());
+            }
         }
         try {
             CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, UriUtil.remoteAddress(request));
             if (carteAuthInfo != null) {
-                requestContext.setClientName(carteAuthInfo.getClientName());
-                requestContext.setFriendGroups(friendCache.getClientGroupIds(carteAuthInfo.getClientName()));
-                requestContext.setSubscribedToClient(subscribedCache.isSubscribed(carteAuthInfo.getClientName()));
-                requestContext.setAuthScope(carteAuthInfo.getAuthScope());
+                String clientName = carteAuthInfo.getClientName();
+                requestContext.setClientName(clientName);
+                requestContext.setFriendGroups(friendCache.getClientGroupIds(clientName));
+                requestContext.setSubscribedToClient(subscribedCache.isSubscribed(clientName));
+                requestContext.setClientScope(carteAuthInfo.getAuthScope());
+                requestContext.setOwner(Objects.equals(clientName, requestContext.nodeName()));
+                long adminScope = grantCache.get(requestContext.nodeId(), clientName);
+                if (requestContext.isOwner()) {
+                    adminScope |= carteAuthInfo.getAuthScope() & Scope.VIEW_ALL.getMask();
+                }
+                requestContext.setAdminScope(adminScope);
             }
         } catch (UnknownHostException e) {
             throw new InvalidCarteException("carte.client-address-unknown");
@@ -160,20 +170,21 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     }
 
     private void logAuthStatus() {
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
         if (requestContext.isRootAdmin()) {
             MDC.put("auth", "!");
-        } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
-            MDC.put("auth", "#");
-        } else if (requestContext.isClient(requestContext.nodeName(), Scope.IDENTIFY)) {
-            MDC.put("auth", "$#");
-        } else if (requestContext.getClientName(Scope.IDENTIFY) != null) {
-            MDC.put("auth", "$$");
-            log.info("Authorized with node name {}", requestContext.getClientName(Scope.IDENTIFY));
         } else {
-            MDC.put("auth", "$-");
+            String prompt = (requestContext.getAdminScope() != 0 ? "#" : "-") + (clientName != null ? "$" : "-");
+            MDC.put("auth", prompt);
+            if (clientName != null) {
+                log.info("Authorized with node name {}", clientName);
+            }
         }
-        if (!requestContext.hasAuthScope(Scope.ALL)) {
-            log.info("Scope is ({})", String.join(", ", Scope.toValues(requestContext.getAuthScope())));
+        if (requestContext.getAdminScope() != 0 && !requestContext.isAdmin(Scope.ALL)) {
+            log.info("Admin scope is ({})", String.join(", ", Scope.toValues(requestContext.getAdminScope())));
+        }
+        if (clientName != null && !requestContext.hasClientScope(Scope.ALL)) {
+            log.info("Client scope is ({})", String.join(", ", Scope.toValues(requestContext.getClientScope())));
         }
     }
 

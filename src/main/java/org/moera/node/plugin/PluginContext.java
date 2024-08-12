@@ -2,10 +2,8 @@ package org.moera.node.plugin;
 
 import java.net.http.HttpRequest;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,9 +16,10 @@ import org.moera.node.option.Options;
 public class PluginContext {
 
     private boolean rootAdmin;
-    private boolean admin;
-    private List<String> authScope;
+    private List<String> adminScope;
+    private List<String> clientScope;
     private String clientName;
+    private boolean owner;
     private String remoteAddress;
     private String userAgent;
     private String userAgentOs;
@@ -36,9 +35,10 @@ public class PluginContext {
 
     public PluginContext(RequestContext requestContext) {
         rootAdmin = requestContext.isRootAdmin();
-        admin = requestContext.isAdmin(Scope.IDENTIFY);
-        authScope = Scope.toValues(requestContext.getAuthScope());
+        adminScope = Scope.toValues(requestContext.getAdminScope());
+        clientScope = Scope.toValues(requestContext.getClientScope());
         clientName = Optional.ofNullable(requestContext.getClientName(Scope.IDENTIFY)).orElse("");
+        owner = requestContext.isOwner();
         remoteAddress = getRemoteAddress(requestContext);
         userAgent = requestContext.getUserAgent().name().toLowerCase();
         userAgentOs = requestContext.getUserAgentOs().name().toLowerCase();
@@ -68,20 +68,20 @@ public class PluginContext {
         this.rootAdmin = rootAdmin;
     }
 
-    public boolean isAdmin() {
-        return admin;
+    public List<String> getAdminScope() {
+        return adminScope;
     }
 
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
+    public void setAdminScope(List<String> adminScope) {
+        this.adminScope = adminScope;
     }
 
-    public List<String> getAuthScope() {
-        return authScope;
+    public List<String> getClientScope() {
+        return clientScope;
     }
 
-    public void setAuthScope(List<String> authScope) {
-        this.authScope = authScope;
+    public void setClientScope(List<String> clientScope) {
+        this.clientScope = clientScope;
     }
 
     public String getClientName() {
@@ -90,6 +90,14 @@ public class PluginContext {
 
     public void setClientName(String clientName) {
         this.clientName = clientName;
+    }
+
+    public boolean isOwner() {
+        return owner;
+    }
+
+    public void setOwner(boolean owner) {
+        this.owner = owner;
     }
 
     public String getRemoteAddress() {
@@ -157,21 +165,18 @@ public class PluginContext {
     }
 
     public void addContextHeaders(HttpRequest.Builder requestBuilder) {
-        var vars = Map.<String, Object>of(
-                "root-admin", rootAdmin,
-                "admin", admin,
-                "auth-scope", authScope != null ? String.join(",", authScope) : "",
-                "client-name", Optional.ofNullable(clientName).orElse(""),
-                "remote-address", Optional.ofNullable(remoteAddress).orElse(""),
-                "user-agent", Optional.ofNullable(userAgent).orElse("unknown"),
-                "user-agent-os", Optional.ofNullable(userAgentOs).orElse("unknown"),
-                "node-id", nodeId,
-                "node-name", Optional.ofNullable(nodeName).orElse(""),
-                "domain-name", Optional.ofNullable(domainName).orElse("")
-        );
-        String headerValue = vars.entrySet().stream()
-                .map(v -> v.getKey() + "=" + v.getValue())
-                .collect(Collectors.joining(";"));
+        String headerValue = "";
+        headerValue += "root-admin=" + rootAdmin + ";";
+        headerValue += "admin-scope=" + (adminScope != null ? String.join(",", adminScope) : "") + ";";
+        headerValue += "auth-scope=" + (clientScope != null ? String.join(",", clientScope) : "") + ";";
+        headerValue += "client-name=" + Optional.ofNullable(clientName).orElse("") + ";";
+        headerValue += "owner=" + owner + ";";
+        headerValue += "remote-address=" + Optional.ofNullable(remoteAddress).orElse("") + ";";
+        headerValue += "user-agent=" + Optional.ofNullable(userAgent).orElse("unknown") + ";";
+        headerValue += "user-agent-os=" + Optional.ofNullable(userAgentOs).orElse("unknown") + ";";
+        headerValue += "node-id=" + nodeId + ";";
+        headerValue += "node-name=" + Optional.ofNullable(nodeName).orElse("") + ";";
+        headerValue += "domain-name=" + Optional.ofNullable(domainName).orElse("") + ";";
         requestBuilder.header("X-Moera-Auth", headerValue);
         requestBuilder.header("X-Moera-Origin", originUrl);
     }

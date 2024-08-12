@@ -31,6 +31,7 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.event.Event;
 import org.moera.node.model.event.PingEvent;
+import org.moera.node.operations.GrantCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -80,6 +81,9 @@ public class EventManager {
     @Inject
     private SubscribedCache subscribedCache;
 
+    @Inject
+    private GrantCache grantCache;
+
     private final Map<String, EventSubscriber> subscribers = new ConcurrentHashMap<>();
     private final List<EventPacket> queue = new ArrayList<>();
     private final long startedAt = Instant.now().getEpochSecond();
@@ -99,37 +103,46 @@ public class EventManager {
         universalContext.associate(nodeId);
 
         AuthSecrets secrets = new AuthSecrets(accessor.getFirstNativeHeader(TOKEN_HEADER));
-        boolean admin = false;
-        long authScope = Scope.ALL.getMask();
+        long adminScope = 0;
+        long clientScope = 0;
         String clientName = null;
+        boolean owner = false;
+        String[] friendGroups = null;
+        boolean subscribedToClient = false;
         try {
             Token token = authenticationManager.getToken(secrets.token, nodeId);
             if (token != null) {
-                admin = true;
-                authScope = token.getAuthScope() != 0 ? token.getAuthScope() : Scope.ALL.getMask();
-                clientName = universalContext.nodeName();
+                adminScope = token.getAuthScope() != 0 ? token.getAuthScope() : Scope.ALL.getMask();
+                owner = true;
             } else if (secrets.carte != null) {
                 CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, getRemoteAddress(accessor));
                 if (carteAuthInfo != null) {
                     clientName = carteAuthInfo.getClientName();
-                    authScope = carteAuthInfo.getAuthScope();
+                    clientScope = carteAuthInfo.getAuthScope();
+                    friendGroups = friendCache.getClientGroupIds(clientName);
+                    subscribedToClient = subscribedCache.isSubscribed(clientName);
+                    owner = Objects.equals(clientName, universalContext.nodeName());
+                    adminScope = grantCache.get(universalContext.nodeId(), clientName);
+                    if (owner) {
+                        adminScope |= clientScope & Scope.VIEW_ALL.getMask();
+                    }
                 }
             }
         } catch (InvalidTokenException | UnknownHostException e) {
             // Ignore, the client will detect the problem from REST API requests
         }
-        log.info("Session connect, id = {} {} clientName = {}",
-                accessor.getSessionId(), admin ? "admin" : "non-admin", LogUtil.format(clientName));
+        log.info("Session connect, id = {} clientName = {}", accessor.getSessionId(), LogUtil.format(clientName));
 
         EventSubscriber subscriber = new EventSubscriber();
         subscriber.setNodeId(nodeId);
         subscriber.setOptions(domains.getDomainOptions(nodeId));
         subscriber.setSessionId(accessor.getSessionId());
-        subscriber.setAdmin(admin);
-        subscriber.setAuthScope(authScope);
+        subscriber.setAdminScope(adminScope);
+        subscriber.setClientScope(clientScope);
         subscriber.setClientName(clientName);
-        subscriber.setSubscribedToClient(subscribedCache.isSubscribed(clientName));
-        subscriber.setFriendGroups(friendCache.getClientGroupIds(clientName));
+        subscriber.setOwner(owner);
+        subscriber.setSubscribedToClient(subscribedToClient);
+        subscriber.setFriendGroups(friendGroups);
         subscribers.put(accessor.getSessionId(), subscriber);
     }
 

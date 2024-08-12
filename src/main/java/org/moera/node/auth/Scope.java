@@ -45,6 +45,8 @@ public enum Scope {
     REMOTE_UPDATE_COMMENT   (0x00002040, false),
     REMOTE_REACT            (0x00002080, false),
     REMOTE_DELETE_CONTENT   (0x00002100, false),
+    // These are admin operations allowed when authenticated by carte
+    VIEW_ALL                (0x00088406, false),
     ALL                     (0x0fffffff, false);
     //CHECKSTYLE:ON
 

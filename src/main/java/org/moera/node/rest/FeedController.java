@@ -313,48 +313,37 @@ public class FeedController {
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .toList();
 
-        String clientName = requestContext.getClientName(Scope.IDENTIFY);
-        boolean viewContent = requestContext.hasAuthScope(Scope.VIEW_CONTENT);
-        if (!ObjectUtils.isEmpty(clientName)) {
-            Map<String, PostingInfo> postingMap = stories.stream()
-                    .map(StoryInfo::getPosting)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toMap(PostingInfo::getId, Function.identity(), (p1, p2) -> p1));
-            reactionRepository.findByStoriesInRangeAndOwner(
-                    requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
-                    .stream()
-                    .filter(r -> r.getViewE().isPublic() || viewContent)
-                    .map(ClientReactionInfo::new)
-                    .filter(r -> postingMap.containsKey(r.getEntryId()))
-                    .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
-            if (requestContext.isAdmin(Scope.IDENTIFY)) {
-                fillOwnInfo(stories, postingMap);
-            } else {
-                List<BlockedUser> blockedUsers = blockedUserOperations.search(
-                        requestContext.nodeId(),
-                        new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
-                        clientName,
-                        postingMap.keySet().stream().map(UUID::fromString).collect(Collectors.toList()),
-                        null,
-                        null,
-                        false
-                );
-                for (BlockedUser blockedUser : blockedUsers) {
-                    if (blockedUser.isGlobal()) {
-                        postingMap.values().forEach(p -> p.putBlockedOperation(blockedUser.getBlockedOperation()));
-                    } else {
-                        PostingInfo postingInfo = postingMap.get(blockedUser.getEntry().getId().toString());
-                        if (postingInfo != null) {
-                            postingInfo.putBlockedOperation(blockedUser.getBlockedOperation());
-                        }
-                    }
-                }
+        Map<String, PostingInfo> postingMap = stories.stream()
+                .map(StoryInfo::getPosting)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(PostingInfo::getId, Function.identity(), (p1, p2) -> p1));
+        if (!requestContext.isOwner()) {
+            String clientName = requestContext.getClientName(Scope.IDENTIFY);
+            if (!ObjectUtils.isEmpty(clientName)) {
+                fillReactions(sliceInfo, feedName, postingMap, clientName,
+                        requestContext.hasClientScope(Scope.VIEW_CONTENT));
+                fillBlocked(clientName, postingMap);
             }
+        } else {
+            fillReactions(sliceInfo, feedName, postingMap, requestContext.nodeName(),
+                    requestContext.isAdmin(Scope.VIEW_CONTENT));
+            fillOwnInfo(stories, postingMap);
         }
 
         userListOperations.fillSheriffListMarks(feedName, stories);
 
         sliceInfo.getStories().addAll(stories);
+    }
+
+    private void fillReactions(FeedSliceInfo sliceInfo, String feedName, Map<String, PostingInfo> postingMap,
+                               String clientName, boolean viewContent) {
+        reactionRepository.findByStoriesInRangeAndOwner(
+                requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
+                .stream()
+                .filter(r -> r.getViewE().isPublic() || viewContent)
+                .map(ClientReactionInfo::new)
+                .filter(r -> postingMap.containsKey(r.getEntryId()))
+                .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
     }
 
     private Predicate storyFilter(UUID nodeId, String feedName, long afterMoment, long beforeMoment) {
@@ -406,6 +395,28 @@ public class FeedController {
         }
     }
 
+    private void fillBlocked(String clientName, Map<String, PostingInfo> postingMap) {
+        List<BlockedUser> blockedUsers = blockedUserOperations.search(
+                requestContext.nodeId(),
+                new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
+                clientName,
+                postingMap.keySet().stream().map(UUID::fromString).collect(Collectors.toList()),
+                null,
+                null,
+                false
+        );
+        for (BlockedUser blockedUser : blockedUsers) {
+            if (blockedUser.isGlobal()) {
+                postingMap.values().forEach(p -> p.putBlockedOperation(blockedUser.getBlockedOperation()));
+            } else {
+                PostingInfo postingInfo = postingMap.get(blockedUser.getEntry().getId().toString());
+                if (postingInfo != null) {
+                    postingInfo.putBlockedOperation(blockedUser.getBlockedOperation());
+                }
+            }
+        }
+    }
+
     private void fillOwnInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
         List<PostingInfo> postings = stories.stream()
                 .map(StoryInfo::getPosting)
@@ -418,7 +429,7 @@ public class FeedController {
                 .collect(Collectors.toList());
         if (!remotePostings.isEmpty()) {
             // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
-            if (requestContext.hasAuthScope(Scope.VIEW_CONTENT)) {
+            if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
                 fillOwnReactions(postings, remotePostings);
             }
             fillBlockedBy(postings, remotePostings);

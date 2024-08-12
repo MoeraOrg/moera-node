@@ -121,7 +121,7 @@ public class PostingReactionController {
 
                 if (posting.isOriginal()) {
                     return postToOriginal(reactionDescription, posting);
-                } else if (requestContext.isAdmin(Scope.IDENTIFY)) {
+                } else if (requestContext.isOwner()) {
                     return postToPickedAtHome(reactionDescription, posting);
                 } else {
                     return postToPicked(reactionDescription, posting);
