@@ -68,6 +68,10 @@ public enum Scope {
         return basic;
     }
 
+    public boolean included(long mask) {
+        return (mask & getMask()) == getMask();
+    }
+
     @JsonValue
     public String getValue() {
         return name().toLowerCase().replace('_', '-');

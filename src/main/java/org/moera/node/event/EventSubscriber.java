@@ -54,7 +54,7 @@ public class EventSubscriber implements AccessChecker {
     }
 
     public boolean isAdmin(Scope scope) {
-        return (adminScope & scope.getMask()) == scope.getMask();
+        return scope.included(adminScope);
     }
 
     public long getAdminScope() {
@@ -74,7 +74,7 @@ public class EventSubscriber implements AccessChecker {
     }
 
     public boolean hasClientScope(Scope scope) {
-        return (clientScope & scope.getMask()) == scope.getMask();
+        return scope.included(clientScope);
     }
 
     public String getClientName(Scope scope) {

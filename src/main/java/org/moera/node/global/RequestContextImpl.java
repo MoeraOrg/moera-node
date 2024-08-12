@@ -92,7 +92,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean isAdmin(Scope scope) {
-        return (adminScope & scope.getMask()) == scope.getMask();
+        return scope.included(adminScope);
     }
 
     @Override
@@ -158,7 +158,7 @@ public class RequestContextImpl implements RequestContext {
 
     @Override
     public boolean hasClientScope(Scope scope) {
-        return (clientScope & scope.getMask()) == scope.getMask();
+        return scope.included(clientScope);
     }
 
     @Override

@@ -17,6 +17,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.Scope;
 import org.moera.node.config.Config;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.Friend;
@@ -37,6 +38,7 @@ import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.operations.ContactOperations;
+import org.moera.node.operations.GrantCache;
 import org.moera.node.operations.RemoteConnectivityOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
@@ -94,6 +96,9 @@ public class NotificationSenderPool {
 
     @Inject
     private SubscribedCache subscribedCache;
+
+    @Inject
+    private GrantCache grantCache;
 
     @Inject
     private ContactOperations contactOperations;
@@ -188,8 +193,10 @@ public class NotificationSenderPool {
 
     private void sendSingle(SingleDirection direction, Notification notification) {
         String nodeName = domains.getDomainOptions(direction.getNodeId()).nodeName();
+        long adminScope = grantCache.get(direction.getNodeId(), nodeName);
+        boolean adminViewContent = Scope.VIEW_CONTENT.included(adminScope);
         if (!direction.isPermitted(
-                Objects.equals(nodeName, direction.getNodeName()),
+                Objects.equals(nodeName, direction.getNodeName()) || adminViewContent,
                 direction.getNodeName(),
                 subscribedCache.isSubscribed(direction.getNodeId(), direction.getNodeName()),
                 friendCache.getClientGroupIds(direction.getNodeName()))

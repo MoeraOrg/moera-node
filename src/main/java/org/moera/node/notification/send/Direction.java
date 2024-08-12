@@ -42,10 +42,9 @@ public class Direction {
         if (this == peer) {
             return true;
         }
-        if (!(peer instanceof Direction)) {
+        if (!(peer instanceof Direction direction)) {
             return false;
         }
-        Direction direction = (Direction) peer;
         return Objects.equals(nodeId, direction.nodeId);
     }
 
