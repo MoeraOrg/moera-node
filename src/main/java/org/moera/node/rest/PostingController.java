@@ -165,8 +165,7 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName(),
-                requestContext.isAdmin(Scope.ADD_POST));
+        byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
         }
@@ -224,8 +223,7 @@ public class PostingController {
                 postingText.getOwnerAvatar(),
                 postingText::setOwnerAvatarMediaFile,
                 () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
-        byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName(),
-                requestContext.isAdmin(Scope.UPDATE_POST));
+        byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName());
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
         }
@@ -276,24 +274,26 @@ public class PostingController {
         ));
     }
 
-    private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName, boolean isAdmin) {
+    private byte[] validatePostingText(Posting posting, PostingText postingText, String ownerName) {
         byte[] digest = null;
         if (postingText.getSignature() == null) {
-            if (!isAdmin) {
-                Scope scope = posting == null ? Scope.ADD_POST : Scope.UPDATE_POST;
-                String clientName = requestContext.getClientName(scope);
-                if (ObjectUtils.isEmpty(clientName)) {
-                    throw new AuthenticationException();
-                }
-                if (!ObjectUtils.isEmpty(ownerName) && !ownerName.equals(clientName)) {
-                    throw new AuthenticationException();
-                }
-                postingText.setOwnerName(clientName);
+            Scope scope = posting == null ? Scope.ADD_POST : Scope.UPDATE_POST;
+            String clientName = requestContext.getClientName(scope);
+            boolean valid = false;
+            if (!ObjectUtils.isEmpty(ownerName)) {
+                valid = ownerName.equals(clientName)
+                        || ownerName.equals(requestContext.nodeName()) && requestContext.isAdmin(scope);
             } else {
-                if (!ObjectUtils.isEmpty(ownerName) && !ownerName.equals(requestContext.nodeName())) {
-                    throw new AuthenticationException();
+                if (!ObjectUtils.isEmpty(clientName)) {
+                    postingText.setOwnerName(clientName);
+                    valid = true;
+                } else if (requestContext.isAdmin(scope)) {
+                    postingText.setOwnerName(requestContext.nodeName());
+                    valid = true;
                 }
-                postingText.setOwnerName(requestContext.nodeName());
+            }
+            if (!valid) {
+                throw new AuthenticationException();
             }
 
             if (posting == null && ObjectUtils.isEmpty(postingText.getBodySrc())

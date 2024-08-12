@@ -154,7 +154,8 @@ public class MediaController {
         log.info("POST /media/public (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
-        if (requestContext.getClientName(Scope.UPDATE_PROFILE) == null) {
+        if (!requestContext.isAdmin(Scope.UPLOAD_PUBLIC_MEDIA)
+                && requestContext.getClientName(Scope.UPLOAD_PUBLIC_MEDIA) == null) {
             throw new AuthenticationException();
         }
         if (isBlocked()) {
@@ -196,14 +197,8 @@ public class MediaController {
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
         boolean mediaUploadScope = clientName == null
-                ? requestContext.isAdmin(Scope.ADD_POST)
-                    || requestContext.isAdmin(Scope.UPDATE_POST)
-                    || requestContext.isAdmin(Scope.ADD_COMMENT)
-                    || requestContext.isAdmin(Scope.UPDATE_COMMENT)
-                : requestContext.isClient(clientName, Scope.ADD_POST)
-                    || requestContext.isClient(clientName, Scope.UPDATE_POST)
-                    || requestContext.isClient(clientName, Scope.ADD_COMMENT)
-                    || requestContext.isClient(clientName, Scope.UPDATE_COMMENT);
+                ? requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA)
+                : requestContext.isClient(clientName, Scope.UPLOAD_PRIVATE_MEDIA);
         if (!mediaUploadScope) {
             throw new AuthenticationException();
         }

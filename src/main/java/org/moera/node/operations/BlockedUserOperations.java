@@ -106,6 +106,9 @@ public class BlockedUserOperations {
 
     public boolean isBlocked(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
                              String entryNodeName, String entryPostingId) {
+        if (remoteNodeName == null) {
+            return false;
+        }
         return count(nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId, false) > 0;
     }
 

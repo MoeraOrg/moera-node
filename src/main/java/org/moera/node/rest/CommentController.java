@@ -340,16 +340,25 @@ public class CommentController {
         if (commentText.getSignature() == null) {
             Scope scope = comment == null ? Scope.ADD_COMMENT : Scope.UPDATE_COMMENT;
             String clientName = requestContext.getClientName(scope);
-            if (ObjectUtils.isEmpty(clientName)) {
-                throw new AuthenticationException();
+            boolean valid = false;
+            if (!ObjectUtils.isEmpty(ownerName)) {
+                valid = ownerName.equals(clientName)
+                        || ownerName.equals(requestContext.nodeName()) && requestContext.isAdmin(scope);
+            } else {
+                if (!ObjectUtils.isEmpty(clientName)) {
+                    commentText.setOwnerName(clientName);
+                    valid = true;
+                } else if (requestContext.isAdmin(scope)) {
+                    commentText.setOwnerName(requestContext.nodeName());
+                    valid = true;
+                }
             }
-            if (!ObjectUtils.isEmpty(ownerName) && !ownerName.equals(clientName)) {
+            if (!valid) {
                 // posting owner may change seniorOperations
                 if (comment == null || !isSenior) {
                     throw new AuthenticationException();
                 }
             }
-            commentText.setOwnerName(clientName);
 
             if (comment == null && ObjectUtils.isEmpty(commentText.getBodySrc())
                     && ObjectUtils.isEmpty(commentText.getMedia())) {

@@ -73,7 +73,8 @@ public class SheriffComplaintController {
                 LogUtil.format(sheriffComplaintText.getCommentId()),
                 LogUtil.format(SheriffOrderReason.toValue(sheriffComplaintText.getReasonCode())));
 
-        if (ObjectUtils.isEmpty(requestContext.getClientName(Scope.IDENTIFY))) {
+        String clientName = requestContext.getClientName(Scope.IDENTIFY);
+        if (ObjectUtils.isEmpty(clientName)) {
             throw new AuthenticationException();
         }
 
@@ -84,7 +85,7 @@ public class SheriffComplaintController {
         SheriffComplaintGroup group = groupAndCreated.getFirst();
         boolean groupCreated = groupAndCreated.getSecond();
         sheriffComplaint.setGroup(group);
-        sheriffComplaint.setOwnerName(requestContext.getClientName(Scope.IDENTIFY));
+        sheriffComplaint.setOwnerName(clientName);
         sheriffComplaintText.toSheriffComplaint(sheriffComplaint);
         if (group.getStatus() != SheriffComplaintStatus.APPROVED
                 && group.getStatus() != SheriffComplaintStatus.REJECTED) {

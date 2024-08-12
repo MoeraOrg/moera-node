@@ -104,12 +104,12 @@ public class ReactionOperations {
                 () -> new ValidationFailure("reactionDescription.ownerAvatar.mediaId.not-found"));
 
         if (reactionDescription.getSignature() == null) {
+            String ownerName = reactionDescription.getOwnerName();
             String clientName = requestContext.getClientName(Scope.REACT);
             boolean valid = false;
-            if (!ObjectUtils.isEmpty(reactionDescription.getOwnerName())) {
-                valid = reactionDescription.getOwnerName().equals(clientName)
-                        || reactionDescription.getOwnerName().equals(requestContext.nodeName())
-                            && requestContext.isAdmin(Scope.REACT);
+            if (!ObjectUtils.isEmpty(ownerName)) {
+                valid = ownerName.equals(clientName)
+                        || ownerName.equals(requestContext.nodeName()) && requestContext.isAdmin(Scope.REACT);
             } else {
                 if (!ObjectUtils.isEmpty(clientName)) {
                     reactionDescription.setOwnerName(clientName);
