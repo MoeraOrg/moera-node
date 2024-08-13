@@ -6,10 +6,8 @@ import java.time.Instant;
 
 import org.moera.commons.crypto.Fingerprint;
 
-@FingerprintVersion(objectType = FingerprintObjectType.CARTE, version = 2)
-public class CarteFingerprint extends Fingerprint implements CarteProperties {
-
-    public static final short VERSION = 2;
+@FingerprintVersion(objectType = FingerprintObjectType.CARTE, version = 1)
+public class CarteFingerprint1 extends Fingerprint implements CarteProperties {
 
     public String objectType = FingerprintObjectType.CARTE.name();
     public String ownerName;
@@ -18,23 +16,21 @@ public class CarteFingerprint extends Fingerprint implements CarteProperties {
     public long deadline;
     public String nodeName;
     public long clientScope;
-    public long adminScope;
     public byte[] salt;
 
-    public CarteFingerprint() {
-        super(2);
+    public CarteFingerprint1() {
+        super(1);
     }
 
-    public CarteFingerprint(String ownerName, InetAddress address, Instant beginning, Instant deadline,
-                            String nodeName, long clientScope, long adminScope) {
-        super(2);
+    public CarteFingerprint1(String ownerName, InetAddress address, Instant beginning, Instant deadline,
+                             String nodeName, long clientScope) {
+        super(1);
         this.ownerName = ownerName;
         this.address = address;
         this.beginning = beginning.getEpochSecond();
         this.deadline = deadline.getEpochSecond();
         this.nodeName = nodeName;
         this.clientScope = clientScope;
-        this.adminScope = adminScope;
         salt = new byte[8];
         new SecureRandom().nextBytes(salt);
     }
@@ -72,11 +68,6 @@ public class CarteFingerprint extends Fingerprint implements CarteProperties {
     @Override
     public long getClientScope() {
         return clientScope;
-    }
-
-    @Override
-    public long getAdminScope() {
-        return adminScope;
     }
 
     public byte[] getSalt() {

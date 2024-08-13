@@ -6,6 +6,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
@@ -38,22 +39,24 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
     @Override
     protected void execute() {
         try {
-            PostingInfo postingInfo = nodeApi.getPosting(data.getNodeName(), generateCarte(data.getNodeName()),
-                    data.getPostingId());
+            PostingInfo postingInfo = nodeApi.getPosting(
+                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId());
             updateData(data -> data.setOwnerName(postingInfo.getReceiverName()));
             byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                    ? mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
-                                                         postingInfo.getParentMediaId(), null)
+                    ? mediaManager.getPrivateMediaDigest(
+                            data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
+                            postingInfo.getParentMediaId(), null)
                     : null;
             Function<PrivateMediaFileInfo, byte[]> mediaDigest
-                    = pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
-                                                                pmf);
+                    = pmf -> mediaManager.getPrivateMediaDigest(
+                            data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
 
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo, parentMediaDigest, mediaDigest);
             } else {
-                PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(data.getNodeName(),
-                        generateCarte(data.getNodeName()), data.getPostingId(), data.getRevisionId());
+                PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(
+                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId(),
+                        data.getRevisionId());
                 verifySignature(postingInfo, revisionInfo, parentMediaDigest, mediaDigest);
             }
         } catch (Exception e) {

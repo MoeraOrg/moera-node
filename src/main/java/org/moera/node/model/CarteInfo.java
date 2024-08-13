@@ -13,15 +13,17 @@ public class CarteInfo {
     private String carte;
     private long beginning;
     private long deadline;
-    private List<String> permissions;
+    private List<String> clientScope;
+    private List<String> adminScope;
 
     public static CarteInfo generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey,
-                                     String nodeName, long authScope) {
+                                     String nodeName, long clientScope, long adminScope) {
         CarteInfo carteInfo = new CarteInfo();
-        carteInfo.setCarte(Carte.generate(ownerName, address, beginning, signingKey, nodeName, authScope));
+        carteInfo.setCarte(Carte.generate(ownerName, address, beginning, signingKey, nodeName, clientScope, adminScope));
         carteInfo.setBeginning(beginning.getEpochSecond());
         carteInfo.setDeadline(Carte.getDeadline(beginning).getEpochSecond());
-        carteInfo.setPermissions(Scope.toValues(authScope));
+        carteInfo.setClientScope(Scope.toValues(clientScope));
+        carteInfo.setAdminScope(Scope.toValues(adminScope));
         return carteInfo;
     }
 
@@ -49,12 +51,20 @@ public class CarteInfo {
         this.deadline = deadline;
     }
 
-    public List<String> getPermissions() {
-        return permissions;
+    public List<String> getClientScope() {
+        return clientScope;
     }
 
-    public void setPermissions(List<String> permissions) {
-        this.permissions = permissions;
+    public void setClientScope(List<String> clientScope) {
+        this.clientScope = clientScope;
+    }
+
+    public List<String> getAdminScope() {
+        return adminScope;
+    }
+
+    public void setAdminScope(List<String> adminScope) {
+        this.adminScope = adminScope;
     }
 
 }

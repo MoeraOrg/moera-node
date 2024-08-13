@@ -150,11 +150,12 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                 requestContext.setClientName(clientName);
                 requestContext.setFriendGroups(friendCache.getClientGroupIds(clientName));
                 requestContext.setSubscribedToClient(subscribedCache.isSubscribed(clientName));
-                requestContext.setClientScope(carteAuthInfo.getAuthScope());
+                requestContext.setClientScope(carteAuthInfo.getClientScope());
                 requestContext.setOwner(Objects.equals(clientName, requestContext.nodeName()));
-                long adminScope = grantCache.get(requestContext.nodeId(), clientName);
+                long adminScope = carteAuthInfo.getAdminScope();
+                adminScope &= grantCache.get(requestContext.nodeId(), clientName);
                 if (requestContext.isOwner()) {
-                    adminScope |= carteAuthInfo.getAuthScope() & Scope.VIEW_ALL.getMask();
+                    adminScope |= carteAuthInfo.getClientScope() & Scope.VIEW_ALL.getMask();
                 }
                 requestContext.setAdminScope(adminScope);
             }

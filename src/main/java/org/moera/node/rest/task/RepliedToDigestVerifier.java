@@ -12,6 +12,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
+import org.moera.node.auth.Scope;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
@@ -21,6 +22,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
+import org.moera.node.util.CarteGenerator;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -34,9 +36,9 @@ public class RepliedToDigestVerifier {
     @Inject
     private MediaManager mediaManager;
 
-    public byte[] getRepliedToDigest(String targetNodeName, Function<String, String> generateCarte,
-                                     PostingInfo postingInfo, Map<String, PostingRevisionInfo> revisions,
-                                     String repliedToId, String repliedToRevisionId) throws NodeApiException {
+    public byte[] getRepliedToDigest(String targetNodeName, CarteGenerator generateCarte, PostingInfo postingInfo,
+                                     Map<String, PostingRevisionInfo> revisions, String repliedToId,
+                                     String repliedToRevisionId) throws NodeApiException {
         if (repliedToId == null) {
             return null;
         }
@@ -45,10 +47,9 @@ public class RepliedToDigestVerifier {
                 repliedToId, new HashMap<>(), repliedToRevisionId);
     }
 
-    private byte[] getRepliedToDigest(String targetNodeName, Function<String, String> generateCarte,
-                                      PostingInfo postingInfo, Map<String, PostingRevisionInfo> postingRevisions,
-                                      int depth, Set<String> visited, String id,
-                                      Map<String, CommentRevisionInfo> commentRevisions,
+    private byte[] getRepliedToDigest(String targetNodeName, CarteGenerator generateCarte, PostingInfo postingInfo,
+                                      Map<String, PostingRevisionInfo> postingRevisions, int depth, Set<String> visited,
+                                      String id, Map<String, CommentRevisionInfo> commentRevisions,
                                       String revisionId) throws NodeApiException {
         if (id == null) {
             return null;
@@ -59,16 +60,17 @@ public class RepliedToDigestVerifier {
 
         CommentInfo commentInfo;
         try {
-            commentInfo =
-                    nodeApi.getComment(targetNodeName, generateCarte.apply(targetNodeName), postingInfo.getId(), id);
+            commentInfo = nodeApi.getComment(
+                    targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(), id);
         } catch (NodeApiNotFoundException e) {
             throw new ObjectNotFoundFailure("comment.reply-not-found");
         }
         CommentRevisionInfo commentRevisionInfo = commentRevisions.get(revisionId);
         if (commentRevisionInfo == null) {
             try {
-                commentRevisionInfo = nodeApi.getCommentRevision(targetNodeName, generateCarte.apply(targetNodeName),
-                        postingInfo.getId(), id, revisionId);
+                commentRevisionInfo = nodeApi.getCommentRevision(
+                        targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
+                        id, revisionId);
             } catch (NodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }
@@ -93,8 +95,9 @@ public class RepliedToDigestVerifier {
         PostingRevisionInfo postingRevisionInfo = postingRevisions.get(commentRevisionInfo.getPostingRevisionId());
         if (postingRevisionInfo == null) {
             try {
-                postingRevisionInfo = nodeApi.getPostingRevision(targetNodeName, generateCarte.apply(targetNodeName),
-                        postingInfo.getId(), commentRevisionInfo.getPostingRevisionId());
+                postingRevisionInfo = nodeApi.getPostingRevision(
+                        targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
+                        commentRevisionInfo.getPostingRevisionId());
             } catch (NodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }
@@ -102,11 +105,13 @@ public class RepliedToDigestVerifier {
         }
 
         byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte.apply(targetNodeName),
-                                                     postingInfo.getParentMediaId(), null)
+                ? mediaManager.getPrivateMediaDigest(
+                        targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA),
+                postingInfo.getParentMediaId(), null)
                 : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(targetNodeName, generateCarte.apply(targetNodeName), pmf);
+                pmf -> mediaManager.getPrivateMediaDigest(
+                        targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA), pmf);
 
         Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
                 .create(commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,

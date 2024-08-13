@@ -10,6 +10,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
@@ -195,6 +196,10 @@ public class MediaController {
                                             InputStream in) throws IOException {
         log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
+
+        if (Objects.equals(clientName, requestContext.nodeName())) {
+            clientName = null;
+        }
 
         boolean mediaUploadScope = clientName == null
                 ? requestContext.isAdmin(Scope.UPLOAD_PRIVATE_MEDIA)

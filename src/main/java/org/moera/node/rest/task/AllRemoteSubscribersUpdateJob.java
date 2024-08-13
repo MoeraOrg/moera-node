@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
@@ -91,8 +92,11 @@ public class AllRemoteSubscribersUpdateJob
 
             log.info("Updating subscriber info at node {}", subscription.getRemoteNodeName());
             try {
-                nodeApi.putSubscriber(subscription.getRemoteNodeName(), generateCarte(subscription.getRemoteNodeName()),
-                        subscription.getRemoteSubscriberId(), override);
+                nodeApi.putSubscriber(
+                        subscription.getRemoteNodeName(),
+                        generateCarte(subscription.getRemoteNodeName(), Scope.SUBSCRIBE),
+                        subscription.getRemoteSubscriberId(),
+                        override);
                 state.updated.add(subscription.getId());
             } catch (NodeApiException e) {
                 log.warn("Error updating subscriber info at node {}: {}",

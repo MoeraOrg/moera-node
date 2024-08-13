@@ -89,13 +89,14 @@ public abstract class Task implements Runnable {
         return nameInfo != null ? nameInfo.getSigningKey() : null;
     }
 
-    protected String generateCarte(String targetNodeName) {
-        return generateCarte(targetNodeName, Scope.ALL);
+    protected String generateCarte(String targetNodeName, Scope clientScope) {
+        return generateCarte(targetNodeName, clientScope, Scope.NONE);
     }
 
-    protected String generateCarte(String targetNodeName, Scope scope) {
+    protected String generateCarte(String targetNodeName, Scope clientScope, Scope adminScope) {
         try {
-            return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName, scope.getMask());
+            return Carte.generate(nodeName(), localAddr, Instant.now(), signingKey(), targetNodeName,
+                    clientScope.getMask(), adminScope.getMask());
         } catch (Exception e) {
             log.info("Error generating carte by {} {}", nodeId, universalContext.nodeId());
             throw e;

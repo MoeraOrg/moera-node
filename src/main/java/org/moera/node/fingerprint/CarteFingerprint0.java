@@ -61,11 +61,6 @@ public class CarteFingerprint0 extends Fingerprint implements CarteProperties {
         return deadline;
     }
 
-    @Override
-    public long getAuthScope() {
-        return 0;
-    }
-
     public byte[] getSalt() {
         return salt;
     }

@@ -20,7 +20,6 @@ import org.moera.commons.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
-import org.moera.node.fingerprint.CarteFingerprint;
 import org.moera.node.fingerprint.CarteProperties;
 import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.fingerprint.Fingerprints;
@@ -164,12 +163,9 @@ public class AuthenticationManager {
             log.info("Carte: deadline at {} + 2 min", LogUtil.format(Util.toTimestamp(fp.getDeadline())));
             throw new InvalidCarteException("carte.expired");
         }
-        if (fp instanceof CarteFingerprint) {
-            String nodeName = ((CarteFingerprint) fp).getNodeName();
-            if (nodeName != null && !nodeName.equals(requestContext.getOptions().nodeName())) {
-                log.info("Carte: belongs to a wrong node ({})", LogUtil.format(nodeName));
-                throw new InvalidCarteException("carte.wrong-node");
-            }
+        if (fp.getNodeName() != null && !fp.getNodeName().equals(requestContext.getOptions().nodeName())) {
+            log.info("Carte: belongs to a wrong node ({})", LogUtil.format(fp.getNodeName()));
+            throw new InvalidCarteException("carte.wrong-node");
         }
         byte[] signingKey = namingCache.get(fp.getOwnerName()).getSigningKey();
         if (signingKey == null) {

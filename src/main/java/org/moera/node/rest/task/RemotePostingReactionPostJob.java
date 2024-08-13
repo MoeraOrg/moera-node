@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnReaction;
@@ -197,7 +198,7 @@ public class RemotePostingReactionPostJob
         if (!state.ownerAvatarUploaded) {
             mediaManager.uploadPublicMedia(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
                     getAvatar());
             state.ownerAvatarUploaded = true;
             checkpoint();
@@ -206,7 +207,7 @@ public class RemotePostingReactionPostJob
         if (state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                     parameters.postingId);
             checkpoint();
         }
@@ -240,7 +241,7 @@ public class RemotePostingReactionPostJob
         byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
                         parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName),
+                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                         state.postingInfo.getParentMediaId(),
                         null)
                 : null;
@@ -252,7 +253,7 @@ public class RemotePostingReactionPostJob
                         parentMediaDigest,
                         pmf -> mediaManager.getPrivateMediaDigest(
                                 parameters.targetNodeName,
-                                generateCarte(parameters.targetNodeName),
+                                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                                 pmf)));
         ReactionDescription description = new ReactionDescription(
                 nodeName(), fullName(), gender(), getAvatar(), parameters.attributes);

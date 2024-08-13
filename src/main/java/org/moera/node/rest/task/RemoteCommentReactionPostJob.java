@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.fingerprint.ReactionFingerprint;
@@ -148,11 +149,11 @@ public class RemoteCommentReactionPostJob
         if (state.commentInfo == null) {
             mediaManager.uploadPublicMedia(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
                     getAvatar());
             state.commentInfo = nodeApi.getComment(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                     parameters.postingId,
                     parameters.commentId);
             if (state.commentInfo.getOwnerAvatar() != null) {
@@ -166,7 +167,7 @@ public class RemoteCommentReactionPostJob
         if (state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                     parameters.postingId);
             if (state.postingInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile =
@@ -180,7 +181,7 @@ public class RemoteCommentReactionPostJob
                 && !state.commentInfo.getPostingRevisionId().equals(state.postingInfo.getRevisionId())) {
             state.postingRevisionInfo = nodeApi.getPostingRevision(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                     parameters.postingId,
                     state.commentInfo.getPostingRevisionId());
             checkpoint();
@@ -197,13 +198,13 @@ public class RemoteCommentReactionPostJob
         byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
                         parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName),
+                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                 state.postingInfo.getParentMediaId(),
                         null)
                 : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(
-                        parameters.targetNodeName, generateCarte(parameters.targetNodeName), pmf);
+                        parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf);
         Fingerprint postingFingerprint = state.postingRevisionInfo == null
                 ? Fingerprints.posting(state.postingInfo.getSignatureVersion())
                         .create(state.postingInfo, parentMediaDigest, mediaDigest)

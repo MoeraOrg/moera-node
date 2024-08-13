@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnComment;
@@ -248,7 +249,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         if (state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                     parameters.postingId);
             checkpoint();
         }
@@ -264,7 +265,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         if (!state.ownerAvatarUploaded) {
             mediaManager.uploadPublicMedia(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
                     parameters.sourceText.getOwnerAvatarMediaFile());
             state.ownerAvatarUploaded = true;
             checkpoint();
@@ -273,7 +274,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         if (parameters.commentId != null && state.prevCommentInfo == null) {
             state.prevCommentInfo = nodeApi.getComment(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                     parameters.postingId,
                     parameters.commentId);
             checkpoint();
@@ -289,7 +290,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             } else if (parameters.sourceText.getRepliedToId() != null) {
                 CommentInfo repliedToCommentInfo = nodeApi.getComment(
                         parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName),
+                        generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                         parameters.postingId,
                         parameters.sourceText.getRepliedToId().toString());
                 if (repliedToCommentInfo != null) {
@@ -352,8 +353,8 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
                         parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName),
-                state.postingInfo.getParentMediaId(),
+                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                        state.postingInfo.getParentMediaId(),
                         null)
                 : null;
         CommentFingerprint fingerprint = new CommentFingerprint(
@@ -363,7 +364,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                         parentMediaDigest,
                         pmf -> mediaManager.getPrivateMediaDigest(
                                 parameters.targetNodeName,
-                                generateCarte(parameters.targetNodeName),
+                                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                                 pmf)),
                 state.repliedToDigest,
                 id -> commentMediaDigest(id, mediaDigests));
@@ -393,7 +394,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
         return mediaManager.getPrivateMediaDigest(
                 parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName),
+                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                 id.toString(),
                 null);
     }

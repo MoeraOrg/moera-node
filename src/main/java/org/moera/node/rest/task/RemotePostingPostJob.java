@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnPosting;
@@ -204,7 +205,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         if (!state.ownerAvatarUploaded) {
             mediaManager.uploadPublicMedia(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
                     parameters.sourceText.getOwnerAvatarMediaFile());
             state.ownerAvatarUploaded = true;
             checkpoint();
@@ -213,7 +214,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         if (state.prevPostingInfo == null && parameters.postingId != null) {
             state.prevPostingInfo = nodeApi.getPosting(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                     parameters.postingId);
             checkpoint();
         }
@@ -251,7 +252,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         byte[] parentMediaDigest = state.prevPostingInfo != null && state.prevPostingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
                         parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName),
+                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                         state.prevPostingInfo.getParentMediaId(),
                         null)
                 : null;
@@ -285,7 +286,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         }
         return mediaManager.getPrivateMediaDigest(
                 parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName),
+                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                 id.toString(),
                 null);
     }

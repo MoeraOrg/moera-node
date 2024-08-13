@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffComplaintStatus;
@@ -213,7 +214,7 @@ public class SheriffComplaintGroupPrepareJob
         if (state.postingInfo == null && parameters.postingId != null) {
             state.postingInfo = nodeApi.getPosting(
                     parameters.nodeName,
-                    generateCarte(parameters.nodeName),
+                    generateCarte(parameters.nodeName, Scope.SHERIFF),
                     parameters.postingId);
             if (state.postingInfo != null) {
                 boolean inFeed = state.postingInfo.getFeedReferences().stream()
@@ -233,7 +234,7 @@ public class SheriffComplaintGroupPrepareJob
         if (state.commentInfo == null && parameters.commentId != null) {
             state.commentInfo = nodeApi.getComment(
                     parameters.nodeName,
-                    generateCarte(parameters.nodeName),
+                    generateCarte(parameters.nodeName, Scope.SHERIFF),
                     parameters.postingId,
                     parameters.commentId);
             checkpoint();

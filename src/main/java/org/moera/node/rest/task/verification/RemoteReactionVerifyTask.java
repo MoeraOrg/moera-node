@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.node.NodeApiNotFoundException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;
@@ -44,34 +45,40 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         try {
             String remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
-            PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName),
-                    remotePostingId);
+            PostingInfo postingInfo = nodeApi.getPosting(
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();
                 remotePostingId = postingInfo.getReceiverPostingId();
-                postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName), remotePostingId);
+                postingInfo = nodeApi.getPosting(
+                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
             }
             if (data.getCommentId() == null) {
-                ReactionInfo reactionInfo = nodeApi.getPostingReaction(remoteNodeName, generateCarte(remoteNodeName),
-                        remotePostingId, data.getOwnerName());
+                ReactionInfo reactionInfo = nodeApi.getPostingReaction(
+                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                        data.getOwnerName());
                 try {
-                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
-                            generateCarte(remoteNodeName), remotePostingId, reactionInfo.getPostingRevisionId());
+                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(
+                            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                            reactionInfo.getPostingRevisionId());
                     verify(postingInfo, postingRevisionInfo, reactionInfo);
                 } catch (NodeApiNotFoundException e) {
                     succeeded(false);
                 }
             } else {
-                ReactionInfo reactionInfo = nodeApi.getCommentReaction(remoteNodeName, generateCarte(remoteNodeName),
-                        remotePostingId, data.getCommentId(), data.getOwnerName());
-                CommentInfo commentInfo = nodeApi.getComment(remoteNodeName, generateCarte(remoteNodeName),
-                        remotePostingId, data.getCommentId());
+                ReactionInfo reactionInfo = nodeApi.getCommentReaction(
+                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                        data.getCommentId(), data.getOwnerName());
+                CommentInfo commentInfo = nodeApi.getComment(
+                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                        data.getCommentId());
                 try {
-                    CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(remoteNodeName,
-                            generateCarte(remoteNodeName), remotePostingId, data.getCommentId(),
-                            reactionInfo.getCommentRevisionId());
-                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(remoteNodeName,
-                            generateCarte(remoteNodeName), remotePostingId, commentInfo.getPostingRevisionId());
+                    CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(
+                            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                            data.getCommentId(), reactionInfo.getCommentRevisionId());
+                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(
+                            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                            commentInfo.getPostingRevisionId());
                     verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
                 } catch (NodeApiNotFoundException e) {
                     succeeded(false);
@@ -95,11 +102,13 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         }
 
         byte[] postingParentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
-                                                     postingInfo.getParentMediaId(), null)
+                ? mediaManager.getPrivateMediaDigest(
+                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
+                        postingInfo.getParentMediaId(), null)
                 : null;
         Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
+                pmf -> mediaManager.getPrivateMediaDigest(
+                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
 
         Fingerprint fingerprint = Fingerprints.reaction(reactionInfo.getSignatureVersion())
                 .create(reactionInfo, postingInfo, postingRevisionInfo, postingParentMediaDigest, postingMediaDigest);
@@ -120,11 +129,13 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         }
 
         byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()),
-                                                     postingInfo.getParentMediaId(), null)
+                ? mediaManager.getPrivateMediaDigest(
+                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
+                postingInfo.getParentMediaId(), null)
                 : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(data.getNodeName(), generateCarte(data.getNodeName()), pmf);
+                pmf -> mediaManager.getPrivateMediaDigest(
+                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
 
         Fingerprint fingerprint = Fingerprints.reaction(reactionInfo.getSignatureVersion())
                 .create(reactionInfo, commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,

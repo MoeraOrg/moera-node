@@ -48,14 +48,16 @@ public class CarteController {
     @Admin(Scope.REMOTE_IDENTIFY)
     @Entitled
     @Transactional
-    public CarteSet get(@RequestParam(required = false) String scope, @RequestParam(required = false) Integer limit,
-                        HttpServletRequest request) {
-        log.info("GET /cartes (scope = {}, limit = {})", LogUtil.format(scope), LogUtil.format(limit));
+    public CarteSet get(@RequestParam(required = false) String scope, @RequestParam(required = false) String admin,
+                        @RequestParam(required = false) Integer limit, HttpServletRequest request) {
+        log.info("GET /cartes (scope = {}, admin = {}, limit = {})",
+                LogUtil.format(scope), LogUtil.format(admin), LogUtil.format(limit));
 
         limit = limit != null ? limit : DEFAULT_SET_SIZE;
         limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
         long scopeMask = ObjectUtils.isEmpty(scope) ? Scope.ALL.getMask() : Scope.forValues(Util.setParam(scope));
         scopeMask &= requestContext.getAdminScope();
+        long adminMask = Scope.forValues(Util.setParam(admin));
 
         String ownerName = requestContext.nodeName();
         PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
@@ -65,7 +67,7 @@ public class CarteController {
 
             CarteSet carteSet = new CarteSet();
             carteSet.setCartesIp(remoteAddress.getHostAddress());
-            carteSet.setCartes(generateCarteList(ownerName, signingKey, remoteAddress, scopeMask, limit));
+            carteSet.setCartes(generateCarteList(ownerName, signingKey, remoteAddress, scopeMask, adminMask, limit));
             carteSet.setCreatedAt(Instant.now().getEpochSecond());
             return carteSet;
         } catch (UnknownHostException e) {
@@ -74,11 +76,12 @@ public class CarteController {
     }
 
     private List<CarteInfo> generateCarteList(String ownerName, PrivateKey signingKey, InetAddress remoteAddress,
-                                              long scopeMask, int limit) {
+                                              long scopeMask, long adminMask, int limit) {
         List<CarteInfo> cartes = new ArrayList<>();
         Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
         for (int i = 0; i < limit; i++) {
-            CarteInfo carteAll = CarteInfo.generate(ownerName, remoteAddress, beginning, signingKey, null, scopeMask);
+            CarteInfo carteAll = CarteInfo.generate(
+                    ownerName, remoteAddress, beginning, signingKey, null, scopeMask, adminMask);
             cartes.add(carteAll);
             beginning = Instant.ofEpochSecond(carteAll.getDeadline());
         }

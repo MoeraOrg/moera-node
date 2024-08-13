@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.auth.Scope;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingMediaReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
@@ -109,7 +110,7 @@ public class RemoteMediaReactionFailedJob
         if (state.parentPosting == null) {
             EntryInfo[] parents = nodeApi.getPrivateMediaParent(
                     parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName),
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
                     parameters.mediaId);
             if (parents != null && parents.length > 0) {
                 if (parents[0].getComment() == null) {
@@ -119,7 +120,7 @@ public class RemoteMediaReactionFailedJob
                     if (state.parentComment != null) {
                         state.parentPosting = nodeApi.getPosting(
                                 parameters.targetNodeName,
-                                generateCarte(parameters.targetNodeName),
+                                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
                                 state.parentComment.getPostingId());
                     }
                 }

@@ -20,10 +20,10 @@ public class Carte {
     }
 
     public static String generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey,
-                                  String nodeName, long authScope) {
+                                  String nodeName, long clientScope, long adminScope) {
         CarteFingerprint fingerprint = new CarteFingerprint(
                 NodeName.expand(ownerName), address, beginning, getDeadline(beginning), NodeName.expand(nodeName),
-                authScope
+                clientScope, adminScope
         );
         byte[] content = CryptoUtil.fingerprint(fingerprint);
         byte[] signature = CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey);

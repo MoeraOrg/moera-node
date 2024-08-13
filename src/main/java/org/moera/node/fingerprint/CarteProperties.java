@@ -14,6 +14,16 @@ public interface CarteProperties {
 
     long getDeadline();
 
-    long getAuthScope();
+    default String getNodeName() {
+        return null;
+    }
+
+    default long getClientScope() {
+        return 0;
+    }
+
+    default long getAdminScope() {
+        return 0;
+    }
 
 }

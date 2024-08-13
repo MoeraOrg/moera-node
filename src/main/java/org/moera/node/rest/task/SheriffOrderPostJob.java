@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffOrder;
@@ -182,7 +183,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         if (postingId != null && state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
                     parameters.remoteNodeName,
-                    generateCarte(parameters.remoteNodeName),
+                    generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
                     postingId);
             checkpoint();
         }
@@ -190,7 +191,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         if (postingId != null && commentId != null && state.commentInfo == null) {
             state.commentInfo = nodeApi.getComment(
                     parameters.remoteNodeName,
-                    generateCarte(parameters.remoteNodeName),
+                    generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
                     postingId,
                     commentId);
             checkpoint();
@@ -199,7 +200,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         if (!state.avatarUploaded) {
             mediaManager.uploadPublicMedia(
                     parameters.remoteNodeName,
-                    generateCarte(parameters.remoteNodeName),
+                    generateCarte(parameters.remoteNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
                     getAvatar());
             state.avatarUploaded = true;
             checkpoint();

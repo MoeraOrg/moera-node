@@ -15,6 +15,7 @@ import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
+import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
@@ -163,7 +164,8 @@ public class Picker extends Task {
 
     private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
                                     List<Liberin> liberins, List<Pick> picks) throws NodeApiException {
-        PostingInfo postingInfo = nodeApi.getPosting(remoteNodeName, generateCarte(remoteNodeName), remotePostingId);
+        PostingInfo postingInfo = nodeApi.getPosting(
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
         String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
         String receiverFullName = postingInfo.isOriginal()
@@ -264,7 +266,7 @@ public class Picker extends Task {
         int ordinal = 0;
         for (MediaAttachment attach : postingInfo.getMedia()) {
             MediaFileOwner media = mediaManager.downloadPrivateMedia(
-                    remoteNodeName, generateCarte(remoteNodeName), attach.getMedia(), entryId);
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), attach.getMedia(), entryId);
             if (media != null) {
                 EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
                 attachment.setEmbedded(attach.isEmbedded());

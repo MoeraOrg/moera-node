@@ -4,28 +4,26 @@ import org.moera.node.fingerprint.CarteProperties;
 
 public class CarteAuthInfo {
 
-    private String clientName;
-    private long authScope;
+    private final String clientName;
+    private final long clientScope;
+    private final long adminScope;
 
     public CarteAuthInfo(CarteProperties properties) {
         clientName = properties.getOwnerName();
-        authScope = properties.getAuthScope();
+        clientScope = properties.getClientScope();
+        adminScope = properties.getClientScope();
     }
 
     public String getClientName() {
         return clientName;
     }
 
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
+    public long getClientScope() {
+        return clientScope;
     }
 
-    public long getAuthScope() {
-        return authScope;
-    }
-
-    public void setAuthScope(long authScope) {
-        this.authScope = authScope;
+    public long getAdminScope() {
+        return adminScope;
     }
 
 }

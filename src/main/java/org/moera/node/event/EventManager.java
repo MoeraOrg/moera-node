@@ -118,11 +118,12 @@ public class EventManager {
                 CarteAuthInfo carteAuthInfo = authenticationManager.getCarte(secrets.carte, getRemoteAddress(accessor));
                 if (carteAuthInfo != null) {
                     clientName = carteAuthInfo.getClientName();
-                    clientScope = carteAuthInfo.getAuthScope();
+                    clientScope = carteAuthInfo.getClientScope();
                     friendGroups = friendCache.getClientGroupIds(clientName);
                     subscribedToClient = subscribedCache.isSubscribed(clientName);
                     owner = Objects.equals(clientName, universalContext.nodeName());
-                    adminScope = grantCache.get(universalContext.nodeId(), clientName);
+                    adminScope = carteAuthInfo.getAdminScope();
+                    adminScope &= grantCache.get(universalContext.nodeId(), clientName);
                     if (owner) {
                         adminScope |= clientScope & Scope.VIEW_ALL.getMask();
                     }

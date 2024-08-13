@@ -8,6 +8,7 @@ import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.api.node.NodeApiValidationException;
+import org.moera.node.auth.Scope;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
@@ -104,12 +105,13 @@ public class SubscriptionTask extends Task {
             }
         }
         try {
-            mediaManager.uploadPublicMedia(targetNodeName, generateCarte(targetNodeName), getAvatar());
+            mediaManager.uploadPublicMedia(
+                    targetNodeName, generateCarte(targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA), getAvatar());
             SubscriberDescriptionQ description = new SubscriberDescriptionQ(subscription.getSubscriptionType(),
                     subscription.getRemoteFeedName(), subscription.getRemoteEntryId(), lastEditedAt,
                     UserSubscription.getViewAllPrincipal(getOptions()).isPublic());
-            SubscriberInfo subscriberInfo =
-                    nodeApi.postSubscriber(targetNodeName, generateCarte(targetNodeName), description);
+            SubscriberInfo subscriberInfo = nodeApi.postSubscriber(
+                    targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), description);
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
         } catch (NodeApiException | NamingNotAvailableException e) {
             error(true, e);
@@ -129,7 +131,8 @@ public class SubscriptionTask extends Task {
     private void unsubscribe(Subscription subscription) {
         targetNodeName = subscription.getRemoteNodeName();
         try {
-            nodeApi.deleteSubscriber(targetNodeName, generateCarte(targetNodeName),
+            nodeApi.deleteSubscriber(
+                    targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE),
                     subscription.getRemoteSubscriberId());
         } catch (NodeApiException e) {
             error(false, e);

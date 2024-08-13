@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum Scope {
 
     //CHECKSTYLE:OFF
+    NONE                    (0x00000000, false),
     IDENTIFY                (0x00000000, false),
     OTHER                   (0x00000001, true),
     VIEW_MEDIA              (0x00000002, true),
