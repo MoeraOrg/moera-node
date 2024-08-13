@@ -1,8 +1,12 @@
 package org.moera.node.model.notification;
 
+import java.util.List;
+
+import org.moera.node.auth.Scope;
+
 public class GrantUpdatedNotification extends Notification {
 
-    private long scope;
+    private List<String> scope;
 
     public GrantUpdatedNotification() {
         super(NotificationType.GRANT_UPDATED);
@@ -10,14 +14,14 @@ public class GrantUpdatedNotification extends Notification {
 
     public GrantUpdatedNotification(long scope) {
         super(NotificationType.GRANT_UPDATED);
-        this.scope = scope;
+        this.scope = Scope.toValues(scope);
     }
 
-    public long getScope() {
+    public List<String> getScope() {
         return scope;
     }
 
-    public void setScope(long scope) {
+    public void setScope(List<String> scope) {
         this.scope = scope;
     }
 

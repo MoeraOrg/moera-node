@@ -1,19 +1,21 @@
 package org.moera.node.model;
 
+import java.util.List;
+
 public class GrantChange {
 
-    private long scope;
+    private List<String> scope;
 
     private boolean revoke;
 
     public GrantChange() {
     }
 
-    public long getScope() {
+    public List<String> getScope() {
         return scope;
     }
 
-    public void setScope(long scope) {
+    public void setScope(List<String> scope) {
         this.scope = scope;
     }
 

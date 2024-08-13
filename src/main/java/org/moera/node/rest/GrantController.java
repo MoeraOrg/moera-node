@@ -56,9 +56,9 @@ public class GrantController {
 
         long scope;
         if (!change.isRevoke()) {
-            scope = grantCache.grant(requestContext.nodeId(), nodeName, change.getScope());
+            scope = grantCache.grant(requestContext.nodeId(), nodeName, Scope.forValues(change.getScope()));
         } else {
-            scope = grantCache.revoke(requestContext.nodeId(), nodeName, change.getScope());
+            scope = grantCache.revoke(requestContext.nodeId(), nodeName, Scope.forValues(change.getScope()));
         }
 
         requestContext.send(new GrantUpdatedLiberin(nodeName, scope));

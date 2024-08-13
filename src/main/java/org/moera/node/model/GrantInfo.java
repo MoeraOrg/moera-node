@@ -1,19 +1,22 @@
 package org.moera.node.model;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.node.auth.Scope;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GrantInfo {
 
     private String nodeName;
-    private long scope;
+    private List<String> scope;
 
     public GrantInfo() {
     }
 
     public GrantInfo(String nodeName, long scope) {
         this.nodeName = nodeName;
-        this.scope = scope;
+        this.scope = Scope.toValues(scope);
     }
 
     public String getNodeName() {
@@ -24,11 +27,11 @@ public class GrantInfo {
         this.nodeName = nodeName;
     }
 
-    public long getScope() {
+    public List<String> getScope() {
         return scope;
     }
 
-    public void setScope(long scope) {
+    public void setScope(List<String> scope) {
         this.scope = scope;
     }
 
