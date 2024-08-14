@@ -9,6 +9,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -17,16 +18,18 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.model.CarteAttributes;
 import org.moera.node.model.CarteInfo;
 import org.moera.node.model.CarteSet;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.util.UriUtil;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @ApiController
@@ -44,20 +47,51 @@ public class CarteController {
     private RequestContext requestContext;
 
     // FIXME GET is for backward compatibility only
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST})
+    @GetMapping
     @Admin(Scope.REMOTE_IDENTIFY)
     @Entitled
     @Transactional
-    public CarteSet get(@RequestParam(required = false) String scope, @RequestParam(required = false) String admin,
-                        @RequestParam(required = false) Integer limit, HttpServletRequest request) {
-        log.info("GET /cartes (scope = {}, admin = {}, limit = {})",
-                LogUtil.format(scope), LogUtil.format(admin), LogUtil.format(limit));
+    @Deprecated
+    public CarteSet get(@RequestParam(required = false) Integer limit, HttpServletRequest request) {
+        log.info("GET /cartes (limit = {})", LogUtil.format(limit));
 
         limit = limit != null ? limit : DEFAULT_SET_SIZE;
         limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
-        long scopeMask = ObjectUtils.isEmpty(scope) ? Scope.ALL.getMask() : Scope.forValues(Util.setParam(scope));
+
+        String ownerName = requestContext.nodeName();
+        PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
+
+        try {
+            InetAddress remoteAddress = UriUtil.remoteAddress(request);
+
+            CarteSet carteSet = new CarteSet();
+            carteSet.setCartesIp(remoteAddress.getHostAddress());
+            List<CarteInfo> cartes =
+                    generateCarteList(ownerName, signingKey, remoteAddress, Scope.ALL.getMask(), 0, limit);
+            cartes.addAll(
+                    generateCarteList(ownerName, signingKey, remoteAddress, Scope.VIEW_MEDIA.getMask(), 0, limit));
+            carteSet.setCartes(cartes);
+            carteSet.setCreatedAt(Instant.now().getEpochSecond());
+            return carteSet;
+        } catch (UnknownHostException e) {
+            throw new OperationFailure("carte.client-address-unknown");
+        }
+    }
+
+    @PostMapping
+    @Admin(Scope.REMOTE_IDENTIFY)
+    @Entitled
+    @Transactional
+    public CarteSet post(@Valid @RequestBody CarteAttributes carteAttributes, HttpServletRequest request) {
+        log.info("POST /cartes");
+
+        int limit = carteAttributes.getLimit() != null ? carteAttributes.getLimit() : DEFAULT_SET_SIZE;
+        limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
+        long scopeMask = ObjectUtils.isEmpty(carteAttributes.getClientScope())
+                ? Scope.ALL.getMask()
+                : Scope.forValues(carteAttributes.getClientScope());
         scopeMask &= requestContext.getAdminScope();
-        long adminMask = Scope.forValues(Util.setParam(admin));
+        long adminMask = Scope.forValues(carteAttributes.getAdminScope());
 
         String ownerName = requestContext.nodeName();
         PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");

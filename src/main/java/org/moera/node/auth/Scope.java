@@ -106,6 +106,10 @@ public enum Scope {
     }
 
     public static long forValues(Collection<String> values) {
+        if (values == null) {
+            return 0;
+        }
+
         long mask = 0;
         for (String value : values) {
             Scope scope = forValue(value);
