@@ -82,16 +82,16 @@ public class CarteController {
     @Admin(Scope.REMOTE_IDENTIFY)
     @Entitled
     @Transactional
-    public CarteSet post(@Valid @RequestBody CarteAttributes carteAttributes, HttpServletRequest request) {
+    public CarteSet post(@Valid @RequestBody CarteAttributes attributes, HttpServletRequest request) {
         log.info("POST /cartes");
 
-        int limit = carteAttributes.getLimit() != null ? carteAttributes.getLimit() : DEFAULT_SET_SIZE;
+        int limit = attributes.getLimit() != null ? attributes.getLimit() : DEFAULT_SET_SIZE;
         limit = (limit > 0 && limit <= MAX_SET_SIZE) ? limit : MAX_SET_SIZE;
-        long scopeMask = ObjectUtils.isEmpty(carteAttributes.getClientScope())
+        long scopeMask = ObjectUtils.isEmpty(attributes.getClientScope())
                 ? Scope.ALL.getMask()
-                : Scope.forValues(carteAttributes.getClientScope());
+                : Scope.forValues(attributes.getClientScope());
         scopeMask &= requestContext.getAdminScope();
-        long adminMask = Scope.forValues(carteAttributes.getAdminScope());
+        long adminMask = Scope.forValues(attributes.getAdminScope());
 
         String ownerName = requestContext.nodeName();
         PrivateKey signingKey = requestContext.getOptions().getPrivateKey("profile.signing-key");
