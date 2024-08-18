@@ -33,7 +33,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.TokenAttributes;
 import org.moera.node.model.TokenInfo;
-import org.moera.node.model.TokenName;
+import org.moera.node.model.TokenUpdate;
 import org.moera.node.notification.receive.DefrostNotificationsJob;
 import org.moera.node.option.Options;
 import org.moera.node.task.Jobs;
@@ -114,14 +114,20 @@ public class TokenController {
     @PutMapping("/{id}")
     @Admin(Scope.TOKENS)
     @Transactional
-    public TokenInfo put(@PathVariable UUID id, @Valid @RequestBody TokenName tokenName) {
-        log.info("PUT /tokens/{} (name = {})", id, LogUtil.format(tokenName.getName()));
+    public TokenInfo put(@PathVariable UUID id, @Valid @RequestBody TokenUpdate update) {
+        log.info("PUT /tokens/{} (name = {})", id, LogUtil.format(update.getName()));
 
         Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);
         if (token == null) {
             throw new ObjectNotFoundFailure("not-found");
         }
-        token.setName(tokenName.getName());
+        if (!ObjectUtils.isEmpty(update.getName())) {
+            token.setName(update.getName());
+        }
+        if (update.getPermissions() != null) {
+            long updatedScope = Scope.forValues(update.getPermissions());
+            token.setAuthScope(token.getAuthScope() & updatedScope);
+        }
 
         requestContext.send(new TokenUpdatedLiberin(token));
 
