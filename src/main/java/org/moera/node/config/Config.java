@@ -18,6 +18,7 @@ public class Config {
     private MediaConfig media = new MediaConfig();
     private OptionConfig[] options = new OptionConfig[0];
     private String fcmRelay;
+    private LinkPreviewConfig linkPreview = new LinkPreviewConfig();
     private DebugConfig debug = new DebugConfig();
 
     public String getRootSecret() {
@@ -111,6 +112,14 @@ public class Config {
 
     public void setFcmRelay(String fcmRelay) {
         this.fcmRelay = fcmRelay;
+    }
+
+    public LinkPreviewConfig getLinkPreview() {
+        return linkPreview;
+    }
+
+    public void setLinkPreview(LinkPreviewConfig linkPreview) {
+        this.linkPreview = linkPreview;
     }
 
     public DebugConfig getDebug() {

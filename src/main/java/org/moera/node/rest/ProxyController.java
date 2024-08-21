@@ -7,6 +7,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import javax.inject.Inject;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -14,7 +15,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.config.Config;
 import org.moera.node.global.ApiController;
+import org.moera.node.linkpreviewnet.LinkPreviewNet;
+import org.moera.node.linkpreviewnet.LinkPreviewNetException;
+import org.moera.node.linkpreviewnet.LinkPreviewNetInfo;
 import org.moera.node.model.LinkPreviewInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -40,6 +45,12 @@ public class ProxyController {
 
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(20);
     private static final Duration REQUEST_TIMEOUT = Duration.ofMinutes(1);
+
+    @Inject
+    private Config config;
+
+    @Inject
+    private LinkPreviewNet linkPreviewNet;
 
     @GetMapping("/media")
     @Admin
@@ -90,6 +101,28 @@ public class ProxyController {
     public LinkPreviewInfo getLinkPreview(@RequestParam String url) {
         log.info("GET /proxy/link-preview, (url = {})", LogUtil.format(url));
 
+        String host = URI.create(url).getHost();
+        if (host == null) {
+            throw new ObjectNotFoundFailure("proxy.resource-not-found");
+        }
+
+        for (String domain : config.getLinkPreview().getDomains()) {
+            if (!host.matches(domain)) {
+                continue;
+            }
+            switch (config.getLinkPreview().getService()) {
+                case "linkpreviewnet":
+                    return queryLinkPreviewNet(url);
+                default:
+                    log.error("Unknown link preview service: " + LogUtil.format(config.getLinkPreview().getService()));
+                    throw new OperationFailure("server.misconfiguration");
+            }
+        }
+
+        return queryDirectly(url);
+    }
+
+    private static LinkPreviewInfo queryDirectly(String url) {
         Document document;
         try {
             document = Jsoup.connect(url)
@@ -154,6 +187,22 @@ public class ProxyController {
                 linkPreviewInfo.setTitle(title.ownText());
             }
         }
+        return linkPreviewInfo;
+    }
+
+    private LinkPreviewInfo queryLinkPreviewNet(String url) {
+        LinkPreviewNetInfo info;
+        try {
+            info = linkPreviewNet.query(url);
+        } catch (LinkPreviewNetException e) {
+            throw new OperationFailure("proxy.request-failed");
+        }
+
+        LinkPreviewInfo linkPreviewInfo = new LinkPreviewInfo();
+        linkPreviewInfo.setUrl(info.getUrl());
+        linkPreviewInfo.setTitle(info.getTitle());
+        linkPreviewInfo.setDescription(info.getDescription());
+        linkPreviewInfo.setImageUrl(info.getImage());
         return linkPreviewInfo;
     }
 
