@@ -2,7 +2,7 @@ package org.moera.node.auth;
 
 public class InvalidCarteException extends RuntimeException {
 
-    private String errorCode;
+    private final String errorCode;
 
     public InvalidCarteException(String errorCode) {
         super("Invalid carte: " + errorCode);

@@ -6,6 +6,7 @@ import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
@@ -13,6 +14,9 @@ import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.auth.AuthenticationManager;
+import org.moera.node.auth.CarteAuthInfo;
+import org.moera.node.auth.InvalidCarteException;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
@@ -21,10 +25,13 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.CarteAttributes;
 import org.moera.node.model.CarteInfo;
 import org.moera.node.model.CarteSet;
+import org.moera.node.model.CarteVerificationInfo;
+import org.moera.node.model.ClientCarte;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,6 +52,12 @@ public class CarteController {
 
     @Inject
     private RequestContext requestContext;
+
+    @Inject
+    private AuthenticationManager authenticationManager;
+
+    @Inject
+    private MessageSource messageSource;
 
     // FIXME GET is for backward compatibility only
     @GetMapping
@@ -120,6 +133,34 @@ public class CarteController {
             beginning = Instant.ofEpochSecond(carteAll.getDeadline());
         }
         return cartes;
+    }
+
+    @PostMapping("/verify")
+    @Admin(Scope.OTHER)
+    @Entitled
+    @Transactional
+    public CarteVerificationInfo verify(@Valid @RequestBody ClientCarte clientCarte) {
+        log.info("POST /cartes/verify");
+
+        CarteVerificationInfo info = new CarteVerificationInfo();
+
+        try {
+            CarteAuthInfo authInfo = authenticationManager.getCarte(clientCarte.getCarte(), null);
+            if (clientCarte.getClientName() != null && !clientCarte.getClientName().equals(authInfo.getClientName())) {
+                throw new InvalidCarteException("carte.wrong-client");
+            }
+            info.setValid(true);
+            info.setClientName(authInfo.getClientName());
+            info.setClientScope(Scope.toValues(authInfo.getClientScope()));
+            info.setAdminScope(Scope.toValues(authInfo.getAdminScope()));
+        } catch (InvalidCarteException e) {
+            info.setValid(false);
+            info.setErrorCode(e.getErrorCode());
+            String errorMessage = messageSource.getMessage(e.getErrorCode(), null, Locale.getDefault());
+            info.setErrorMessage(errorMessage);
+        }
+
+        return info;
     }
 
 }

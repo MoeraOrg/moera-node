@@ -11,7 +11,7 @@ public class CarteAuthInfo {
     public CarteAuthInfo(CarteProperties properties) {
         clientName = properties.getOwnerName();
         clientScope = properties.getClientScope();
-        adminScope = properties.getClientScope();
+        adminScope = properties.getAdminScope();
     }
 
     public String getClientName() {

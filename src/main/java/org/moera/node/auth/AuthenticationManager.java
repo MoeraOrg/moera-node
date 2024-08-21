@@ -151,7 +151,7 @@ public class AuthenticationManager {
             log.info("Carte: not a carte fingerprint");
             throw new InvalidCarteException("carte.invalid");
         }
-        if (!clientAddress.equals(fp.getAddress())) {
+        if (fp.getAddress() != null && clientAddress != null && !fp.getAddress().equals(clientAddress)) {
             log.info("Carte: IP {} differs from client IP {}", fp.getAddress(), clientAddress);
             throw new InvalidCarteException("carte.invalid");
         }

@@ -5,14 +5,17 @@ import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.Scope;
 import org.moera.node.util.Carte;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CarteInfo {
 
     private String carte;
     private long beginning;
     private long deadline;
+    private String nodeName;
     private List<String> clientScope;
     private List<String> adminScope;
 
@@ -22,6 +25,7 @@ public class CarteInfo {
         carteInfo.setCarte(Carte.generate(ownerName, address, beginning, signingKey, nodeName, clientScope, adminScope));
         carteInfo.setBeginning(beginning.getEpochSecond());
         carteInfo.setDeadline(Carte.getDeadline(beginning).getEpochSecond());
+        carteInfo.setNodeName(nodeName);
         carteInfo.setClientScope(Scope.toValues(clientScope));
         carteInfo.setAdminScope(Scope.toValues(adminScope));
         return carteInfo;
@@ -49,6 +53,14 @@ public class CarteInfo {
 
     public void setDeadline(long deadline) {
         this.deadline = deadline;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
     public List<String> getClientScope() {

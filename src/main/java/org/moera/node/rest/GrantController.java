@@ -5,6 +5,8 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
+import org.moera.naming.rpc.NodeName;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
@@ -14,6 +16,7 @@ import org.moera.node.liberin.model.GrantUpdatedLiberin;
 import org.moera.node.model.GrantChange;
 import org.moera.node.model.GrantInfo;
 import org.moera.node.model.Result;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.GrantCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +38,9 @@ public class GrantController {
     private RequestContext requestContext;
 
     @Inject
+    private NamingCache namingCache;
+
+    @Inject
     private GrantCache grantCache;
 
     @GetMapping("/{nodeName}")
@@ -43,6 +49,7 @@ public class GrantController {
     public GrantInfo get(@PathVariable String nodeName) {
         log.info("GET /grants/{nodeName}, (nodeName = {})", LogUtil.format(nodeName));
 
+        nodeName = NodeName.expand(nodeName);
         long scope = grantCache.get(requestContext.nodeId(), nodeName);
 
         return new GrantInfo(nodeName, scope);
@@ -53,6 +60,12 @@ public class GrantController {
     @Transactional
     public GrantInfo put(@PathVariable String nodeName, @Valid @RequestBody GrantChange change) {
         log.info("PUT /grants/{nodeName}, (nodeName = {})", LogUtil.format(nodeName));
+
+        nodeName = NodeName.expand(nodeName);
+
+        if (namingCache.get(nodeName).getNodeName() == null) {
+            throw new ValidationFailure("grant.name-not-registered");
+        }
 
         long scope;
         if (!change.isRevoke()) {
@@ -71,6 +84,8 @@ public class GrantController {
     @Transactional
     public Result delete(@PathVariable String nodeName) {
         log.info("DELETE /grants/{nodeName}, (nodeName = {})", LogUtil.format(nodeName));
+
+        nodeName = NodeName.expand(nodeName);
 
         long scope = grantCache.get(requestContext.nodeId(), nodeName);
         if (scope != 0) {
