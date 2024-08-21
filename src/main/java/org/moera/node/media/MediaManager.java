@@ -142,7 +142,7 @@ public class MediaManager {
             return;
         }
 
-        if (avatarImage.getMediaFile() == null) {
+        if (avatarImage.getMediaFile() != null) {
             return;
         }
         MediaFile mediaFile = mediaFileRepository.findById(id).orElse(null);
