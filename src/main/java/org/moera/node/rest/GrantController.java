@@ -1,5 +1,6 @@
 package org.moera.node.rest;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -9,6 +10,7 @@ import org.moera.naming.rpc.NodeName;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;
+import org.moera.node.data.GrantRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -42,6 +44,18 @@ public class GrantController {
 
     @Inject
     private GrantCache grantCache;
+
+    @Inject
+    private GrantRepository grantRepository;
+
+    @GetMapping
+    @Admin(Scope.OTHER)
+    @Transactional
+    public List<GrantInfo> getAll() {
+        log.info("GET /grants");
+
+        return grantRepository.findAllByNodeId(requestContext.nodeId()).stream().map(GrantInfo::new).toList();
+    }
 
     @GetMapping("/{nodeName}")
     @Admin(Scope.OTHER)

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.node.auth.Scope;
+import org.moera.node.data.Grant;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GrantInfo {
@@ -17,6 +18,11 @@ public class GrantInfo {
     public GrantInfo(String nodeName, long scope) {
         this.nodeName = nodeName;
         this.scope = Scope.toValues(scope);
+    }
+
+    public GrantInfo(Grant grant) {
+        this.nodeName = grant.getNodeName();
+        this.scope = Scope.toValues(grant.getAuthScope());
     }
 
     public String getNodeName() {
