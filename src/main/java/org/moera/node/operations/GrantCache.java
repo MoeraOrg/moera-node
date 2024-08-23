@@ -80,9 +80,9 @@ public class GrantCache {
                     grant.setId(UUID.randomUUID());
                     grant.setNodeId(nodeId);
                     grant.setNodeName(nodeName);
-                    grant.setAuthScope(currentScope);
-                    grantRepository.save(grant);
+                    grant = grantRepository.save(grant);
                 }
+                grant.setAuthScope(currentScope);
             } else {
                 grants.remove(key);
 
