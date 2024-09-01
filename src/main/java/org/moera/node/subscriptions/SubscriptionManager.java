@@ -12,10 +12,14 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 
+import org.moera.node.data.Posting;
+import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
+import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.RequestCounter;
+import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.task.TaskAutowire;
 import org.moera.node.util.Transaction;
@@ -49,6 +53,12 @@ public class SubscriptionManager {
 
     @Inject
     private SubscriptionOperations subscriptionOperations;
+
+    @Inject
+    private PostingRepository postingRepository;
+
+    @Inject
+    private PostingOperations postingOperations;
 
     @Inject
     @Qualifier("remoteTaskExecutor")
@@ -179,9 +189,21 @@ public class SubscriptionManager {
                 subscriptionRepository.updateRetryAtById(subscription.getId(), Util.farFuture());
                 subscriptionOperations.deleteParents(subscription);
                 // The subscription itself becomes a pending unused subscription and will be removed by trigger
+                if (subscription.getSubscriptionType() == SubscriptionType.POSTING) {
+                    deletePickedPosting(subscription);
+                }
             },
             e -> log.error("Error deleting invalid subscription", e)
         );
+    }
+
+    private void deletePickedPosting(Subscription subscription) {
+        Posting posting = postingRepository.findByReceiverId(subscription.getNodeId(), subscription.getRemoteNodeName(),
+                subscription.getRemoteEntryId()).orElse(null);
+        if (posting == null) {
+            return;
+        }
+        postingOperations.deletePickedPosting(posting);
     }
 
     public void rescan() {

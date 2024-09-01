@@ -5,8 +5,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
@@ -19,24 +17,20 @@ import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
-import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
-import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.UnsubscribeFailure;
-import org.moera.node.model.notification.StoryAddedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
 import org.moera.node.model.notification.PostingDeletedNotification;
 import org.moera.node.model.notification.PostingReactionsUpdatedNotification;
 import org.moera.node.model.notification.PostingSubscriberNotification;
 import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.model.notification.StoryAddedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.operations.ReactionTotalOperations;
-import org.moera.node.operations.StoryOperations;
 import org.moera.node.picker.PickerPool;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +65,6 @@ public class PostingProcessor {
 
     @Inject
     private PostingOperations postingOperations;
-
-    @Inject
-    private StoryOperations storyOperations;
 
     @Inject
     private ReactionTotalOperations reactionTotalOperations;
@@ -134,22 +125,9 @@ public class PostingProcessor {
     @NotificationMapping(NotificationType.POSTING_DELETED)
     @Transactional
     public void deleted(PostingDeletedNotification notification) {
-        withValidPostingSubscription(notification, (subscription, posting) -> {
-            EntryRevision latest = posting.getCurrentRevision();
-            if (universalContext.getOptions().getBool("posting.picked.hide-on-delete")) {
-                Principal latestView = posting.getViewE();
-                posting.setViewPrincipal(Principal.ADMIN);
-                posting.setEditedAt(Util.now());
-                posting.setReceiverDeletedAt(Util.now());
-
-                universalContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
-            } else {
-                postingOperations.deletePosting(posting);
-                storyOperations.unpublish(posting.getId());
-
-                universalContext.send(new PostingDeletedLiberin(posting, latest));
-            }
-        });
+        withValidPostingSubscription(notification, (subscription, posting) ->
+            postingOperations.deletePickedPosting(posting)
+        );
     }
 
     @NotificationMapping(NotificationType.POSTING_REACTIONS_UPDATED)

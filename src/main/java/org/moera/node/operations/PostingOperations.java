@@ -16,6 +16,7 @@ import javax.inject.Inject;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.util.LogUtil;
+import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
@@ -283,6 +284,23 @@ public class PostingOperations {
         }
         posting = postingRepository.saveAndFlush(posting);
         mediaOperations.updatePermissions(posting);
+    }
+
+    public void deletePickedPosting(Posting posting) {
+        EntryRevision latest = posting.getCurrentRevision();
+        if (universalContext.getOptions().getBool("posting.picked.hide-on-delete")) {
+            Principal latestView = posting.getViewE();
+            posting.setViewPrincipal(Principal.ADMIN);
+            posting.setEditedAt(Util.now());
+            posting.setReceiverDeletedAt(Util.now());
+
+            universalContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
+        } else {
+            deletePosting(posting, universalContext.getOptions());
+            storyOperations.unpublish(posting.getId());
+
+            universalContext.send(new PostingDeletedLiberin(posting, latest));
+        }
     }
 
     @Scheduled(fixedDelayString = "PT1H")
