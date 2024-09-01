@@ -59,6 +59,7 @@ public class ProxyController {
         log.info("GET /proxy/media, (url = {})", LogUtil.format(url));
 
         HttpClient client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(CONNECTION_TIMEOUT)
                 .build();
