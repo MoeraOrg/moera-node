@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -197,6 +198,7 @@ public class TokenController {
                             .isBefore(Instant.now()))
                     .map(DomainInfo::getNodeId)
                     .map(domains::getDomainOptions)
+                    .filter(Objects::nonNull)
                     .filter(options -> !options.isFrozen())
                     .filter(options -> tokenRepository.countAllByNodeId(options.nodeId(), Util.now()) == 0)
                     .forEach(options -> options.set("frozen", true));
