@@ -40,6 +40,10 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if (ObjectUtils.isEmpty(requestContext.nodeName())) {
+            return true;
+        }
+
         String referer = request.getHeader("Referer");
         if (ObjectUtils.isEmpty(referer)) {
             return true;
