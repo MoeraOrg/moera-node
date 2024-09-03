@@ -17,8 +17,6 @@ import org.moera.node.data.Token;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.global.UserAgent;
-import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.Result;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.GrantCache;
@@ -78,7 +76,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
         try {
-            processUserAgent(request);
             processAuthParameters(request);
 
             if (!(handler instanceof HandlerMethod handlerMethod)) {
@@ -186,53 +183,6 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         }
         if (clientName != null && !requestContext.hasClientScope(Scope.ALL)) {
             log.info("Client scope is ({})", String.join(", ", Scope.toValues(requestContext.getClientScope())));
-        }
-    }
-
-    private void processUserAgent(HttpServletRequest request) {
-        String userAgent = request.getHeader("User-Agent");
-        if (ObjectUtils.isEmpty(userAgent)) {
-            return;
-        }
-
-        if (userAgent.contains("Firefox")) {
-            requestContext.setUserAgent(UserAgent.FIREFOX);
-        } else if (userAgent.contains("Opera")) {
-            requestContext.setUserAgent(UserAgent.OPERA);
-        } else if (userAgent.contains("Googlebot")) {
-            requestContext.setUserAgent(UserAgent.GOOGLEBOT);
-        } else if (userAgent.contains("PetalBot")) {
-            requestContext.setUserAgent(UserAgent.PETALBOT);
-        } else if (userAgent.contains("SemrushBot")) {
-            requestContext.setUserAgent(UserAgent.SEMRUSHBOT);
-        } else if (userAgent.contains("Chrome")) {
-            if (userAgent.contains("YaBrowser")) {
-                requestContext.setUserAgent(UserAgent.YANDEX);
-            } else if (userAgent.contains("Brave")) {
-                requestContext.setUserAgent(UserAgent.BRAVE);
-            } else if (userAgent.contains("Vivaldi")) {
-                requestContext.setUserAgent(UserAgent.VIVALDI);
-            } else if (userAgent.contains("Edge")) {
-                requestContext.setUserAgent(UserAgent.EDGE);
-            } else {
-                requestContext.setUserAgent(UserAgent.CHROME);
-            }
-        } else if (userAgent.contains("Safari")) {
-            requestContext.setUserAgent(UserAgent.SAFARI);
-        } else if (userAgent.contains("MSIE")) {
-            requestContext.setUserAgent(UserAgent.IE);
-        } else if (userAgent.contains("Dolphin")) {
-            requestContext.setUserAgent(UserAgent.DOLPHIN);
-        }
-
-        if (userAgent.contains("Android")) {
-            requestContext.setUserAgentOs(UserAgentOs.ANDROID);
-        } else if (userAgent.contains("iPhone")) {
-            requestContext.setUserAgentOs(UserAgentOs.IOS);
-        } else if (userAgent.contains("Windows")) {
-            requestContext.setUserAgentOs(UserAgentOs.WINDOWS);
-        } else if (userAgent.contains("Linux")) {
-            requestContext.setUserAgentOs(UserAgentOs.LINUX);
         }
     }
 

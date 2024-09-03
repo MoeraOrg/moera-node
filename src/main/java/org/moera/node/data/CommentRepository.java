@@ -15,6 +15,9 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 
 public interface CommentRepository extends JpaRepository<Comment, UUID>, QuerydslPredicateExecutor<Comment> {
 
+    @Query("select c from Comment c where c.nodeId = ?1 and c.id = ?2 and c.deletedAt is null")
+    Optional<Comment> findByNodeIdAndId(UUID nodeId, UUID id);
+
     @Query("select c from Comment c"
             + " join fetch c.currentRevision cr left join fetch c.ownerAvatarMediaFile"
             + " left join fetch c.reactionTotals left join fetch c.parent"
