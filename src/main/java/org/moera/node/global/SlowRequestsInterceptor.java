@@ -44,6 +44,10 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
         Instant startedAt = requestContext.getTimes(Times.STARTED);
         Instant finishedAt = requestContext.getTimes(Times.FINISHED);
 
+        if (startedAt == null || finishedAt == null) {
+            return;
+        }
+
         long fullDuration = receivedAt.until(now, ChronoUnit.MILLIS);
         String handlerName = getHandlerName(handler);
         if (handlerName != null) {
