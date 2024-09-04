@@ -108,7 +108,7 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
 
     private SearchEngine findSearchEngine(String referer) {
         for (SearchEngine searchEngine : SearchEngine.values()) {
-            if (searchEngine.getRefererPattern().matcher(referer).matches()) {
+            if (searchEngine.getRefererPattern().matcher(referer).find()) {
                 return requestContext.getUserAgent() == searchEngine.getBotUserAgent() ? null : searchEngine;
             }
         }
