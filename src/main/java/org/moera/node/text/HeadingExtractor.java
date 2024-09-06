@@ -14,13 +14,13 @@ import org.springframework.util.ObjectUtils;
 
 public class HeadingExtractor {
 
+    public static final String EMOJI_PICTURE = Character.toString(0x1f5bc);
+    public static final String EMOJI_SCROLL = Character.toString(0x1f4dc);
+    public static final String EMOJI_CHAIN = Character.toString(0x1f517);
+    public static final String EMOJI_MOVIE = Character.toString(0x1f4fd);
+
     private static final int HEADING_LENGTH = 80;
     private static final int DESCRIPTION_LENGTH = 200;
-
-    private static final String EMOJI_PICTURE = Character.toString(0x1f5bc);
-    private static final String EMOJI_SCROLL = Character.toString(0x1f4dc);
-    private static final String EMOJI_CHAIN = Character.toString(0x1f517);
-    private static final String EMOJI_MOVIE = Character.toString(0x1f4fd);
 
     private static final Pattern URL = Pattern.compile(
             "https?://[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9]{1,6}"

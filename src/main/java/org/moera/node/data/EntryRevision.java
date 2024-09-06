@@ -55,6 +55,7 @@ public class EntryRevision {
     private String saneBody;
 
     @NotNull
+    @Size(max = 255)
     private String heading = "";
 
     @NotNull

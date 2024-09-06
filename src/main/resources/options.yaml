@@ -650,3 +650,7 @@
   type: bool
   defaultValue: false
   internal: true
+
+- name: search-engines.report.generated
+  type: Timestamp
+  internal: true

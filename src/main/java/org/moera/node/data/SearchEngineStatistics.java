@@ -19,7 +19,8 @@ public class SearchEngineStatistics {
     private UUID id;
 
     @NotNull
-    private UUID nodeId;
+    @Size(max = 63)
+    private String nodeName;
 
     @NotNull
     @Enumerated
@@ -35,6 +36,9 @@ public class SearchEngineStatistics {
 
     private UUID mediaId;
 
+    @Size(max = 255)
+    private String heading;
+
     @NotNull
     private Timestamp clickedAt = Util.now();
 
@@ -46,12 +50,12 @@ public class SearchEngineStatistics {
         this.id = id;
     }
 
-    public UUID getNodeId() {
-        return nodeId;
+    public String getNodeName() {
+        return nodeName;
     }
 
-    public void setNodeId(UUID nodeId) {
-        this.nodeId = nodeId;
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
     public SearchEngine getEngine() {
@@ -92,6 +96,14 @@ public class SearchEngineStatistics {
 
     public void setMediaId(UUID mediaId) {
         this.mediaId = mediaId;
+    }
+
+    public String getHeading() {
+        return heading;
+    }
+
+    public void setHeading(String heading) {
+        this.heading = heading;
     }
 
     public Timestamp getClickedAt() {

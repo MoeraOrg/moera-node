@@ -24,6 +24,7 @@ public class StorySummaryData {
     private StorySummaryBlocked blocked;
     private StorySummarySheriff sheriff;
     private String description;
+    private List<StorySummaryEntryClicks> clicks;
 
     public StorySummaryNode getNode() {
         return node;
@@ -151,6 +152,14 @@ public class StorySummaryData {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<StorySummaryEntryClicks> getClicks() {
+        return clicks;
+    }
+
+    public void setClicks(List<StorySummaryEntryClicks> clicks) {
+        this.clicks = clicks;
     }
 
 }

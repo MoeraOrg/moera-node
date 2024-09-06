@@ -56,7 +56,7 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
 
         SearchEngineStatistics searchEngineStatistics = new SearchEngineStatistics();
         searchEngineStatistics.setId(UUID.randomUUID());
-        searchEngineStatistics.setNodeId(requestContext.nodeId());
+        searchEngineStatistics.setNodeName(requestContext.nodeName());
         searchEngineStatistics.setEngine(searchEngine);
         searchEngineStatistics.setOwnerName(requestContext.nodeName());
 
