@@ -3,16 +3,16 @@ package org.moera.node.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class StorySummaryEntryClicks {
+public class StorySummaryPageClicks {
 
     private String heading;
     private String href;
     private long clicks;
 
-    public StorySummaryEntryClicks() {
+    public StorySummaryPageClicks() {
     }
 
-    public StorySummaryEntryClicks(String heading, String href, long clicks) {
+    public StorySummaryPageClicks(String heading, String href, long clicks) {
         this.heading = heading;
         this.href = href;
         this.clicks = clicks;

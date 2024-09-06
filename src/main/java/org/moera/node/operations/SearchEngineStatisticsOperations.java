@@ -25,7 +25,7 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntryClicks;
+import org.moera.node.model.StorySummaryPageClicks;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -127,10 +127,10 @@ public class SearchEngineStatisticsOperations {
         }
     }
 
-    private StorySummaryEntryClicks toSummary(SearchEngineClicks clicks) {
+    private StorySummaryPageClicks toSummary(SearchEngineClicks clicks) {
         String heading = getSummaryHeading(clicks);
         String href = getSummaryHref(clicks);
-        return new StorySummaryEntryClicks(heading, href, clicks.getClicks());
+        return new StorySummaryPageClicks(heading, href, clicks.getClicks());
     }
 
     private String getSummaryHeading(SearchEngineClicks clicks) {
