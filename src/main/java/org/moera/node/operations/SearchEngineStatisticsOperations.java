@@ -68,6 +68,9 @@ public class SearchEngineStatisticsOperations {
     private StoryOperations storyOperations;
 
     @Inject
+    private BlockedInstantOperations blockedInstantOperations;
+
+    @Inject
     private Transaction tx;
 
     @Scheduled(fixedDelayString = "PT6H")
@@ -79,6 +82,13 @@ public class SearchEngineStatisticsOperations {
                 try {
                     String ownerName = domains.getDomainOptions(domainName).nodeName();
                     if (ObjectUtils.isEmpty(ownerName)) {
+                        continue;
+                    }
+
+                    UUID nodeId = domains.getDomainNodeId(domainName);
+
+                    if (blockedInstantOperations.count(nodeId, StoryType.SEARCH_REPORT, null, null, null, null) > 0) {
+                        log.debug("Generation of reports for domain {} blocked", LogUtil.format(domainName));
                         continue;
                     }
 
@@ -107,7 +117,6 @@ public class SearchEngineStatisticsOperations {
                         continue;
                     }
 
-                    UUID nodeId = domains.getDomainNodeId(domainName);
                     Story story = new Story(UUID.randomUUID(), nodeId, StoryType.SEARCH_REPORT);
                     story.setFeedName(Feed.NEWS);
                     StorySummaryData summaryData = new StorySummaryData();
