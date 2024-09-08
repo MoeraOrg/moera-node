@@ -14,9 +14,11 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
+import org.moera.node.model.Result;
 import org.moera.node.model.StoryAttributes;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.operations.EntryOperations;
@@ -25,6 +27,7 @@ import org.moera.node.util.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -56,7 +59,7 @@ public class StoryController {
     @GetMapping("/{id}")
     @Transactional
     public StoryInfo get(@PathVariable UUID id) {
-        log.info("GET /stories/{id}, (id = {})", LogUtil.format(id));
+        log.info("GET /stories/{id} (id = {})", LogUtil.format(id));
 
         Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id).orElse(null);
         if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin(Scope.VIEW_FEEDS)) {
@@ -74,7 +77,7 @@ public class StoryController {
     @PutMapping("/{id}")
     @Admin(Scope.UPDATE_FEEDS)
     public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) {
-        log.info("PUT /stories/{id}, (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
+        log.info("PUT /stories/{id} (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
                 LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
                 LogUtil.format(storyAttributes.getPinned()),
@@ -104,6 +107,24 @@ public class StoryController {
         requestContext.send(new StoryUpdatedLiberin(info.getFirst()));
 
         return info.getSecond();
+    }
+
+    @DeleteMapping("/{id}")
+    @Admin(Scope.UPDATE_FEEDS)
+    public Result delete(@PathVariable UUID id) {
+        log.info("DELETE /stories/{id} (id = {})", LogUtil.format(id));
+
+        Story deletedStory = tx.executeWrite(() -> {
+            Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
+            storyRepository.delete(story);
+
+            return story;
+        });
+
+        requestContext.send(new StoryDeletedLiberin(deletedStory));
+
+        return Result.OK;
     }
 
 }
