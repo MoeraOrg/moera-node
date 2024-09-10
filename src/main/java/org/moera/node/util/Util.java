@@ -44,6 +44,17 @@ public class Util {
                 LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC));
     }
 
+    public static Duration mulPow2(Duration duration, int power) {
+        if (power <= 0) {
+            throw new IllegalArgumentException("Power must be positive");
+        }
+        Duration result = duration;
+        for (int i = 2; i <= power; i++) {
+            result = result.plus(result);
+        }
+        return result;
+    }
+
     public static String ue(Object s) {
         return URLEncoder.encode(s.toString(), StandardCharsets.UTF_8);
     }

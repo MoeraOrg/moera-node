@@ -16,6 +16,7 @@ import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.OptionRepository;
 import org.moera.node.model.DomainInfo;
+import org.moera.node.operations.ReminderOperations;
 import org.moera.node.option.OptionHookManager;
 import org.moera.node.option.Options;
 import org.moera.node.option.OptionsMetadata;
@@ -56,6 +57,10 @@ public class Domains {
     @Lazy
     @Inject
     private OptionHookManager optionHookManager;
+
+    @Lazy
+    @Inject
+    private ReminderOperations reminderOperations;
 
     @EventListener(OptionsMetadataConfiguredEvent.class)
     public void load() {
@@ -198,6 +203,7 @@ public class Domains {
             friendGroup.setViewPrincipal(Principal.PUBLIC);
             friendGroupRepository.save(friendGroup);
         }
+        reminderOperations.initializeNode(nodeId);
     }
 
     public void deleteDomain(String name) {

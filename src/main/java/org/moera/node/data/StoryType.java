@@ -45,7 +45,8 @@ public enum StoryType {
     SHERIFF_COMPLAINT_ADDED(0),               // 37
     SHERIFF_COMPLAINT_DECIDED(0),             // 38
     DEFROSTING(0),                            // 39
-    SEARCH_REPORT(0);                         // 40
+    SEARCH_REPORT(0),                         // 40
+    REMINDER_FULL_NAME(0);                    // 41
 
     private final int priority;
 
