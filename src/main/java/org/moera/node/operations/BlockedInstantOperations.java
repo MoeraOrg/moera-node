@@ -48,6 +48,10 @@ public class BlockedInstantOperations {
         return StreamSupport.stream(blockedInstantRepository.findAll(where).spliterator(), false);
     }
 
+    public long count(UUID nodeId, StoryType storyType) {
+        return count(nodeId, storyType, null, null, null, null);
+    }
+
     public long count(
             UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
             String remoteOwnerName

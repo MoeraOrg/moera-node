@@ -51,6 +51,9 @@ public class ReminderOperations {
     private StoryOperations storyOperations;
 
     @Inject
+    private BlockedInstantOperations blockedInstantOperations;
+
+    @Inject
     private Transaction tx;
 
     public void initializeNode(UUID nodeId) {
@@ -93,6 +96,10 @@ public class ReminderOperations {
                     continue;
                 }
                 if (conditionSatisfied(reminder.getStoryType())) {
+                    reminderRepository.delete(reminder);
+                    continue;
+                }
+                if (blockedInstantOperations.count(nodeId, reminder.getStoryType()) > 0) {
                     reminderRepository.delete(reminder);
                     continue;
                 }
