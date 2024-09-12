@@ -120,7 +120,7 @@ public class ReminderOperations {
                 continue;
             }
             publishing = true;
-            if (reminder.getStory().isRead()) {
+            if (reminder.getStory().isViewed()) {
                 reminder.setReadCount(reminder.getReadCount() + 1);
                 if (reminder.getReadCount() >= REPEAT_COUNT) {
                     reminderRepository.delete(reminder);
