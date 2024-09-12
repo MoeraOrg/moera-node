@@ -1,6 +1,7 @@
 package org.moera.node.data;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,6 +22,9 @@ public interface StoryRepository extends JpaRepository<Story, UUID>, QuerydslPre
 
     @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2")
     List<Story> findByFeed(UUID nodeId, String feedName, Pageable pageable);
+
+    @Query("select s from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3")
+    Collection<Story> findByFeedAndType(UUID nodeId, String feedName, StoryType storyType);
 
     @Query("select count(*) from Story s where s.nodeId = ?1 and s.feedName = ?2 and s.storyType = ?3"
             + " and s.entry.id = ?4")

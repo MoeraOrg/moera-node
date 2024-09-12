@@ -3,6 +3,7 @@ package org.moera.node.operations;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -17,6 +18,9 @@ import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.StoryAddedLiberin;
+import org.moera.node.liberin.model.StoryDeletedLiberin;
+import org.moera.node.option.OptionHook;
+import org.moera.node.option.OptionValueChange;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -96,11 +100,11 @@ public class ReminderOperations {
                     continue;
                 }
                 if (conditionSatisfied(reminder.getStoryType())) {
-                    reminderRepository.delete(reminder);
+                    unpublishAndDelete(reminder.getStoryType());
                     continue;
                 }
                 if (blockedInstantOperations.count(nodeId, reminder.getStoryType()) > 0) {
-                    reminderRepository.delete(reminder);
+                    unpublishAndDelete(reminder.getStoryType());
                     continue;
                 }
                 publish(reminder);
@@ -150,9 +154,24 @@ public class ReminderOperations {
         reminderRepository.save(reminder);
     }
 
+    public void unpublishAndDelete(StoryType storyType) {
+        Collection<Story> stories = storyRepository.findByFeedAndType(universalContext.nodeId(), Feed.NEWS, storyType);
+        for (Story story : stories) {
+            storyRepository.delete(story);
+            universalContext.send(new StoryDeletedLiberin(story));
+        }
+        reminderRepository.deleteByNodeIdAndStoryType(universalContext.nodeId(), storyType);
+    }
+
     @Scheduled(fixedDelayString = "PT6H")
     public void activateReminders() {
         domains.getWarmDomainNames().forEach(name -> activateReminders(domains.getDomainNodeId(name)));
+    }
+
+    @OptionHook("profile.full-name")
+    public void profileFullNameUpdated(OptionValueChange change) {
+        universalContext.associate(change.getNodeId());
+        unpublishAndDelete(StoryType.REMINDER_FULL_NAME);
     }
 
 }

@@ -58,6 +58,10 @@ public enum StoryType {
         return priority;
     }
 
+    public boolean isReminder() {
+        return name().startsWith("REMINDER_");
+    }
+
     @JsonValue
     public String getValue() {
         return name().toLowerCase().replace('_', '-');

@@ -27,6 +27,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedInstantOperations;
+import org.moera.node.operations.ReminderOperations;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,9 @@ public class BlockedInstantController {
 
     @Inject
     private BlockedInstantOperations blockedInstantOperations;
+
+    @Inject
+    private ReminderOperations reminderOperations;
 
     @PostMapping
     @Admin(Scope.OTHER)
@@ -92,6 +96,10 @@ public class BlockedInstantController {
         blockedInstant = blockedInstantRepository.save(blockedInstant);
 
         requestContext.send(new BlockedInstantAddedLiberin(blockedInstant));
+
+        if (blockedInstantAttributes.getStoryType().isReminder()) {
+            reminderOperations.unpublishAndDelete(blockedInstantAttributes.getStoryType());
+        }
 
         return ResponseEntity.created(URI.create("/blocked-instants/" + blockedInstant.getId()))
                 .body(new BlockedInstantInfo(blockedInstant));
