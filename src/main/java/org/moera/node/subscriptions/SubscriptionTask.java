@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.commons.crypto.CryptoException;
 import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
@@ -113,7 +114,7 @@ public class SubscriptionTask extends Task {
             SubscriberInfo subscriberInfo = nodeApi.postSubscriber(
                     targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), description);
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
-        } catch (NodeApiException | NamingNotAvailableException e) {
+        } catch (CryptoException | NodeApiException | NamingNotAvailableException e) {
             error(true, e);
             if (e instanceof NodeApiValidationException
                     && ((NodeApiValidationException) e).getErrorCode()
@@ -134,7 +135,7 @@ public class SubscriptionTask extends Task {
             nodeApi.deleteSubscriber(
                     targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE),
                     subscription.getRemoteSubscriberId());
-        } catch (NodeApiException e) {
+        } catch (CryptoException | NodeApiException e) {
             error(false, e);
         }
         // Ignore error, because unsubscription will happen anyway on notification

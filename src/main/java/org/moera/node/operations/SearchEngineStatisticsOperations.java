@@ -86,6 +86,7 @@ public class SearchEngineStatisticsOperations {
                     }
 
                     UUID nodeId = domains.getDomainNodeId(domainName);
+                    universalContext.associate(nodeId);
 
                     if (blockedInstantOperations.count(nodeId, StoryType.SEARCH_REPORT) > 0) {
                         log.debug("Generation of reports for domain {} blocked", LogUtil.format(domainName));
