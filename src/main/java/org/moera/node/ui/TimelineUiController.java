@@ -97,6 +97,7 @@ public class TimelineUiController {
             stories = storyRepository.findInRange(
                     requestContext.nodeId(), Feed.TIMELINE, publicPage.getAfterMoment(), publicPage.getBeforeMoment())
                     .stream()
+                    .filter(t -> t.getEntry() != null)
                     .filter(t -> t.getEntry().isMessage())
                     .filter(t -> t.getEntry().getViewCompound().isPublic())
                     .map(s -> StoryInfo.build(s, false, t -> PostingInfo.forUi(t.getEntry(), entryOperations)))
