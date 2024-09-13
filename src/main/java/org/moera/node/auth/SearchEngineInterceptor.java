@@ -1,5 +1,6 @@
 package org.moera.node.auth;
 
+import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -13,6 +14,8 @@ import org.moera.node.data.SearchEngine;
 import org.moera.node.data.SearchEngineStatistics;
 import org.moera.node.data.SearchEngineStatisticsRepository;
 import org.moera.node.global.RequestContext;
+import org.moera.node.liberin.model.SearchEngineClickedLiberin;
+import org.moera.node.text.HeadingExtractor;
 import org.moera.node.util.Transaction;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -69,8 +72,9 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
                 UUID postingId = UUID.fromString(uric.getPathSegments().get(1));
                 Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId).orElse(null);
                 if (posting != null) {
-                    searchEngineStatistics.setPostingId(postingId);
+                    searchEngineStatistics.setPostingId(postingId.toString());
                     searchEngineStatistics.setOwnerName(posting.getOwnerName());
+                    searchEngineStatistics.setHeading(posting.getCurrentRevision().getHeading());
 
                     String commentS = uric.getQueryParams().getFirst("comment");
                     if (commentS != null) {
@@ -79,8 +83,9 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
                             Comment comment = commentRepository.findByNodeIdAndId(requestContext.nodeId(), commentId)
                                     .orElse(null);
                             if (comment != null) {
-                                searchEngineStatistics.setCommentId(commentId);
+                                searchEngineStatistics.setCommentId(commentId.toString());
                                 searchEngineStatistics.setOwnerName(comment.getOwnerName());
+                                searchEngineStatistics.setHeading(comment.getCurrentRevision().getHeading());
                             }
                         } catch (IllegalArgumentException e) {
                             // pass, not a comment
@@ -89,10 +94,12 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
 
                     String mediaS = uric.getQueryParams().getFirst("media");
                     if (mediaS != null) {
-                        try {
-                            searchEngineStatistics.setMediaId(UUID.fromString(mediaS));
-                        } catch (IllegalArgumentException e) {
-                            // pass, not a media
+                        searchEngineStatistics.setMediaId(mediaS);
+                        if (searchEngineStatistics.getHeading() != null) {
+                            searchEngineStatistics.setHeading(
+                                    HeadingExtractor.EMOJI_PICTURE + ": " + searchEngineStatistics.getHeading());
+                        } else {
+                            searchEngineStatistics.setHeading(HeadingExtractor.EMOJI_PICTURE);
                         }
                     }
                 }
@@ -101,7 +108,11 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
             }
         }
 
-        tx.executeWriteQuietly(() -> searchEngineStatisticsRepository.save(searchEngineStatistics));
+        if (Objects.equals(requestContext.nodeName(), searchEngineStatistics.getOwnerName())) {
+            tx.executeWriteQuietly(() -> searchEngineStatisticsRepository.save(searchEngineStatistics));
+        } else {
+            requestContext.send(new SearchEngineClickedLiberin(searchEngineStatistics));
+        }
 
         return true;
     }

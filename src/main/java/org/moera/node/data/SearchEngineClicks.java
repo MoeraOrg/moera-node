@@ -1,14 +1,13 @@
 package org.moera.node.data;
 
 import java.util.Date;
-import java.util.UUID;
 
 public class SearchEngineClicks {
 
     private String nodeName;
-    private UUID postingId;
-    private UUID commentId;
-    private UUID mediaId;
+    private String postingId;
+    private String commentId;
+    private String mediaId;
     private String heading;
     private long clicks;
     private Date lastClickedAt;
@@ -16,7 +15,7 @@ public class SearchEngineClicks {
     public SearchEngineClicks() {
     }
 
-    public SearchEngineClicks(String nodeName, UUID postingId, UUID commentId, UUID mediaId, String heading,
+    public SearchEngineClicks(String nodeName, String postingId, String commentId, String mediaId, String heading,
                               long clicks, Date lastClickedAt) {
         this.nodeName = nodeName;
         this.postingId = postingId;
@@ -35,27 +34,27 @@ public class SearchEngineClicks {
         this.nodeName = nodeName;
     }
 
-    public UUID getPostingId() {
+    public String getPostingId() {
         return postingId;
     }
 
-    public void setPostingId(UUID postingId) {
+    public void setPostingId(String postingId) {
         this.postingId = postingId;
     }
 
-    public UUID getCommentId() {
+    public String getCommentId() {
         return commentId;
     }
 
-    public void setCommentId(UUID commentId) {
+    public void setCommentId(String commentId) {
         this.commentId = commentId;
     }
 
-    public UUID getMediaId() {
+    public String getMediaId() {
         return mediaId;
     }
 
-    public void setMediaId(UUID mediaId) {
+    public void setMediaId(String mediaId) {
         this.mediaId = mediaId;
     }
 

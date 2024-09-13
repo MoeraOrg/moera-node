@@ -30,11 +30,14 @@ public class SearchEngineStatistics {
     @Size(max = 63)
     private String ownerName;
 
-    private UUID postingId;
+    @Size(max = 40)
+    private String postingId;
 
-    private UUID commentId;
+    @Size(max = 40)
+    private String commentId;
 
-    private UUID mediaId;
+    @Size(max = 40)
+    private String mediaId;
 
     @Size(max = 255)
     private String heading;
@@ -74,27 +77,27 @@ public class SearchEngineStatistics {
         this.ownerName = ownerName;
     }
 
-    public UUID getPostingId() {
+    public String getPostingId() {
         return postingId;
     }
 
-    public void setPostingId(UUID postingId) {
+    public void setPostingId(String postingId) {
         this.postingId = postingId;
     }
 
-    public UUID getCommentId() {
+    public String getCommentId() {
         return commentId;
     }
 
-    public void setCommentId(UUID commentId) {
+    public void setCommentId(String commentId) {
         this.commentId = commentId;
     }
 
-    public UUID getMediaId() {
+    public String getMediaId() {
         return mediaId;
     }
 
-    public void setMediaId(UUID mediaId) {
+    public void setMediaId(String mediaId) {
         this.mediaId = mediaId;
     }
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -27,6 +28,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 
 @Component
 public class Domains {
@@ -182,6 +184,18 @@ public class Domains {
     public String getDomainName(UUID nodeId) {
         DomainInfo domainInfo = getDomain(nodeId);
         return domainInfo != null ? domainInfo.getName() : null;
+    }
+
+    // WARNING: information on the server may differ from the information in the naming system if the node
+    // was moved to another server
+    public String findDomainByNodeName(String nodeName) {
+        if (ObjectUtils.isEmpty(nodeName)) {
+            return null;
+        }
+        return getAllDomainNames().stream()
+                .filter(name -> Objects.equals(getDomainOptions(name).nodeName(), nodeName))
+                .findFirst()
+                .orElse(null);
     }
 
     public Domain createDomain(String name, UUID nodeId) {

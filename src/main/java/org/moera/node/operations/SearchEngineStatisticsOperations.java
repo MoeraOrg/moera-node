@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -146,21 +145,20 @@ public class SearchEngineStatisticsOperations {
     private String getSummaryHeading(SearchEngineClicks clicks) {
         String heading = clicks.getHeading();
         if (heading == null && clicks.getPostingId() != null) {
-            String nodeDomain = domains.getAllDomainNames().stream()
-                    .filter(name -> Objects.equals(domains.getDomainOptions(name).nodeName(), clicks.getNodeName()))
-                    .findFirst()
-                    .orElse(null);
-            UUID nodeId = domains.getDomainNodeId(nodeDomain);
-            if (nodeId != null) {
+            String nodeDomain = domains.findDomainByNodeName(clicks.getNodeName());
+            if (nodeDomain != null) {
+                UUID nodeId = domains.getDomainNodeId(nodeDomain);
                 heading = tx.executeRead(() -> {
                     if (clicks.getCommentId() != null) {
-                        Comment comment = commentRepository.findFullByNodeIdAndId(nodeId, clicks.getCommentId())
+                        UUID commentId = UUID.fromString(clicks.getCommentId());
+                        Comment comment = commentRepository.findFullByNodeIdAndId(nodeId, commentId)
                                 .orElse(null);
                         if (comment != null) {
                             return comment.getCurrentRevision().getHeading();
                         }
                     }
-                    Posting posting = postingRepository.findFullByNodeIdAndId(nodeId, clicks.getPostingId())
+                    UUID postingId = UUID.fromString(clicks.getPostingId());
+                    Posting posting = postingRepository.findFullByNodeIdAndId(nodeId, postingId)
                             .orElse(null);
                     return posting != null ? posting.getCurrentRevision().getHeading() : null;
                 });
