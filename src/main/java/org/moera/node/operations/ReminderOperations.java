@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
@@ -31,7 +30,7 @@ import org.springframework.util.ObjectUtils;
 public class ReminderOperations {
 
     private static final Duration REMINDERS_START_DELAY = Duration.ofDays(7);
-    private static final Duration REMINDERS_INTERVAL = Duration.ofDays(2);
+    private static final Duration REMINDERS_INTERVAL = Duration.ofDays(3);
     private static final Duration REMINDER_INTERVAL = Duration.ofDays(14);
     private static final int REPEAT_COUNT = 4;
 
@@ -76,17 +75,18 @@ public class ReminderOperations {
     private void activateReminders(UUID nodeId) {
         universalContext.associate(nodeId);
 
+        if (universalContext.getOptions() == null) {
+            return;
+        }
+
+        Timestamp lastInteraction = getLastInteraction();
+        if (lastInteraction != null && lastInteraction.toInstant().isAfter(Instant.now().minus(REMINDERS_INTERVAL))) {
+            return;
+        }
+
         tx.executeWrite(() -> {
             List<Reminder> reminders = reminderRepository.findAllByNodeId(nodeId);
             if (reminders.isEmpty()) {
-                return;
-            }
-
-            boolean tooOften = reminders.stream()
-                    .map(Reminder::getReadAt)
-                    .filter(Objects::nonNull)
-                    .anyMatch(readAt -> readAt.toInstant().isAfter(Instant.now().minus(REMINDERS_INTERVAL)));
-            if (tooOften) {
                 return;
             }
 
@@ -129,17 +129,11 @@ public class ReminderOperations {
                 reminder.setStory(null);
                 Duration interval = Util.mulPow2(REMINDER_INTERVAL, reminder.getReadCount());
                 reminder.setNextAt(Timestamp.from(Instant.now().plus(interval)));
+
+                updateLastInteraction();
             }
         }
         return publishing;
-    }
-
-    private boolean conditionSatisfied(StoryType storyType) {
-        return switch (storyType) {
-            case REMINDER_FULL_NAME -> !ObjectUtils.isEmpty(universalContext.fullName());
-            case REMINDER_AVATAR -> universalContext.avatarId() != null;
-            default -> true;
-        };
     }
 
     private void publish(Reminder reminder) {
@@ -152,6 +146,8 @@ public class ReminderOperations {
         reminder.setPublishedAt(Util.now());
         reminder.setStory(story);
         reminderRepository.save(reminder);
+
+        updateLastInteraction();
     }
 
     public void unpublishAndDelete(StoryType storyType) {
@@ -161,11 +157,31 @@ public class ReminderOperations {
             universalContext.send(new StoryDeletedLiberin(story));
         }
         reminderRepository.deleteByNodeIdAndStoryType(universalContext.nodeId(), storyType);
+
+        updateLastInteraction();
+    }
+
+    private Timestamp getLastInteraction() {
+        return universalContext.getOptions().getTimestamp("reminder.last-interaction");
+    }
+
+    private void updateLastInteraction() {
+        universalContext.getOptions().set("reminder.last-interaction", Util.now());
     }
 
     @Scheduled(fixedDelayString = "PT6H")
     public void activateReminders() {
         domains.getWarmDomainNames().forEach(name -> activateReminders(domains.getDomainNodeId(name)));
+    }
+
+    /* Reminder-specific routines */
+
+    private boolean conditionSatisfied(StoryType storyType) {
+        return switch (storyType) {
+            case REMINDER_FULL_NAME -> !ObjectUtils.isEmpty(universalContext.fullName());
+            case REMINDER_AVATAR -> universalContext.avatarId() != null;
+            default -> true;
+        };
     }
 
     @OptionHook("profile.full-name")

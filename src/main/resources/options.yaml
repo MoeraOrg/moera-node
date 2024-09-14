@@ -654,3 +654,7 @@
 - name: search-engines.report.generated
   type: Timestamp
   internal: true
+
+- name: reminder.last-interaction
+  type: Timestamp
+  internal: true
