@@ -30,10 +30,6 @@ import org.springframework.util.ObjectUtils;
 @Component
 public class ReminderOperations {
 
-    private static final StoryType[] REMINDERS_ALL = new StoryType[] {
-        StoryType.REMINDER_FULL_NAME
-    };
-
     private static final Duration REMINDERS_START_DELAY = Duration.ofDays(7);
     private static final Duration REMINDERS_INTERVAL = Duration.ofDays(2);
     private static final Duration REMINDER_INTERVAL = Duration.ofDays(14);
@@ -62,7 +58,10 @@ public class ReminderOperations {
 
     public void initializeNode(UUID nodeId) {
         tx.executeWrite(() -> {
-            for (StoryType storyType : REMINDERS_ALL) {
+            for (StoryType storyType : StoryType.values()) {
+                if (!storyType.isReminder()) {
+                    continue;
+                }
                 Reminder reminder = new Reminder();
                 reminder.setId(UUID.randomUUID());
                 reminder.setNodeId(nodeId);
@@ -138,6 +137,7 @@ public class ReminderOperations {
     private boolean conditionSatisfied(StoryType storyType) {
         return switch (storyType) {
             case REMINDER_FULL_NAME -> !ObjectUtils.isEmpty(universalContext.fullName());
+            case REMINDER_AVATAR -> universalContext.avatarId() != null;
             default -> true;
         };
     }
@@ -171,7 +171,17 @@ public class ReminderOperations {
     @OptionHook("profile.full-name")
     public void profileFullNameUpdated(OptionValueChange change) {
         universalContext.associate(change.getNodeId());
-        unpublishAndDelete(StoryType.REMINDER_FULL_NAME);
+        if (!ObjectUtils.isEmpty(change.getNewValue())) {
+            unpublishAndDelete(StoryType.REMINDER_FULL_NAME);
+        }
+    }
+
+    @OptionHook("profile.avatar.id")
+    public void profileAvatarUpdated(OptionValueChange change) {
+        universalContext.associate(change.getNodeId());
+        if (change.getNewValue() != null) {
+            unpublishAndDelete(StoryType.REMINDER_AVATAR);
+        }
     }
 
 }
