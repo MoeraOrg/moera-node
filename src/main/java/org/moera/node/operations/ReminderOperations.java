@@ -180,6 +180,7 @@ public class ReminderOperations {
         return switch (storyType) {
             case REMINDER_FULL_NAME -> !ObjectUtils.isEmpty(universalContext.fullName());
             case REMINDER_AVATAR -> universalContext.avatarId() != null;
+            case REMINDER_EMAIL -> !ObjectUtils.isEmpty(universalContext.getOptions().getString("profile.email"));
             default -> true;
         };
     }
@@ -197,6 +198,14 @@ public class ReminderOperations {
         universalContext.associate(change.getNodeId());
         if (change.getNewValue() != null) {
             unpublishAndDelete(StoryType.REMINDER_AVATAR);
+        }
+    }
+
+    @OptionHook("profile.email")
+    public void profileEmailUpdated(OptionValueChange change) {
+        universalContext.associate(change.getNodeId());
+        if (!ObjectUtils.isEmpty(change.getNewValue())) {
+            unpublishAndDelete(StoryType.REMINDER_EMAIL);
         }
     }
 
