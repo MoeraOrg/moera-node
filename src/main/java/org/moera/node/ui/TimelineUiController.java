@@ -188,6 +188,7 @@ public class TimelineUiController {
                 model.addAttribute("comments", Collections.emptyList());
             }
         } else {
+            model.addAttribute("noIndex", true);
             model.addAttribute("originalHref",
                     entryLocation(posting.getReceiverName(), null, posting.getReceiverEntryId(), null));
             model.addAttribute("commentsHref",
