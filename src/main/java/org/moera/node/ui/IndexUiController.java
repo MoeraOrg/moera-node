@@ -55,6 +55,7 @@ public class IndexUiController {
                     "User-agent: *\n"
                     + "Disallow: /registrar\n"
                     + "Disallow: /moera/gotoname\n"
+                    + "Disallow: /moera/news\n"
                     + "\n"
                     + "Sitemap: %s/sitemaps\n",
                     requestContext.getSiteUrl());
