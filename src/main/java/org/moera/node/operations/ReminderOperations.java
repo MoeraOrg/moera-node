@@ -18,8 +18,10 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
+import org.moera.node.model.Sheriffs;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
+import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -181,6 +183,12 @@ public class ReminderOperations {
             case REMINDER_FULL_NAME -> !ObjectUtils.isEmpty(universalContext.fullName());
             case REMINDER_AVATAR -> universalContext.avatarId() != null;
             case REMINDER_EMAIL -> !ObjectUtils.isEmpty(universalContext.getOptions().getString("profile.email"));
+            case REMINDER_SHERIFF_ALLOW -> {
+                List<String> sheriffs = SheriffUtil.deserializeSheriffs(
+                        universalContext.getOptions().getString("sheriffs.timeline")).orElse(null);
+                yield sheriffs != null
+                        && sheriffs.stream().anyMatch(name -> name.equals(Sheriffs.GOOGLE_PLAY_TIMELINE));
+            }
             default -> true;
         };
     }
@@ -206,6 +214,17 @@ public class ReminderOperations {
         universalContext.associate(change.getNodeId());
         if (!ObjectUtils.isEmpty(change.getNewValue())) {
             unpublishAndDelete(StoryType.REMINDER_EMAIL);
+        }
+    }
+
+    @OptionHook("sheriffs.timeline")
+    public void sheriffsUpdated(OptionValueChange change) {
+        universalContext.associate(change.getNodeId());
+        List<String> sheriffs = SheriffUtil.deserializeSheriffs((String) change.getNewValue()).orElse(null);
+        boolean sheriffAllowed = sheriffs != null
+                && sheriffs.stream().anyMatch(name -> name.equals(Sheriffs.GOOGLE_PLAY_TIMELINE));
+        if (sheriffAllowed) {
+            unpublishAndDelete(StoryType.REMINDER_SHERIFF_ALLOW);
         }
     }
 

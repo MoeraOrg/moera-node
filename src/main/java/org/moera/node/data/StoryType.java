@@ -48,7 +48,8 @@ public enum StoryType {
     SEARCH_REPORT(0),                         // 40
     REMINDER_FULL_NAME(1),                    // 41
     REMINDER_AVATAR(0),                       // 42
-    REMINDER_EMAIL(2);                        // 43
+    REMINDER_EMAIL(2),                        // 43
+    REMINDER_SHERIFF_ALLOW(3);                // 44
 
     private final int priority;
 
