@@ -97,7 +97,7 @@ public class SearchEngineStatisticsOperations {
                     if (lastReport == null) {
                         lastReport = Util.toTimestamp(domains.getDomain(domainName).getCreatedAt());
                     }
-                    if (lastReport.toInstant().plus(1, ChronoUnit.DAYS).isAfter(Instant.now())) {
+                    if (lastReport.toInstant().plus(7, ChronoUnit.DAYS).isAfter(Instant.now())) {
                         continue;
                     }
 
