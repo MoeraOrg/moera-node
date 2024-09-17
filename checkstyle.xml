@@ -105,9 +105,7 @@
         <module name="AvoidNoArgumentSuperConstructorCall"/>
         <module name="GenericWhitespace"/>
         <module name="MethodParamPad"/>
-        <module name="NoArrayTrailingComma"/>
         <module name="NoLineWrap"/>
-        <module name="NoEnumTrailingComma"/>
         <module name="OperatorWrap"/>
         <module name="ParenPad"/>
         <module name="SeparatorWrap">

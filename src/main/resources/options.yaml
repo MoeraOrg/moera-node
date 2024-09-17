@@ -50,6 +50,7 @@
 
 - name: naming.operation.signing-key
   type: PrivateKey
+  encrypted: true
   internal: true
 
 - name: credentials.login
@@ -107,6 +108,7 @@
 
 - name: profile.signing-key
   type: PrivateKey
+  encrypted: true
   internal: true
 
 - name: profile.signing-key.valid-from.layover

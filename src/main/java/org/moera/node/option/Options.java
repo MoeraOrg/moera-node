@@ -1,8 +1,11 @@
 package org.moera.node.option;
 
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.sql.Timestamp;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +13,8 @@ import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Option;
@@ -20,10 +25,13 @@ import org.moera.node.option.type.OptionTypeBase;
 import org.moera.node.util.ExtendedDuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 
 public class Options {
 
     private static final Logger log = LoggerFactory.getLogger(Options.class);
+
+    private static final String ENCRYPTION_TAG = "enc:";
 
     private final Map<String, Object> values = new HashMap<>();
     private final ReadWriteLock valuesLock = new ReentrantReadWriteLock();
@@ -51,8 +59,8 @@ public class Options {
         try {
             optionsMetadata.getDescriptorsForNode(nodeId).stream()
                     .filter(desc -> desc.getDefaultValue() != null)
-                    .forEach(desc -> putValue(desc.getName(), desc.getDefaultValue()));
-            optionRepository.findAllByNodeId(nodeId).forEach(option -> putValue(option.getName(), option.getValue()));
+                    .forEach(desc -> loadValue(desc.getName(), desc.getDefaultValue()));
+            optionRepository.findAllByNodeId(nodeId).forEach(option -> loadValue(option.getName(), option.getValue()));
         } finally {
             loading = false;
         }
@@ -176,6 +184,53 @@ public class Options {
         }
     }
 
+    private String encryptValue(String value) {
+        if (ObjectUtils.isEmpty(value)) {
+            return value;
+        }
+
+        SecretKey key = optionsMetadata.getEncryptionKey();
+        if (key == null) {
+            log.warn("Encryption key is not set, saving plain text");
+            return value;
+        }
+
+        try {
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            byte[] encryptedValue = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
+
+            return ENCRYPTION_TAG + Base64.getEncoder().encodeToString(encryptedValue);
+        } catch (GeneralSecurityException e) {
+            log.error("Encryption error", e);
+            return value;
+        }
+    }
+
+    private String decryptValue(String value) {
+        if (ObjectUtils.isEmpty(value) || !value.startsWith(ENCRYPTION_TAG)) {
+            return value;
+        }
+
+        SecretKey key = optionsMetadata.getEncryptionKey();
+        if (key == null) {
+            log.error("Encryption key is not set, cannot decrypt");
+            return value;
+        }
+
+        try {
+            byte[] encryptedValue = Base64.getDecoder().decode(value.substring(ENCRYPTION_TAG.length()));
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            byte[] decryptedValue = cipher.doFinal(encryptedValue);
+
+            return new String(decryptedValue, StandardCharsets.UTF_8);
+        } catch (GeneralSecurityException | IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private String serializeValue(String type, Object value) {
         if (value == null) {
             return null;
@@ -190,12 +245,16 @@ public class Options {
         return optionsMetadata.getType(type).deserializeValue(value);
     }
 
-    private void putValue(String name, String value) {
+    private void loadValue(String name, String value) {
+        OptionDescriptor desc = optionsMetadata.getDescriptor(name);
+        if (desc == null) {
+            log.warn("No metadata for option {}", name);
+            return;
+        }
+
         try {
-            OptionDescriptor desc = optionsMetadata.getDescriptor(name);
-            if (desc == null) {
-                log.warn("No metadata for option {}", name);
-                return;
+            if (desc.isEncrypted()) {
+                value = decryptValue(value);
             }
             transactionalPut(name, deserializeValue(desc.getType(), value));
         } catch (DeserializeOptionValueException e) {
@@ -214,6 +273,10 @@ public class Options {
         } finally {
             unlockRead();
         }
+    }
+
+    private Object get(String name) {
+        return forName(name, (value, optionType) -> value);
     }
 
     public String getString(String name) {
@@ -291,7 +354,11 @@ public class Options {
         lockWrite();
         try {
             Option option = optionRepository.findByNodeIdAndName(nodeId, name).orElse(new Option(nodeId, name));
-            option.setValue(serializeValue(optionType.getTypeName(), newValue));
+            String serializedValue = serializeValue(optionType.getTypeName(), newValue);
+            if (optionsMetadata.isEncrypted(name)) {
+                serializedValue = encryptValue(serializedValue);
+            }
+            option.setValue(serializedValue);
             optionRepository.saveAndFlush(option);
 
             transactionalPut(name, newValue);
@@ -309,6 +376,10 @@ public class Options {
         } finally {
             unlockWrite();
         }
+    }
+
+    public void resave(String name) {
+        set(name, get(name));
     }
 
     public UUID nodeId() {

@@ -23,7 +23,6 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
-import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.fingerprint.PostingFingerprint;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.body.Body;
@@ -32,8 +31,10 @@ import org.moera.node.option.Options;
 import org.moera.node.rest.task.upgrade.AllRemoteAvatarsDownloadTask;
 import org.moera.node.rest.task.upgrade.AllRemoteGendersDownloadTask;
 import org.moera.node.rest.task.upgrade.ContactsUpgradeTask;
+import org.moera.node.rest.task.upgrade.EncryptAllOptionsJob;
 import org.moera.node.rest.task.upgrade.MediaFileRenamePaddedIdsJob;
 import org.moera.node.task.Jobs;
+import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.task.TaskAutowire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +91,7 @@ public class Updater {
     @Inject
     private Jobs jobs;
 
-    @EventListener(DomainsConfiguredEvent.class)
+    @EventListener(JobsManagerInitializedEvent.class)
     @Transactional
     public void execute() {
         executeDomainUpgrades();
@@ -102,6 +103,7 @@ public class Updater {
     private void executeDomainUpgrades() {
         downloadAvatars();
         downloadGenders();
+        encryptOptions();
     }
 
     private void downloadAvatars() {
@@ -119,6 +121,13 @@ public class Updater {
             var task = new AllRemoteGendersDownloadTask();
             taskAutowire.autowireWithoutRequest(task, upgrade.getNodeId());
             taskExecutor.execute(task);
+        }
+    }
+
+    private void encryptOptions() {
+        Set<DomainUpgrade> upgrades = domainUpgradeRepository.findPending(UpgradeType.ENCRYPT_OPTIONS);
+        if (!upgrades.isEmpty() && !jobs.isRunning(EncryptAllOptionsJob.class)) {
+            jobs.run(EncryptAllOptionsJob.class, new EncryptAllOptionsJob.Parameters());
         }
     }
 

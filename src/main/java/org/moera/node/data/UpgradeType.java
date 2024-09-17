@@ -9,6 +9,7 @@ public enum UpgradeType {
     PROFILE_SUBSCRIBE, /* 3 */
     AVATAR_DOWNLOAD,   /* 4 */
     GENDER_DOWNLOAD,   /* 5 */
-    PROFILE_DOWNLOAD   /* 6 */
+    PROFILE_DOWNLOAD,  /* 6 */
+    ENCRYPT_OPTIONS,   /* 7 */
 
 }

@@ -9,6 +9,7 @@ import org.springframework.util.ObjectUtils;
 public class Config {
 
     private String rootSecret;
+    private String encryptionKey;
     private String address;
     private PoolsConfig pools = new PoolsConfig();
     private MultiHost multi = MultiHost.NONE;
@@ -27,6 +28,14 @@ public class Config {
 
     public void setRootSecret(String rootSecret) {
         this.rootSecret = rootSecret;
+    }
+
+    public String getEncryptionKey() {
+        return encryptionKey;
+    }
+
+    public void setEncryptionKey(String encryptionKey) {
+        this.encryptionKey = encryptionKey;
     }
 
     public String getAddress() {

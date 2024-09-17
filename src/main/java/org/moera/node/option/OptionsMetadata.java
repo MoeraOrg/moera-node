@@ -2,6 +2,7 @@ package org.moera.node.option;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,6 +15,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -190,6 +193,11 @@ public class OptionsMetadata {
         return descriptor != null && descriptor.isPrivileged();
     }
 
+    public boolean isEncrypted(String name) {
+        OptionDescriptor descriptor = getDescriptor(name);
+        return descriptor != null && descriptor.isEncrypted();
+    }
+
     private Map<String, OptionDescriptor> getDescriptors() {
         return descriptors;
     }
@@ -217,6 +225,14 @@ public class OptionsMetadata {
             return null;
         }
         return optionName.substring(PLUGIN_PREFIX.length(), pos);
+    }
+
+    public SecretKey getEncryptionKey() {
+        String key = config.getEncryptionKey();
+        if (key == null) {
+            return null;
+        }
+        return new SecretKeySpec(Base64.getDecoder().decode(key), "AES");
     }
 
 }
