@@ -119,6 +119,11 @@
     min: 1m
     max: 7d
 
+- name: profile.updating-key.mnemonic
+  type: string
+  encrypted: true
+  internal: true
+
 - name: profile.avatar.id
   type: UUID
   internal: true

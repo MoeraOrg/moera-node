@@ -9,6 +9,7 @@ import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
+import org.springframework.util.ObjectUtils;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NodeNameInfo {
@@ -18,6 +19,7 @@ public class NodeNameInfo {
     private Long operationStatusUpdated;
     private String operationErrorCode;
     private String operationErrorMessage;
+    private Boolean storedMnemonic;
     private Map<String, Principal> operations;
 
     public NodeNameInfo() {
@@ -53,6 +55,7 @@ public class NodeNameInfo {
                         break;
                 }
             }
+            storedMnemonic = !ObjectUtils.isEmpty(options.getString("profile.updating-key.mnemonic"));
         }
         operations = Collections.singletonMap("manage", Principal.ADMIN);
     }
@@ -95,6 +98,14 @@ public class NodeNameInfo {
 
     public void setOperationErrorMessage(String operationErrorMessage) {
         this.operationErrorMessage = operationErrorMessage;
+    }
+
+    public Boolean getStoredMnemonic() {
+        return storedMnemonic;
+    }
+
+    public void setStoredMnemonic(Boolean storedMnemonic) {
+        this.storedMnemonic = storedMnemonic;
     }
 
     public Map<String, Principal> getOperations() {

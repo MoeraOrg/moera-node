@@ -32,8 +32,10 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
+import org.moera.node.model.KeyMnemonic;
 import org.moera.node.model.NameToRegister;
 import org.moera.node.model.NodeNameInfo;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
@@ -212,6 +214,49 @@ public class NodeNameController {
         });
         requestContext.send(new NodeNameChangedLiberin(
                 prevNodeName, requestContext.getOptions(), requestContext.getAvatar()));
+
+        return Result.OK;
+    }
+
+    @PostMapping("/mnemonic")
+    @Admin(Scope.NAME)
+    @Transactional
+    public Result postMnemonic(@Valid @RequestBody KeyMnemonic mnemonic) {
+        log.info("POST /node-name/mnemonic");
+
+        requestContext.getOptions().set("profile.updating-key.mnemonic", String.join(" ", mnemonic.getMnemonic()));
+
+        requestContext.send(new NodeNameChangedLiberin(
+                requestContext.nodeName(), requestContext.nodeName(), requestContext.getOptions(),
+                requestContext.getAvatar()));
+
+        return Result.OK;
+    }
+
+    @GetMapping("/mnemonic")
+    @Admin(Scope.NAME)
+    public KeyMnemonic getMnemonic() {
+        log.info("GET /node-name/mnemonic");
+
+        String mnemonic = requestContext.getOptions().getString("profile.updating-key.mnemonic");
+        if (ObjectUtils.isEmpty(mnemonic)) {
+            throw new ObjectNotFoundFailure("not-found");
+        }
+
+        return new KeyMnemonic(mnemonic.split(" "));
+    }
+
+    @DeleteMapping("/mnemonic")
+    @Admin(Scope.NAME)
+    @Transactional
+    public Result deleteMnemonic() {
+        log.info("DELETE /node-name/mnemonic");
+
+        requestContext.getOptions().reset("profile.updating-key.mnemonic");
+
+        requestContext.send(new NodeNameChangedLiberin(
+                requestContext.nodeName(), requestContext.nodeName(), requestContext.getOptions(),
+                requestContext.getAvatar()));
 
         return Result.OK;
     }
