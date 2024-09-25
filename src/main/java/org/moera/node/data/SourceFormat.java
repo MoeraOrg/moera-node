@@ -8,7 +8,8 @@ public enum SourceFormat {
     PLAIN_TEXT,
     HTML,
     MARKDOWN,
-    APPLICATION;
+    APPLICATION,
+    DELTA;
 
     @JsonValue
     public String getValue() {

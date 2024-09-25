@@ -25,6 +25,7 @@ public class TextConverter {
             case PLAIN_TEXT -> PlainTextConverter.toHtml(source);
             case HTML -> source;
             case MARKDOWN -> markdownConverter.toHtml(source);
+            case DELTA -> source; // TODO
             default -> throw new IllegalArgumentException("Unknown source format: " + format.name());
         };
     }
