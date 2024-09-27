@@ -1,8 +1,8 @@
-package org.moera.node.text.delta;
+package org.moera.node.text.delta.model;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-import static org.moera.node.text.delta.Op.Type.DELETE;
-import static org.moera.node.text.delta.Op.Type.INSERT;
+import static org.moera.node.text.delta.model.Op.Type.DELETE;
+import static org.moera.node.text.delta.model.Op.Type.INSERT;
 
 import java.util.List;
 import java.util.Map;

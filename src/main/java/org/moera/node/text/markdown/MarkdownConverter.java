@@ -1,4 +1,4 @@
-package org.moera.node.text;
+package org.moera.node.text.markdown;
 
 import com.vladsch.flexmark.ext.autolink.AutolinkExtension;
 import com.vladsch.flexmark.ext.definition.DefinitionExtension;

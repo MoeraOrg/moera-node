@@ -1,4 +1,4 @@
-package org.moera.node.text.delta;
+package org.moera.node.text.delta.model;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static java.util.stream.Collectors.toList;

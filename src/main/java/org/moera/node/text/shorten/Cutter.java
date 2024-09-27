@@ -7,8 +7,8 @@ import org.jsoup.select.NodeFilter;
 
 class Cutter implements NodeFilter {
 
-    private TextPosition cut;
-    private boolean ellipsis;
+    private final TextPosition cut;
+    private final boolean ellipsis;
     private Element target;
     private TextPosition offset = new TextPosition();
     private Element ignoreContent = null;
@@ -38,8 +38,7 @@ class Cutter implements NodeFilter {
                 }
                 goOn = offset.less(cut);
             }
-        } else if (node instanceof Element && ignoreContent == null) {
-            Element element = (Element) node;
+        } else if (node instanceof Element element && ignoreContent == null) {
             if (Elements.isDetails(element)) {
                 ignoreContent = element;
             } else if (Elements.isObject(element)) {
@@ -59,8 +58,7 @@ class Cutter implements NodeFilter {
 
     @Override
     public FilterResult tail(Node node, int i) {
-        if (node instanceof Element) {
-            Element element = (Element) node;
+        if (node instanceof Element element) {
             if (ignoreContent == null) {
                 if (Elements.isBreaking(element)) {
                     offset = offset.newLine();

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.moera.node.text.delta;
+package org.moera.node.text.delta.model;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;

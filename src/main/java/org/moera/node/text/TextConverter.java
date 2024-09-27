@@ -9,6 +9,8 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
 import org.moera.node.model.body.BodyMappingException;
+import org.moera.node.text.delta.converter.DeltaConverter;
+import org.moera.node.text.markdown.MarkdownConverter;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
 import org.springframework.stereotype.Component;
@@ -20,12 +22,15 @@ public class TextConverter {
     @Inject
     private MarkdownConverter markdownConverter;
 
+    @Inject
+    private DeltaConverter deltaConverter;
+
     public String toHtml(SourceFormat format, String source) {
         return switch (format) {
             case PLAIN_TEXT -> PlainTextConverter.toHtml(source);
             case HTML -> source;
             case MARKDOWN -> markdownConverter.toHtml(source);
-            case DELTA -> source; // TODO
+            case DELTA -> deltaConverter.toHtml(source);
             default -> throw new IllegalArgumentException("Unknown source format: " + format.name());
         };
     }
@@ -45,7 +50,7 @@ public class TextConverter {
                            boolean isSigned, List<MediaFileOwner> media, boolean collapseQuotations,
                            EntryRevision revision) {
         Body body = new Body();
-        if (!isSigned && (sourceBody == null || ObjectUtils.isEmpty(sourceBody))) {
+        if (!isSigned && ObjectUtils.isEmpty(sourceBody)) {
             if (!ObjectUtils.isEmpty(bodySrc)) {
                 if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
                     revision.setBodySrc(bodySrc);
