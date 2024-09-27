@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.moera.node.text.delta.model.AttributeMap;
 import org.moera.node.text.delta.model.Delta;
 import org.moera.node.text.delta.model.OpList;
 
@@ -19,13 +20,13 @@ public class TextSlice {
         TextSlice textSlice = new TextSlice();
 
         AtomicReference<Paragraph> current = new AtomicReference<>();
-        document.eachLine((line, attributeMap) -> {
+        document.eachLine((line, lineAttributes) -> {
             if (isEmptyLine(line)) {
                 current.set(null);
             } else {
                 Paragraph paragraph = current.get();
-                if (paragraph == null) {
-                    paragraph = new Paragraph();
+                if (paragraph == null || !paragraph.continuesWith(lineAttributes)) {
+                    paragraph = createParagraph(lineAttributes);
                     current.set(paragraph);
                     textSlice.getParagraphs().add(paragraph);
                 }
@@ -43,15 +44,19 @@ public class TextSlice {
                 || ops.size() == 1 && ops.get(0).isTextInsert() && ops.get(0).argAsString().matches("\\s*\n");
     }
 
+    private static Paragraph createParagraph(AttributeMap lineAttributes) {
+        if (lineAttributes == null) {
+            return new Paragraph();
+        }
+        if (lineAttributes.containsKey("header")) {
+            return new Header((Integer) lineAttributes.get("header"));
+        }
+        return new Paragraph();
+    }
+
     public String toHtml() {
         StringBuilder buf = new StringBuilder();
-
-        paragraphs.forEach(paragraph -> {
-            buf.append("<p>");
-            buf.append(paragraph.toHtml());
-            buf.append("</p>");
-        });
-
+        paragraphs.forEach(paragraph -> buf.append(paragraph.toHtml()));
         return buf.toString();
     }
 
