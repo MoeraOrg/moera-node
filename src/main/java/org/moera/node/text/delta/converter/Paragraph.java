@@ -4,18 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.moera.node.text.delta.model.AttributeMap;
-import org.moera.node.text.delta.model.Delta;
 
 public class Paragraph {
 
-    private final List<Delta> lines = new ArrayList<>();
+    protected final List<Line> lines = new ArrayList<>();
 
-    public List<Delta> getLines() {
+    public List<Line> getLines() {
         return lines;
     }
 
     public boolean continuesWith(AttributeMap lineAttributes) {
-        return lineAttributes == null || !lineAttributes.containsKey("header");
+        return lineAttributes == null || !lineAttributes.containsKey("header") && !lineAttributes.containsKey("list");
     }
 
     public String toHtml() {
@@ -31,7 +30,7 @@ public class Paragraph {
             if (i != 0) {
                 buf.append("<br>");
             }
-            buf.append(LineConverter.toHtml(lines.get(i)));
+            buf.append(LineConverter.toHtml(lines.get(i).getDelta()));
         }
         buf.append("</");
         buf.append(tagName);

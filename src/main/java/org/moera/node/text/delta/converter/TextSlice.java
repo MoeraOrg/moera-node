@@ -30,7 +30,7 @@ public class TextSlice {
                     current.set(paragraph);
                     textSlice.getParagraphs().add(paragraph);
                 }
-                paragraph.getLines().add(line);
+                paragraph.getLines().add(new Line(line, lineAttributes));
             }
             return true;
         });
@@ -50,6 +50,9 @@ public class TextSlice {
         }
         if (lineAttributes.containsKey("header")) {
             return new Header((Integer) lineAttributes.get("header"));
+        }
+        if (lineAttributes.containsKey("list")) {
+            return new MarkedList();
         }
         return new Paragraph();
     }
