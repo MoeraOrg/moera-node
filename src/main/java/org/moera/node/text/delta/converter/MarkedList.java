@@ -7,6 +7,10 @@ import org.moera.node.text.delta.model.AttributeMap;
 
 public class MarkedList extends Paragraph {
 
+    public MarkedList(int quoteLevel) {
+        super(quoteLevel);
+    }
+
     @Override
     public boolean continuesWith(AttributeMap lineAttributes) {
         return lineAttributes != null && lineAttributes.containsKey("list");

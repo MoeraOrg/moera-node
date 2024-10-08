@@ -8,9 +8,18 @@ import org.moera.node.text.delta.model.AttributeMap;
 public class Paragraph {
 
     protected final List<Line> lines = new ArrayList<>();
+    private final int quoteLevel;
+
+    public Paragraph(int quoteLevel) {
+        this.quoteLevel = quoteLevel;
+    }
 
     public List<Line> getLines() {
         return lines;
+    }
+
+    public int getQuoteLevel() {
+        return quoteLevel;
     }
 
     public boolean continuesWith(AttributeMap lineAttributes) {

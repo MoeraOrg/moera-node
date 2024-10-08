@@ -2,6 +2,7 @@ package org.moera.node.text.delta.converter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.moera.node.text.delta.model.AttributeMap;
@@ -25,8 +26,11 @@ public class TextSlice {
                 current.set(null);
             } else {
                 Paragraph paragraph = current.get();
-                if (paragraph == null || !paragraph.continuesWith(lineAttributes)) {
-                    paragraph = createParagraph(lineAttributes);
+                int quoteLevel = getQuoteLevel(lineAttributes);
+                if (paragraph == null
+                        || !paragraph.continuesWith(lineAttributes)
+                        || paragraph.getQuoteLevel() != quoteLevel) {
+                    paragraph = createParagraph(lineAttributes, quoteLevel);
                     current.set(paragraph);
                     textSlice.getParagraphs().add(paragraph);
                 }
@@ -44,22 +48,42 @@ public class TextSlice {
                 || ops.size() == 1 && ops.get(0).isTextInsert() && ops.get(0).argAsString().matches("\\s*\n");
     }
 
-    private static Paragraph createParagraph(AttributeMap lineAttributes) {
+    private static int getQuoteLevel(AttributeMap lineAttributes) {
         if (lineAttributes == null) {
-            return new Paragraph();
+            return 0;
+        }
+        if (lineAttributes.containsKey("quote-level")) {
+            return Integer.parseInt((String) lineAttributes.get("quote-level"));
+        }
+        if (lineAttributes.containsKey("blockquote")) {
+            return 1;
+        }
+        return 0;
+    }
+
+    private static Paragraph createParagraph(AttributeMap lineAttributes, int quoteLevel) {
+        if (lineAttributes == null) {
+            return new Paragraph(quoteLevel);
         }
         if (lineAttributes.containsKey("header")) {
-            return new Header((Integer) lineAttributes.get("header"));
+            return new Header((Integer) lineAttributes.get("header"), quoteLevel);
         }
         if (lineAttributes.containsKey("list")) {
-            return new MarkedList();
+            return new MarkedList(quoteLevel);
         }
-        return new Paragraph();
+        return new Paragraph(quoteLevel);
     }
 
     public String toHtml() {
         StringBuilder buf = new StringBuilder();
-        paragraphs.forEach(paragraph -> buf.append(paragraph.toHtml()));
+        AtomicInteger quoteLevel = new AtomicInteger(0);
+        paragraphs.forEach(paragraph -> {
+            buf.append("</blockquote>".repeat(Math.max(0, quoteLevel.get() - paragraph.getQuoteLevel())));
+            buf.append("<blockquote>".repeat(Math.max(0, paragraph.getQuoteLevel() - quoteLevel.get())));
+            buf.append(paragraph.toHtml());
+            quoteLevel.set(paragraph.getQuoteLevel());
+        });
+        buf.append("</blockquote>".repeat(quoteLevel.get()));
         return buf.toString();
     }
 

@@ -8,7 +8,8 @@ public class Header extends Paragraph {
 
     private final int level;
 
-    public Header(int level) {
+    public Header(int level, int quoteLevel) {
+        super(quoteLevel);
         this.level = level;
     }
 
