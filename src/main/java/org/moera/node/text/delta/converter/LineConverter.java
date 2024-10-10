@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import org.moera.commons.util.UniversalLocation;
+import org.moera.naming.rpc.NodeName;
 import org.moera.node.text.delta.model.AttributeMap;
 import org.moera.node.text.delta.model.Delta;
 import org.moera.node.text.delta.model.Op;
@@ -15,16 +17,19 @@ import org.moera.node.util.Util;
 
 public class LineConverter {
 
-    private static final Set<String> KNOWN_FORMATS = Set.of("bold", "code", "italic", "strike", "underline");
+    private record Format(String name, Object value) {
+    }
+
+    private static final Set<String> KNOWN_FORMATS = Set.of("bold", "code", "italic", "mention", "strike", "underline");
 
     public static String toHtml(Delta line) {
         StringBuilder buf = new StringBuilder();
 
         String openLink = null;
-        Set<String> openFormats = new HashSet<>();
-        Deque<String> openStack = new ArrayDeque<>();
+        Set<Format> openFormats = new HashSet<>();
+        Deque<Format> openStack = new ArrayDeque<>();
         Set<String> toClose = new HashSet<>();
-        List<String> toOpen = new ArrayList<>();
+        List<Format> toOpen = new ArrayList<>();
 
         for (Op op : line.getOps()) {
             if (!op.isInsert()) {
@@ -37,15 +42,16 @@ public class LineConverter {
             }
 
             toClose.clear();
-            for (String format : openFormats) {
-                if (!attrs.containsKey(format)) {
-                    toClose.add(format);
+            for (Format format : openFormats) {
+                if (!attrs.containsKey(format.name) || !Objects.equals(attrs.get(format.name), format.value)) {
+                    toClose.add(format.name);
                 }
             }
 
             toOpen.clear();
-            for (String format : attrs.keySet()) {
-                if (KNOWN_FORMATS.contains(format) && !openFormats.contains(format)) {
+            for (String formatName : attrs.keySet()) {
+                Format format = new Format(formatName, attrs.get(formatName));
+                if (KNOWN_FORMATS.contains(format.name) && !openFormats.contains(format)) {
                     toOpen.add(format);
                 }
             }
@@ -57,11 +63,11 @@ public class LineConverter {
                     break;
                 }
 
-                String format = openStack.pop();
+                Format format = openStack.pop();
                 openFormats.remove(format);
-                if (toClose.contains(format)) {
-                    toClose.remove(format);
-                    closeTag(format, buf);
+                if (toClose.contains(format.name)) {
+                    toClose.remove(format.name);
+                    closeTag(format.name, buf);
                 } else {
                     toOpen.add(format);
                 }
@@ -78,7 +84,7 @@ public class LineConverter {
             }
 
             for (int i = toOpen.size() - 1; i >= 0; i--) {
-                String format = toOpen.get(i);
+                Format format = toOpen.get(i);
                 openTag(format, buf);
                 openStack.push(format);
                 openFormats.add(format);
@@ -90,26 +96,35 @@ public class LineConverter {
         return buf.toString();
     }
 
-    private static String formatToTag(String format) {
-        return switch (format) {
+    private static String formatToTag(Format format) {
+        return switch (format.name) {
             case "bold" -> "b";
             case "code" -> "code";
             case "italic" -> "i";
+            case "mention" -> {
+                String name = (String) format.value;
+                if (format.value != null) {
+                    yield String.format("a href=\"%s\" data-nodename=\"%s\"",
+                            UniversalLocation.redirectTo(name, null), NodeName.expand(name));
+                } else {
+                    yield "a";
+                }
+            }
             case "strike" -> "s";
             case "underline" -> "u";
             default -> null;
         };
     }
 
-    private static void openTag(String format, StringBuilder buf) {
+    private static void openTag(Format format, StringBuilder buf) {
         buf.append("<");
         buf.append(formatToTag(format));
         buf.append(">");
     }
 
-    private static void closeTag(String format, StringBuilder buf) {
+    private static void closeTag(String formatName, StringBuilder buf) {
         buf.append("</");
-        buf.append(formatToTag(format));
+        buf.append(formatToTag(new Format(formatName, null)));
         buf.append(">");
     }
 
