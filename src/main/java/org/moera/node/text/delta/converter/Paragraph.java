@@ -2,30 +2,34 @@ package org.moera.node.text.delta.converter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-import org.moera.node.text.delta.model.AttributeMap;
-
-public class Paragraph {
+public class Paragraph extends Block {
 
     protected final List<Line> lines = new ArrayList<>();
-    private final int quoteLevel;
 
     public Paragraph(int quoteLevel) {
-        this.quoteLevel = quoteLevel;
+        super(quoteLevel);
     }
 
     public List<Line> getLines() {
         return lines;
     }
 
-    public int getQuoteLevel() {
-        return quoteLevel;
+    @Override
+    public void addLine(Line line) {
+        lines.add(line);
     }
 
-    public boolean continuesWith(AttributeMap lineAttributes) {
-        return lineAttributes == null || !lineAttributes.containsKey("header") && !lineAttributes.containsKey("list");
+    @Override
+    public boolean continuesWith(Map<String, Object> lineAttributes) {
+        return lineAttributes == null
+                || !lineAttributes.containsKey("header")
+                    && !lineAttributes.containsKey("list")
+                    && !lineAttributes.containsKey("horizontal-rule");
     }
 
+    @Override
     public String toHtml() {
         return toHtml("p");
     }

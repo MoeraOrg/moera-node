@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static org.moera.node.text.delta.model.Op.Type.DELETE;
 import static org.moera.node.text.delta.model.Op.Type.RETAIN;
 
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -152,6 +153,11 @@ public class Op {
     public String argAsString() {
         assert insert instanceof String;
         return (String) insert;
+    }
+
+    public Map<String, Object> argAsMap() {
+        assert insert instanceof Map;
+        return (Map<String, Object>) insert;
     }
 
     public boolean hasAttributes() {

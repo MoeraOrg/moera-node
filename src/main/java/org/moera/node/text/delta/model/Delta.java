@@ -7,6 +7,7 @@ import static org.moera.node.text.delta.model.Op.Type.INSERT;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import org.springframework.util.ObjectUtils;
 
 @JsonInclude(value = NON_NULL)
 public class Delta {
@@ -243,17 +245,35 @@ public class Delta {
         return delta.chop();
     }
 
-    public void eachLine(BiFunction<Delta, AttributeMap, Boolean> predicate, String newLine) {
+    private boolean isEmbedSeparator(Op op, List<String> embeds) {
+        if (embeds == null || op.isTextInsert() || ObjectUtils.isEmpty(op.arg())) {
+            return false;
+        }
+        Set<String> keys = op.argAsMap().keySet();
+        return embeds.stream().anyMatch(keys::contains);
+    }
+
+    public void eachLine(BiFunction<Delta, AttributeMap, Boolean> predicate, LineSeparator separator) {
         final OpList.Iterator it = ops.iterator();
         Delta line = new Delta();
         while (it.hasNext()) {
             if (it.peekType() != INSERT) {
                 return;
             }
+
             final Op thisOp = it.peek();
+
+            if (line.ops.isEmpty() && isEmbedSeparator(thisOp, separator.embeds())) {
+                if (!predicate.apply(new Delta().push(thisOp), null)) {
+                    return;
+                }
+                it.next();
+                continue;
+            }
+
             final int start = thisOp.length() - it.peekLength();
             final int index =
-                    thisOp.isTextInsert() ? thisOp.argAsString().indexOf(newLine, start) - start : -1;
+                    thisOp.isTextInsert() ? thisOp.argAsString().indexOf(separator.newLine(), start) - start : -1;
             if (index < 0) {
                 line.push(it.next());
             } else if (index > 0) {
@@ -271,7 +291,7 @@ public class Delta {
     }
 
     public void eachLine(BiFunction<Delta, AttributeMap, Boolean> applyFunction) {
-        eachLine(applyFunction, "\n");
+        eachLine(applyFunction, new LineSeparator("\n"));
     }
 
     public Delta invert(Delta base) {

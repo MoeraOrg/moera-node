@@ -1,14 +1,15 @@
 package org.moera.node.text.delta.converter;
 
-import org.moera.node.text.delta.model.AttributeMap;
+import java.util.Map;
+
 import org.moera.node.text.delta.model.Delta;
 
 public class Line {
 
     private final Delta delta;
-    private final AttributeMap attributes;
+    private final Map<String, Object> attributes;
 
-    public Line(Delta delta, AttributeMap attributes) {
+    public Line(Delta delta, Map<String, Object> attributes) {
         this.delta = delta;
         this.attributes = attributes;
     }
@@ -17,7 +18,7 @@ public class Line {
         return delta;
     }
 
-    public AttributeMap getAttributes() {
+    public Map<String, Object> getAttributes() {
         return attributes;
     }
 

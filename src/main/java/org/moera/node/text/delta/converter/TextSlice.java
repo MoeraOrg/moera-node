@@ -2,42 +2,44 @@ package org.moera.node.text.delta.converter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.moera.node.text.delta.model.AttributeMap;
 import org.moera.node.text.delta.model.Delta;
+import org.moera.node.text.delta.model.LineSeparator;
 import org.moera.node.text.delta.model.OpList;
 
 public class TextSlice {
 
-    private final List<Paragraph> paragraphs = new ArrayList<>();
+    private final List<Block> blocks = new ArrayList<>();
 
-    public List<Paragraph> getParagraphs() {
-        return paragraphs;
+    public List<Block> getBlocks() {
+        return blocks;
     }
 
     public static TextSlice parse(Delta document) {
         TextSlice textSlice = new TextSlice();
 
-        AtomicReference<Paragraph> current = new AtomicReference<>();
+        AtomicReference<Block> current = new AtomicReference<>();
         document.eachLine((line, lineAttributes) -> {
             if (isEmptyLine(line)) {
                 current.set(null);
             } else {
-                Paragraph paragraph = current.get();
-                int quoteLevel = getQuoteLevel(lineAttributes);
-                if (paragraph == null
-                        || !paragraph.continuesWith(lineAttributes)
-                        || paragraph.getQuoteLevel() != quoteLevel) {
-                    paragraph = createParagraph(lineAttributes, quoteLevel);
-                    current.set(paragraph);
-                    textSlice.getParagraphs().add(paragraph);
+                Map<String, Object> attributes = isBlockEmbed(line) ? line.getOps().get(0).argAsMap() : lineAttributes;
+                Block block = current.get();
+                int quoteLevel = getQuoteLevel(attributes);
+                if (block == null
+                        || !block.continuesWith(attributes)
+                        || block.getQuoteLevel() != quoteLevel) {
+                    block = createBlock(attributes, quoteLevel);
+                    current.set(block);
+                    textSlice.getBlocks().add(block);
                 }
-                paragraph.getLines().add(new Line(line, lineAttributes));
+                block.addLine(new Line(line, attributes));
             }
             return true;
-        });
+        }, new LineSeparator("\n", "horizontal-rule"));
 
         return textSlice;
     }
@@ -48,7 +50,12 @@ public class TextSlice {
                 || ops.size() == 1 && ops.get(0).isTextInsert() && ops.get(0).argAsString().matches("\\s*\n");
     }
 
-    private static int getQuoteLevel(AttributeMap lineAttributes) {
+    private static boolean isBlockEmbed(Delta line) {
+        OpList ops = line.getOps();
+        return ops.size() == 1 && !ops.get(0).isTextInsert();
+    }
+
+    private static int getQuoteLevel(Map<String, Object> lineAttributes) {
         if (lineAttributes == null) {
             return 0;
         }
@@ -61,7 +68,7 @@ public class TextSlice {
         return 0;
     }
 
-    private static Paragraph createParagraph(AttributeMap lineAttributes, int quoteLevel) {
+    private static Block createBlock(Map<String, Object> lineAttributes, int quoteLevel) {
         if (lineAttributes == null) {
             return new Paragraph(quoteLevel);
         }
@@ -71,17 +78,20 @@ public class TextSlice {
         if (lineAttributes.containsKey("list")) {
             return new MarkedList(quoteLevel);
         }
+        if (lineAttributes.containsKey("horizontal-rule")) {
+            return new HorizontalRule(quoteLevel);
+        }
         return new Paragraph(quoteLevel);
     }
 
     public String toHtml() {
         StringBuilder buf = new StringBuilder();
         AtomicInteger quoteLevel = new AtomicInteger(0);
-        paragraphs.forEach(paragraph -> {
-            buf.append("</blockquote>".repeat(Math.max(0, quoteLevel.get() - paragraph.getQuoteLevel())));
-            buf.append("<blockquote>".repeat(Math.max(0, paragraph.getQuoteLevel() - quoteLevel.get())));
-            buf.append(paragraph.toHtml());
-            quoteLevel.set(paragraph.getQuoteLevel());
+        blocks.forEach(block -> {
+            buf.append("</blockquote>".repeat(Math.max(0, quoteLevel.get() - block.getQuoteLevel())));
+            buf.append("<blockquote>".repeat(Math.max(0, block.getQuoteLevel() - quoteLevel.get())));
+            buf.append(block.toHtml());
+            quoteLevel.set(block.getQuoteLevel());
         });
         buf.append("</blockquote>".repeat(quoteLevel.get()));
         return buf.toString();

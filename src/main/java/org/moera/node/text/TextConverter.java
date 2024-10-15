@@ -13,11 +13,15 @@ import org.moera.node.text.delta.converter.DeltaConverter;
 import org.moera.node.text.markdown.MarkdownConverter;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Component
 public class TextConverter {
+
+    private static final Logger log = LoggerFactory.getLogger(TextConverter.class);
 
     @Inject
     private MarkdownConverter markdownConverter;
@@ -41,6 +45,7 @@ public class TextConverter {
         try {
             converted.setText(toHtml(format, source.getText()));
         } catch (Exception e) {
+            log.warn("Text conversion error", e);
             throw new BodyMappingException();
         }
         return converted;

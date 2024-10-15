@@ -2,8 +2,7 @@ package org.moera.node.text.delta.converter;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-
-import org.moera.node.text.delta.model.AttributeMap;
+import java.util.Map;
 
 public class MarkedList extends Paragraph {
 
@@ -12,7 +11,7 @@ public class MarkedList extends Paragraph {
     }
 
     @Override
-    public boolean continuesWith(AttributeMap lineAttributes) {
+    public boolean continuesWith(Map<String, Object> lineAttributes) {
         return lineAttributes != null && lineAttributes.containsKey("list");
     }
 

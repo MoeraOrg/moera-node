@@ -1,8 +1,7 @@
 package org.moera.node.text.delta.converter;
 
+import java.util.Map;
 import java.util.Objects;
-
-import org.moera.node.text.delta.model.AttributeMap;
 
 public class Header extends Paragraph {
 
@@ -14,7 +13,7 @@ public class Header extends Paragraph {
     }
 
     @Override
-    public boolean continuesWith(AttributeMap lineAttributes) {
+    public boolean continuesWith(Map<String, Object> lineAttributes) {
         return lineAttributes != null && Objects.equals(lineAttributes.get("header"), level);
     }
 
