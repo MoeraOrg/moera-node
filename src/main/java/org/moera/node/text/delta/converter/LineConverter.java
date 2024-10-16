@@ -20,7 +20,15 @@ public class LineConverter {
     private record Format(String name, Object value) {
     }
 
-    private static final Set<String> KNOWN_FORMATS = Set.of("bold", "code", "italic", "mention", "strike", "underline");
+    private static final Set<String> KNOWN_FORMATS = Set.of(
+        "bold",
+        "code",
+        "italic",
+        "mention",
+        "spoiler",
+        "strike",
+        "underline"
+    );
 
     public static String toHtml(Delta line) {
         StringBuilder buf = new StringBuilder();
@@ -93,6 +101,13 @@ public class LineConverter {
             buf.append(op.argAsString());
         }
 
+        while (!openStack.isEmpty()) {
+            closeTag(openStack.pop().name, buf);
+        }
+        if (openLink != null) {
+            closeLink(buf);
+        }
+
         return buf.toString();
     }
 
@@ -103,11 +118,19 @@ public class LineConverter {
             case "italic" -> "i";
             case "mention" -> {
                 String name = (String) format.value;
-                if (format.value != null) {
+                if (name != null) {
                     yield String.format("a href=\"%s\" data-nodename=\"%s\"",
                             UniversalLocation.redirectTo(name, null), NodeName.expand(name));
                 } else {
                     yield "a";
+                }
+            }
+            case "spoiler" -> {
+                String title = (String) format.value;
+                if (title != null) {
+                    yield String.format("mr-spoiler title=\"%s\"", title);
+                } else {
+                    yield "mr-spoiler";
                 }
             }
             case "strike" -> "s";
