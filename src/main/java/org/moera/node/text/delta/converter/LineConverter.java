@@ -1,11 +1,12 @@
 package org.moera.node.text.delta.converter;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 
 import org.moera.commons.util.UniversalLocation;
@@ -20,24 +21,28 @@ public class LineConverter {
     private record Format(String name, Object value) {
     }
 
-    private static final Set<String> KNOWN_FORMATS = Set.of(
-        "bold",
-        "code",
-        "italic",
-        "mention",
-        "spoiler",
-        "strike",
-        "underline"
+    private static final Map<String, Integer> KNOWN_FORMATS = Map.of(
+        "bold", 1,
+        "code", 2,
+        "italic", 1,
+        "link", 3,
+        "mention", 0,
+        "spoiler", 4,
+        "strike", 1,
+        "underline", 1
     );
 
     public static String toHtml(Delta line) {
         StringBuilder buf = new StringBuilder();
 
-        String openLink = null;
         Set<Format> openFormats = new HashSet<>();
         Deque<Format> openStack = new ArrayDeque<>();
         Set<String> toClose = new HashSet<>();
-        List<Format> toOpen = new ArrayList<>();
+        Queue<Format> toOpen = new PriorityQueue<>((f1, f2) -> {
+            int p1 = KNOWN_FORMATS.get(f1.name);
+            int p2 = KNOWN_FORMATS.get(f2.name);
+            return p1 != p2 ? p2 - p1 : f2.name.compareTo(f1.name);
+        });
 
         for (Op op : line.getOps()) {
             if (!op.isInsert()) {
@@ -59,15 +64,15 @@ public class LineConverter {
             toOpen.clear();
             for (String formatName : attrs.keySet()) {
                 Format format = new Format(formatName, attrs.get(formatName));
-                if (KNOWN_FORMATS.contains(format.name) && !openFormats.contains(format)) {
+                if (KNOWN_FORMATS.containsKey(format.name) && !openFormats.contains(format)) {
                     toOpen.add(format);
                 }
             }
 
-            String newLink = (String) attrs.get("link");
-
             while (!openStack.isEmpty()) {
-                if (toClose.isEmpty() && Objects.equals(openLink, newLink)) {
+                int toOpenPriority = !toOpen.isEmpty() ? KNOWN_FORMATS.get(toOpen.peek().name) : 0;
+                assert openStack.peek() != null;
+                if (toClose.isEmpty() && KNOWN_FORMATS.get(openStack.peek().name) >= toOpenPriority) {
                     break;
                 }
 
@@ -81,18 +86,8 @@ public class LineConverter {
                 }
             }
 
-            if (!Objects.equals(openLink, newLink)) {
-                if (openLink != null) {
-                    closeLink(buf);
-                }
-                if (newLink != null) {
-                    openLink(newLink, buf);
-                    openLink = newLink;
-                }
-            }
-
-            for (int i = toOpen.size() - 1; i >= 0; i--) {
-                Format format = toOpen.get(i);
+            while (!toOpen.isEmpty()) {
+                Format format = toOpen.poll();
                 openTag(format, buf);
                 openStack.push(format);
                 openFormats.add(format);
@@ -104,9 +99,6 @@ public class LineConverter {
         while (!openStack.isEmpty()) {
             closeTag(openStack.pop().name, buf);
         }
-        if (openLink != null) {
-            closeLink(buf);
-        }
 
         return buf.toString();
     }
@@ -116,11 +108,19 @@ public class LineConverter {
             case "bold" -> "b";
             case "code" -> "code";
             case "italic" -> "i";
+            case "link" -> {
+                String href = (String) format.value;
+                if (href != null) {
+                    yield String.format("a href=\"%s\"", Util.he(href));
+                } else {
+                    yield "a";
+                }
+            }
             case "mention" -> {
                 String name = (String) format.value;
                 if (name != null) {
                     yield String.format("a href=\"%s\" data-nodename=\"%s\"",
-                            UniversalLocation.redirectTo(name, null), NodeName.expand(name));
+                            UniversalLocation.redirectTo(name, null), Util.he(NodeName.expand(name)));
                 } else {
                     yield "a";
                 }
@@ -128,7 +128,7 @@ public class LineConverter {
             case "spoiler" -> {
                 String title = (String) format.value;
                 if (title != null) {
-                    yield String.format("mr-spoiler title=\"%s\"", title);
+                    yield String.format("mr-spoiler title=\"%s\"", Util.he(title));
                 } else {
                     yield "mr-spoiler";
                 }
@@ -149,16 +149,6 @@ public class LineConverter {
         buf.append("</");
         buf.append(formatToTag(new Format(formatName, null)));
         buf.append(">");
-    }
-
-    private static void openLink(String href, StringBuilder buf) {
-        buf.append("<a href=\"");
-        buf.append(Util.he(href));
-        buf.append("\">");
-    }
-
-    private static void closeLink(StringBuilder buf) {
-        buf.append("</a>");
     }
 
 }
