@@ -11,11 +11,15 @@ import org.moera.node.model.body.Body;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 @Component
 public class TextConverter {
+
+    private static final Logger log = LoggerFactory.getLogger(TextConverter.class);
 
     @Inject
     private MarkdownConverter markdownConverter;
@@ -35,6 +39,7 @@ public class TextConverter {
         try {
             converted.setText(toHtml(format, source.getText()));
         } catch (Exception e) {
+            log.warn("Text conversion error", e);
             throw new BodyMappingException();
         }
         return converted;
@@ -44,7 +49,7 @@ public class TextConverter {
                            boolean isSigned, List<MediaFileOwner> media, boolean collapseQuotations,
                            EntryRevision revision) {
         Body body = new Body();
-        if (!isSigned && (sourceBody == null || ObjectUtils.isEmpty(sourceBody))) {
+        if (!isSigned && ObjectUtils.isEmpty(sourceBody)) {
             if (!ObjectUtils.isEmpty(bodySrc)) {
                 if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
                     revision.setBodySrc(bodySrc);
