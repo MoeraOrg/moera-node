@@ -91,7 +91,7 @@ public class HeadingExtractor {
                 if (node instanceof TextNode textNode) {
                     text = clear(textNode.text().trim());
                 } else if (node instanceof Element element) {
-                    if (element.normalName().equals("mr-spoiler")) {
+                    if (element.normalName().equals("mr-spoiler") || element.normalName().equals("mr-spoiler-block")) {
                         ignoreContent++;
                         text = element.hasAttr("title") ? element.attr("title") : "spoiler!";
                         text = "[" + text + "]";
@@ -137,6 +137,7 @@ public class HeadingExtractor {
             if (node instanceof Element) {
                 Element element = (Element) node;
                 if (element.normalName().equals("mr-spoiler")
+                        || element.normalName().equals("mr-spoiler-block")
                         || element.normalName().equals("blockquote") && collapseQuotations
                         || element.normalName().equals("iframe")
                         || element.normalName().equals("object")

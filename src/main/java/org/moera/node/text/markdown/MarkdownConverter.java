@@ -71,7 +71,7 @@ public class MarkdownConverter {
         List<String> list = Parser.HTML_BLOCK_TAGS.get(null).stream()
                 .filter(tag -> !BLOCK_TAGS_MARKDOWN_ALLOWED.contains(tag.toLowerCase()))
                 .collect(Collectors.toList());
-        list.add("mr-spoiler");
+        list.add("mr-spoiler-block");
         return list;
     }
 
