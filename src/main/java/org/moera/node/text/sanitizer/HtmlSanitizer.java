@@ -17,13 +17,13 @@ public class HtmlSanitizer {
                     "bdi", "bdo", "br", "cite", "code", "data", "dfn", "em", "i", "kbd", "mark", "q", "rb", "rp", "rt",
                     "rtc", "ruby", "s", "samp", "small", "span", "strong", "sub", "sup", "time", "u", "var", "wbr",
                     "caption", "col", "colgroup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "img", "del",
-                    "ins", "details", "summary", "mr-spoiler", "iframe", "video", "audio")
+                    "ins", "details", "summary", "mr-spoiler", "mr-spoiler-block", "iframe", "video", "audio")
             .allowUrlProtocols("http", "https", "ftp", "mailto")
             .allowAttributes("style").onElements("p")
             .allowAttributes("start", "type").onElements("ol")
             .allowAttributes("href", "data-nodename", "data-id").onElements("a")
             .allowAttributes("src", "srcset", "sizes", "width", "height", "alt", "style").onElements("img")
-            .allowAttributes("title").onElements("mr-spoiler")
+            .allowAttributes("title").onElements("mr-spoiler", "mr-spoiler-block")
             .allowAttributes("src").matching(HtmlSanitizer::validateIframeSrc).onElements("iframe")
             .allowAttributes("width", "height", "frameborder", "allow", "allowfullscreen", "sandbox", "scrolling",
                     "allowtransparency", "style").onElements("iframe")

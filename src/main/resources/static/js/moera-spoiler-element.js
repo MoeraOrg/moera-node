@@ -56,3 +56,4 @@ class MoeraSpoilerElement extends HTMLElement {
 }
 
 customElements.define("mr-spoiler", MoeraSpoilerElement);
+customElements.define("mr-spoiler-block", MoeraSpoilerElement);
