@@ -78,9 +78,9 @@ public class LineConverter {
 
                 Format format = openStack.pop();
                 openFormats.remove(format);
+                closeTag(format.name, buf);
                 if (toClose.contains(format.name)) {
                     toClose.remove(format.name);
-                    closeTag(format.name, buf);
                 } else {
                     toOpen.add(format);
                 }
