@@ -27,7 +27,7 @@ public class TextConverter {
     public String toHtml(SourceFormat format, String source) {
         return switch (format) {
             case PLAIN_TEXT -> PlainTextConverter.toHtml(source);
-            case HTML -> source;
+            case HTML, VISUAL_HTML -> source;
             case MARKDOWN -> markdownConverter.toHtml(source);
             default -> throw new IllegalArgumentException("Unknown source format: " + format.name());
         };
