@@ -9,11 +9,11 @@ public enum SourceFormat {
     HTML,
     MARKDOWN,
     APPLICATION,
-    VISUAL_HTML;
+    HTML__VISUAL;
 
     @JsonValue
     public String getValue() {
-        return name().toLowerCase().replace('_', '-');
+        return name().toLowerCase().replace("__", "/").replace('_', '-');
     }
 
     public static String toValue(SourceFormat type) {
@@ -30,7 +30,7 @@ public enum SourceFormat {
 
     @JsonCreator
     public static SourceFormat parse(String value) {
-        return valueOf(value.toUpperCase().replace('-', '_'));
+        return valueOf(value.toUpperCase().replace('-', '_').replace("/", "__"));
     }
 
 }
