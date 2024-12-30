@@ -21,7 +21,11 @@ public interface EntryAttachmentRepository extends JpaRepository<EntryAttachment
 
     @Query("select er.entry from EntryAttachment ea full join ea.entryRevision er"
             + " where er.deletedAt is null and ea.mediaFileOwner.nodeId = ?1 and ea.mediaFileOwner.id = ?2")
-    Set<Entry> findByMedia(UUID nodeId, UUID mediaId);
+    Set<Entry> findEntriesByMedia(UUID nodeId, UUID mediaId);
+
+    @Query("select ea.draft from EntryAttachment ea"
+            + " where ea.draft is not null and ea.mediaFileOwner.nodeId = ?1 and ea.mediaFileOwner.id = ?2")
+    Set<Draft> findDraftsByMedia(UUID nodeId, UUID mediaId);
 
     @Query("select p from EntryAttachment ea"
             + " left join ea.mediaFileOwner mfo full join mfo.postings p left join fetch p.currentRevision"

@@ -57,6 +57,7 @@ import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
+import org.moera.node.data.Draft;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRepository;
@@ -452,10 +453,15 @@ public class MediaOperations {
         }
 
         Collection<Entry> entries =
-                entryAttachmentRepository.findByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
+                entryAttachmentRepository.findEntriesByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
         Principal view = entries.stream()
                 .map(this::entryViewPrincipal)
                 .reduce(Principal.NONE, Principal::union);
+        Collection<Draft> drafts =
+                entryAttachmentRepository.findDraftsByMedia(mediaFileOwner.getNodeId(), mediaFileOwner.getId());
+        if (!drafts.isEmpty()) {
+            view = view.union(Principal.ADMIN);
+        }
         mediaFileOwner.setViewPrincipal(view);
         mediaFileOwner.setPermissionsUpdatedAt(Util.now());
         for (Posting posting : mediaFileOwner.getPostings()) {
