@@ -99,7 +99,7 @@
 
 - name: profile.bio.src.format
   type: string
-  defaultValue: markdown
+  defaultValue: "html/visual"
   internal: true
 
 - name: profile.bio.html
