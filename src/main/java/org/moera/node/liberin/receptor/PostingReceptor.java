@@ -188,8 +188,11 @@ public class PostingReceptor extends LiberinReceptorBase {
     public void commentTotalsUpdated(PostingCommentTotalsUpdatedLiberin liberin) {
         Posting posting = liberin.getPosting();
 
+        Principal viewComments = posting.isOriginal()
+                ? posting.getViewCommentsE()
+                : posting.getReceiverViewCommentsE();
         PrincipalFilter viewFilter = posting.getViewE().a()
-                .and(posting.getViewCommentsE());
+                .and(viewComments);
         send(liberin, new PostingCommentsChangedEvent(posting, viewFilter));
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), viewFilter),
                 new PostingCommentsUpdatedNotification(posting.getId(), liberin.getTotal()));
