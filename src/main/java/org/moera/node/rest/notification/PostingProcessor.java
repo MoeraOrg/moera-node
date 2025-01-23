@@ -137,9 +137,9 @@ public class PostingProcessor {
             var reactionTotals = reactionTotalRepository.findAllByEntryId(posting.getId());
             if (!reactionTotalOperations.isSame(reactionTotals, notification.getTotals())) {
                 reactionTotalOperations.replaceAll(posting, notification.getTotals());
-
-                universalContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals()));
             }
+            // Totals may be the same, but events were not sent yet, because reactions weren't signed
+            universalContext.send(new PostingReactionTotalsUpdatedLiberin(posting, notification.getTotals()));
         });
     }
 
@@ -151,9 +151,9 @@ public class PostingProcessor {
                 log.debug("Total comments for posting {} = {}: updated from notification",
                         LogUtil.format(posting.getId()), LogUtil.format(notification.getTotal()));
                 posting.setTotalChildren(notification.getTotal());
-
-                universalContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal()));
             }
+            // The number may be the same, but events were not sent yet, because comments weren't signed
+            universalContext.send(new PostingCommentTotalsUpdatedLiberin(posting, notification.getTotal()));
         });
     }
 
