@@ -1,7 +1,5 @@
 package org.moera.node.api.naming;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
@@ -14,15 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
-import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
-import com.googlecode.jsonrpc4j.ProxyUtil;
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.naming.rpc.NamingService;
-import org.moera.naming.rpc.OperationStatus;
-import org.moera.naming.rpc.OperationStatusInfo;
-import org.moera.naming.rpc.PutCallFingerprint;
+import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.naming.Fingerprints;
+import org.moera.lib.naming.MoeraNaming;
+import org.moera.lib.naming.types.OperationStatus;
+import org.moera.lib.naming.types.OperationStatusInfo;
+import org.moera.lib.naming.types.RegisteredNameInfo;
 import org.moera.naming.rpc.RegisteredName;
-import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.UniversalContext;
@@ -46,7 +42,7 @@ public class NamingClient {
 
     private static final Logger log = LoggerFactory.getLogger(NamingClient.class);
 
-    private final Map<String, NamingService> namingServices = new ConcurrentHashMap<>();
+    private final Map<String, MoeraNaming> namingServices = new ConcurrentHashMap<>();
 
     @Inject
     private UniversalContext universalContext;
@@ -71,20 +67,12 @@ public class NamingClient {
         domains.getAllDomainNames().stream().map(domains::getDomainOptions).forEach(this::monitorOperation);
     }
 
-    private NamingService getNamingService(Options options) {
+    private MoeraNaming getNamingService(Options options) {
         return getNamingService(options.getString("naming.location"));
     }
 
-    private NamingService getNamingService(String namingLocation) {
-        return namingServices.computeIfAbsent(namingLocation, location -> {
-            try {
-                JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(location));
-                return ProxyUtil.createClientProxy(getClass().getClassLoader(), NamingService.class, client);
-            } catch (MalformedURLException e) {
-                log.error(e.getMessage());
-                return null;
-            }
-        });
+    private MoeraNaming getNamingService(String location) {
+        return namingServices.computeIfAbsent(location, MoeraNaming::new);
     }
 
     private void monitorOperation(Options options) {
@@ -94,7 +82,7 @@ public class NamingClient {
             log.debug("No pending naming operation");
             return;
         }
-        NamingService namingService = getNamingService(options);
+        MoeraNaming namingService = getNamingService(options);
         if (namingService == null) {
             log.error("No naming service available");
             return;
@@ -217,7 +205,7 @@ public class NamingClient {
     }
 
     public RegisteredNameInfo getCurrent(String name, int generation, String namingLocation) {
-        NamingService namingService = getNamingService(namingLocation);
+        MoeraNaming namingService = getNamingService(namingLocation);
         if (namingService == null) {
             log.error("No naming service available");
             return null;
@@ -226,7 +214,7 @@ public class NamingClient {
     }
 
     public RegisteredNameInfo getPast(String name, int generation, long at, String namingLocation) {
-        NamingService namingService = getNamingService(namingLocation);
+        MoeraNaming namingService = getNamingService(namingLocation);
         if (namingService == null) {
             log.error("No naming service available");
             return null;
@@ -234,10 +222,15 @@ public class NamingClient {
         return namingService.getPast(name, generation, at);
     }
 
-    public void register(String name, String nodeUri, ECPublicKey updatingKey,
-                         ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
-
-        NamingService namingService = getNamingService(options);
+    public void register(
+        String name,
+        String nodeUri,
+        ECPublicKey updatingKey,
+        ECPrivateKey privateSigningKey,
+        ECPublicKey signingKey,
+        Options options
+    ) {
+        MoeraNaming namingService = getNamingService(options);
         if (namingService == null) {
             log.error("No naming service available");
             return;
@@ -273,10 +266,15 @@ public class NamingClient {
         monitorOperation(options);
     }
 
-    public void update(String name, String nodeUri, ECPrivateKey privateUpdatingKey,
-                       ECPrivateKey privateSigningKey, ECPublicKey signingKey, Options options) {
-
-        NamingService namingService = getNamingService(options);
+    public void update(
+        String name,
+        String nodeUri,
+        ECPrivateKey privateUpdatingKey,
+        ECPrivateKey privateSigningKey,
+        ECPublicKey signingKey,
+        Options options
+    ) {
+        MoeraNaming namingService = getNamingService(options);
         if (namingService == null) {
             log.error("No naming service available");
             return;
@@ -304,19 +302,20 @@ public class NamingClient {
                     .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
                     .getEpochSecond()
                 : info.getValidFrom();
-        Object putCall = new PutCallFingerprint(
-                info.getName(),
-                info.getGeneration(),
-                info.getUpdatingKey(),
-                nodeUri,
-                signingKeyR,
-                validFrom,
-                info.getDigest());
+        byte[] putCall = Fingerprints.putCall(
+            info.getName(),
+            info.getGeneration(),
+            info.getUpdatingKey(),
+            nodeUri,
+            signingKeyR,
+            validFrom,
+            info.getDigest()
+        );
 
         UUID operationId;
 
         if (log.isDebugEnabled()) {
-            log.debug("Data to be signed: {}", Util.dump(CryptoUtil.fingerprint(putCall)));
+            log.debug("Data to be signed: {}", Util.dump(putCall));
         }
         byte[] signature = CryptoUtil.sign(putCall, privateUpdatingKey);
 

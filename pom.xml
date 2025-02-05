@@ -229,6 +229,11 @@
             <artifactId>moera-commons</artifactId>
             <version>0.10.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.moera</groupId>
+            <artifactId>moeralib</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

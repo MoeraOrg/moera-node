@@ -1,7 +1,7 @@
 package org.moera.node.api.naming;
 
+import org.moera.lib.naming.types.RegisteredNameInfo;
 import org.moera.naming.rpc.RegisteredName;
-import org.moera.naming.rpc.RegisteredNameInfo;
 
 public class RegisteredNameDetails implements Cloneable {
 

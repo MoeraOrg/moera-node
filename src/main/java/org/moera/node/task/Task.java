@@ -6,9 +6,9 @@ import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.lib.naming.types.RegisteredNameInfo;
 import org.moera.naming.rpc.NodeName;
 import org.moera.naming.rpc.RegisteredName;
-import org.moera.naming.rpc.RegisteredNameInfo;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiUnknownNameException;
