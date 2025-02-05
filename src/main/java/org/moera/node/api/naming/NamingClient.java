@@ -15,10 +15,10 @@ import javax.inject.Inject;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.naming.Fingerprints;
 import org.moera.lib.naming.MoeraNaming;
+import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.OperationStatus;
 import org.moera.lib.naming.types.OperationStatusInfo;
 import org.moera.lib.naming.types.RegisteredNameInfo;
-import org.moera.naming.rpc.RegisteredName;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.UniversalContext;
@@ -244,7 +244,7 @@ public class NamingClient {
         log.info("Registering name '{}': node uri = {}, updating key = {}, signing key = {}, valid from = {}",
                 name, nodeUri, Util.dump(updatingKeyR), Util.dump(signingKeyR), Util.formatTimestamp(validFrom));
         UUID operationId;
-        RegisteredName registeredName = RegisteredName.parse(name);
+        NodeName registeredName = NodeName.parse(name);
         try {
             RegisteredNameInfo info = namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());
             byte[] previousDigest = info != null ? info.getDigest() : null;
@@ -280,7 +280,7 @@ public class NamingClient {
             return;
         }
 
-        RegisteredName registeredName = RegisteredName.parse(name);
+        NodeName registeredName = NodeName.parse(name);
         RegisteredNameInfo info;
         try {
             info = namingService.getCurrent(registeredName.getName(), registeredName.getGeneration());

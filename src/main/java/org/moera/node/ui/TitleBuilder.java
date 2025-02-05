@@ -2,7 +2,7 @@ package org.moera.node.ui;
 
 import javax.inject.Inject;
 
-import org.moera.naming.rpc.NodeName;
+import org.moera.lib.naming.NodeName;
 import org.moera.node.global.RequestContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;

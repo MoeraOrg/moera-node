@@ -15,9 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.util.LogUtil;
+import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
-import org.moera.naming.rpc.NodeName;
-import org.moera.naming.rpc.RegisteredName;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.data.FrozenNotification;
 import org.moera.node.data.FrozenNotificationRepository;
@@ -154,7 +153,7 @@ public class NotificationController {
 
     private byte[] fetchSigningKey(String ownerName) {
         String namingLocation = domains.getDomainOptions(requestContext.nodeId()).getString("naming.location");
-        RegisteredName registeredName = (RegisteredName) NodeName.parse(ownerName);
+        NodeName registeredName = NodeName.parse(ownerName);
         RegisteredNameInfo nameInfo =
                 namingClient.getCurrent(registeredName.getName(), registeredName.getGeneration(), namingLocation);
         return nameInfo != null ? nameInfo.getSigningKey() : null;

@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.naming.rpc.NodeName;
+import org.moera.lib.naming.NodeName;
 import org.moera.node.fingerprint.CarteFingerprint;
 
 public class Carte {

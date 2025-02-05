@@ -2,7 +2,7 @@ package org.moera.node.ui;
 
 import javax.inject.Inject;
 
-import org.moera.naming.rpc.NodeName;
+import org.moera.lib.naming.NodeName;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.model.AvatarImage;

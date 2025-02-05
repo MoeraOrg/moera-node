@@ -1,7 +1,7 @@
 package org.moera.node.text.markdown.mention.internal;
 
 import org.jetbrains.annotations.NotNull;
-import org.moera.naming.rpc.Rules;
+import org.moera.lib.Rules;
 import org.moera.node.text.markdown.mention.MentionNode;
 import com.vladsch.flexmark.parser.InlineParser;
 import com.vladsch.flexmark.parser.InlineParserExtension;

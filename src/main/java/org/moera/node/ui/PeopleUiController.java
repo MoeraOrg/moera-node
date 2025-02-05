@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.naming.rpc.NodeName;
+import org.moera.lib.naming.NodeName;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;

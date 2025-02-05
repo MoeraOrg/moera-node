@@ -11,7 +11,7 @@ import com.vladsch.flexmark.html.renderer.NodeRenderingHandler;
 import com.vladsch.flexmark.util.data.DataHolder;
 import org.jetbrains.annotations.NotNull;
 import org.moera.commons.util.UniversalLocation;
-import org.moera.naming.rpc.NodeName;
+import org.moera.lib.naming.NodeName;
 import org.moera.node.text.markdown.mention.MentionNode;
 
 public class MentionsNodeRenderer implements NodeRenderer {

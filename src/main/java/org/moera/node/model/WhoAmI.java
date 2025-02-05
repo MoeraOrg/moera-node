@@ -1,7 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.naming.rpc.OperationStatus;
+import org.moera.lib.naming.types.OperationStatus;
 import org.moera.node.global.RequestContext;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

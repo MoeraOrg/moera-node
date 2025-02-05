@@ -9,8 +9,7 @@ import javax.inject.Inject;
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
 import org.moera.commons.util.UniversalLocation;
-import org.moera.naming.rpc.NodeName;
-import org.moera.naming.rpc.RegisteredName;
+import org.moera.lib.naming.NodeName;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
@@ -37,7 +36,7 @@ public class MoeraHelperSource {
         boolean linked = HelperUtil.boolArg(options.hash("linked", "true"));
 
         StringBuilder buf = new StringBuilder();
-        RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
+        NodeName registeredName = NodeName.parse(nodeName);
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
             String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
 
@@ -90,7 +89,7 @@ public class MoeraHelperSource {
         String nodeName = options.hash("nodeName");
 
         StringBuilder buf = new StringBuilder();
-        RegisteredName registeredName = (RegisteredName) NodeName.parse(nodeName);
+        NodeName registeredName = NodeName.parse(nodeName);
         if (!ObjectUtils.isEmpty(registeredName.getName())) {
             String nodeUrl = namingCache.getFast(nodeName).getNodeUri();
             buf.append("<a");

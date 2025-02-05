@@ -6,9 +6,8 @@ import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
+import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
-import org.moera.naming.rpc.NodeName;
-import org.moera.naming.rpc.RegisteredName;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiUnknownNameException;
@@ -83,7 +82,7 @@ public abstract class Task implements Runnable {
 
     protected byte[] fetchSigningKey(String remoteNodeName, long at) {
         String namingLocation = getOptions().getString("naming.location");
-        RegisteredName registeredName = (RegisteredName) NodeName.parse(remoteNodeName);
+        NodeName registeredName = NodeName.parse(remoteNodeName);
         RegisteredNameInfo nameInfo =
                 namingClient.getPast(registeredName.getName(), registeredName.getGeneration(), at, namingLocation);
         return nameInfo != null ? nameInfo.getSigningKey() : null;

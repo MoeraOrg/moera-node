@@ -6,7 +6,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.moera.commons.util.LogUtil;
-import org.moera.naming.rpc.NodeName;
+import org.moera.lib.naming.NodeName;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;

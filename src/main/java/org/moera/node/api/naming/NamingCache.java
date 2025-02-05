@@ -11,8 +11,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.inject.Inject;
 
+import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
-import org.moera.naming.rpc.RegisteredName;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.slf4j.Logger;
@@ -163,7 +163,7 @@ public class NamingCache {
     }
 
     private void queryName(Key key) {
-        RegisteredName registeredName = RegisteredName.parse(key.name);
+        NodeName registeredName = NodeName.parse(key.name);
         RegisteredNameInfo info = null;
         Throwable error = null;
         try {

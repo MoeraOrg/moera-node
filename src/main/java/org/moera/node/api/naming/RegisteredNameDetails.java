@@ -1,7 +1,7 @@
 package org.moera.node.api.naming;
 
+import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
-import org.moera.naming.rpc.RegisteredName;
 
 public class RegisteredNameDetails implements Cloneable {
 
@@ -19,7 +19,7 @@ public class RegisteredNameDetails implements Cloneable {
     }
 
     public RegisteredNameDetails(RegisteredNameInfo info) {
-        nodeName = RegisteredName.toString(info.getName(), info.getGeneration());
+        nodeName = NodeName.toString(info.getName(), info.getGeneration());
         nodeUri = info.getNodeUri();
         signingKey = info.getSigningKey();
     }
