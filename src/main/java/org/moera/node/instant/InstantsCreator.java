@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;

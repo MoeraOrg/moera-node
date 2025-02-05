@@ -4,7 +4,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;

@@ -4,7 +4,7 @@ import java.util.List;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.springframework.data.util.Pair;
 
 public abstract class SheriffOrderForPostingNotification extends Notification {

@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.OptionDefault;
 import org.moera.node.data.OptionDefaultRepository;

@@ -5,7 +5,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.lib.naming.NodeName;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.Admin;

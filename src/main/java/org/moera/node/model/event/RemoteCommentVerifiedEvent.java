@@ -2,7 +2,7 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.VerificationStatus;
 import org.springframework.data.util.Pair;

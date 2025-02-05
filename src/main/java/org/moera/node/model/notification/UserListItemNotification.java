@@ -3,7 +3,7 @@ package org.moera.node.model.notification;
 import java.util.List;
 import javax.validation.constraints.Size;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.springframework.data.util.Pair;
 
 public class UserListItemNotification extends SubscriberNotification {

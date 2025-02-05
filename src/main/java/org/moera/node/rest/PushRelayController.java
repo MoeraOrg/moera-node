@@ -6,7 +6,7 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.api.pushrelay.FcmRelay;
 import org.moera.node.api.pushrelay.PushRelayRegisterFingerprint;
 import org.moera.node.auth.Admin;

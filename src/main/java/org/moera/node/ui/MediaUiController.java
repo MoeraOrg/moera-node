@@ -5,7 +5,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;

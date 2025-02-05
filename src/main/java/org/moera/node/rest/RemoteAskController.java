@@ -3,7 +3,7 @@ package org.moera.node.rest;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;

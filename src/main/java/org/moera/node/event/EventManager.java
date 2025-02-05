@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthSecrets;
 import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.auth.CarteAuthInfo;

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.commons.util.UniversalLocation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;

@@ -10,7 +10,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import com.github.slugify.Slugify;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.config.Config;

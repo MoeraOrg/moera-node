@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;

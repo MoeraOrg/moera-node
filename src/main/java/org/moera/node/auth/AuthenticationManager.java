@@ -16,7 +16,7 @@ import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Fingerprint;
 import org.moera.commons.crypto.FingerprintException;
 import org.moera.commons.crypto.RestoredObject;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;

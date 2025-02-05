@@ -15,7 +15,7 @@ import com.googlecode.jsonrpc4j.JsonRpcClientException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
 import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.push.PushContent;

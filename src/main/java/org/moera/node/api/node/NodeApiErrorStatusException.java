@@ -3,7 +3,7 @@ package org.moera.node.api.node;
 import java.io.IOException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.model.Result;
 
 public class NodeApiErrorStatusException extends NodeApiException {

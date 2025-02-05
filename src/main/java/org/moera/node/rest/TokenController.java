@@ -14,7 +14,7 @@ import javax.validation.Valid;
 
 import org.moera.commons.crypto.CryptoUtil;
 import org.moera.commons.crypto.Password;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.Token;

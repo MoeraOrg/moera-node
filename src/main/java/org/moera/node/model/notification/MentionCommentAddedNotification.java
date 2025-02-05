@@ -5,7 +5,7 @@ import java.util.UUID;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.data.SheriffMark;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.util.SheriffUtil;

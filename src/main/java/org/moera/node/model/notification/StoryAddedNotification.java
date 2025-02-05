@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.validation.constraints.Size;
 
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryType;
 import org.springframework.data.util.Pair;

@@ -5,7 +5,7 @@ import java.util.List;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.moera.commons.util.LogUtil;
+import org.moera.lib.util.LogUtil;
 import org.springframework.data.util.Pair;
 
 public abstract class SubscriberNotification extends Notification {
