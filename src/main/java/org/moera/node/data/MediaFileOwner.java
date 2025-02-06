@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.TypeDef;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalType;
 import org.moera.node.media.MimeUtils;

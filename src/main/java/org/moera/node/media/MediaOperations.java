@@ -51,7 +51,7 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import org.apache.commons.io.input.BoundedInputStream;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;

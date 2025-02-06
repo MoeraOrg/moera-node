@@ -14,12 +14,14 @@ import javax.inject.Inject;
 import com.googlecode.jsonrpc4j.JsonRpcClientException;
 import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
 import com.googlecode.jsonrpc4j.ProxyUtil;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.Fingerprints;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.push.PushContent;
 import org.moera.node.push.PushContentType;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -118,7 +120,7 @@ public class FcmRelay {
     private byte[] getSignature(UUID nodeId, long signedAt) {
         ECPrivateKey signingKey =
                 (ECPrivateKey) domains.getDomainOptions(nodeId).getPrivateKey("profile.signing-key");
-        PushRelayMessageFingerprint fingerprint = new PushRelayMessageFingerprint(signedAt);
+        byte[] fingerprint = Fingerprints.pushRelayMessage(Util.toTimestamp(signedAt));
         return CryptoUtil.sign(fingerprint, signingKey);
     }
 

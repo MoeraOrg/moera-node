@@ -1,29 +1,48 @@
 package org.moera.node.fingerprint;
 
 import java.net.InetAddress;
+import java.sql.Timestamp;
 
-public interface CarteProperties {
+import org.moera.lib.crypto.Fingerprint;
 
-    String getObjectType();
+public class CarteProperties {
 
-    String getOwnerName();
+    private final Fingerprint fingerprint;
 
-    InetAddress getAddress();
-
-    long getBeginning();
-
-    long getDeadline();
-
-    default String getNodeName() {
-        return null;
+    public CarteProperties(Fingerprint fingerprint) {
+        this.fingerprint = fingerprint;
     }
 
-    default long getClientScope() {
-        return 0;
+    public String getObjectType() {
+        return (String) fingerprint.get("object_type");
     }
 
-    default long getAdminScope() {
-        return 0;
+    public String getOwnerName() {
+        return (String) fingerprint.get("owner_name");
+    }
+
+    public InetAddress getAddress() {
+        return (InetAddress) fingerprint.get("address");
+    }
+
+    public Timestamp getBeginning() {
+        return (Timestamp) fingerprint.get("beginning");
+    }
+
+    public Timestamp getDeadline() {
+        return (Timestamp) fingerprint.get("deadline");
+    }
+
+    public String getNodeName() {
+        return (String) fingerprint.get("node_name");
+    }
+
+    public long getClientScope() {
+        return (Long) fingerprint.getOrDefault("client_scope", 0L);
+    }
+
+    public long getAdminScope() {
+        return (Long) fingerprint.getOrDefault("admin_scope", 0L);
     }
 
 }

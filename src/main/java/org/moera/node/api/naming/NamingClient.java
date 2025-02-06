@@ -308,7 +308,7 @@ public class NamingClient {
             info.getUpdatingKey(),
             nodeUri,
             signingKeyR,
-            validFrom,
+            Util.toTimestamp(validFrom),
             info.getDigest()
         );
 

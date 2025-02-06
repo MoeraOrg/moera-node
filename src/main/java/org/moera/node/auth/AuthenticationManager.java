@@ -11,18 +11,18 @@ import javax.persistence.EntityManager;
 
 import com.vladmihalcea.hibernate.type.basic.Inet;
 import org.hibernate.HibernateException;
-import org.moera.commons.crypto.CryptoException;
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
-import org.moera.commons.crypto.FingerprintException;
-import org.moera.commons.crypto.RestoredObject;
+import org.moera.lib.crypto.CryptoException;
+import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.crypto.Fingerprint;
+import org.moera.lib.crypto.FingerprintException;
+import org.moera.lib.crypto.RestoredFingerprint;
+import org.moera.lib.node.Fingerprints;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.fingerprint.CarteProperties;
 import org.moera.node.fingerprint.FingerprintObjectType;
-import org.moera.node.fingerprint.Fingerprints;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.util.Transaction;
@@ -136,61 +136,51 @@ public class AuthenticationManager {
         if (carte.length == 0) {
             return null;
         }
-        CarteProperties fp;
+        Fingerprint fingerprint;
         byte[] signature;
         try {
-            RestoredObject<Fingerprint> rc = CryptoUtil.restore(carte, this::carteFingerprintCreator);
-            fp = (CarteProperties) rc.getObject();
-            signature = new byte[rc.getAvailable()];
+            RestoredFingerprint rc = CryptoUtil.restore(carte, version -> Fingerprints.getSchema("CARTE", version));
+            fingerprint = rc.fingerprint();
+            signature = new byte[rc.available()];
             System.arraycopy(carte, carte.length - signature.length, signature, 0, signature.length);
         } catch (CryptoException | FingerprintException e) {
             log.info("Carte: unknown fingerprint");
             throw new InvalidCarteException("carte.unknown-fingerprint", e);
         }
-        if (!FingerprintObjectType.CARTE.name().equals(fp.getObjectType())) {
+        CarteProperties cp = new CarteProperties(fingerprint);
+        if (!FingerprintObjectType.CARTE.name().equals(cp.getObjectType())) {
             log.info("Carte: not a carte fingerprint");
             throw new InvalidCarteException("carte.invalid");
         }
-        if (fp.getAddress() != null && clientAddress != null && !fp.getAddress().equals(clientAddress)) {
-            log.info("Carte: IP {} differs from client IP {}", fp.getAddress(), clientAddress);
+        if (cp.getAddress() != null && clientAddress != null && !cp.getAddress().equals(clientAddress)) {
+            log.info("Carte: IP {} differs from client IP {}", cp.getAddress(), clientAddress);
             throw new InvalidCarteException("carte.invalid");
         }
-        if (Instant.now().isBefore(Instant.ofEpochSecond(fp.getBeginning()).minusSeconds(120))) {
-            log.info("Carte: begins at {} - 2 min", LogUtil.format(Util.toTimestamp(fp.getBeginning())));
+        if (Instant.now().isBefore(cp.getBeginning().toInstant().minusSeconds(120))) {
+            log.info("Carte: begins at {} - 2 min", LogUtil.format(cp.getBeginning()));
             throw new InvalidCarteException("carte.not-begun");
         }
-        if (Instant.now().isAfter(Instant.ofEpochSecond(fp.getDeadline()).plusSeconds(120))) {
-            log.info("Carte: deadline at {} + 2 min", LogUtil.format(Util.toTimestamp(fp.getDeadline())));
+        if (Instant.now().isAfter(cp.getDeadline().toInstant().plusSeconds(120))) {
+            log.info("Carte: deadline at {} + 2 min", LogUtil.format(cp.getDeadline()));
             throw new InvalidCarteException("carte.expired");
         }
-        if (fp.getNodeName() != null && !fp.getNodeName().equals(requestContext.getOptions().nodeName())) {
-            log.info("Carte: belongs to a wrong node ({})", LogUtil.format(fp.getNodeName()));
+        if (cp.getNodeName() != null && !cp.getNodeName().equals(requestContext.getOptions().nodeName())) {
+            log.info("Carte: belongs to a wrong node ({})", LogUtil.format(cp.getNodeName()));
             throw new InvalidCarteException("carte.wrong-node");
         }
-        byte[] signingKey = namingCache.get(fp.getOwnerName()).getSigningKey();
+        byte[] signingKey = namingCache.get(cp.getOwnerName()).getSigningKey();
         if (signingKey == null) {
-            log.info("Carte: signing key for node {} is unknown", LogUtil.format(fp.getOwnerName()));
+            log.info("Carte: signing key for node {} is unknown", LogUtil.format(cp.getOwnerName()));
             throw new InvalidCarteException("carte.unknown-signing-key");
         }
-        if (!CryptoUtil.verify(fp, signature, signingKey)) {
+        byte[] fingerprintBytes = CryptoUtil.fingerprint(
+            fingerprint, Fingerprints.getSchema("CARTE", fingerprint.getVersion())
+        );
+        if (!CryptoUtil.verify(fingerprintBytes, signature, signingKey)) {
             log.info("Carte: signature verification failed");
             throw new InvalidCarteException("carte.invalid-signature");
         }
-        return new CarteAuthInfo(fp);
-    }
-
-    private Fingerprint carteFingerprintCreator(short version) {
-        Class<? extends Fingerprint> fingerprintClass = Fingerprints.get(FingerprintObjectType.CARTE, version);
-        if (fingerprintClass == null) {
-            log.info("Carte: unknown fingerprint");
-            throw new InvalidCarteException("carte.unknown-fingerprint");
-        }
-        try {
-            return fingerprintClass.getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            log.info("Carte: unknown fingerprint");
-            throw new InvalidCarteException("carte.unknown-fingerprint", e);
-        }
+        return new CarteAuthInfo(cp);
     }
 
 }

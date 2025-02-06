@@ -7,7 +7,7 @@ import java.time.Instant;
 import org.moera.commons.crypto.Fingerprint;
 
 @FingerprintVersion(objectType = FingerprintObjectType.CARTE, version = 0)
-public class CarteFingerprint0 extends Fingerprint implements CarteProperties {
+public class CarteFingerprint0 extends Fingerprint {
 
     public String objectType = FingerprintObjectType.CARTE.name();
     public String ownerName;
@@ -34,35 +34,6 @@ public class CarteFingerprint0 extends Fingerprint implements CarteProperties {
         this.deadline = deadline.getEpochSecond();
         salt = new byte[8];
         new SecureRandom().nextBytes(salt);
-    }
-
-    @Override
-    public String getObjectType() {
-        return objectType;
-    }
-
-    @Override
-    public String getOwnerName() {
-        return ownerName;
-    }
-
-    @Override
-    public InetAddress getAddress() {
-        return address;
-    }
-
-    @Override
-    public long getBeginning() {
-        return beginning;
-    }
-
-    @Override
-    public long getDeadline() {
-        return deadline;
-    }
-
-    public byte[] getSalt() {
-        return salt;
     }
 
 }
