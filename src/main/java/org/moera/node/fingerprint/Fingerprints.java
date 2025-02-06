@@ -34,10 +34,6 @@ public class Fingerprints {
         return new CommentFingerprintFactory(get(FingerprintObjectType.COMMENT, version));
     }
 
-    public static AttachmentFingerprintFactory attachment(short version) {
-        return new AttachmentFingerprintFactory(get(FingerprintObjectType.ATTACHMENT, version));
-    }
-
     public static Class<? extends Fingerprint> get(FingerprintObjectType objectType, short version) {
         return FINGERPRINTS.get(new FingerprintId(objectType, version));
     }

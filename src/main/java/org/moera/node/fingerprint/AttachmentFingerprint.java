@@ -5,6 +5,7 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.MediaFileOwner;
 
 @FingerprintVersion(objectType = FingerprintObjectType.ATTACHMENT, version = 0)
+@Deprecated
 public class AttachmentFingerprint extends Fingerprint {
 
     public static final short VERSION = 0;

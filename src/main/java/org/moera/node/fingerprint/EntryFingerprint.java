@@ -12,6 +12,7 @@ import org.moera.node.data.MediaFileOwner;
 import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PrivateMediaFileInfo;
 
+@Deprecated
 public class EntryFingerprint extends Fingerprint {
 
     public EntryFingerprint(int version) {
