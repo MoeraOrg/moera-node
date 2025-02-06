@@ -30,10 +30,6 @@ public class Fingerprints {
         return new ReactionFingerprintFactory(get(FingerprintObjectType.REACTION, version));
     }
 
-    public static NotificationPacketFingerprintFactory notificationPacket(short version) {
-        return new NotificationPacketFingerprintFactory(get(FingerprintObjectType.NOTIFICATION_PACKET, version));
-    }
-
     public static CommentFingerprintFactory comment(short version) {
         return new CommentFingerprintFactory(get(FingerprintObjectType.COMMENT, version));
     }

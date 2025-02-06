@@ -12,16 +12,15 @@ import javax.validation.Valid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
-import org.moera.lib.util.LogUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.data.FrozenNotification;
 import org.moera.node.data.FrozenNotificationRepository;
 import org.moera.node.domain.Domains;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -147,7 +146,7 @@ public class NotificationController {
             return false;
         }
 
-        Fingerprint fingerprint = Fingerprints.notificationPacket(packet.getSignatureVersion()).create(packet);
+        byte[] fingerprint = NotificationPacketFingerprintBuilder.build(packet.getSignatureVersion(), packet);
         return CryptoUtil.verify(fingerprint, packet.getSignature(), signingKey);
     }
 

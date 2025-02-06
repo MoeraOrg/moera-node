@@ -13,7 +13,7 @@ import javax.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiAuthenticationException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiOperationException;
@@ -21,7 +21,7 @@ import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.api.node.NodeApiValidationException;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
-import org.moera.node.fingerprint.NotificationPacketFingerprint;
+import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.Result;
 import org.moera.node.model.notification.Notification;
@@ -190,9 +190,9 @@ public class NotificationSender extends Task {
         packet.setType(notification.getType().getValue());
         packet.setNotification(objectMapper.writeValueAsString(notification));
 
-        NotificationPacketFingerprint fingerprint = new NotificationPacketFingerprint(packet);
+        byte[] fingerprint = NotificationPacketFingerprintBuilder.build(packet);
         packet.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
-        packet.setSignatureVersion(NotificationPacketFingerprint.VERSION);
+        packet.setSignatureVersion(NotificationPacketFingerprintBuilder.LATEST_VERSION);
 
         return packet;
     }
