@@ -26,10 +26,6 @@ public class Fingerprints {
         return new PostingFingerprintFactory(get(FingerprintObjectType.POSTING, version));
     }
 
-    public static CarteFingerprintFactory carte(short version) {
-        return new CarteFingerprintFactory(get(FingerprintObjectType.CARTE, version));
-    }
-
     public static ReactionFingerprintFactory reaction(short version) {
         return new ReactionFingerprintFactory(get(FingerprintObjectType.REACTION, version));
     }

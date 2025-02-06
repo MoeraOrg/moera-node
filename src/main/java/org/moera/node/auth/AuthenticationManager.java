@@ -174,7 +174,7 @@ public class AuthenticationManager {
             throw new InvalidCarteException("carte.unknown-signing-key");
         }
         byte[] fingerprintBytes = CryptoUtil.fingerprint(
-            fingerprint, Fingerprints.getSchema("CARTE", fingerprint.getVersion())
+            fingerprint, Fingerprints.getSchema(FingerprintObjectType.CARTE.name(), fingerprint.getVersion())
         );
         if (!CryptoUtil.verify(fingerprintBytes, signature, signingKey)) {
             log.info("Carte: signature verification failed");

@@ -2,14 +2,16 @@ package org.moera.node.util;
 
 import java.net.InetAddress;
 import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.security.interfaces.ECPrivateKey;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.naming.NodeName;
-import org.moera.node.fingerprint.CarteFingerprint;
+import org.moera.lib.node.Fingerprints;
 
 public class Carte {
 
@@ -21,15 +23,22 @@ public class Carte {
 
     public static String generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey,
                                   String nodeName, long clientScope, long adminScope) {
-        CarteFingerprint fingerprint = new CarteFingerprint(
-                NodeName.expand(ownerName), address, beginning, getDeadline(beginning), NodeName.expand(nodeName),
-                clientScope, adminScope
+        var salt = new byte[8];
+        new SecureRandom().nextBytes(salt);
+        byte[] fingerprint = Fingerprints.carte(
+            NodeName.expand(ownerName),
+            address,
+            Timestamp.from(beginning),
+            Timestamp.from(getDeadline(beginning)),
+            NodeName.expand(nodeName),
+            clientScope,
+            adminScope,
+            salt
         );
-        byte[] content = CryptoUtil.fingerprint(fingerprint);
         byte[] signature = CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey);
-        byte[] carte = new byte[content.length + signature.length];
-        System.arraycopy(content, 0, carte, 0, content.length);
-        System.arraycopy(signature, 0, carte, content.length, signature.length);
+        byte[] carte = new byte[fingerprint.length + signature.length];
+        System.arraycopy(fingerprint, 0, carte, 0, fingerprint.length);
+        System.arraycopy(signature, 0, carte, fingerprint.length, signature.length);
         return Util.base64urlencode(carte);
     }
 
