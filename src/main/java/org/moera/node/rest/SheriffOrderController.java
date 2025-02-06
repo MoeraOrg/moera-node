@@ -7,8 +7,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
@@ -19,7 +18,7 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.SheriffOrderFingerprintBuilder;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -124,8 +123,9 @@ public class SheriffOrderController {
         }
 
         byte[] signingKey = namingCache.get(sheriffOrderDetails.getSheriffName()).getSigningKey();
-        Fingerprint fingerprint = Fingerprints.sheriffOrder(sheriffOrderDetails.getSignatureVersion())
-                .create(requestContext.nodeName(), sheriffOrderDetails, entryDigest);
+        byte[] fingerprint = SheriffOrderFingerprintBuilder.build(
+            sheriffOrderDetails.getSignatureVersion(), requestContext.nodeName(), sheriffOrderDetails, entryDigest
+        );
         if (!CryptoUtil.verify(fingerprint, sheriffOrderDetails.getSignature(), signingKey)) {
             throw new IncorrectSignatureException();
         }

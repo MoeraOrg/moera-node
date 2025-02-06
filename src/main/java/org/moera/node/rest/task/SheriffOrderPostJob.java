@@ -7,16 +7,14 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
-import org.moera.node.fingerprint.Fingerprints;
-import org.moera.node.fingerprint.SheriffOrderFingerprint;
+import org.moera.node.fingerprint.SheriffOrderFingerprintBuilder;
 import org.moera.node.liberin.model.SheriffOrderSentLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarDescription;
@@ -218,11 +216,11 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
             if (state.postingInfo != null) {
                 digest = state.commentInfo == null ? state.postingInfo.getDigest() : state.commentInfo.getDigest();
             }
-            Fingerprint fingerprint = Fingerprints.sheriffOrder(SheriffOrderFingerprint.VERSION)
-                    .create(parameters.remoteNodeName, state.sheriffOrderDetails, digest);
-
+            byte[] fingerprint = SheriffOrderFingerprintBuilder.build(
+                parameters.remoteNodeName, state.sheriffOrderDetails, digest
+            );
             state.sheriffOrderDetails.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
-            state.sheriffOrderDetails.setSignatureVersion(SheriffOrderFingerprint.VERSION);
+            state.sheriffOrderDetails.setSignatureVersion(SheriffOrderFingerprintBuilder.LATEST_VERSION);
             nodeApi.postSheriffOrder(parameters.remoteNodeName, state.sheriffOrderDetails);
             checkpoint();
         }
