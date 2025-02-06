@@ -2,6 +2,9 @@ package org.moera.node.fingerprint;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -32,8 +35,32 @@ public class AttachmentFingerprintBuilder {
         return Fingerprints.attachment(mediaFileOwner.getMediaFile().getDigest());
     }
 
+    public static byte[] build(EntryAttachment attachment) {
+        return build(LATEST_VERSION, attachment);
+    }
+
     public static byte[] build(short version, EntryAttachment attachment) {
         return build(version, attachment.getMediaFileOwner());
+    }
+
+    public static List<byte[]> build(
+        MediaFileOwner parentMedia,
+        Collection<EntryAttachment> entryAttachments
+    ) {
+        if (entryAttachments == null) {
+            entryAttachments = Collections.emptyList();
+        }
+
+        List<byte[]> digests = new ArrayList<>();
+        if (parentMedia != null) {
+            digests.add(build(parentMedia));
+        }
+        entryAttachments.stream()
+            .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+            .filter(ea -> ea.getMediaFileOwner().getMediaFile().getDigest() != null)
+            .map(AttachmentFingerprintBuilder::build)
+            .forEach(digests::add);
+        return digests;
     }
 
     public static List<byte[]> build(
@@ -57,7 +84,7 @@ public class AttachmentFingerprintBuilder {
         return digests;
     }
 
-    public List<byte[]> build(
+    public static List<byte[]> build(
         byte[] parentMediaDigest,
         UUID[] mediaIds,
         Function<UUID, byte[]> mediaDigest

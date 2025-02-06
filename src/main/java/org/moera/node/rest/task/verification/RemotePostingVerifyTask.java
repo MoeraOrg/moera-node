@@ -4,13 +4,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.inject.Inject;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.liberin.model.RemotePostingVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerifiedLiberin;
 import org.moera.node.media.MediaManager;
@@ -72,8 +71,9 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             return;
         }
         data.setRevisionId(postingInfo.getRevisionId());
-        Fingerprint fingerprint = Fingerprints.posting(postingInfo.getSignatureVersion())
-                .create(postingInfo, parentMediaDigest, mediaDigest);
+        byte[] fingerprint = PostingFingerprintBuilder.build(
+            postingInfo.getSignatureVersion(), postingInfo, parentMediaDigest, mediaDigest
+        );
         succeeded(CryptoUtil.verify(fingerprint, postingInfo.getSignature(), signingKey));
     }
 
@@ -84,8 +84,9 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
             succeeded(false);
             return;
         }
-        Fingerprint fingerprint = Fingerprints.posting(postingInfo.getSignatureVersion())
-                .create(postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest);
+        byte[] fingerprint = PostingFingerprintBuilder.build(
+            postingInfo.getSignatureVersion(), postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest
+        );
         succeeded(CryptoUtil.verify(fingerprint, postingRevisionInfo.getSignature(), signingKey));
     }
 

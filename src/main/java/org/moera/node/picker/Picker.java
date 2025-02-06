@@ -10,8 +10,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
@@ -31,7 +30,7 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.StoryType;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.model.PostingAddedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
@@ -257,7 +256,7 @@ public class Picker extends Task {
     private void updateRevision(Posting posting, PostingInfo postingInfo, EntryRevision revision) {
         postingInfo.toPickedEntryRevision(revision);
 
-        Fingerprint fingerprint = Fingerprints.posting(revision.getSignatureVersion()).create(posting, revision);
+        byte[] fingerprint = PostingFingerprintBuilder.build(revision.getSignatureVersion(), posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));
     }
 

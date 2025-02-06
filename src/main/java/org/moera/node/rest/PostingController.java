@@ -14,9 +14,9 @@ import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.Scope;
@@ -36,7 +36,7 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
@@ -53,7 +53,6 @@ import org.moera.node.model.PostingText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.body.BodyMappingException;
-import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
@@ -61,8 +60,8 @@ import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.operations.PostingOperations;
-import org.moera.node.operations.UserListOperations;
 import org.moera.node.operations.StoryOperations;
+import org.moera.node.operations.UserListOperations;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -305,8 +304,9 @@ public class PostingController {
             }
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
-            Fingerprint fingerprint = Fingerprints.posting(postingText.getSignatureVersion())
-                    .create(postingText, parentMediaDigest(posting), this::mediaDigest);
+            byte[] fingerprint = PostingFingerprintBuilder.build(
+                postingText.getSignatureVersion(), postingText, parentMediaDigest(posting), this::mediaDigest
+            );
             if (!CryptoUtil.verify(fingerprint, postingText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }

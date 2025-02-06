@@ -10,14 +10,14 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.OwnPostingRepository;
-import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.liberin.model.RemotePostingAddedLiberin;
 import org.moera.node.liberin.model.RemotePostingAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdateFailedLiberin;
@@ -256,12 +256,13 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
                         state.prevPostingInfo.getParentMediaId(),
                         null)
                 : null;
-        PostingFingerprint fingerprint = new PostingFingerprint(
-                postingText,
-                parentMediaDigest,
-                id -> postingMediaDigest(id, mediaDigests));
+        byte[] fingerprint = PostingFingerprintBuilder.build(
+            postingText,
+            parentMediaDigest,
+            id -> postingMediaDigest(id, mediaDigests)
+        );
         postingText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
-        postingText.setSignatureVersion(PostingFingerprint.VERSION);
+        postingText.setSignatureVersion(PostingFingerprintBuilder.LATEST_VERSION);
         return postingText;
     }
 

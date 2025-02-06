@@ -11,6 +11,7 @@ import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.PrivateMediaFileInfo;
 
+@Deprecated
 public class PostingFingerprintFactory extends FingerprintFactory {
 
     public PostingFingerprintFactory(Class<? extends Fingerprint> klass) {

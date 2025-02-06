@@ -9,7 +9,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.data.ContactUpgradeRepository;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
@@ -23,7 +23,7 @@ import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
-import org.moera.node.fingerprint.PostingFingerprint;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.body.Body;
 import org.moera.node.operations.PostingOperations;
@@ -174,9 +174,9 @@ public class Updater {
             return;
         }
         Posting posting = (Posting) revision.getEntry();
-        PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
+        byte[] fingerprint = PostingFingerprintBuilder.build(posting, revision);
         revision.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey));
-        revision.setSignatureVersion(PostingFingerprint.VERSION);
+        revision.setSignatureVersion(PostingFingerprintBuilder.LATEST_VERSION);
         log.info("Signature upgraded for entry {}, revision {}", posting.getId(), revision.getId());
     }
 
@@ -193,7 +193,7 @@ public class Updater {
 
     private void updateDigest(EntryRevision revision) {
         Posting posting = (Posting) revision.getEntry();
-        PostingFingerprint fingerprint = new PostingFingerprint(posting, revision);
+        byte[] fingerprint = PostingFingerprintBuilder.build(posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));
         log.info("Digest upgraded for entry {}, revision {}", posting.getId(), revision.getId());
     }

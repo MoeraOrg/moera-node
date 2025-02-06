@@ -14,6 +14,7 @@ import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.Util;
 
 @FingerprintVersion(objectType = FingerprintObjectType.POSTING, version = 0)
+@Deprecated
 public class PostingFingerprint0 extends EntryFingerprint {
 
     public String objectType = FingerprintObjectType.POSTING.name();
