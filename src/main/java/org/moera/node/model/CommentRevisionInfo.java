@@ -1,7 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
@@ -38,7 +38,7 @@ public class CommentRevisionInfo implements RevisionInfo {
         bodyPreview = new Body(revision.getBodyPreview());
         bodySrcHash = revision.getReceiverBodySrcHash() != null
                 ? revision.getReceiverBodySrcHash()
-                : CryptoUtil.digest(revision.getBodySrc());
+                : CryptoUtil.digest(CryptoUtil.fingerprint(revision.getBodySrc()));
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();

@@ -3,7 +3,7 @@ package org.moera.node.option.type;
 import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.util.Util;
 
 @OptionType("PrivateKey")

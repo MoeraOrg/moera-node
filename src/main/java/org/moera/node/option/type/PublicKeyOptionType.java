@@ -3,7 +3,7 @@ package org.moera.node.option.type;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.util.Util;
 
 @OptionType("PublicKey")

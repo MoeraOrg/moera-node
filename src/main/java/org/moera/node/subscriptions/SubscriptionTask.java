@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.commons.crypto.CryptoException;
+import org.moera.lib.crypto.CryptoException;
 import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiUnknownNameException;

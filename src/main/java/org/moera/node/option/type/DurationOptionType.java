@@ -1,9 +1,9 @@
 package org.moera.node.option.type;
 
-import org.moera.commons.util.DurationFormatException;
 import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
+import org.moera.node.util.DurationFormatException;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Util;
 

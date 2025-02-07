@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
@@ -112,7 +112,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         if (includeSource) {
             bodySrc = new Body(revision.getBodySrc());
         }
-        bodySrcHash = CryptoUtil.digest(revision.getBodySrc());
+        bodySrcHash = CryptoUtil.digest(CryptoUtil.fingerprint(revision.getBodySrc()));
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();

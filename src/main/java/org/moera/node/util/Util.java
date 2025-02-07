@@ -18,7 +18,6 @@ import java.util.regex.Pattern;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.ibm.icu.util.Calendar;
-import org.moera.commons.util.DurationFormatException;
 import org.springframework.web.util.HtmlUtils;
 
 public class Util {

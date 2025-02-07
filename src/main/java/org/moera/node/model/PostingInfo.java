@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.AccessCheckers;
@@ -205,7 +205,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         }
         bodySrcHash = revision.getReceiverBodySrcHash() != null
                 ? revision.getReceiverBodySrcHash()
-                : CryptoUtil.digest(revision.getBodySrc());
+                : CryptoUtil.digest(CryptoUtil.fingerprint(revision.getBodySrc()));
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
