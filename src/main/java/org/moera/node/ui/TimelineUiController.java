@@ -10,8 +10,8 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import org.moera.lib.UniversalLocation;
 import org.moera.lib.util.LogUtil;
-import org.moera.commons.util.UniversalLocation;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;

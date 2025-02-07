@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.UUID;
 import javax.inject.Inject;
 
-import org.moera.commons.util.UniversalLocation;
+import org.moera.lib.UniversalLocation;
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;

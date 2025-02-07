@@ -10,7 +10,7 @@ import com.vladsch.flexmark.html.renderer.NodeRendererFactory;
 import com.vladsch.flexmark.html.renderer.NodeRenderingHandler;
 import com.vladsch.flexmark.util.data.DataHolder;
 import org.jetbrains.annotations.NotNull;
-import org.moera.commons.util.UniversalLocation;
+import org.moera.lib.UniversalLocation;
 import org.moera.lib.naming.NodeName;
 import org.moera.node.text.markdown.mention.MentionNode;
 

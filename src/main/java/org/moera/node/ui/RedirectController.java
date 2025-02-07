@@ -5,7 +5,7 @@ import java.net.URISyntaxException;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-import org.moera.commons.util.UniversalLocation;
+import org.moera.lib.UniversalLocation;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.api.naming.NamingCache;
 import org.springframework.stereotype.Controller;

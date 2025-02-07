@@ -12,8 +12,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.commons.crypto.Password;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.crypto.Password;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;

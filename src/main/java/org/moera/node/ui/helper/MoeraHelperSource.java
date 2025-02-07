@@ -8,7 +8,7 @@ import javax.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
-import org.moera.commons.util.UniversalLocation;
+import org.moera.lib.UniversalLocation;
 import org.moera.lib.naming.NodeName;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.global.RequestContext;

@@ -7,8 +7,8 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.moera.commons.crypto.Password;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.crypto.Password;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.PasswordResetToken;
 import org.moera.node.data.PasswordResetTokenRepository;
