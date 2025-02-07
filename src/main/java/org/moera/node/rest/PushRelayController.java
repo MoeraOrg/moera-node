@@ -5,10 +5,10 @@ import java.time.Instant;
 import javax.inject.Inject;
 import javax.validation.Valid;
 
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.Fingerprints;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.pushrelay.FcmRelay;
-import org.moera.node.api.pushrelay.PushRelayRegisterFingerprint;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
@@ -20,6 +20,7 @@ import org.moera.node.model.PushRelayClientAttributes;
 import org.moera.node.model.PushRelayType;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,18 +57,20 @@ public class PushRelayController {
         }
 
         long now = Instant.now().getEpochSecond();
-        PushRelayRegisterFingerprint fingerprint = new PushRelayRegisterFingerprint(
-                pushRelayClientAttributes.getClientId(),
-                pushRelayClientAttributes.getLang(),
-                now);
+        byte[] fingerprint = Fingerprints.pushRelayRegister(
+            pushRelayClientAttributes.getClientId(),
+            pushRelayClientAttributes.getLang(),
+            Util.toTimestamp(now)
+        );
         byte[] signature = CryptoUtil.sign(fingerprint, getSigningKey());
         try {
             fcmRelay.register(
-                    pushRelayClientAttributes.getClientId(),
-                    requestContext.nodeName(),
-                    pushRelayClientAttributes.getLang(),
-                    now,
-                    signature);
+                pushRelayClientAttributes.getClientId(),
+                requestContext.nodeName(),
+                pushRelayClientAttributes.getLang(),
+                now,
+                signature
+            );
         } catch (Exception e) {
             log.warn("Error calling push relay service: " + e.getMessage());
             throw new OperationFailure("push-relay.error");
