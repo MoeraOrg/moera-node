@@ -6,12 +6,12 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.CommentFingerprintBuilder;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.fingerprint.ReactionFingerprint;
 import org.moera.node.liberin.model.RemoteCommentReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
@@ -205,13 +205,17 @@ public class RemoteCommentReactionPostJob
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(
                         parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf);
-        Fingerprint postingFingerprint = state.postingRevisionInfo == null
-                ? Fingerprints.posting(state.postingInfo.getSignatureVersion())
-                        .create(state.postingInfo, parentMediaDigest, mediaDigest)
-                : Fingerprints.posting(state.postingRevisionInfo.getSignatureVersion())
-                        .create(state.postingInfo, state.postingRevisionInfo, parentMediaDigest, mediaDigest);
-        Fingerprint commentFingerprint = Fingerprints.comment(state.commentInfo.getSignatureVersion())
-                .create(state.commentInfo, postingFingerprint, mediaDigest);
+        byte[] postingFingerprint = state.postingRevisionInfo == null
+                ? PostingFingerprintBuilder.build(
+                      state.postingInfo.getSignatureVersion(), state.postingInfo, parentMediaDigest, mediaDigest
+                  )
+                : PostingFingerprintBuilder.build(
+                      state.postingRevisionInfo.getSignatureVersion(), state.postingInfo, state.postingRevisionInfo,
+                      parentMediaDigest, mediaDigest
+                  );
+        byte[] commentFingerprint = CommentFingerprintBuilder.build(
+            state.commentInfo.getSignatureVersion(), state.commentInfo, postingFingerprint, mediaDigest
+        );
         ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName(), parameters.attributes, commentFingerprint);
 
         ReactionDescription description = new ReactionDescription(

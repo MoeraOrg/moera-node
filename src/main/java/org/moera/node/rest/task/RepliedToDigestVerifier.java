@@ -7,13 +7,12 @@ import java.util.Set;
 import java.util.function.Function;
 import javax.inject.Inject;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.auth.Scope;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
@@ -113,9 +112,10 @@ public class RepliedToDigestVerifier {
                 pmf -> mediaManager.getPrivateMediaDigest(
                         targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA), pmf);
 
-        Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,
-                        parentMediaDigest, mediaDigest, repliedToDigest);
+        byte[] fingerprint = CommentFingerprintBuilder.build(
+            commentInfo.getSignatureVersion(), commentInfo, commentRevisionInfo, mediaDigest,
+            postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest, repliedToDigest
+        );
         return CryptoUtil.digest(fingerprint);
     }
 

@@ -25,8 +25,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
@@ -51,7 +50,7 @@ import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.SourceFormat;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -369,8 +368,13 @@ public class CommentController {
             }
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
-            Fingerprint fingerprint = Fingerprints.comment(commentText.getSignatureVersion())
-                    .create(commentText, posting.getCurrentRevision().getDigest(), repliedToDigest, this::mediaDigest);
+            byte[] fingerprint = CommentFingerprintBuilder.build(
+                commentText.getSignatureVersion(),
+                commentText,
+                posting.getCurrentRevision().getDigest(),
+                repliedToDigest,
+                this::mediaDigest
+            );
             if (!CryptoUtil.verify(fingerprint, commentText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }

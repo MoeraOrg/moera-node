@@ -6,15 +6,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.inject.Inject;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.liberin.model.RemoteCommentVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentVerifiedLiberin;
 import org.moera.node.media.MediaManager;
@@ -119,9 +118,10 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         }
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(
                 remoteNodeName, this::generateCarte, postingInfo, revisions, repliedToId, repliedToRevisionId);
-        Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, mediaDigest, postingInfo, revisionInfo, parentMediaDigest, mediaDigest,
-                        repliedToDigest);
+        byte[] fingerprint = CommentFingerprintBuilder.build(
+            commentInfo.getSignatureVersion(), commentInfo, mediaDigest, postingInfo, revisionInfo, parentMediaDigest,
+            mediaDigest, repliedToDigest
+        );
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
@@ -167,9 +167,10 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         }
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
                 postingInfo, revisions, repliedToId, repliedToRevisionId);
-        Fingerprint fingerprint = Fingerprints.comment(commentInfo.getSignatureVersion())
-                .create(commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,
-                        parentMediaDigest, mediaDigest, repliedToDigest);
+        byte[] fingerprint = CommentFingerprintBuilder.build(
+            commentInfo.getSignatureVersion(), commentInfo, commentRevisionInfo, mediaDigest,
+            postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest, repliedToDigest
+        );
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
 

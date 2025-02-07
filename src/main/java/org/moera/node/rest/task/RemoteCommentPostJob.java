@@ -11,15 +11,15 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnComment;
 import org.moera.node.data.OwnCommentRepository;
-import org.moera.node.fingerprint.CommentFingerprint;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.CommentFingerprintBuilder;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.liberin.model.RemoteCommentAddedLiberin;
 import org.moera.node.liberin.model.RemoteCommentAddingFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
@@ -357,19 +357,23 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                         state.postingInfo.getParentMediaId(),
                         null)
                 : null;
-        CommentFingerprint fingerprint = new CommentFingerprint(
+        byte[] fingerprint = CommentFingerprintBuilder.build(
                 commentText,
-                Fingerprints.posting(state.postingInfo.getSignatureVersion()).create(
-                        state.postingInfo,
-                        parentMediaDigest,
-                        pmf -> mediaManager.getPrivateMediaDigest(
-                                parameters.targetNodeName,
-                                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                                pmf)),
+                CryptoUtil.digest(PostingFingerprintBuilder.build(
+                    state.postingInfo.getSignatureVersion(),
+                    state.postingInfo,
+                    parentMediaDigest,
+                    pmf -> mediaManager.getPrivateMediaDigest(
+                            parameters.targetNodeName,
+                            generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                            pmf
+                    )
+                )),
                 state.repliedToDigest,
-                id -> commentMediaDigest(id, mediaDigests));
+                id -> commentMediaDigest(id, mediaDigests)
+        );
         commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
-        commentText.setSignatureVersion(CommentFingerprint.VERSION);
+        commentText.setSignatureVersion(CommentFingerprintBuilder.LATEST_VERSION);
         return commentText;
     }
 

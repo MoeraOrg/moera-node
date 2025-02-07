@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.inject.Inject;
 
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Comment;
@@ -26,7 +26,7 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
-import org.moera.node.fingerprint.CommentFingerprint;
+import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.Liberin;
@@ -249,10 +249,10 @@ public class CommentOperations {
 
         if (current.getSignature() == null) {
             if (comment.getOwnerName().equals(requestContext.nodeName())) {
-                CommentFingerprint fingerprint = new CommentFingerprint(comment);
+                byte[] fingerprint = CommentFingerprintBuilder.build(comment);
                 current.setDigest(CryptoUtil.digest(fingerprint));
                 current.setSignature(CryptoUtil.sign(fingerprint, getSigningKey()));
-                current.setSignatureVersion(CommentFingerprint.VERSION);
+                current.setSignatureVersion(CommentFingerprintBuilder.LATEST_VERSION);
             } else {
                 current.setDeadline(Timestamp.from(Instant.now().plus(UNSIGNED_TTL)));
             }
