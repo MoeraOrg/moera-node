@@ -9,8 +9,6 @@ import org.moera.node.data.Comment;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
-import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.Util;
 
@@ -39,19 +37,19 @@ public class CommentFingerprintBuilder {
 
     public static byte[] build(
         CommentText commentText,
+        Function<UUID, byte[]> mediaDigest,
         byte[] postingDigest,
-        byte[] repliedToDigest,
-        Function<UUID, byte[]> mediaDigest
+        byte[] repliedToDigest
     ) {
-        return build(LATEST_VERSION, commentText, postingDigest, repliedToDigest, mediaDigest);
+        return build(LATEST_VERSION, commentText, mediaDigest, postingDigest, repliedToDigest);
     }
 
     public static byte[] build(
         short version,
         CommentText commentText,
+        Function<UUID, byte[]> mediaDigest,
         byte[] postingDigest,
-        byte[] repliedToDigest,
-        Function<UUID, byte[]> mediaDigest
+        byte[] repliedToDigest
     ) {
         return Fingerprints.comment(
             commentText.getOwnerName(),
@@ -70,8 +68,8 @@ public class CommentFingerprintBuilder {
     public static byte[] build(
         short version,
         CommentInfo commentInfo,
-        byte[] postingFingerprint,
-        Function<PrivateMediaFileInfo, byte[]> mediaDigest
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        byte[] postingFingerprint
     ) {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
@@ -91,21 +89,12 @@ public class CommentFingerprintBuilder {
         short version,
         CommentInfo commentInfo,
         CommentRevisionInfo commentRevisionInfo,
-        Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
-        PostingInfo postingInfo,
-        PostingRevisionInfo postingRevisionInfo,
-        byte[] postingParentMediaDigest,
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        byte[] postingFingerprint
     ) {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
-            CryptoUtil.digest(PostingFingerprintBuilder.build(
-                postingRevisionInfo.getSignatureVersion(),
-                postingInfo,
-                postingRevisionInfo,
-                postingParentMediaDigest,
-                postingMediaDigest
-            )),
+            CryptoUtil.digest(postingFingerprint),
             commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null,
             commentRevisionInfo.getBodySrcHash(),
             commentRevisionInfo.getBodySrcFormat().getValue(),
@@ -113,29 +102,20 @@ public class CommentFingerprintBuilder {
             commentRevisionInfo.getBodyFormat(),
             Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), commentMediaDigest)
+            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
         );
     }
 
     public static byte[] build(
         short version,
         CommentInfo commentInfo,
-        Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
-        PostingInfo postingInfo,
-        PostingRevisionInfo postingRevisionInfo,
-        byte[] postingParentMediaDigest,
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest,
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        byte[] postingFingerprint,
         byte[] repliedToDigest
     ) {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
-            CryptoUtil.digest(PostingFingerprintBuilder.build(
-                postingRevisionInfo.getSignatureVersion(),
-                postingInfo,
-                postingRevisionInfo,
-                postingParentMediaDigest,
-                postingMediaDigest
-            )),
+            CryptoUtil.digest(postingFingerprint),
             repliedToDigest,
             commentInfo.getBodySrcHash(),
             commentInfo.getBodySrcFormat().getValue(),
@@ -143,7 +123,7 @@ public class CommentFingerprintBuilder {
             commentInfo.getBodyFormat(),
             Util.toTimestamp(commentInfo.getRevisionCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), commentMediaDigest)
+            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
         );
     }
 
@@ -151,22 +131,13 @@ public class CommentFingerprintBuilder {
         short version,
         CommentInfo commentInfo,
         CommentRevisionInfo commentRevisionInfo,
-        Function<PrivateMediaFileInfo, byte[]> commentMediaDigest,
-        PostingInfo postingInfo,
-        PostingRevisionInfo postingRevisionInfo,
-        byte[] postingParentMediaDigest,
-        Function<PrivateMediaFileInfo, byte[]> postingMediaDigest,
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest,
+        byte[] postingFingerprint,
         byte[] repliedToDigest
     ) {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
-            CryptoUtil.digest(PostingFingerprintBuilder.build(
-                postingRevisionInfo.getSignatureVersion(),
-                postingInfo,
-                postingRevisionInfo,
-                postingParentMediaDigest,
-                postingMediaDigest
-            )),
+            CryptoUtil.digest(postingFingerprint),
             repliedToDigest,
             commentRevisionInfo.getBodySrcHash(),
             commentRevisionInfo.getBodySrcFormat().getValue(),
@@ -174,7 +145,7 @@ public class CommentFingerprintBuilder {
             commentRevisionInfo.getBodyFormat(),
             Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), commentMediaDigest)
+            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
         );
     }
 

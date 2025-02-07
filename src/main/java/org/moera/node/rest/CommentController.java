@@ -371,9 +371,9 @@ public class CommentController {
             byte[] fingerprint = CommentFingerprintBuilder.build(
                 commentText.getSignatureVersion(),
                 commentText,
+                this::mediaDigest,
                 posting.getCurrentRevision().getDigest(),
-                repliedToDigest,
-                this::mediaDigest
+                repliedToDigest
             );
             if (!CryptoUtil.verify(fingerprint, commentText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();

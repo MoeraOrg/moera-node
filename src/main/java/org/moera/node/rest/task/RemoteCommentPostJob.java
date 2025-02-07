@@ -358,19 +358,19 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                         null)
                 : null;
         byte[] fingerprint = CommentFingerprintBuilder.build(
-                commentText,
-                CryptoUtil.digest(PostingFingerprintBuilder.build(
-                    state.postingInfo.getSignatureVersion(),
-                    state.postingInfo,
-                    parentMediaDigest,
-                    pmf -> mediaManager.getPrivateMediaDigest(
-                            parameters.targetNodeName,
-                            generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                            pmf
-                    )
-                )),
-                state.repliedToDigest,
-                id -> commentMediaDigest(id, mediaDigests)
+            commentText,
+            id -> commentMediaDigest(id, mediaDigests),
+            CryptoUtil.digest(PostingFingerprintBuilder.build(
+                state.postingInfo.getSignatureVersion(),
+                state.postingInfo,
+                parentMediaDigest,
+                pmf -> mediaManager.getPrivateMediaDigest(
+                        parameters.targetNodeName,
+                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                        pmf
+                )
+            )),
+            state.repliedToDigest
         );
         commentText.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         commentText.setSignatureVersion(CommentFingerprintBuilder.LATEST_VERSION);

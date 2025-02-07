@@ -13,6 +13,7 @@ import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.auth.Scope;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
@@ -113,8 +114,18 @@ public class RepliedToDigestVerifier {
                         targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA), pmf);
 
         byte[] fingerprint = CommentFingerprintBuilder.build(
-            commentInfo.getSignatureVersion(), commentInfo, commentRevisionInfo, mediaDigest,
-            postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest, repliedToDigest
+            commentInfo.getSignatureVersion(),
+            commentInfo,
+            commentRevisionInfo,
+            mediaDigest,
+            PostingFingerprintBuilder.build(
+                postingRevisionInfo.getSignatureVersion(),
+                postingInfo,
+                postingRevisionInfo,
+                parentMediaDigest,
+                mediaDigest
+            ),
+            repliedToDigest
         );
         return CryptoUtil.digest(fingerprint);
     }

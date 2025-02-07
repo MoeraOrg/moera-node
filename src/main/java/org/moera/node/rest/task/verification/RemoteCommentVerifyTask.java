@@ -14,6 +14,7 @@ import org.moera.node.data.RemoteCommentVerification;
 import org.moera.node.data.RemoteCommentVerificationRepository;
 import org.moera.node.data.VerificationStatus;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.liberin.model.RemoteCommentVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentVerifiedLiberin;
 import org.moera.node.media.MediaManager;
@@ -119,8 +120,17 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(
                 remoteNodeName, this::generateCarte, postingInfo, revisions, repliedToId, repliedToRevisionId);
         byte[] fingerprint = CommentFingerprintBuilder.build(
-            commentInfo.getSignatureVersion(), commentInfo, mediaDigest, postingInfo, revisionInfo, parentMediaDigest,
-            mediaDigest, repliedToDigest
+            commentInfo.getSignatureVersion(),
+            commentInfo,
+            mediaDigest,
+            PostingFingerprintBuilder.build(
+                revisionInfo.getSignatureVersion(),
+                postingInfo,
+                revisionInfo,
+                parentMediaDigest,
+                mediaDigest
+            ),
+            repliedToDigest
         );
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }
@@ -165,11 +175,22 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             repliedToId = commentInfo.getRepliedTo().getId();
             repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
         }
-        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(remoteNodeName, this::generateCarte,
-                postingInfo, revisions, repliedToId, repliedToRevisionId);
+        byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(
+            remoteNodeName, this::generateCarte, postingInfo, revisions, repliedToId, repliedToRevisionId
+        );
         byte[] fingerprint = CommentFingerprintBuilder.build(
-            commentInfo.getSignatureVersion(), commentInfo, commentRevisionInfo, mediaDigest,
-            postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest, repliedToDigest
+            commentInfo.getSignatureVersion(),
+            commentInfo,
+            commentRevisionInfo,
+            mediaDigest,
+            PostingFingerprintBuilder.build(
+                postingRevisionInfo.getSignatureVersion(),
+                postingInfo,
+                postingRevisionInfo,
+                parentMediaDigest,
+                mediaDigest
+            ),
+            repliedToDigest
         );
         succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
     }

@@ -214,7 +214,7 @@ public class RemoteCommentReactionPostJob
                       parentMediaDigest, mediaDigest
                   );
         byte[] commentFingerprint = CommentFingerprintBuilder.build(
-            state.commentInfo.getSignatureVersion(), state.commentInfo, postingFingerprint, mediaDigest
+            state.commentInfo.getSignatureVersion(), state.commentInfo, mediaDigest, postingFingerprint
         );
         byte[] fingerprint = ReactionFingerprintBuilder.build(nodeName(), parameters.attributes, commentFingerprint);
 
