@@ -6,15 +6,15 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.moera.commons.crypto.CryptoUtil;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
 import org.moera.node.data.OwnReaction;
 import org.moera.node.data.OwnReactionRepository;
-import org.moera.node.fingerprint.Fingerprints;
-import org.moera.node.fingerprint.ReactionFingerprint;
+import org.moera.node.fingerprint.PostingFingerprintBuilder;
+import org.moera.node.fingerprint.ReactionFingerprintBuilder;
 import org.moera.node.liberin.model.RemotePostingReactionAddedLiberin;
 import org.moera.node.liberin.model.RemotePostingReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
@@ -245,20 +245,26 @@ public class RemotePostingReactionPostJob
                         state.postingInfo.getParentMediaId(),
                         null)
                 : null;
-        ReactionFingerprint fingerprint = new ReactionFingerprint(
+        byte[] fingerprint = ReactionFingerprintBuilder.build(
                 nodeName(),
                 parameters.attributes,
-                Fingerprints.posting(state.postingInfo.getSignatureVersion()).create(
-                        state.postingInfo,
-                        parentMediaDigest,
-                        pmf -> mediaManager.getPrivateMediaDigest(
-                                parameters.targetNodeName,
-                                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                                pmf)));
+                PostingFingerprintBuilder.build(
+                    state.postingInfo.getSignatureVersion(),
+                    state.postingInfo,
+                    parentMediaDigest,
+                    pmf ->
+                        mediaManager.getPrivateMediaDigest(
+                            parameters.targetNodeName,
+                            generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                            pmf
+                        )
+                )
+        );
         ReactionDescription description = new ReactionDescription(
-                nodeName(), fullName(), gender(), getAvatar(), parameters.attributes);
+                nodeName(), fullName(), gender(), getAvatar(), parameters.attributes
+        );
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
-        description.setSignatureVersion(ReactionFingerprint.VERSION);
+        description.setSignatureVersion(ReactionFingerprintBuilder.LATEST_VERSION);
         return description;
     }
 

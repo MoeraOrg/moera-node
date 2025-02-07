@@ -12,8 +12,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
@@ -30,7 +29,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionRepository;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.ReactionFingerprintBuilder;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.LiberinManager;
@@ -124,8 +123,9 @@ public class ReactionOperations {
             }
         } else {
             byte[] signingKey = namingCache.get(reactionDescription.getOwnerName()).getSigningKey();
-            Fingerprint fingerprint = Fingerprints.reaction(reactionDescription.getSignatureVersion())
-                    .create(reactionDescription, entry.getCurrentRevision().getDigest());
+            byte[] fingerprint = ReactionFingerprintBuilder.build(
+                reactionDescription.getSignatureVersion(), reactionDescription, entry.getCurrentRevision().getDigest()
+            );
             if (!CryptoUtil.verify(fingerprint, reactionDescription.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }

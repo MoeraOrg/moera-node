@@ -12,7 +12,7 @@ import org.moera.node.auth.Scope;
 import org.moera.node.data.MediaFile;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
-import org.moera.node.fingerprint.ReactionFingerprint;
+import org.moera.node.fingerprint.ReactionFingerprintBuilder;
 import org.moera.node.liberin.model.RemoteCommentReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
@@ -216,12 +216,12 @@ public class RemoteCommentReactionPostJob
         byte[] commentFingerprint = CommentFingerprintBuilder.build(
             state.commentInfo.getSignatureVersion(), state.commentInfo, postingFingerprint, mediaDigest
         );
-        ReactionFingerprint fingerprint = new ReactionFingerprint(nodeName(), parameters.attributes, commentFingerprint);
+        byte[] fingerprint = ReactionFingerprintBuilder.build(nodeName(), parameters.attributes, commentFingerprint);
 
         ReactionDescription description = new ReactionDescription(
                 nodeName(), fullName(), gender(), getAvatar(), parameters.attributes);
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
-        description.setSignatureVersion(ReactionFingerprint.VERSION);
+        description.setSignatureVersion(ReactionFingerprintBuilder.LATEST_VERSION);
 
         return description;
     }

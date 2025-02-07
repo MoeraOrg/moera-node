@@ -22,7 +22,6 @@ import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Token;
 import org.moera.node.data.TokenRepository;
 import org.moera.node.fingerprint.CarteProperties;
-import org.moera.node.fingerprint.FingerprintObjectType;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.util.Transaction;
@@ -148,7 +147,7 @@ public class AuthenticationManager {
             throw new InvalidCarteException("carte.unknown-fingerprint", e);
         }
         CarteProperties cp = new CarteProperties(fingerprint);
-        if (!FingerprintObjectType.CARTE.name().equals(cp.getObjectType())) {
+        if (!"CARTE".equals(cp.getObjectType())) {
             log.info("Carte: not a carte fingerprint");
             throw new InvalidCarteException("carte.invalid");
         }
@@ -174,7 +173,7 @@ public class AuthenticationManager {
             throw new InvalidCarteException("carte.unknown-signing-key");
         }
         byte[] fingerprintBytes = CryptoUtil.fingerprint(
-            fingerprint, Fingerprints.getSchema(FingerprintObjectType.CARTE.name(), fingerprint.getVersion())
+            fingerprint, Fingerprints.getSchema("CARTE", fingerprint.getVersion())
         );
         if (!CryptoUtil.verify(fingerprintBytes, signature, signingKey)) {
             log.info("Carte: signature verification failed");

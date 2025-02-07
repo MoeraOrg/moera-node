@@ -4,14 +4,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.inject.Inject;
 
-import org.moera.commons.crypto.CryptoUtil;
-import org.moera.commons.crypto.Fingerprint;
+import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.auth.Scope;
 import org.moera.node.data.RemoteReactionVerification;
 import org.moera.node.data.RemoteReactionVerificationRepository;
 import org.moera.node.data.VerificationStatus;
-import org.moera.node.fingerprint.Fingerprints;
+import org.moera.node.fingerprint.ReactionFingerprintBuilder;
 import org.moera.node.liberin.model.RemoteReactionVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemoteReactionVerifiedLiberin;
 import org.moera.node.media.MediaManager;
@@ -110,8 +109,10 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 pmf -> mediaManager.getPrivateMediaDigest(
                         data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
 
-        Fingerprint fingerprint = Fingerprints.reaction(reactionInfo.getSignatureVersion())
-                .create(reactionInfo, postingInfo, postingRevisionInfo, postingParentMediaDigest, postingMediaDigest);
+        byte[] fingerprint = ReactionFingerprintBuilder.build(
+            reactionInfo.getSignatureVersion(), reactionInfo,
+            postingInfo, postingRevisionInfo, postingParentMediaDigest, postingMediaDigest
+        );
         succeeded(CryptoUtil.verify(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 
@@ -137,9 +138,10 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 pmf -> mediaManager.getPrivateMediaDigest(
                         data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
 
-        Fingerprint fingerprint = Fingerprints.reaction(reactionInfo.getSignatureVersion())
-                .create(reactionInfo, commentInfo, commentRevisionInfo, mediaDigest, postingInfo, postingRevisionInfo,
-                        parentMediaDigest, mediaDigest);
+        byte[] fingerprint = ReactionFingerprintBuilder.build(
+            reactionInfo.getSignatureVersion(), reactionInfo, commentInfo, commentRevisionInfo, mediaDigest,
+            postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest
+        );
         succeeded(CryptoUtil.verify(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 
