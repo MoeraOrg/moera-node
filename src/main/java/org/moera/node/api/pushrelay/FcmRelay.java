@@ -1,7 +1,5 @@
 package org.moera.node.api.pushrelay;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.interfaces.ECPrivateKey;
 import java.time.Instant;
 import java.util.Objects;
@@ -11,11 +9,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import com.googlecode.jsonrpc4j.JsonRpcClientException;
-import com.googlecode.jsonrpc4j.JsonRpcHttpClient;
-import com.googlecode.jsonrpc4j.ProxyUtil;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.pushrelay.PushRelay;
+import org.moera.lib.pushrelay.PushRelayApiException;
+import org.moera.lib.pushrelay.PushRelayError;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
@@ -32,7 +30,7 @@ public class FcmRelay {
 
     private static final Logger log = LoggerFactory.getLogger(FcmRelay.class);
 
-    private PushRelayService service;
+    private PushRelay service;
     private final BlockingQueue<Pair<UUID, PushContent>> queue = new LinkedBlockingQueue<>();
 
     @Inject
@@ -43,13 +41,7 @@ public class FcmRelay {
 
     @PostConstruct
     public void init() {
-        try {
-            JsonRpcHttpClient client = new JsonRpcHttpClient(new URL(config.getFcmRelay()));
-            service = ProxyUtil.createClientProxy(getClass().getClassLoader(), PushRelayService.class, client);
-        } catch (MalformedURLException e) {
-            log.error("Malformed FCM relay service URL: {}", LogUtil.format(config.getFcmRelay()));
-            System.exit(1);
-        }
+        service = new PushRelay(config.getFcmRelay());
 
         Thread thread = new Thread(this::deliver);
         thread.setDaemon(true);
@@ -85,9 +77,9 @@ public class FcmRelay {
                             case STORY_DELETED ->
                                 service.storyDeleted(content.getId(), nodeName, now, signature);
                         }
-                    } catch (JsonRpcClientException e) {
-                        log.error("RPC error {} returned from FCM relay call", e.getCode());
-                        switch (e.getCode()) {
+                    } catch (PushRelayApiException e) {
+                        log.error("RPC error {} returned from FCM relay call", e.getRpcCode());
+                        switch (e.getRpcCode()) {
                             case PushRelayError.NODE_NAME_UNKNOWN -> {
                                 // Maybe a temporary error
                                 if (retry == 0) {
