@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;

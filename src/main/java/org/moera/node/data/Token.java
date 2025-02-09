@@ -2,20 +2,20 @@ package org.moera.node.data;
 
 import java.sql.Timestamp;
 import java.util.UUID;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-import com.vladmihalcea.hibernate.type.basic.Inet;
-import com.vladmihalcea.hibernate.type.basic.PostgreSQLInetType;
-import org.hibernate.annotations.TypeDef;
+import io.hypersistence.utils.hibernate.type.basic.Inet;
+import io.hypersistence.utils.hibernate.type.basic.PostgreSQLInetType;
+import org.hibernate.annotations.Type;
 import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "tokens")
-@TypeDef(name = "Inet", typeClass = PostgreSQLInetType.class, defaultForType = Inet.class)
 public class Token {
 
     @Id
@@ -33,6 +33,8 @@ public class Token {
     @NotNull
     private long authScope;
 
+    @Type(PostgreSQLInetType.class)
+    @Column(columnDefinition = "inet")
     private Inet ip;
 
     @Size(max = 48)

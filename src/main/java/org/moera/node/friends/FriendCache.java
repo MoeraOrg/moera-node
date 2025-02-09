@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;

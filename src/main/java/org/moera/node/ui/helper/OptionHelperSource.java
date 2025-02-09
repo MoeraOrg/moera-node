@@ -1,6 +1,6 @@
 package org.moera.node.ui.helper;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;

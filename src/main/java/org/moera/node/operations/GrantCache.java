@@ -3,7 +3,7 @@ package org.moera.node.operations;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Grant;
 import org.moera.node.data.GrantRepository;

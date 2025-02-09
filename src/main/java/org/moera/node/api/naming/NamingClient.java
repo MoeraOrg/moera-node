@@ -4,13 +4,12 @@ import java.security.PrivateKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.time.Instant;
-import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.naming.Fingerprints;
@@ -146,8 +145,8 @@ public class NamingClient {
             if (options.getUuid("naming.operation.id") == null) {
                 return null;
             }
-            Date last = context.lastCompletionTime();
-            return last == null ? new Date() : Date.from(last.toInstant().plusSeconds(10));
+            Instant last = context.lastCompletion();
+            return last == null ? Instant.now() : last.plusSeconds(10);
         });
     }
 

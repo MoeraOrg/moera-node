@@ -1,8 +1,8 @@
 package org.moera.node.data;
 
 import java.util.UUID;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue("1")

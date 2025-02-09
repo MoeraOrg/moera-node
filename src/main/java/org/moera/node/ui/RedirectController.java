@@ -2,8 +2,8 @@ package org.moera.node.ui;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import org.moera.lib.UniversalLocation;
 import org.moera.node.global.PageNotFoundException;

@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.Scope;

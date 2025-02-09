@@ -1,9 +1,9 @@
 package org.moera.node.global;
 
 import java.io.IOException;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.node.util.VirtualPageHeader;
 import org.springframework.stereotype.Component;

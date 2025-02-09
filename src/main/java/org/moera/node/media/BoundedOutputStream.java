@@ -7,7 +7,7 @@ import org.apache.commons.io.output.ThresholdingOutputStream;
 
 public class BoundedOutputStream extends ThresholdingOutputStream {
 
-    private OutputStream out;
+    private final OutputStream out;
 
     public BoundedOutputStream(OutputStream out, int threshold) {
         super(threshold);
@@ -15,7 +15,7 @@ public class BoundedOutputStream extends ThresholdingOutputStream {
     }
 
     @Override
-    protected OutputStream getStream() {
+    protected OutputStream getOutputStream() {
         return out;
     }
 

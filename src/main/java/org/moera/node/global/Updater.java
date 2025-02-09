@@ -6,8 +6,8 @@ import java.security.interfaces.ECPrivateKey;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.data.ContactUpgradeRepository;

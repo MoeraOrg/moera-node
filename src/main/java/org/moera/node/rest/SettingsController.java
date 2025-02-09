@@ -8,9 +8,9 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.validation.Valid;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;

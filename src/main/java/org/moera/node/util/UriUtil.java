@@ -2,7 +2,7 @@ package org.moera.node.util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.util.ObjectUtils;

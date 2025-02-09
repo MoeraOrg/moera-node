@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Domain;

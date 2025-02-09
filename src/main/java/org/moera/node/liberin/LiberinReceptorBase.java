@@ -1,6 +1,6 @@
 package org.moera.node.liberin;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.api.pushrelay.FcmRelay;
 import org.moera.node.event.EventManager;

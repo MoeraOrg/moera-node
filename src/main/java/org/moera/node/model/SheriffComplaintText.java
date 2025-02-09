@@ -1,7 +1,7 @@
 package org.moera.node.model;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.data.SheriffComplaintGroup;

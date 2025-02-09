@@ -2,8 +2,8 @@ package org.moera.node.rest;
 
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;

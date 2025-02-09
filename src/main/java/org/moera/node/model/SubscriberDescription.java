@@ -2,7 +2,7 @@ package org.moera.node.model;
 
 import java.util.Map;
 import java.util.UUID;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscriber;

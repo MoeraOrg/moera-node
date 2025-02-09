@@ -1,7 +1,7 @@
 package org.moera.node.rest.task.verification;
 
 import java.util.Locale;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.api.node.NodeApiErrorStatusException;
 import org.moera.node.api.node.NodeApiNotFoundException;

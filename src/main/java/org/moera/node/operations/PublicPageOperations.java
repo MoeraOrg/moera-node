@@ -3,7 +3,7 @@ package org.moera.node.operations;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Entry;
 import org.moera.node.data.PublicPage;

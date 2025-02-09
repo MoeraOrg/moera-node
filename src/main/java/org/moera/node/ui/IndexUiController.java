@@ -1,6 +1,6 @@
 package org.moera.node.ui;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;

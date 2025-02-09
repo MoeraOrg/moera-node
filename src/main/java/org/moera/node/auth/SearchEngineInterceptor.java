@@ -2,9 +2,9 @@ package org.moera.node.auth;
 
 import java.util.Objects;
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;

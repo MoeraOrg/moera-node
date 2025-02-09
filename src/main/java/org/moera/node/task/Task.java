@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.UUID;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;

@@ -8,7 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Pick;
 import org.moera.node.data.PickRepository;

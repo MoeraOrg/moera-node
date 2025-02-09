@@ -3,7 +3,7 @@ package org.moera.node.liberin.receptor;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalExpression;

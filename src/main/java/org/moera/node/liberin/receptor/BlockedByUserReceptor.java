@@ -1,6 +1,6 @@
 package org.moera.node.liberin.receptor;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.instant.BlockedUserInstants;

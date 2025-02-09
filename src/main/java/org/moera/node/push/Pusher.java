@@ -2,7 +2,7 @@ package org.moera.node.push;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.PushClient;
 import org.moera.node.data.PushNotificationRepository;

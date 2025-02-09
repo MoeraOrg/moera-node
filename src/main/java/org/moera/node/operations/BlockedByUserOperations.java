@@ -3,8 +3,8 @@ package org.moera.node.operations;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;

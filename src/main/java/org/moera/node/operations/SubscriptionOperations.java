@@ -3,7 +3,7 @@ package org.moera.node.operations;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;

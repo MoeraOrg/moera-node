@@ -1,10 +1,10 @@
 package org.moera.node.domain;
 
 import java.io.IOException;
-import javax.inject.Inject;
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.node.config.Config;
 import org.moera.node.config.MultiHost;

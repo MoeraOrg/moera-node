@@ -2,9 +2,9 @@ package org.moera.node.ui;
 
 import java.util.UUID;
 import java.util.regex.Pattern;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;

@@ -2,7 +2,7 @@ package org.moera.node.model.notification;
 
 import java.util.List;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.moera.lib.util.LogUtil;
 import org.moera.node.model.FriendGroupInfo;

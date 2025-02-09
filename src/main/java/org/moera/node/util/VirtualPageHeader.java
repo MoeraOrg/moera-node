@@ -1,6 +1,6 @@
 package org.moera.node.util;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.util.ObjectUtils;
 

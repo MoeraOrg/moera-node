@@ -3,9 +3,9 @@ package org.moera.node.rest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.validation.Valid;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.util.LogUtil;

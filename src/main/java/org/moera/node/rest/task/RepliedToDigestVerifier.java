@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.api.node.NodeApi;

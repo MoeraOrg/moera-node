@@ -2,8 +2,8 @@ package org.moera.node.global;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.CacheControl;

@@ -2,7 +2,7 @@ package org.moera.node.model.notification;
 
 import java.sql.Timestamp;
 import java.util.List;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.lib.util.LogUtil;

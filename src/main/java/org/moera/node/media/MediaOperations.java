@@ -2,7 +2,7 @@ package org.moera.node.media;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
-import static javax.transaction.Transactional.TxType.REQUIRES_NEW;
+import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -39,8 +39,8 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.FileImageInputStream;
 import javax.imageio.stream.ImageInputStream;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import com.drew.imaging.FileType;
 import com.drew.imaging.FileTypeDetector;
@@ -215,7 +215,7 @@ public class MediaOperations {
             if (contentLength > maxSize) {
                 throw new ThresholdReachedException();
             }
-            in = new BoundedInputStream(in, contentLength);
+            in = BoundedInputStream.builder().setInputStream(in).setMaxCount(contentLength).get();
         } else {
             out = new BoundedOutputStream(out, maxSize);
         }

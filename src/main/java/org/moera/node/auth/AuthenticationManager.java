@@ -6,10 +6,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 
-import com.vladmihalcea.hibernate.type.basic.Inet;
+import io.hypersistence.utils.hibernate.type.basic.Inet;
 import org.hibernate.HibernateException;
 import org.moera.lib.crypto.CryptoException;
 import org.moera.lib.crypto.CryptoUtil;

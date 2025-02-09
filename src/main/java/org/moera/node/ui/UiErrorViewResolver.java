@@ -2,8 +2,8 @@ package org.moera.node.ui;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.context.annotation.Lazy;

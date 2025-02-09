@@ -1,8 +1,8 @@
 package org.moera.node.liberin;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;

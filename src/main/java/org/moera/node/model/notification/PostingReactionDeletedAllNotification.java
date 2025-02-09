@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import org.moera.lib.util.LogUtil;
 import org.springframework.data.util.Pair;

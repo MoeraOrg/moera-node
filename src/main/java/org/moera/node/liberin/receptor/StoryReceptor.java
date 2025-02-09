@@ -2,7 +2,7 @@ package org.moera.node.liberin.receptor;
 
 import java.util.Objects;
 import java.util.UUID;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;

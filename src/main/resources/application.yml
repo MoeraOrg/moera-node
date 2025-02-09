@@ -26,12 +26,6 @@ spring:
       ddl-auto: none  # Hibernate DDL auto (create, create-drop, update)
       naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy  # Naming strategy
 
-    # Hibernate native properties (the prefix is
-    # stripped before adding them to the entity manager)
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL82Dialect  # The SQL dialect makes Hibernate generate better SQL for the chosen database
-
   mail:
     host: localhost
 #    host: smtp.gmail.com

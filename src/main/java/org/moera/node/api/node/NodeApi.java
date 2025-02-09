@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,8 +1,8 @@
 package org.moera.node.model;
 
 import java.util.Map;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import org.moera.lib.naming.NodeName;
 import org.moera.node.auth.principal.Principal;

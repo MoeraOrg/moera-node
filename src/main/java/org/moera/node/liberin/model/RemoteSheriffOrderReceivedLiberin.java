@@ -1,7 +1,7 @@
 package org.moera.node.liberin.model;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.AvatarImage;

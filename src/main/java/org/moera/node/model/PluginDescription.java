@@ -2,9 +2,9 @@ package org.moera.node.model;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.plugin.PluginDescriptor;

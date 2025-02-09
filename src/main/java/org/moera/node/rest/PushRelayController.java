@@ -2,8 +2,8 @@ package org.moera.node.rest;
 
 import java.security.interfaces.ECPrivateKey;
 import java.time.Instant;
-import javax.inject.Inject;
-import javax.validation.Valid;
+import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;

@@ -1,6 +1,6 @@
 package org.moera.node.model;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintStatus;

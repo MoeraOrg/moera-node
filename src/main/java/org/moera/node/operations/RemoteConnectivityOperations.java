@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.RemoteConnectivity;

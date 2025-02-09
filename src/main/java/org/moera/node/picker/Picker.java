@@ -7,7 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;

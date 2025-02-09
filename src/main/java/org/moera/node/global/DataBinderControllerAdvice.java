@@ -1,6 +1,6 @@
 package org.moera.node.global;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.validation.DefaultMessageCodesResolver;

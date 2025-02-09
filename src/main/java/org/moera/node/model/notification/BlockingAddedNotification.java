@@ -1,6 +1,6 @@
 package org.moera.node.model.notification;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.data.BlockedOperation;
 

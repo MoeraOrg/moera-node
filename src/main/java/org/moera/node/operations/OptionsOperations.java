@@ -1,6 +1,6 @@
 package org.moera.node.operations;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestContext;

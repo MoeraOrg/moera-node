@@ -2,7 +2,7 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Posting;

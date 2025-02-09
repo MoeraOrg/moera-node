@@ -4,37 +4,31 @@ import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Entity;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.type.PostgresUUIDType;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalType;
 import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "entries")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "entryType", discriminatorType = DiscriminatorType.INTEGER)
-@TypeDef(name = "pg-uuid", typeClass = PostgresUUIDType.class, defaultForType = UUID.class)
-@TypeDef(name = "Principal", typeClass = PrincipalType.class, defaultForType = Principal.class)
-@TypeDef(name = "ChildOperations", typeClass = ChildOperationsType.class, defaultForType = ChildOperations.class)
 public class Entry {
 
     @Id

@@ -1,6 +1,6 @@
 package org.moera.node.rest;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;

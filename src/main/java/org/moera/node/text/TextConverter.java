@@ -1,7 +1,7 @@
 package org.moera.node.text;
 
 import java.util.List;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.BodyFormat;
 import org.moera.node.data.EntryRevision;

@@ -21,8 +21,8 @@ import org.moera.node.text.markdown.mention.MentionsExtension;
 import org.moera.node.text.markdown.spoiler.SpoilerExtension;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;

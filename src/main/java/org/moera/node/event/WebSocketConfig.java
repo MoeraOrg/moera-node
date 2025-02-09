@@ -1,6 +1,6 @@
 package org.moera.node.event;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;

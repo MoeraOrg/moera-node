@@ -1,6 +1,6 @@
 package org.moera.node.rest.notification;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionReason;

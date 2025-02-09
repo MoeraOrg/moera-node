@@ -2,7 +2,7 @@ package org.moera.node.subscriptions;
 
 import java.time.Instant;
 import java.util.UUID;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoException;
 import org.moera.node.api.naming.NamingNotAvailableException;

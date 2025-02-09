@@ -1,8 +1,8 @@
 package org.moera.node.model.notification;
 
 import java.util.List;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import org.moera.lib.util.LogUtil;
 import org.springframework.data.util.Pair;

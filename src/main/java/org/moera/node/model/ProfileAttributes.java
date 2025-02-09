@@ -1,9 +1,9 @@
 package org.moera.node.model;
 
 import java.util.Map;
-import javax.transaction.Transactional;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.Size;
+import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SourceFormat;

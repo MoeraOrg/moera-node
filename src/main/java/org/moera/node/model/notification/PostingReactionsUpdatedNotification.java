@@ -2,7 +2,7 @@ package org.moera.node.model.notification;
 
 import java.util.UUID;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.moera.node.model.ReactionTotalsInfo;
 

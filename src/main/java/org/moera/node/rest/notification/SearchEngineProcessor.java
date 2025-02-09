@@ -1,8 +1,8 @@
 package org.moera.node.rest.notification;
 
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import org.moera.node.data.SearchEngine;
 import org.moera.node.data.SearchEngineStatistics;

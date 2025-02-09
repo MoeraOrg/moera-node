@@ -1,8 +1,8 @@
 package org.moera.node.ui;
 
 import java.util.UUID;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
 import org.moera.lib.util.LogUtil;

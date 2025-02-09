@@ -1,7 +1,7 @@
 package org.moera.node.rest;
 
-import javax.inject.Inject;
-import javax.validation.Valid;
+import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;

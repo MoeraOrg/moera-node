@@ -2,7 +2,7 @@ package org.moera.node.global;
 
 import java.util.Objects;
 import java.util.UUID;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;

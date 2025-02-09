@@ -1,7 +1,7 @@
 package org.moera.node.model;
 
 import java.util.UUID;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;

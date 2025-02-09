@@ -2,7 +2,7 @@ package org.moera.node.liberin.receptor;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.FriendOf;
 import org.moera.node.instant.FriendInstants;

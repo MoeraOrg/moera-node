@@ -5,26 +5,23 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-import org.hibernate.annotations.TypeDef;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalType;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.util.Util;
 
 @Entity
 @Table(name = "media_file_owners")
-@TypeDef(name = "Principal", typeClass = PrincipalType.class, defaultForType = Principal.class)
 public class MediaFileOwner {
 
     @Id

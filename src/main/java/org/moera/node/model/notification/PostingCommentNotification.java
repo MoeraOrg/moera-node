@@ -2,8 +2,8 @@ package org.moera.node.model.notification;
 
 import java.util.List;
 import java.util.UUID;
-import javax.validation.Valid;
-import javax.validation.constraints.Size;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 
 import org.moera.lib.util.LogUtil;
 import org.moera.node.model.AvatarImage;

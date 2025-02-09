@@ -1,7 +1,7 @@
 package org.moera.node;
 
 import java.security.Security;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.github.jknack.handlebars.springmvc.HandlebarsViewResolver;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
-import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.task.TaskExecutor;
@@ -159,7 +158,10 @@ public class MoeraNodeApplication implements WebMvcConfigurer {
     }
 
     private ThreadPoolTaskExecutor buildTaskExecutor(int size) {
-        return new TaskExecutorBuilder().corePoolSize(size).maxPoolSize(size).build();
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(size);
+        taskExecutor.setMaxPoolSize(size);
+        return taskExecutor;
     }
 
     public static void main(String[] args) {

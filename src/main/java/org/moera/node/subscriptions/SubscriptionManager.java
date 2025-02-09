@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;

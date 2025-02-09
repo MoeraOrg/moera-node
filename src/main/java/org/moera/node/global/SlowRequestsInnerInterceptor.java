@@ -1,9 +1,9 @@
 package org.moera.node.global;
 
 import java.time.Instant;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.node.global.RequestContext.Times;
 import org.springframework.stereotype.Component;
