@@ -31,7 +31,7 @@ public class CommentFingerprintBuilder {
             comment.getCurrentRevision().getBodyFormat(),
             comment.getCurrentRevision().getCreatedAt(),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, comment.getCurrentRevision().getAttachments())
+            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, comment.getCurrentRevision().getAttachments()))
         );
     }
 
@@ -61,7 +61,7 @@ public class CommentFingerprintBuilder {
             commentText.getBodyFormat(),
             Util.toTimestamp(commentText.getCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentText.getMedia(), mediaDigest)
+            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentText.getMedia(), mediaDigest))
         );
     }
 
@@ -81,7 +81,7 @@ public class CommentFingerprintBuilder {
             commentInfo.getBodyFormat(),
             Util.toTimestamp(commentInfo.getRevisionCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
         );
     }
 
@@ -102,7 +102,7 @@ public class CommentFingerprintBuilder {
             commentRevisionInfo.getBodyFormat(),
             Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
         );
     }
 
@@ -123,7 +123,7 @@ public class CommentFingerprintBuilder {
             commentInfo.getBodyFormat(),
             Util.toTimestamp(commentInfo.getRevisionCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
         );
     }
 
@@ -145,7 +145,7 @@ public class CommentFingerprintBuilder {
             commentRevisionInfo.getBodyFormat(),
             Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
             (byte) 0,
-            AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest)
+            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
         );
     }
 

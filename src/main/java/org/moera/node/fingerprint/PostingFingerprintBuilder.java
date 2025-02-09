@@ -39,7 +39,9 @@ public class PostingFingerprintBuilder {
                     revision.getBodyFormat(),
                     posting.isOriginal() ? revision.getCreatedAt() : revision.getReceiverCreatedAt(),
                     (byte) 0,
-                    AttachmentFingerprintBuilder.build(posting.getParentMedia(), revision.getAttachments())
+                    CryptoUtil.digest(
+                        AttachmentFingerprintBuilder.build(posting.getParentMedia(), revision.getAttachments())
+                    )
                 );
             case 0 ->
                 Fingerprints.posting0(
@@ -82,7 +84,9 @@ public class PostingFingerprintBuilder {
                             : postingInfo.getReceiverRevisionCreatedAt()
                     ),
                     (byte) 0,
-                    AttachmentFingerprintBuilder.build(parentMediaDigest, postingInfo.getMedia(), mediaDigest)
+                    CryptoUtil.digest(
+                        AttachmentFingerprintBuilder.build(parentMediaDigest, postingInfo.getMedia(), mediaDigest)
+                    )
                 );
             case 0 ->
                 Fingerprints.posting0(
@@ -126,7 +130,11 @@ public class PostingFingerprintBuilder {
                             : postingRevisionInfo.getReceiverCreatedAt()
                     ),
                     (byte) 0,
-                    AttachmentFingerprintBuilder.build(parentMediaDigest, postingRevisionInfo.getMedia(), mediaDigest)
+                    CryptoUtil.digest(
+                        AttachmentFingerprintBuilder.build(
+                            parentMediaDigest, postingRevisionInfo.getMedia(), mediaDigest
+                        )
+                    )
                 );
             case 0 ->
                 Fingerprints.posting0(
@@ -169,7 +177,9 @@ public class PostingFingerprintBuilder {
                     postingText.getBodyFormat(),
                     Util.toTimestamp(postingText.getCreatedAt()),
                     (byte) 0,
-                    AttachmentFingerprintBuilder.build(parentMediaDigest, postingText.getMedia(), mediaDigest)
+                    CryptoUtil.digest(
+                        AttachmentFingerprintBuilder.build(parentMediaDigest, postingText.getMedia(), mediaDigest)
+                    )
                 );
             case 0 ->
                 Fingerprints.posting0(
