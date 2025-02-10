@@ -24,7 +24,7 @@ public class CommentFingerprintBuilder {
         return Fingerprints.comment(
             comment.getOwnerName(),
             comment.getPosting().getCurrentRevision().getDigest(),
-            comment.getRepliedTo() != null ? comment.getRepliedTo().getCurrentRevision().getDigest() : null,
+            nullDigest(comment.getRepliedTo() != null ? comment.getRepliedTo().getCurrentRevision().getDigest() : null),
             CryptoUtil.digest(CryptoUtil.fingerprint(comment.getCurrentRevision().getBodySrc())),
             comment.getCurrentRevision().getBodySrcFormat().getValue(),
             comment.getCurrentRevision().getBody(),
@@ -54,7 +54,7 @@ public class CommentFingerprintBuilder {
         return Fingerprints.comment(
             commentText.getOwnerName(),
             postingDigest,
-            repliedToDigest,
+            nullDigest(repliedToDigest),
             CryptoUtil.digest(CryptoUtil.fingerprint(commentText.getBodySrc())),
             commentText.getBodySrcFormat().getValue(),
             commentText.getBody(),
@@ -74,7 +74,7 @@ public class CommentFingerprintBuilder {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
             CryptoUtil.digest(postingFingerprint),
-            commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null,
+            nullDigest(commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null),
             commentInfo.getBodySrcHash(),
             commentInfo.getBodySrcFormat().getValue(),
             commentInfo.getBody().getEncoded(),
@@ -95,7 +95,7 @@ public class CommentFingerprintBuilder {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
             CryptoUtil.digest(postingFingerprint),
-            commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null,
+            nullDigest(commentInfo.getRepliedTo() != null ? commentInfo.getRepliedTo().getDigest() : null),
             commentRevisionInfo.getBodySrcHash(),
             commentRevisionInfo.getBodySrcFormat().getValue(),
             commentRevisionInfo.getBody().getEncoded(),
@@ -116,7 +116,7 @@ public class CommentFingerprintBuilder {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
             CryptoUtil.digest(postingFingerprint),
-            repliedToDigest,
+            nullDigest(repliedToDigest),
             commentInfo.getBodySrcHash(),
             commentInfo.getBodySrcFormat().getValue(),
             commentInfo.getBody().getEncoded(),
@@ -138,7 +138,7 @@ public class CommentFingerprintBuilder {
         return Fingerprints.comment(
             commentInfo.getOwnerName(),
             CryptoUtil.digest(postingFingerprint),
-            repliedToDigest,
+            nullDigest(repliedToDigest),
             commentRevisionInfo.getBodySrcHash(),
             commentRevisionInfo.getBodySrcFormat().getValue(),
             commentRevisionInfo.getBody().getEncoded(),
@@ -147,6 +147,10 @@ public class CommentFingerprintBuilder {
             (byte) 0,
             CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
         );
+    }
+
+    private static byte[] nullDigest(byte[] digest) {
+        return digest != null ? digest : CryptoUtil.digest(CryptoUtil.fingerprint(null));
     }
 
 }
