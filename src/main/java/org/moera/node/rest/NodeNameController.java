@@ -1,11 +1,5 @@
 package org.moera.node.rest;
 
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.SecureRandom;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import jakarta.inject.Inject;
@@ -13,18 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
-import io.github.novacrypto.bip39.JavaxPbkdf2WithHmacSha512;
-import io.github.novacrypto.bip39.MnemonicGenerator;
-import io.github.novacrypto.bip39.SeedCalculator;
-import io.github.novacrypto.bip39.Words;
-import io.github.novacrypto.bip39.wordlists.English;
-import org.bouncycastle.jce.ECNamedCurveTable;
-import org.bouncycastle.jce.spec.ECParameterSpec;
-import org.bouncycastle.jce.spec.ECPrivateKeySpec;
-import org.bouncycastle.jce.spec.ECPublicKeySpec;
-import org.bouncycastle.math.ec.ECPoint;
 import org.moera.lib.Rules;
-import org.moera.lib.crypto.CryptoException;
+import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.crypto.KeyPair;
+import org.moera.lib.crypto.MnemonicKey;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.Scope;
@@ -42,7 +28,6 @@ import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.option.Options;
 import org.moera.node.util.UriUtil;
-import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
@@ -87,48 +72,22 @@ public class NodeNameController {
         if (options.getUuid("naming.operation.id") != null) {
             throw new OperationFailure("naming.operation-pending");
         }
+
         RegisteredNameSecret secretInfo = new RegisteredNameSecret();
         secretInfo.setName(nameToRegister.getName());
-        KeyPair signingKeyPair;
-        try {
-            SecureRandom random = new SecureRandom();
+        MnemonicKey mnemonicKey = CryptoUtil.generateMnemonicKey();
+        secretInfo.setSecret(mnemonicKey.getSecret());
+        secretInfo.setMnemonic(mnemonicKey.getMnemonic().split(" "));
+        KeyPair signingKeyPair = CryptoUtil.generateKey();
 
-            byte[] entropy = new byte[Words.TWENTY_FOUR.byteLength()];
-            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(Rules.EC_CURVE);
-            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-
-            BigInteger p = ecSpec.getCurve().getField().getCharacteristic();
-            BigInteger d = BigInteger.ZERO;
-            while (d.equals(BigInteger.ZERO)) {
-                random.nextBytes(entropy);
-                StringBuilder mnemonic = new StringBuilder();
-                new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, mnemonic::append);
-                byte[] seed = new SeedCalculator(JavaxPbkdf2WithHmacSha512.INSTANCE)
-                        .calculateSeed(mnemonic.toString(), "");
-
-                secretInfo.setSecret(Util.base64encode(entropy));
-                secretInfo.setMnemonic(mnemonic.toString().split(" "));
-
-                d = new BigInteger(1, seed).remainder(p);
-            }
-            ECPoint q = ecSpec.getG().multiply(d);
-            ECPublicKeySpec pubSpec = new ECPublicKeySpec(q, ecSpec);
-            ECPublicKey publicUpdatingKey = (ECPublicKey) keyFactory.generatePublic(pubSpec);
-
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
-            keyPairGenerator.initialize(ecSpec, random);
-            signingKeyPair = keyPairGenerator.generateKeyPair();
-
-            namingClient.register(
-                    nameToRegister.getName(),
-                    getNodeUri(request),
-                    publicUpdatingKey,
-                    (ECPrivateKey) signingKeyPair.getPrivate(),
-                    (ECPublicKey) signingKeyPair.getPublic(),
-                    options);
-        } catch (GeneralSecurityException e) {
-            throw new CryptoException(e);
-        }
+        namingClient.register(
+            nameToRegister.getName(),
+            getNodeUri(request),
+            mnemonicKey.getPublicKey(),
+            signingKeyPair.getPrivateKey(),
+            signingKeyPair.getPublicKey(),
+            options
+        );
 
         return secretInfo;
     }
@@ -152,41 +111,23 @@ public class NodeNameController {
             throw new ValidationFailure("registeredNameSecret.empty");
         }
 
-        String mnemonic;
-        if (!ObjectUtils.isEmpty(registeredNameSecret.getSecret())) {
-            byte[] entropy = Util.base64decode(registeredNameSecret.getSecret());
-            StringBuilder buf = new StringBuilder();
-            new MnemonicGenerator(English.INSTANCE).createMnemonic(entropy, buf::append);
-            mnemonic = buf.toString();
-        } else {
-            mnemonic = String.join(" ", registeredNameSecret.getMnemonic());
+        String mnemonic = !ObjectUtils.isEmpty(registeredNameSecret.getSecret())
+            ? CryptoUtil.secretToMnemonic(registeredNameSecret.getSecret())
+            : String.join(" ", registeredNameSecret.getMnemonic());
+        ECPrivateKey privateUpdatingKey = CryptoUtil.mnemonicToPrivateKey(mnemonic);
+
+        ECPrivateKey privateSigningKey = null;
+        ECPublicKey signingKey = null;
+        if (registeredNameSecret.getName() != null) {
+            KeyPair signingKeyPair = CryptoUtil.generateKey();
+            privateSigningKey = signingKeyPair.getPrivateKey();
+            signingKey = signingKeyPair.getPublicKey();
         }
-        byte[] seed = new SeedCalculator(JavaxPbkdf2WithHmacSha512.INSTANCE).calculateSeed(mnemonic, "");
 
         try {
-            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(Rules.EC_CURVE);
-
-            BigInteger p = ecSpec.getCurve().getField().getCharacteristic();
-            BigInteger d = new BigInteger(1, seed).remainder(p);
-            ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(d, ecSpec);
-            ECPrivateKey privateUpdatingKey = (ECPrivateKey) keyFactory.generatePrivate(privateKeySpec);
-
-            ECPrivateKey privateSigningKey = null;
-            ECPublicKey signingKey = null;
-            if (registeredNameSecret.getName() != null) {
-                SecureRandom random = new SecureRandom();
-                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", "BC");
-                keyPairGenerator.initialize(ecSpec, random);
-                KeyPair signingKeyPair = keyPairGenerator.generateKeyPair();
-                privateSigningKey = (ECPrivateKey) signingKeyPair.getPrivate();
-                signingKey = (ECPublicKey) signingKeyPair.getPublic();
-            }
-
-            namingClient.update(nodeName, getNodeUri(request), privateUpdatingKey, privateSigningKey, signingKey,
-                    options);
-        } catch (GeneralSecurityException e) {
-            throw new CryptoException(e);
+            namingClient.update(
+                nodeName, getNodeUri(request), privateUpdatingKey, privateSigningKey, signingKey, options
+            );
         } catch (OperationFailure of) {
             throw new OperationFailure("node-name." + of.getErrorCode());
         }

@@ -106,7 +106,7 @@ public abstract class Notification implements Cloneable {
     public final String toLogMessage() {
         List<Pair<String, String>> parameters = new ArrayList<>();
         logParameters(parameters);
-        if (parameters.size() == 0) {
+        if (parameters.isEmpty()) {
             return getType().toString();
         }
         String params = parameters.stream()
