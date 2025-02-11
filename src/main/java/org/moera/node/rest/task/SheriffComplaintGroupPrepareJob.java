@@ -8,13 +8,13 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
-import org.moera.node.data.SheriffComplaintStatus;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.liberin.model.SheriffComplaintGroupUpdatedLiberin;

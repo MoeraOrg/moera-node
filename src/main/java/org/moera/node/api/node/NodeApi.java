@@ -20,8 +20,8 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.TemporaryFile;
 import org.moera.node.media.TemporaryMediaFile;

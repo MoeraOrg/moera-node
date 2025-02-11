@@ -8,14 +8,15 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintStatus;
+import org.moera.lib.node.types.SheriffOrderCategory;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffComplaintRepository;
-import org.moera.node.data.SheriffComplaintStatus;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -26,7 +27,6 @@ import org.moera.node.model.SheriffComplaintGroupInfo;
 import org.moera.node.model.SheriffComplaintGroupsSliceInfo;
 import org.moera.node.model.SheriffComplaintInfo;
 import org.moera.node.model.SheriffOrderAttributes;
-import org.moera.node.model.SheriffOrderCategory;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.rest.task.SheriffOrderPostJob;
 import org.moera.node.task.Jobs;
@@ -71,8 +71,8 @@ public class SheriffComplaintGroupController {
             @RequestParam(required = false) Long before,
             @RequestParam(required = false) Long after,
             @RequestParam(required = false) Integer limit,
-            @RequestParam(required = false) SheriffComplaintStatus status) {
-
+            @RequestParam(required = false) SheriffComplaintStatus status
+    ) {
         log.info("GET /sheriff/complaints/groups (before = {}, after = {}, limit = {}, status = {})",
                 LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit),
                 LogUtil.format(Objects.toString(status, null)));

@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.data.BlockedOperation;
+import org.moera.lib.node.types.BlockedOperation;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StorySummaryBlocked {

@@ -2,9 +2,9 @@ package org.moera.node.notification.send;
 
 import java.util.UUID;
 
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalFilter;
-import org.moera.node.data.SubscriptionType;
 
 class SubscribersDirection extends Direction {
 

@@ -1,8 +1,8 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.data.RemotePostingVerification;
-import org.moera.node.data.VerificationStatus;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RemotePostingVerificationInfo {

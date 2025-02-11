@@ -8,7 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import jakarta.inject.Inject;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.AskSubject;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.data.AskHistoryRepository;
 import org.moera.node.domain.Domains;
 import org.moera.node.friends.FriendCache;
@@ -17,7 +18,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.AskSubjectsChangedLiberin;
-import org.moera.node.model.AskSubject;
 import org.moera.node.model.Features;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;

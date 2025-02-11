@@ -3,7 +3,7 @@ package org.moera.node.data;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-import org.moera.node.model.AskSubject;
+import org.moera.lib.node.types.AskSubject;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

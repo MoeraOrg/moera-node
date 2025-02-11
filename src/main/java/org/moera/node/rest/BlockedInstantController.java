@@ -8,9 +8,9 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.BlockedInstant;
 import org.moera.node.data.BlockedInstantRepository;
 import org.moera.node.data.Entry;
@@ -25,6 +25,7 @@ import org.moera.node.model.BlockedInstantFilter;
 import org.moera.node.model.BlockedInstantInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
+import org.moera.node.model.StoryTypeUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.operations.ReminderOperations;
@@ -97,7 +98,7 @@ public class BlockedInstantController {
 
         requestContext.send(new BlockedInstantAddedLiberin(blockedInstant));
 
-        if (blockedInstantAttributes.getStoryType().isReminder()) {
+        if (StoryTypeUtil.isReminder(blockedInstantAttributes.getStoryType())) {
             reminderOperations.unpublishAndDelete(blockedInstantAttributes.getStoryType());
         }
 

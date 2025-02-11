@@ -4,8 +4,8 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApiException;
-import org.moera.node.auth.Scope;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingMediaReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;

@@ -2,10 +2,10 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
-import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.util.Util;

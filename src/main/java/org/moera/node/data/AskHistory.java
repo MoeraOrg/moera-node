@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.model.AskSubject;
+import org.moera.lib.node.types.AskSubject;
 import org.moera.node.util.Util;
 
 @Entity

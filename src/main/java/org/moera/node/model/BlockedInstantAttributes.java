@@ -2,8 +2,8 @@ package org.moera.node.model;
 
 import java.util.UUID;
 
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.BlockedInstant;
-import org.moera.node.data.StoryType;
 import org.moera.node.util.Util;
 
 public class BlockedInstantAttributes {

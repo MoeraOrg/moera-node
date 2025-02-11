@@ -3,11 +3,11 @@ package org.moera.node.instant;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.StoryType;
 import org.moera.node.model.StorySummaryData;
 import org.moera.node.model.StorySummaryFriendGroup;
 import org.moera.node.model.StorySummaryNode;

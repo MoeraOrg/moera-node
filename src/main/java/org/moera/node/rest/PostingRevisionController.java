@@ -3,7 +3,7 @@ package org.moera.node.rest;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.global.ApiController;

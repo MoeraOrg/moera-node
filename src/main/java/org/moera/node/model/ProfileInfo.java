@@ -3,9 +3,9 @@ package org.moera.node.model;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.SourceFormat;
 import org.moera.node.global.RequestContext;
 import org.moera.node.option.Options;
 

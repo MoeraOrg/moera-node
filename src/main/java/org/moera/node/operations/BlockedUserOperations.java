@@ -15,8 +15,8 @@ import jakarta.persistence.EntityManager;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.moera.node.auth.Scope;
-import org.moera.node.data.BlockedOperation;
+import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.QBlockedUser;
@@ -75,8 +75,8 @@ public class BlockedUserOperations {
     }
 
     public List<BlockedUser> search(
-            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
-            String entryNodeName, String entryPostingId, boolean strict
+        UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
+        String entryNodeName, String entryPostingId, boolean strict
     ) {
         return search(nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId, strict);
     }

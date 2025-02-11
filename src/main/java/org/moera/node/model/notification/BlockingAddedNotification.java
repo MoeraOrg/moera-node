@@ -2,7 +2,7 @@ package org.moera.node.model.notification;
 
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.data.BlockedOperation;
+import org.moera.lib.node.types.BlockedOperation;
 
 public class BlockingAddedNotification extends Notification {
 

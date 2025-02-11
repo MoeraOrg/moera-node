@@ -12,11 +12,11 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.operations.PostingOperations;

@@ -19,13 +19,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.config.Config;
-import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRepository;

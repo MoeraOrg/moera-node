@@ -5,15 +5,15 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.AskSubject;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.AskHistory;
 import org.moera.node.data.AskHistoryRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.liberin.model.AskSubjectsChangedLiberin;
 import org.moera.node.liberin.model.AskedToFriendLiberin;
 import org.moera.node.liberin.model.AskedToSubscribeLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AskSubject;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.task.Job;
 import org.moera.node.util.Transaction;

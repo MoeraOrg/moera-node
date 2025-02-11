@@ -1,5 +1,7 @@
 package org.moera.node.model;
 
+import org.moera.lib.node.types.SheriffOrderCategory;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.util.Util;
 

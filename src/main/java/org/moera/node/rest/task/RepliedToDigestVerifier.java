@@ -8,10 +8,10 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiNotFoundException;
-import org.moera.node.auth.Scope;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.media.MediaManager;

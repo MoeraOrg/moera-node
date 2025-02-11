@@ -10,10 +10,10 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.SheriffOrderCategory;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.SheriffOrderCategory;
-import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.util.Util;
 
 @Entity

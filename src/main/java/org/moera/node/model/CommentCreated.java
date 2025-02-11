@@ -3,8 +3,8 @@ package org.moera.node.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.BlockedOperation;
 import org.moera.node.auth.principal.AccessChecker;
-import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Comment;
 import org.moera.node.operations.MediaAttachmentsProvider;
 

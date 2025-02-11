@@ -3,9 +3,9 @@ package org.moera.node.liberin.model;
 import java.util.Map;
 import java.util.UUID;
 
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Story;
-import org.moera.node.data.StoryType;
 import org.moera.node.liberin.Liberin;
 
 public class StoryDeletedLiberin extends Liberin {

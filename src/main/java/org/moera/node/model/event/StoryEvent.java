@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.StoryType;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Story;
-import org.moera.node.data.StoryType;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.StorySummaryData;

@@ -11,15 +11,15 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.lib.node.types.BodyFormat;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.BodyFormat;
 import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
 import org.moera.node.text.TextConverter;
 import org.moera.node.text.shorten.Shortener;

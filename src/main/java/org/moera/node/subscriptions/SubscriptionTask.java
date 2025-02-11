@@ -5,16 +5,16 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoException;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.api.node.NodeApiValidationException;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.SubscriberDescriptionQ;

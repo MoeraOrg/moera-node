@@ -3,9 +3,9 @@ package org.moera.node.model;
 import java.util.UUID;
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.data.BlockedOperation;
+import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.data.BlockedUser;
-import org.moera.node.data.SourceFormat;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;

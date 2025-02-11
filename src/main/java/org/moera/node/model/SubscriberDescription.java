@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.UUID;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscriber;
-import org.moera.node.data.SubscriptionType;
 
 public class SubscriberDescription {
 

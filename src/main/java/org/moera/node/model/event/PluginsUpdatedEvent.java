@@ -1,6 +1,6 @@
 package org.moera.node.model.event;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.principal.Principal;
 
 public class PluginsUpdatedEvent extends Event {

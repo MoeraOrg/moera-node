@@ -2,6 +2,8 @@ package org.moera.node.model;
 
 import jakarta.validation.constraints.NotBlank;
 
+import org.moera.lib.node.types.PushRelayType;
+
 public class PushRelayClientAttributes {
 
     private PushRelayType type;

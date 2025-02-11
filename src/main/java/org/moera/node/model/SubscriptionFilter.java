@@ -3,7 +3,7 @@ package org.moera.node.model;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.data.SubscriptionType;
+import org.moera.lib.node.types.SubscriptionType;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SubscriptionFilter {

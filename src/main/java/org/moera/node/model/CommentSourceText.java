@@ -7,9 +7,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;
-import org.moera.node.data.SourceFormat;
 
 public class CommentSourceText {
 

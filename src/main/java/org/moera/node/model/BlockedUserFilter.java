@@ -2,7 +2,7 @@ package org.moera.node.model;
 
 import java.util.UUID;
 
-import org.moera.node.data.BlockedOperation;
+import org.moera.lib.node.types.BlockedOperation;
 
 public class BlockedUserFilter {
 

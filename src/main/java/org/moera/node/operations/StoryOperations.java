@@ -9,12 +9,12 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Entry;
 import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwnerRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;

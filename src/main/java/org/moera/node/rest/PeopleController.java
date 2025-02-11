@@ -5,12 +5,12 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.data.FriendRepository;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;

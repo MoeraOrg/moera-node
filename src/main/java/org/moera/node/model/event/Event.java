@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;

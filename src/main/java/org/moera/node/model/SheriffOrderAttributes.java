@@ -3,6 +3,8 @@ package org.moera.node.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.SheriffOrderCategory;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.data.SheriffComplaintGroup;
 
 public class SheriffOrderAttributes {

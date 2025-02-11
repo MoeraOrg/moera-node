@@ -9,7 +9,8 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.model.SheriffOrderReason;
+import org.moera.lib.node.types.SheriffComplaintStatus;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.util.Util;
 
 @Entity

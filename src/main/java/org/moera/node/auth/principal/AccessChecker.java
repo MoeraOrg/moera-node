@@ -1,6 +1,6 @@
 package org.moera.node.auth.principal;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 
 public interface AccessChecker {
 

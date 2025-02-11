@@ -3,6 +3,7 @@ package org.moera.node.data;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

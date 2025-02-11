@@ -4,7 +4,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import org.moera.node.data.SearchEngine;
+import org.moera.lib.node.types.SearchEngine;
 import org.moera.node.data.SearchEngineStatistics;
 import org.moera.node.data.SearchEngineStatisticsRepository;
 import org.moera.node.global.UniversalContext;

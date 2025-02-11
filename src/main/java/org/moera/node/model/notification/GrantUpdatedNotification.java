@@ -2,7 +2,7 @@ package org.moera.node.model.notification;
 
 import java.util.List;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 
 public class GrantUpdatedNotification extends Notification {
 

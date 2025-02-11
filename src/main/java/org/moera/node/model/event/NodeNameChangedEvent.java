@@ -2,8 +2,8 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.Avatar;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.option.Options;

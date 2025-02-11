@@ -16,8 +16,9 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.Scope;
 import org.moera.node.config.Config;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.Friend;
@@ -26,7 +27,6 @@ import org.moera.node.data.PendingNotification;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.domain.Domains;
 import org.moera.node.domain.DomainsConfiguredEvent;
 import org.moera.node.friends.FriendCache;

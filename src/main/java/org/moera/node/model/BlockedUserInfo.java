@@ -1,12 +1,12 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.BlockedUser;
-import org.moera.node.data.SourceFormat;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 

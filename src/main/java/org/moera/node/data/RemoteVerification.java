@@ -14,6 +14,8 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.VerificationStatus;
+
 @Entity
 @Table(name = "remote_verifications")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)

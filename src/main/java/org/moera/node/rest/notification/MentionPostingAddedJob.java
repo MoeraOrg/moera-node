@@ -5,9 +5,9 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.node.data.Contact;
 import org.moera.node.data.SheriffMark;
-import org.moera.node.data.SubscriptionReason;
 import org.moera.node.liberin.model.MentionInRemotePostingAddedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImage;

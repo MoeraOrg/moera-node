@@ -18,6 +18,7 @@ import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.model.StorySummaryData;

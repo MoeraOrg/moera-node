@@ -3,9 +3,9 @@ package org.moera.node.rest.notification;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.UnsubscribeFailure;
 import org.moera.node.model.notification.NotificationType;

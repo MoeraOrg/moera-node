@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.SubscriptionReason;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;
@@ -26,8 +28,6 @@ import org.moera.node.data.PostingRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
 import org.moera.node.data.Story;
-import org.moera.node.data.SubscriptionReason;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserList;
 import org.moera.node.data.UserListItem;
 import org.moera.node.data.UserListItemRepository;

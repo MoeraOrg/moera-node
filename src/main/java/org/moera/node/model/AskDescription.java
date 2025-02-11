@@ -2,6 +2,8 @@ package org.moera.node.model;
 
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.AskSubject;
+
 public class AskDescription {
 
     private AskSubject subject;

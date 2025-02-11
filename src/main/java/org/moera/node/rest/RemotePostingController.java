@@ -6,14 +6,14 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.OwnPostingRepository;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
-import org.moera.node.data.SourceFormat;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;

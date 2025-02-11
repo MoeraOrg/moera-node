@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.moera.lib.node.types.BlockedOperation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;

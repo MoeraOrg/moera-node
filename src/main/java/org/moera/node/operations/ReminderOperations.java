@@ -8,17 +8,18 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Reminder;
 import org.moera.node.data.ReminderRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.Sheriffs;
+import org.moera.node.model.StoryTypeUtil;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.util.SheriffUtil;
@@ -60,14 +61,14 @@ public class ReminderOperations {
     public void initializeNode(UUID nodeId) {
         tx.executeWrite(() -> {
             for (StoryType storyType : StoryType.values()) {
-                if (!storyType.isReminder()) {
+                if (!StoryTypeUtil.isReminder(storyType)) {
                     continue;
                 }
                 Reminder reminder = new Reminder();
                 reminder.setId(UUID.randomUUID());
                 reminder.setNodeId(nodeId);
                 reminder.setStoryType(storyType);
-                reminder.setPriority(storyType.getPriority());
+                reminder.setPriority(StoryTypeUtil.priority(storyType));
                 reminder.setNextAt(Timestamp.from(Instant.now().plus(REMINDERS_START_DELAY)));
                 reminderRepository.save(reminder);
             }

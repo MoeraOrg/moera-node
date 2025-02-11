@@ -3,10 +3,10 @@ package org.moera.node.text;
 import java.util.List;
 import jakarta.inject.Inject;
 
-import org.moera.node.data.BodyFormat;
+import org.moera.lib.node.types.BodyFormat;
+import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.data.SourceFormat;
 import org.moera.node.model.body.Body;
 import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.text.sanitizer.HtmlSanitizer;

@@ -4,9 +4,9 @@ import java.util.List;
 
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.StoryType;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Story;
-import org.moera.node.data.StoryType;
 import org.springframework.data.util.Pair;
 
 public class StoryAddedNotification extends SubscriberNotification {

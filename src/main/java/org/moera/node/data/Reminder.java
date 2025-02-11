@@ -10,6 +10,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
+import org.moera.lib.node.types.StoryType;
+
 @Entity
 @Table(name = "reminders")
 public class Reminder {

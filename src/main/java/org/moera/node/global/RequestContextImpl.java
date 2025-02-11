@@ -9,7 +9,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.UniversalLocation;
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;

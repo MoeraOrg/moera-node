@@ -2,18 +2,20 @@ package org.moera.node.auth;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.moera.lib.node.types.SearchEngine;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.data.SearchEngine;
 import org.moera.node.data.SearchEngineStatistics;
 import org.moera.node.data.SearchEngineStatisticsRepository;
 import org.moera.node.global.RequestContext;
+import org.moera.node.global.UserAgent;
 import org.moera.node.liberin.model.SearchEngineClickedLiberin;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.util.Transaction;
@@ -25,6 +27,18 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class SearchEngineInterceptor implements HandlerInterceptor {
+
+    private record SearchEngineReferer(Pattern refererPattern, UserAgent botUserAgent, SearchEngine engine) {
+
+        SearchEngineReferer(String refererPattern, UserAgent botUserAgent, SearchEngine engine) {
+            this(Pattern.compile(refererPattern), botUserAgent, engine);
+        }
+
+    }
+
+    private static final SearchEngineReferer[] SEARCH_ENGINE_REFERERS = {
+        new SearchEngineReferer("^https?://[a-z]+\\.google\\.com", UserAgent.GOOGLEBOT, SearchEngine.GOOGLE)
+    };
 
     @Inject
     private RequestContext requestContext;
@@ -118,9 +132,9 @@ public class SearchEngineInterceptor implements HandlerInterceptor {
     }
 
     private SearchEngine findSearchEngine(String referer) {
-        for (SearchEngine searchEngine : SearchEngine.values()) {
-            if (searchEngine.getRefererPattern().matcher(referer).find()) {
-                return requestContext.getUserAgent() == searchEngine.getBotUserAgent() ? null : searchEngine;
+        for (var searchEngine : SEARCH_ENGINE_REFERERS) {
+            if (searchEngine.refererPattern().matcher(referer).find()) {
+                return requestContext.getUserAgent() == searchEngine.botUserAgent() ? null : searchEngine.engine();
             }
         }
         return null;

@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.SheriffOrderCategory;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
@@ -27,9 +29,7 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarImage;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
-import org.moera.node.model.SheriffOrderCategory;
 import org.moera.node.model.SheriffOrderDetails;
-import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.FeedOperations;

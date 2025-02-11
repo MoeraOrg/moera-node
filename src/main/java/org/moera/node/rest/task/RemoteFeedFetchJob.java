@@ -5,11 +5,11 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.data.StoryType;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;

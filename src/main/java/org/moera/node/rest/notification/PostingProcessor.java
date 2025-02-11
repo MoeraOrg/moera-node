@@ -4,15 +4,15 @@ import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.ReactionTotalRepository;
-import org.moera.node.data.StoryType;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;

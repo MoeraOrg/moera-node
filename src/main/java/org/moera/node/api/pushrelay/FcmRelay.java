@@ -11,6 +11,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.PushContentType;
 import org.moera.lib.pushrelay.PushRelay;
 import org.moera.lib.pushrelay.PushRelayApiException;
 import org.moera.lib.pushrelay.PushRelayError;
@@ -18,7 +19,6 @@ import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.domain.Domains;
 import org.moera.node.push.PushContent;
-import org.moera.node.push.PushContentType;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

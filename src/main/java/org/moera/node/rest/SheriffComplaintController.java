@@ -7,14 +7,15 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintStatus;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffComplaintRepository;
-import org.moera.node.data.SheriffComplaintStatus;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
@@ -22,7 +23,6 @@ import org.moera.node.liberin.model.SheriffComplaintAddedLiberin;
 import org.moera.node.liberin.model.SheriffComplaintGroupAddedLiberin;
 import org.moera.node.model.SheriffComplaintInfo;
 import org.moera.node.model.SheriffComplaintText;
-import org.moera.node.model.SheriffOrderReason;
 import org.moera.node.rest.task.SheriffComplaintGroupPrepareJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.MomentFinder;
@@ -88,7 +88,8 @@ public class SheriffComplaintController {
         sheriffComplaint.setOwnerName(clientName);
         sheriffComplaintText.toSheriffComplaint(sheriffComplaint);
         if (group.getStatus() != SheriffComplaintStatus.APPROVED
-                && group.getStatus() != SheriffComplaintStatus.REJECTED) {
+            && group.getStatus() != SheriffComplaintStatus.REJECTED
+        ) {
             group.setAnonymous(group.isAnonymous() || sheriffComplaint.isAnonymousRequested());
         }
         sheriffComplaint = sheriffComplaintRepository.save(sheriffComplaint);

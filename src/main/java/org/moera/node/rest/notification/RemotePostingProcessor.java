@@ -2,10 +2,10 @@ package org.moera.node.rest.notification;
 
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.SubscriptionReason;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Subscription;
-import org.moera.node.data.SubscriptionReason;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;

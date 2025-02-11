@@ -2,8 +2,8 @@ package org.moera.node.model.notification;
 
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.AskSubject;
 import org.moera.node.model.AskDescription;
-import org.moera.node.model.AskSubject;
 
 public class AskedNotification extends Notification {
 

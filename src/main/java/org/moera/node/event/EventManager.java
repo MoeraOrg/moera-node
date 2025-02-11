@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthSecrets;
 import org.moera.node.auth.AuthenticationManager;
 import org.moera.node.auth.CarteAuthInfo;
 import org.moera.node.auth.InvalidTokenException;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.Token;
 import org.moera.node.domain.Domains;
 import org.moera.node.friends.FriendCache;

@@ -5,8 +5,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;

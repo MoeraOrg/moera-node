@@ -3,12 +3,12 @@ package org.moera.node.model.event;
 import java.util.List;
 import java.util.UUID;
 
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.model.SheriffComplaintInfo;
-import org.moera.node.model.SheriffOrderReason;
 import org.springframework.data.util.Pair;
 
 public class SheriffComplaintAddedEvent extends Event {

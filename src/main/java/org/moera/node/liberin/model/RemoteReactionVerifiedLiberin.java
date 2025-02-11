@@ -2,8 +2,8 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.data.RemoteReactionVerification;
-import org.moera.node.data.VerificationStatus;
 import org.moera.node.liberin.Liberin;
 
 public class RemoteReactionVerifiedLiberin extends Liberin {

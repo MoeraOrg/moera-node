@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Story;
-import org.moera.node.data.StoryType;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

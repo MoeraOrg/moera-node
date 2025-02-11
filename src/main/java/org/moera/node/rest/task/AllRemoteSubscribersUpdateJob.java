@@ -9,12 +9,12 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.api.node.NodeApiException;
-import org.moera.node.auth.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.model.SubscriberOverride;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;

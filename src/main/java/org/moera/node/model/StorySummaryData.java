@@ -3,7 +3,7 @@ package org.moera.node.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.data.SubscriptionReason;
+import org.moera.lib.node.types.SubscriptionReason;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StorySummaryData {

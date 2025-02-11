@@ -3,16 +3,16 @@ package org.moera.node.rest;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.AskSubject;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.Scope;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemoteNodeAskedLiberin;
 import org.moera.node.model.AskDescription;
-import org.moera.node.model.AskSubject;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;

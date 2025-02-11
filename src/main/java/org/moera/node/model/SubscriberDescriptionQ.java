@@ -3,8 +3,8 @@ package org.moera.node.model;
 import java.util.Collections;
 import java.util.Map;
 
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.SubscriptionType;
 
 public class SubscriberDescriptionQ {
 
@@ -17,8 +17,9 @@ public class SubscriberDescriptionQ {
     public SubscriberDescriptionQ() {
     }
 
-    public SubscriberDescriptionQ(SubscriptionType type, String feedName, String postingId, Long lastUpdatedAt,
-                                  boolean visible) {
+    public SubscriberDescriptionQ(
+        SubscriptionType type, String feedName, String postingId, Long lastUpdatedAt, boolean visible
+    ) {
         this.type = type;
         this.feedName = feedName;
         this.postingId = postingId;

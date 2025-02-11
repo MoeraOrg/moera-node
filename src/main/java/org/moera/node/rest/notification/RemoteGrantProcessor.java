@@ -2,7 +2,7 @@ package org.moera.node.rest.notification;
 
 import jakarta.inject.Inject;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.model.notification.GrantUpdatedNotification;
 import org.moera.node.model.notification.NotificationType;
 import org.moera.node.notification.receive.NotificationMapping;

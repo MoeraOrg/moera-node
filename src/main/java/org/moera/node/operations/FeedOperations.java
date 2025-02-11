@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Feed;
 import org.moera.node.data.SheriffMark;

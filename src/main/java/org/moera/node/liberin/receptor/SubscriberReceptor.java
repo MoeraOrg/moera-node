@@ -2,13 +2,13 @@ package org.moera.node.liberin.receptor;
 
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.auth.principal.PrincipalExpression;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.data.Subscriber;
 import org.moera.node.data.SubscriberRepository;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.instant.SubscriberInstants;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinMapping;

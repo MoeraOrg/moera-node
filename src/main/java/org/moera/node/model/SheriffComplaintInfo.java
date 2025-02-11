@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.util.Util;
 

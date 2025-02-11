@@ -1,8 +1,9 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.SheriffComplaintStatus;
+import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.data.SheriffComplaintGroup;
-import org.moera.node.data.SheriffComplaintStatus;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

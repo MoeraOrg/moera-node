@@ -5,11 +5,11 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.lib.naming.NodeName;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.Admin;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.GrantRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;

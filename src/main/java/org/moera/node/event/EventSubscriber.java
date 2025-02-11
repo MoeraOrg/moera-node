@@ -2,7 +2,7 @@ package org.moera.node.event;
 
 import java.util.UUID;
 
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.option.Options;

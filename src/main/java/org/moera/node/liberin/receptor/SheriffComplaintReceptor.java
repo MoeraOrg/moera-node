@@ -2,10 +2,10 @@ package org.moera.node.liberin.receptor;
 
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.data.SheriffComplaintRepository;
-import org.moera.node.data.SheriffComplaintStatus;
 import org.moera.node.instant.SheriffInstants;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;

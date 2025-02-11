@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.data.SearchEngine;
+import org.moera.lib.node.types.SearchEngine;
 import org.moera.node.data.SearchEngineStatistics;
 import org.moera.node.util.Util;
 
@@ -34,8 +34,14 @@ public class SearchEngineClickedNotification extends Notification {
         super(NotificationType.SEARCH_ENGINE_CLICKED);
     }
 
-    public SearchEngineClickedNotification(SearchEngine searchEngine, String postingId, String commentId,
-                                           String mediaId, String heading, Timestamp clickedAt) {
+    public SearchEngineClickedNotification(
+        SearchEngine searchEngine,
+        String postingId,
+        String commentId,
+        String mediaId,
+        String heading,
+        Timestamp clickedAt
+    ) {
         super(NotificationType.SEARCH_ENGINE_CLICKED);
         this.searchEngine = searchEngine.getValue();
         this.postingId = postingId;

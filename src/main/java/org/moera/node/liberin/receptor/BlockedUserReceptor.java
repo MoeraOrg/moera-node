@@ -1,6 +1,6 @@
 package org.moera.node.liberin.receptor;
 
-import org.moera.node.data.BlockedOperation;
+import org.moera.lib.node.types.BlockedOperation;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;

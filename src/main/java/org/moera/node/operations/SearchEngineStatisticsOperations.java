@@ -8,6 +8,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.UniversalLocation;
+import org.moera.lib.node.types.StoryType;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
@@ -18,7 +19,6 @@ import org.moera.node.data.SearchEngineClicks;
 import org.moera.node.data.SearchEngineStatisticsRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.StoryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;

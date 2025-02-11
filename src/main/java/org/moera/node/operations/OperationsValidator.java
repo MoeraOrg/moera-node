@@ -3,8 +3,8 @@ package org.moera.node.operations;
 import java.util.List;
 import java.util.function.Function;
 
+import org.moera.lib.node.types.PrincipalFlag;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalFlag;
 import org.moera.node.model.ValidationFailure;
 import org.springframework.data.util.Pair;
 

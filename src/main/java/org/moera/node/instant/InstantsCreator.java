@@ -4,18 +4,19 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.StoryType;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.data.StoryType;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.FeedStatus;
+import org.moera.node.model.StoryTypeUtil;
 import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.StoryOperations;
@@ -55,8 +56,9 @@ public class InstantsCreator {
         return universalContext.nodeName();
     }
 
-    protected boolean isBlocked(StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
-                                String remoteOwnerName) {
+    protected boolean isBlocked(
+        StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId, String remoteOwnerName
+    ) {
         boolean blocked = false;
         if (!ObjectUtils.isEmpty(remoteOwnerName)) {
             blocked |= blockedUserOperations.isBlocked(
@@ -131,17 +133,24 @@ public class InstantsCreator {
         log.debug("Fetched {} stories", stories.size());
         while (!stories.isEmpty()) {
             for (Story prev : stories) {
-                log.debug("Probing story {}, type {}, priority {}, viewed {}",
-                        LogUtil.format(prev.getId()), LogUtil.format(prev.getStoryType().getValue()),
-                        prev.getStoryType().getPriority(), LogUtil.format(prev.isViewed()));
+                log.debug(
+                    "Probing story {}, type {}, priority {}, viewed {}",
+                    LogUtil.format(prev.getId()), LogUtil.format(prev.getStoryType().getValue()),
+                    StoryTypeUtil.priority(prev.getStoryType()), LogUtil.format(prev.isViewed())
+                );
                 if (prev.getId().equals(story.getId())) {
                     log.debug("Skipping ourselves");
                     continue;
                 }
-                if (prev.isViewed() || prev.getStoryType().getPriority() <= story.getStoryType().getPriority()) {
-                    log.debug("Found position: {}..{}",
-                            top ? momentBase : prev.getMoment(),
-                            top ? SafeInteger.MAX_VALUE : momentBase);
+                if (
+                    prev.isViewed()
+                    || StoryTypeUtil.priority(prev.getStoryType()) <= StoryTypeUtil.priority(story.getStoryType())
+                ) {
+                    log.debug(
+                        "Found position: {}..{}",
+                        top ? momentBase : prev.getMoment(),
+                        top ? SafeInteger.MAX_VALUE : momentBase
+                    );
                     return top ? Pair.of(momentBase, SafeInteger.MAX_VALUE) : Pair.of(prev.getMoment(), momentBase);
                 }
                 top = false;

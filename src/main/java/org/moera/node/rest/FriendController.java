@@ -11,10 +11,10 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.auth.Scope;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.Friend;

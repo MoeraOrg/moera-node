@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.SubscriptionReason;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.SubscriptionReason;
-import org.moera.node.data.SubscriptionType;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;

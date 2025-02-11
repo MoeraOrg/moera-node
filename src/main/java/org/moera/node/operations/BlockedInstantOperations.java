@@ -8,10 +8,10 @@ import jakarta.transaction.Transactional;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
+import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.BlockedInstant;
 import org.moera.node.data.BlockedInstantRepository;
 import org.moera.node.data.QBlockedInstant;
-import org.moera.node.data.StoryType;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -31,8 +31,8 @@ public class BlockedInstantOperations {
     private BlockedInstantRepository blockedInstantRepository;
 
     public Stream<BlockedInstant> findExact(
-            UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
-            String remoteOwnerName
+        UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
+        String remoteOwnerName
     ) {
         BooleanBuilder where = buildExactFilter(
                 nodeId, storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName);

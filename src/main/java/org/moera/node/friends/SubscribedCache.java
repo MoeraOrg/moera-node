@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.inject.Inject;
 
-import org.moera.node.data.SubscriptionType;
+import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.util.Nodes;

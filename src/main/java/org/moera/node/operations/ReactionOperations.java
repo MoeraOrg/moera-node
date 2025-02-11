@@ -13,14 +13,14 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
-import org.moera.node.auth.Scope;
 import org.moera.node.auth.UserBlockedException;
 import org.moera.node.auth.principal.Principal;
-import org.moera.node.data.BlockedOperation;
 import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;

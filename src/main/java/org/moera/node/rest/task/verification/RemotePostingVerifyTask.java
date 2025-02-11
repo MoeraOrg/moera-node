@@ -5,10 +5,10 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.data.RemotePostingVerification;
 import org.moera.node.data.RemotePostingVerificationRepository;
-import org.moera.node.data.VerificationStatus;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.liberin.model.RemotePostingVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerifiedLiberin;

@@ -3,7 +3,8 @@ package org.moera.node.model;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.Scope;
+import org.moera.lib.node.types.AskSubject;
+import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.principal.AccessChecker;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Friend;
