@@ -102,13 +102,13 @@ public class Body implements Cloneable {
         }
         for (LinkPreview linkPreview : getLinkPreviews()) {
             if (!ObjectUtils.isEmpty(linkPreview.getTitle())) {
-                if (buf.length() != 0) {
+                if (!buf.isEmpty()) {
                     buf.append(' ');
                 }
                 buf.append(linkPreview.getTitle());
             }
             if (!ObjectUtils.isEmpty(linkPreview.getDescription())) {
-                if (buf.length() != 0) {
+                if (!buf.isEmpty()) {
                     buf.append(' ');
                 }
                 buf.append(linkPreview.getDescription());
