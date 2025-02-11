@@ -126,7 +126,7 @@ public class SheriffOrderController {
         byte[] fingerprint = SheriffOrderFingerprintBuilder.build(
             sheriffOrderDetails.getSignatureVersion(), requestContext.nodeName(), sheriffOrderDetails, entryDigest
         );
-        if (!CryptoUtil.verify(fingerprint, sheriffOrderDetails.getSignature(), signingKey)) {
+        if (!CryptoUtil.verifySignature(fingerprint, sheriffOrderDetails.getSignature(), signingKey)) {
             throw new IncorrectSignatureException();
         }
         requestContext.authenticatedWithSignature(sheriffOrderDetails.getSheriffName());

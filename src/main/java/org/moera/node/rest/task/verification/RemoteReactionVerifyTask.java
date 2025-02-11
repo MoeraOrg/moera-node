@@ -122,7 +122,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 postingMediaDigest
             )
         );
-        succeeded(CryptoUtil.verify(fingerprint, reactionInfo.getSignature(), signingKey));
+        succeeded(CryptoUtil.verifySignature(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 
     private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
@@ -164,7 +164,7 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
                 )
             )
         );
-        succeeded(CryptoUtil.verify(fingerprint, reactionInfo.getSignature(), signingKey));
+        succeeded(CryptoUtil.verifySignature(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 
     private void updateData(Consumer<RemoteReactionVerification> updater) {

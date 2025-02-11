@@ -11,12 +11,12 @@ public class PublicKeyOptionType extends OptionTypeBase {
 
     @Override
     public String serializeValue(Object value) {
-        return Util.base64encode(CryptoUtil.toRawPublicKey((ECPublicKey) value));
+        return Util.base64encode(CryptoUtil.rawPublicKey((ECPublicKey) value));
     }
 
     @Override
     public Object deserializeValue(String value) {
-        return CryptoUtil.toPublicKey(Util.base64decode(value));
+        return CryptoUtil.rawToPublicKey(Util.base64decode(value));
     }
 
     @Override

@@ -138,7 +138,9 @@ public class AuthenticationManager {
         Fingerprint fingerprint;
         byte[] signature;
         try {
-            RestoredFingerprint rc = CryptoUtil.restore(carte, version -> Fingerprints.getSchema("CARTE", version));
+            RestoredFingerprint rc = CryptoUtil.restoreFingerprint(
+                carte, version -> Fingerprints.getSchema("CARTE", version)
+            );
             fingerprint = rc.fingerprint();
             signature = new byte[rc.available()];
             System.arraycopy(carte, carte.length - signature.length, signature, 0, signature.length);
@@ -175,7 +177,7 @@ public class AuthenticationManager {
         byte[] fingerprintBytes = CryptoUtil.fingerprint(
             fingerprint, Fingerprints.getSchema("CARTE", fingerprint.getVersion())
         );
-        if (!CryptoUtil.verify(fingerprintBytes, signature, signingKey)) {
+        if (!CryptoUtil.verifySignature(fingerprintBytes, signature, signingKey)) {
             log.info("Carte: signature verification failed");
             throw new InvalidCarteException("carte.invalid-signature");
         }

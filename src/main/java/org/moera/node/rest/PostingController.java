@@ -307,7 +307,7 @@ public class PostingController {
             byte[] fingerprint = PostingFingerprintBuilder.build(
                 postingText.getSignatureVersion(), postingText, parentMediaDigest(posting), this::mediaDigest
             );
-            if (!CryptoUtil.verify(fingerprint, postingText.getSignature(), signingKey)) {
+            if (!CryptoUtil.verifySignature(fingerprint, postingText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
             digest = CryptoUtil.digest(fingerprint);

@@ -11,12 +11,12 @@ public class PrivateKeyOptionType extends OptionTypeBase {
 
     @Override
     public String serializeValue(Object value) {
-        return Util.base64encode(CryptoUtil.toRawPrivateKey((ECPrivateKey) value));
+        return Util.base64encode(CryptoUtil.rawPrivateKey((ECPrivateKey) value));
     }
 
     @Override
     public Object deserializeValue(String value) {
-        return CryptoUtil.toPrivateKey(Util.base64decode(value));
+        return CryptoUtil.rawToPrivateKey(Util.base64decode(value));
     }
 
     @Override

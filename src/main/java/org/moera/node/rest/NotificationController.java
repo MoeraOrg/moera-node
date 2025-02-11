@@ -147,7 +147,7 @@ public class NotificationController {
         }
 
         byte[] fingerprint = NotificationPacketFingerprintBuilder.build(packet.getSignatureVersion(), packet);
-        return CryptoUtil.verify(fingerprint, packet.getSignature(), signingKey);
+        return CryptoUtil.verifySignature(fingerprint, packet.getSignature(), signingKey);
     }
 
     private byte[] fetchSigningKey(String ownerName) {

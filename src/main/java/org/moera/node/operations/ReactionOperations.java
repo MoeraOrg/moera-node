@@ -126,7 +126,7 @@ public class ReactionOperations {
             byte[] fingerprint = ReactionFingerprintBuilder.build(
                 reactionDescription.getSignatureVersion(), reactionDescription, entry.getCurrentRevision().getDigest()
             );
-            if (!CryptoUtil.verify(fingerprint, reactionDescription.getSignature(), signingKey)) {
+            if (!CryptoUtil.verifySignature(fingerprint, reactionDescription.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
             requestContext.authenticatedWithSignature(reactionDescription.getOwnerName());

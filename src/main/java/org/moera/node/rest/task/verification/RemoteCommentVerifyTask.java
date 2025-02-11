@@ -132,7 +132,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             ),
             repliedToDigest
         );
-        succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
+        succeeded(CryptoUtil.verifySignature(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
     private void verify(PostingInfo postingInfo, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo)
@@ -192,7 +192,7 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             ),
             repliedToDigest
         );
-        succeeded(CryptoUtil.verify(fingerprint, commentInfo.getSignature(), signingKey));
+        succeeded(CryptoUtil.verifySignature(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
     private void updateData(Consumer<RemoteCommentVerification> updater) {

@@ -235,8 +235,8 @@ public class NamingClient {
             return;
         }
 
-        byte[] updatingKeyR = CryptoUtil.toRawPublicKey(updatingKey);
-        byte[] signingKeyR = CryptoUtil.toRawPublicKey(signingKey);
+        byte[] updatingKeyR = CryptoUtil.rawPublicKey(updatingKey);
+        byte[] signingKeyR = CryptoUtil.rawPublicKey(signingKey);
         long validFrom = Instant.now()
                                 .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())
                                 .getEpochSecond();
@@ -295,7 +295,7 @@ public class NamingClient {
         byte[] previousDigest = info.getDigest();
         log.info("Previous digest is {}", previousDigest != null ? Util.dump(previousDigest) : "null");
         nodeUri = nodeUri != null ? nodeUri : info.getNodeUri();
-        byte[] signingKeyR = signingKey != null ? CryptoUtil.toRawPublicKey(signingKey) : info.getSigningKey();
+        byte[] signingKeyR = signingKey != null ? CryptoUtil.rawPublicKey(signingKey) : info.getSigningKey();
         long validFrom = signingKey != null
                 ? Instant.now()
                     .plus(options.getDuration("profile.signing-key.valid-from.layover").getDuration())

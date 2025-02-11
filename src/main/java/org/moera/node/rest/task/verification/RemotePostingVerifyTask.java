@@ -74,7 +74,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         byte[] fingerprint = PostingFingerprintBuilder.build(
             postingInfo.getSignatureVersion(), postingInfo, parentMediaDigest, mediaDigest
         );
-        succeeded(CryptoUtil.verify(fingerprint, postingInfo.getSignature(), signingKey));
+        succeeded(CryptoUtil.verifySignature(fingerprint, postingInfo.getSignature(), signingKey));
     }
 
     private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
@@ -87,7 +87,7 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         byte[] fingerprint = PostingFingerprintBuilder.build(
             postingInfo.getSignatureVersion(), postingInfo, postingRevisionInfo, parentMediaDigest, mediaDigest
         );
-        succeeded(CryptoUtil.verify(fingerprint, postingRevisionInfo.getSignature(), signingKey));
+        succeeded(CryptoUtil.verifySignature(fingerprint, postingRevisionInfo.getSignature(), signingKey));
     }
 
     private void updateData(Consumer<RemotePostingVerification> updater) {

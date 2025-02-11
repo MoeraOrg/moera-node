@@ -375,7 +375,7 @@ public class CommentController {
                 posting.getCurrentRevision().getDigest(),
                 repliedToDigest
             );
-            if (!CryptoUtil.verify(fingerprint, commentText.getSignature(), signingKey)) {
+            if (!CryptoUtil.verifySignature(fingerprint, commentText.getSignature(), signingKey)) {
                 throw new IncorrectSignatureException();
             }
             digest = CryptoUtil.digest(fingerprint);
