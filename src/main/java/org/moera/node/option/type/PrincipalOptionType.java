@@ -1,6 +1,6 @@
 package org.moera.node.option.type;
 
-import org.moera.lib.node.types.PrincipalFlag;
+import org.moera.lib.node.types.principal.PrincipalFlag;
 import org.moera.node.auth.principal.Principal;
 import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.UnsuitableOptionValueException;

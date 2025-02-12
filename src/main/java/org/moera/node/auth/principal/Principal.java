@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.util.StdConverter;
-import org.moera.lib.node.types.PrincipalFlag;
+import org.moera.lib.node.types.principal.PrincipalFlag;
 
 @JsonSerialize(converter = Principal.ToStringConverter.class)
 @JsonDeserialize(converter = Principal.FromStringConverter.class)
