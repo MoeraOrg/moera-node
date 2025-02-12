@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.UniversalLocation;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
@@ -27,7 +28,7 @@ import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
@@ -209,9 +210,11 @@ public class TimelineUiController {
             model.addAttribute("ogImageWidth", image.getWidth());
             model.addAttribute("ogImageHeight", image.getHeight());
         } else if (entry.getOwnerAvatarMediaFile() != null) {
-            AvatarImage avatarImage = new AvatarImage(entry.getOwnerAvatarMediaFile(), entry.getOwnerAvatarShape());
+            AvatarImage avatarImage = AvatarImageUtil.build(
+                entry.getOwnerAvatarMediaFile(), entry.getOwnerAvatarShape()
+            );
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
-            model.addAttribute("ogImageType", avatarImage.getMediaFile().getMimeType());
+            model.addAttribute("ogImageType", AvatarImageUtil.getMediaFile(avatarImage).getMimeType());
             model.addAttribute("ogImageWidth", avatarImage.getWidth());
             model.addAttribute("ogImageHeight", avatarImage.getHeight());
         }

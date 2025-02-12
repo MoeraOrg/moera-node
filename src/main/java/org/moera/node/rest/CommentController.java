@@ -27,6 +27,7 @@ import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.CommentTotalInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
@@ -66,7 +67,7 @@ import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentMassAttributes;
 import org.moera.node.model.CommentText;
-import org.moera.node.model.CommentTotalInfo;
+import org.moera.node.model.CommentTotalInfoUtil;
 import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
@@ -764,7 +765,7 @@ public class CommentController {
 
         requestContext.send(new CommentDeletedLiberin(comment, latest));
 
-        return new CommentTotalInfo(comment.getPosting().getTotalChildren());
+        return CommentTotalInfoUtil.build(comment.getPosting().getTotalChildren());
     }
 
     @GetMapping("/{commentId}/attached")

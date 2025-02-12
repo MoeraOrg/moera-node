@@ -8,6 +8,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintInfo;
 import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.util.LogUtil;
@@ -21,7 +22,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SheriffComplaintAddedLiberin;
 import org.moera.node.liberin.model.SheriffComplaintGroupAddedLiberin;
-import org.moera.node.model.SheriffComplaintInfo;
+import org.moera.node.model.SheriffComplaintInfoUtil;
 import org.moera.node.model.SheriffComplaintText;
 import org.moera.node.rest.task.SheriffComplaintGroupPrepareJob;
 import org.moera.node.task.Jobs;
@@ -111,7 +112,7 @@ public class SheriffComplaintController {
         requestContext.send(new SheriffComplaintAddedLiberin(sheriffComplaint, group));
 
         return ResponseEntity.created(URI.create("/sheriff/complaints/" + sheriffComplaint.getId()))
-                .body(new SheriffComplaintInfo(sheriffComplaint, true));
+                .body(SheriffComplaintInfoUtil.build(sheriffComplaint, true));
     }
 
     private Pair<SheriffComplaintGroup, Boolean> findOrCreateComplaintGroup(SheriffComplaintText sheriffComplaintText) {

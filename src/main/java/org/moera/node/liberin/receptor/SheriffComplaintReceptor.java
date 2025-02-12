@@ -15,7 +15,7 @@ import org.moera.node.liberin.model.SheriffComplaintAddedLiberin;
 import org.moera.node.liberin.model.SheriffComplaintGroupAddedLiberin;
 import org.moera.node.liberin.model.SheriffComplaintGroupUpdatedLiberin;
 import org.moera.node.mail.ComplaintAddedMail;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.event.SheriffComplaintAddedEvent;
 import org.moera.node.model.event.SheriffComplaintGroupAddedEvent;
 import org.moera.node.model.event.SheriffComplaintGroupUpdatedEvent;
@@ -44,8 +44,11 @@ public class SheriffComplaintReceptor extends LiberinReceptorBase {
                 case POSTED:
                     break;
                 case PREPARED:
-                    sheriffInstants.complaintAdded(universalContext.nodeName(),
-                            new AvatarImage(universalContext.getAvatar()), liberin.getGroup().getId().toString());
+                    sheriffInstants.complaintAdded(
+                        universalContext.nodeName(),
+                        AvatarImageUtil.build(universalContext.getAvatar()),
+                        liberin.getGroup().getId().toString()
+                    );
                     send(new ComplaintAddedMail(liberin.getGroup().getId()));
                     break;
                 default:

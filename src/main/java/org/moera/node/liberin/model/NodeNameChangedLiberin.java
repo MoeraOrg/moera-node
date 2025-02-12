@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.option.Options;
 
 public class NodeNameChangedLiberin extends Liberin {
@@ -66,7 +66,7 @@ public class NodeNameChangedLiberin extends Liberin {
         model.put("gender", options.getString("profile.gender"));
         model.put("title", options.getString("profile.title"));
         if (avatar != null) {
-            model.put("avatar", new AvatarImage(avatar));
+            model.put("avatar", AvatarImageUtil.build(avatar));
         }
     }
 

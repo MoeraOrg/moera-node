@@ -44,7 +44,7 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.EntryInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.PostingFeatures;
+import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.PublicMediaFileInfo;
@@ -143,7 +143,7 @@ public class MediaController {
     }
 
     private DigestingOutputStream transfer(InputStream in, OutputStream out, Long contentLength) throws IOException {
-        int maxSize = new PostingFeatures(requestContext.getOptions(), requestContext).getMediaMaxSize();
+        int maxSize = PostingFeaturesUtil.build(requestContext.getOptions(), requestContext).getMediaMaxSize();
         return MediaOperations.transfer(in, out, contentLength, maxSize);
     }
 

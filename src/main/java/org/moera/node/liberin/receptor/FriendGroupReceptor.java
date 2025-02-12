@@ -2,6 +2,7 @@ package org.moera.node.liberin.receptor;
 
 import java.util.UUID;
 
+import org.moera.lib.node.types.FriendGroupInfo;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.node.data.FriendGroup;
@@ -11,7 +12,7 @@ import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.FriendGroupAddedLiberin;
 import org.moera.node.liberin.model.FriendGroupDeletedLiberin;
 import org.moera.node.liberin.model.FriendGroupUpdatedLiberin;
-import org.moera.node.model.FriendGroupInfo;
+import org.moera.node.model.FriendGroupInfoUtil;
 import org.moera.node.model.event.FriendGroupAddedEvent;
 import org.moera.node.model.event.FriendGroupDeletedEvent;
 import org.moera.node.model.event.FriendGroupUpdatedEvent;
@@ -24,18 +25,22 @@ public class FriendGroupReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(FriendGroupAddedLiberin liberin) {
-        send(liberin, new FriendGroupAddedEvent(new FriendGroupInfo(liberin.getFriendGroup(), true),
-                Principal.ADMIN));
-        send(liberin, new FriendGroupAddedEvent(new FriendGroupInfo(liberin.getFriendGroup(), false),
-                visibilityFilter(liberin.getFriendGroup()).a().andNot(Principal.ADMIN)));
+        send(liberin, new FriendGroupAddedEvent(
+            FriendGroupInfoUtil.build(liberin.getFriendGroup(), true),
+            Principal.ADMIN
+        ));
+        send(liberin, new FriendGroupAddedEvent(
+            FriendGroupInfoUtil.build(liberin.getFriendGroup(), false),
+            visibilityFilter(liberin.getFriendGroup()).a().andNot(Principal.ADMIN)
+        ));
     }
 
     @LiberinMapping
     public void updated(FriendGroupUpdatedLiberin liberin) {
-        FriendGroupInfo friendGroupInfo = new FriendGroupInfo(liberin.getFriendGroup(), true);
+        FriendGroupInfo friendGroupInfo = FriendGroupInfoUtil.build(liberin.getFriendGroup(), true);
         send(liberin, new FriendGroupUpdatedEvent(friendGroupInfo, Principal.ADMIN));
 
-        friendGroupInfo = new FriendGroupInfo(liberin.getFriendGroup(), false);
+        friendGroupInfo = FriendGroupInfoUtil.build(liberin.getFriendGroup(), false);
         Principal filter = visibilityFilter(liberin.getFriendGroup());
         Principal latestFilter = visibilityFilter(liberin.getFriendGroup().getId(), liberin.getLatestViewPrincipal());
 

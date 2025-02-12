@@ -3,8 +3,8 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.data.SheriffMark;
 import org.springframework.data.util.Pair;
 
 public class FeedSheriffDataUpdatedEvent extends Event {

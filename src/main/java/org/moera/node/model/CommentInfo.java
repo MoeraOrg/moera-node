@@ -9,8 +9,10 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
@@ -18,7 +20,6 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.OwnComment;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.model.body.Body;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.util.SheriffUtil;
@@ -102,7 +103,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         ownerFullName = comment.getOwnerFullName();
         ownerGender = comment.getOwnerGender();
         if (comment.getOwnerAvatarMediaFile() != null) {
-            ownerAvatar = new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape());
+            ownerAvatar = AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape());
         }
         postingId = comment.getPosting().getId().toString();
         postingRevisionId = revision.getParent().getId().toString();

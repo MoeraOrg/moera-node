@@ -9,6 +9,9 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintGroupInfo;
+import org.moera.lib.node.types.SheriffComplaintGroupsSliceInfo;
+import org.moera.lib.node.types.SheriffComplaintInfo;
 import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.lib.node.types.SheriffOrderCategory;
 import org.moera.lib.util.LogUtil;
@@ -23,9 +26,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SheriffComplaintGroupUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SheriffComplaintDecisionText;
-import org.moera.node.model.SheriffComplaintGroupInfo;
-import org.moera.node.model.SheriffComplaintGroupsSliceInfo;
-import org.moera.node.model.SheriffComplaintInfo;
+import org.moera.node.model.SheriffComplaintGroupInfoUtil;
+import org.moera.node.model.SheriffComplaintInfoUtil;
 import org.moera.node.model.SheriffOrderAttributes;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.rest.task.SheriffOrderPostJob;
@@ -136,7 +138,11 @@ public class SheriffComplaintGroupController {
     }
 
     private static void fillSlice(SheriffComplaintGroupsSliceInfo sliceInfo, Page<SheriffComplaintGroup> page) {
-        sliceInfo.setGroups(page.getContent().stream().map(SheriffComplaintGroupInfo::new).collect(Collectors.toList()));
+        sliceInfo.setGroups(
+            page.getContent().stream()
+                .map(SheriffComplaintGroupInfoUtil::build)
+                .collect(Collectors.toList())
+        );
     }
 
     private void calcSliceTotals(SheriffComplaintGroupsSliceInfo sliceInfo, SheriffComplaintStatus status) {
@@ -170,7 +176,7 @@ public class SheriffComplaintGroupController {
                 .findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
 
-        return new SheriffComplaintGroupInfo(sheriffComplaintGroup);
+        return SheriffComplaintGroupInfoUtil.build(sheriffComplaintGroup);
     }
 
     @GetMapping("/{id}/complaints")
@@ -185,11 +191,12 @@ public class SheriffComplaintGroupController {
         List<SheriffComplaint> sheriffComplaints = sheriffComplaintRepository.findByGroupId(requestContext.nodeId(), id);
 
         return sheriffComplaints.stream()
-                .filter(sc ->
-                        !sheriffComplaintGroup.isAnonymous()
-                                || requestContext.isAdmin(Scope.SHERIFF)
-                                || requestContext.isClient(sc.getOwnerName(), Scope.IDENTIFY))
-                .map(sc -> new SheriffComplaintInfo(sc, false))
+                .filter(
+                    sc -> !sheriffComplaintGroup.isAnonymous()
+                        || requestContext.isAdmin(Scope.SHERIFF)
+                        || requestContext.isClient(sc.getOwnerName(), Scope.IDENTIFY)
+                )
+                .map(sc -> SheriffComplaintInfoUtil.build(sc, false))
                 .collect(Collectors.toList());
     }
 
@@ -217,20 +224,23 @@ public class SheriffComplaintGroupController {
 
         if (!noOrder) {
             jobs.run(
-                    SheriffOrderPostJob.class,
-                    new SheriffOrderPostJob.Parameters(
-                            sheriffComplaintGroup.getRemoteNodeName(),
-                            new SheriffOrderAttributes(
-                                    sheriffComplaintGroup,
-                                    SheriffOrderCategory.VISIBILITY,
-                                    sheriffComplaintDecisionText),
-                            sheriffComplaintGroup.getId()),
-                    requestContext.nodeId());
+                SheriffOrderPostJob.class,
+                new SheriffOrderPostJob.Parameters(
+                    sheriffComplaintGroup.getRemoteNodeName(),
+                    new SheriffOrderAttributes(
+                        sheriffComplaintGroup,
+                        SheriffOrderCategory.VISIBILITY,
+                        sheriffComplaintDecisionText
+                    ),
+                    sheriffComplaintGroup.getId()
+                ),
+                requestContext.nodeId()
+            );
         }
 
         requestContext.send(new SheriffComplaintGroupUpdatedLiberin(sheriffComplaintGroup, prevStatus));
 
-        return new SheriffComplaintGroupInfo(sheriffComplaintGroup);
+        return SheriffComplaintGroupInfoUtil.build(sheriffComplaintGroup);
     }
 
 }

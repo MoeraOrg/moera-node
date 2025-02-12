@@ -4,8 +4,9 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.springframework.data.util.Pair;
 
 public abstract class ReactionNotification extends Notification {
@@ -82,7 +83,7 @@ public abstract class ReactionNotification extends Notification {
     public void logParameters(List<Pair<String, String>> parameters) {
         super.logParameters(parameters);
         parameters.add(Pair.of("ownerName", LogUtil.format(ownerName)));
-        parameters.add(Pair.of("ownerAvatar", ownerAvatar != null ? ownerAvatar.toLogString() : "null"));
+        parameters.add(Pair.of("ownerAvatar", ownerAvatar != null ? AvatarImageUtil.toLogString(ownerAvatar) : "null"));
         parameters.add(Pair.of("negative", LogUtil.format(negative)));
     }
 

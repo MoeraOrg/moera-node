@@ -3,14 +3,15 @@ package org.moera.node.instant;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryFriendGroup;
-import org.moera.node.model.StorySummaryNode;
+import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.StorySummaryFriendGroupUtil;
+import org.moera.node.model.StorySummaryNodeUtil;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,7 +30,7 @@ public class AskInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(remoteFullName);
-        story.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
+        story.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(remoteAvatar));
         story.setRemoteAvatarShape(remoteAvatar.getShape());
         story.setSummaryData(buildSubscribeSummary(remoteNodeName, remoteFullName, remoteGender, message));
         updateMoment(story);
@@ -40,7 +41,7 @@ public class AskInstants extends InstantsCreator {
     private static StorySummaryData buildSubscribeSummary(String remoteNodeName, String remoteFullName,
                                                           String remoteGender, String message) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(remoteNodeName, remoteFullName, remoteGender));
+        summaryData.setNode(StorySummaryNodeUtil.build(remoteNodeName, remoteFullName, remoteGender));
         summaryData.setDescription(message);
         return summaryData;
     }
@@ -55,10 +56,11 @@ public class AskInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         story.setRemoteFullName(remoteFullName);
-        story.setRemoteAvatarMediaFile(remoteAvatar.getMediaFile());
+        story.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(remoteAvatar));
         story.setRemoteAvatarShape(remoteAvatar.getShape());
-        story.setSummaryData(buildFriendSummary(remoteNodeName, remoteFullName, remoteGender, friendGroupId,
-                friendGroupTitle, message));
+        story.setSummaryData(
+            buildFriendSummary(remoteNodeName, remoteFullName, remoteGender, friendGroupId, friendGroupTitle, message)
+        );
         updateMoment(story);
         story = storyRepository.saveAndFlush(story);
         storyAdded(story);
@@ -68,8 +70,8 @@ public class AskInstants extends InstantsCreator {
                                                        String remoteGender, UUID friendGroupId, String friendGroupTitle,
                                                        String message) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(remoteNodeName, remoteFullName, remoteGender));
-        summaryData.setFriendGroup(new StorySummaryFriendGroup(friendGroupId.toString(), friendGroupTitle));
+        summaryData.setNode(StorySummaryNodeUtil.build(remoteNodeName, remoteFullName, remoteGender));
+        summaryData.setFriendGroup(StorySummaryFriendGroupUtil.build(friendGroupId.toString(), friendGroupTitle));
         summaryData.setDescription(message);
         return summaryData;
     }

@@ -8,6 +8,8 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.UniversalLocation;
+import org.moera.lib.node.types.StorySummaryData;
+import org.moera.lib.node.types.StorySummaryPageClicks;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Comment;
@@ -23,8 +25,7 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.StoryAddedLiberin;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryPageClicks;
+import org.moera.node.model.StorySummaryPageClicksUtil;
 import org.moera.node.text.HeadingExtractor;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -139,7 +140,7 @@ public class SearchEngineStatisticsOperations {
     private StorySummaryPageClicks toSummary(SearchEngineClicks clicks) {
         String heading = getSummaryHeading(clicks);
         String href = getSummaryHref(clicks);
-        return new StorySummaryPageClicks(heading, href, clicks.getClicks());
+        return StorySummaryPageClicksUtil.build(heading, href, (int) clicks.getClicks());
     }
 
     private String getSummaryHeading(SearchEngineClicks clicks) {

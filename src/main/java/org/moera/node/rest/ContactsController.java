@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Contact;
@@ -24,7 +25,7 @@ import org.moera.node.data.QContact;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.ContactInfo;
+import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -95,7 +96,7 @@ public class ContactsController {
             page.stream()
                     .filter(ct -> contactMatch(ct, regexes))
                     .limit(limit - result.size())
-                    .map(c -> new ContactInfo(c, requestContext.getOptions(), requestContext))
+                    .map(c -> ContactInfoUtil.build(c, requestContext.getOptions(), requestContext))
                     .forEach(result::add);
             if (result.size() >= limit) {
                 return result;

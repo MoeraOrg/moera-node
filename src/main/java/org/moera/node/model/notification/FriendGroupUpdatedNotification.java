@@ -4,8 +4,8 @@ import java.util.List;
 
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.FriendGroupInfo;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.model.FriendGroupInfo;
 import org.springframework.data.util.Pair;
 
 public class FriendGroupUpdatedNotification extends Notification {

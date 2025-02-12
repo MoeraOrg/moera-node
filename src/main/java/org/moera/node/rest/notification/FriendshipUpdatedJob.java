@@ -9,14 +9,15 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.node.data.Contact;
 import org.moera.node.data.ContactRepository;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.FriendOfRepository;
 import org.moera.node.liberin.model.RemoteFriendshipUpdatedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.FriendGroupDetails;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 import org.moera.node.util.Util;
@@ -134,12 +135,12 @@ public class FriendshipUpdatedJob extends Job<FriendshipUpdatedJob.Parameters, O
             contactOperations.updateFriendOfCount(parameters.senderNodeName, liberin.getAdded().size());
             if (parameters.senderAvatar != null) {
                 contactRepository.updateRemoteAvatar(
-                        universalContext.nodeId(),
-                        contact.getRemoteNodeName(),
-                        parameters.senderAvatar.getMediaFile(),
-                        parameters.senderAvatar.getShape()
+                    universalContext.nodeId(),
+                    contact.getRemoteNodeName(),
+                    AvatarImageUtil.getMediaFile(parameters.senderAvatar),
+                    parameters.senderAvatar.getShape()
                 );
-                contact.setRemoteAvatarMediaFile(parameters.senderAvatar.getMediaFile());
+                contact.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(parameters.senderAvatar));
                 contact.setRemoteAvatarShape(parameters.senderAvatar.getShape());
             }
             liberin.setContact(contact);

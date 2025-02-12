@@ -15,7 +15,7 @@ import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.SubscriptionAddedLiberin;
 import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
 import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
-import org.moera.node.model.SubscriptionInfo;
+import org.moera.node.model.SubscriptionInfoUtil;
 import org.moera.node.model.event.SubscriptionAddedEvent;
 import org.moera.node.model.event.SubscriptionDeletedEvent;
 import org.moera.node.model.event.SubscriptionUpdatedEvent;
@@ -32,8 +32,10 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
     public void added(SubscriptionAddedLiberin liberin) {
         UserSubscription subscription = liberin.getSubscription();
 
-        send(liberin, new SubscriptionAddedEvent(new SubscriptionInfo(subscription, universalContext.getOptions()),
-                visibilityFilter(universalContext.getOptions(), subscription)));
+        send(liberin, new SubscriptionAddedEvent(
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()),
+            visibilityFilter(universalContext.getOptions(), subscription)
+        ));
         sendPeopleChangedEvent(liberin);
     }
 
@@ -45,19 +47,22 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
                 .and(subscription.getViewE())
                 .andNot(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionAddedEvent(
-                new SubscriptionInfo(subscription, universalContext.getOptions()), addedFilter));
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), addedFilter
+        ));
 
         PrincipalExpression updatedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
                 .and(subscription.getViewE())
                 .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionUpdatedEvent(
-                new SubscriptionInfo(subscription, universalContext.getOptions()), updatedFilter));
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), updatedFilter
+        ));
 
         PrincipalExpression deletedFilter = generalVisibilityFilter(universalContext.getOptions(), subscription).a()
                 .andNot(subscription.getViewE())
                 .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriptionDeletedEvent(
-                new SubscriptionInfo(subscription, universalContext.getOptions()), deletedFilter));
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()), deletedFilter
+        ));
     }
 
     @LiberinMapping
@@ -65,8 +70,9 @@ public class SubscriptionReceptor extends LiberinReceptorBase {
         UserSubscription subscription = liberin.getSubscription();
 
         send(liberin, new SubscriptionDeletedEvent(
-                new SubscriptionInfo(subscription, universalContext.getOptions()),
-                visibilityFilter(universalContext.getOptions(), subscription)));
+            SubscriptionInfoUtil.build(subscription, universalContext.getOptions()),
+            visibilityFilter(universalContext.getOptions(), subscription)
+        ));
         sendPeopleChangedEvent(liberin);
     }
 

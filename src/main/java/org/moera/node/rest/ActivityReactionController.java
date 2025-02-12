@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.ActivityReactionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.OwnReaction;
@@ -15,7 +16,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ActivityReactionFilter;
-import org.moera.node.model.ActivityReactionInfo;
+import org.moera.node.model.ActivityReactionInfoUtil;
 import org.moera.node.model.RemotePosting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public class ActivityReactionController {
 
         return ownReactions.stream()
                 .filter(r -> filter.getPostings().contains(r.getRemotePosting()))
-                .map(ActivityReactionInfo::new)
+                .map(ActivityReactionInfoUtil::build)
                 .collect(Collectors.toList());
     }
 

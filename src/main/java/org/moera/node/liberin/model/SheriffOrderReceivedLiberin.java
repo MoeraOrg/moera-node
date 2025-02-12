@@ -3,11 +3,11 @@ package org.moera.node.liberin.model;
 import java.util.Map;
 import jakarta.persistence.EntityManager;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarImage;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 

@@ -25,7 +25,7 @@ import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.body.Body;
@@ -106,14 +106,23 @@ public class CommentReceptor extends LiberinReceptorBase {
         notifyMentioned(posting, comment, null, Principal.PUBLIC, liberin.getLatestRevision(),
                 comment.getViewE());
 
-        send(Directions.postingSubscribers(comment.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
-                new PostingCommentsUpdatedNotification(
-                        posting.getId(), posting.getTotalChildren()));
-        send(Directions.postingCommentsSubscribers(comment.getNodeId(), posting.getId(),
-                        visibilityFilter(posting, comment)),
-                new PostingCommentDeletedNotification(posting.getId(), comment.getId(), comment.getOwnerName(),
-                        comment.getOwnerFullName(), comment.getOwnerGender(),
-                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
+        send(
+            Directions.postingSubscribers(comment.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
+            new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren())
+        );
+        send(
+            Directions.postingCommentsSubscribers(
+                comment.getNodeId(), posting.getId(), visibilityFilter(posting, comment)
+            ),
+            new PostingCommentDeletedNotification(
+                posting.getId(),
+                comment.getId(),
+                comment.getOwnerName(),
+                comment.getOwnerFullName(),
+                comment.getOwnerGender(),
+                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
+            )
+        );
 
         send(liberin, new CommentDeletedEvent(comment, visibilityFilter(posting, comment)));
         send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
@@ -171,10 +180,18 @@ public class CommentReceptor extends LiberinReceptorBase {
         if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null) {
             return;
         }
-        send(Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
-                new ReplyCommentDeletedNotification(posting.getId(), comment.getId(), comment.getRepliedTo().getId(),
-                        comment.getOwnerName(), comment.getOwnerFullName(), comment.getOwnerGender(),
-                        new AvatarImage(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())));
+        send(
+            Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
+            new ReplyCommentDeletedNotification(
+                posting.getId(),
+                comment.getId(),
+                comment.getRepliedTo().getId(),
+                comment.getOwnerName(),
+                comment.getOwnerFullName(),
+                comment.getOwnerGender(),
+                AvatarImageUtil.build(comment.getOwnerAvatarMediaFile(), comment.getOwnerAvatarShape())
+            )
+        );
     }
 
     private void notifyMentioned(Entry posting, Comment comment, EntryRevision current, Principal currentView,

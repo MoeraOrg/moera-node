@@ -4,11 +4,11 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.data.Contact;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddedLiberin;
 import org.moera.node.liberin.model.RemotePostingMediaReactionAddedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarImage;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 

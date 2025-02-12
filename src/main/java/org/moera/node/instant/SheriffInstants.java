@@ -3,14 +3,15 @@ package org.moera.node.instant;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntry;
-import org.moera.node.model.StorySummarySheriff;
+import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.StorySummaryEntryUtil;
+import org.moera.node.model.StorySummarySheriffUtil;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -94,7 +95,7 @@ public class SheriffInstants extends InstantsCreator {
         story.setFeedName(Feed.INSTANT);
         story.setRemoteNodeName(remoteNodeName);
         if (sheriffAvatar != null) {
-            story.setRemoteAvatarMediaFile(sheriffAvatar.getMediaFile());
+            story.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(sheriffAvatar));
             story.setRemoteAvatarShape(sheriffAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
@@ -116,13 +117,17 @@ public class SheriffInstants extends InstantsCreator {
                                                  String complaintId) {
         StorySummaryData summaryData = new StorySummaryData();
         if (postingHeading != null) {
-            summaryData.setPosting(new StorySummaryEntry(postingOwnerName, postingOwnerFullName, null, postingHeading));
+            summaryData.setPosting(
+                StorySummaryEntryUtil.build(postingOwnerName, postingOwnerFullName, null, postingHeading)
+            );
         }
         if (commentHeading != null) {
-            summaryData.setComment(new StorySummaryEntry(commentOwnerName, commentOwnerFullName, null, commentHeading));
+            summaryData.setComment(
+                StorySummaryEntryUtil.build(commentOwnerName, commentOwnerFullName, null, commentHeading)
+            );
         }
         summaryData.setFeedName(remoteFeedName);
-        summaryData.setSheriff(new StorySummarySheriff(sheriffName, orderId, complaintId));
+        summaryData.setSheriff(StorySummarySheriffUtil.build(sheriffName, orderId, complaintId));
         return summaryData;
     }
 

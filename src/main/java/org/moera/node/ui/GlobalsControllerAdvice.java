@@ -3,9 +3,10 @@ package org.moera.node.ui;
 import jakarta.inject.Inject;
 
 import org.moera.lib.naming.NodeName;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.NodeNameInfo;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
@@ -24,14 +25,14 @@ public class GlobalsControllerAdvice {
         if (!requestContext.isRegistrar()) {
             model.addAttribute("nodeName", new NodeNameInfo(requestContext.getPublic()));
             model.addAttribute("nodeAvatar", requestContext.getPublic().getAvatar() != null
-                    ? new AvatarImage(requestContext.getPublic().getAvatar()) : null);
+                    ? AvatarImageUtil.build(requestContext.getPublic().getAvatar()) : null);
             model.addAttribute("siteUrl", requestContext.getSiteUrl());
         }
         model.addAttribute("ogType", "website");
         if (requestContext.getAvatar() != null) {
-            AvatarImage avatarImage = new AvatarImage(requestContext.getAvatar());
+            AvatarImage avatarImage = AvatarImageUtil.build(requestContext.getAvatar());
             model.addAttribute("ogImage", requestContext.getSiteUrl() + "/moera/media/" + avatarImage.getPath());
-            model.addAttribute("ogImageType", avatarImage.getMediaFile().getMimeType());
+            model.addAttribute("ogImageType", AvatarImageUtil.getMediaFile(avatarImage).getMimeType());
             model.addAttribute("ogImageWidth", avatarImage.getWidth());
             model.addAttribute("ogImageHeight", avatarImage.getHeight());
         } else {

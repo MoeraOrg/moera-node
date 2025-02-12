@@ -2,7 +2,7 @@ package org.moera.node.model.notification;
 
 import java.util.UUID;
 
-import org.moera.node.model.AvatarImage;
+import org.moera.lib.node.types.AvatarImage;
 
 public class CommentReactionDeletedNotification extends CommentReactionNotification {
 

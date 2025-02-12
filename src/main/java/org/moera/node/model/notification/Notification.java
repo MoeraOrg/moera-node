@@ -7,7 +7,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.moera.node.model.AvatarImage;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 

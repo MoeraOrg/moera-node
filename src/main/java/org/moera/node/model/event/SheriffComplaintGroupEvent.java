@@ -3,12 +3,13 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintGroupInfo;
 import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.SheriffComplaintGroup;
-import org.moera.node.model.SheriffComplaintGroupInfo;
+import org.moera.node.model.SheriffComplaintGroupInfoUtil;
 import org.springframework.data.util.Pair;
 
 public class SheriffComplaintGroupEvent extends Event {
@@ -21,7 +22,7 @@ public class SheriffComplaintGroupEvent extends Event {
 
     protected SheriffComplaintGroupEvent(EventType type, SheriffComplaintGroup group) {
         super(type, Scope.SHERIFF, Principal.ADMIN);
-        this.group = new SheriffComplaintGroupInfo(group);
+        this.group = SheriffComplaintGroupInfoUtil.build(group);
     }
 
     public SheriffComplaintGroupInfo getGroup() {

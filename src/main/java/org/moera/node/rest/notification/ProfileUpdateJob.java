@@ -8,7 +8,7 @@ import org.moera.node.data.MediaFile;
 import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
 import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.WhoAmI;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
@@ -103,15 +103,16 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
         }
 
         tx.executeWriteWithExceptions(() -> mediaManager.downloadAvatar(parameters.nodeName, state.whoAmI.getAvatar()));
-        if (state.whoAmI.getAvatar() != null && state.whoAmI.getAvatar().getMediaFile() != null) {
-            MediaFile mediaFile = state.whoAmI.getAvatar().getMediaFile();
+        if (state.whoAmI.getAvatar() != null && AvatarImageUtil.getMediaFile(state.whoAmI.getAvatar()) != null) {
+            MediaFile mediaFile = AvatarImageUtil.getMediaFile(state.whoAmI.getAvatar());
             String shape = state.whoAmI.getAvatar().getShape();
             contactOperations.updateAvatar(
                     parameters.nodeName,
                     mediaFile,
                     shape,
                     () -> universalContext.send(
-                            new RemoteNodeAvatarChangedLiberin(parameters.nodeName, new AvatarImage(mediaFile, shape)))
+                        new RemoteNodeAvatarChangedLiberin(parameters.nodeName, AvatarImageUtil.build(mediaFile, shape))
+                    )
             );
         }
     }

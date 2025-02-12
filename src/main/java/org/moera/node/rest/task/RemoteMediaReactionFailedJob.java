@@ -9,6 +9,7 @@ import org.moera.node.api.node.NodeApiException;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingMediaReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.EntryInfo;
 import org.moera.node.model.PostingInfo;
@@ -133,16 +134,16 @@ public class RemoteMediaReactionFailedJob
         }
 
         if (state.parentPosting.getOwnerAvatar() != null) {
-            state.parentPosting.getOwnerAvatar().setMediaFile(
-                    mediaManager.downloadPublicMedia(
-                            parameters.targetNodeName,
-                            state.parentPosting.getOwnerAvatar()));
+            AvatarImageUtil.setMediaFile(
+                state.parentPosting.getOwnerAvatar(),
+                mediaManager.downloadPublicMedia(parameters.targetNodeName, state.parentPosting.getOwnerAvatar())
+            );
         }
         if (state.parentComment != null && state.parentComment.getOwnerAvatar() != null) {
-            state.parentComment.getOwnerAvatar().setMediaFile(
-                    mediaManager.downloadPublicMedia(
-                            parameters.targetNodeName,
-                            state.parentComment.getOwnerAvatar()));
+            AvatarImageUtil.setMediaFile(
+                state.parentComment.getOwnerAvatar(),
+                mediaManager.downloadPublicMedia(parameters.targetNodeName, state.parentComment.getOwnerAvatar())
+            );
         }
 
         if (state.parentComment == null) {

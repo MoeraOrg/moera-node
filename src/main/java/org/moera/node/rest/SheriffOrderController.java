@@ -26,7 +26,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SheriffOrderReceivedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SheriffOrderDetails;
@@ -149,10 +149,17 @@ public class SheriffOrderController {
             entry.setEditedAt(Util.now());
         }
 
-        requestContext.send(new SheriffOrderReceivedLiberin(sheriffOrderDetails.isDelete(),
-                sheriffOrderDetails.getFeedName(), posting, comment, sheriffOrderDetails.getSheriffName(),
-                new AvatarImage(sheriffOrderDetails.getSheriffAvatar(), sheriffOrderDetails.getSheriffAvatarMediaFile()),
-                sheriffOrderDetails.getId()));
+        requestContext.send(new SheriffOrderReceivedLiberin(
+            sheriffOrderDetails.isDelete(),
+            sheriffOrderDetails.getFeedName(),
+            posting,
+            comment,
+            sheriffOrderDetails.getSheriffName(),
+            AvatarImageUtil.build(
+                sheriffOrderDetails.getSheriffAvatar(), sheriffOrderDetails.getSheriffAvatarMediaFile()
+            ),
+            sheriffOrderDetails.getId()
+        ));
         return Result.OK;
     }
 

@@ -5,13 +5,13 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.node.data.Contact;
 import org.moera.node.data.OwnCommentRepository;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.liberin.model.ForeignCommentAddedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarImage;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 

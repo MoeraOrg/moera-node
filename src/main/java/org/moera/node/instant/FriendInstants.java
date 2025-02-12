@@ -3,14 +3,14 @@ package org.moera.node.instant;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.FriendOf;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryFriendGroup;
-import org.moera.node.model.StorySummaryNode;
+import org.moera.node.model.StorySummaryFriendGroupUtil;
+import org.moera.node.model.StorySummaryNodeUtil;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -50,9 +50,10 @@ public class FriendInstants extends InstantsCreator {
 
     private static StorySummaryData buildSummary(FriendOf friend) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(friend.getContact()));
+        summaryData.setNode(StorySummaryNodeUtil.build(friend.getContact()));
         summaryData.setFriendGroup(
-                new StorySummaryFriendGroup(friend.getRemoteGroupId(), friend.getRemoteGroupTitle()));
+            StorySummaryFriendGroupUtil.build(friend.getRemoteGroupId(), friend.getRemoteGroupTitle())
+        );
         return summaryData;
     }
 

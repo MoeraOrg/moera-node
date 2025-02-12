@@ -52,6 +52,7 @@ import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PostingFeatures;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -74,7 +75,7 @@ import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescription;
-import org.moera.node.model.PostingFeatures;
+import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.util.DigestingOutputStream;
@@ -586,7 +587,7 @@ public class MediaOperations {
             return Collections.emptyList();
         }
 
-        PostingFeatures features = new PostingFeatures(universalContext.getOptions(), AccessCheckers.ADMIN);
+        PostingFeatures features = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN);
         int recommendedSize = features.getImageRecommendedSize();
 
         List<MediaFileOwner> attached = new ArrayList<>();

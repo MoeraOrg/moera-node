@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.AsyncOperationCreated;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -15,7 +16,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.AsyncOperationCreated;
+import org.moera.node.model.AsyncOperationCreatedUtil;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.Result;
 import org.moera.node.rest.task.RemoteCommentReactionPostJob;
@@ -109,7 +110,7 @@ public class RemoteCommentReactionController {
         taskAutowire.autowire(task);
         taskExecutor.execute(task);
 
-        return new AsyncOperationCreated(data.getId());
+        return AsyncOperationCreatedUtil.build(data.getId());
     }
 
 }

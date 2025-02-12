@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.AsyncOperationCreated;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.util.LogUtil;
@@ -20,7 +21,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.AsyncOperationCreated;
+import org.moera.node.model.AsyncOperationCreatedUtil;
 import org.moera.node.model.PostingSourceText;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -167,7 +168,7 @@ public class RemotePostingController {
         taskAutowire.autowire(task);
         taskExecutor.execute(task);
 
-        return new AsyncOperationCreated(data.getId());
+        return AsyncOperationCreatedUtil.build(data.getId());
     }
 
 }

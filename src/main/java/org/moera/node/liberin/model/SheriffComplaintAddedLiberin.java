@@ -5,8 +5,8 @@ import java.util.Map;
 import org.moera.node.data.SheriffComplaint;
 import org.moera.node.data.SheriffComplaintGroup;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.SheriffComplaintGroupInfo;
-import org.moera.node.model.SheriffComplaintInfo;
+import org.moera.node.model.SheriffComplaintGroupInfoUtil;
+import org.moera.node.model.SheriffComplaintInfoUtil;
 
 public class SheriffComplaintAddedLiberin extends Liberin {
 
@@ -37,8 +37,8 @@ public class SheriffComplaintAddedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("complaint", new SheriffComplaintInfo(complaint, false));
-        model.put("group", new SheriffComplaintGroupInfo(group));
+        model.put("complaint", SheriffComplaintInfoUtil.build(complaint, false));
+        model.put("group", SheriffComplaintGroupInfoUtil.build(group));
     }
 
 }

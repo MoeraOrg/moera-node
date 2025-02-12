@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.naming.types.OperationStatus;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.global.RequestContext;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,7 +30,7 @@ public class WhoAmI {
         gender = requestContext.getOptions().getString("profile.gender");
         title = requestContext.getOptions().getString("profile.title");
         if (requestContext.getAvatar() != null) {
-            avatar = new AvatarImage(requestContext.getAvatar());
+            avatar = AvatarImageUtil.build(requestContext.getAvatar());
         }
         if (requestContext.getOptions().getBool("frozen")) {
             frozen = true;

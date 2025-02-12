@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.moera.node.data.FriendOf;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.FriendOfInfo;
+import org.moera.node.model.FriendOfInfoUtil;
 
 public class RemoteFriendGroupDeletedLiberin extends Liberin {
 
@@ -25,7 +25,7 @@ public class RemoteFriendGroupDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("friendOf", new FriendOfInfo(friendOf, getPluginContext().getOptions()));
+        model.put("friendOf", FriendOfInfoUtil.build(friendOf, getPluginContext().getOptions()));
     }
 
 }

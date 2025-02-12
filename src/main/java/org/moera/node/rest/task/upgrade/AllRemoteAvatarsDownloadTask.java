@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.Contact;
@@ -13,7 +14,6 @@ import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.UpgradeType;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarImage;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

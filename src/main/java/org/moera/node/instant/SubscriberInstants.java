@@ -3,14 +3,14 @@ package org.moera.node.instant;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.data.Subscriber;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryNode;
+import org.moera.node.model.StorySummaryNodeUtil;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -54,7 +54,7 @@ public class SubscriberInstants extends InstantsCreator {
 
     private static StorySummaryData buildSummary(Subscriber subscriber) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(subscriber.getContact()));
+        summaryData.setNode(StorySummaryNodeUtil.build(subscriber.getContact()));
         summaryData.setFeedName(subscriber.getFeedName());
         return summaryData;
     }

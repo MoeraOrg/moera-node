@@ -18,6 +18,7 @@ import org.moera.node.fingerprint.ReactionFingerprintBuilder;
 import org.moera.node.liberin.model.RemotePostingReactionAddedLiberin;
 import org.moera.node.liberin.model.RemotePostingReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionCreated;
@@ -212,11 +213,15 @@ public class RemotePostingReactionPostJob
             checkpoint();
         }
 
-        if (state.postingInfo.getOwnerAvatar() != null && state.postingInfo.getOwnerAvatar().getMediaFile() == null) {
+        if (
+            state.postingInfo.getOwnerAvatar() != null
+            && AvatarImageUtil.getMediaFile(state.postingInfo.getOwnerAvatar()) == null
+        ) {
             MediaFile mediaFile = mediaManager.downloadPublicMedia(
-                    parameters.targetNodeName,
-                    state.postingInfo.getOwnerAvatar());
-            state.postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
+                parameters.targetNodeName,
+                state.postingInfo.getOwnerAvatar()
+            );
+            AvatarImageUtil.setMediaFile(state.postingInfo.getOwnerAvatar(), mediaFile);
             checkpoint();
         }
 

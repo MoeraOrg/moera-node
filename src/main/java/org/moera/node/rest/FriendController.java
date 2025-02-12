@@ -11,6 +11,9 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.ContactInfo;
+import org.moera.lib.node.types.FriendGroupDetails;
+import org.moera.lib.node.types.FriendInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -27,11 +30,11 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
-import org.moera.node.model.ContactInfo;
+import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.FriendDescription;
 import org.moera.node.model.FriendGroupAssignment;
-import org.moera.node.model.FriendGroupDetails;
-import org.moera.node.model.FriendInfo;
+import org.moera.node.model.FriendGroupDetailsUtil;
+import org.moera.node.model.FriendInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
@@ -100,7 +103,7 @@ public class FriendController {
                 groups = null;
             }
             if (groups == null) {
-                FriendInfo info = new FriendInfo(friend, requestContext.getOptions(), requestContext);
+                FriendInfo info = FriendInfoUtil.build(friend, requestContext.getOptions(), requestContext);
                 if (groupId == null) {
                     groups = new ArrayList<>();
                     info.setGroups(groups);
@@ -113,7 +116,7 @@ public class FriendController {
                         || requestContext.isClient(friend.getRemoteNodeName(), Scope.VIEW_PEOPLE)
                         || friend.getFriendGroup().getViewPrincipal().isPublic());
             if (groups != null && visible) {
-                groups.add(new FriendGroupDetails(friend, requestContext.isAdmin(Scope.VIEW_PEOPLE)));
+                groups.add(FriendGroupDetailsUtil.build(friend, requestContext.isAdmin(Scope.VIEW_PEOPLE)));
             }
         }
 
@@ -131,7 +134,7 @@ public class FriendController {
         }
 
         ContactInfo contact = contactRepository.findByRemoteNode(requestContext.nodeId(), nodeName)
-                .map(c -> new ContactInfo(c, requestContext.getOptions(), requestContext))
+                .map(c -> ContactInfoUtil.build(c, requestContext.getOptions(), requestContext))
                 .orElse(null);
 
         boolean privileged = requestContext.isAdmin(Scope.VIEW_PEOPLE)
@@ -141,10 +144,10 @@ public class FriendController {
         List<FriendGroupDetails> groups = Arrays.stream(friendCache.getClientGroups(nodeName))
                 .filter(fr -> isPublic.get(fr.getFriendGroup().getId()) || privileged)
                 .filter(fr -> requestContext.isPrincipal(fr.getViewE(), Scope.VIEW_PEOPLE))
-                .map(fr -> new FriendGroupDetails(fr, requestContext.isAdmin(Scope.VIEW_PEOPLE)))
+                .map(fr -> FriendGroupDetailsUtil.build(fr, requestContext.isAdmin(Scope.VIEW_PEOPLE)))
                 .collect(Collectors.toList());
 
-        return new FriendInfo(nodeName, contact, groups);
+        return FriendInfoUtil.build(nodeName, contact, groups);
     }
 
     @PutMapping
@@ -158,7 +161,7 @@ public class FriendController {
         Map<UUID, FriendGroup> groups = new HashMap<>();
         for (FriendDescription friendDescription : friendDescriptions) {
             Contact contact = contactOperations.find(friendDescription.getNodeName());
-            FriendInfo friendInfo = new FriendInfo(contact, requestContext.getOptions(), requestContext);
+            FriendInfo friendInfo = FriendInfoUtil.build(contact, requestContext.getOptions(), requestContext);
             result.add(friendInfo);
 
             Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
@@ -208,10 +211,10 @@ public class FriendController {
                 if (friendInfo.getGroups() == null) {
                     friendInfo.setGroups(new ArrayList<>());
                 }
-                friendInfo.getGroups().add(new FriendGroupDetails(friend, true));
+                friendInfo.getGroups().add(FriendGroupDetailsUtil.build(friend, true));
             }
 
-            friendInfo.setContact(new ContactInfo(contact, requestContext.getOptions(), requestContext));
+            friendInfo.setContact(ContactInfoUtil.build(contact, requestContext.getOptions(), requestContext));
 
             requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS, friendDescription.getNodeName());
             requestContext.send(

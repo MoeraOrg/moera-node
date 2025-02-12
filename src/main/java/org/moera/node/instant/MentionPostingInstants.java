@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.SheriffMark;
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntry;
+import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.StorySummaryEntryUtil;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,7 +37,7 @@ public class MentionPostingInstants extends InstantsCreator {
         story.setRemotePostingNodeName(ownerName);
         story.setRemotePostingFullName(ownerFullName);
         if (ownerAvatar != null) {
-            story.setRemotePostingAvatarMediaFile(ownerAvatar.getMediaFile());
+            story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(ownerAvatar));
             story.setRemotePostingAvatarShape(ownerAvatar.getShape());
         }
         story.setRemotePostingId(id);
@@ -63,9 +64,14 @@ public class MentionPostingInstants extends InstantsCreator {
     private static StorySummaryData buildSummary(Story story, String ownerGender, String heading, List<String> sheriffs,
                                                  List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(
-                story.getRemotePostingNodeName(), story.getRemotePostingFullName(), ownerGender, heading, sheriffs,
-                sheriffMarks));
+        summaryData.setPosting(StorySummaryEntryUtil.build(
+            story.getRemotePostingNodeName(),
+            story.getRemotePostingFullName(),
+            ownerGender,
+            heading,
+            sheriffs,
+            sheriffMarks
+        ));
         return summaryData;
     }
 

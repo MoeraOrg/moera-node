@@ -1,7 +1,7 @@
 package org.moera.node.model.event;
 
+import org.moera.lib.node.types.FriendGroupInfo;
 import org.moera.lib.node.types.principal.PrincipalFilter;
-import org.moera.node.model.FriendGroupInfo;
 
 public class FriendGroupAddedEvent extends FriendGroupEvent {
 

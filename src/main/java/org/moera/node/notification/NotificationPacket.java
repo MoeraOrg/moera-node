@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.model.AvatarImage;
+import org.moera.lib.node.types.AvatarImage;
 
 public class NotificationPacket {
 

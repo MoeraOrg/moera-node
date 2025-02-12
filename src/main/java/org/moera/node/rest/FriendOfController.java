@@ -7,6 +7,9 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.ContactInfo;
+import org.moera.lib.node.types.FriendGroupDetails;
+import org.moera.lib.node.types.FriendOfInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
@@ -15,9 +18,9 @@ import org.moera.node.data.FriendOfRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.ContactInfo;
-import org.moera.node.model.FriendGroupDetails;
-import org.moera.node.model.FriendOfInfo;
+import org.moera.node.model.ContactInfoUtil;
+import org.moera.node.model.FriendGroupDetailsUtil;
+import org.moera.node.model.FriendOfInfoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,13 +59,13 @@ public class FriendOfController {
                 groups = null;
             }
             if (groups == null) {
-                FriendOfInfo info = new FriendOfInfo(friendOf, requestContext.getOptions(), requestContext);
+                FriendOfInfo info = FriendOfInfoUtil.build(friendOf, requestContext.getOptions(), requestContext);
                 groups = new ArrayList<>();
                 info.setGroups(groups);
                 friendOfInfos.add(info);
                 prevNodeName = friendOf.getRemoteNodeName();
             }
-            groups.add(new FriendGroupDetails(friendOf));
+            groups.add(FriendGroupDetailsUtil.build(friendOf));
         }
 
         return friendOfInfos.stream().filter(fi -> !fi.getGroups().isEmpty()).collect(Collectors.toList());
@@ -80,16 +83,17 @@ public class FriendOfController {
 
         List<FriendOf> friendOfs = friendOfRepository.findByNodeIdAndRemoteNode(requestContext.nodeId(), nodeName);
         if (friendOfs.isEmpty()) {
-            return new FriendOfInfo(nodeName, null, Collections.emptyList());
+            return FriendOfInfoUtil.build(nodeName, null, Collections.emptyList());
         }
 
         List<FriendGroupDetails> groups = friendOfs.stream()
-                .map(FriendGroupDetails::new)
+                .map(FriendGroupDetailsUtil::build)
                 .collect(Collectors.toList());
 
-        ContactInfo contactInfo = new ContactInfo(
-                friendOfs.get(0).getContact(), requestContext.getOptions(), requestContext);
-        return new FriendOfInfo(nodeName, contactInfo, groups);
+        ContactInfo contactInfo = ContactInfoUtil.build(
+            friendOfs.get(0).getContact(), requestContext.getOptions(), requestContext
+        );
+        return FriendOfInfoUtil.build(nodeName, contactInfo, groups);
     }
 
 }

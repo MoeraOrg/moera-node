@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
@@ -24,7 +25,7 @@ import org.moera.node.liberin.model.PostingReactionAddedLiberin;
 import org.moera.node.liberin.model.PostingReactionDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionAddedNotification;
@@ -70,8 +71,9 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
     private void updated(Liberin liberin, Posting posting, Reaction addedReaction, Reaction deletedReaction,
                          ReactionTotalsInfo reactionTotals) {
         if (deletedReaction != null) {
-            AvatarImage ownerAvatar = new AvatarImage(deletedReaction.getOwnerAvatarMediaFile(),
-                    deletedReaction.getOwnerAvatarShape());
+            AvatarImage ownerAvatar = AvatarImageUtil.build(
+                deletedReaction.getOwnerAvatarMediaFile(), deletedReaction.getOwnerAvatarShape()
+            );
             if (posting.getParentMedia() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
                     send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
@@ -105,12 +107,14 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
         }
 
         if (addedReaction != null && addedReaction.getSignature() != null) {
-            AvatarImage ownerAvatar = new AvatarImage(addedReaction.getOwnerAvatarMediaFile(),
-                    addedReaction.getOwnerAvatarShape());
+            AvatarImage ownerAvatar = AvatarImageUtil.build(
+                addedReaction.getOwnerAvatarMediaFile(), addedReaction.getOwnerAvatarShape()
+            );
             if (posting.getParentMedia() == null) {
                 if (!Objects.equals(posting.getOwnerName(), universalContext.nodeName())) {
-                    AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
-                            posting.getOwnerAvatarShape());
+                    AvatarImage postingOwnerAvatar = AvatarImageUtil.build(
+                        posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape()
+                    );
                     send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
                                     visibilityFilter(posting, addedReaction)),
                             new PostingReactionAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
@@ -132,8 +136,9 @@ public class PostingReactionReceptor extends LiberinReceptorBase {
                 Set<Entry> entries = entryRepository.findByMediaId(posting.getParentMedia().getId());
                 for (Entry entry : entries) {
                     Entry parentPosting = entry instanceof Comment ? ((Comment) entry).getPosting() : entry;
-                    AvatarImage parentPostingAvatar = new AvatarImage(parentPosting.getOwnerAvatarMediaFile(),
-                            parentPosting.getOwnerAvatarShape());
+                    AvatarImage parentPostingAvatar = AvatarImageUtil.build(
+                        parentPosting.getOwnerAvatarMediaFile(), parentPosting.getOwnerAvatarShape()
+                    );
                     UUID parentCommentId = entry instanceof Comment ? entry.getId() : null;
                     send(Directions.single(liberin.getNodeId(), posting.getOwnerName(),
                                     visibilityFilter(posting, addedReaction)),

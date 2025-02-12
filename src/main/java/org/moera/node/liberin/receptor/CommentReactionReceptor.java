@@ -1,5 +1,6 @@
 package org.moera.node.liberin.receptor;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
@@ -14,7 +15,7 @@ import org.moera.node.liberin.model.CommentReactionAddedLiberin;
 import org.moera.node.liberin.model.CommentReactionDeletedLiberin;
 import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.CommentReactionsDeletedAllLiberin;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.event.CommentReactionsChangedEvent;
 import org.moera.node.model.notification.CommentReactionAddedNotification;
 import org.moera.node.model.notification.CommentReactionDeletedAllNotification;
@@ -36,30 +37,51 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
 
     private void updated(Liberin liberin, Comment comment, Reaction addedReaction, Reaction deletedReaction) {
         if (deletedReaction != null) {
-            send(Directions.single(liberin.getNodeId(), comment.getOwnerName(),
-                            visibilityFilter(comment, deletedReaction)),
-                    new CommentReactionDeletedNotification(comment.getPosting().getId(), comment.getId(),
-                            deletedReaction.getOwnerName(), deletedReaction.getOwnerFullName(),
-                            deletedReaction.getOwnerGender(),
-                            new AvatarImage(
-                                    deletedReaction.getOwnerAvatarMediaFile(), deletedReaction.getOwnerAvatarShape()),
-                            deletedReaction.isNegative()));
+            send(
+                Directions.single(
+                    liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment, deletedReaction)
+                ),
+                new CommentReactionDeletedNotification(
+                    comment.getPosting().getId(),
+                    comment.getId(),
+                    deletedReaction.getOwnerName(),
+                    deletedReaction.getOwnerFullName(),
+                    deletedReaction.getOwnerGender(),
+                    AvatarImageUtil.build(
+                        deletedReaction.getOwnerAvatarMediaFile(), deletedReaction.getOwnerAvatarShape()
+                    ),
+                    deletedReaction.isNegative()
+                )
+            );
         }
 
         if (addedReaction != null && addedReaction.getSignature() != null) {
             Entry posting = comment.getPosting();
-            AvatarImage postingOwnerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(),
-                    posting.getOwnerAvatarShape());
-            send(Directions.single(liberin.getNodeId(), comment.getOwnerName(),
-                            visibilityFilter(comment, addedReaction)),
-                    new CommentReactionAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                            posting.getOwnerGender(), postingOwnerAvatar, posting.getId(), comment.getId(),
-                            posting.getCurrentRevision().getHeading(),
-                            comment.getCurrentRevision().getHeading(), addedReaction.getOwnerName(),
-                            addedReaction.getOwnerFullName(), addedReaction.getOwnerGender(),
-                            new AvatarImage(
-                                    addedReaction.getOwnerAvatarMediaFile(), addedReaction.getOwnerAvatarShape()),
-                            addedReaction.isNegative(), addedReaction.getEmoji()));
+            AvatarImage postingOwnerAvatar = AvatarImageUtil.build(
+                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape()
+            );
+            send(
+                Directions.single(
+                    liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment, addedReaction)
+                ),
+                new CommentReactionAddedNotification(
+                    posting.getOwnerName(),
+                    posting.getOwnerFullName(),
+                    posting.getOwnerGender(),
+                    postingOwnerAvatar,
+                    posting.getId(),
+                    comment.getId(),
+                    posting.getCurrentRevision().getHeading(),
+                    comment.getCurrentRevision().getHeading(),
+                    addedReaction.getOwnerName(),
+                    addedReaction.getOwnerFullName(),
+                    addedReaction.getOwnerGender(),
+                    AvatarImageUtil.build(
+                        addedReaction.getOwnerAvatarMediaFile(), addedReaction.getOwnerAvatarShape()
+                    ),
+                    addedReaction.isNegative(), addedReaction.getEmoji()
+                )
+            );
         }
 
         send(liberin, new CommentReactionsChangedEvent(comment, generalVisibilityFilter(comment)));

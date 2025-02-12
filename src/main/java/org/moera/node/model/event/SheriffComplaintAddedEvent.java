@@ -4,11 +4,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintInfo;
 import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.SheriffComplaint;
-import org.moera.node.model.SheriffComplaintInfo;
+import org.moera.node.model.SheriffComplaintInfoUtil;
 import org.springframework.data.util.Pair;
 
 public class SheriffComplaintAddedEvent extends Event {
@@ -22,7 +23,7 @@ public class SheriffComplaintAddedEvent extends Event {
 
     public SheriffComplaintAddedEvent(SheriffComplaint complaint, UUID groupId) {
         super(EventType.SHERIFF_COMPLAINT_ADDED, Scope.SHERIFF, Principal.ADMIN);
-        this.complaint = new SheriffComplaintInfo(complaint, false);
+        this.complaint = SheriffComplaintInfoUtil.build(complaint, false);
         this.groupId = groupId.toString();
     }
 

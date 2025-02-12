@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Feed;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UniversalContext;

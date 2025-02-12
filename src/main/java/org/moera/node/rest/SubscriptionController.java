@@ -12,7 +12,9 @@ import jakarta.validation.Valid;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -29,13 +31,13 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
 import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
-import org.moera.node.model.ContactInfo;
+import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.RemoteFeed;
 import org.moera.node.model.RemotePosting;
 import org.moera.node.model.SubscriptionDescription;
 import org.moera.node.model.SubscriptionFilter;
-import org.moera.node.model.SubscriptionInfo;
+import org.moera.node.model.SubscriptionInfoUtil;
 import org.moera.node.model.SubscriptionOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
@@ -113,7 +115,7 @@ public class SubscriptionController {
 
         return fetchSubscriptions(where).stream()
                 .filter(sr -> requestContext.isPrincipal(sr.getViewE(), Scope.VIEW_PEOPLE))
-                .map(sr -> new SubscriptionInfo(sr, requestContext.getOptions(), requestContext))
+                .map(sr -> SubscriptionInfoUtil.build(sr, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -148,7 +150,7 @@ public class SubscriptionController {
 
         UserSubscription subscription = subscriptionOperations.subscribe(subscriptionDescription::toUserSubscription);
 
-        return new SubscriptionInfo(subscription, requestContext.getOptions(), requestContext);
+        return SubscriptionInfoUtil.build(subscription, requestContext.getOptions(), requestContext);
     }
 
     @PutMapping("/{id}")
@@ -177,7 +179,7 @@ public class SubscriptionController {
 
         requestContext.send(new SubscriptionOperationsUpdatedLiberin(subscription, latestView));
 
-        return new SubscriptionInfo(subscription, requestContext.getOptions(), requestContext);
+        return SubscriptionInfoUtil.build(subscription, requestContext.getOptions(), requestContext);
     }
 
     @DeleteMapping("/{id}")
@@ -203,7 +205,7 @@ public class SubscriptionController {
         }
         requestContext.send(new SubscriptionDeletedLiberin(subscription));
 
-        return new ContactInfo(subscription.getContact(), requestContext.getOptions(), requestContext);
+        return ContactInfoUtil.build(subscription.getContact(), requestContext.getOptions(), requestContext);
     }
 
     @PostMapping("/search")
@@ -237,7 +239,7 @@ public class SubscriptionController {
         return fetchSubscriptions(where).stream()
                 .filter(r -> filter.getFeeds() == null || filter.getFeeds().contains(r.getRemoteFeed()))
                 .filter(r -> filter.getPostings() == null || filter.getPostings().contains(r.getRemotePosting()))
-                .map(sr -> new SubscriptionInfo(sr, requestContext.getOptions(), requestContext))
+                .map(sr -> SubscriptionInfoUtil.build(sr, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 

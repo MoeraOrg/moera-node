@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.ContactInfo;
+import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.node.data.FriendOf;
 import org.moera.node.instant.FriendInstants;
 import org.moera.node.liberin.LiberinMapping;
@@ -11,9 +13,9 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.RemoteFriendGroupDeletedLiberin;
 import org.moera.node.liberin.model.RemoteFriendshipUpdatedLiberin;
-import org.moera.node.model.ContactInfo;
-import org.moera.node.model.FriendGroupDetails;
-import org.moera.node.model.FriendOfInfo;
+import org.moera.node.model.ContactInfoUtil;
+import org.moera.node.model.FriendGroupDetailsUtil;
+import org.moera.node.model.FriendOfInfoUtil;
 import org.moera.node.model.event.RemoteFriendshipUpdatedEvent;
 import org.springframework.util.ObjectUtils;
 
@@ -32,13 +34,13 @@ public class RemoteFriendGroupReceptor extends LiberinReceptorBase {
                 .filter(fo -> !ObjectUtils.isEmpty(fo.getRemoteGroupTitle()))
                 .forEach(fo -> friendInstants.deleted(fo));
 
-        ContactInfo contactInfo = new ContactInfo(liberin.getContact(), universalContext.getOptions());
+        ContactInfo contactInfo = ContactInfoUtil.build(liberin.getContact(), universalContext.getOptions());
         List<FriendGroupDetails> groups = liberin.getCurrent().stream()
-                .map(FriendGroupDetails::new)
+                .map(FriendGroupDetailsUtil::build)
                 .collect(Collectors.toList());
         send(liberin, new RemoteFriendshipUpdatedEvent(
-                new FriendOfInfo(contactInfo.getNodeName(), contactInfo, groups),
-                FriendOf.getViewAllE(universalContext.getOptions())
+            FriendOfInfoUtil.build(contactInfo.getNodeName(), contactInfo, groups),
+            FriendOf.getViewAllE(universalContext.getOptions())
         ));
     }
 

@@ -6,7 +6,7 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Subscriber;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.SubscriberInfoUtil;
 
 public class SubscriberOperationsUpdatedLiberin extends Liberin {
 
@@ -37,7 +37,10 @@ public class SubscriberOperationsUpdatedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("subscriber", new SubscriberInfo(subscriber, getPluginContext().getOptions(), AccessCheckers.ADMIN));
+        model.put(
+            "subscriber",
+            SubscriberInfoUtil.build(subscriber, getPluginContext().getOptions(), AccessCheckers.ADMIN)
+        );
         model.put("latestViewPrincipal", latestViewPrincipal);
     }
 

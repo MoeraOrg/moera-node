@@ -9,16 +9,16 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.Contact;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.StorySummaryBlocked;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntry;
-import org.moera.node.model.StorySummaryNode;
+import org.moera.node.model.StorySummaryBlockedUtil;
+import org.moera.node.model.StorySummaryEntryUtil;
+import org.moera.node.model.StorySummaryNodeUtil;
 import org.moera.node.util.Util;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -95,11 +95,12 @@ public class BlockedUserInstants extends InstantsCreator {
         Long period = deadline != null ? deadline.toInstant().getEpochSecond() - Instant.now().getEpochSecond() : null;
 
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setNode(new StorySummaryNode(contact.getRemoteNodeName(), contact.getRemoteFullName(),
-                contact.getRemoteGender()));
-        summaryData.setBlocked(new StorySummaryBlocked(operations, period));
+        summaryData.setNode(StorySummaryNodeUtil.build(
+            contact.getRemoteNodeName(), contact.getRemoteFullName(), contact.getRemoteGender()
+        ));
+        summaryData.setBlocked(StorySummaryBlockedUtil.build(operations, period));
         if (entryHeading != null) {
-            summaryData.setPosting(new StorySummaryEntry(null, null, null, entryHeading));
+            summaryData.setPosting(StorySummaryEntryUtil.build(null, null, null, entryHeading));
         }
         return summaryData;
     }

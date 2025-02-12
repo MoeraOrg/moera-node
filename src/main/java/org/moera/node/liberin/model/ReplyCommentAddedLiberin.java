@@ -3,9 +3,9 @@ package org.moera.node.liberin.model;
 import java.util.List;
 import java.util.Map;
 
-import org.moera.node.data.SheriffMark;
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarImage;
 
 public class ReplyCommentAddedLiberin extends Liberin {
 

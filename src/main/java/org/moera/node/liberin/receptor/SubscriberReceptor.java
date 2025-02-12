@@ -17,7 +17,7 @@ import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.SubscriberAddedLiberin;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
-import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.SubscriberInfoUtil;
 import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.event.SubscriberUpdatedEvent;
@@ -51,12 +51,17 @@ public class SubscriberReceptor extends LiberinReceptorBase {
 
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
             send(liberin, new SubscriberAddedEvent(
-                    new SubscriberInfo(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
-                    visibilityFilter(universalContext.getOptions(), subscriber)));
+                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                visibilityFilter(universalContext.getOptions(), subscriber)
+            ));
             send(liberin, new SubscriberAddedEvent(
-                    new SubscriberInfo(subscriber, universalContext.getOptions(),
-                            AccessCheckers.node(subscriber.getRemoteNodeName())),
-                    Principal.ofNode(subscriber.getRemoteNodeName())));
+                SubscriberInfoUtil.build(
+                    subscriber,
+                    universalContext.getOptions(),
+                    AccessCheckers.node(subscriber.getRemoteNodeName())
+                ),
+                Principal.ofNode(subscriber.getRemoteNodeName())
+            ));
             sendPeopleChangedEvent(liberin);
         }
 
@@ -75,23 +80,30 @@ public class SubscriberReceptor extends LiberinReceptorBase {
                 .and(subscriber.getViewE())
                 .andNot(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriberAddedEvent(
-                new SubscriberInfo(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), addedFilter));
+            SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), addedFilter
+        ));
 
         PrincipalExpression updatedFilter = generalVisibilityFilter(universalContext.getOptions(), subscriber)
                 .and(subscriber.getViewE())
                 .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriberUpdatedEvent(
-                new SubscriberInfo(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), updatedFilter));
+            SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), updatedFilter
+        ));
         send(liberin, new SubscriberUpdatedEvent(
-                new SubscriberInfo(subscriber, universalContext.getOptions(),
-                        AccessCheckers.node(subscriber.getRemoteNodeName())),
-                Principal.ofNode(subscriber.getRemoteNodeName())));
+            SubscriberInfoUtil.build(
+                subscriber,
+                universalContext.getOptions(),
+                AccessCheckers.node(subscriber.getRemoteNodeName())
+            ),
+            Principal.ofNode(subscriber.getRemoteNodeName())
+        ));
 
         PrincipalExpression deletedFilter = generalVisibilityFilter(universalContext.getOptions(), subscriber)
                 .andNot(subscriber.getViewE())
                 .and(liberin.getLatestViewPrincipal());
         send(liberin, new SubscriberDeletedEvent(
-                new SubscriberInfo(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), deletedFilter));
+            SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), deletedFilter
+        ));
     }
 
     @LiberinMapping
@@ -100,12 +112,17 @@ public class SubscriberReceptor extends LiberinReceptorBase {
 
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
             send(liberin, new SubscriberDeletedEvent(
-                    new SubscriberInfo(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
-                    visibilityFilter(universalContext.getOptions(), subscriber)));
+                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                visibilityFilter(universalContext.getOptions(), subscriber)
+            ));
             send(liberin, new SubscriberDeletedEvent(
-                    new SubscriberInfo(subscriber, universalContext.getOptions(),
-                            AccessCheckers.node(subscriber.getRemoteNodeName())),
-                    Principal.ofNode(subscriber.getRemoteNodeName())));
+                SubscriberInfoUtil.build(
+                    subscriber,
+                    universalContext.getOptions(),
+                    AccessCheckers.node(subscriber.getRemoteNodeName())
+                ),
+                Principal.ofNode(subscriber.getRemoteNodeName())
+            ));
             sendPeopleChangedEvent(liberin);
         }
 

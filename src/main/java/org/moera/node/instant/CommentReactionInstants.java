@@ -11,16 +11,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.StorySummaryData;
+import org.moera.lib.node.types.StorySummaryReaction;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntry;
-import org.moera.node.model.StorySummaryReaction;
+import org.moera.node.model.StorySummaryEntryUtil;
+import org.moera.node.model.StorySummaryReactionUtil;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -60,7 +62,7 @@ public class CommentReactionInstants extends InstantsCreator {
             story.setRemotePostingNodeName(postingOwnerName);
             story.setRemotePostingFullName(postingOwnerFullName);
             if (postingOwnerAvatar != null) {
-                story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+                story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
                 story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
             story.setRemotePostingId(postingId);
@@ -74,7 +76,7 @@ public class CommentReactionInstants extends InstantsCreator {
         substory.setRemoteOwnerName(reactionNodeName);
         substory.setRemoteOwnerFullName(reactionFullName);
         if (reactionAvatar != null) {
-            substory.setRemoteOwnerAvatarMediaFile(reactionAvatar.getMediaFile());
+            substory.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(reactionAvatar));
             substory.setRemoteOwnerAvatarShape(reactionAvatar.getShape());
         }
         substory.setSummaryData(buildReactionSummary(reactionGender, reactionEmoji));
@@ -87,14 +89,14 @@ public class CommentReactionInstants extends InstantsCreator {
 
     private static StorySummaryData buildPostingAndCommentSummary(String gender, String commentHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(null, null, gender, null));
-        summaryData.setComment(new StorySummaryEntry(null, null, null, commentHeading));
+        summaryData.setPosting(StorySummaryEntryUtil.build(null, null, gender, null));
+        summaryData.setComment(StorySummaryEntryUtil.build(null, null, null, commentHeading));
         return summaryData;
     }
 
     private static StorySummaryData buildReactionSummary(String gender, int emoji) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setReaction(new StorySummaryReaction(null, null, gender, emoji));
+        summaryData.setReaction(StorySummaryReactionUtil.build(null, null, gender, emoji));
         return summaryData;
     }
 
@@ -161,16 +163,24 @@ public class CommentReactionInstants extends InstantsCreator {
         for (int i = 0; i < 2 && i < stories.size(); i++) {
             Story substory = stories.get(i);
             StorySummaryReaction reaction = substory.getSummaryData().getReaction();
-            reactions.add(new StorySummaryReaction(substory.getRemoteOwnerName(), substory.getRemoteOwnerFullName(),
-                    reaction.getOwnerGender(), reaction.getEmoji()));
+            reactions.add(StorySummaryReactionUtil.build(
+                substory.getRemoteOwnerName(),
+                substory.getRemoteOwnerFullName(),
+                reaction.getOwnerGender(),
+                reaction.getEmoji()
+            ));
         }
         summaryData.setReactions(reactions);
         summaryData.setTotalReactions(stories.size());
-        summaryData.setComment(new StorySummaryEntry(
-                null, null, null, story.getSummaryData().getComment().getHeading()));
-        summaryData.setPosting(new StorySummaryEntry(
-                story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                story.getSummaryData().getPosting().getOwnerGender(), null));
+        summaryData.setComment(StorySummaryEntryUtil.build(
+            null, null, null, story.getSummaryData().getComment().getHeading()
+        ));
+        summaryData.setPosting(StorySummaryEntryUtil.build(
+            story.getRemotePostingNodeName(),
+            story.getRemotePostingFullName(),
+            story.getSummaryData().getPosting().getOwnerGender(),
+            null
+        ));
         return summaryData;
     }
 
@@ -197,14 +207,14 @@ public class CommentReactionInstants extends InstantsCreator {
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
         if (postingOwnerAvatar != null) {
-            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
         story.setRemoteOwnerFullName(commentOwnerFullName);
         if (commentOwnerAvatar != null) {
-            story.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
+            story.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(commentOwnerAvatar));
             story.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         story.setRemoteCommentId(commentId);
@@ -221,10 +231,12 @@ public class CommentReactionInstants extends InstantsCreator {
                                                              String commentOwnerName, String commentOwnerFullName,
                                                              String commentOwnerGender, String commentHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(
-                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading));
-        summaryData.setComment(new StorySummaryEntry(
-                commentOwnerName, commentOwnerFullName, commentOwnerGender, commentHeading));
+        summaryData.setPosting(StorySummaryEntryUtil.build(
+            postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading
+        ));
+        summaryData.setComment(StorySummaryEntryUtil.build(
+            commentOwnerName, commentOwnerFullName, commentOwnerGender, commentHeading
+        ));
         return summaryData;
     }
 

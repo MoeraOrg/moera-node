@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
@@ -26,7 +27,7 @@ import org.moera.node.liberin.model.PostingCommentTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.body.Body;
 import org.moera.node.model.event.PostingAddedEvent;
@@ -98,7 +99,9 @@ public class PostingReceptor extends LiberinReceptorBase {
         send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
                 new PostingUpdatedNotification(posting.getId()));
         if (posting.getCurrentRevision().isUpdateImportant()) {
-            AvatarImage ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
+            AvatarImage ownerAvatar = AvatarImageUtil.build(
+                posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape()
+            );
             send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
                     new PostingImportantUpdateNotification(posting.getOwnerName(), posting.getOwnerFullName(),
                             posting.getOwnerGender(), ownerAvatar, posting.getId(),

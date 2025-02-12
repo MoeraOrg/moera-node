@@ -10,15 +10,17 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.SheriffMark;
+import org.moera.lib.node.types.StorySummaryData;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.node.data.Feed;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntry;
+import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -63,7 +65,7 @@ public class RemoteCommentInstants extends InstantsCreator {
             story.setRemotePostingNodeName(postingOwnerName);
             story.setRemotePostingFullName(postingOwnerFullName);
             if (postingOwnerAvatar != null) {
-                story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+                story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
                 story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
             }
             story.setRemotePostingId(postingId);
@@ -79,7 +81,7 @@ public class RemoteCommentInstants extends InstantsCreator {
         substory.setRemoteOwnerName(commentOwnerName);
         substory.setRemoteOwnerFullName(commentOwnerFullName);
         if (commentOwnerAvatar != null) {
-            substory.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
+            substory.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(commentOwnerAvatar));
             substory.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         substory.setRemoteCommentId(commentId);
@@ -94,13 +96,13 @@ public class RemoteCommentInstants extends InstantsCreator {
     private static StorySummaryData buildPostingSummary(String gender, String heading, List<String> sheriffs,
                                                         List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(null, null, gender, heading, sheriffs, sheriffMarks));
+        summaryData.setPosting(StorySummaryEntryUtil.build(null, null, gender, heading, sheriffs, sheriffMarks));
         return summaryData;
     }
 
     private static StorySummaryData buildCommentSummary(String gender, String heading, List<SheriffMark> sheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setComment(new StorySummaryEntry(null, null, gender, heading, null, sheriffMarks));
+        summaryData.setComment(StorySummaryEntryUtil.build(null, null, gender, heading, null, sheriffMarks));
         return summaryData;
     }
 
@@ -151,12 +153,14 @@ public class RemoteCommentInstants extends InstantsCreator {
         StorySummaryData summaryData = new StorySummaryData();
         List<StorySummaryEntry> comments = new ArrayList<>();
         Story firstStory = stories.get(0);
-        comments.add(new StorySummaryEntry(
-                firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(),
-                firstStory.getSummaryData().getComment().getOwnerGender(),
-                firstStory.getSummaryData().getComment().getHeading(),
-                firstStory.getSummaryData().getComment().getSheriffs(),
-                firstStory.getSummaryData().getComment().getSheriffMarks()));
+        comments.add(StorySummaryEntryUtil.build(
+            firstStory.getRemoteOwnerName(),
+            firstStory.getRemoteOwnerFullName(),
+            firstStory.getSummaryData().getComment().getOwnerGender(),
+            firstStory.getSummaryData().getComment().getHeading(),
+            firstStory.getSummaryData().getComment().getSheriffs(),
+            firstStory.getSummaryData().getComment().getSheriffMarks()
+        ));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             if (names.size() > 1) {
@@ -165,12 +169,14 @@ public class RemoteCommentInstants extends InstantsCreator {
                         .findFirst()
                         .orElse(null);
                 if (secondStory != null) {
-                    comments.add(new StorySummaryEntry(
-                            secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(),
-                            secondStory.getSummaryData().getComment().getOwnerGender(),
-                            secondStory.getSummaryData().getComment().getHeading(),
-                            secondStory.getSummaryData().getComment().getSheriffs(),
-                            secondStory.getSummaryData().getComment().getSheriffMarks()));
+                    comments.add(StorySummaryEntryUtil.build(
+                        secondStory.getRemoteOwnerName(),
+                        secondStory.getRemoteOwnerFullName(),
+                        secondStory.getSummaryData().getComment().getOwnerGender(),
+                        secondStory.getSummaryData().getComment().getHeading(),
+                        secondStory.getSummaryData().getComment().getSheriffs(),
+                        secondStory.getSummaryData().getComment().getSheriffMarks()
+                    ));
                 }
             }
             summaryData.setTotalComments(names.size());
@@ -178,11 +184,14 @@ public class RemoteCommentInstants extends InstantsCreator {
             summaryData.setTotalComments(1);
         }
         summaryData.setComments(comments);
-        summaryData.setPosting(new StorySummaryEntry(
-                story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                story.getSummaryData().getPosting().getOwnerGender(), story.getSummaryData().getPosting().getHeading(),
-                story.getSummaryData().getPosting().getSheriffs(),
-                story.getSummaryData().getPosting().getSheriffMarks()));
+        summaryData.setPosting(StorySummaryEntryUtil.build(
+            story.getRemotePostingNodeName(),
+            story.getRemotePostingFullName(),
+            story.getSummaryData().getPosting().getOwnerGender(),
+            story.getSummaryData().getPosting().getHeading(),
+            story.getSummaryData().getPosting().getSheriffs(),
+            story.getSummaryData().getPosting().getSheriffMarks()
+        ));
         summaryData.setSubscriptionReason(reason);
         return summaryData;
     }

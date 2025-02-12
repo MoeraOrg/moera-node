@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffOrderCategory;
+import org.moera.lib.node.types.SheriffOrderInfo;
 import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -20,7 +21,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SheriffOrderAttributes;
-import org.moera.node.model.SheriffOrderInfo;
+import org.moera.node.model.SheriffOrderInfoUtil;
 import org.moera.node.rest.task.SheriffOrderPostJob;
 import org.moera.node.task.Jobs;
 import org.slf4j.Logger;
@@ -86,7 +87,7 @@ public class RemoteSheriffOrderController {
             throw new ObjectNotFoundFailure("sheriff-order.wrong-node");
         }
 
-        return new SheriffOrderInfo(sheriffOrder, requestContext.nodeName());
+        return SheriffOrderInfoUtil.build(sheriffOrder, requestContext.nodeName());
     }
 
 }

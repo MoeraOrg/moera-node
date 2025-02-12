@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.data.EntrySource;
 import org.moera.node.util.Util;
 
@@ -21,7 +22,7 @@ public class PostingSourceInfo {
         nodeName = entrySource.getRemoteNodeName();
         fullName = entrySource.getRemoteFullName();
         if (entrySource.getRemoteAvatarMediaFile() != null) {
-            avatar = new AvatarImage(entrySource.getRemoteAvatarMediaFile(), entrySource.getRemoteAvatarShape());
+            avatar = AvatarImageUtil.build(entrySource.getRemoteAvatarMediaFile(), entrySource.getRemoteAvatarShape());
         }
         feedName = entrySource.getRemoteFeedName();
         postingId = entrySource.getRemotePostingId();

@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoException;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.api.node.NodeApiException;
@@ -18,7 +19,6 @@ import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.SubscriberDescriptionQ;
-import org.moera.node.model.SubscriberInfo;
 import org.moera.node.rest.notification.ProfileUpdateJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.Task;

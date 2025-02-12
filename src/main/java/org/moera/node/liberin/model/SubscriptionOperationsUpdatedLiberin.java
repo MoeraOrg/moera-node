@@ -5,7 +5,7 @@ import java.util.Map;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.SubscriptionInfo;
+import org.moera.node.model.SubscriptionInfoUtil;
 
 public class SubscriptionOperationsUpdatedLiberin extends Liberin {
 
@@ -36,7 +36,7 @@ public class SubscriptionOperationsUpdatedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("subscription", new SubscriptionInfo(subscription, getPluginContext().getOptions()));
+        model.put("subscription", SubscriptionInfoUtil.build(subscription, getPluginContext().getOptions()));
         model.put("latestViewPrincipal", latestViewPrincipal);
     }
 

@@ -7,7 +7,7 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.BlockedUserAddedLiberin;
 import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
-import org.moera.node.model.BlockedUserInfo;
+import org.moera.node.model.BlockedUserInfoUtil;
 import org.moera.node.model.event.BlockedUserAddedEvent;
 import org.moera.node.model.event.BlockedUserDeletedEvent;
 import org.moera.node.model.notification.BlockingAddedNotification;
@@ -22,24 +22,30 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     public void added(BlockedUserAddedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
         send(liberin, new BlockedUserAddedEvent(
-                new BlockedUserInfo(blockedUser, universalContext.getOptions()),
-                BlockedUser.getViewAllE(universalContext.getOptions())));
-        if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
-                && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
-                && blockedUser.getEntryNodeName() == null) {
+            BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions()),
+            BlockedUser.getViewAllE(universalContext.getOptions())
+        ));
+        if (
+            blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
+            && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
+            && blockedUser.getEntryNodeName() == null
+        ) {
             String postingId = null;
             String postingHeading = null;
             if (blockedUser.getEntry() != null) {
                 postingId = blockedUser.getEntry().getId().toString();
                 postingHeading = blockedUser.getEntry().getCurrentRevision().getHeading();
             }
-            send(Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
-                    new BlockingAddedNotification(
-                            blockedUser.getBlockedOperation(),
-                            postingId,
-                            postingHeading,
-                            Util.toEpochSecond(blockedUser.getDeadline()),
-                            blockedUser.getReason()));
+            send(
+                Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
+                new BlockingAddedNotification(
+                    blockedUser.getBlockedOperation(),
+                    postingId,
+                    postingHeading,
+                    Util.toEpochSecond(blockedUser.getDeadline()),
+                    blockedUser.getReason()
+                )
+            );
         }
     }
 
@@ -47,19 +53,24 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
     public void deleted(BlockedUserDeletedLiberin liberin) {
         BlockedUser blockedUser = liberin.getBlockedUser();
         send(liberin, new BlockedUserDeletedEvent(
-                new BlockedUserInfo(blockedUser, universalContext.getOptions()),
-                BlockedUser.getViewAllE(universalContext.getOptions())));
-        if (blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
-                && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
-                && blockedUser.getEntryNodeName() == null) {
+            BlockedUserInfoUtil.build(blockedUser, universalContext.getOptions()),
+            BlockedUser.getViewAllE(universalContext.getOptions())
+        ));
+        if (
+            blockedUser.getBlockedOperation() != BlockedOperation.VISIBILITY
+            && blockedUser.getBlockedOperation() != BlockedOperation.INSTANT
+            && blockedUser.getEntryNodeName() == null
+        ) {
             String postingId = null;
             String postingHeading = null;
             if (blockedUser.getEntry() != null) {
                 postingId = blockedUser.getEntry().getId().toString();
                 postingHeading = blockedUser.getEntry().getCurrentRevision().getHeading();
             }
-            send(Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
-                    new BlockingDeletedNotification(blockedUser.getBlockedOperation(), postingId, postingHeading));
+            send(
+                Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
+                new BlockingDeletedNotification(blockedUser.getBlockedOperation(), postingId, postingHeading)
+            );
         }
     }
 

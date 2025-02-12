@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.moera.lib.node.types.FriendOfInfo;
 import org.moera.node.data.Contact;
 import org.moera.node.data.FriendOf;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.FriendOfInfo;
+import org.moera.node.model.FriendOfInfoUtil;
 
 public class RemoteFriendshipUpdatedLiberin extends Liberin {
 
@@ -57,7 +58,7 @@ public class RemoteFriendshipUpdatedLiberin extends Liberin {
 
     private List<FriendOfInfo> toFriendOfInfos(List<FriendOf> friendOfs) {
         return friendOfs.stream()
-                .map(fo -> new FriendOfInfo(fo, getPluginContext().getOptions()))
+                .map(fo -> FriendOfInfoUtil.build(fo, getPluginContext().getOptions()))
                 .collect(Collectors.toList());
     }
 

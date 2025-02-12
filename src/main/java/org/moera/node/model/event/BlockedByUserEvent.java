@@ -2,11 +2,12 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
+import org.moera.lib.node.types.BlockedByUserInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
-import org.moera.node.model.BlockedByUserInfo;
+import org.moera.node.model.BlockedByUserInfoUtil;
 import org.springframework.data.util.Pair;
 
 public class BlockedByUserEvent extends Event {
@@ -32,7 +33,7 @@ public class BlockedByUserEvent extends Event {
 
     @Override
     public void protect(EventSubscriber eventSubscriber) {
-        blockedByUser.protect(eventSubscriber);
+        BlockedByUserInfoUtil.protect(blockedByUser, eventSubscriber);
     }
 
     @Override

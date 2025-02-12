@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.FriendGroupInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -26,7 +27,7 @@ import org.moera.node.liberin.model.FriendGroupAddedLiberin;
 import org.moera.node.liberin.model.FriendGroupDeletedLiberin;
 import org.moera.node.liberin.model.FriendGroupUpdatedLiberin;
 import org.moera.node.model.FriendGroupDescription;
-import org.moera.node.model.FriendGroupInfo;
+import org.moera.node.model.FriendGroupInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.operations.OperationsValidator;
@@ -67,7 +68,7 @@ public class FriendGroupController {
 
         return Arrays.stream(friendCache.getNodeGroups())
                 .filter(this::isFriendGroupVisible)
-                .map(fg -> new FriendGroupInfo(fg, requestContext.isAdmin(Scope.VIEW_PEOPLE)))
+                .map(fg -> FriendGroupInfoUtil.build(fg, requestContext.isAdmin(Scope.VIEW_PEOPLE)))
                 .collect(Collectors.toList());
     }
 
@@ -82,7 +83,7 @@ public class FriendGroupController {
             throw new AuthenticationException();
         }
 
-        return new FriendGroupInfo(friendGroup, requestContext.isAdmin(Scope.VIEW_PEOPLE));
+        return FriendGroupInfoUtil.build(friendGroup, requestContext.isAdmin(Scope.VIEW_PEOPLE));
     }
 
     private boolean isFriendGroupVisible(FriendGroup friendGroup) {
@@ -113,7 +114,7 @@ public class FriendGroupController {
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.send(new FriendGroupAddedLiberin(friendGroup));
 
-        return new FriendGroupInfo(friendGroup, true);
+        return FriendGroupInfoUtil.build(friendGroup, true);
     }
 
     @PutMapping("/{id}")
@@ -138,7 +139,7 @@ public class FriendGroupController {
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);
         requestContext.send(new FriendGroupUpdatedLiberin(friendGroup, latestViewPrincipal));
 
-        return new FriendGroupInfo(friendGroup, true);
+        return FriendGroupInfoUtil.build(friendGroup, true);
     }
 
     @DeleteMapping("/{id}")

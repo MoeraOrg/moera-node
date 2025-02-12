@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.BlockedUserInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -23,7 +24,7 @@ import org.moera.node.liberin.model.BlockedUserAddedLiberin;
 import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
 import org.moera.node.model.BlockedUserAttributes;
 import org.moera.node.model.BlockedUserFilter;
-import org.moera.node.model.BlockedUserInfo;
+import org.moera.node.model.BlockedUserInfoUtil;
 import org.moera.node.model.BlockedUsersChecksums;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
@@ -108,7 +109,7 @@ public class BlockedUserController {
         requestContext.send(new BlockedUserAddedLiberin(blockedUser));
 
         return ResponseEntity.created(URI.create("/blocked-users/" + blockedUser.getId()))
-                .body(new BlockedUserInfo(blockedUser, requestContext.getOptions(), requestContext));
+                .body(BlockedUserInfoUtil.build(blockedUser, requestContext.getOptions(), requestContext));
     }
 
     @GetMapping("/{id}")
@@ -124,7 +125,7 @@ public class BlockedUserController {
             throw new AuthenticationException();
         }
 
-        return new BlockedUserInfo(blockedUser, requestContext.getOptions(), requestContext);
+        return BlockedUserInfoUtil.build(blockedUser, requestContext.getOptions(), requestContext);
     }
 
     @DeleteMapping("/{id}")
@@ -159,7 +160,7 @@ public class BlockedUserController {
                         blockedUserFilter.getNodeName(), blockedUserFilter.getEntryId(),
                         blockedUserFilter.getEntryNodeName(), blockedUserFilter.getEntryPostingId(),
                         blockedUserFilter.getStrict() != null && blockedUserFilter.getStrict()).stream()
-                .map(bu -> new BlockedUserInfo(bu, requestContext.getOptions(), requestContext))
+                .map(bu -> BlockedUserInfoUtil.build(bu, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 

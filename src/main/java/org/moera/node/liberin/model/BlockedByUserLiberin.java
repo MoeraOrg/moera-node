@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.BlockedByUserInfo;
+import org.moera.node.model.BlockedByUserInfoUtil;
 
 public class BlockedByUserLiberin extends Liberin {
 
@@ -35,7 +35,8 @@ public class BlockedByUserLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("blockedByUser", new BlockedByUserInfo(blockedByUser, getPluginContext().getOptions()));
+        model.put("blockedByUser", BlockedByUserInfoUtil.build(blockedByUser, getPluginContext().getOptions()));
         model.put("entryHeading", entryHeading);
     }
+
 }

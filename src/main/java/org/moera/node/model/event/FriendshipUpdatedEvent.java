@@ -2,11 +2,12 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
+import org.moera.lib.node.types.FriendInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.event.EventSubscriber;
-import org.moera.node.model.FriendInfo;
+import org.moera.node.model.FriendInfoUtil;
 import org.springframework.data.util.Pair;
 
 public class FriendshipUpdatedEvent extends Event {
@@ -29,7 +30,7 @@ public class FriendshipUpdatedEvent extends Event {
 
     @Override
     public void protect(EventSubscriber eventSubscriber) {
-        friend.protect(eventSubscriber);
+        FriendInfoUtil.protect(friend, eventSubscriber);
     }
 
     @Override

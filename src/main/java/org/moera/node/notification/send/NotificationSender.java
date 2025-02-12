@@ -22,7 +22,7 @@ import org.moera.node.api.node.NodeApiValidationException;
 import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.Result;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
@@ -184,7 +184,7 @@ public class NotificationSender extends Task {
         packet.setFullName(fullName());
         packet.setGender(gender());
         if (getAvatar() != null) {
-            packet.setAvatar(new AvatarImage(getAvatar()));
+            packet.setAvatar(AvatarImageUtil.build(getAvatar()));
         }
         packet.setCreatedAt(Util.toEpochSecond(Util.now()));
         packet.setType(notification.getType().getValue());

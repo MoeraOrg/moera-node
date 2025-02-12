@@ -25,6 +25,7 @@ import org.moera.node.liberin.model.RemoteCommentAddingFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentSourceText;
@@ -254,11 +255,15 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             checkpoint();
         }
 
-        if (state.postingInfo.getOwnerAvatar() != null && state.postingInfo.getOwnerAvatar().getMediaFile() == null) {
+        if (
+            state.postingInfo.getOwnerAvatar() != null
+            && AvatarImageUtil.getMediaFile(state.postingInfo.getOwnerAvatar()) == null
+        ) {
             MediaFile mediaFile = mediaManager.downloadPublicMedia(
-                    parameters.targetNodeName,
-                    state.postingInfo.getOwnerAvatar());
-            state.postingInfo.getOwnerAvatar().setMediaFile(mediaFile);
+                parameters.targetNodeName,
+                state.postingInfo.getOwnerAvatar()
+            );
+            AvatarImageUtil.setMediaFile(state.postingInfo.getOwnerAvatar(), mediaFile);
             checkpoint();
         }
 

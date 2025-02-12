@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.data.Comment;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,7 +29,7 @@ public class RepliedTo {
             fullName = comment.getRepliedToFullName();
             gender = comment.getRepliedToGender();
             if (comment.getRepliedToAvatarMediaFile() != null) {
-                avatar = new AvatarImage(comment.getRepliedToAvatarMediaFile(), comment.getRepliedToAvatarShape());
+                avatar = AvatarImageUtil.build(comment.getRepliedToAvatarMediaFile(), comment.getRepliedToAvatarShape());
             }
             heading = comment.getRepliedToHeading();
             digest = comment.getRepliedToDigest();

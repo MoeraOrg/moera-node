@@ -12,7 +12,9 @@ import jakarta.validation.Valid;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -33,10 +35,10 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SubscriberAddedLiberin;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
-import org.moera.node.model.ContactInfo;
+import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SubscriberDescription;
-import org.moera.node.model.SubscriberInfo;
+import org.moera.node.model.SubscriberInfoUtil;
 import org.moera.node.model.SubscriberOverride;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
@@ -113,7 +115,7 @@ public class SubscriberController {
 
         return fetchSubscribers(where).stream()
                 .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                .map(s -> new SubscriberInfo(s, requestContext.getOptions(), requestContext))
+                .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 
@@ -136,7 +138,7 @@ public class SubscriberController {
             }
         }
 
-        return new SubscriberInfo(subscriber, requestContext.getOptions(), requestContext);
+        return SubscriberInfoUtil.build(subscriber, requestContext.getOptions(), requestContext);
     }
 
     @PostMapping
@@ -186,7 +188,7 @@ public class SubscriberController {
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberAddedLiberin(subscriber, subscriberDescription.getLastUpdatedAt()));
 
-        return new SubscriberInfo(subscriber, requestContext.getOptions(), requestContext);
+        return SubscriberInfoUtil.build(subscriber, requestContext.getOptions(), requestContext);
     }
 
     private void validate(SubscriberDescription description) {
@@ -258,7 +260,7 @@ public class SubscriberController {
 
         requestContext.send(new SubscriberOperationsUpdatedLiberin(subscriber, latestView));
 
-        return new SubscriberInfo(subscriber, requestContext.getOptions(), requestContext);
+        return SubscriberInfoUtil.build(subscriber, requestContext.getOptions(), requestContext);
     }
 
     @DeleteMapping("/{id}")
@@ -280,7 +282,7 @@ public class SubscriberController {
         requestContext.subscriptionsUpdated();
         requestContext.send(new SubscriberDeletedLiberin(subscriber));
 
-        return new ContactInfo(subscriber.getContact(), requestContext.getOptions(), requestContext);
+        return ContactInfoUtil.build(subscriber.getContact(), requestContext.getOptions(), requestContext);
     }
 
     private List<Subscriber> fetchSubscribers(Predicate where) {

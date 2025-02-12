@@ -9,7 +9,7 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.BlockedByUserAddedLiberin;
 import org.moera.node.liberin.model.BlockedByUserDeletedLiberin;
-import org.moera.node.model.BlockedByUserInfo;
+import org.moera.node.model.BlockedByUserInfoUtil;
 import org.moera.node.model.event.BlockedByUserAddedEvent;
 import org.moera.node.model.event.BlockedByUserDeletedEvent;
 
@@ -24,8 +24,9 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
         BlockedByUser blockedByUser = liberin.getBlockedByUser();
         blockedUserInstants.blocked(blockedByUser, liberin.getEntryHeading());
         send(liberin, new BlockedByUserAddedEvent(
-                new BlockedByUserInfo(blockedByUser, universalContext.getOptions()),
-                BlockedByUser.getViewAllE(universalContext.getOptions())));
+            BlockedByUserInfoUtil.build(blockedByUser, universalContext.getOptions()),
+            BlockedByUser.getViewAllE(universalContext.getOptions())
+        ));
     }
 
     @LiberinMapping
@@ -33,8 +34,9 @@ public class BlockedByUserReceptor extends LiberinReceptorBase {
         BlockedByUser blockedByUser = liberin.getBlockedByUser();
         blockedUserInstants.unblocked(blockedByUser, liberin.getEntryHeading());
         send(liberin, new BlockedByUserDeletedEvent(
-                new BlockedByUserInfo(blockedByUser, universalContext.getOptions()),
-                BlockedByUser.getViewAllE(universalContext.getOptions())));
+            BlockedByUserInfoUtil.build(blockedByUser, universalContext.getOptions()),
+            BlockedByUser.getViewAllE(universalContext.getOptions())
+        ));
     }
 
 }

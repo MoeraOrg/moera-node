@@ -10,10 +10,11 @@ import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
 import org.moera.lib.UniversalLocation;
 import org.moera.lib.naming.NodeName;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.AvatarInfo;
 import org.moera.node.model.ReactionTotalInfo;
 import org.moera.node.model.ReactionTotalsInfo;
@@ -105,7 +106,7 @@ public class MoeraHelperSource {
             HelperUtil.appendAttr(buf, "class", "avatar avatar-circle");
         } else {
             AvatarImage avatarImage = avatar instanceof AvatarInfo
-                    ? new AvatarImage((AvatarInfo) avatar) : (AvatarImage) avatar;
+                    ? AvatarImageUtil.build((AvatarInfo) avatar) : (AvatarImage) avatar;
 
             HelperUtil.appendAttr(buf, "src", "/moera/media/" + avatarImage.getPath());
             HelperUtil.appendAttr(buf, "alt", "Avatar");

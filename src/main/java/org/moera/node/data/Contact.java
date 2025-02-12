@@ -10,8 +10,9 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 
@@ -303,7 +304,7 @@ public class Contact {
     public static void toAvatar(Contact contact, AvatarImage avatarImage) {
         if (contact != null && contact.getRemoteAvatarMediaFile() != null && avatarImage != null
                 && Objects.equals(contact.getRemoteAvatarMediaFile().getId(), avatarImage.getMediaId())) {
-            avatarImage.setMediaFile(contact.getRemoteAvatarMediaFile());
+            AvatarImageUtil.setMediaFile(avatarImage, contact.getRemoteAvatarMediaFile());
         }
     }
 

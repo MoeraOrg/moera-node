@@ -1,13 +1,13 @@
 package org.moera.node.data;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.moera.lib.node.types.FeedInfo;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.model.FeedInfo;
+import org.moera.node.model.FeedInfoUtil;
 
 public class Feed {
 
@@ -18,18 +18,15 @@ public class Feed {
     private static final Map<String, FeedInfo> STANDARD = new HashMap<>();
 
     static {
-        FeedInfo feedInfo = new FeedInfo(TIMELINE);
+        FeedInfo feedInfo = FeedInfoUtil.build(TIMELINE, Principal.ADMIN);
         feedInfo.setTitle("Timeline");
-        feedInfo.setOperations(Collections.singletonMap("add", Principal.ADMIN));
         STANDARD.put(TIMELINE, feedInfo);
 
-        feedInfo = new FeedInfo(INSTANT);
-        feedInfo.setOperations(Collections.singletonMap("add", Principal.NONE));
+        feedInfo = FeedInfoUtil.build(INSTANT, Principal.NONE);
         STANDARD.put(INSTANT, feedInfo);
 
-        feedInfo = new FeedInfo(NEWS);
+        feedInfo = FeedInfoUtil.build(NEWS, Principal.NONE);
         feedInfo.setTitle("News");
-        feedInfo.setOperations(Collections.singletonMap("add", Principal.NONE));
         STANDARD.put(NEWS, feedInfo);
     }
 

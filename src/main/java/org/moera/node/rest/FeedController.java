@@ -23,6 +23,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.FeedInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -45,7 +46,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.FeedStoriesReadLiberin;
 import org.moera.node.model.ClientReactionInfo;
-import org.moera.node.model.FeedInfo;
+import org.moera.node.model.FeedInfoUtil;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
@@ -124,7 +125,7 @@ public class FeedController {
                 .stream()
                 .map(FeedInfo::clone)
                 .peek(this::fillFeedTotals)
-                .peek(fi -> fi.fillSheriffs(requestContext.getOptions()))
+                .peek(fi -> FeedInfoUtil.fillSheriffs(fi, requestContext.getOptions()))
                 .collect(Collectors.toList());
     }
 
@@ -139,7 +140,7 @@ public class FeedController {
 
         FeedInfo feedInfo = Feed.getStandard(feedName).clone();
         fillFeedTotals(feedInfo);
-        feedInfo.fillSheriffs(requestContext.getOptions());
+        FeedInfoUtil.fillSheriffs(feedInfo, requestContext.getOptions());
 
         return feedInfo;
     }

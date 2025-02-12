@@ -2,10 +2,11 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Avatar;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.option.Options;
 import org.springframework.data.util.Pair;
 
@@ -28,7 +29,7 @@ public class NodeNameChangedEvent extends Event {
         gender = options.getString("profile.gender");
         title = options.getString("profile.title");
         if (avatar != null) {
-            this.avatar = new AvatarImage(avatar);
+            this.avatar = AvatarImageUtil.build(avatar);
         }
     }
 
@@ -79,7 +80,7 @@ public class NodeNameChangedEvent extends Event {
         parameters.add(Pair.of("fullName", LogUtil.format(fullName)));
         parameters.add(Pair.of("gender", LogUtil.format(gender)));
         parameters.add(Pair.of("title", LogUtil.format(title)));
-        parameters.add(Pair.of("avatar", avatar != null ? avatar.toLogString() : "null"));
+        parameters.add(Pair.of("avatar", avatar != null ? AvatarImageUtil.toLogString(avatar) : "null"));
     }
 
 }

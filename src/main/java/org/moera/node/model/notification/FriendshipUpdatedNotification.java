@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import jakarta.validation.Valid;
 
-import org.moera.node.model.FriendGroupDetails;
+import org.moera.lib.node.types.FriendGroupDetails;
 
 public class FriendshipUpdatedNotification extends Notification {
 

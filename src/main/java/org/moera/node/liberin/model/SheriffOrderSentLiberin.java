@@ -5,7 +5,7 @@ import jakarta.persistence.EntityManager;
 
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.SheriffOrderInfo;
+import org.moera.node.model.SheriffOrderInfoUtil;
 
 public class SheriffOrderSentLiberin extends Liberin {
 
@@ -37,7 +37,7 @@ public class SheriffOrderSentLiberin extends Liberin {
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
         model.put("sheriffName", sheriffName);
-        model.put("sheriffOrder", new SheriffOrderInfo(sheriffOrder, sheriffName));
+        model.put("sheriffOrder", SheriffOrderInfoUtil.build(sheriffOrder, sheriffName));
     }
 
 }

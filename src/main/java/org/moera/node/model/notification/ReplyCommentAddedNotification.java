@@ -6,9 +6,9 @@ import java.util.UUID;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.data.SheriffMark;
-import org.moera.node.model.AvatarImage;
 import org.springframework.data.util.Pair;
 
 public class ReplyCommentAddedNotification extends ReplyCommentNotification {

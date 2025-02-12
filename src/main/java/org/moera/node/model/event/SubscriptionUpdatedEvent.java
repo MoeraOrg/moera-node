@@ -1,7 +1,7 @@
 package org.moera.node.model.event;
 
+import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.principal.PrincipalFilter;
-import org.moera.node.model.SubscriptionInfo;
 
 public class SubscriptionUpdatedEvent extends SubscriptionEvent {
 

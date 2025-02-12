@@ -4,14 +4,15 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.SheriffMark;
+import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.AvatarImage;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntry;
+import org.moera.node.model.AvatarImageUtil;
+import org.moera.node.model.StorySummaryEntryUtil;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,14 +39,14 @@ public class MentionCommentInstants extends InstantsCreator {
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
         if (postingAvatar != null) {
-            story.setRemotePostingAvatarMediaFile(postingAvatar.getMediaFile());
+            story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingAvatar));
             story.setRemotePostingAvatarShape(postingAvatar.getShape());
         }
         story.setRemotePostingId(postingId);
         story.setRemoteOwnerName(commentOwnerName);
         story.setRemoteOwnerFullName(commentOwnerFullName);
         if (commentOwnerAvatar != null) {
-            story.setRemoteOwnerAvatarMediaFile(commentOwnerAvatar.getMediaFile());
+            story.setRemoteOwnerAvatarMediaFile(AvatarImageUtil.getMediaFile(commentOwnerAvatar));
             story.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         story.setRemoteCommentId(commentId);
@@ -76,10 +77,22 @@ public class MentionCommentInstants extends InstantsCreator {
                                           String commentOwnerGender, String commentHeading,
                                           List<SheriffMark> commentSheriffMarks) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(story.getRemotePostingNodeName(), story.getRemotePostingFullName(),
-                postingOwnerGender, postingHeading, postingSheriffs, postingSheriffMarks));
-        summaryData.setComment(new StorySummaryEntry(story.getRemoteOwnerName(), story.getRemoteOwnerFullName(),
-                commentOwnerGender, commentHeading, null, commentSheriffMarks));
+        summaryData.setPosting(StorySummaryEntryUtil.build(
+            story.getRemotePostingNodeName(),
+            story.getRemotePostingFullName(),
+            postingOwnerGender,
+            postingHeading,
+            postingSheriffs,
+            postingSheriffMarks
+        ));
+        summaryData.setComment(StorySummaryEntryUtil.build(
+            story.getRemoteOwnerName(),
+            story.getRemoteOwnerFullName(),
+            commentOwnerGender,
+            commentHeading,
+            null,
+            commentSheriffMarks
+        ));
         return summaryData;
     }
 

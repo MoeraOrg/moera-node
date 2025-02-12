@@ -10,6 +10,8 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriberInfo;
+import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;
@@ -23,8 +25,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.PeopleGeneralInfo;
-import org.moera.node.model.SubscriberInfo;
-import org.moera.node.model.SubscriptionInfo;
+import org.moera.node.model.SubscriberInfoUtil;
+import org.moera.node.model.SubscriptionInfoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
@@ -83,7 +85,7 @@ public class PeopleUiController {
             subscribers = subscriberRepository.findAllByType(requestContext.nodeId(), SubscriptionType.FEED).stream()
                     .sorted(comparator)
                     .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                    .map(s -> new SubscriberInfo(s, requestContext.getOptions(), requestContext))
+                    .map(s -> SubscriberInfoUtil.build(s, requestContext.getOptions(), requestContext))
                     .collect(Collectors.toList());
         }
 
@@ -117,7 +119,7 @@ public class PeopleUiController {
                     .stream()
                     .sorted(comparator)
                     .filter(s -> requestContext.isPrincipal(s.getViewE(), Scope.VIEW_PEOPLE))
-                    .map(s -> new SubscriptionInfo(s, requestContext.getOptions(), requestContext))
+                    .map(s -> SubscriptionInfoUtil.build(s, requestContext.getOptions(), requestContext))
                     .collect(Collectors.toList());
         }
 

@@ -3,10 +3,10 @@ package org.moera.node.liberin.model;
 import java.util.List;
 import java.util.Map;
 
+import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.node.data.Contact;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.ContactInfo;
-import org.moera.node.model.FriendGroupDetails;
+import org.moera.node.model.ContactInfoUtil;
 
 public class FriendshipUpdatedLiberin extends Liberin {
 
@@ -49,7 +49,7 @@ public class FriendshipUpdatedLiberin extends Liberin {
         super.toModel(model);
         model.put("friendNodeName", friendNodeName);
         model.put("friendGroups", friendGroups);
-        model.put("contact", new ContactInfo(contact, getPluginContext().getOptions()));
+        model.put("contact", ContactInfoUtil.build(contact, getPluginContext().getOptions()));
     }
 
 }

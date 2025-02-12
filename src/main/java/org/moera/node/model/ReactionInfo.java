@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.Principal;
@@ -46,7 +47,7 @@ public class ReactionInfo {
         ownerFullName = reaction.getOwnerFullName();
         ownerGender = reaction.getOwnerGender();
         if (reaction.getOwnerAvatarMediaFile() != null) {
-            ownerAvatar = new AvatarImage(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape());
+            ownerAvatar = AvatarImageUtil.build(reaction.getOwnerAvatarMediaFile(), reaction.getOwnerAvatarShape());
         }
         EntryRevision entryRevision = reaction.getEntryRevision();
         Entry entry = entryRevision.getEntry();

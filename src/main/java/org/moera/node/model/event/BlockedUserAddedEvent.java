@@ -1,7 +1,7 @@
 package org.moera.node.model.event;
 
+import org.moera.lib.node.types.BlockedUserInfo;
 import org.moera.lib.node.types.principal.PrincipalFilter;
-import org.moera.node.model.BlockedUserInfo;
 
 public class BlockedUserAddedEvent extends BlockedUserEvent {
 

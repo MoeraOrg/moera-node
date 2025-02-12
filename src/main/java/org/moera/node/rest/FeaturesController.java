@@ -9,6 +9,7 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AskSubject;
+import org.moera.lib.node.types.Features;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.data.AskHistoryRepository;
 import org.moera.node.domain.Domains;
@@ -18,7 +19,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.AskSubjectsChangedLiberin;
-import org.moera.node.model.Features;
+import org.moera.node.model.FeaturesUtil;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.option.Options;
@@ -59,14 +60,15 @@ public class FeaturesController {
     public Features get() {
         log.info("GET /features");
 
-        return new Features(
-                requestContext.getOptions(),
-                plugins.getNames(requestContext.nodeId()),
-                friendCache.getNodeGroups(),
-                friendCache.getClientGroups(requestContext.getClientName(Scope.IDENTIFY)),
-                requestContext,
-                getAsks(requestContext.getOptions()),
-                requestContext.isSubscribedToClient(Scope.IDENTIFY));
+        return FeaturesUtil.build(
+            requestContext.getOptions(),
+            plugins.getNames(requestContext.nodeId()),
+            friendCache.getNodeGroups(),
+            friendCache.getClientGroups(requestContext.getClientName(Scope.IDENTIFY)),
+            requestContext,
+            getAsks(requestContext.getOptions()),
+            requestContext.isSubscribedToClient(Scope.IDENTIFY)
+        );
     }
 
     private List<AskSubject> getAsks(Options options) {

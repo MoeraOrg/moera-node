@@ -10,16 +10,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.StorySummaryData;
+import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.StorySummaryData;
-import org.moera.node.model.StorySummaryEntry;
+import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 
@@ -122,9 +124,12 @@ public class CommentInstants extends InstantsCreator {
         List<StorySummaryEntry> comments = new ArrayList<>();
         summaryData.setComments(comments);
         Story firstStory = stories.get(0);
-        comments.add(new StorySummaryEntry(
-                firstStory.getRemoteOwnerName(), firstStory.getRemoteOwnerFullName(),
-                firstStory.getEntry().getOwnerGender(), null));
+        comments.add(StorySummaryEntryUtil.build(
+            firstStory.getRemoteOwnerName(),
+            firstStory.getRemoteOwnerFullName(),
+            firstStory.getEntry().getOwnerGender(),
+            null
+        ));
         if (stories.size() > 1) { // just for optimization
             var names = stories.stream().map(Story::getRemoteOwnerName).collect(Collectors.toSet());
             Story secondStory = stories.stream()
@@ -132,17 +137,20 @@ public class CommentInstants extends InstantsCreator {
                     .findFirst()
                     .orElse(null);
             if (secondStory != null) {
-                comments.add(new StorySummaryEntry(
-                        secondStory.getRemoteOwnerName(), secondStory.getRemoteOwnerFullName(),
-                        secondStory.getEntry().getOwnerGender(), null));
+                comments.add(StorySummaryEntryUtil.build(
+                    secondStory.getRemoteOwnerName(),
+                    secondStory.getRemoteOwnerFullName(),
+                    secondStory.getEntry().getOwnerGender(),
+                    null
+                ));
             }
             summaryData.setTotalComments(names.size());
         } else {
             summaryData.setTotalComments(1);
         }
-        summaryData.setPosting(new StorySummaryEntry(
-                null, null, null,
-                story.getEntry().getCurrentRevision().getHeading()));
+        summaryData.setPosting(StorySummaryEntryUtil.build(
+            null, null, null, story.getEntry().getCurrentRevision().getHeading()
+        ));
         return summaryData;
     }
 
@@ -163,7 +171,7 @@ public class CommentInstants extends InstantsCreator {
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
         if (postingOwnerAvatar != null) {
-            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(remotePostingId);
@@ -194,7 +202,7 @@ public class CommentInstants extends InstantsCreator {
         story.setRemotePostingNodeName(postingOwnerName);
         story.setRemotePostingFullName(postingOwnerFullName);
         if (postingOwnerAvatar != null) {
-            story.setRemotePostingAvatarMediaFile(postingOwnerAvatar.getMediaFile());
+            story.setRemotePostingAvatarMediaFile(AvatarImageUtil.getMediaFile(postingOwnerAvatar));
             story.setRemotePostingAvatarShape(postingOwnerAvatar.getShape());
         }
         story.setRemotePostingId(remotePostingId);
@@ -210,15 +218,15 @@ public class CommentInstants extends InstantsCreator {
     private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String gender,
                                                              String postingHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, gender, postingHeading));
+        summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, gender, postingHeading));
         return summaryData;
     }
 
     private static StorySummaryData buildUpdateFailedSummary(String nodeName, String fullName, String gender,
                                                              String postingHeading, String commentHeading) {
         StorySummaryData summaryData = new StorySummaryData();
-        summaryData.setPosting(new StorySummaryEntry(nodeName, fullName, gender, postingHeading));
-        summaryData.setComment(new StorySummaryEntry(null, null, null, commentHeading));
+        summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, gender, postingHeading));
+        summaryData.setComment(StorySummaryEntryUtil.build(null, null, null, commentHeading));
         return summaryData;
     }
 

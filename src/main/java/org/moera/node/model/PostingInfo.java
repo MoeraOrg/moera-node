@@ -13,8 +13,11 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.FeedReference;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
@@ -25,7 +28,6 @@ import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.OwnPosting;
-import org.moera.node.data.SheriffMark;
 import org.moera.node.data.Story;
 import org.moera.node.model.body.Body;
 import org.moera.node.operations.FeedOperations;
@@ -189,7 +191,9 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         receiverFullName = posting.getReceiverFullName();
         receiverGender = posting.getReceiverGender();
         if (posting.getReceiverAvatarMediaFile() != null) {
-            receiverAvatar = new AvatarImage(posting.getReceiverAvatarMediaFile(), posting.getReceiverAvatarShape());
+            receiverAvatar = AvatarImageUtil.build(
+                posting.getReceiverAvatarMediaFile(), posting.getReceiverAvatarShape()
+            );
         }
         receiverPostingId = posting.getReceiverEntryId();
         parentMediaId = posting.getParentMedia() != null ? posting.getParentMedia().getId().toString() : null;
@@ -197,7 +201,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         ownerFullName = posting.getOwnerFullName();
         ownerGender = posting.getOwnerGender();
         if (posting.getOwnerAvatarMediaFile() != null) {
-            ownerAvatar = new AvatarImage(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
+            ownerAvatar = AvatarImageUtil.build(posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape());
         }
         bodyPreview = new Body(revision.getBodyPreview());
         if (includeSource && !ObjectUtils.isEmpty(revision.getBodySrc())) {
@@ -227,7 +231,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
         if (!ObjectUtils.isEmpty(stories)) {
-            feedReferences = stories.stream().map(FeedReference::new).collect(Collectors.toList());
+            feedReferences = stories.stream().map(FeedReferenceUtil::build).collect(Collectors.toList());
         }
         if (accessChecker.isPrincipal(Principal.ADMIN, Scope.OTHER)
                 && posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()) {
@@ -760,7 +764,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
     @JsonIgnore
     public Boolean isTimelinePinned() {
         FeedReference fr = getFeedReference(Feed.TIMELINE);
-        return fr != null ? fr.isPinned() : null;
+        return fr != null ? fr.getPinned() : null;
     }
 
     @JsonIgnore

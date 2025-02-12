@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.DraftType;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
@@ -59,7 +60,7 @@ public class DraftInfo {
         deadline = Util.toEpochSecond(draft.getDeadline());
         ownerFullName = draft.getOwnerFullName();
         if (draft.getOwnerAvatarMediaFile() != null) {
-            ownerAvatar = new AvatarImage(draft.getOwnerAvatarMediaFile(), draft.getOwnerAvatarShape());
+            ownerAvatar = AvatarImageUtil.build(draft.getOwnerAvatarMediaFile(), draft.getOwnerAvatarShape());
         }
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(draft.getAcceptedReactionsPositive());

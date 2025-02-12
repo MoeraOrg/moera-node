@@ -11,8 +11,9 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.SheriffMark;
 import org.moera.node.data.Entry;
-import org.moera.node.data.SheriffMark;
+import org.moera.node.data.SheriffMarkUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.slf4j.Logger;
@@ -70,7 +71,7 @@ public class SheriffUtil {
                 .filter(mark -> !mark.getSheriffName().equals(sheriffName))
                 .collect(Collectors.toList());
         if (!isDelete) {
-            sheriffMarks.add(new SheriffMark(sheriffName));
+            sheriffMarks.add(SheriffMarkUtil.build(sheriffName));
         }
         setter.accept(SheriffUtil.serializeSheriffMarks(sheriffMarks).orElse(""));
     }
@@ -84,7 +85,7 @@ public class SheriffUtil {
             return sheriffMarks;
         }
         List<SheriffMark> allMarks = new ArrayList<>(sheriffMarks != null ? sheriffMarks : Collections.emptyList());
-        allMarks.add(new SheriffMark(sheriffName));
+        allMarks.add(SheriffMarkUtil.build(sheriffName));
         return allMarks;
     }
 

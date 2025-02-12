@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.BlockedByUserInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
@@ -16,7 +17,7 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.BlockedByUserFilter;
-import org.moera.node.model.BlockedByUserInfo;
+import org.moera.node.model.BlockedByUserInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public class BlockedByUserController {
             throw new AuthenticationException();
         }
 
-        return new BlockedByUserInfo(blockedByUser, requestContext.getOptions(), requestContext);
+        return BlockedByUserInfoUtil.build(blockedByUser, requestContext.getOptions(), requestContext);
     }
 
     @PostMapping("/search")
@@ -71,7 +72,7 @@ public class BlockedByUserController {
         return blockedByUserOperations.search(requestContext.nodeId(), blockedByUserFilter.getBlockedOperations(),
                         blockedByUserFilter.getPostings(),
                         blockedByUserFilter.getStrict() != null && blockedByUserFilter.getStrict()).stream()
-                .map(bbu -> new BlockedByUserInfo(bbu, requestContext.getOptions(), requestContext))
+                .map(bbu -> BlockedByUserInfoUtil.build(bbu, requestContext.getOptions(), requestContext))
                 .collect(Collectors.toList());
     }
 

@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedByUserRepository;
@@ -14,7 +15,7 @@ import org.moera.node.data.ContactRepository;
 import org.moera.node.liberin.model.BlockedByUserAddedLiberin;
 import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 import org.moera.node.util.Util;
@@ -247,12 +248,12 @@ public class BlockingAddedJob extends Job<BlockingAddedJob.Parameters, BlockingA
                 () -> {
                     mediaManager.downloadAvatar(parameters.senderNodeName, parameters.senderAvatar);
                     contactRepository.updateRemoteAvatar(
-                            universalContext.nodeId(),
-                            parameters.senderNodeName,
-                            parameters.senderAvatar.getMediaFile(),
-                            parameters.senderAvatar.getShape()
+                        universalContext.nodeId(),
+                        parameters.senderNodeName,
+                        AvatarImageUtil.getMediaFile(parameters.senderAvatar),
+                        parameters.senderAvatar.getShape()
                     );
-                    state.contact.setRemoteAvatarMediaFile(parameters.senderAvatar.getMediaFile());
+                    state.contact.setRemoteAvatarMediaFile(AvatarImageUtil.getMediaFile(parameters.senderAvatar));
                     state.contact.setRemoteAvatarShape(parameters.senderAvatar.getShape());
                 }
             );

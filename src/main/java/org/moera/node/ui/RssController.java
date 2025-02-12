@@ -23,7 +23,7 @@ import org.moera.node.data.PublicPageRepository;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.AvatarImage;
+import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -66,7 +66,7 @@ public class RssController {
         if (rcp.avatarId() != null) {
             SyndImage image = new SyndImageImpl();
             image.setTitle(title);
-            image.setUrl(rcp.getSiteUrl() + "/moera/media/" + new AvatarImage(rcp.getAvatar()).getPath());
+            image.setUrl(rcp.getSiteUrl() + "/moera/media/" + AvatarImageUtil.build(rcp.getAvatar()).getPath());
             image.setLink(rcp.getSiteUrl() + "/");
             feed.setImage(image);
         }
