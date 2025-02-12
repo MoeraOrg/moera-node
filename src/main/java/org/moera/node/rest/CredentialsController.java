@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.Password;
+import org.moera.lib.node.types.CredentialsCreated;
+import org.moera.lib.node.types.EmailHint;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.PasswordResetToken;
 import org.moera.node.data.PasswordResetTokenRepository;
@@ -19,8 +21,8 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PasswordResetLiberin;
 import org.moera.node.model.Credentials;
 import org.moera.node.model.CredentialsChange;
-import org.moera.node.model.CredentialsCreated;
-import org.moera.node.model.EmailHint;
+import org.moera.node.model.CredentialsCreatedUtil;
+import org.moera.node.model.EmailHintUtil;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -60,9 +62,10 @@ public class CredentialsController {
         log.info("GET /credentials");
 
         Options options = requestContext.getOptions();
-        return new CredentialsCreated(
-                !ObjectUtils.isEmpty(options.getString("credentials.login"))
-                && !ObjectUtils.isEmpty(options.getString("credentials.password-hash")));
+        return CredentialsCreatedUtil.build(
+            !ObjectUtils.isEmpty(options.getString("credentials.login"))
+            && !ObjectUtils.isEmpty(options.getString("credentials.password-hash"))
+        );
     }
 
     @PostMapping
@@ -147,7 +150,7 @@ public class CredentialsController {
 
         requestContext.send(new PasswordResetLiberin(token.getToken()));
 
-        return new EmailHint(email);
+        return EmailHintUtil.build(email);
     }
 
     @Scheduled(fixedDelayString = "PT1H")

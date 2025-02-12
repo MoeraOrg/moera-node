@@ -3,6 +3,7 @@ package org.moera.node.rest;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.DeleteNodeStatus;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
@@ -10,7 +11,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.DeleteNodeCancelledLiberin;
 import org.moera.node.liberin.model.DeleteNodeRequestedLiberin;
-import org.moera.node.model.DeleteNodeStatus;
+import org.moera.node.model.DeleteNodeStatusUtil;
 import org.moera.node.model.DeleteNodeText;
 import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ public class ProviderController {
     public DeleteNodeStatus deleteNodeStatus() {
         log.info("GET /delete-node");
 
-        return new DeleteNodeStatus(requestContext.getOptions());
+        return DeleteNodeStatusUtil.build(requestContext.getOptions());
     }
 
     @PostMapping("/delete-node")
@@ -54,7 +55,7 @@ public class ProviderController {
 
         requestContext.send(new DeleteNodeRequestedLiberin(deleteNodeText.getMessage()));
 
-        return new DeleteNodeStatus(requestContext.getOptions());
+        return DeleteNodeStatusUtil.build(requestContext.getOptions());
     }
 
     @DeleteMapping("/delete-node")
@@ -68,7 +69,7 @@ public class ProviderController {
             requestContext.send(new DeleteNodeCancelledLiberin());
         }
 
-        return new DeleteNodeStatus(requestContext.getOptions());
+        return DeleteNodeStatusUtil.build(requestContext.getOptions());
     }
 
 }
