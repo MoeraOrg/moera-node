@@ -6,8 +6,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.lib.node.types.Scope;
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;
 import org.springframework.data.util.Pair;
 

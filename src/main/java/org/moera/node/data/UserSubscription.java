@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
 
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.lib.node.types.SubscriptionType;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.model.RemoteFeed;
 import org.moera.node.model.RemotePosting;
 import org.moera.node.option.Options;

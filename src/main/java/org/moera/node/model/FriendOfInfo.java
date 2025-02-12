@@ -3,7 +3,7 @@ package org.moera.node.model;
 import java.util.Collections;
 import java.util.List;
 
-import org.moera.node.auth.principal.AccessChecker;
+import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.FriendOf;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;

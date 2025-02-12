@@ -13,7 +13,7 @@ import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.ChildOperations;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryAttachment;

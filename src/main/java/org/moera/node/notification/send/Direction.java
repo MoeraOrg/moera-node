@@ -3,8 +3,8 @@ package org.moera.node.notification.send;
 import java.util.Objects;
 import java.util.UUID;
 
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 
 public class Direction {
 

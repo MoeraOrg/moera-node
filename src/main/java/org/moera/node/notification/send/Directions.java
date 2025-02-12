@@ -3,7 +3,7 @@ package org.moera.node.notification.send;
 import java.util.UUID;
 
 import org.moera.lib.node.types.SubscriptionType;
-import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 
 public class Directions {
 

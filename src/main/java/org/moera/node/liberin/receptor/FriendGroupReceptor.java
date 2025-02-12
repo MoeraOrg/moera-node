@@ -2,8 +2,8 @@ package org.moera.node.liberin.receptor;
 
 import java.util.UUID;
 
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalExpression;
+import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;

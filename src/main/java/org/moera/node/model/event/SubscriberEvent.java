@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.model.SubscriberInfo;
 import org.springframework.data.util.Pair;
 

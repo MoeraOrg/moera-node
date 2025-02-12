@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.UniversalLocation;
 import org.moera.lib.node.types.Scope;
-import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.AvatarRepository;
 import org.moera.node.friends.FriendCache;

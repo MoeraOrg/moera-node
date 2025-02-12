@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 

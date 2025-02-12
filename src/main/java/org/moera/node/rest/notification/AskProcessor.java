@@ -7,8 +7,8 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.AskHistoryRepository;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;

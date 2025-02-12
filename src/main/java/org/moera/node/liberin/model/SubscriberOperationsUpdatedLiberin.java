@@ -2,8 +2,8 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
-import org.moera.node.auth.principal.AccessCheckers;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.AccessCheckers;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Subscriber;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.SubscriberInfo;

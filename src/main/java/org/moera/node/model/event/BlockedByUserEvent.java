@@ -3,8 +3,8 @@ package org.moera.node.model.event;
 import java.util.List;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.principal.PrincipalFilter;
 import org.moera.node.event.EventSubscriber;
 import org.moera.node.model.BlockedByUserInfo;
 import org.springframework.data.util.Pair;

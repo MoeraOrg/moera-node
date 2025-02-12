@@ -4,7 +4,7 @@ import java.util.Map;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.FriendGroup;
 
 public class FriendGroupDescription {

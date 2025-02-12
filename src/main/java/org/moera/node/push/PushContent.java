@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.PushContentType;
-import org.moera.node.auth.principal.AccessCheckers;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Story;
 import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedWithStatus;

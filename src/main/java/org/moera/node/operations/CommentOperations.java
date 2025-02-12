@@ -15,8 +15,8 @@ import java.util.function.Predicate;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.CommentRepository;
 import org.moera.node.data.Entry;

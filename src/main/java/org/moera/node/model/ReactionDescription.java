@@ -4,7 +4,7 @@ import java.util.Map;
 import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.Reaction;

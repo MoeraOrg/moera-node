@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.moera.lib.node.types.Scope;
-import org.moera.node.auth.principal.AccessChecker;
+import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.Avatar;
 import org.moera.node.friends.FriendCacheInvalidation;
 import org.moera.node.friends.FriendCachePart;

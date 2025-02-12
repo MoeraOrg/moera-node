@@ -1,7 +1,9 @@
-package org.moera.node.auth.principal;
+package org.moera.node.model.principal;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+
+import org.moera.lib.node.types.principal.Principal;
 
 @Converter(autoApply = true)
 public class PrincipalAttributeConverter implements AttributeConverter<Principal, String> {

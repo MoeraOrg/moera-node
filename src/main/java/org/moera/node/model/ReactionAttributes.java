@@ -2,7 +2,7 @@ package org.moera.node.model;
 
 import java.util.Map;
 
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 
 public class ReactionAttributes {
 

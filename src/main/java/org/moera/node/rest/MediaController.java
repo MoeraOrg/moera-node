@@ -21,10 +21,10 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.UserBlockedException;
-import org.moera.node.auth.principal.Principal;
 import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;

@@ -16,7 +16,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.moera.lib.crypto.CryptoUtil;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.util.Util;
 

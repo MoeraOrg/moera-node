@@ -4,8 +4,8 @@ import java.util.Map;
 
 import jakarta.persistence.EntityManager;
 
-import org.moera.node.auth.principal.AccessCheckers;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.AccessCheckers;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;

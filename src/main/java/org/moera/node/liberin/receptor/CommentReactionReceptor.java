@@ -1,8 +1,8 @@
 package org.moera.node.liberin.receptor;
 
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalExpression;
-import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.principal.PrincipalExpression;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Entry;
 import org.moera.node.data.Reaction;

@@ -4,8 +4,8 @@ import javax.imageio.ImageIO;
 
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.node.auth.principal.AccessChecker;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.AccessChecker;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.option.Options;
 
 public class PostingFeatures {

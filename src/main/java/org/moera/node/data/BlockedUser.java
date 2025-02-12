@@ -11,7 +11,7 @@ import jakarta.validation.constraints.NotNull;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 

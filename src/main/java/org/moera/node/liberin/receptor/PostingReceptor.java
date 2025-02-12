@@ -8,10 +8,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import org.moera.node.auth.principal.AccessCheckers;
-import org.moera.node.auth.principal.Principal;
-import org.moera.node.auth.principal.PrincipalExpression;
-import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.lib.node.types.principal.AccessCheckers;
+import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.principal.PrincipalExpression;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Story;

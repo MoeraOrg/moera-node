@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.DraftType;
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Draft;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.model.body.Body;

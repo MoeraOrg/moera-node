@@ -3,7 +3,7 @@ package org.moera.node.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.node.auth.principal.AccessChecker;
+import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.model.body.Body;

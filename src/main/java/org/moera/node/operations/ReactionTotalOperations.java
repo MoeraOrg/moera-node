@@ -11,7 +11,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
-import org.moera.node.auth.principal.AccessCheckers;
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;

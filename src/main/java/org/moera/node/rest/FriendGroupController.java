@@ -9,10 +9,10 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
-import org.moera.node.auth.principal.Principal;
 import org.moera.node.data.Friend;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;

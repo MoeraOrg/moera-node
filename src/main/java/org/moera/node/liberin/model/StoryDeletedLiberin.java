@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.moera.lib.node.types.StoryType;
-import org.moera.node.auth.principal.PrincipalFilter;
+import org.moera.lib.node.types.principal.PrincipalFilter;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.Liberin;
 

@@ -1,7 +1,7 @@
 package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.principal.AccessChecker;
+import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.Reaction;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

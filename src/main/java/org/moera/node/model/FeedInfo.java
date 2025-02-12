@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.SheriffMark;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.option.Options;

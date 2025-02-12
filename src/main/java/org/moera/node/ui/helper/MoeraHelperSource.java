@@ -10,7 +10,7 @@ import com.github.jknack.handlebars.Handlebars.SafeString;
 import com.github.jknack.handlebars.Options;
 import org.moera.lib.UniversalLocation;
 import org.moera.lib.naming.NodeName;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.AvatarImage;

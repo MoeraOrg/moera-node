@@ -2,7 +2,7 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.BlockedOperation;
-import org.moera.node.auth.principal.AccessChecker;
+import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;

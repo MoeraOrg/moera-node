@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.Scope;
-import org.moera.node.auth.principal.AccessChecker;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.AccessChecker;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.BlockedByUser;
 import org.moera.node.data.BlockedUser;
 import org.moera.node.data.Contact;

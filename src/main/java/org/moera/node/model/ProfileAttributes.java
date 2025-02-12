@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.model.constraint.Uuid;
 import org.moera.node.option.Options;
 import org.moera.node.text.TextConverter;

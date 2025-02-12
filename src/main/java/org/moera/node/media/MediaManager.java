@@ -12,10 +12,10 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.api.node.NodeApiLocalStorageException;
-import org.moera.node.auth.principal.AccessCheckers;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.MediaFile;

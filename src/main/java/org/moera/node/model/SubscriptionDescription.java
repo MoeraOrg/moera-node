@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.lib.node.types.SubscriptionType;
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.UserSubscription;
 
 public class SubscriptionDescription {

@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
 import org.moera.node.option.exception.DeserializeOptionValueException;

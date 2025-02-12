@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import jakarta.inject.Inject;
 
-import org.moera.node.auth.principal.Principal;
+import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
 import org.moera.node.data.FriendGroup;
