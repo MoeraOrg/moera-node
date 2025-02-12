@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SettingMetaInfo;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
@@ -26,7 +27,7 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.SettingInfo;
 import org.moera.node.model.SettingMetaAttributes;
-import org.moera.node.model.SettingMetaInfo;
+import org.moera.node.model.SettingMetaInfoUtil;
 import org.moera.node.operations.OptionsOperations;
 import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
@@ -101,7 +102,7 @@ public class SettingsController {
         return optionsMetadata.getDescriptorsForNode(requestContext.nodeId()).stream()
                 .filter(d -> !d.isInternal())
                 .filter(d -> prefix == null || d.getName().startsWith(prefix))
-                .map(SettingMetaInfo::new)
+                .map(SettingMetaInfoUtil::build)
                 .sorted(Comparator.comparing(SettingMetaInfo::getName))
                 .collect(Collectors.toList());
     }

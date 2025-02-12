@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import io.hypersistence.utils.hibernate.type.basic.Inet;
+import org.moera.lib.node.types.PluginInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
@@ -32,7 +33,7 @@ import org.moera.node.liberin.model.PluginDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PluginDescription;
-import org.moera.node.model.PluginInfo;
+import org.moera.node.model.PluginInfoUtil;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OptionsOperations;
@@ -141,7 +142,7 @@ public class PluginController {
 
         pluginsUpdated(descriptor, false);
 
-        return new PluginInfo(descriptor, optionsMetadata, requestContext.isRootAdmin());
+        return PluginInfoUtil.build(descriptor, optionsMetadata, requestContext.isRootAdmin());
     }
 
     @GetMapping
@@ -150,7 +151,7 @@ public class PluginController {
 
         return plugins.getNames(requestContext.nodeId()).stream()
                 .map(name -> getPluginDescriptor(name, false))
-                .map(desc -> new PluginInfo(desc, optionsMetadata, requestContext.isRootAdmin()))
+                .map(desc -> PluginInfoUtil.build(desc, optionsMetadata, requestContext.isRootAdmin()))
                 .collect(Collectors.toList());
     }
 
@@ -159,8 +160,9 @@ public class PluginController {
     public PluginInfo get(@PathVariable String pluginName) {
         log.info("GET /plugins/{pluginName} (pluginName = {})", LogUtil.format(pluginName));
 
-        return new PluginInfo(getPluginDescriptor(pluginName, false), optionsMetadata,
-                requestContext.isRootAdmin());
+        return PluginInfoUtil.build(
+            getPluginDescriptor(pluginName, false), optionsMetadata, requestContext.isRootAdmin()
+        );
     }
 
     @ProviderApi

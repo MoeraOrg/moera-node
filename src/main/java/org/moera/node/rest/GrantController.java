@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.GrantInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.lib.naming.NodeName;
@@ -16,7 +17,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.GrantUpdatedLiberin;
 import org.moera.node.model.GrantChange;
-import org.moera.node.model.GrantInfo;
+import org.moera.node.model.GrantInfoUtil;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.GrantCache;
@@ -54,7 +55,7 @@ public class GrantController {
     public List<GrantInfo> getAll() {
         log.info("GET /grants");
 
-        return grantRepository.findAllByNodeId(requestContext.nodeId()).stream().map(GrantInfo::new).toList();
+        return grantRepository.findAllByNodeId(requestContext.nodeId()).stream().map(GrantInfoUtil::build).toList();
     }
 
     @GetMapping("/{nodeName}")
@@ -66,7 +67,7 @@ public class GrantController {
         nodeName = NodeName.expand(nodeName);
         long scope = grantCache.get(requestContext.nodeId(), nodeName);
 
-        return new GrantInfo(nodeName, scope);
+        return GrantInfoUtil.build(nodeName, scope);
     }
 
     @PutMapping("/{nodeName}")
@@ -90,7 +91,7 @@ public class GrantController {
 
         requestContext.send(new GrantUpdatedLiberin(nodeName, scope));
 
-        return new GrantInfo(nodeName, scope);
+        return GrantInfoUtil.build(nodeName, scope);
     }
 
     @DeleteMapping("/{nodeName}")
