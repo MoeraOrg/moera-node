@@ -12,6 +12,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.CarteInfo;
+import org.moera.lib.node.types.CarteSet;
+import org.moera.lib.node.types.CarteVerificationInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -23,9 +26,7 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CarteAttributes;
-import org.moera.node.model.CarteInfo;
-import org.moera.node.model.CarteSet;
-import org.moera.node.model.CarteVerificationInfo;
+import org.moera.node.model.CarteInfoUtil;
 import org.moera.node.model.ClientCarte;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.util.UriUtil;
@@ -127,8 +128,9 @@ public class CarteController {
         List<CarteInfo> cartes = new ArrayList<>();
         Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
         for (int i = 0; i < limit; i++) {
-            CarteInfo carteAll = CarteInfo.generate(
-                    ownerName, remoteAddress, beginning, signingKey, null, scopeMask, adminMask);
+            CarteInfo carteAll = CarteInfoUtil.generate(
+                ownerName, remoteAddress, beginning, signingKey, null, scopeMask, adminMask
+            );
             cartes.add(carteAll);
             beginning = Instant.ofEpochSecond(carteAll.getDeadline());
         }

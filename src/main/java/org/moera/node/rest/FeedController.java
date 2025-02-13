@@ -45,7 +45,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.FeedStoriesReadLiberin;
-import org.moera.node.model.ClientReactionInfo;
+import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.FeedStatus;
@@ -338,13 +338,15 @@ public class FeedController {
 
     private void fillReactions(FeedSliceInfo sliceInfo, String feedName, Map<String, PostingInfo> postingMap,
                                String clientName, boolean viewContent) {
-        reactionRepository.findByStoriesInRangeAndOwner(
-                requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
-                .stream()
-                .filter(r -> r.getViewE().isPublic() || viewContent)
-                .map(ClientReactionInfo::new)
-                .filter(r -> postingMap.containsKey(r.getEntryId()))
-                .forEach(r -> postingMap.get(r.getEntryId()).setClientReaction(r));
+        reactionRepository
+            .findByStoriesInRangeAndOwner(
+                requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName
+            )
+            .stream()
+            .filter(r -> r.getViewE().isPublic() || viewContent)
+            .map(ClientReactionInfoUtil::build)
+            .filter(r -> postingMap.containsKey(ClientReactionInfoUtil.getEntryId(r)))
+            .forEach(r -> postingMap.get(ClientReactionInfoUtil.getEntryId(r)).setClientReaction(r));
     }
 
     private Predicate storyFilter(UUID nodeId, String feedName, long afterMoment, long beforeMoment) {
@@ -451,7 +453,7 @@ public class FeedController {
             if (ownReaction != null
                     && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
                     && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
-                posting.setClientReaction(new ClientReactionInfo(ownReaction));
+                posting.setClientReaction(ClientReactionInfoUtil.build(ownReaction));
             }
         });
     }

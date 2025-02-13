@@ -4,6 +4,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Comment;
@@ -12,7 +13,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

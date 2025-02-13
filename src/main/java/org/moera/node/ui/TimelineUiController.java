@@ -12,6 +12,8 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.UniversalLocation;
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
@@ -30,9 +32,7 @@ import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
-import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.EntryOperations;

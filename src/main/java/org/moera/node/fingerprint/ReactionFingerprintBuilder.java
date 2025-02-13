@@ -2,9 +2,9 @@ package org.moera.node.fingerprint;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.ReactionInfo;
 import org.moera.node.model.ReactionAttributes;
 import org.moera.node.model.ReactionDescription;
-import org.moera.node.model.ReactionInfo;
 
 public class ReactionFingerprintBuilder {
 
@@ -45,7 +45,7 @@ public class ReactionFingerprintBuilder {
         return Fingerprints.reaction(
             reactionInfo.getOwnerName(),
             CryptoUtil.digest(entryFingerprint),
-            reactionInfo.isNegative(),
+            Boolean.TRUE.equals(reactionInfo.getNegative()),
             reactionInfo.getEmoji()
         );
     }

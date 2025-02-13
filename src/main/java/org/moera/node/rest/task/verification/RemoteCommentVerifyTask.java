@@ -7,6 +7,7 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.api.node.NodeApiException;
@@ -22,7 +23,6 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.rest.task.RepliedToDigestVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,12 +104,14 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
         byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
-                        null)
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
+                    null
+                )
                 : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf);
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf
+                );
 
         String repliedToId = null;
         String repliedToRevisionId = null;

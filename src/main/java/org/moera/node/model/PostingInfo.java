@@ -15,7 +15,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.BlockedPostingInstantInfo;
+import org.moera.lib.node.types.ClientReactionInfo;
 import org.moera.lib.node.types.FeedReference;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.PostingSourceInfo;
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SourceFormat;
@@ -236,7 +241,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         if (accessChecker.isPrincipal(Principal.ADMIN, Scope.OTHER)
                 && posting.getBlockedInstants() != null && !posting.getBlockedInstants().isEmpty()) {
             blockedInstants = posting.getBlockedInstants().stream()
-                    .map(BlockedPostingInstantInfo::new)
+                    .map(BlockedPostingInstantInfoUtil::build)
                     .collect(Collectors.toList());
         }
 
@@ -353,9 +358,9 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         acceptedReactions.setPositive(posting.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(posting.getAcceptedReactionsNegative());
 
-        reactions = new ReactionTotalsInfo(posting.getReactionTotals(), posting, accessChecker);
+        reactions = ReactionTotalsInfoUtil.build(posting.getReactionTotals(), posting, accessChecker);
         sources = posting.getSources() != null
-                ? posting.getSources().stream().map(PostingSourceInfo::new).collect(Collectors.toList())
+                ? posting.getSources().stream().map(PostingSourceInfoUtil::build).collect(Collectors.toList())
                 : Collections.emptyList();
         Principal viewComments = posting.isOriginal()
                 ? posting.getViewCommentsE()

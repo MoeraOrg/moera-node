@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.ReactionTotalInfo;
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Entry;
 import org.moera.node.data.EntryRevision;
@@ -19,8 +21,7 @@ import org.moera.node.data.Reaction;
 import org.moera.node.data.ReactionTotal;
 import org.moera.node.data.ReactionTotalRepository;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.ReactionTotalInfo;
-import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.node.model.ReactionTotalsInfoUtil;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -73,11 +74,11 @@ public class ReactionTotalOperations {
         }
 
         public ReactionTotalsInfo getClientInfo() {
-            return new ReactionTotalsInfo(totals, entry, requestContext);
+            return ReactionTotalsInfoUtil.build(totals, entry, requestContext);
         }
 
         public ReactionTotalsInfo getPublicInfo() {
-            return new ReactionTotalsInfo(totals, entry, AccessCheckers.PUBLIC);
+            return ReactionTotalsInfoUtil.build(totals, entry, AccessCheckers.PUBLIC);
         }
 
     }

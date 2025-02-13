@@ -2,6 +2,9 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.ClientReactionInfo;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.EntryRevision;
@@ -60,7 +63,7 @@ public class PostingRevisionInfo implements RevisionInfo {
         digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        reactions = new ReactionTotalsInfo(revision.getReactionTotals(), posting, accessChecker);
+        reactions = ReactionTotalsInfoUtil.build(revision.getReactionTotals(), posting, accessChecker);
     }
 
     public String getId() {

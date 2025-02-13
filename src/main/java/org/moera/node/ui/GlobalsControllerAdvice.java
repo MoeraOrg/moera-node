@@ -7,7 +7,7 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.NodeNameInfo;
+import org.moera.node.model.NodeNameInfoUtil;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -23,9 +23,13 @@ public class GlobalsControllerAdvice {
     public void session(Model model) {
         model.addAttribute("webClientUrl", requestContext.getRedirectorUrl());
         if (!requestContext.isRegistrar()) {
-            model.addAttribute("nodeName", new NodeNameInfo(requestContext.getPublic()));
-            model.addAttribute("nodeAvatar", requestContext.getPublic().getAvatar() != null
-                    ? AvatarImageUtil.build(requestContext.getPublic().getAvatar()) : null);
+            model.addAttribute("nodeName", NodeNameInfoUtil.build(requestContext.getPublic()));
+            model.addAttribute(
+                "nodeAvatar",
+                requestContext.getPublic().getAvatar() != null
+                    ? AvatarImageUtil.build(requestContext.getPublic().getAvatar())
+                    : null
+            );
             model.addAttribute("siteUrl", requestContext.getSiteUrl());
         }
         model.addAttribute("ogType", "website");
@@ -45,7 +49,8 @@ public class GlobalsControllerAdvice {
             model.addAttribute("ogDescription", requestContext.getOptions().getString("profile.title"));
         }
         String siteName = !ObjectUtils.isEmpty(requestContext.fullName())
-                ? requestContext.fullName() : NodeName.shorten(requestContext.nodeName());
+            ? requestContext.fullName()
+            : NodeName.shorten(requestContext.nodeName());
         model.addAttribute("ogSiteName", siteName);
         model.addAttribute("ogTitle", siteName);
     }

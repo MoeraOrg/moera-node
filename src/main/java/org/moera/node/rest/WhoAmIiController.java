@@ -2,10 +2,11 @@ package org.moera.node.rest;
 
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.WhoAmI;
+import org.moera.node.model.WhoAmIiUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class WhoAmIiController {
     public WhoAmI get() {
         log.info("GET /whoami");
 
-        return new WhoAmI(requestContext);
+        return WhoAmIiUtil.build(requestContext);
     }
 
 }

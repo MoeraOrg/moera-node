@@ -1,6 +1,6 @@
 package org.moera.node.model.event;
 
-import org.moera.node.model.BlockedInstantInfo;
+import org.moera.lib.node.types.BlockedInstantInfo;
 
 public class BlockedInstantDeletedEvent extends BlockedInstantEvent {
 

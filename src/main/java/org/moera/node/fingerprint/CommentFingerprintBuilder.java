@@ -5,11 +5,11 @@ import java.util.function.Function;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.Comment;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.Util;
 
 public class CommentFingerprintBuilder {

@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.BlockedInstantInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -22,7 +23,7 @@ import org.moera.node.liberin.model.BlockedInstantAddedLiberin;
 import org.moera.node.liberin.model.BlockedInstantDeletedLiberin;
 import org.moera.node.model.BlockedInstantAttributes;
 import org.moera.node.model.BlockedInstantFilter;
-import org.moera.node.model.BlockedInstantInfo;
+import org.moera.node.model.BlockedInstantInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.StoryTypeUtil;
@@ -103,7 +104,7 @@ public class BlockedInstantController {
         }
 
         return ResponseEntity.created(URI.create("/blocked-instants/" + blockedInstant.getId()))
-                .body(new BlockedInstantInfo(blockedInstant));
+                .body(BlockedInstantInfoUtil.build(blockedInstant));
     }
 
     @GetMapping("/{id}")
@@ -115,7 +116,7 @@ public class BlockedInstantController {
         BlockedInstant blockedInstant = blockedInstantRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
 
-        return new BlockedInstantInfo(blockedInstant);
+        return BlockedInstantInfoUtil.build(blockedInstant);
     }
 
     @DeleteMapping("/{id}")
@@ -143,7 +144,7 @@ public class BlockedInstantController {
         return blockedInstantOperations.search(requestContext.nodeId(), blockedInstantFilter.getStoryType(),
                         blockedInstantFilter.getEntryId(), blockedInstantFilter.getRemoteNodeName(),
                         blockedInstantFilter.getRemotePostingId(), blockedInstantFilter.getRemoteOwnerName())
-                .map(BlockedInstantInfo::new)
+                .map(BlockedInstantInfoUtil::build)
                 .collect(Collectors.toList());
     }
 

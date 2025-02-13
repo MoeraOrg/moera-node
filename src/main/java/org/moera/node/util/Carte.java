@@ -21,8 +21,15 @@ public class Carte {
         return beginning.plus(TTL);
     }
 
-    public static String generate(String ownerName, InetAddress address, Instant beginning, PrivateKey signingKey,
-                                  String nodeName, long clientScope, long adminScope) {
+    public static String generate(
+        String ownerName,
+        InetAddress address,
+        Instant beginning,
+        PrivateKey signingKey,
+        String nodeName,
+        long clientScope,
+        long adminScope
+    ) {
         var salt = new byte[8];
         new SecureRandom().nextBytes(salt);
         byte[] fingerprint = Fingerprints.carte(

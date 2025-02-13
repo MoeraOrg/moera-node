@@ -46,7 +46,7 @@ import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReadLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.ClientReactionInfo;
+import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingText;
@@ -437,14 +437,14 @@ public class PostingController {
             Reaction reaction = reactionRepository.findByEntryIdAndOwner(
                     UUID.fromString(postingInfo.getId()), clientName);
             if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
-                postingInfo.setClientReaction(new ClientReactionInfo(reaction));
+                postingInfo.setClientReaction(ClientReactionInfoUtil.build(reaction));
             }
         } else if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
             // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
             OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(
                     requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId())
                     .orElse(null);
-            postingInfo.setClientReaction(ownReaction != null ? new ClientReactionInfo(ownReaction) : null);
+            postingInfo.setClientReaction(ownReaction != null ? ClientReactionInfoUtil.build(ownReaction) : null);
         }
         return postingInfo;
     }

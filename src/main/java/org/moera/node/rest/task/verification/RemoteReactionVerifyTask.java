@@ -5,6 +5,8 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.api.node.NodeApiNotFoundException;
@@ -20,8 +22,6 @@ import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
-import org.moera.node.model.ReactionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

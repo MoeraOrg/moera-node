@@ -13,6 +13,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiException;
@@ -29,8 +31,6 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingFeaturesUtil;
-import org.moera.node.model.PrivateMediaFileInfo;
-import org.moera.node.model.PublicMediaFileInfo;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -258,8 +258,9 @@ public class MediaManager {
         }
     }
 
-    public MediaFileOwner downloadPrivateMedia(String nodeName, String carte, PrivateMediaFileInfo info,
-                                               UUID entryId) throws NodeApiException {
+    public MediaFileOwner downloadPrivateMedia(
+        String nodeName, String carte, PrivateMediaFileInfo info, UUID entryId
+    ) throws NodeApiException {
         int maxSize = PostingFeaturesUtil.build(universalContext.getOptions(), AccessCheckers.ADMIN).getMediaMaxSize();
         return downloadPrivateMedia(nodeName, carte, info.getId(), info.getHash(), maxSize, entryId);
     }

@@ -2,8 +2,8 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.ReactionInfo;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.ReactionInfo;
 
 public class RemotePostingReactionAddedLiberin extends Liberin {
 

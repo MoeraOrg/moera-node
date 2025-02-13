@@ -4,8 +4,8 @@ import java.util.Map;
 
 import org.moera.node.data.Avatar;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarInfo;
-import org.moera.node.model.ProfileInfo;
+import org.moera.node.model.AvatarInfoUtil;
+import org.moera.node.model.ProfileInfoUtil;
 import org.moera.node.option.Options;
 
 public class ProfileUpdatedLiberin extends Liberin {
@@ -58,8 +58,8 @@ public class ProfileUpdatedLiberin extends Liberin {
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
         model.put("nodeName", nodeName);
-        model.put("profile", new ProfileInfo(options));
-        model.put("avatar", new AvatarInfo(avatar));
+        model.put("profile", ProfileInfoUtil.build(options));
+        model.put("avatar", AvatarInfoUtil.build(avatar));
         model.put("prevEmail", prevEmail);
     }
 

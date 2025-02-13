@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
@@ -13,7 +14,6 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.model.StorySummaryNodeUtil;
-import org.moera.node.model.WhoAmI;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
 

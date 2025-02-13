@@ -5,7 +5,7 @@ import jakarta.inject.Inject;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
-import org.moera.node.model.ProfileInfo;
+import org.moera.node.model.ProfileInfoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -39,7 +39,7 @@ public class IndexUiController {
 
         model.addAttribute("pageTitle", titleBuilder.build("Profile"));
         model.addAttribute("menuIndex", "profile");
-        model.addAttribute("profile", new ProfileInfo(requestContext.getPublic(), false));
+        model.addAttribute("profile", ProfileInfoUtil.build(requestContext.getPublic(), false));
 
         model.addAttribute("ogUrl", requestContext.getSiteUrl() + "/profile");
         model.addAttribute("ogTitle", "Profile");

@@ -8,6 +8,7 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApi;
 import org.moera.node.api.node.NodeApiException;
@@ -21,7 +22,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.CarteGenerator;
 import org.springframework.stereotype.Component;
 
@@ -111,7 +111,8 @@ public class RepliedToDigestVerifier {
                 : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(
-                        targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA), pmf);
+                    targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_MEDIA), pmf
+                );
 
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentInfo.getSignatureVersion(),

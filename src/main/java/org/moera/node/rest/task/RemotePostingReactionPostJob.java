@@ -7,7 +7,10 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.ReactionCreated;
+import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileRepository;
@@ -21,10 +24,8 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.ReactionAttributes;
-import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
-import org.moera.node.model.ReactionInfo;
-import org.moera.node.model.WhoAmI;
+import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
@@ -293,7 +294,7 @@ public class RemotePostingReactionPostJob
                     ownReaction = ownReactionRepository.save(ownReaction);
                     contactOperations.updateCloseness(nodeId, parameters.targetNodeName, 0.25f);
                 }
-                state.reactionInfo.toOwnReaction(ownReaction);
+                ReactionInfoUtil.toOwnReaction(state.reactionInfo, ownReaction);
                 ownReaction.setPostingHeading(state.postingInfo.getHeading());
             }
         );

@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import jakarta.validation.Valid;
 
-import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.lib.node.types.ReactionTotalsInfo;
 
 public class PostingReactionsUpdatedNotification extends PostingSubscriberNotification {
 

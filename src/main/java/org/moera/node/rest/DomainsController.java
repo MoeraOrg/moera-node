@@ -10,6 +10,8 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import com.github.slugify.Slugify;
+import org.moera.lib.node.types.DomainAvailable;
+import org.moera.lib.node.types.DomainInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
@@ -25,8 +27,8 @@ import org.moera.node.liberin.model.DomainAddedLiberin;
 import org.moera.node.liberin.model.DomainDeletedLiberin;
 import org.moera.node.liberin.model.DomainUpdatedLiberin;
 import org.moera.node.model.DomainAttributes;
-import org.moera.node.model.DomainAvailable;
-import org.moera.node.model.DomainInfo;
+import org.moera.node.model.DomainAvailableUtil;
+import org.moera.node.model.DomainInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
@@ -123,7 +125,7 @@ public class DomainsController {
 
         liberinManager.send(new DomainAddedLiberin(name).withNodeId(nodeId));
 
-        return ResponseEntity.created(URI.create("/domains/" + domain.getName())).body(new DomainInfo(domain));
+        return ResponseEntity.created(URI.create("/domains/" + domain.getName())).body(DomainInfoUtil.build(domain));
     }
 
     @ProviderApi
@@ -163,7 +165,7 @@ public class DomainsController {
 
         liberinManager.send(new DomainUpdatedLiberin(name, newName).withNodeId(domain.getNodeId()));
 
-        return new DomainInfo(domain);
+        return DomainInfoUtil.build(domain);
     }
 
     @ProviderApi
@@ -215,7 +217,7 @@ public class DomainsController {
                 fqdn = domainName + i + "." + config.getRegistrar().getDomain();
             } while (domains.isDomainDefined(fqdn));
         }
-        return new DomainAvailable(fqdn);
+        return DomainAvailableUtil.build(fqdn);
     }
 
 }

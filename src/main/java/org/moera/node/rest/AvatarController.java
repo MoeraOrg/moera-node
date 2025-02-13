@@ -9,6 +9,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.AvatarInfo;
+import org.moera.lib.node.types.AvatarOrdinal;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -26,8 +28,8 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThumbnailUtil;
 import org.moera.node.model.AvatarAttributes;
-import org.moera.node.model.AvatarInfo;
-import org.moera.node.model.AvatarOrdinal;
+import org.moera.node.model.AvatarInfoUtil;
+import org.moera.node.model.AvatarOrdinalUtil;
 import org.moera.node.model.AvatarsOrdered;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -122,7 +124,7 @@ public class AvatarController {
             }
             avatar = avatarRepository.save(avatar);
 
-            AvatarInfo avatarInfo = new AvatarInfo(avatar);
+            AvatarInfo avatarInfo = AvatarInfoUtil.build(avatar);
 
             requestContext.send(new AvatarAddedLiberin(avatarInfo));
 
@@ -189,7 +191,7 @@ public class AvatarController {
             Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                     .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
             avatar.setOrdinal(ordinal);
-            result[ordinal] = new AvatarOrdinal(avatar.getId().toString(), ordinal);
+            result[ordinal] = AvatarOrdinalUtil.build(avatar.getId().toString(), ordinal);
             requestContext.send(new AvatarOrderedLiberin(avatar));
             ordinal++;
         }
@@ -204,7 +206,7 @@ public class AvatarController {
         log.info("GET /avatars");
 
         return avatarRepository.findAllByNodeId(requestContext.nodeId()).stream()
-                .map(AvatarInfo::new)
+                .map(AvatarInfoUtil::build)
                 .collect(Collectors.toList());
     }
 
@@ -215,7 +217,7 @@ public class AvatarController {
 
         Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
                 .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
-        return new AvatarInfo(avatar);
+        return AvatarInfoUtil.build(avatar);
     }
 
     @DeleteMapping("/{id}")

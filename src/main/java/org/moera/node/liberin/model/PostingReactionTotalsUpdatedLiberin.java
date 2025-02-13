@@ -4,11 +4,11 @@ import java.util.Map;
 
 import jakarta.persistence.EntityManager;
 
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.ReactionTotalsInfo;
 
 public class PostingReactionTotalsUpdatedLiberin extends Liberin {
 

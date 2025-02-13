@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.Principal;
 
 public interface ReactionsInfo {

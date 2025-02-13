@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -37,8 +38,7 @@ import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ReactionDescription;
-import org.moera.node.model.ReactionInfo;
-import org.moera.node.model.ReactionsSliceInfo;
+import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.EmojiList;
 import org.moera.node.util.ExtendedDuration;
@@ -245,7 +245,7 @@ public class ReactionOperations {
         sliceInfo.setTotal(getTotal(entryId, negative, emoji));
         sliceInfo.setReactions(page.stream()
                 .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
-                .map(r -> new ReactionInfo(r, requestContext))
+                .map(r -> ReactionInfoUtil.build(r, requestContext))
                 .collect(Collectors.toList()));
         return sliceInfo;
     }

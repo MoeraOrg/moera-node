@@ -62,7 +62,7 @@ import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.liberin.model.CommentsReadLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.ClientReactionInfo;
+import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.CommentMassAttributes;
@@ -644,21 +644,25 @@ public class CommentController {
                 ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
                 : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (!ObjectUtils.isEmpty(clientName)) {
-            reactionRepository.findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
-                            sliceInfo.getAfter(), sliceInfo.getBefore(), clientName)
-                    .stream()
-                    .filter(r -> r.getViewE().isPublic() || viewContent)
-                    .map(ClientReactionInfo::new)
-                    .filter(r -> commentMap.containsKey(r.getEntryId()))
-                    .forEach(r -> commentMap.get(r.getEntryId()).setClientReaction(r));
-        }
-        reactionRepository.findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
-                        sliceInfo.getAfter(), sliceInfo.getBefore(), posting.getOwnerName())
+            reactionRepository
+                .findByCommentsInRangeAndOwner(
+                    requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore(), clientName
+                )
                 .stream()
-                .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
-                .map(ClientReactionInfo::new)
-                .filter(r -> commentMap.containsKey(r.getEntryId()))
-                .forEach(r -> commentMap.get(r.getEntryId()).setSeniorReaction(r));
+                .filter(r -> r.getViewE().isPublic() || viewContent)
+                .map(ClientReactionInfoUtil::build)
+                .filter(r -> commentMap.containsKey(ClientReactionInfoUtil.getEntryId(r)))
+                .forEach(r -> commentMap.get(ClientReactionInfoUtil.getEntryId(r)).setClientReaction(r));
+        }
+        reactionRepository
+            .findByCommentsInRangeAndOwner(requestContext.nodeId(), posting.getId(),
+                sliceInfo.getAfter(), sliceInfo.getBefore(), posting.getOwnerName()
+            )
+            .stream()
+            .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
+            .map(ClientReactionInfoUtil::build)
+            .filter(r -> commentMap.containsKey(ClientReactionInfoUtil.getEntryId(r)))
+            .forEach(r -> commentMap.get(ClientReactionInfoUtil.getEntryId(r)).setSeniorReaction(r));
 
         var blockedOperations = blockedUserOperations.findBlockedOperations(posting.getId());
         comments.forEach(c -> c.putBlockedOperations(blockedOperations));
@@ -807,7 +811,7 @@ public class CommentController {
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), clientName);
         if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
-            commentInfo.setClientReaction(new ClientReactionInfo(reaction));
+            commentInfo.setClientReaction(ClientReactionInfoUtil.build(reaction));
         }
         return commentInfo;
     }
@@ -815,7 +819,7 @@ public class CommentController {
     private CommentInfo withSeniorReaction(CommentInfo commentInfo, String seniorName) {
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(commentInfo.getId()), seniorName);
         if (reaction != null && requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)) {
-            commentInfo.setSeniorReaction(new ClientReactionInfo(reaction));
+            commentInfo.setSeniorReaction(ClientReactionInfoUtil.build(reaction));
         }
         return commentInfo;
     }
@@ -832,7 +836,7 @@ public class CommentController {
         }
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(UUID.fromString(postingInfo.getId()), clientName);
         if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
-            postingInfo.setClientReaction(new ClientReactionInfo(reaction));
+            postingInfo.setClientReaction(ClientReactionInfoUtil.build(reaction));
         }
         return postingInfo;
     }

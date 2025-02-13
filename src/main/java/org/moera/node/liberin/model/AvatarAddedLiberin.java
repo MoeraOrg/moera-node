@@ -2,8 +2,8 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.AvatarInfo;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.AvatarInfo;
 
 public class AvatarAddedLiberin extends Liberin {
 

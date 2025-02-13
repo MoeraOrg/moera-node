@@ -10,13 +10,14 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.DomainInfo;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Domain;
 import org.moera.node.data.DomainRepository;
 import org.moera.node.data.FriendGroup;
 import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.data.OptionRepository;
-import org.moera.node.model.DomainInfo;
+import org.moera.node.model.DomainInfoUtil;
 import org.moera.node.operations.ReminderOperations;
 import org.moera.node.option.OptionHookManager;
 import org.moera.node.option.Options;
@@ -95,7 +96,7 @@ public class Domains {
     private void configureDomain(Domain domain) {
         lockWrite();
         try {
-            domains.put(domain.getNodeId(), new DomainInfo(domain));
+            domains.put(domain.getNodeId(), DomainInfoUtil.build(domain));
             Options options = new Options(domain.getNodeId(), optionsMetadata, optionRepository, optionHookManager);
             domainOptions.put(domain.getName(), options);
         } finally {

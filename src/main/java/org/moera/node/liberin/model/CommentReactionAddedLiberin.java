@@ -9,7 +9,7 @@ import org.moera.node.data.Comment;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.CommentInfo;
-import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.ReactionInfoUtil;
 
 public class CommentReactionAddedLiberin extends Liberin {
 
@@ -52,11 +52,11 @@ public class CommentReactionAddedLiberin extends Liberin {
         model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
         if (addedReaction != null) {
             addedReaction = entityManager.merge(addedReaction);
-            model.put("addedReaction", new ReactionInfo(addedReaction, AccessCheckers.ADMIN));
+            model.put("addedReaction", ReactionInfoUtil.build(addedReaction, AccessCheckers.ADMIN));
         }
         if (deletedReaction != null) {
             deletedReaction = entityManager.merge(deletedReaction);
-            model.put("deletedReaction", new ReactionInfo(deletedReaction, AccessCheckers.ADMIN));
+            model.put("deletedReaction", ReactionInfoUtil.build(deletedReaction, AccessCheckers.ADMIN));
         }
     }
 

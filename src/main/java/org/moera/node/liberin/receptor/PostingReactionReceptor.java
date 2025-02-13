@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
 import org.moera.lib.node.types.principal.PrincipalFilter;
@@ -26,7 +27,6 @@ import org.moera.node.liberin.model.PostingReactionDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.event.PostingReactionsChangedEvent;
 import org.moera.node.model.notification.PostingReactionAddedNotification;
 import org.moera.node.model.notification.PostingReactionDeletedAllNotification;

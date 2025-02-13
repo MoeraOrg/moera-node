@@ -2,9 +2,9 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.WhoAmI;
 
 public class RemotePostingUpdateFailedLiberin extends Liberin {
 

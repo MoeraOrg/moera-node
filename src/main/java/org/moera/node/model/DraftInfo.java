@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.DraftType;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Draft;
@@ -71,7 +72,7 @@ public class DraftInfo {
         bodyFormat = draft.getBodyFormat();
         media = draft.getAttachments().stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> new MediaAttachment(ea, null))
+                .map(ea -> MediaAttachmentUtil.build(ea, null))
                 .toArray(MediaAttachment[]::new);
         heading = draft.getHeading();
         publishAt = Util.toEpochSecond(draft.getPublishAt());

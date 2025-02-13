@@ -14,7 +14,9 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.Password;
+import org.moera.lib.node.types.DomainInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.TokenInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Token;
@@ -28,12 +30,11 @@ import org.moera.node.liberin.model.DefrostLiberin;
 import org.moera.node.liberin.model.TokenAddedLiberin;
 import org.moera.node.liberin.model.TokenDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
-import org.moera.node.model.DomainInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.TokenAttributes;
-import org.moera.node.model.TokenInfo;
+import org.moera.node.model.TokenInfoUtil;
 import org.moera.node.model.TokenUpdate;
 import org.moera.node.notification.receive.DefrostNotificationsJob;
 import org.moera.node.option.Options;
@@ -109,7 +110,7 @@ public class TokenController {
 
         requestContext.send(new TokenAddedLiberin(token));
 
-        return ResponseEntity.created(URI.create("/tokens/" + token.getId())).body(new TokenInfo(token, true));
+        return ResponseEntity.created(URI.create("/tokens/" + token.getId())).body(TokenInfoUtil.build(token, true));
     }
 
     @PutMapping("/{id}")
@@ -132,7 +133,7 @@ public class TokenController {
 
         requestContext.send(new TokenUpdatedLiberin(token));
 
-        return new TokenInfo(token, false);
+        return TokenInfoUtil.build(token, false);
     }
 
     @DeleteMapping("/{id}")
@@ -159,7 +160,7 @@ public class TokenController {
         log.info("GET /tokens");
 
         List<Token> tokens = tokenRepository.findAllByNodeId(requestContext.nodeId(), Util.now());
-        return tokens.stream().map(td -> new TokenInfo(td, false)).collect(Collectors.toList());
+        return tokens.stream().map(td -> TokenInfoUtil.build(td, false)).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -172,7 +173,7 @@ public class TokenController {
         if (token == null) {
             throw new ObjectNotFoundFailure("not-found");
         }
-        return new TokenInfo(token, false);
+        return TokenInfoUtil.build(token, false);
     }
 
     @Scheduled(fixedDelayString = "PT1H")

@@ -11,6 +11,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.ClientReactionInfo;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.ReactionTotalsInfo;
+import org.moera.lib.node.types.RepliedTo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SourceFormat;
@@ -120,7 +124,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         media = mediaAttachmentsProvider.getMediaAttachments(revision, null);
         heading = revision.getHeading();
         if (comment.getRepliedTo() != null) {
-            repliedTo = new RepliedTo(comment);
+            repliedTo = RepliedToUtil.build(comment);
         }
         moment = comment.getMoment();
         createdAt = Util.toEpochSecond(comment.getCreatedAt());
@@ -218,7 +222,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         acceptedReactions = new AcceptedReactions();
         acceptedReactions.setPositive(comment.getAcceptedReactionsPositive());
         acceptedReactions.setNegative(comment.getAcceptedReactionsNegative());
-        reactions = new ReactionTotalsInfo(comment.getReactionTotals(), comment, accessChecker);
+        reactions = ReactionTotalsInfoUtil.build(comment.getReactionTotals(), comment, accessChecker);
     }
 
     private static void putOperation(Map<String, Principal> operations, String operationName, Principal value,

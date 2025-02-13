@@ -8,6 +8,9 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.UserListInfo;
+import org.moera.lib.node.types.UserListItemInfo;
+import org.moera.lib.node.types.UserListSliceInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.UserListItem;
@@ -20,10 +23,10 @@ import org.moera.node.liberin.model.UserListItemDeletedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
-import org.moera.node.model.UserListInfo;
+import org.moera.node.model.UserListInfoUtil;
 import org.moera.node.model.UserListItemAttributes;
-import org.moera.node.model.UserListItemInfo;
-import org.moera.node.model.UserListSliceInfo;
+import org.moera.node.model.UserListItemInfoUtil;
+import org.moera.node.model.UserListSliceInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
@@ -67,7 +70,7 @@ public class UserListController {
 
         int total = userListItemRepository.countByList(requestContext.nodeId(), listName);
 
-        return new UserListInfo(listName, total);
+        return UserListInfoUtil.build(listName, total);
     }
 
     @GetMapping("/{name}/items")
@@ -103,7 +106,7 @@ public class UserListController {
     }
 
     private UserListSliceInfo getItemsBefore(String listName, long before, int limit) {
-        UserListSliceInfo sliceInfo = new UserListSliceInfo(listName);
+        UserListSliceInfo sliceInfo = UserListSliceInfoUtil.build(listName);
         sliceInfo.setBefore(before);
         Page<UserListItem> page = findSlice(requestContext.nodeId(), listName, SafeInteger.MIN_VALUE, before,
                 limit + 1, Sort.Direction.DESC);
@@ -117,7 +120,7 @@ public class UserListController {
     }
 
     private UserListSliceInfo getItemsAfter(String listName, long after, int limit) {
-        UserListSliceInfo sliceInfo = new UserListSliceInfo(listName);
+        UserListSliceInfo sliceInfo = UserListSliceInfoUtil.build(listName);
         sliceInfo.setAfter(after);
         Page<UserListItem> page = findSlice(requestContext.nodeId(), listName, after, SafeInteger.MAX_VALUE,
                 limit + 1, Sort.Direction.ASC);
@@ -137,7 +140,7 @@ public class UserListController {
     }
 
     private static void fillSlice(UserListSliceInfo sliceInfo, Page<UserListItem> page) {
-        sliceInfo.setItems(page.getContent().stream().map(UserListItemInfo::new).collect(Collectors.toList()));
+        sliceInfo.setItems(page.getContent().stream().map(UserListItemInfoUtil::build).collect(Collectors.toList()));
     }
 
     private void calcSliceTotals(UserListSliceInfo sliceInfo) {
@@ -166,7 +169,7 @@ public class UserListController {
         UserListItem item = userListItemRepository.findByListAndNodeName(requestContext.nodeId(), listName, nodeName)
                 .orElseThrow(() -> new ObjectNotFoundFailure("user-list-item.not-found"));
 
-        return new UserListItemInfo(item);
+        return UserListItemInfoUtil.build(item);
     }
 
     @PostMapping("/{name}/items")
@@ -199,7 +202,7 @@ public class UserListController {
 
         return ResponseEntity
                 .created(URI.create(String.format("/%s/items/%s", Util.ue(listName), Util.ue(item.getNodeName()))))
-                .body(new UserListItemInfo(item));
+                .body(UserListItemInfoUtil.build(item));
     }
 
     @DeleteMapping("/{name}/items/{nodeName}")

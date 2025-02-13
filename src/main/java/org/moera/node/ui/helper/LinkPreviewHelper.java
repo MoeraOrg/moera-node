@@ -5,9 +5,10 @@ import static org.moera.node.util.Util.ellipsize;
 import java.util.Arrays;
 
 import com.github.jknack.handlebars.Handlebars;
-import org.moera.node.model.MediaAttachment;
-import org.moera.node.model.MediaFilePreviewInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.MediaFilePreviewInfo;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.util.MediaUtil;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -15,8 +16,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 @HelperSource
 public class LinkPreviewHelper {
 
-    public CharSequence linkPreview(String siteName, String url, String title, String description, String imageHash,
-                                    MediaAttachment[] media, boolean small) {
+    public CharSequence linkPreview(
+        String siteName,
+        String url,
+        String title,
+        String description,
+        String imageHash,
+        MediaAttachment[] media,
+        boolean small
+    ) {
         if (ObjectUtils.isEmpty(url)) {
             return null;
         }
@@ -53,15 +61,14 @@ public class LinkPreviewHelper {
             boolean directServing = mediaFile.getDirectPath() != null;
             String mediaLocation = "/moera/media/" + (directServing ? mediaFile.getDirectPath() : mediaFile.getPath());
 
-            MediaFilePreviewInfo preview = mediaFile.findLargerPreview(800);
+            MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.getPreviews(), 800);
             int imageWidth = preview != null ? preview.getWidth() : mediaFile.getWidth();
             int imageHeight = preview != null ? preview.getHeight() : mediaFile.getHeight();
 
             buf.append("<img");
             HelperUtil.appendAttr(buf, "src",
                     directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 800));
-            HelperUtil.appendAttr(buf, "srcset",
-                    MediaUtil.mediaSourcesInfo(mediaLocation, Arrays.asList(mediaFile.getPreviews())));
+            HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSourcesInfo(mediaLocation, mediaFile.getPreviews()));
             HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
             HelperUtil.appendAttr(buf, "width", imageWidth);
             HelperUtil.appendAttr(buf, "height", imageHeight);

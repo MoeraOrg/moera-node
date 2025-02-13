@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.FundraiserInfo;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.model.constraint.Uuid;

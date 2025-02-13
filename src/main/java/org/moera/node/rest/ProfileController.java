@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.ProfileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -14,7 +15,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.ProfileReadLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
 import org.moera.node.model.ProfileAttributes;
-import org.moera.node.model.ProfileInfo;
+import org.moera.node.model.ProfileInfoUtil;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.text.TextConverter;
 import org.moera.node.util.Util;
@@ -47,7 +48,7 @@ public class ProfileController {
 
         requestContext.send(new ProfileReadLiberin());
 
-        return new ProfileInfo(requestContext, includeSet.contains("source"));
+        return ProfileInfoUtil.build(requestContext, includeSet.contains("source"));
     }
 
     @PutMapping
@@ -65,7 +66,7 @@ public class ProfileController {
         requestContext.send(new ProfileUpdatedLiberin(requestContext.nodeName(), requestContext.getOptions(),
                 requestContext.getAvatar(), oldEmail));
 
-        return new ProfileInfo(requestContext, true);
+        return ProfileInfoUtil.build(requestContext, true);
     }
 
 }

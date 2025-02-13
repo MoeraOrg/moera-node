@@ -10,10 +10,10 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.model.MediaAttachment;
-import org.moera.node.model.PrivateMediaFileInfo;
 
 public class AttachmentFingerprintBuilder {
 

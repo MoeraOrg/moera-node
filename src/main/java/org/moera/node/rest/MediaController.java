@@ -20,6 +20,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -46,8 +48,8 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
-import org.moera.node.model.PublicMediaFileInfo;
+import org.moera.node.model.PrivateMediaFileInfoUtil;
+import org.moera.node.model.PublicMediaFileInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.EntryOperations;
@@ -149,9 +151,11 @@ public class MediaController {
 
     @PostMapping("/public")
     @Transactional
-    public PublicMediaFileInfo postPublic(@RequestHeader("Content-Type") MediaType mediaType,
-                                          @RequestHeader(value = "Content-Length", required = false) Long contentLength,
-                                          InputStream in) throws IOException {
+    public PublicMediaFileInfo postPublic(
+        @RequestHeader("Content-Type") MediaType mediaType,
+        @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+        InputStream in
+    ) throws IOException {
         log.info("POST /media/public (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
@@ -170,7 +174,7 @@ public class MediaController {
                     out.getHash(), toContentType(mediaType), tmp.getPath(), out.getDigest(), true);
             mediaFile = mediaFileRepository.save(mediaFile);
 
-            return new PublicMediaFileInfo(mediaFile);
+            return PublicMediaFileInfoUtil.build(mediaFile);
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -190,10 +194,12 @@ public class MediaController {
 
     @PostMapping({"/private", "/private/{clientName}"})
     @Transactional
-    public PrivateMediaFileInfo postPrivate(@RequestHeader("Content-Type") MediaType mediaType,
-                                            @RequestHeader(value = "Content-Length", required = false) Long contentLength,
-                                            @PathVariable String clientName,
-                                            InputStream in) throws IOException {
+    public PrivateMediaFileInfo postPrivate(
+        @RequestHeader("Content-Type") MediaType mediaType,
+        @RequestHeader(value = "Content-Length", required = false) Long contentLength,
+        @PathVariable String clientName,
+        InputStream in
+    ) throws IOException {
         log.info("POST /media/private (Content-Type: {}, Content-Length: {})",
                 LogUtil.format(mediaType.toString()), LogUtil.format(contentLength));
 
@@ -224,7 +230,7 @@ public class MediaController {
             MediaFileOwner mediaFileOwner = mediaOperations.own(mediaFile, clientName);
             mediaFileOwner.addPosting(postingOperations.newPosting(mediaFileOwner));
 
-            return new PrivateMediaFileInfo(mediaFileOwner, null);
+            return PrivateMediaFileInfoUtil.build(mediaFileOwner, null);
         } catch (InvalidImageException e) {
             throw new ValidationFailure("media.image-invalid");
         } catch (ThresholdReachedException e) {
@@ -265,7 +271,7 @@ public class MediaController {
     public PublicMediaFileInfo getInfoPublic(@PathVariable String id) {
         log.info("GET /media/public/{id}/info (id = {})", LogUtil.format(id));
 
-        return new PublicMediaFileInfo(getMediaFile(id));
+        return PublicMediaFileInfoUtil.build(getMediaFile(id));
     }
 
     @GetMapping("/private/{id}/info")
@@ -273,7 +279,7 @@ public class MediaController {
     public PrivateMediaFileInfo getInfoPrivate(@PathVariable UUID id) {
         log.info("GET /media/private/{id}/info (id = {})", LogUtil.format(id));
 
-        return new PrivateMediaFileInfo(getMediaFileOwner(id), null);
+        return PrivateMediaFileInfoUtil.build(getMediaFileOwner(id), null);
     }
 
     @GetMapping("/public/{id}/data")

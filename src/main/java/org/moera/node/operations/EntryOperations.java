@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
@@ -16,7 +17,7 @@ import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.data.EntryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
-import org.moera.node.model.MediaAttachment;
+import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.MediaAttachmentsCache;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ExtendedDuration;
@@ -109,7 +110,7 @@ public class EntryOperations implements MediaAttachmentsProvider {
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
                 .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> new MediaAttachment(ea, receiverName))
+                .map(ea -> MediaAttachmentUtil.build(ea, receiverName))
                 .toArray(MediaAttachment[]::new);
     }
 

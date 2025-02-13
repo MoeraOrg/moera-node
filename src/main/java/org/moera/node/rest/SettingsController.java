@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SettingInfo;
 import org.moera.lib.node.types.SettingMetaInfo;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
@@ -25,7 +26,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SettingsChangedLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.Result;
-import org.moera.node.model.SettingInfo;
+import org.moera.node.model.SettingInfoUtil;
 import org.moera.node.model.SettingMetaAttributes;
 import org.moera.node.model.SettingMetaInfoUtil;
 import org.moera.node.operations.OptionsOperations;
@@ -69,7 +70,7 @@ public class SettingsController {
             if (!nameFilter.test(name)) {
                 return;
             }
-            list.add(new SettingInfo(name, optionType.getString(value)));
+            list.add(SettingInfoUtil.build(name, optionType.getString(value)));
         });
         list.sort(Comparator.comparing(SettingInfo::getName));
 

@@ -7,6 +7,10 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.ReactionCreated;
+import org.moera.lib.node.types.ReactionInfo;
+import org.moera.lib.node.types.ReactionTotalsInfo;
+import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -24,12 +28,11 @@ import org.moera.node.liberin.model.CommentReactionDeletedLiberin;
 import org.moera.node.liberin.model.CommentReactionOperationsUpdatedLiberin;
 import org.moera.node.liberin.model.CommentReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ReactionCreated;
+import org.moera.node.model.ReactionCreatedUtil;
 import org.moera.node.model.ReactionDescription;
-import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ReactionOverride;
-import org.moera.node.model.ReactionTotalsInfo;
-import org.moera.node.model.ReactionsSliceInfo;
+import org.moera.node.model.ReactionsSliceInfoUtil;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
@@ -131,7 +134,7 @@ public class CommentReactionController {
                 return ResponseEntity.created(
                         URI.create(String.format("/postings/%s/comments/%s/reactions/%s",
                                 postingId, comment.getId(), reaction.getId())))
-                        .body(new ReactionCreated(reaction, totalsInfo.getClientInfo(), requestContext));
+                        .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
                     });
         } finally {
             lock.unlock(postingId);
@@ -194,7 +197,7 @@ public class CommentReactionController {
 
         reactionOverride.toCommentReaction(reaction);
 
-        return new ReactionInfo(reaction, requestContext);
+        return ReactionInfoUtil.build(reaction, requestContext);
     }
 
     @GetMapping
@@ -227,10 +230,10 @@ public class CommentReactionController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         if (!requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)) {
-            return ReactionsSliceInfo.EMPTY;
+            return ReactionsSliceInfoUtil.EMPTY;
         }
         if (negative && !requestContext.isPrincipal(comment.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
-            return ReactionsSliceInfo.EMPTY;
+            return ReactionsSliceInfoUtil.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
                 ? limit : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
@@ -264,7 +267,7 @@ public class CommentReactionController {
         }
         if (!requestContext.isPrincipal(comment.getViewReactionsE(), Scope.VIEW_CONTENT)
                 && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)) {
-            return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
+            return ReactionInfoUtil.ofComment(commentId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(commentId, ownerName);
@@ -273,10 +276,10 @@ public class CommentReactionController {
                 || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
                 || reaction.isNegative()
                     && !requestContext.isPrincipal(comment.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
-            return ReactionInfo.ofComment(commentId); // FIXME ugly, return 404
+            return ReactionInfoUtil.ofComment(commentId); // FIXME ugly, return 404
         }
 
-        return new ReactionInfo(reaction, requestContext);
+        return ReactionInfoUtil.build(reaction, requestContext);
     }
 
     @DeleteMapping

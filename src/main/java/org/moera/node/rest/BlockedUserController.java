@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedUserInfo;
+import org.moera.lib.node.types.BlockedUsersChecksums;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -25,7 +26,7 @@ import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
 import org.moera.node.model.BlockedUserAttributes;
 import org.moera.node.model.BlockedUserFilter;
 import org.moera.node.model.BlockedUserInfoUtil;
-import org.moera.node.model.BlockedUsersChecksums;
+import org.moera.node.model.BlockedUsersChecksumsUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
@@ -170,7 +171,9 @@ public class BlockedUserController {
     public BlockedUsersChecksums checksums() {
         log.info("GET /people/blocked-users/checksums");
 
-        return new BlockedUsersChecksums(requestContext.getOptions().getLong("blocked-users.visibility.checksum"));
+        return BlockedUsersChecksumsUtil.build(
+            requestContext.getOptions().getLong("blocked-users.visibility.checksum")
+        );
     }
 
 }

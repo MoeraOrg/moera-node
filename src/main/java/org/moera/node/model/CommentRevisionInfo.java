@@ -2,6 +2,8 @@ package org.moera.node.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.ClientReactionInfo;
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.Comment;
@@ -49,7 +51,7 @@ public class CommentRevisionInfo implements RevisionInfo {
         digest = revision.getDigest();
         signature = revision.getSignature();
         signatureVersion = revision.getSignatureVersion();
-        reactions = new ReactionTotalsInfo(revision.getReactionTotals(), comment, accessChecker);
+        reactions = ReactionTotalsInfoUtil.build(revision.getReactionTotals(), comment, accessChecker);
     }
 
     public String getId() {

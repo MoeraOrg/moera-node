@@ -11,8 +11,10 @@ import jakarta.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryType;
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.node.NodeApiException;
@@ -37,10 +39,8 @@ import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.MediaAttachment;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryAttributes;
-import org.moera.node.model.WhoAmI;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
@@ -268,7 +268,7 @@ public class Picker extends Task {
                     remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), attach.getMedia(), entryId);
             if (media != null) {
                 EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
-                attachment.setEmbedded(attach.isEmbedded());
+                attachment.setEmbedded(Boolean.TRUE.equals(attach.getEmbedded()));
                 attachment.setRemoteMediaId(attach.getMedia().getId());
                 attachment = entryAttachmentRepository.save(attachment);
                 revision.addAttachment(attachment);

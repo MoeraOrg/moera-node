@@ -4,6 +4,7 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.api.node.NodeApiUnknownNameException;
 import org.moera.node.data.ContactUpgrade;
 import org.moera.node.data.ContactUpgradeRepository;
@@ -13,7 +14,6 @@ import org.moera.node.liberin.model.RemoteNodeAvatarChangedLiberin;
 import org.moera.node.liberin.model.RemoteNodeFullNameChangedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.WhoAmI;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Task;
 import org.slf4j.Logger;

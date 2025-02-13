@@ -7,6 +7,8 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.lib.node.types.ReactionCreated;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.MediaFile;
@@ -19,9 +21,7 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.ReactionAttributes;
-import org.moera.node.model.ReactionCreated;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
@@ -198,22 +198,24 @@ public class RemoteCommentReactionPostJob
     private ReactionDescription buildReaction() {
         byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
-                        parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                state.postingInfo.getParentMediaId(),
-                        null)
+                    parameters.targetNodeName,
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                    state.postingInfo.getParentMediaId(),
+                    null
+                )
                 : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
                 pmf -> mediaManager.getPrivateMediaDigest(
-                        parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf);
+                    parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA), pmf
+                );
         byte[] postingFingerprint = state.postingRevisionInfo == null
                 ? PostingFingerprintBuilder.build(
                       state.postingInfo.getSignatureVersion(), state.postingInfo, parentMediaDigest, mediaDigest
-                  )
+                )
                 : PostingFingerprintBuilder.build(
                       state.postingRevisionInfo.getSignatureVersion(), state.postingInfo, state.postingRevisionInfo,
                       parentMediaDigest, mediaDigest
-                  );
+                );
         byte[] commentFingerprint = CommentFingerprintBuilder.build(
             state.commentInfo.getSignatureVersion(), state.commentInfo, mediaDigest, postingFingerprint
         );

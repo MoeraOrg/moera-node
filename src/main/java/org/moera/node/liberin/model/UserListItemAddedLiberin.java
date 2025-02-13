@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.moera.node.data.UserListItem;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.UserListItemInfo;
+import org.moera.node.model.UserListItemInfoUtil;
 
 public class UserListItemAddedLiberin extends Liberin {
 
@@ -27,7 +27,7 @@ public class UserListItemAddedLiberin extends Liberin {
         super.toModel(model);
         model.put("id", item.getId());
         model.put("listName", item.getListName());
-        model.put("item", new UserListItemInfo(item));
+        model.put("item", UserListItemInfoUtil.build(item));
     }
 
 }

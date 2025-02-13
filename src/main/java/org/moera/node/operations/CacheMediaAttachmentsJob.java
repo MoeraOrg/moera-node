@@ -7,12 +7,13 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
-import org.moera.node.model.MediaAttachment;
+import org.moera.node.model.MediaAttachmentUtil;
 import org.moera.node.model.MediaAttachmentsCache;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
@@ -106,7 +107,7 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
             Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
             MediaAttachment[] mediaAttachments = attachments.stream()
                     .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                    .map(ea -> new MediaAttachment(ea, parameters.receiverName))
+                    .map(ea -> MediaAttachmentUtil.build(ea, parameters.receiverName))
                     .toArray(MediaAttachment[]::new);
             cache.putCache(parameters.receiverName, mediaAttachments);
 

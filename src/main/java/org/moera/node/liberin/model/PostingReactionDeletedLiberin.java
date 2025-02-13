@@ -4,13 +4,13 @@ import java.util.Map;
 
 import jakarta.persistence.EntityManager;
 
+import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.ReactionInfo;
-import org.moera.node.model.ReactionTotalsInfo;
+import org.moera.node.model.ReactionInfoUtil;
 
 public class PostingReactionDeletedLiberin extends Liberin {
 
@@ -52,7 +52,7 @@ public class PostingReactionDeletedLiberin extends Liberin {
         posting = entityManager.merge(posting);
         reaction = entityManager.merge(reaction);
         model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
-        model.put("reaction", new ReactionInfo(reaction, AccessCheckers.ADMIN));
+        model.put("reaction", ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN));
         model.put("reactionTotals", reactionTotals);
     }
 

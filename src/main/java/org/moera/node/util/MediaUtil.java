@@ -5,10 +5,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.moera.lib.node.types.MediaFilePreviewInfo;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFilePreview;
-import org.moera.node.model.MediaFilePreviewInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
+import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.springframework.util.ObjectUtils;
 
 public class MediaUtil {
@@ -27,17 +28,19 @@ public class MediaUtil {
             return "";
         }
         return mediaSourcesInfo(
-                location,
-                previews.stream()
-                        .filter(preview -> preview.getMediaFile() != null)
-                        .map(preview -> new MediaFilePreviewInfo(preview, directServing ? location : null))
-                        .collect(Collectors.toList()));
+            location,
+            previews
+                .stream()
+                .filter(preview -> preview.getMediaFile() != null)
+                .map(preview -> MediaFilePreviewInfoUtil.build(preview, directServing ? location : null))
+                .collect(Collectors.toList())
+        );
     }
 
     public static String mediaSourcesInfo(String location, Collection<MediaFilePreviewInfo> previews) {
         List<String> sources = new ArrayList<>();
         for (MediaFilePreviewInfo preview : previews) {
-            String url = preview.isOriginal()
+            String url = Boolean.TRUE.equals(preview.getOriginal())
                     ? location
                     : (preview.getDirectPath() != null
                         ? "/moera/media/" + preview.getDirectPath()
@@ -54,7 +57,7 @@ public class MediaUtil {
     }
 
     private static int findLargerPreviewWidth(PrivateMediaFileInfo mediaFile, int width) {
-        MediaFilePreviewInfo preview = mediaFile.findLargerPreview(width);
+        MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.getPreviews(), width);
         return preview != null ? preview.getWidth() : width;
     }
 

@@ -12,13 +12,14 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars.SafeString;
+import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.MediaFilePreviewInfo;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CommentInfo;
-import org.moera.node.model.MediaAttachment;
-import org.moera.node.model.MediaFilePreviewInfo;
+import org.moera.node.model.MediaFilePreviewInfoUtil;
 import org.moera.node.model.MediaInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.util.MediaUtil;
 import org.moera.node.util.Util;
@@ -57,10 +58,11 @@ public class GalleriesHelperSource {
             var props = Arrays.stream(entry.getMedia())
                     .map(MediaAttachment::getMedia)
                     .map(mfo -> Map.of(
-                            "id", mfo.getId(),
-                            "src", "/moera/media/" + mfo.getPath(),
-                            "thumb", "/moera/media/" + mfo.getPath() + "?width=150",
-                            "subHtmlUrl", "/moera/media/private/" + mfo.getId() + "/caption"))
+                        "id", mfo.getId(),
+                        "src", "/moera/media/" + mfo.getPath(),
+                        "thumb", "/moera/media/" + mfo.getPath() + "?width=150",
+                        "subHtmlUrl", "/moera/media/private/" + mfo.getId() + "/caption"
+                    ))
                     .toArray(Map[]::new);
             entryMap.put(entry.getId(), props);
         }
@@ -111,7 +113,7 @@ public class GalleriesHelperSource {
 
     private CharSequence entryImage(String postingId, String commentId, PrivateMediaFileInfo mediaFile, String flex,
                                     Integer count) {
-        MediaFilePreviewInfo preview = mediaFile.findLargerPreview(900);
+        MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.getPreviews(), 900);
         int imageWidth = preview != null ? preview.getWidth() : mediaFile.getWidth();
         int imageHeight = preview != null ? preview.getHeight() : mediaFile.getHeight();
 
@@ -148,8 +150,7 @@ public class GalleriesHelperSource {
         buf.append("<img");
         HelperUtil.appendAttr(buf, "src",
                 directServing ? mediaLocation : MediaUtil.mediaPreview(mediaLocation, 900));
-        HelperUtil.appendAttr(buf, "srcset",
-                MediaUtil.mediaSourcesInfo(mediaLocation, Arrays.asList(mediaFile.getPreviews())));
+        HelperUtil.appendAttr(buf, "srcset", MediaUtil.mediaSourcesInfo(mediaLocation, mediaFile.getPreviews()));
         HelperUtil.appendAttr(buf, "sizes", MediaUtil.mediaSizes(mediaFile));
         HelperUtil.appendAttr(buf, "width", imageWidth);
         HelperUtil.appendAttr(buf, "height", imageHeight);
@@ -179,7 +180,7 @@ public class GalleriesHelperSource {
         }
 
         List<PrivateMediaFileInfo> images = Arrays.stream(media)
-                .filter(ma -> !ma.isEmbedded())
+                .filter(ma -> !Boolean.TRUE.equals(ma.getEmbedded()))
                 .map(MediaAttachment::getMedia)
                 .collect(Collectors.toList());
         if (images.isEmpty()) {

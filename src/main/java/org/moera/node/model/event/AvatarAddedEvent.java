@@ -2,9 +2,9 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
+import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.model.AvatarInfo;
 import org.springframework.data.util.Pair;
 
 public class AvatarAddedEvent extends Event {

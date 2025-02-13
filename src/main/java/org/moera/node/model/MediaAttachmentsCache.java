@@ -3,6 +3,8 @@ package org.moera.node.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.moera.lib.node.types.MediaAttachment;
+
 public class MediaAttachmentsCache {
 
     private MediaAttachment[] owner;

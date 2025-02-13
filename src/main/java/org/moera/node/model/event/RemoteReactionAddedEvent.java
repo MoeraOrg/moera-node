@@ -2,8 +2,8 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
+import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.model.ReactionInfo;
 import org.springframework.data.util.Pair;
 
 public class RemoteReactionAddedEvent extends RemoteReactionEvent {
@@ -18,7 +18,7 @@ public class RemoteReactionAddedEvent extends RemoteReactionEvent {
 
     public RemoteReactionAddedEvent(String remoteNodeName, String remotePostingId, ReactionInfo reactionInfo) {
         super(EventType.REMOTE_REACTION_ADDED, remoteNodeName, remotePostingId);
-        this.negative = reactionInfo.isNegative();
+        this.negative = Boolean.TRUE.equals(reactionInfo.getNegative());
         this.emoji = reactionInfo.getEmoji();
         this.createdAt = reactionInfo.getCreatedAt();
     }

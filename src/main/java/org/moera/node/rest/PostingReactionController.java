@@ -13,6 +13,10 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.ReactionCreated;
+import org.moera.lib.node.types.ReactionInfo;
+import org.moera.lib.node.types.ReactionTotalsInfo;
+import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
@@ -31,13 +35,12 @@ import org.moera.node.liberin.model.PostingReactionDeletedLiberin;
 import org.moera.node.liberin.model.PostingReactionOperationsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ReactionCreated;
+import org.moera.node.model.ReactionCreatedUtil;
 import org.moera.node.model.ReactionDescription;
-import org.moera.node.model.ReactionInfo;
+import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ReactionOverride;
-import org.moera.node.model.ReactionTotalsInfo;
 import org.moera.node.model.ReactionsFilter;
-import org.moera.node.model.ReactionsSliceInfo;
+import org.moera.node.model.ReactionsSliceInfoUtil;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
@@ -143,7 +146,7 @@ public class PostingReactionController {
         requestContext.send(liberin);
 
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
-                .body(new ReactionCreated(reaction, totalsInfo.getClientInfo(), requestContext));
+                .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
     }
 
     private ResponseEntity<ReactionCreated> postToPickedAtHome(ReactionDescription reactionDescription,
@@ -156,7 +159,7 @@ public class PostingReactionController {
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
-                .body(new ReactionCreated(null, totalsInfo.getClientInfo(), requestContext));
+                .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
     }
 
     private ResponseEntity<ReactionCreated> postToPicked(ReactionDescription reactionDescription, Posting posting) {
@@ -165,7 +168,7 @@ public class PostingReactionController {
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
         return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
-                .body(new ReactionCreated(null, totalsInfo.getClientInfo(), requestContext));
+                .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
     }
 
     @PutMapping("/{postingId}/reactions/{ownerName}")
@@ -206,7 +209,7 @@ public class PostingReactionController {
 
         requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
 
-        return new ReactionInfo(reaction, requestContext);
+        return ReactionInfoUtil.build(reaction, requestContext);
     }
 
     @GetMapping("/{postingId}/reactions")
@@ -230,10 +233,10 @@ public class PostingReactionController {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         if (!requestContext.isPrincipal(posting.getViewReactionsE(), Scope.VIEW_CONTENT)) {
-            return ReactionsSliceInfo.EMPTY;
+            return ReactionsSliceInfoUtil.EMPTY;
         }
         if (negative && !requestContext.isPrincipal(posting.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
-            return ReactionsSliceInfo.EMPTY;
+            return ReactionsSliceInfoUtil.EMPTY;
         }
         limit = limit != null && limit <= ReactionOperations.MAX_REACTIONS_PER_REQUEST
                 ? limit : ReactionOperations.MAX_REACTIONS_PER_REQUEST;
@@ -257,7 +260,7 @@ public class PostingReactionController {
         }
         if (!requestContext.isPrincipal(posting.getViewReactionsE(), Scope.VIEW_CONTENT)
                 && !requestContext.isClient(ownerName, Scope.VIEW_CONTENT)) {
-            return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
+            return ReactionInfoUtil.ofPosting(postingId); // FIXME ugly, return 404
         }
 
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(postingId, ownerName);
@@ -266,10 +269,10 @@ public class PostingReactionController {
                 || !requestContext.isPrincipal(reaction.getViewE(), Scope.VIEW_CONTENT)
                 || reaction.isNegative()
                     && !requestContext.isPrincipal(posting.getViewNegativeReactionsE(), Scope.VIEW_CONTENT)) {
-            return ReactionInfo.ofPosting(postingId); // FIXME ugly, return 404
+            return ReactionInfoUtil.ofPosting(postingId); // FIXME ugly, return 404
         }
 
-        return new ReactionInfo(reaction, requestContext);
+        return ReactionInfoUtil.build(reaction, requestContext);
     }
 
     @PostMapping("/reactions/search")
@@ -294,7 +297,7 @@ public class PostingReactionController {
                 .filter(r -> !r.isNegative()
                         || requestContext.isPrincipal(postings.get(r.getEntryRevision().getEntry().getId())
                                                         .getViewNegativeReactionsE(), Scope.VIEW_CONTENT))
-                .map(r -> new ReactionInfo(r, requestContext))
+                .map(r -> ReactionInfoUtil.build(r, requestContext))
                 .collect(Collectors.toList());
     }
 

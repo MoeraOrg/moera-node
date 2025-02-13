@@ -6,13 +6,13 @@ import java.util.function.Function;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.FingerprintException;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PostingText;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.moera.node.util.Util;
 
 public class PostingFingerprintBuilder {

@@ -2,6 +2,7 @@ package org.moera.node.rest;
 
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
+import java.util.Arrays;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -11,6 +12,8 @@ import org.moera.lib.Rules;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.KeyPair;
 import org.moera.lib.crypto.MnemonicKey;
+import org.moera.lib.node.types.NodeNameInfo;
+import org.moera.lib.node.types.RegisteredNameSecret;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.auth.Admin;
@@ -20,10 +23,9 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
 import org.moera.node.model.KeyMnemonic;
 import org.moera.node.model.NameToRegister;
-import org.moera.node.model.NodeNameInfo;
+import org.moera.node.model.NodeNameInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.RegisteredNameSecret;
 import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.option.Options;
@@ -55,7 +57,7 @@ public class NodeNameController {
     public NodeNameInfo get() {
         log.info("GET /node-name");
 
-        return new NodeNameInfo(requestContext);
+        return NodeNameInfoUtil.build(requestContext);
     }
 
     @PostMapping
@@ -77,7 +79,7 @@ public class NodeNameController {
         secretInfo.setName(nameToRegister.getName());
         MnemonicKey mnemonicKey = CryptoUtil.generateMnemonicKey();
         secretInfo.setSecret(mnemonicKey.getSecret());
-        secretInfo.setMnemonic(mnemonicKey.getMnemonic().split(" "));
+        secretInfo.setMnemonic(Arrays.asList(mnemonicKey.getMnemonic().split(" ")));
         KeyPair signingKeyPair = CryptoUtil.generateKey();
 
         namingClient.register(
@@ -106,7 +108,7 @@ public class NodeNameController {
         if (ObjectUtils.isEmpty(nodeName)) {
             throw new ValidationFailure("node-name.name-absent");
         }
-        if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().length == 0)
+        if ((registeredNameSecret.getMnemonic() == null || registeredNameSecret.getMnemonic().isEmpty())
                 && ObjectUtils.isEmpty(registeredNameSecret.getSecret())) {
             throw new ValidationFailure("registeredNameSecret.empty");
         }

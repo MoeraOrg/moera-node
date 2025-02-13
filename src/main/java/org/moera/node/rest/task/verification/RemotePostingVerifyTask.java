@@ -5,6 +5,7 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
 import org.moera.node.data.RemotePostingVerification;
@@ -15,7 +16,6 @@ import org.moera.node.liberin.model.RemotePostingVerifiedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.model.PrivateMediaFileInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

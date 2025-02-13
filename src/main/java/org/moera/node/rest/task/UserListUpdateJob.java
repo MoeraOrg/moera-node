@@ -5,11 +5,11 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.UserListSliceInfo;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.EntryRepository;
 import org.moera.node.data.RemoteUserListItem;
 import org.moera.node.data.RemoteUserListItemRepository;
-import org.moera.node.model.UserListSliceInfo;
 import org.moera.node.operations.UserListOperations;
 import org.moera.node.task.Job;
 import org.moera.node.util.SafeInteger;

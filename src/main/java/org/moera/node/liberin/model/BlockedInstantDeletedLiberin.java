@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.moera.node.data.BlockedInstant;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.BlockedInstantInfo;
+import org.moera.node.model.BlockedInstantInfoUtil;
 
 public class BlockedInstantDeletedLiberin extends Liberin {
 
@@ -25,7 +25,7 @@ public class BlockedInstantDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("blockedInstant", new BlockedInstantInfo(blockedInstant));
+        model.put("blockedInstant", BlockedInstantInfoUtil.build(blockedInstant));
     }
 
 }

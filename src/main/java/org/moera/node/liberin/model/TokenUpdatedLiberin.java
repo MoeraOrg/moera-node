@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.moera.node.data.Token;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.TokenInfo;
+import org.moera.node.model.TokenInfoUtil;
 
 public class TokenUpdatedLiberin extends Liberin {
 
@@ -25,7 +25,7 @@ public class TokenUpdatedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("token", new TokenInfo(token, false));
+        model.put("token", TokenInfoUtil.build(token, false));
     }
 
 }
