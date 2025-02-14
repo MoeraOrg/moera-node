@@ -24,6 +24,7 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.FeedInfo;
+import org.moera.lib.node.types.RemotePostingOrNode;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -52,7 +53,7 @@ import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.RemotePosting;
+import org.moera.node.model.RemotePostingOrNodeUtil;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
@@ -426,22 +427,22 @@ public class FeedController {
                 .filter(Objects::nonNull)
                 .filter(p -> !p.isOriginal())
                 .collect(Collectors.toList());
-        List<RemotePosting> remotePostings = postingMap.values().stream()
+        List<RemotePostingOrNode> remotePostingsOrNodes = postingMap.values().stream()
                 .filter(p -> !p.isOriginal())
-                .map(p -> new RemotePosting(p.getReceiverName(), p.getReceiverPostingId()))
+                .map(p -> RemotePostingOrNodeUtil.build(p.getReceiverName(), p.getReceiverPostingId()))
                 .collect(Collectors.toList());
-        if (!remotePostings.isEmpty()) {
+        if (!remotePostingsOrNodes.isEmpty()) {
             // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
             if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
-                fillOwnReactions(postings, remotePostings);
+                fillOwnReactions(postings, remotePostingsOrNodes);
             }
-            fillBlockedBy(postings, remotePostings);
+            fillBlockedBy(postings, remotePostingsOrNodes);
         }
     }
 
-    private void fillOwnReactions(List<PostingInfo> postings, List<RemotePosting> remotePostings) {
-        List<String> remotePostingIds = remotePostings.stream()
-                .map(RemotePosting::getPostingId)
+    private void fillOwnReactions(List<PostingInfo> postings, List<RemotePostingOrNode> remotePostingsOrNodes) {
+        List<String> remotePostingIds = remotePostingsOrNodes.stream()
+                .map(RemotePostingOrNode::getPostingId)
                 .collect(Collectors.toList());
         Map<String, OwnReaction> ownReactions = ownReactionRepository
                 .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
@@ -458,20 +459,25 @@ public class FeedController {
         });
     }
 
-    private void fillBlockedBy(List<PostingInfo> postings, List<RemotePosting> remotePostings) {
+    private void fillBlockedBy(List<PostingInfo> postings, List<RemotePostingOrNode> remotePostingsOrNodes) {
         List<BlockedByUser> blockedByUsers = blockedByUserOperations.search(
-                requestContext.nodeId(),
-                new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
-                remotePostings.toArray(RemotePosting[]::new),
-                false);
+            requestContext.nodeId(),
+            List.of(BlockedOperation.COMMENT, BlockedOperation.REACTION),
+            remotePostingsOrNodes,
+            false
+        );
         if (blockedByUsers.isEmpty()) {
             return;
         }
         for (BlockedByUser blockedByUser : blockedByUsers) {
             for (PostingInfo posting : postings) {
-                if (blockedByUser.getRemoteNodeName().equals(posting.getReceiverName())
-                        && (blockedByUser.isGlobal()
-                            || blockedByUser.getRemotePostingId().equals(posting.getReceiverPostingId()))) {
+                if (
+                    blockedByUser.getRemoteNodeName().equals(posting.getReceiverName())
+                    && (
+                        blockedByUser.isGlobal()
+                        || blockedByUser.getRemotePostingId().equals(posting.getReceiverPostingId())
+                    )
+                ) {
                     posting.putBlockedOperation(blockedByUser.getBlockedOperation());
                 }
             }

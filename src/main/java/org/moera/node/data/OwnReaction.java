@@ -10,7 +10,7 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import org.moera.node.model.RemotePosting;
+import org.moera.lib.node.types.RemotePosting;
 import org.moera.node.util.Util;
 
 @Entity

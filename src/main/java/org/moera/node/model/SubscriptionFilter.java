@@ -3,6 +3,8 @@ package org.moera.node.model;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.RemoteFeed;
+import org.moera.lib.node.types.RemotePosting;
 import org.moera.lib.node.types.SubscriptionType;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

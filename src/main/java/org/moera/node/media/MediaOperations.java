@@ -52,6 +52,7 @@ import com.drew.metadata.MetadataException;
 import com.drew.metadata.exif.ExifIFD0Directory;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.PostingFeatures;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -74,7 +75,6 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.model.AvatarDescription;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.JobsManagerInitializedEvent;
@@ -562,8 +562,11 @@ public class MediaOperations {
         return serve(preview != null ? preview.getMediaFile() : mediaFile, download);
     }
 
-    public void validateAvatar(AvatarDescription avatar, Consumer<MediaFile> found,
-                               Supplier<RuntimeException> notFound) {
+    public void validateAvatar(
+        AvatarDescription avatar,
+        Consumer<MediaFile> found,
+        Supplier<RuntimeException> notFound
+    ) {
         if (avatar == null || avatar.getMediaId() == null) {
             return;
         }
@@ -579,10 +582,14 @@ public class MediaOperations {
         }
     }
 
-    public List<MediaFileOwner> validateAttachments(UUID[] ids, Supplier<RuntimeException> notFound,
-                                                    Supplier<RuntimeException> notCompressed,
-                                                    boolean isAdminViewMedia, boolean isAdminUncompressedMedia,
-                                                    String clientName) {
+    public List<MediaFileOwner> validateAttachments(
+        UUID[] ids,
+        Supplier<RuntimeException> notFound,
+        Supplier<RuntimeException> notCompressed,
+        boolean isAdminViewMedia,
+        boolean isAdminUncompressedMedia,
+        String clientName
+    ) {
         if (ObjectUtils.isEmpty(ids)) {
             return Collections.emptyList();
         }

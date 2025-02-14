@@ -4,6 +4,7 @@ import java.util.Map;
 import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
@@ -41,7 +42,7 @@ public class ReactionDescription {
         this.ownerName = ownerName;
         this.ownerFullName = ownerFullName;
         this.ownerGender = ownerGender;
-        this.ownerAvatar = ownerAvatar != null ? new AvatarDescription(ownerAvatar) : null;
+        this.ownerAvatar = ownerAvatar != null ? AvatarDescriptionUtil.build(ownerAvatar) : null;
         negative = attributes.isNegative();
         emoji = attributes.getEmoji();
         operations = attributes.getOperations();

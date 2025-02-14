@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Entry;
 import org.moera.node.data.Feed;
@@ -23,7 +24,7 @@ import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.model.FeedStatus;
-import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Transaction;
@@ -95,7 +96,7 @@ public class StoryOperations {
             Story story = new Story(UUID.randomUUID(), nodeId, StoryType.POSTING_ADDED);
             story.setEntry(posting);
             story.setFeedName(Feed.TIMELINE);
-            publication.toStory(story);
+            StoryAttributesUtil.toStory(publication, story);
             updateMoment(story, nodeId);
             story = storyRepository.saveAndFlush(story);
             posting.addStory(story);

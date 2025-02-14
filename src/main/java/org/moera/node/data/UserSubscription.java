@@ -11,11 +11,11 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.RemoteFeed;
+import org.moera.lib.node.types.RemotePosting;
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.model.RemoteFeed;
-import org.moera.node.model.RemotePosting;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;

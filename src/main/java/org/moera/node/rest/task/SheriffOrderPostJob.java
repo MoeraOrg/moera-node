@@ -18,7 +18,7 @@ import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.fingerprint.SheriffOrderFingerprintBuilder;
 import org.moera.node.liberin.model.SheriffOrderSentLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.AvatarDescription;
+import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.SheriffOrderAttributes;
@@ -206,10 +206,11 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
 
         if (state.sheriffOrderDetails == null) {
             state.sheriffOrderDetails = new SheriffOrderDetailsQ(
-                    state.sheriffOrderId.toString(),
-                    nodeName(),
-                    new AvatarDescription(getAvatar()),
-                    parameters.attributes);
+                state.sheriffOrderId.toString(),
+                nodeName(),
+                AvatarDescriptionUtil.build(getAvatar()),
+                parameters.attributes
+            );
             state.sheriffOrderDetails.setCreatedAt(Instant.now().getEpochSecond());
 
             byte[] digest = null;

@@ -18,6 +18,7 @@ import org.moera.lib.node.types.DomainInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.TokenInfo;
+import org.moera.lib.node.types.TokenUpdate;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Token;
@@ -35,7 +36,6 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.TokenAttributes;
 import org.moera.node.model.TokenInfoUtil;
-import org.moera.node.model.TokenUpdate;
 import org.moera.node.notification.receive.DefrostNotificationsJob;
 import org.moera.node.option.Options;
 import org.moera.node.task.Jobs;
@@ -116,7 +116,7 @@ public class TokenController {
     @PutMapping("/{id}")
     @Admin(Scope.TOKENS)
     @Transactional
-    public TokenInfo put(@PathVariable UUID id, @Valid @RequestBody TokenUpdate update) {
+    public TokenInfo put(@PathVariable UUID id, @RequestBody TokenUpdate update) {
         log.info("PUT /tokens/{} (name = {})", id, LogUtil.format(update.getName()));
 
         Token token = tokenRepository.findByNodeIdAndId(requestContext.nodeId(), id, Util.now()).orElse(null);

@@ -5,8 +5,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.BlockedByUserFilter;
 import org.moera.lib.node.types.BlockedByUserInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
@@ -16,7 +16,6 @@ import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.BlockedByUserFilter;
 import org.moera.node.model.BlockedByUserInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.BlockedByUserOperations;
@@ -50,10 +49,12 @@ public class BlockedByUserController {
         log.info("GET /people/blocked-by-users/{id}, (id = {})", LogUtil.format(id));
 
         BlockedByUser blockedByUser = blockedByUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("blocked-by-user.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("blocked-by-user.not-found"));
 
-        if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && !requestContext.isClient(blockedByUser.getRemoteNodeName(), Scope.VIEW_PEOPLE)) {
+        if (
+            !requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
+            && !requestContext.isClient(blockedByUser.getRemoteNodeName(), Scope.VIEW_PEOPLE)
+        ) {
             throw new AuthenticationException();
         }
 
@@ -62,18 +63,22 @@ public class BlockedByUserController {
 
     @PostMapping("/search")
     @Transactional
-    public List<BlockedByUserInfo> search(@Valid @RequestBody BlockedByUserFilter blockedByUserFilter) {
+    public List<BlockedByUserInfo> search(@RequestBody BlockedByUserFilter blockedByUserFilter) {
         log.info("POST /people/blocked-by-users/search");
 
         if (!requestContext.isPrincipal(BlockedByUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)) {
             throw new AuthenticationException();
         }
 
-        return blockedByUserOperations.search(requestContext.nodeId(), blockedByUserFilter.getBlockedOperations(),
-                        blockedByUserFilter.getPostings(),
-                        blockedByUserFilter.getStrict() != null && blockedByUserFilter.getStrict()).stream()
-                .map(bbu -> BlockedByUserInfoUtil.build(bbu, requestContext.getOptions(), requestContext))
-                .collect(Collectors.toList());
+        return blockedByUserOperations.search(
+            requestContext.nodeId(),
+            blockedByUserFilter.getBlockedOperations(),
+            blockedByUserFilter.getPostings(),
+            blockedByUserFilter.getStrict() != null && blockedByUserFilter.getStrict()
+        )
+            .stream()
+            .map(bbu -> BlockedByUserInfoUtil.build(bbu, requestContext.getOptions(), requestContext))
+            .collect(Collectors.toList());
     }
 
 }

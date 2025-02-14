@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.SheriffOrderCategory;
 import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.data.SheriffOrder;

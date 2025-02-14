@@ -3,10 +3,10 @@ package org.moera.node.rest;
 import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
@@ -19,7 +19,7 @@ import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.StoryAttributes;
+import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.StoryOperations;
@@ -76,7 +76,7 @@ public class StoryController {
 
     @PutMapping("/{id}")
     @Admin(Scope.UPDATE_FEEDS)
-    public StoryInfo put(@PathVariable UUID id, @Valid @RequestBody StoryAttributes storyAttributes) {
+    public StoryInfo put(@PathVariable UUID id, @RequestBody StoryAttributes storyAttributes) {
         log.info("PUT /stories/{id} (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
                 LogUtil.format(id),
                 LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
@@ -91,7 +91,7 @@ public class StoryController {
                     && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("story.not-found");
             }
-            storyAttributes.toStory(story);
+            StoryAttributesUtil.toStory(storyAttributes, story);
             if (storyAttributes.getFeedName() != null
                     || storyAttributes.getPublishAt() != null
                     || storyAttributes.getPinned() != null) {

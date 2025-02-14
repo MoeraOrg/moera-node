@@ -1,5 +1,6 @@
 package org.moera.node.model;
 
+import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.util.LogUtil;
