@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.AsyncOperationCreated;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -21,7 +22,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingReactionDeletedLiberin;
 import org.moera.node.model.AsyncOperationCreatedUtil;
 import org.moera.node.model.ReactionAttributes;
-import org.moera.node.model.Result;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingReactionPostJob;
 import org.moera.node.rest.task.verification.RemoteReactionVerifyTask;

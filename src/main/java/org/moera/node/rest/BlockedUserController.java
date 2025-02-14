@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedUserInfo;
 import org.moera.lib.node.types.BlockedUsersChecksums;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -28,7 +29,6 @@ import org.moera.node.model.BlockedUserFilter;
 import org.moera.node.model.BlockedUserInfoUtil;
 import org.moera.node.model.BlockedUsersChecksumsUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.ContactOperations;

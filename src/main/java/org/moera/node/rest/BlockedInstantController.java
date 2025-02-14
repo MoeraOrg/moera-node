@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedInstantInfo;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -25,7 +26,6 @@ import org.moera.node.model.BlockedInstantAttributes;
 import org.moera.node.model.BlockedInstantFilter;
 import org.moera.node.model.BlockedInstantInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.Result;
 import org.moera.node.model.StoryTypeUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedInstantOperations;

@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 
 import io.hypersistence.utils.hibernate.type.basic.Inet;
 import org.moera.lib.node.types.PluginInfo;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
@@ -34,7 +35,6 @@ import org.moera.node.liberin.model.TokenUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PluginDescription;
 import org.moera.node.model.PluginInfoUtil;
-import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OptionsOperations;
 import org.moera.node.option.OptionsMetadata;

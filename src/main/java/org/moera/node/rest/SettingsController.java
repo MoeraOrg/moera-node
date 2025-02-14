@@ -12,6 +12,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SettingInfo;
 import org.moera.lib.node.types.SettingMetaInfo;
@@ -25,7 +26,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SettingsChangedLiberin;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.Result;
 import org.moera.node.model.SettingInfoUtil;
 import org.moera.node.model.SettingMetaAttributes;
 import org.moera.node.model.SettingMetaInfoUtil;

@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.GrantInfo;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.lib.naming.NodeName;
@@ -18,7 +19,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.GrantUpdatedLiberin;
 import org.moera.node.model.GrantChange;
 import org.moera.node.model.GrantInfoUtil;
-import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.GrantCache;
 import org.slf4j.Logger;

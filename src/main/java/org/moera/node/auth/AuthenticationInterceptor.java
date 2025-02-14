@@ -12,13 +12,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.config.Config;
 import org.moera.node.data.Token;
 import org.moera.node.friends.FriendCache;
 import org.moera.node.friends.SubscribedCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.Result;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.GrantCache;
 import org.moera.node.util.UriUtil;

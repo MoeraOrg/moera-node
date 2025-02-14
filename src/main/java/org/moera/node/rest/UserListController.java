@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.UserListInfo;
 import org.moera.lib.node.types.UserListItemInfo;
@@ -22,7 +23,6 @@ import org.moera.node.liberin.model.UserListItemAddedLiberin;
 import org.moera.node.liberin.model.UserListItemDeletedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.Result;
 import org.moera.node.model.UserListInfoUtil;
 import org.moera.node.model.UserListItemAttributes;
 import org.moera.node.model.UserListItemInfoUtil;

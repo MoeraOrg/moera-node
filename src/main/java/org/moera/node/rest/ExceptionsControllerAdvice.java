@@ -4,6 +4,7 @@ import java.util.Locale;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.moera.lib.node.types.Result;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
@@ -12,7 +13,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.PageNotFoundException;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.option.exception.OptionValueException;

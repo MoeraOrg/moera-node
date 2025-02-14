@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.node.types.AvatarOrdinal;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -33,7 +34,6 @@ import org.moera.node.model.AvatarOrdinalUtil;
 import org.moera.node.model.AvatarsOrdered;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.Result;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.DigestingOutputStream;
 import org.slf4j.Logger;

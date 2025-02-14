@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.FriendGroupInfo;
+import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -29,7 +30,6 @@ import org.moera.node.liberin.model.FriendGroupUpdatedLiberin;
 import org.moera.node.model.FriendGroupDescription;
 import org.moera.node.model.FriendGroupInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.Result;
 import org.moera.node.operations.OperationsValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
