@@ -5,10 +5,10 @@ import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.ClientReactionInfo;
 import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
-import org.moera.node.model.body.Body;
 import org.moera.node.util.Util;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

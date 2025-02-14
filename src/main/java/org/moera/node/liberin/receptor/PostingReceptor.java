@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
@@ -29,7 +30,6 @@ import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.body.Body;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;

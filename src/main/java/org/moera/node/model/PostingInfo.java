@@ -24,6 +24,7 @@ import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -34,7 +35,6 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.OwnPosting;
 import org.moera.node.data.Story;
-import org.moera.node.model.body.Body;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.option.Options;
@@ -1001,8 +1001,11 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
 
         entryRevision.setReceiverRevisionId(revisionId);
         entryRevision.setBodyPreview(bodyPreview.getEncoded());
-        entryRevision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media));
+        entryRevision.setSaneBodyPreview(
+            HtmlSanitizer.sanitizeIfNeeded(
+                !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media
+            )
+        );
         entryRevision.setBodySrcFormat(bodySrcFormat);
         entryRevision.setReceiverBodySrcHash(bodySrcHash);
         entryRevision.setBodyFormat(bodyFormat);

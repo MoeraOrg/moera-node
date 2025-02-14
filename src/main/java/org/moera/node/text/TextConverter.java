@@ -5,10 +5,10 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.body.Body;
+import org.moera.lib.node.types.body.BodyMappingException;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
-import org.moera.node.model.body.Body;
-import org.moera.node.model.body.BodyMappingException;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
 import org.moera.node.text.shorten.Shortener;
 import org.slf4j.Logger;

@@ -5,8 +5,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.moera.node.model.body.Body;
-import org.moera.node.model.body.LinkPreview;
+import org.moera.lib.node.types.body.Body;
+import org.moera.lib.node.types.body.LinkPreview;
 import org.springframework.util.ObjectUtils;
 
 public class MediaExtractor {

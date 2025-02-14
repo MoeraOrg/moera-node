@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
+import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalExpression;
@@ -28,7 +29,6 @@ import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.body.Body;
 import org.moera.node.model.event.CommentAddedEvent;
 import org.moera.node.model.event.CommentDeletedEvent;
 import org.moera.node.model.event.CommentUpdatedEvent;

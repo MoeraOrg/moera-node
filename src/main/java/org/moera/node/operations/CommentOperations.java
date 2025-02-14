@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Comment;
@@ -35,7 +36,6 @@ import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.CommentText;
-import org.moera.node.model.body.Body;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;

@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.body.Body;
 import org.moera.node.data.ContactUpgradeRepository;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
@@ -25,7 +26,6 @@ import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
 import org.moera.node.fingerprint.PostingFingerprintBuilder;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.body.Body;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.option.Options;
 import org.moera.node.rest.task.upgrade.AllRemoteAvatarsDownloadTask;
