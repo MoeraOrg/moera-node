@@ -1,9 +1,9 @@
 package org.moera.node.model.constraint;
 
-import java.util.UUID;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
+import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
 
 public class UuidValidator implements ConstraintValidator<Uuid, String> {
@@ -17,12 +17,7 @@ public class UuidValidator implements ConstraintValidator<Uuid, String> {
         if (ObjectUtils.isEmpty(s)) {
             return true;
         }
-        try {
-            UUID.fromString(s);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
+        return Util.uuid(s, null) != null;
     }
 
 }

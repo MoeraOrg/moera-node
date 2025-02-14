@@ -1,28 +1,17 @@
 package org.moera.node.option.type;
 
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
+import org.moera.node.util.Util;
 
 @OptionType("UUID")
 public class UuidOptionType extends OptionTypeBase {
 
-    private UUID parse(String value, Consumer<String> invalidValue) {
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException e) {
-            invalidValue.accept(value);
-        }
-        return null; // unreachable
-    }
-
     @Override
     public Object deserializeValue(String value) {
-        return parse(value, v -> {
-            throw new DeserializeOptionValueException(getTypeName(), v);
-        });
+        return Util.uuid(value).orElseThrow(() -> new DeserializeOptionValueException(getTypeName(), value));
     }
 
     @Override
@@ -35,10 +24,8 @@ public class UuidOptionType extends OptionTypeBase {
         if (value instanceof UUID) {
             return value;
         }
-        if (value instanceof String) {
-            return parse((String) value, v -> {
-                throw new UnsuitableOptionValueException(v);
-            });
+        if (value instanceof String v) {
+            return Util.uuid(v).orElseThrow(() -> new UnsuitableOptionValueException(v));
         }
         return super.accept(value);
     }

@@ -13,7 +13,9 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
@@ -209,6 +211,22 @@ public class Util {
 
     public static String hexByte(byte b) {
         return String.format("%02X", b >= 0 ? b : 256 + (int) b);
+    }
+
+    public static Optional<UUID> uuid(String value) {
+        try {
+            return Optional.of(UUID.fromString(value));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    public static UUID uuid(String value, UUID defaultValue) {
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException e) {
+            return defaultValue;
+        }
     }
 
 }

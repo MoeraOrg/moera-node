@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.BlockedInstantAttributes;
 import org.moera.lib.node.types.BlockedInstantInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
@@ -22,7 +23,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.BlockedInstantAddedLiberin;
 import org.moera.node.liberin.model.BlockedInstantDeletedLiberin;
-import org.moera.node.model.BlockedInstantAttributes;
+import org.moera.node.model.BlockedInstantAttributesUtil;
 import org.moera.node.model.BlockedInstantFilter;
 import org.moera.node.model.BlockedInstantInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -66,8 +67,7 @@ public class BlockedInstantController {
     @PostMapping
     @Admin(Scope.OTHER)
     @Transactional
-    public ResponseEntity<BlockedInstantInfo> post(
-            @Valid @RequestBody BlockedInstantAttributes blockedInstantAttributes) {
+    public ResponseEntity<BlockedInstantInfo> post(@RequestBody BlockedInstantAttributes blockedInstantAttributes) {
         log.info("POST /blocked-instants (storyType = {}, entryId = {}, remoteNodeName = {}, remotePostingId = {})",
                 LogUtil.format(blockedInstantAttributes.getStoryType().toString()),
                 LogUtil.format(blockedInstantAttributes.getEntryId()),
@@ -77,24 +77,30 @@ public class BlockedInstantController {
         if (blockedInstantAttributes.getStoryType() == null) {
             throw new ValidationFailure("blockedInstantAttributes.storyType.blank");
         }
+        UUID entryId = Util.uuid(blockedInstantAttributes.getEntryId())
+            .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
 
         Entry entry = null;
         if (blockedInstantAttributes.getEntryId() != null) {
-            entry = entryRepository.findByNodeIdAndId(requestContext.nodeId(), blockedInstantAttributes.getEntryId())
-                    .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
+            entry = entryRepository.findByNodeIdAndId(requestContext.nodeId(), entryId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
         }
 
-        blockedInstantOperations.findExact(requestContext.nodeId(), blockedInstantAttributes.getStoryType(),
-                blockedInstantAttributes.getEntryId(), blockedInstantAttributes.getRemoteNodeName(),
-                blockedInstantAttributes.getRemotePostingId(), blockedInstantAttributes.getRemoteOwnerName())
-                .forEach(blockedInstantRepository::delete);
+        blockedInstantOperations.findExact(
+            requestContext.nodeId(),
+            blockedInstantAttributes.getStoryType(),
+            entryId,
+            blockedInstantAttributes.getRemoteNodeName(),
+            blockedInstantAttributes.getRemotePostingId(),
+            blockedInstantAttributes.getRemoteOwnerName()
+        ).forEach(blockedInstantRepository::delete);
 
         BlockedInstant blockedInstant = new BlockedInstant();
         blockedInstant.setId(UUID.randomUUID());
         blockedInstant.setNodeId(requestContext.nodeId());
         blockedInstant.setEntry(entry);
         blockedInstant.setCreatedAt(Util.now());
-        blockedInstantAttributes.toBlockedInstant(blockedInstant);
+        BlockedInstantAttributesUtil.toBlockedInstant(blockedInstantAttributes, blockedInstant);
         blockedInstant = blockedInstantRepository.save(blockedInstant);
 
         requestContext.send(new BlockedInstantAddedLiberin(blockedInstant));
@@ -104,7 +110,7 @@ public class BlockedInstantController {
         }
 
         return ResponseEntity.created(URI.create("/blocked-instants/" + blockedInstant.getId()))
-                .body(BlockedInstantInfoUtil.build(blockedInstant));
+            .body(BlockedInstantInfoUtil.build(blockedInstant));
     }
 
     @GetMapping("/{id}")
@@ -114,7 +120,7 @@ public class BlockedInstantController {
         log.info("GET /blocked-instants/{id}, (id = {})", LogUtil.format(id));
 
         BlockedInstant blockedInstant = blockedInstantRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
 
         return BlockedInstantInfoUtil.build(blockedInstant);
     }
@@ -126,7 +132,7 @@ public class BlockedInstantController {
         log.info("DELETE /blocked-instants/{id}, (id = {})", LogUtil.format(id));
 
         BlockedInstant blockedInstant = blockedInstantRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("blocked-instant.not-found"));
         blockedInstantRepository.delete(blockedInstant);
 
         requestContext.send(new BlockedInstantDeletedLiberin(blockedInstant));
@@ -138,14 +144,21 @@ public class BlockedInstantController {
     @Admin(Scope.OTHER)
     @Transactional
     public List<BlockedInstantInfo> post(@Valid @RequestBody BlockedInstantFilter blockedInstantFilter) {
-        log.info("POST /blocked-instants/search (storyType = {})",
-                LogUtil.format(blockedInstantFilter.getStoryType().toString()));
+        log.info(
+            "POST /blocked-instants/search (storyType = {})",
+            LogUtil.format(blockedInstantFilter.getStoryType().toString())
+        );
 
-        return blockedInstantOperations.search(requestContext.nodeId(), blockedInstantFilter.getStoryType(),
-                        blockedInstantFilter.getEntryId(), blockedInstantFilter.getRemoteNodeName(),
-                        blockedInstantFilter.getRemotePostingId(), blockedInstantFilter.getRemoteOwnerName())
-                .map(BlockedInstantInfoUtil::build)
-                .collect(Collectors.toList());
+        return blockedInstantOperations.search(
+            requestContext.nodeId(),
+            blockedInstantFilter.getStoryType(),
+            blockedInstantFilter.getEntryId(),
+            blockedInstantFilter.getRemoteNodeName(),
+            blockedInstantFilter.getRemotePostingId(),
+            blockedInstantFilter.getRemoteOwnerName()
+        )
+            .map(BlockedInstantInfoUtil::build)
+            .collect(Collectors.toList());
     }
 
 }

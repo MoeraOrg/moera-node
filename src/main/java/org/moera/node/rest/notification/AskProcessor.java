@@ -21,6 +21,7 @@ import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.Transaction;
+import org.moera.node.util.Util;
 
 @NotificationProcessor
 public class AskProcessor {
@@ -83,12 +84,8 @@ public class AskProcessor {
                     throw new AuthenticationException();
                 }
 
-                UUID friendGroupId;
-                try {
-                    friendGroupId = UUID.fromString(notification.getFriendGroupId());
-                } catch (Exception e) {
-                    throw new ValidationFailure("friend-group.not-found");
-                }
+                UUID friendGroupId = Util.uuid(notification.getFriendGroupId())
+                    .orElseThrow(() -> new ValidationFailure("friend-group.not-found"));
 
                 if (universalContext.isMemberOf(friendGroupId, Scope.IDENTIFY)) {
                     break;
