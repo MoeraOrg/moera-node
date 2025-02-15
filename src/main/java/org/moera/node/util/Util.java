@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import com.github.jknack.handlebars.Handlebars.SafeString;
@@ -219,6 +220,20 @@ public class Util {
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }
+    }
+
+    public static <X extends Throwable> UUID uuidOrNull(
+        String value, Supplier<? extends X> exceptionSupplier
+    ) throws X {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException e) {
+            throw exceptionSupplier.get();
+        }
+
     }
 
 }

@@ -77,11 +77,13 @@ public class BlockedInstantController {
         if (blockedInstantAttributes.getStoryType() == null) {
             throw new ValidationFailure("blockedInstantAttributes.storyType.blank");
         }
-        UUID entryId = Util.uuid(blockedInstantAttributes.getEntryId())
-            .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
+        UUID entryId = Util.uuidOrNull(
+            blockedInstantAttributes.getEntryId(),
+            () -> new ObjectNotFoundFailure("entry.not-found")
+        );
 
         Entry entry = null;
-        if (blockedInstantAttributes.getEntryId() != null) {
+        if (entryId != null) {
             entry = entryRepository.findByNodeIdAndId(requestContext.nodeId(), entryId)
                 .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
         }
