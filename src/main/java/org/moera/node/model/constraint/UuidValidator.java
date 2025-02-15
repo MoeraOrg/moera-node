@@ -17,7 +17,7 @@ public class UuidValidator implements ConstraintValidator<Uuid, String> {
         if (ObjectUtils.isEmpty(s)) {
             return true;
         }
-        return Util.uuid(s, null) != null;
+        return Util.uuid(s).orElse(null) != null;
     }
 
 }

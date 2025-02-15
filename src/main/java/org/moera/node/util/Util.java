@@ -221,12 +221,4 @@ public class Util {
         }
     }
 
-    public static UUID uuid(String value, UUID defaultValue) {
-        try {
-            return UUID.fromString(value);
-        } catch (IllegalArgumentException e) {
-            return defaultValue;
-        }
-    }
-
 }
