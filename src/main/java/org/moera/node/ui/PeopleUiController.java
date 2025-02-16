@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.naming.NodeName;
+import org.moera.lib.node.types.PeopleGeneralInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriptionInfo;
@@ -24,7 +25,7 @@ import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.global.VirtualPage;
-import org.moera.node.model.PeopleGeneralInfo;
+import org.moera.node.model.PeopleGeneralInfoUtil;
 import org.moera.node.model.SubscriberInfoUtil;
 import org.moera.node.model.SubscriptionInfoUtil;
 import org.slf4j.Logger;
@@ -143,8 +144,10 @@ public class PeopleUiController {
         int friendOfsTotal = friendOfRepository.countByNodeId(requestContext.nodeId());
         int blockedTotal = blockedUserRepository.countByNodeId(requestContext.nodeId());
         int blockedByTotal = blockedByUserRepository.countByNodeId(requestContext.nodeId());
-        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, friendsTotal, friendOfsTotal, blockedTotal,
-                blockedByTotal, requestContext.getOptions(), requestContext);
+        return PeopleGeneralInfoUtil.build(
+            subscribersTotal, subscriptionsTotal, friendsTotal, friendOfsTotal, blockedTotal, blockedByTotal,
+            requestContext.getOptions(), requestContext
+        );
     }
 
 }

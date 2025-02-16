@@ -1,10 +1,12 @@
 package org.moera.node.model;
 
+import java.util.HashMap;
 import java.util.Map;
 import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.lib.node.types.AvatarDescription;
+import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Avatar;
 import org.moera.node.data.MediaFile;
@@ -45,7 +47,9 @@ public class ReactionDescription {
         this.ownerAvatar = ownerAvatar != null ? AvatarDescriptionUtil.build(ownerAvatar) : null;
         negative = attributes.isNegative();
         emoji = attributes.getEmoji();
-        operations = attributes.getOperations();
+        operations = new HashMap<>();
+        operations.put("view", attributes.getOperations().getView());
+        operations.put("delete", attributes.getOperations().getDelete());
     }
 
     public String getOwnerName() {

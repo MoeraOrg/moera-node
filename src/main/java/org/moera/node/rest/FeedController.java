@@ -15,7 +15,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
@@ -25,6 +24,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.FeedInfo;
 import org.moera.lib.node.types.FeedStatus;
+import org.moera.lib.node.types.FeedStatusChange;
 import org.moera.lib.node.types.RemotePostingOrNode;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
@@ -50,7 +50,6 @@ import org.moera.node.liberin.model.FeedStoriesReadLiberin;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
 import org.moera.node.model.FeedSliceInfo;
-import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.RemotePostingOrNodeUtil;
@@ -173,10 +172,12 @@ public class FeedController {
     @PutMapping("/{feedName}/status")
     @Admin(Scope.UPDATE_FEEDS)
     @Transactional
-    public FeedStatus putStatus(@PathVariable String feedName, @Valid @RequestBody FeedStatusChange change) {
-        log.info("PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
-                LogUtil.format(feedName), LogUtil.format(change.getViewed()), LogUtil.format(change.getRead()),
-                LogUtil.format(change.getBefore()));
+    public FeedStatus putStatus(@PathVariable String feedName, @RequestBody FeedStatusChange change) {
+        log.info(
+            "PUT /feeds/{feedName}/status (feedName = {}, viewed = {}, read = {}, before = {})",
+            LogUtil.format(feedName), LogUtil.format(change.getViewed()), LogUtil.format(change.getRead()),
+            LogUtil.format(change.getBefore())
+        );
 
         if (!Feed.isStandard(feedName)) {
             throw new ObjectNotFoundFailure("feed.not-found");
@@ -186,15 +187,20 @@ public class FeedController {
         tx.executeWrite(() -> {
             if (change.getViewed() != null) {
                 if (feedName.equals(Feed.INSTANT)) {
-                    instantsUpdated.addAll(storyRepository.findViewed(requestContext.nodeId(), feedName,
-                            !change.getViewed(), change.getBefore()));
+                    instantsUpdated.addAll(
+                        storyRepository.findViewed(
+                            requestContext.nodeId(), feedName, !change.getViewed(), change.getBefore()
+                        )
+                    );
                 }
-                storyRepository.updateViewed(requestContext.nodeId(), feedName, change.getViewed(),
-                        change.getBefore(), !change.getViewed());
+                storyRepository.updateViewed(
+                    requestContext.nodeId(), feedName, change.getViewed(), change.getBefore(), !change.getViewed()
+                );
             }
             if (change.getRead() != null) {
-                storyRepository.updateRead(requestContext.nodeId(), feedName, change.getRead(),
-                        change.getBefore(), !change.getRead());
+                storyRepository.updateRead(
+                    requestContext.nodeId(), feedName, change.getRead(), change.getBefore(), !change.getRead()
+                );
             }
         });
 
@@ -208,13 +214,15 @@ public class FeedController {
     @GetMapping("/{feedName}/stories")
     @Transactional
     public FeedSliceInfo getStories(
-            @PathVariable String feedName,
-            @RequestParam(required = false) Long before,
-            @RequestParam(required = false) Long after,
-            @RequestParam(required = false) Integer limit) {
-
-        log.info("GET /feeds/{feedName}/stories (feedName = {}, before = {}, after = {}, limit = {})",
-                LogUtil.format(feedName), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
+        @PathVariable String feedName,
+        @RequestParam(required = false) Long before,
+        @RequestParam(required = false) Long after,
+        @RequestParam(required = false) Integer limit
+    ) {
+        log.info(
+            "GET /feeds/{feedName}/stories (feedName = {}, before = {}, after = {}, limit = {})",
+            LogUtil.format(feedName), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit)
+        );
 
         if (!Feed.isStandard(feedName) || !Feed.isReadable(feedName, requestContext.isAdmin(Scope.VIEW_FEEDS))) {
             throw new ObjectNotFoundFailure("feed.not-found");
@@ -224,7 +232,8 @@ public class FeedController {
         }
 
         limit = limit != null && limit <= PostingOperations.MAX_POSTINGS_PER_REQUEST
-                ? limit : PostingOperations.MAX_POSTINGS_PER_REQUEST;
+            ? limit
+            : PostingOperations.MAX_POSTINGS_PER_REQUEST;
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }

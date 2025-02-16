@@ -16,7 +16,9 @@ import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.RemoteFeed;
 import org.moera.lib.node.types.RemotePosting;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriptionFilter;
 import org.moera.lib.node.types.SubscriptionInfo;
+import org.moera.lib.node.types.SubscriptionOverride;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -36,9 +38,8 @@ import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
 import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SubscriptionDescription;
-import org.moera.node.model.SubscriptionFilter;
 import org.moera.node.model.SubscriptionInfoUtil;
-import org.moera.node.model.SubscriptionOverride;
+import org.moera.node.model.SubscriptionOverrideUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
@@ -155,12 +156,11 @@ public class SubscriptionController {
 
     @PutMapping("/{id}")
     @Transactional
-    public SubscriptionInfo put(@PathVariable UUID id, @Valid @RequestBody SubscriptionOverride subscriptionOverride) {
+    public SubscriptionInfo put(@PathVariable UUID id, @RequestBody SubscriptionOverride subscriptionOverride) {
         log.info("PUT /people/subscriptions/{id} (id = {})", LogUtil.format(id));
 
-        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
-                        requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(requestContext.nodeId(), id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         Principal latestView = subscription.getViewE();
         if (subscription.getSubscriptionType() != SubscriptionType.FEED) {
             throw new ObjectNotFoundFailure("not-supported");
@@ -168,11 +168,13 @@ public class SubscriptionController {
         if (!requestContext.isPrincipal(subscription.getEditOperationsE(), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
-        OperationsValidator.validateOperations(subscriptionOverride::getPrincipal,
-                OperationsValidator.SUBSCRIBER_OPERATIONS, false,
-                "subscriptionOverride.operations.wrong-principal");
+        OperationsValidator.validateOperations(
+            subscriptionOverride.getOperations(),
+            false,
+            "subscriptionOverride.operations.wrong-principal"
+        );
 
-        subscriptionOverride.toUserSubscription(subscription);
+        SubscriptionOverrideUtil.toUserSubscription(subscriptionOverride, subscription);
         if (subscription.getSubscriptionType() == SubscriptionType.FEED) {
             contactOperations.updateViewPrincipal(subscription).fill(subscription);
         }
@@ -188,9 +190,8 @@ public class SubscriptionController {
     public ContactInfo delete(@PathVariable UUID id) {
         log.info("DELETE /people/subscriptions/{id} (id = {})", LogUtil.format(id));
 
-        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(
-                        requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
+        UserSubscription subscription = userSubscriptionRepository.findAllByNodeIdAndId(requestContext.nodeId(), id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("subscription.not-found"));
         if (!requestContext.isPrincipal(subscription.getDeleteE(requestContext.getOptions()), Scope.SUBSCRIBE)) {
             throw new AuthenticationException();
         }
@@ -210,7 +211,7 @@ public class SubscriptionController {
 
     @PostMapping("/search")
     @Transactional
-    public List<SubscriptionInfo> search(@Valid @RequestBody SubscriptionFilter filter) {
+    public List<SubscriptionInfo> search(@RequestBody SubscriptionFilter filter) {
         log.info("POST /people/subscriptions/search");
 
         if (ObjectUtils.isEmpty(filter.getFeeds()) && ObjectUtils.isEmpty(filter.getPostings())) {

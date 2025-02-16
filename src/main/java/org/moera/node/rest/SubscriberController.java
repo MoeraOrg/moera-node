@@ -15,6 +15,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriberInfo;
+import org.moera.lib.node.types.SubscriberOverride;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -39,7 +40,7 @@ import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.SubscriberDescription;
 import org.moera.node.model.SubscriberInfoUtil;
-import org.moera.node.model.SubscriberOverride;
+import org.moera.node.model.SubscriberOverrideUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
@@ -229,31 +230,41 @@ public class SubscriberController {
 
     @PutMapping("/{id}")
     @Transactional
-    public SubscriberInfo put(@PathVariable UUID id, @Valid @RequestBody SubscriberOverride subscriberOverride) {
+    public SubscriberInfo put(@PathVariable UUID id, @RequestBody SubscriberOverride subscriberOverride) {
         log.info("PUT /people/subscribers/{id} (id = {})", LogUtil.format(id));
 
         Subscriber subscriber = subscriberRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("subscriber.not-found"));
         Principal latestView = subscriber.getViewE();
         if (subscriber.getSubscriptionType() != SubscriptionType.FEED) {
             throw new ObjectNotFoundFailure("not-supported");
         }
-        if (subscriberOverride.getOperations() != null && !subscriberOverride.getOperations().isEmpty()
-                && !requestContext.isClient(subscriber.getRemoteNodeName(), Scope.SUBSCRIBE)) {
+        if (
+            subscriberOverride.getOperations() != null
+            && !subscriberOverride.getOperations().isEmpty()
+            && !requestContext.isClient(subscriber.getRemoteNodeName(), Scope.SUBSCRIBE)
+        ) {
             throw new AuthenticationException();
         }
-        OperationsValidator.validateOperations(subscriberOverride::getPrincipal,
-                OperationsValidator.SUBSCRIBER_OPERATIONS, false,
-                "subscriberOverride.operations.wrong-principal");
-        if (subscriberOverride.getAdminOperations() != null && !subscriberOverride.getAdminOperations().isEmpty()
-                && !requestContext.isPrincipal(Subscriber.getOverrideE(), Scope.VIEW_PEOPLE)) {
+        OperationsValidator.validateOperations(
+            subscriberOverride.getOperations(),
+            false,
+            "subscriberOverride.operations.wrong-principal"
+        );
+        if (
+            subscriberOverride.getAdminOperations() != null
+            && !subscriberOverride.getAdminOperations().isEmpty()
+            && !requestContext.isPrincipal(Subscriber.getOverrideE(), Scope.VIEW_PEOPLE)
+        ) {
             throw new AuthenticationException();
         }
-        OperationsValidator.validateOperations(subscriberOverride::getAdminPrincipal,
-                OperationsValidator.SUBSCRIBER_OPERATIONS, true,
-                "subscriberOverride.adminOperations.wrong-principal");
+        OperationsValidator.validateOperations(
+            subscriberOverride.getAdminOperations(),
+            true,
+            "subscriberOverride.adminOperations.wrong-principal"
+        );
 
-        subscriberOverride.toSubscriber(subscriber);
+        SubscriberOverrideUtil.toSubscriber(subscriberOverride, subscriber);
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
             contactOperations.updateViewPrincipal(subscriber).fill(subscriber);
         }

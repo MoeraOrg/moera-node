@@ -4,9 +4,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.AsyncOperationCreated;
+import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
@@ -21,7 +21,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingReactionDeletedLiberin;
 import org.moera.node.model.AsyncOperationCreatedUtil;
-import org.moera.node.model.ReactionAttributes;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingReactionPostJob;
 import org.moera.node.rest.task.verification.RemoteReactionVerifyTask;
@@ -69,19 +68,25 @@ public class RemotePostingReactionController {
     @PostMapping
     @Admin(Scope.REMOTE_REACT)
     @Entitled
-    public Result post(@PathVariable String nodeName, @PathVariable String postingId,
-                       @Valid @RequestBody ReactionAttributes attributes) {
-        log.info("POST /nodes/{nodeName}/postings/{postingId}/reactions"
-                        + " (nodeName = {}, postingId = {}, negative = {}, emoji = {})",
-                LogUtil.format(nodeName),
-                LogUtil.format(postingId),
-                attributes.isNegative() ? "yes" : "no",
-                LogUtil.format(attributes.getEmoji()));
+    public Result post(
+        @PathVariable String nodeName,
+        @PathVariable String postingId,
+        @RequestBody ReactionAttributes attributes
+    ) {
+        log.info(
+            "POST /nodes/{nodeName}/postings/{postingId}/reactions"
+                + " (nodeName = {}, postingId = {}, negative = {}, emoji = {})",
+            LogUtil.format(nodeName),
+            LogUtil.format(postingId),
+            attributes.isNegative() ? "yes" : "no",
+            LogUtil.format(attributes.getEmoji())
+        );
 
         jobs.run(
-                RemotePostingReactionPostJob.class,
-                new RemotePostingReactionPostJob.Parameters(nodeName, postingId, attributes),
-                requestContext.nodeId());
+            RemotePostingReactionPostJob.class,
+            new RemotePostingReactionPostJob.Parameters(nodeName, postingId, attributes),
+            requestContext.nodeId()
+        );
 
         return Result.OK;
     }
@@ -90,12 +95,15 @@ public class RemotePostingReactionController {
     @Admin(Scope.REMOTE_REACT)
     @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId) {
-        log.info("DELETE /nodes/{nodeName}/postings/{postingId}/reactions (nodeName = {}, postingId = {})",
-                LogUtil.format(nodeName),
-                LogUtil.format(postingId));
+        log.info(
+            "DELETE /nodes/{nodeName}/postings/{postingId}/reactions (nodeName = {}, postingId = {})",
+            LogUtil.format(nodeName),
+            LogUtil.format(postingId)
+        );
 
-        OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(), nodeName,
-                postingId).orElse(null);
+        OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(
+            requestContext.nodeId(), nodeName, postingId
+        ).orElse(null);
         if (ownReaction != null) {
             ownReactionRepository.delete(ownReaction);
             contactOperations.asyncUpdateCloseness(nodeName, -0.25f);
@@ -108,16 +116,23 @@ public class RemotePostingReactionController {
     @PostMapping("/{ownerName}/verify")
     @Admin(Scope.OTHER)
     @Transactional
-    public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String postingId,
-                                        @PathVariable String ownerName) {
-        log.info("POST /nodes/{nodeName}/postings/{postingId}/reactions/{ownerName}/verify"
-                        + " (nodeName = {}, postingId = {}, ownerName = {})",
-                LogUtil.format(nodeName), LogUtil.format(postingId), LogUtil.format(ownerName));
+    public AsyncOperationCreated verify(
+        @PathVariable String nodeName,
+        @PathVariable String postingId,
+        @PathVariable String ownerName
+    ) {
+        log.info(
+            "POST /nodes/{nodeName}/postings/{postingId}/reactions/{ownerName}/verify"
+                + " (nodeName = {}, postingId = {}, ownerName = {})",
+            LogUtil.format(nodeName), LogUtil.format(postingId), LogUtil.format(ownerName)
+        );
 
         RemoteReactionVerification data = new RemoteReactionVerification(
-                requestContext.nodeId(), nodeName, postingId, ownerName);
+            requestContext.nodeId(), nodeName, postingId, ownerName
+        );
         data.setDeadline(Timestamp.from(Instant.now().plus(
-                requestContext.getOptions().getDuration("remote-reaction-verification.lifetime").getDuration())));
+            requestContext.getOptions().getDuration("remote-reaction-verification.lifetime").getDuration()
+        )));
         remoteReactionVerificationRepository.saveAndFlush(data);
 
         RemoteReactionVerifyTask task = new RemoteReactionVerifyTask(data);

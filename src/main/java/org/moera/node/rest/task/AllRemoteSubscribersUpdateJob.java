@@ -1,6 +1,5 @@
 package org.moera.node.rest.task;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,12 +9,13 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriberOperations;
+import org.moera.lib.node.types.SubscriberOverride;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
-import org.moera.node.model.SubscriberOverride;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +84,9 @@ public class AllRemoteSubscribersUpdateJob
     protected void execute() {
         List<Subscription> subscriptions = subscriptionRepository.findAllByType(nodeId, SubscriptionType.FEED);
         SubscriberOverride override = new SubscriberOverride();
-        override.setOperations(Collections.singletonMap("view", parameters.viewPrincipal));
+        SubscriberOperations operations = new SubscriberOperations();
+        operations.setView(parameters.viewPrincipal);
+        override.setOperations(operations);
         for (Subscription subscription : subscriptions) {
             if (state.updated.contains(subscription.getId())) {
                 return;
@@ -93,14 +95,17 @@ public class AllRemoteSubscribersUpdateJob
             log.info("Updating subscriber info at node {}", subscription.getRemoteNodeName());
             try {
                 nodeApi.putSubscriber(
-                        subscription.getRemoteNodeName(),
-                        generateCarte(subscription.getRemoteNodeName(), Scope.SUBSCRIBE),
-                        subscription.getRemoteSubscriberId(),
-                        override);
+                    subscription.getRemoteNodeName(),
+                    generateCarte(subscription.getRemoteNodeName(), Scope.SUBSCRIBE),
+                    subscription.getRemoteSubscriberId(),
+                    override
+                );
                 state.updated.add(subscription.getId());
             } catch (NodeApiException e) {
-                log.warn("Error updating subscriber info at node {}: {}",
-                        subscription.getRemoteNodeName(), e.getMessage());
+                log.warn(
+                    "Error updating subscriber info at node {}: {}",
+                    subscription.getRemoteNodeName(), e.getMessage()
+                );
             }
         }
         if (state.updated.size() < subscriptions.size()) {

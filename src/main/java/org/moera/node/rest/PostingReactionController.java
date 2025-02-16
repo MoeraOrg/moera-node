@@ -15,7 +15,9 @@ import jakarta.validation.Valid;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.ReactionCreated;
 import org.moera.lib.node.types.ReactionInfo;
+import org.moera.lib.node.types.ReactionOverride;
 import org.moera.lib.node.types.ReactionTotalsInfo;
+import org.moera.lib.node.types.ReactionsFilter;
 import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
@@ -39,8 +41,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreatedUtil;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfoUtil;
-import org.moera.node.model.ReactionOverride;
-import org.moera.node.model.ReactionsFilter;
+import org.moera.node.model.ReactionOverrideUtil;
 import org.moera.node.model.ReactionsSliceInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
@@ -173,39 +174,54 @@ public class PostingReactionController {
 
     @PutMapping("/{postingId}/reactions/{ownerName}")
     @Transactional
-    public ReactionInfo put(@PathVariable UUID postingId, @PathVariable String ownerName,
-                            @Valid @RequestBody ReactionOverride reactionOverride) {
-        log.info("PUT /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
-                LogUtil.format(postingId), LogUtil.format(ownerName));
+    public ReactionInfo put(
+        @PathVariable UUID postingId, @PathVariable String ownerName, @RequestBody ReactionOverride reactionOverride
+    ) {
+        log.info(
+            "PUT /postings/{postingId}/reactions/{ownerName} (postingId = {}, ownerName = {})",
+            LogUtil.format(postingId), LogUtil.format(ownerName)
+        );
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
-                && !requestContext.isClient(ownerName, Scope.REACT)) {
+        if (
+            reactionOverride.getOperations() != null
+            && !reactionOverride.getOperations().isEmpty()
+            && !requestContext.isClient(ownerName, Scope.REACT)
+        ) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
             throw new UserBlockedException();
         }
-        OperationsValidator.validateOperations(reactionOverride::getPrincipal,
-                OperationsValidator.POSTING_REACTION_OPERATIONS, false,
-                "reactionOverride.operations.wrong-principal");
-        if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
-                && !requestContext.isPrincipal(posting.getOverrideReactionE(), Scope.DELETE_OTHERS_CONTENT)) {
+        OperationsValidator.validateOperations(
+            false,
+            reactionOverride.getOperations(),
+            false,
+            "reactionOverride.operations.wrong-principal"
+        );
+        if (
+            reactionOverride.getSeniorOperations() != null
+            && !reactionOverride.getSeniorOperations().isEmpty()
+            && !requestContext.isPrincipal(posting.getOverrideReactionE(), Scope.DELETE_OTHERS_CONTENT)
+        ) {
             throw new AuthenticationException();
         }
-        OperationsValidator.validateOperations(reactionOverride::getSeniorPrincipal,
-                OperationsValidator.POSTING_REACTION_OPERATIONS, true,
-                "reactionOverride.seniorOperations.wrong-principal");
+        OperationsValidator.validateOperations(
+            false,
+            reactionOverride.getSeniorOperations(),
+            true,
+            "reactionOverride.seniorOperations.wrong-principal"
+        );
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(), ownerName);
         if (reaction == null) {
             throw new ObjectNotFoundFailure("reaction.not-found");
         }
 
-        reactionOverride.toPostingReaction(reaction);
+        ReactionOverrideUtil.toPostingReaction(reactionOverride, reaction);
 
         requestContext.send(new PostingReactionOperationsUpdatedLiberin(posting, reaction));
 
@@ -277,28 +293,38 @@ public class PostingReactionController {
 
     @PostMapping("/reactions/search")
     @Transactional
-    public List<ReactionInfo> search(@Valid @RequestBody ReactionsFilter filter) {
+    public List<ReactionInfo> search(@RequestBody ReactionsFilter filter) {
         log.info("POST /postings/reactions/search (ownerName = {})", LogUtil.format(filter.getOwnerName()));
 
-        if (ObjectUtils.isEmpty(filter.getOwnerName())
-                || filter.getPostings() == null || filter.getPostings().isEmpty()) {
+        if (
+            ObjectUtils.isEmpty(filter.getOwnerName()) || filter.getPostings() == null || filter.getPostings().isEmpty()
+        ) {
             return Collections.emptyList();
         }
 
         boolean own = requestContext.isClient(filter.getOwnerName(), Scope.VIEW_CONTENT);
-        Map<UUID, Posting> postings = postingRepository.findByNodeIdAndIds(requestContext.nodeId(), filter.getPostings())
-                .stream()
-                .filter(p -> requestContext.isPrincipal(p.getViewE(), Scope.VIEW_CONTENT))
-                .filter(p -> requestContext.isPrincipal(p.getViewReactionsE(), Scope.VIEW_CONTENT) || own)
-                .collect(Collectors.toMap(Posting::getId, Function.identity()));
+        List<UUID> postingIds = filter.getPostings().stream()
+            .map(Util::uuid)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
+        Map<UUID, Posting> postings = postingRepository.findByNodeIdAndIds(requestContext.nodeId(), postingIds)
+            .stream()
+            .filter(p -> requestContext.isPrincipal(p.getViewE(), Scope.VIEW_CONTENT))
+            .filter(p -> requestContext.isPrincipal(p.getViewReactionsE(), Scope.VIEW_CONTENT) || own)
+            .collect(Collectors.toMap(Posting::getId, Function.identity()));
 
         return reactionRepository.findByEntryIdsAndOwner(postings.keySet(), filter.getOwnerName()).stream()
-                .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
-                .filter(r -> !r.isNegative()
-                        || requestContext.isPrincipal(postings.get(r.getEntryRevision().getEntry().getId())
-                                                        .getViewNegativeReactionsE(), Scope.VIEW_CONTENT))
-                .map(r -> ReactionInfoUtil.build(r, requestContext))
-                .collect(Collectors.toList());
+            .filter(r -> requestContext.isPrincipal(r.getViewE(), Scope.VIEW_CONTENT))
+            .filter(
+                r -> !r.isNegative()
+                || requestContext.isPrincipal(
+                    postings.get(r.getEntryRevision().getEntry().getId()).getViewNegativeReactionsE(),
+                    Scope.VIEW_CONTENT
+                )
+            )
+            .map(r -> ReactionInfoUtil.build(r, requestContext))
+            .collect(Collectors.toList());
     }
 
     @DeleteMapping("/{postingId}/reactions")

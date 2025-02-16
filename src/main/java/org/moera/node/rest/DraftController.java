@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.DraftType;
+import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
@@ -42,7 +43,6 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.DraftInfo;
 import org.moera.node.model.DraftText;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.RemoteMedia;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.PostingOperations;
 import org.moera.node.text.MediaExtractor;
@@ -262,20 +262,21 @@ public class DraftController {
             UUID[] ids;
             try {
                 ids = Arrays.stream(draftText.getMedia())
-                        .map(RemoteMedia::getId)
-                        .map(UUID::fromString)
-                        .toArray(UUID[]::new);
+                    .map(RemoteMedia::getId)
+                    .map(UUID::fromString)
+                    .toArray(UUID[]::new);
             } catch (IllegalArgumentException e) {
                 throw new ValidationFailure("draftText.media.not-found");
             }
 
             return mediaOperations.validateAttachments(
-                    ids,
-                    () -> new ValidationFailure("draftText.media.not-found"),
-                    null,
-                    requestContext.isAdmin(Scope.VIEW_MEDIA),
-                    requestContext.isAdmin(Scope.DRAFTS),
-                    requestContext.getClientName(Scope.VIEW_MEDIA));
+                ids,
+                () -> new ValidationFailure("draftText.media.not-found"),
+                null,
+                requestContext.isAdmin(Scope.VIEW_MEDIA),
+                requestContext.isAdmin(Scope.DRAFTS),
+                requestContext.getClientName(Scope.VIEW_MEDIA)
+            );
         } else {
             return Collections.emptyList();
         }

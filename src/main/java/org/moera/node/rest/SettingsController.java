@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SettingInfo;
+import org.moera.lib.node.types.SettingMetaAttributes;
 import org.moera.lib.node.types.SettingMetaInfo;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
@@ -27,7 +28,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SettingsChangedLiberin;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.SettingInfoUtil;
-import org.moera.node.model.SettingMetaAttributes;
 import org.moera.node.model.SettingMetaInfoUtil;
 import org.moera.node.operations.OptionsOperations;
 import org.moera.node.option.OptionDescriptor;
@@ -111,7 +111,7 @@ public class SettingsController {
     @PutMapping("/node/metadata")
     @RootAdmin
     @Transactional
-    public Result putMetadata(@RequestBody @Valid List<SettingMetaAttributes> metaAttributes) throws IOException {
+    public Result putMetadata(@RequestBody List<SettingMetaAttributes> metaAttributes) throws IOException {
         log.info("PUT /settings/node/metadata");
 
         boolean metaChanged = tx.executeWrite(() -> {
@@ -136,11 +136,13 @@ public class SettingsController {
                 if (optionType == null) {
                     continue;
                 }
-                Object newValue = optionType.accept(meta.getDefaultValue(),
-                        optionsMetadata.getOptionTypeModifiers(meta.getName()));
+                Object newValue = optionType.accept(
+                    meta.getDefaultValue(),
+                    optionsMetadata.getOptionTypeModifiers(meta.getName())
+                );
 
                 OptionDefault optionDefault = optionDefaultRepository.findByName(meta.getName())
-                        .orElse(new OptionDefault(meta.getName()));
+                    .orElse(new OptionDefault(meta.getName()));
                 if (newValue != null) {
                     if (optionDefault.getId() == null) {
                         optionDefault.setId(UUID.randomUUID());

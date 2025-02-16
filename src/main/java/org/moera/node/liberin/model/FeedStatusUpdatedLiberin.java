@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.moera.lib.node.types.FeedStatus;
+import org.moera.lib.node.types.FeedStatusChange;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.FeedStatusChange;
 
 public class FeedStatusUpdatedLiberin extends Liberin {
 

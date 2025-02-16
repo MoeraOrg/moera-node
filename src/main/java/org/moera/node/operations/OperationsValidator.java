@@ -6,6 +6,9 @@ import java.util.function.Function;
 
 import org.moera.lib.node.types.CommentOperations;
 import org.moera.lib.node.types.FriendOperations;
+import org.moera.lib.node.types.ReactionOperations;
+import org.moera.lib.node.types.SubscriberOperations;
+import org.moera.lib.node.types.SubscriptionOperations;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFlag;
 import org.moera.node.model.ValidationFailure;
@@ -129,11 +132,6 @@ public class OperationsValidator {
                     PrincipalFlag.PUBLIC | PrincipalFlag.PRIVATE | PrincipalFlag.ADMIN)
     );
 
-    public static final List<Pair<String, Integer>> FRIEND_OPERATIONS = List.of(
-            Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.PRIVATE)
-    );
-
     public static void validateOperations(Function<String, Principal> getPrincipal,
                                           List<Pair<String, Integer>> description,
                                           boolean includeUnset,
@@ -147,6 +145,10 @@ public class OperationsValidator {
     }
 
     public static void validateOperations(CommentOperations operations, boolean includeUnset, String errorCode) {
+        if (operations == null) {
+            return;
+        }
+
         BiConsumer<Principal, Integer> v = (principal, flags) ->
             validatePrincipal(principal, flags, includeUnset, errorCode);
 
@@ -210,7 +212,78 @@ public class OperationsValidator {
         );
     }
 
+    public static void validateOperations(
+        boolean isComment, ReactionOperations operations, boolean includeUnset, String errorCode
+    ) {
+        if (operations == null) {
+            return;
+        }
+
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        if (!isComment) {
+            // posting reactions
+            v.accept(
+                operations.getView(),
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+                | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.NONE
+            );
+            v.accept(
+                operations.getDelete(),
+                PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.OWNER
+                | PrincipalFlag.ADMIN | PrincipalFlag.NONE
+            );
+        } else {
+            // comment reactions
+            v.accept(
+                operations.getView(),
+                PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+                | PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.ENIGMA | PrincipalFlag.NONE
+            );
+            v.accept(
+                operations.getDelete(),
+                PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.ENIGMA
+                | PrincipalFlag.MAJOR | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE
+            );
+        }
+    }
+
+    public static void validateOperations(SubscriberOperations operations, boolean includeUnset, String errorCode) {
+        if (operations == null) {
+            return;
+        }
+
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        v.accept(
+            operations.getView(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.PRIVATE
+        );
+    }
+
+    public static void validateOperations(SubscriptionOperations operations, boolean includeUnset, String errorCode) {
+        if (operations == null) {
+            return;
+        }
+
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        v.accept(
+            operations.getView(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.PRIVATE
+        );
+    }
+
     public static void validateOperations(FriendOperations operations, boolean includeUnset, String errorCode) {
+        if (operations == null) {
+            return;
+        }
+
         BiConsumer<Principal, Integer> v = (principal, flags) ->
             validatePrincipal(principal, flags, includeUnset, errorCode);
 

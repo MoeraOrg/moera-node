@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.PeopleGeneralInfo;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.BlockedByUserRepository;
 import org.moera.node.data.BlockedUserRepository;
@@ -15,7 +16,7 @@ import org.moera.node.data.UserSubscriptionRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.PeopleGeneralInfo;
+import org.moera.node.model.PeopleGeneralInfoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,8 +63,10 @@ public class PeopleController {
         int blockedTotal = blockedUserRepository.countByNodeId(requestContext.nodeId());
         int blockedByTotal = blockedByUserRepository.countByNodeId(requestContext.nodeId());
 
-        return new PeopleGeneralInfo(subscribersTotal, subscriptionsTotal, friendsTotal, friendOfsTotal, blockedTotal,
-                blockedByTotal, requestContext.getOptions(), requestContext);
+        return PeopleGeneralInfoUtil.build(
+            subscribersTotal, subscriptionsTotal, friendsTotal, friendOfsTotal, blockedTotal, blockedByTotal,
+            requestContext.getOptions(), requestContext
+        );
     }
 
 }

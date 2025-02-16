@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.ReactionCreated;
 import org.moera.lib.node.types.ReactionInfo;
+import org.moera.lib.node.types.ReactionOverride;
 import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Result;
@@ -32,7 +33,7 @@ import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreatedUtil;
 import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfoUtil;
-import org.moera.node.model.ReactionOverride;
+import org.moera.node.model.ReactionOverrideUtil;
 import org.moera.node.model.ReactionsSliceInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
@@ -143,14 +144,20 @@ public class CommentReactionController {
 
     @PutMapping("/{ownerName}")
     @Transactional
-    public ReactionInfo put(@PathVariable UUID postingId, @PathVariable UUID commentId, @PathVariable String ownerName,
-                            @Valid @RequestBody ReactionOverride reactionOverride) {
-        log.info("PUT /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
-                        + " (postingId = {}, commentId = {}, ownerName = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName));
+    public ReactionInfo put(
+        @PathVariable UUID postingId,
+        @PathVariable UUID commentId,
+        @PathVariable String ownerName,
+        @RequestBody ReactionOverride reactionOverride
+    ) {
+        log.info(
+            "PUT /postings/{postingId}/comments/{commentId}/reactions/{ownerName}"
+                + " (postingId = {}, commentId = {}, ownerName = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(ownerName)
+        );
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
@@ -163,31 +170,50 @@ public class CommentReactionController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (reactionOverride.getOperations() != null && !reactionOverride.getOperations().isEmpty()
-                && !requestContext.isClient(ownerName, Scope.REACT)) {
+        if (
+            reactionOverride.getOperations() != null
+            && !reactionOverride.getOperations().isEmpty()
+            && !requestContext.isClient(ownerName, Scope.REACT)
+        ) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
             throw new UserBlockedException();
         }
-        OperationsValidator.validateOperations(reactionOverride::getPrincipal,
-                OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
-                "reactionOverride.operations.wrong-principal");
-        if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
-                && !requestContext.isPrincipal(comment.getOverrideReactionE(), Scope.DELETE_OTHERS_CONTENT)) {
+        OperationsValidator.validateOperations(
+            true,
+            reactionOverride.getOperations(),
+            false,
+            "reactionOverride.operations.wrong-principal"
+        );
+        if (
+            reactionOverride.getSeniorOperations() != null
+            && !reactionOverride.getSeniorOperations().isEmpty()
+            && !requestContext.isPrincipal(comment.getOverrideReactionE(), Scope.DELETE_OTHERS_CONTENT)
+        ) {
             throw new AuthenticationException();
         }
-        OperationsValidator.validateOperations(reactionOverride::getSeniorPrincipal,
-                OperationsValidator.COMMENT_REACTION_OPERATIONS, true,
-                "reactionOverride.seniorOperations.wrong-principal");
-        if (reactionOverride.getSeniorOperations() != null && !reactionOverride.getSeniorOperations().isEmpty()
-                && !requestContext.isPrincipal(
-                        comment.getPosting().getOverrideCommentReactionE(), Scope.DELETE_OTHERS_CONTENT)) {
+        OperationsValidator.validateOperations(
+            true,
+            reactionOverride.getSeniorOperations(),
+            true,
+            "reactionOverride.seniorOperations.wrong-principal"
+        );
+        if (
+            reactionOverride.getSeniorOperations() != null
+            && !reactionOverride.getSeniorOperations().isEmpty()
+            && !requestContext.isPrincipal(
+                comment.getPosting().getOverrideCommentReactionE(), Scope.DELETE_OTHERS_CONTENT
+            )
+        ) {
             throw new AuthenticationException();
         }
-        OperationsValidator.validateOperations(reactionOverride::getMajorPrincipal,
-                OperationsValidator.COMMENT_REACTION_OPERATIONS, true,
-                "reactionOverride.majorOperations.wrong-principal");
+        OperationsValidator.validateOperations(
+            true,
+            reactionOverride.getMajorOperations(),
+            true,
+            "reactionOverride.majorOperations.wrong-principal"
+        );
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(comment.getId(), ownerName);
         if (reaction == null) {
             throw new ObjectNotFoundFailure("reaction.not-found");
@@ -195,7 +221,7 @@ public class CommentReactionController {
 
         requestContext.send(new CommentReactionOperationsUpdatedLiberin(comment, reaction));
 
-        reactionOverride.toCommentReaction(reaction);
+        ReactionOverrideUtil.toCommentReaction(reactionOverride, reaction);
 
         return ReactionInfoUtil.build(reaction, requestContext);
     }
