@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.BodyFormat;
+import org.moera.lib.node.types.MediaWithDigest;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.body.Body;
@@ -92,7 +93,10 @@ public class PostingText {
         bodySrc = sourceText.getBodySrc();
         bodySrcFormat = sourceText.getBodySrcFormat() != null ? sourceText.getBodySrcFormat() : SourceFormat.PLAIN_TEXT;
         media = sourceText.getMedia() != null
-                ? Arrays.stream(sourceText.getMedia()).map(MediaWithDigest::getId).toArray(UUID[]::new)
+                ? Arrays.stream(sourceText.getMedia())
+                    .map(MediaWithDigest::getId)
+                    .map(id -> Util.uuid(id).orElse(null))
+                    .toArray(UUID[]::new)
                 : null;
         createdAt = Util.toEpochSecond(Util.now());
         acceptedReactions = sourceText.getAcceptedReactions();

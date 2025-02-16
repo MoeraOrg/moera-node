@@ -27,6 +27,7 @@ import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.CommentMassAttributes;
 import org.moera.lib.node.types.CommentTotalInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
@@ -67,7 +68,7 @@ import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.CommentCreated;
 import org.moera.node.model.CommentInfo;
-import org.moera.node.model.CommentMassAttributes;
+import org.moera.node.model.CommentMassAttributesUtil;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.CommentTotalInfoUtil;
 import org.moera.node.model.CommentsSliceInfo;
@@ -420,7 +421,7 @@ public class CommentController {
     @PutMapping
     @Transactional
     @NoClientId
-    public Result putAll(@PathVariable UUID postingId, @Valid @RequestBody CommentMassAttributes commentMassAttributes) {
+    public Result putAll(@PathVariable UUID postingId, @RequestBody CommentMassAttributes commentMassAttributes) {
         log.info("PUT /postings/{postingId}/comments (postingId = {})", LogUtil.format(postingId));
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
@@ -434,9 +435,11 @@ public class CommentController {
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
             throw new UserBlockedException();
         }
-        OperationsValidator.validateOperations(commentMassAttributes::getSeniorPrincipal,
-                OperationsValidator.COMMENT_OPERATIONS, true,
-                "commentMassAttributes.seniorOperations.wrong-principal");
+        OperationsValidator.validateOperations(
+            commentMassAttributes.getSeniorOperations(),
+            true,
+            "commentMassAttributes.seniorOperations.wrong-principal"
+        );
 
         Page<Comment> page;
         int n = 0;
@@ -444,12 +447,13 @@ public class CommentController {
             // TODO despite pagination, objects and liberins may still take a lot of memory
             // It is possible to perform the update in a single query, making a backup of the previous state
             // Then, use the backup to generate liberins
-            page = commentRepository.findByNodeIdAndParentId(requestContext.nodeId(), postingId,
-                    PageRequest.of(n++, MASS_UPDATE_PAGE_SIZE));
+            page = commentRepository.findByNodeIdAndParentId(
+                requestContext.nodeId(), postingId, PageRequest.of(n++, MASS_UPDATE_PAGE_SIZE)
+            );
             for (Comment comment : page.getContent()) {
-                if (!commentMassAttributes.sameAsEntry(comment)) {
+                if (!CommentMassAttributesUtil.sameAsEntry(commentMassAttributes, comment)) {
                     Principal latestView = comment.getViewE();
-                    commentMassAttributes.toEntry(comment);
+                    CommentMassAttributesUtil.toEntry(commentMassAttributes, comment);
                     requestContext.send(new CommentUpdatedLiberin(comment, comment.getCurrentRevision(), latestView));
                 }
             }

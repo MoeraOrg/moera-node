@@ -180,7 +180,7 @@ public class GalleriesHelperSource {
         }
 
         List<PrivateMediaFileInfo> images = Arrays.stream(media)
-                .filter(ma -> !Boolean.TRUE.equals(ma.getEmbedded()))
+                .filter(ma -> !ma.isEmbedded())
                 .map(MediaAttachment::getMedia)
                 .collect(Collectors.toList());
         if (images.isEmpty()) {

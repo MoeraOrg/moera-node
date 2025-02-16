@@ -40,11 +40,10 @@ public class BlockedInstantOperations {
     }
 
     public Stream<BlockedInstant> search(
-            UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
-            String remoteOwnerName
+        UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
+        String remoteOwnerName
     ) {
-        Predicate where = buildFilter(
-                nodeId, storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName);
+        Predicate where = buildFilter(nodeId, storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName);
         return StreamSupport.stream(blockedInstantRepository.findAll(where).spliterator(), false);
     }
 
@@ -53,17 +52,16 @@ public class BlockedInstantOperations {
     }
 
     public long count(
-            UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
-            String remoteOwnerName
+        UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
+        String remoteOwnerName
     ) {
-        Predicate where = buildFilter(
-                nodeId, storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName);
+        Predicate where = buildFilter(nodeId, storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName);
         return blockedInstantRepository.count(where);
     }
 
     private static BooleanBuilder buildExactFilter(
-            UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
-            String remoteOwnerName
+        UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
+        String remoteOwnerName
     ) {
         QBlockedInstant blockedInstant = QBlockedInstant.blockedInstant;
         BooleanBuilder where = new BooleanBuilder();
@@ -93,8 +91,8 @@ public class BlockedInstantOperations {
     }
 
     private static BooleanBuilder buildFilter(
-            UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
-            String remoteOwnerName
+        UUID nodeId, StoryType storyType, UUID entryId, String remoteNodeName, String remotePostingId,
+        String remoteOwnerName
     ) {
         QBlockedInstant blockedInstant = QBlockedInstant.blockedInstant;
         BooleanBuilder where = new BooleanBuilder();

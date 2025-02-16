@@ -6,9 +6,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedInstantAttributes;
+import org.moera.lib.node.types.BlockedInstantFilter;
 import org.moera.lib.node.types.BlockedInstantInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
@@ -24,7 +24,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.BlockedInstantAddedLiberin;
 import org.moera.node.liberin.model.BlockedInstantDeletedLiberin;
 import org.moera.node.model.BlockedInstantAttributesUtil;
-import org.moera.node.model.BlockedInstantFilter;
 import org.moera.node.model.BlockedInstantInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.StoryTypeUtil;
@@ -145,7 +144,7 @@ public class BlockedInstantController {
     @PostMapping("/search")
     @Admin(Scope.OTHER)
     @Transactional
-    public List<BlockedInstantInfo> post(@Valid @RequestBody BlockedInstantFilter blockedInstantFilter) {
+    public List<BlockedInstantInfo> post(@RequestBody BlockedInstantFilter blockedInstantFilter) {
         log.info(
             "POST /blocked-instants/search (storyType = {})",
             LogUtil.format(blockedInstantFilter.getStoryType().toString())
@@ -154,7 +153,7 @@ public class BlockedInstantController {
         return blockedInstantOperations.search(
             requestContext.nodeId(),
             blockedInstantFilter.getStoryType(),
-            blockedInstantFilter.getEntryId(),
+            Util.uuid(blockedInstantFilter.getEntryId()).orElse(null),
             blockedInstantFilter.getRemoteNodeName(),
             blockedInstantFilter.getRemotePostingId(),
             blockedInstantFilter.getRemoteOwnerName()

@@ -4,6 +4,7 @@ import java.util.List;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import org.moera.lib.node.types.FriendGroupAssignment;
 import org.moera.node.data.Friend;
 
 public class FriendDescription {

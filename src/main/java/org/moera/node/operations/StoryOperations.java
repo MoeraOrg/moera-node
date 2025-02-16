@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Entry;
@@ -23,7 +24,7 @@ import org.moera.node.liberin.Liberin;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
-import org.moera.node.model.FeedStatus;
+import org.moera.node.model.FeedStatusUtil;
 import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
@@ -124,9 +125,11 @@ public class StoryOperations {
             Long notReadMoment = storyRepository.findNotReadMoment(nodeId, feedName);
             notReadMoment = notReadMoment != null ? notReadMoment : SafeInteger.MAX_VALUE;
 
-            return new FeedStatus(total, totalPinned, lastMoment, notViewed, notRead, notViewedMoment, notReadMoment);
+            return FeedStatusUtil.build(
+                total, totalPinned, lastMoment, notViewed, notRead, notViewedMoment, notReadMoment
+            );
         } else {
-            return new FeedStatus(total, totalPinned, lastMoment);
+            return FeedStatusUtil.build(total, totalPinned, lastMoment);
         }
     }
 

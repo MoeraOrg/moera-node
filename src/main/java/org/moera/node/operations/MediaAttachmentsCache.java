@@ -1,4 +1,4 @@
-package org.moera.node.model;
+package org.moera.node.operations;
 
 import java.util.HashMap;
 import java.util.Map;

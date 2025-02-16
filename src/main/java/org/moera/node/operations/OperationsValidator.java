@@ -1,8 +1,11 @@
 package org.moera.node.operations;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.moera.lib.node.types.CommentOperations;
+import org.moera.lib.node.types.FriendOperations;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFlag;
 import org.moera.node.model.ValidationFailure;
@@ -140,6 +143,86 @@ public class OperationsValidator {
             if (principal != null && !principal.isOneOf(desc.getSecond()) && (!includeUnset || !principal.isUnset())) {
                 throw new ValidationFailure(errorCode);
             }
+        }
+    }
+
+    public static void validateOperations(CommentOperations operations, boolean includeUnset, String errorCode) {
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        v.accept(
+            operations.getView(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE
+        );
+        v.accept(
+            operations.getEdit(),
+            PrincipalFlag.OWNER | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getDelete(),
+            PrincipalFlag.PRIVATE | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.OWNER
+            | PrincipalFlag.ADMIN | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewReactions(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewNegativeReactions(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewReactionTotals(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewNegativeReactionTotals(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewReactionRatios(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getViewNegativeReactionRatios(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.SECRET | PrincipalFlag.PRIVATE | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getAddReaction(),
+            PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+            | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.ADMIN | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getAddNegativeReaction(),
+            PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS | PrincipalFlag.PRIVATE
+            | PrincipalFlag.SECRET | PrincipalFlag.SENIOR | PrincipalFlag.ADMIN | PrincipalFlag.NONE
+        );
+        v.accept(
+            operations.getOverrideReaction(),
+            PrincipalFlag.OWNER | PrincipalFlag.NONE
+        );
+    }
+
+    public static void validateOperations(FriendOperations operations, boolean includeUnset, String errorCode) {
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        v.accept(
+            operations.getView(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.PRIVATE
+        );
+    }
+
+    private static void validatePrincipal(Principal principal, int flags, boolean includeUnset, String errorCode) {
+        if (principal != null && !principal.isOneOf(flags) && (!includeUnset || !principal.isUnset())) {
+            throw new ValidationFailure(errorCode);
         }
     }
 

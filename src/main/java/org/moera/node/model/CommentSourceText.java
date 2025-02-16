@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.moera.lib.node.types.AvatarDescription;
+import org.moera.lib.node.types.MediaWithDigest;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.MediaFile;

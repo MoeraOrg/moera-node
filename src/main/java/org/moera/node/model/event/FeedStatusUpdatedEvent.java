@@ -2,10 +2,10 @@ package org.moera.node.model.event;
 
 import java.util.List;
 
+import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
-import org.moera.node.model.FeedStatus;
 import org.springframework.data.util.Pair;
 
 public class FeedStatusUpdatedEvent extends Event {

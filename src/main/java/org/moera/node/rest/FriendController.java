@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.ContactInfo;
+import org.moera.lib.node.types.FriendGroupAssignment;
 import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.lib.node.types.FriendInfo;
 import org.moera.lib.node.types.Scope;
@@ -32,12 +33,13 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
 import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.FriendDescription;
-import org.moera.node.model.FriendGroupAssignment;
+import org.moera.node.model.FriendGroupAssignmentUtil;
 import org.moera.node.model.FriendGroupDetailsUtil;
 import org.moera.node.model.FriendInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -167,10 +169,14 @@ public class FriendController {
             Map<UUID, Pair<FriendGroupAssignment, Friend>> targetGroups = new HashMap<>();
             if (friendDescription.getGroups() != null) {
                 for (var ga : friendDescription.getGroups()) {
-                    OperationsValidator.validateOperations(ga::getPrincipal,
-                            OperationsValidator.FRIEND_OPERATIONS, false,
-                            "friendDescription.groups.wrong-principal");
-                    targetGroups.put(ga.getId(), Pair.of(ga, new Friend()));
+                    OperationsValidator.validateOperations(
+                        ga.getOperations(),
+                        false,
+                        "friendDescription.groups.wrong-principal"
+                    );
+                    Util.uuid(ga.getId()).ifPresent(
+                        groupId -> targetGroups.put(groupId, Pair.of(ga, new Friend()))
+                    );
                 }
             }
 
@@ -198,13 +204,13 @@ public class FriendController {
                                 .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"))
                     );
                     friend.setFriendGroup(group);
-                    target.getValue().getFirst().toFriend(friend);
+                    FriendGroupAssignmentUtil.toFriend(target.getValue().getFirst(), friend);
                     friend = friendRepository.save(friend);
 
                     contactOperations.asyncUpdateCloseness(friend.getRemoteNodeName(), 800);
                     contactOperations.updateFriendCount(friend.getRemoteNodeName(), 1);
                 } else {
-                    target.getValue().getFirst().toFriend(friend);
+                    FriendGroupAssignmentUtil.toFriend(target.getValue().getFirst(), friend);
                 }
                 contact = contactOperations.updateViewPrincipal(friend);
                 contact.fill(friend);

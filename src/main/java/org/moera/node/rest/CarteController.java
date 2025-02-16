@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.CarteAttributes;
 import org.moera.lib.node.types.CarteInfo;
 import org.moera.lib.node.types.CarteSet;
 import org.moera.lib.node.types.CarteVerificationInfo;
@@ -25,7 +26,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.CarteAttributes;
 import org.moera.node.model.CarteInfoUtil;
 import org.moera.node.model.ClientCarte;
 import org.moera.node.model.OperationFailure;

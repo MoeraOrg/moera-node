@@ -3,9 +3,9 @@ package org.moera.node.liberin.model;
 import java.util.Map;
 import java.util.Set;
 
+import org.moera.lib.node.types.FeedStatus;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
 
 public class FeedStatusUpdatedLiberin extends Liberin {
@@ -19,8 +19,9 @@ public class FeedStatusUpdatedLiberin extends Liberin {
         this(feedName, status, null, null);
     }
 
-    public FeedStatusUpdatedLiberin(String feedName, FeedStatus status, FeedStatusChange change,
-                                    Set<Story> instantsUpdated) {
+    public FeedStatusUpdatedLiberin(
+        String feedName, FeedStatus status, FeedStatusChange change, Set<Story> instantsUpdated
+    ) {
         this.feedName = feedName;
         this.status = status;
         this.change = change;

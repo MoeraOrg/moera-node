@@ -5,6 +5,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Feed;
@@ -15,7 +16,6 @@ import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
-import org.moera.node.model.FeedStatus;
 import org.moera.node.model.StoryTypeUtil;
 import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.operations.BlockedUserOperations;
@@ -62,11 +62,22 @@ public class InstantsCreator {
         boolean blocked = false;
         if (!ObjectUtils.isEmpty(remoteOwnerName)) {
             blocked |= blockedUserOperations.isBlocked(
-                    nodeId(), new BlockedOperation[]{BlockedOperation.INSTANT}, remoteOwnerName, entryId,
-                    remoteNodeName, remotePostingId);
+                nodeId(),
+                List.of(BlockedOperation.INSTANT),
+                remoteOwnerName,
+                entryId,
+                remoteNodeName,
+                remotePostingId
+            );
         }
         blocked |= blockedInstantOperations.count(
-                nodeId(), storyType, entryId, remoteNodeName, remotePostingId, remoteOwnerName) > 0;
+            nodeId(),
+            storyType,
+            entryId,
+            remoteNodeName,
+            remotePostingId,
+            remoteOwnerName
+        ) > 0;
         return blocked;
     }
 

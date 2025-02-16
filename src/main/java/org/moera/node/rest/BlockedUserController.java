@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.BlockedUserFilter;
 import org.moera.lib.node.types.BlockedUserInfo;
 import org.moera.lib.node.types.BlockedUsersChecksums;
 import org.moera.lib.node.types.Result;
@@ -25,7 +26,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.BlockedUserAddedLiberin;
 import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
 import org.moera.node.model.BlockedUserAttributes;
-import org.moera.node.model.BlockedUserFilter;
 import org.moera.node.model.BlockedUserInfoUtil;
 import org.moera.node.model.BlockedUsersChecksumsUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
@@ -148,21 +148,31 @@ public class BlockedUserController {
 
     @PostMapping("/search")
     @Transactional
-    public List<BlockedUserInfo> search(@Valid @RequestBody BlockedUserFilter blockedUserFilter) {
+    public List<BlockedUserInfo> search(@RequestBody BlockedUserFilter blockedUserFilter) {
         log.info("POST /people/blocked-users/search");
 
-        if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && (blockedUserFilter.getNodeName() == null
-                    || !requestContext.isClient(blockedUserFilter.getNodeName(), Scope.VIEW_PEOPLE))) {
+        if (
+            !requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
+            && (
+                blockedUserFilter.getNodeName() == null
+                || !requestContext.isClient(blockedUserFilter.getNodeName(), Scope.VIEW_PEOPLE)
+            )
+        ) {
             throw new AuthenticationException();
         }
 
-        return blockedUserOperations.search(requestContext.nodeId(), blockedUserFilter.getBlockedOperations(),
-                        blockedUserFilter.getNodeName(), blockedUserFilter.getEntryId(),
-                        blockedUserFilter.getEntryNodeName(), blockedUserFilter.getEntryPostingId(),
-                        blockedUserFilter.getStrict() != null && blockedUserFilter.getStrict()).stream()
-                .map(bu -> BlockedUserInfoUtil.build(bu, requestContext.getOptions(), requestContext))
-                .collect(Collectors.toList());
+        return blockedUserOperations.search(
+            requestContext.nodeId(),
+            blockedUserFilter.getBlockedOperations(),
+            blockedUserFilter.getNodeName(),
+            Util.uuid(blockedUserFilter.getEntryId()).orElse(null),
+            blockedUserFilter.getEntryNodeName(),
+            blockedUserFilter.getEntryPostingId(),
+            blockedUserFilter.getStrict() != null && blockedUserFilter.getStrict()
+        )
+            .stream()
+            .map(bu -> BlockedUserInfoUtil.build(bu, requestContext.getOptions(), requestContext))
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/checksums")

@@ -24,6 +24,7 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.FeedInfo;
+import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.RemotePostingOrNode;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
@@ -49,7 +50,6 @@ import org.moera.node.liberin.model.FeedStoriesReadLiberin;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
 import org.moera.node.model.FeedSliceInfo;
-import org.moera.node.model.FeedStatus;
 import org.moera.node.model.FeedStatusChange;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfo;
@@ -401,13 +401,13 @@ public class FeedController {
 
     private void fillBlocked(String clientName, Map<String, PostingInfo> postingMap) {
         List<BlockedUser> blockedUsers = blockedUserOperations.search(
-                requestContext.nodeId(),
-                new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
-                clientName,
-                postingMap.keySet().stream().map(UUID::fromString).collect(Collectors.toList()),
-                null,
-                null,
-                false
+            requestContext.nodeId(),
+            List.of(BlockedOperation.COMMENT, BlockedOperation.REACTION),
+            clientName,
+            postingMap.keySet().stream().map(UUID::fromString).collect(Collectors.toList()),
+            null,
+            null,
+            false
         );
         for (BlockedUser blockedUser : blockedUsers) {
             if (blockedUser.isGlobal()) {

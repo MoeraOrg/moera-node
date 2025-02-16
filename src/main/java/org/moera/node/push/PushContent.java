@@ -3,11 +3,12 @@ package org.moera.node.push;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.moera.lib.node.types.FeedStatus;
+import org.moera.lib.node.types.FeedWithStatus;
 import org.moera.lib.node.types.PushContentType;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Story;
-import org.moera.node.model.FeedStatus;
-import org.moera.node.model.FeedWithStatus;
+import org.moera.node.model.FeedWithStatusUtil;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.operations.MediaAttachmentsProvider;
@@ -74,7 +75,7 @@ public class PushContent {
 
     public static PushContent feedUpdated(String feedName, FeedStatus feedStatus) {
         PushContent packet = new PushContent(PushContentType.FEED_UPDATED);
-        packet.setFeedStatus(new FeedWithStatus(feedName, feedStatus));
+        packet.setFeedStatus(FeedWithStatusUtil.build(feedName, feedStatus));
         return packet;
     }
 

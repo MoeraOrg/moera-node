@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.node.types.AvatarOrdinal;
+import org.moera.lib.node.types.AvatarsOrdered;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
@@ -31,11 +32,11 @@ import org.moera.node.media.ThumbnailUtil;
 import org.moera.node.model.AvatarAttributes;
 import org.moera.node.model.AvatarInfoUtil;
 import org.moera.node.model.AvatarOrdinalUtil;
-import org.moera.node.model.AvatarsOrdered;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.DigestingOutputStream;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -176,8 +177,8 @@ public class AvatarController {
     @PostMapping("/reorder")
     @Admin(Scope.UPDATE_PROFILE)
     @Transactional
-    public AvatarOrdinal[] reorder(@Valid @RequestBody AvatarsOrdered avatarsOrdered) {
-        int size = avatarsOrdered.getIds() != null ? avatarsOrdered.getIds().length : 0;
+    public AvatarOrdinal[] reorder(@RequestBody AvatarsOrdered avatarsOrdered) {
+        int size = avatarsOrdered.getIds() != null ? avatarsOrdered.getIds().size() : 0;
 
         log.info("POST /avatars/reorder ({} items)", size);
 
@@ -187,9 +188,11 @@ public class AvatarController {
         }
 
         int ordinal = 0;
-        for (UUID id : avatarsOrdered.getIds()) {
-            Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                    .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        for (String id : avatarsOrdered.getIds()) {
+            UUID avatarId = Util.uuid(id)
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+            Avatar avatar = avatarRepository.findByNodeIdAndId(requestContext.nodeId(), avatarId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
             avatar.setOrdinal(ordinal);
             result[ordinal] = AvatarOrdinalUtil.build(avatar.getId().toString(), ordinal);
             requestContext.send(new AvatarOrderedLiberin(avatar));

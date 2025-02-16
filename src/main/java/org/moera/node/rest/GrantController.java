@@ -3,13 +3,13 @@ package org.moera.node.rest;
 import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
+import org.moera.lib.naming.NodeName;
+import org.moera.lib.node.types.GrantChange;
 import org.moera.lib.node.types.GrantInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
-import org.moera.lib.naming.NodeName;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.GrantRepository;
@@ -17,7 +17,6 @@ import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.GrantUpdatedLiberin;
-import org.moera.node.model.GrantChange;
 import org.moera.node.model.GrantInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.GrantCache;
@@ -73,7 +72,7 @@ public class GrantController {
     @PutMapping("/{nodeName}")
     @Admin(Scope.GRANT)
     @Transactional
-    public GrantInfo put(@PathVariable String nodeName, @Valid @RequestBody GrantChange change) {
+    public GrantInfo put(@PathVariable String nodeName, @RequestBody GrantChange change) {
         log.info("PUT /grants/{nodeName}, (nodeName = {})", LogUtil.format(nodeName));
 
         nodeName = NodeName.expand(nodeName);

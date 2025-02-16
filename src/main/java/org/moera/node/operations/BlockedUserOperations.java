@@ -75,20 +75,37 @@ public class BlockedUserOperations {
     }
 
     public List<BlockedUser> search(
-        UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
-        String entryNodeName, String entryPostingId, boolean strict
+        UUID nodeId,
+        Collection<BlockedOperation> blockedOperations,
+        String remoteNodeName,
+        UUID entryId,
+        String entryNodeName,
+        String entryPostingId,
+        boolean strict
     ) {
         return search(nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId, strict);
     }
 
     public List<BlockedUser> search(
-            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, Collection<UUID> entryIds,
-            String entryNodeName, String entryPostingId, boolean strict
+        UUID nodeId,
+        Collection<BlockedOperation> blockedOperations,
+        String remoteNodeName,
+        Collection<UUID> entryIds,
+        String entryNodeName,
+        String entryPostingId,
+        boolean strict
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
         QContact contact = QContact.contact;
         Predicate where = buildFilter(
-                nodeId, blockedOperations, remoteNodeName, entryIds, entryNodeName, entryPostingId, strict);
+            nodeId,
+            blockedOperations,
+            remoteNodeName,
+            entryIds,
+            entryNodeName,
+            entryPostingId,
+            strict
+        );
         return new JPAQueryFactory(entityManager)
                 .selectFrom(blockedUser)
                 .leftJoin(blockedUser.contact, contact).fetchJoin()
@@ -97,45 +114,98 @@ public class BlockedUserOperations {
                 .fetch();
     }
 
-    public long count(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
-                      String entryNodeName, String entryPostingId, boolean strict) {
+    public long count(
+        UUID nodeId,
+        Collection<BlockedOperation> blockedOperations,
+        String remoteNodeName,
+        UUID entryId,
+        String entryNodeName,
+        String entryPostingId,
+        boolean strict
+    ) {
         Predicate where = buildFilter(
-                nodeId, blockedOperations, remoteNodeName, single(entryId), entryNodeName, entryPostingId, strict);
+            nodeId,
+            blockedOperations,
+            remoteNodeName,
+            single(entryId),
+            entryNodeName,
+            entryPostingId,
+            strict
+        );
         return blockedUserRepository.count(where);
     }
 
-    public boolean isBlocked(UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, UUID entryId,
-                             String entryNodeName, String entryPostingId) {
+    public boolean isBlocked(
+        UUID nodeId,
+        Collection<BlockedOperation> blockedOperations,
+        String remoteNodeName,
+        UUID entryId,
+        String entryNodeName,
+        String entryPostingId
+    ) {
         if (remoteNodeName == null) {
             return false;
         }
         return count(nodeId, blockedOperations, remoteNodeName, entryId, entryNodeName, entryPostingId, false) > 0;
     }
 
-    public boolean isBlocked(BlockedOperation[] blockedOperations, UUID entryId, String entryNodeName,
-                             String entryPostingId) {
-        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(Scope.IDENTIFY),
-                entryId, entryNodeName, entryPostingId);
+    public boolean isBlocked(
+        Collection<BlockedOperation> blockedOperations,
+        UUID entryId,
+        String entryNodeName,
+        String entryPostingId
+    ) {
+        return isBlocked(
+            requestContext.nodeId(),
+            blockedOperations,
+            requestContext.getClientName(Scope.IDENTIFY),
+            entryId,
+            entryNodeName,
+            entryPostingId
+        );
     }
 
     public boolean isBlocked(BlockedOperation blockedOperation, UUID entryId) {
-        return isBlocked(requestContext.nodeId(), new BlockedOperation[]{blockedOperation},
-                requestContext.getClientName(Scope.IDENTIFY), entryId, null, null);
+        return isBlocked(
+            requestContext.nodeId(),
+            List.of(blockedOperation),
+            requestContext.getClientName(Scope.IDENTIFY),
+            entryId,
+            null,
+            null
+        );
     }
 
-    public boolean isBlocked(BlockedOperation[] blockedOperations, UUID entryId) {
-        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(Scope.IDENTIFY),
-                entryId, null, null);
+    public boolean isBlocked(Collection<BlockedOperation> blockedOperations, UUID entryId) {
+        return isBlocked(
+            requestContext.nodeId(),
+            blockedOperations,
+            requestContext.getClientName(Scope.IDENTIFY),
+            entryId,
+            null,
+            null
+        );
     }
 
     public boolean isBlocked(BlockedOperation... blockedOperations) {
-        return isBlocked(requestContext.nodeId(), blockedOperations, requestContext.getClientName(Scope.IDENTIFY),
-                null, null, null);
+        return isBlocked(
+            requestContext.nodeId(),
+            Arrays.asList(blockedOperations),
+            requestContext.getClientName(Scope.IDENTIFY),
+            null,
+            null,
+            null
+        );
     }
 
     private static BooleanBuilder buildFilter(
-            UUID nodeId, BlockedOperation[] blockedOperations, String remoteNodeName, Collection<UUID> entryIds,
-            String entryNodeName, String entryPostingId, boolean strict
+        UUID nodeId,
+        Collection<BlockedOperation> blockedOperations,
+        String remoteNodeName,
+        Collection<UUID> entryIds,
+        String entryNodeName,
+        String entryPostingId,
+        boolean strict
     ) {
         QBlockedUser blockedUser = QBlockedUser.blockedUser;
         BooleanBuilder where = new BooleanBuilder();
@@ -185,13 +255,13 @@ public class BlockedUserOperations {
             return Collections.emptyList();
         }
         return search(
-                requestContext.nodeId(),
-                new BlockedOperation[]{BlockedOperation.COMMENT, BlockedOperation.REACTION},
-                clientName,
-                postingId,
-                null,
-                null,
-                false
+            requestContext.nodeId(),
+            List.of(BlockedOperation.COMMENT, BlockedOperation.REACTION),
+            clientName,
+            postingId,
+            null,
+            null,
+            false
         ).stream().map(BlockedUser::getBlockedOperation).collect(Collectors.toList());
     }
 

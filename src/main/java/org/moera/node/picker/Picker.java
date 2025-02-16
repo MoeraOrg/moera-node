@@ -268,7 +268,7 @@ public class Picker extends Task {
                     remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), attach.getMedia(), entryId);
             if (media != null) {
                 EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
-                attachment.setEmbedded(Boolean.TRUE.equals(attach.getEmbedded()));
+                attachment.setEmbedded(attach.isEmbedded());
                 attachment.setRemoteMediaId(attach.getMedia().getId());
                 attachment = entryAttachmentRepository.save(attachment);
                 revision.addAttachment(attachment);

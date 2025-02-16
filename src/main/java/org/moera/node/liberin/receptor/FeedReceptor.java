@@ -7,6 +7,7 @@ import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
 import org.moera.node.liberin.model.FeedSheriffDataUpdatedLiberin;
 import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
+import org.moera.node.model.FeedStatusUtil;
 import org.moera.node.model.event.FeedSheriffDataUpdatedEvent;
 import org.moera.node.model.event.FeedStatusUpdatedEvent;
 import org.moera.node.model.event.StoriesStatusUpdatedEvent;
@@ -20,8 +21,10 @@ public class FeedReceptor extends LiberinReceptorBase {
     public void statusUpdated(FeedStatusUpdatedLiberin liberin) {
         send(liberin, new FeedStatusUpdatedEvent(liberin.getFeedName(), liberin.getStatus(), true));
         if (!Feed.isAdmin(liberin.getFeedName())) {
-            send(liberin,
-                    new FeedStatusUpdatedEvent(liberin.getFeedName(), liberin.getStatus().notAdmin(), false));
+            send(
+                liberin,
+                new FeedStatusUpdatedEvent(liberin.getFeedName(), FeedStatusUtil.notAdmin(liberin.getStatus()), false)
+            );
         }
         if (liberin.getChange() != null) {
             send(liberin, new StoriesStatusUpdatedEvent(liberin.getFeedName(), liberin.getChange()));
@@ -43,8 +46,10 @@ public class FeedReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void sheriffDataUpdated(FeedSheriffDataUpdatedLiberin liberin) {
-        send(liberin, new FeedSheriffDataUpdatedEvent(liberin.getFeedName(), liberin.getSheriffs(),
-                liberin.getSheriffMarks()));
+        send(
+            liberin,
+            new FeedSheriffDataUpdatedEvent(liberin.getFeedName(), liberin.getSheriffs(), liberin.getSheriffMarks())
+        );
     }
 
 }

@@ -14,7 +14,6 @@ import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
 import org.moera.node.model.MediaAttachmentUtil;
-import org.moera.node.model.MediaAttachmentsCache;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

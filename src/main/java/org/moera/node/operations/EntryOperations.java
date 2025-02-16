@@ -18,7 +18,6 @@ import org.moera.node.data.EntryType;
 import org.moera.node.domain.Domains;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.model.MediaAttachmentUtil;
-import org.moera.node.model.MediaAttachmentsCache;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.Transaction;

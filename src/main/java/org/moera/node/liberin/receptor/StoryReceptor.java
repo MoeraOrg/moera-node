@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.types.FeedStatus;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.LiberinMapping;
@@ -13,7 +14,6 @@ import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
-import org.moera.node.model.FeedStatus;
 import org.moera.node.model.event.StoryAddedEvent;
 import org.moera.node.model.event.StoryDeletedEvent;
 import org.moera.node.model.event.StoryUpdatedEvent;
