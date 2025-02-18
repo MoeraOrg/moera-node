@@ -5,13 +5,16 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.Password;
+import org.moera.lib.node.types.Credentials;
+import org.moera.lib.node.types.CredentialsChange;
 import org.moera.lib.node.types.CredentialsCreated;
 import org.moera.lib.node.types.EmailHint;
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.validate.ValidationUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.RootAdmin;
 import org.moera.node.data.PasswordResetToken;
 import org.moera.node.data.PasswordResetTokenRepository;
@@ -20,8 +23,6 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PasswordResetLiberin;
-import org.moera.node.model.Credentials;
-import org.moera.node.model.CredentialsChange;
 import org.moera.node.model.CredentialsCreatedUtil;
 import org.moera.node.model.EmailHintUtil;
 import org.moera.node.model.OperationFailure;
@@ -70,12 +71,16 @@ public class CredentialsController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<Result> post(@Valid @RequestBody Credentials credentials) {
-        log.info("POST /credentials (login = '{}')", credentials.getLogin());
+    public ResponseEntity<Result> post(@RequestBody Credentials credentials) {
+        log.info("POST /credentials (login = {})", LogUtil.format(credentials.getLogin()));
+
+        credentials.validate();
 
         requestContext.getOptions().runInTransaction(options -> {
-            if (!ObjectUtils.isEmpty(options.getString("credentials.login"))
-                    && !ObjectUtils.isEmpty(options.getString("credentials.password-hash"))) {
+            if (
+                !ObjectUtils.isEmpty(options.getString("credentials.login"))
+                && !ObjectUtils.isEmpty(options.getString("credentials.password-hash"))
+            ) {
                 throw new OperationFailure("credentials.already-created");
             }
             options.set("credentials.login", credentials.getLogin());
@@ -87,24 +92,28 @@ public class CredentialsController {
 
     @PutMapping
     @Transactional
-    public Result put(@Valid @RequestBody CredentialsChange credentials) {
-        log.info("PUT /credentials (login = '{}')", credentials.getLogin());
+    public Result put(@RequestBody CredentialsChange credentials) {
+        log.info("PUT /credentials (login = {})", LogUtil.format(credentials.getLogin()));
+
+        credentials.validate();
 
         if (!ObjectUtils.isEmpty(credentials.getToken())) {
             PasswordResetToken token = passwordResetTokenRepository.findById(credentials.getToken())
-                    .orElseThrow(() -> new ValidationFailure("credentials.wrong-reset-token"));
-            if (!token.getNodeId().equals(requestContext.nodeId())) {
-                throw new ValidationFailure("credentials.wrong-reset-token");
-            }
-            if (token.getDeadline().before(Util.now())) {
-                throw new ValidationFailure("credentials.reset-token-expired");
-            }
+                .orElseThrow(() -> new ValidationFailure("credentials.wrong-reset-token"));
+            ValidationUtil.assertion(
+                token.getNodeId().equals(requestContext.nodeId()),
+                "credentials.wrong-reset-token"
+            );
+            ValidationUtil.assertion(token.getDeadline().after(Util.now()), "credentials.reset-token-expired");
             passwordResetTokenRepository.delete(token);
         } else {
-            if (!credentials.getLogin().equals(requestContext.getOptions().getString("credentials.login"))
-                    || ObjectUtils.isEmpty(credentials.getOldPassword())
-                    || !Password.validate(requestContext.getOptions().getString("credentials.password-hash"),
-                                          credentials.getOldPassword())) {
+            if (
+                !credentials.getLogin().equals(requestContext.getOptions().getString("credentials.login"))
+                || ObjectUtils.isEmpty(credentials.getOldPassword())
+                || !Password.validate(
+                    requestContext.getOptions().getString("credentials.password-hash"), credentials.getOldPassword()
+                )
+            ) {
                 throw new OperationFailure("credentials.login-incorrect");
             }
         }

@@ -1,10 +1,11 @@
 package org.moera.node.rest;
 
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.DeleteNodeStatus;
+import org.moera.lib.node.types.DeleteNodeText;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
@@ -12,11 +13,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.DeleteNodeCancelledLiberin;
 import org.moera.node.liberin.model.DeleteNodeRequestedLiberin;
 import org.moera.node.model.DeleteNodeStatusUtil;
-import org.moera.node.model.DeleteNodeText;
-import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,13 +41,13 @@ public class ProviderController {
 
     @PostMapping("/delete-node")
     @Admin(Scope.OTHER)
-    public DeleteNodeStatus deleteNode(@Valid @RequestBody DeleteNodeText deleteNodeText) {
+    public DeleteNodeStatus deleteNode(@RequestBody DeleteNodeText deleteNodeText) {
         log.info("POST /delete-node");
 
+        deleteNodeText.validate();
+
         String email = requestContext.getOptions().getString("profile.email");
-        if (ObjectUtils.isEmpty(email)) {
-            throw new ValidationFailure("delete-node.no-email");
-        }
+        ValidationUtil.notBlank(email, "delete-node.no-email");
 
         requestContext.getOptions().set("delete-node.requested", true);
 

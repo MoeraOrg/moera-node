@@ -12,18 +12,21 @@ import org.moera.lib.Rules;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.KeyPair;
 import org.moera.lib.crypto.MnemonicKey;
+import org.moera.lib.node.types.KeyMnemonic;
+import org.moera.lib.node.types.NameToRegister;
 import org.moera.lib.node.types.NodeNameInfo;
 import org.moera.lib.node.types.RegisteredNameSecret;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
+import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.auth.Admin;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.NodeNameChangedLiberin;
-import org.moera.node.model.KeyMnemonic;
-import org.moera.node.model.NameToRegister;
+import org.moera.node.model.KeyMnemonicUtil;
 import org.moera.node.model.NodeNameInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
@@ -63,12 +66,14 @@ public class NodeNameController {
     @PostMapping
     @Admin(Scope.NAME)
     @Transactional
-    public RegisteredNameSecret post(@Valid @RequestBody NameToRegister nameToRegister, HttpServletRequest request) {
-        if (!Rules.isNameValid(nameToRegister.getName())) {
-            throw new OperationFailure("nameToRegister.name.invalid");
-        }
+    public RegisteredNameSecret post(@RequestBody NameToRegister nameToRegister, HttpServletRequest request) {
+        log.info("POST /node-name (name = {})", LogUtil.format(nameToRegister.getName()));
 
-        log.info("POST /node-name (name = '{}')", nameToRegister.getName());
+        nameToRegister.validate();
+        ValidationUtil.assertion(
+            Rules.isNameValid(nameToRegister.getName()),
+            "node-name.name.invalid"
+        );
 
         Options options = requestContext.getOptions();
         if (options.getUuid("naming.operation.id") != null) {
@@ -164,14 +169,20 @@ public class NodeNameController {
     @PostMapping("/mnemonic")
     @Admin(Scope.NAME)
     @Transactional
-    public Result postMnemonic(@Valid @RequestBody KeyMnemonic mnemonic) {
+    public Result postMnemonic(@RequestBody KeyMnemonic mnemonic) {
         log.info("POST /node-name/mnemonic");
 
+        mnemonic.validate();
         requestContext.getOptions().set("profile.updating-key.mnemonic", String.join(" ", mnemonic.getMnemonic()));
 
-        requestContext.send(new NodeNameChangedLiberin(
-                requestContext.nodeName(), requestContext.nodeName(), requestContext.getOptions(),
-                requestContext.getAvatar()));
+        requestContext.send(
+            new NodeNameChangedLiberin(
+                requestContext.nodeName(),
+                requestContext.nodeName(),
+                requestContext.getOptions(),
+                requestContext.getAvatar()
+            )
+        );
 
         return Result.OK;
     }
@@ -186,7 +197,7 @@ public class NodeNameController {
             throw new ObjectNotFoundFailure("not-found");
         }
 
-        return new KeyMnemonic(mnemonic.split(" "));
+        return KeyMnemonicUtil.build(Arrays.asList(mnemonic.split(" ")));
     }
 
     @DeleteMapping("/mnemonic")

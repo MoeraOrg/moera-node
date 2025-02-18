@@ -7,12 +7,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import com.github.slugify.Slugify;
+import org.moera.lib.node.types.DomainAttributes;
 import org.moera.lib.node.types.DomainAvailable;
 import org.moera.lib.node.types.DomainInfo;
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.RootAdmin;
@@ -27,12 +28,10 @@ import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.DomainAddedLiberin;
 import org.moera.node.liberin.model.DomainDeletedLiberin;
 import org.moera.node.liberin.model.DomainUpdatedLiberin;
-import org.moera.node.model.DomainAttributes;
 import org.moera.node.model.DomainAvailableUtil;
 import org.moera.node.model.DomainInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.ValidationFailure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -96,15 +95,17 @@ public class DomainsController {
     @ProviderApi
     @PostMapping
     @Transactional
-    public ResponseEntity<DomainInfo> post(@RequestBody @Valid DomainAttributes domainAttributes) {
-        log.info("POST /domains (name = {}, nodeId = {})",
-                LogUtil.format(domainAttributes.getName()), LogUtil.format(domainAttributes.getNodeId()));
+    public ResponseEntity<DomainInfo> post(@RequestBody DomainAttributes domainAttributes) {
+        log.info(
+            "POST /domains (name = {}, nodeId = {})",
+            LogUtil.format(domainAttributes.getName()), LogUtil.format(domainAttributes.getNodeId())
+        );
+
+        domainAttributes.validate();
+        ValidationUtil.notBlank(domainAttributes.getName(), "domain.name.blank");
 
         if (!config.isRegistrationPublic() && !requestContext.isRootAdmin()) {
             throw new AuthenticationException();
-        }
-        if (ObjectUtils.isEmpty(domainAttributes.getName())) {
-            throw new ValidationFailure("domainAttributes.name.blank");
         }
         String name = domainAttributes.getName().toLowerCase();
         UUID nodeId = domainAttributes.getNodeId() == null ? UUID.randomUUID() : domainAttributes.getNodeId();
@@ -132,12 +133,15 @@ public class DomainsController {
     @RootAdmin
     @PutMapping("/{name}")
     @Transactional
-    public DomainInfo put(@PathVariable String name, @RequestBody @Valid DomainAttributes domainAttributes) {
+    public DomainInfo put(@PathVariable String name, @RequestBody DomainAttributes domainAttributes) {
         log.info("PUT /domains/{}", name);
+
+        domainAttributes.validate();
 
         name = name.toLowerCase();
         String newName = !ObjectUtils.isEmpty(domainAttributes.getName())
-                ? domainAttributes.getName().toLowerCase() : name;
+            ? domainAttributes.getName().toLowerCase()
+            : name;
         UUID nodeId = domainAttributes.getNodeId() == null ? UUID.randomUUID() : domainAttributes.getNodeId();
 
         domains.lockWrite();

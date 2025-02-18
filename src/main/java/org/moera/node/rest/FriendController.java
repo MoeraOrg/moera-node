@@ -9,9 +9,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.ContactInfo;
+import org.moera.lib.node.types.FriendDescription;
 import org.moera.lib.node.types.FriendGroupAssignment;
 import org.moera.lib.node.types.FriendGroupDetails;
 import org.moera.lib.node.types.FriendInfo;
@@ -32,7 +32,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FriendshipUpdatedLiberin;
 import org.moera.node.model.ContactInfoUtil;
-import org.moera.node.model.FriendDescription;
+import org.moera.node.model.FriendDescriptionUtil;
 import org.moera.node.model.FriendGroupAssignmentUtil;
 import org.moera.node.model.FriendGroupDetailsUtil;
 import org.moera.node.model.FriendInfoUtil;
@@ -155,13 +155,15 @@ public class FriendController {
     @PutMapping
     @Admin(Scope.FRIEND)
     @Transactional
-    public List<FriendInfo> put(@Valid @RequestBody FriendDescription[] friendDescriptions) {
+    public List<FriendInfo> put(@RequestBody FriendDescription[] friendDescriptions) {
         log.info("PUT /people/friends");
 
         List<FriendInfo> result = new ArrayList<>();
 
         Map<UUID, FriendGroup> groups = new HashMap<>();
         for (FriendDescription friendDescription : friendDescriptions) {
+            friendDescription.validate();
+
             Contact contact = contactOperations.find(friendDescription.getNodeName());
             FriendInfo friendInfo = FriendInfoUtil.build(contact, requestContext.getOptions(), requestContext);
             result.add(friendInfo);
@@ -172,7 +174,7 @@ public class FriendController {
                     OperationsValidator.validateOperations(
                         ga.getOperations(),
                         false,
-                        "friendDescription.groups.wrong-principal"
+                        "friend.operations.wrong-principal"
                     );
                     Util.uuid(ga.getId()).ifPresent(
                         groupId -> targetGroups.put(groupId, Pair.of(ga, new Friend()))
@@ -180,8 +182,9 @@ public class FriendController {
                 }
             }
 
-            List<Friend> friends = new ArrayList<>(friendRepository.findAllByNodeIdAndName(
-                    requestContext.nodeId(), friendDescription.getNodeName()));
+            List<Friend> friends = new ArrayList<>(
+                friendRepository.findAllByNodeIdAndName(requestContext.nodeId(), friendDescription.getNodeName())
+            );
             for (Friend friend : friends) {
                 var target = targetGroups.get(friend.getFriendGroup().getId());
                 if (target != null) {
@@ -197,11 +200,11 @@ public class FriendController {
                 if (friend.getId() == null) {
                     friend.setId(UUID.randomUUID());
                     friend.setNodeId(requestContext.nodeId());
-                    friendDescription.toFriend(friend);
+                    FriendDescriptionUtil.toFriend(friendDescription, friend);
                     FriendGroup group = groups.computeIfAbsent(
-                            target.getKey(),
-                            id -> friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                                .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"))
+                        target.getKey(),
+                        id -> friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
+                            .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"))
                     );
                     friend.setFriendGroup(group);
                     FriendGroupAssignmentUtil.toFriend(target.getValue().getFirst(), friend);
@@ -224,7 +227,8 @@ public class FriendController {
 
             requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS, friendDescription.getNodeName());
             requestContext.send(
-                    new FriendshipUpdatedLiberin(friendDescription.getNodeName(), friendInfo.getGroups(), contact));
+                new FriendshipUpdatedLiberin(friendDescription.getNodeName(), friendInfo.getGroups(), contact)
+            );
         }
 
         return result;

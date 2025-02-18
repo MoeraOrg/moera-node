@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.validate.ValidationException;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.auth.InvalidCarteException;
@@ -116,6 +117,13 @@ public class ExceptionsControllerAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result pageNotFound(PageNotFoundException e) {
         return new Result("not-found", "Page not found");
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result validationException(ValidationException e) {
+        String message = messageSource.getMessage(e.getErrorCode(), new Object[0], Locale.getDefault());
+        return new Result(e.getErrorCode(), message);
     }
 
     @ExceptionHandler

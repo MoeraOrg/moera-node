@@ -6,8 +6,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.BlockedUserAttributes;
 import org.moera.lib.node.types.BlockedUserFilter;
 import org.moera.lib.node.types.BlockedUserInfo;
 import org.moera.lib.node.types.BlockedUsersChecksums;
@@ -25,11 +25,10 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.BlockedUserAddedLiberin;
 import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
-import org.moera.node.model.BlockedUserAttributes;
+import org.moera.node.model.BlockedUserAttributesUtil;
 import org.moera.node.model.BlockedUserInfoUtil;
 import org.moera.node.model.BlockedUsersChecksumsUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.text.TextConverter;
@@ -72,24 +71,25 @@ public class BlockedUserController {
     @PostMapping
     @Admin(Scope.BLOCK)
     @Transactional
-    public ResponseEntity<BlockedUserInfo> post(
-            @Valid @RequestBody BlockedUserAttributes blockedUserAttributes) {
-        log.info("POST /people/blocked-users (blockedOperation = {}, nodeName = {}, entryId = {}, entryNodeName = {}"
-                        + " entryPostingId = {})",
-                LogUtil.format(blockedUserAttributes.getBlockedOperation().toString()),
-                LogUtil.format(blockedUserAttributes.getNodeName()),
-                LogUtil.format(blockedUserAttributes.getEntryId()),
-                LogUtil.format(blockedUserAttributes.getEntryNodeName()),
-                LogUtil.format(blockedUserAttributes.getEntryPostingId()));
+    public ResponseEntity<BlockedUserInfo> post(@RequestBody BlockedUserAttributes blockedUserAttributes) {
+        log.info(
+            "POST /people/blocked-users (blockedOperation = {}, nodeName = {}, entryId = {}, entryNodeName = {}"
+                + " entryPostingId = {})",
+            LogUtil.format(blockedUserAttributes.getBlockedOperation().toString()),
+            LogUtil.format(blockedUserAttributes.getNodeName()),
+            LogUtil.format(blockedUserAttributes.getEntryId()),
+            LogUtil.format(blockedUserAttributes.getEntryNodeName()),
+            LogUtil.format(blockedUserAttributes.getEntryPostingId())
+        );
 
-        if (blockedUserAttributes.getBlockedOperation() == null) {
-            throw new ValidationFailure("blockedUserAttributes.blockedOperation.blank");
-        }
+        blockedUserAttributes.validate();
 
         Entry entry = null;
         if (blockedUserAttributes.getEntryId() != null) {
-            entry = entryRepository.findByNodeIdAndId(requestContext.nodeId(), blockedUserAttributes.getEntryId())
-                    .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
+            UUID entryId = Util.uuid(blockedUserAttributes.getEntryId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
+            entry = entryRepository.findByNodeIdAndId(requestContext.nodeId(), entryId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("entry.not-found"));
         }
 
         BlockedUser blockedUser = new BlockedUser();
@@ -97,7 +97,7 @@ public class BlockedUserController {
         blockedUser.setNodeId(requestContext.nodeId());
         blockedUser.setEntry(entry);
         blockedUser.setCreatedAt(Util.now());
-        blockedUserAttributes.toBlockedInstant(blockedUser, textConverter);
+        BlockedUserAttributesUtil.toBlockedUser(blockedUserAttributes, blockedUser, textConverter);
         blockedUser = blockedUserRepository.save(blockedUser);
 
         if (blockedUser.isGlobal() && blockedUser.getDeadline() == null) {
@@ -110,7 +110,7 @@ public class BlockedUserController {
         requestContext.send(new BlockedUserAddedLiberin(blockedUser));
 
         return ResponseEntity.created(URI.create("/blocked-users/" + blockedUser.getId()))
-                .body(BlockedUserInfoUtil.build(blockedUser, requestContext.getOptions(), requestContext));
+            .body(BlockedUserInfoUtil.build(blockedUser, requestContext.getOptions(), requestContext));
     }
 
     @GetMapping("/{id}")

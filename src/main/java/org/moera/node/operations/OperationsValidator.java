@@ -5,6 +5,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.moera.lib.node.types.CommentOperations;
+import org.moera.lib.node.types.FriendGroupOperations;
 import org.moera.lib.node.types.FriendOperations;
 import org.moera.lib.node.types.ReactionOperations;
 import org.moera.lib.node.types.SubscriberOperations;
@@ -125,11 +126,6 @@ public class OperationsValidator {
             Pair.of("view",
                     PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
                     | PrincipalFlag.PRIVATE)
-    );
-
-    public static final List<Pair<String, Integer>> FRIEND_GROUP_OPERATIONS = List.of(
-            Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.PRIVATE | PrincipalFlag.ADMIN)
     );
 
     public static void validateOperations(Function<String, Principal> getPrincipal,
@@ -290,6 +286,20 @@ public class OperationsValidator {
         v.accept(
             operations.getView(),
             PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.PRIVATE
+        );
+    }
+
+    public static void validateOperations(FriendGroupOperations operations, boolean includeUnset, String errorCode) {
+        if (operations == null) {
+            return;
+        }
+
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        v.accept(
+            operations.getView(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.PRIVATE | PrincipalFlag.ADMIN
         );
     }
 

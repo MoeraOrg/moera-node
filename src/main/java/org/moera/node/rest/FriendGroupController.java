@@ -6,9 +6,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.FriendGroupDescription;
 import org.moera.lib.node.types.FriendGroupInfo;
+import org.moera.lib.node.types.FriendGroupOperations;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
@@ -27,7 +28,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.FriendGroupAddedLiberin;
 import org.moera.node.liberin.model.FriendGroupDeletedLiberin;
 import org.moera.node.liberin.model.FriendGroupUpdatedLiberin;
-import org.moera.node.model.FriendGroupDescription;
+import org.moera.node.model.FriendGroupDescriptionUtil;
 import org.moera.node.model.FriendGroupInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.OperationsValidator;
@@ -96,19 +97,26 @@ public class FriendGroupController {
     @PostMapping
     @Admin(Scope.FRIEND)
     @Transactional
-    public FriendGroupInfo post(@Valid @RequestBody FriendGroupDescription friendGroupDescription) {
-        log.info("POST /people/friends/groups (title = {}, viewPrincipal = {})",
-                LogUtil.format(friendGroupDescription.getTitle()),
-                LogUtil.format(ObjectUtils.nullSafeToString(friendGroupDescription.getPrincipal("view"))));
+    public FriendGroupInfo post(@RequestBody FriendGroupDescription friendGroupDescription) {
+        log.info(
+            "POST /people/friends/groups (title = {}, viewPrincipal = {})",
+            LogUtil.format(friendGroupDescription.getTitle()),
+            LogUtil.format(ObjectUtils.nullSafeToString(
+                FriendGroupOperations.getView(friendGroupDescription.getOperations(), null)
+            ))
+        );
 
-        OperationsValidator.validateOperations(friendGroupDescription::getPrincipal,
-                OperationsValidator.FRIEND_GROUP_OPERATIONS, false,
-                "friendGroupDescription.operations.wrong-principal");
+        friendGroupDescription.validate();
+        OperationsValidator.validateOperations(
+            friendGroupDescription.getOperations(),
+            false,
+            "friend-group.operations.wrong-principal"
+        );
 
         FriendGroup friendGroup = new FriendGroup();
         friendGroup.setId(UUID.randomUUID());
         friendGroup.setNodeId(requestContext.nodeId());
-        friendGroupDescription.toFriendGroup(friendGroup);
+        FriendGroupDescriptionUtil.toFriendGroup(friendGroupDescription, friendGroup);
         friendGroup = friendGroupRepository.save(friendGroup);
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
@@ -120,20 +128,28 @@ public class FriendGroupController {
     @PutMapping("/{id}")
     @Admin(Scope.FRIEND)
     @Transactional
-    public FriendGroupInfo put(@PathVariable UUID id,
-                               @Valid @RequestBody FriendGroupDescription friendGroupDescription) {
-        log.info("PUT /people/friends/groups/{id} (id = {}, title = {}, viewPrincipal = {})",
-                LogUtil.format(id), LogUtil.format(friendGroupDescription.getTitle()),
-                LogUtil.format(ObjectUtils.nullSafeToString(friendGroupDescription.getPrincipal("view"))));
+    public FriendGroupInfo put(
+        @PathVariable UUID id, @RequestBody FriendGroupDescription friendGroupDescription
+    ) {
+        log.info(
+            "PUT /people/friends/groups/{id} (id = {}, title = {}, viewPrincipal = {})",
+            LogUtil.format(id),
+            LogUtil.format(friendGroupDescription.getTitle()),
+            LogUtil.format(ObjectUtils.nullSafeToString(
+                FriendGroupOperations.getView(friendGroupDescription.getOperations(), null)
+            ))
+        );
 
-        OperationsValidator.validateOperations(friendGroupDescription::getPrincipal,
-                OperationsValidator.FRIEND_GROUP_OPERATIONS, false,
-                "friendGroupDescription.operations.wrong-principal");
+        OperationsValidator.validateOperations(
+            friendGroupDescription.getOperations(),
+            false,
+            "friend-group.operations.wrong-principal"
+        );
 
         FriendGroup friendGroup = friendGroupRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("friend-group.not-found"));
         Principal latestViewPrincipal = friendGroup.getViewPrincipal();
-        friendGroupDescription.toFriendGroup(friendGroup);
+        FriendGroupDescriptionUtil.toFriendGroup(friendGroupDescription, friendGroup);
 
         requestContext.invalidateFriendCache(FriendCachePart.NODE_GROUPS, null);
         requestContext.invalidateFriendCache(FriendCachePart.CLIENT_GROUPS_ALL, null);

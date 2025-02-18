@@ -7,13 +7,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.AvatarAttributes;
 import org.moera.lib.node.types.AvatarInfo;
 import org.moera.lib.node.types.AvatarOrdinal;
 import org.moera.lib.node.types.AvatarsOrdered;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Avatar;
@@ -29,12 +30,10 @@ import org.moera.node.liberin.model.AvatarOrderedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MimeUtils;
 import org.moera.node.media.ThumbnailUtil;
-import org.moera.node.model.AvatarAttributes;
 import org.moera.node.model.AvatarInfoUtil;
 import org.moera.node.model.AvatarOrdinalUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -67,49 +66,53 @@ public class AvatarController {
     @PostMapping
     @Admin(Scope.UPDATE_PROFILE)
     @Transactional
-    public AvatarInfo post(@Valid @RequestBody AvatarAttributes avatarAttributes) throws IOException {
-        log.info("POST /avatars (mediaId = {}, clipX = {}, clipY = {}, clipSize = {}, shape = {})",
-                LogUtil.format(avatarAttributes.getMediaId()), LogUtil.format(avatarAttributes.getClipX()),
-                LogUtil.format(avatarAttributes.getClipY()), LogUtil.format(avatarAttributes.getClipSize()),
-                LogUtil.format(avatarAttributes.getShape()));
+    public AvatarInfo post(@RequestBody AvatarAttributes avatarAttributes) throws IOException {
+        log.info(
+            "POST /avatars (mediaId = {}, clipX = {}, clipY = {}, clipSize = {}, shape = {})",
+            LogUtil.format(avatarAttributes.getMediaId()), LogUtil.format(avatarAttributes.getClipX()),
+            LogUtil.format(avatarAttributes.getClipY()), LogUtil.format(avatarAttributes.getClipSize()),
+            LogUtil.format(avatarAttributes.getShape())
+        );
+
+        avatarAttributes.validate();
 
         MediaFile mediaFile = mediaFileRepository.findById(avatarAttributes.getMediaId()).orElse(null);
-        if (mediaFile == null || !mediaFile.isExposed()) {
-            throw new ValidationFailure("avatarAttributes.mediaId.not-found");
-        }
-        if (mediaFile.getSizeX() == null || mediaFile.getSizeY() == null) {
-            throw new ValidationFailure("avatar.media-unsupported");
-        }
+        ValidationUtil.assertion(mediaFile != null && mediaFile.isExposed(), "media.not-found");
+        ValidationUtil.assertion(
+            mediaFile.getSizeX() != null && mediaFile.getSizeY() != null,
+            "avatar.media-unsupported"
+        );
 
         rotateClipToOrientation(avatarAttributes, mediaFile);
-        if (avatarAttributes.getClipX() < 0
-                || avatarAttributes.getClipX() + avatarAttributes.getClipSize() > mediaFile.getSizeX()) {
-            throw new ValidationFailure("avatarAttributes.clipX.out-of-range");
-        }
-        if (avatarAttributes.getClipY() < 0
-                || avatarAttributes.getClipY() + avatarAttributes.getClipSize() > mediaFile.getSizeY()) {
-            throw new ValidationFailure("avatarAttributes.clipY.out-of-range");
-        }
+        ValidationUtil.assertion(
+            avatarAttributes.getClipX() >= 0
+                && avatarAttributes.getClipX() + avatarAttributes.getClipSize() <= mediaFile.getSizeX(),
+            "avatar.clip-x.out-of-range"
+        );
+        ValidationUtil.assertion(
+            avatarAttributes.getClipY() >= 0
+                && avatarAttributes.getClipY() + avatarAttributes.getClipSize() <= mediaFile.getSizeY(),
+            "avatar.clip-y.out-of-range"
+        );
 
         var thumbnailFormat = MimeUtils.thumbnail(mediaFile.getMimeType());
-        if (thumbnailFormat == null) {
-            throw new ValidationFailure("avatar.media-unsupported");
-        }
+        ValidationUtil.assertion(thumbnailFormat != null, "avatar.media-unsupported");
 
         var tmp = mediaOperations.tmpFile();
         try {
             DigestingOutputStream out = new DigestingOutputStream(tmp.getOutputStream());
 
             ThumbnailUtil.thumbnailOf(mediaOperations.getPath(mediaFile).toFile(), mediaFile.getMimeType())
-                    .rotate(avatarAttributes.getRotate())
-                    .sourceRegion(
-                            avatarAttributes.getClipX(), avatarAttributes.getClipY(),
-                            avatarAttributes.getClipSize(), avatarAttributes.getClipSize())
-                    .size(avatarAttributes.getAvatarSize(), avatarAttributes.getAvatarSize())
-                    .toOutputStream(out);
+                .rotate(avatarAttributes.getRotate())
+                .sourceRegion(
+                        avatarAttributes.getClipX(), avatarAttributes.getClipY(),
+                        avatarAttributes.getClipSize(), avatarAttributes.getClipSize())
+                .size(avatarAttributes.getAvatarSize(), avatarAttributes.getAvatarSize())
+                .toOutputStream(out);
 
             MediaFile avatarFile = mediaOperations.putInPlace(
-                    out.getHash(), thumbnailFormat.mimeType, tmp.getPath(), out.getDigest(), true);
+                out.getHash(), thumbnailFormat.mimeType, tmp.getPath(), out.getDigest(), true
+            );
             avatarFile = mediaFileRepository.save(avatarFile);
 
             Avatar avatar = new Avatar();

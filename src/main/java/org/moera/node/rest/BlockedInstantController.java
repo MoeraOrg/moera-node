@@ -27,7 +27,6 @@ import org.moera.node.model.BlockedInstantAttributesUtil;
 import org.moera.node.model.BlockedInstantInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.StoryTypeUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedInstantOperations;
 import org.moera.node.operations.ReminderOperations;
 import org.moera.node.util.Util;
@@ -67,15 +66,15 @@ public class BlockedInstantController {
     @Admin(Scope.OTHER)
     @Transactional
     public ResponseEntity<BlockedInstantInfo> post(@RequestBody BlockedInstantAttributes blockedInstantAttributes) {
-        log.info("POST /blocked-instants (storyType = {}, entryId = {}, remoteNodeName = {}, remotePostingId = {})",
-                LogUtil.format(blockedInstantAttributes.getStoryType().toString()),
-                LogUtil.format(blockedInstantAttributes.getEntryId()),
-                LogUtil.format(blockedInstantAttributes.getRemoteNodeName()),
-                LogUtil.format(blockedInstantAttributes.getRemotePostingId()));
+        log.info(
+            "POST /blocked-instants (storyType = {}, entryId = {}, remoteNodeName = {}, remotePostingId = {})",
+            LogUtil.format(blockedInstantAttributes.getStoryType().toString()),
+            LogUtil.format(blockedInstantAttributes.getEntryId()),
+            LogUtil.format(blockedInstantAttributes.getRemoteNodeName()),
+            LogUtil.format(blockedInstantAttributes.getRemotePostingId())
+        );
 
-        if (blockedInstantAttributes.getStoryType() == null) {
-            throw new ValidationFailure("blockedInstantAttributes.storyType.blank");
-        }
+        blockedInstantAttributes.validate();
         UUID entryId = Util.uuidOrNull(
             blockedInstantAttributes.getEntryId(),
             () -> new ObjectNotFoundFailure("entry.not-found")

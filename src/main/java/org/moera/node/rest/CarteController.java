@@ -16,6 +16,7 @@ import org.moera.lib.node.types.CarteAttributes;
 import org.moera.lib.node.types.CarteInfo;
 import org.moera.lib.node.types.CarteSet;
 import org.moera.lib.node.types.CarteVerificationInfo;
+import org.moera.lib.node.types.ClientCarte;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -27,7 +28,6 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.CarteInfoUtil;
-import org.moera.node.model.ClientCarte;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.util.UriUtil;
 import org.slf4j.Logger;
@@ -123,8 +123,9 @@ public class CarteController {
         }
     }
 
-    private List<CarteInfo> generateCarteList(String ownerName, PrivateKey signingKey, InetAddress remoteAddress,
-                                              long scopeMask, long adminMask, int limit) {
+    private List<CarteInfo> generateCarteList(
+        String ownerName, PrivateKey signingKey, InetAddress remoteAddress, long scopeMask, long adminMask, int limit
+    ) {
         List<CarteInfo> cartes = new ArrayList<>();
         Instant beginning = Instant.now().minusSeconds(BEGINNING_IN_PAST);
         for (int i = 0; i < limit; i++) {
@@ -141,8 +142,10 @@ public class CarteController {
     @Admin(Scope.OTHER)
     @Entitled
     @Transactional
-    public CarteVerificationInfo verify(@Valid @RequestBody ClientCarte clientCarte) {
+    public CarteVerificationInfo verify(@RequestBody ClientCarte clientCarte) {
         log.info("POST /cartes/verify");
+
+        clientCarte.validate();
 
         CarteVerificationInfo info = new CarteVerificationInfo();
 
