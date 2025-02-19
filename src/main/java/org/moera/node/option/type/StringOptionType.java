@@ -1,21 +1,15 @@
 package org.moera.node.option.type;
 
-import org.moera.node.option.OptionTypeModifiers;
-import org.moera.node.option.exception.DeserializeOptionValueException;
-import org.moera.node.util.Util;
+import org.moera.lib.node.types.SettingTypeModifiers;
 
 @OptionType("string")
 public class StringOptionType extends OptionTypeBase {
 
     @Override
-    public StringOptionTypeModifiers parseTypeModifiers(OptionTypeModifiers modifiers) {
+    public StringOptionTypeModifiers parseTypeModifiers(SettingTypeModifiers modifiers) {
         StringOptionTypeModifiers stringMods = new StringOptionTypeModifiers();
         if (modifiers.getMultiline() != null) {
-            Boolean multiline = Util.toBoolean(modifiers.getMultiline());
-            if (multiline == null) {
-                throw new DeserializeOptionValueException("bool", modifiers.getMultiline());
-            }
-            stringMods.setMultiline(multiline);
+            stringMods.setMultiline(modifiers.getMultiline());
         }
         return stringMods;
     }

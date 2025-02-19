@@ -14,12 +14,13 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import io.hypersistence.utils.hibernate.type.basic.Inet;
+import org.moera.lib.node.types.PluginDescription;
 import org.moera.lib.node.types.PluginInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Token;
@@ -33,7 +34,7 @@ import org.moera.node.liberin.model.PluginAddedLiberin;
 import org.moera.node.liberin.model.PluginDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PluginDescription;
+import org.moera.node.model.PluginDescriptionUtil;
 import org.moera.node.model.PluginInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.OptionsOperations;
@@ -101,8 +102,11 @@ public class PluginController {
     @ProviderApi
     @PostMapping
     @Transactional
-    public PluginInfo post(@RequestBody @Valid PluginDescription pluginDescription) {
+    public PluginInfo post(@RequestBody PluginDescription pluginDescription) {
         log.info("POST /plugins (name = {})", LogUtil.format(pluginDescription.getName()));
+
+        pluginDescription.validate();
+        ValidationUtil.assertion(PluginDescriptionUtil.isNameValid(pluginDescription.getName()), "plugin.name.invalid");
 
         UUID nodeId;
         if (requestContext.isRootAdmin()) {
@@ -114,7 +118,7 @@ public class PluginController {
         }
 
         PluginDescriptor descriptor = new PluginDescriptor(nodeId);
-        pluginDescription.toDescriptor(descriptor);
+        PluginDescriptionUtil.toDescriptor(pluginDescription, descriptor);
         try {
             plugins.add(descriptor);
             if (!ObjectUtils.isEmpty(pluginDescription.getOptions())) {
@@ -124,7 +128,7 @@ public class PluginController {
         } catch (DuplicatePluginException e) {
             throw new ValidationFailure("plugin.already-exists");
         } catch (UnknownOptionTypeException e) {
-            throw new ValidationFailure("pluginDescription.options.unknown-type");
+            throw new ValidationFailure("plugin.options.unknown-type");
         } catch (Throwable e) {
             plugins.remove(nodeId, descriptor.getName());
             throw e;
@@ -150,9 +154,9 @@ public class PluginController {
         log.info("GET /plugins");
 
         return plugins.getNames(requestContext.nodeId()).stream()
-                .map(name -> getPluginDescriptor(name, false))
-                .map(desc -> PluginInfoUtil.build(desc, optionsMetadata, requestContext.isRootAdmin()))
-                .collect(Collectors.toList());
+            .map(name -> getPluginDescriptor(name, false))
+            .map(desc -> PluginInfoUtil.build(desc, optionsMetadata, requestContext.isRootAdmin()))
+            .collect(Collectors.toList());
     }
 
     @ProviderApi
@@ -167,10 +171,12 @@ public class PluginController {
 
     @ProviderApi
     @RequestMapping("/{pluginName}/**")
-    public ResponseEntity<String> proxy(@PathVariable String pluginName, @RequestBody(required = false) String body,
-                                        HttpMethod method, HttpServletRequest request)
-            throws PluginInvocationException {
-
+    public ResponseEntity<String> proxy(
+        @PathVariable String pluginName,
+        @RequestBody(required = false) String body,
+        HttpMethod method,
+        HttpServletRequest request
+    ) throws PluginInvocationException {
         log.info("{} /plugins/{pluginName}/... (pluginName = {})", method.name(), LogUtil.format(pluginName));
 
         PluginDescriptor descriptor = getPluginDescriptor(pluginName, false);
@@ -179,17 +185,19 @@ public class PluginController {
         }
 
         try {
-            HttpResponse<String> response = getPluginClient().send(getPluginRequest(descriptor, body, method, request),
-                    HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = getPluginClient().send(
+                getPluginRequest(descriptor, body, method, request),
+                HttpResponse.BodyHandlers.ofString()
+            );
             return ResponseEntity
-                    .status(response.statusCode())
-                    .headers(convertHeaders(response.headers()))
-                    .body(response.body());
+                .status(response.statusCode())
+                .headers(convertHeaders(response.headers()))
+                .body(response.body());
         } catch (HttpClientErrorException e) {
             return ResponseEntity
-                    .status(e.getStatusCode())
-                    .headers(e.getResponseHeaders())
-                    .body(e.getResponseBodyAsString());
+                .status(e.getStatusCode())
+                .headers(e.getResponseHeaders())
+                .body(e.getResponseBodyAsString());
         } catch (IOException | InterruptedException e) {
             throw new PluginInvocationException(e);
         }
@@ -197,9 +205,9 @@ public class PluginController {
 
     private HttpClient getPluginClient() {
         return HttpClient.newBuilder()
-                .followRedirects(HttpClient.Redirect.NEVER)
-                .connectTimeout(PLUGIN_CONNECTION_TIMEOUT)
-                .build();
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .connectTimeout(PLUGIN_CONNECTION_TIMEOUT)
+            .build();
     }
 
     private URI getPluginUri(PluginDescriptor descriptor, HttpServletRequest request) {
@@ -221,19 +229,21 @@ public class PluginController {
         return uriBuilder.build().toUri();
     }
 
-    private HttpRequest getPluginRequest(PluginDescriptor descriptor, String body, HttpMethod method,
-                                         HttpServletRequest request) {
+    private HttpRequest getPluginRequest(
+        PluginDescriptor descriptor, String body, HttpMethod method, HttpServletRequest request
+    ) {
         var bodyPublisher = body != null
-                ? HttpRequest.BodyPublishers.ofString(body)
-                : HttpRequest.BodyPublishers.noBody();
+            ? HttpRequest.BodyPublishers.ofString(body)
+            : HttpRequest.BodyPublishers.noBody();
         var requestBuilder = HttpRequest.newBuilder()
-                .uri(getPluginUri(descriptor, request))
-                .timeout(PLUGIN_REQUEST_TIMEOUT)
-                .method(method.name(), bodyPublisher);
+            .uri(getPluginUri(descriptor, request))
+            .timeout(PLUGIN_REQUEST_TIMEOUT)
+            .method(method.name(), bodyPublisher);
         request.getHeaderNames().asIterator().forEachRemaining(name -> {
             if (!name.equalsIgnoreCase(HttpHeaders.HOST) && !name.equalsIgnoreCase(HttpHeaders.AUTHORIZATION)) {
                 request.getHeaders(name).asIterator().forEachRemaining(value ->
-                        requestBuilder.header(name, value));
+                    requestBuilder.header(name, value)
+                );
             }
         });
         new PluginContext(requestContext).addContextHeaders(requestBuilder);
@@ -248,13 +258,15 @@ public class PluginController {
 
     @ProviderApi
     @GetMapping(value = "/{pluginName}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public StreamEmitter getEvents(@PathVariable String pluginName,
-                                   @RequestParam(name = "after", required = false) Long after,
-                                   @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId)
-            throws IOException {
-
-        log.info("GET /plugins/{pluginName}/events (pluginName = {}, after = {}, Last-Event-ID = {})",
-                LogUtil.format(pluginName), LogUtil.format(after), LogUtil.format(lastEventId));
+    public StreamEmitter getEvents(
+        @PathVariable String pluginName,
+        @RequestParam(name = "after", required = false) Long after,
+        @RequestHeader(value = "Last-Event-ID", required = false) Long lastEventId
+    ) throws IOException {
+        log.info(
+            "GET /plugins/{pluginName}/events (pluginName = {}, after = {}, Last-Event-ID = {})",
+            LogUtil.format(pluginName), LogUtil.format(after), LogUtil.format(lastEventId)
+        );
 
         long lastSeenMoment = after != null ? after : (lastEventId != null ? lastEventId : 0);
 
@@ -308,11 +320,13 @@ public class PluginController {
         if (descriptor.getNodeId() != null) {
             requestContext.send(!deleted ? new PluginAddedLiberin(descriptor) : new PluginDeletedLiberin(descriptor));
         } else {
-            domains.getAllDomainNames().forEach(domainName -> {
-                requestContext.send(!deleted
+            domains.getAllDomainNames().forEach(domainName ->
+                requestContext.send(
+                    !deleted
                         ? new PluginAddedLiberin(descriptor)
-                        : new PluginDeletedLiberin(descriptor));
-            });
+                        : new PluginDeletedLiberin(descriptor)
+                )
+            );
         }
     }
 

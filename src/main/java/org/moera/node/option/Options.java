@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
+import org.moera.lib.node.types.SettingDescriptor;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Option;
 import org.moera.node.data.OptionRepository;
@@ -246,14 +247,14 @@ public class Options {
     }
 
     private void loadValue(String name, String value) {
-        OptionDescriptor desc = optionsMetadata.getDescriptor(name);
+        SettingDescriptor desc = optionsMetadata.getDescriptor(name);
         if (desc == null) {
             log.warn("No metadata for option {}", name);
             return;
         }
 
         try {
-            if (desc.isEncrypted()) {
+            if (Boolean.TRUE.equals(desc.getEncrypted())) {
                 value = decryptValue(value);
             }
             transactionalPut(name, deserializeValue(desc.getType(), value));
@@ -371,7 +372,7 @@ public class Options {
         lockWrite();
         try {
             optionRepository.deleteByNodeIdAndName(nodeId, name);
-            OptionDescriptor desc = optionsMetadata.getDescriptor(name);
+            SettingDescriptor desc = optionsMetadata.getDescriptor(name);
             transactionalPut(name, deserializeValue(desc.getType(), desc.getDefaultValue()));
         } finally {
             unlockWrite();

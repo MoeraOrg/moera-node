@@ -1,20 +1,23 @@
 package org.moera.node.rest;
 
 import java.util.Set;
+import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.ProfileAttributes;
 import org.moera.lib.node.types.ProfileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
+import org.moera.node.data.AvatarRepository;
 import org.moera.node.global.ApiController;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.ProfileReadLiberin;
 import org.moera.node.liberin.model.ProfileUpdatedLiberin;
-import org.moera.node.model.ProfileAttributes;
+import org.moera.node.model.ObjectNotFoundFailure;
+import org.moera.node.model.ProfileAttributesUtil;
 import org.moera.node.model.ProfileInfoUtil;
 import org.moera.node.operations.OperationsValidator;
 import org.moera.node.text.TextConverter;
@@ -40,6 +43,9 @@ public class ProfileController {
     @Inject
     private TextConverter textConverter;
 
+    @Inject
+    private AvatarRepository avatarRepository;
+
     @GetMapping
     public ProfileInfo get(@RequestParam(required = false) String include) {
         log.info("GET /profile (include = {})", LogUtil.format(include));
@@ -54,17 +60,31 @@ public class ProfileController {
     @PutMapping
     @Admin(Scope.UPDATE_PROFILE)
     @Transactional
-    public ProfileInfo put(@Valid @RequestBody ProfileAttributes profileAttributes) {
+    public ProfileInfo put(@RequestBody ProfileAttributes profileAttributes) {
         log.info("PUT /profile");
 
-        OperationsValidator.validateOperations(profileAttributes::getPrincipal, OperationsValidator.PROFILE_OPERATIONS,
-                true, "profileAttributes.operations.wrong-principal");
+        profileAttributes.validate();
+        OperationsValidator.validateOperations(
+            profileAttributes.getOperations(),
+            true,
+            "profile.operations.wrong-principal"
+        );
+
+        if (profileAttributes.getAvatarId() != null) {
+            UUID avatarId = Util.uuid(profileAttributes.getAvatarId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+            avatarRepository.findByNodeIdAndId(requestContext.nodeId(), avatarId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("avatar.not-found"));
+        }
 
         String oldEmail = requestContext.getOptions().getString("profile.email");
-        profileAttributes.toOptions(requestContext.getOptions(), textConverter);
+        ProfileAttributesUtil.toOptions(profileAttributes, requestContext.getOptions(), textConverter);
 
-        requestContext.send(new ProfileUpdatedLiberin(requestContext.nodeName(), requestContext.getOptions(),
-                requestContext.getAvatar(), oldEmail));
+        requestContext.send(
+            new ProfileUpdatedLiberin(
+                requestContext.nodeName(), requestContext.getOptions(), requestContext.getAvatar(), oldEmail
+            )
+        );
 
         return ProfileInfoUtil.build(requestContext, true);
     }

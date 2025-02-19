@@ -7,6 +7,7 @@ import java.util.function.Function;
 import org.moera.lib.node.types.CommentOperations;
 import org.moera.lib.node.types.FriendGroupOperations;
 import org.moera.lib.node.types.FriendOperations;
+import org.moera.lib.node.types.ProfileOperations;
 import org.moera.lib.node.types.ReactionOperations;
 import org.moera.lib.node.types.SubscriberOperations;
 import org.moera.lib.node.types.SubscriptionOperations;
@@ -16,12 +17,6 @@ import org.moera.node.model.ValidationFailure;
 import org.springframework.data.util.Pair;
 
 public class OperationsValidator {
-
-    public static final List<Pair<String, Integer>> PROFILE_OPERATIONS = List.of(
-            Pair.of("viewEmail",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
-                    | PrincipalFlag.ADMIN)
-    );
 
     public static final List<Pair<String, Integer>> POSTING_OPERATIONS = List.of(
             Pair.of("view",
@@ -138,6 +133,25 @@ public class OperationsValidator {
                 throw new ValidationFailure(errorCode);
             }
         }
+    }
+
+    public static void validateOperations(ProfileOperations operations, boolean includeUnset, String errorCode) {
+        if (operations == null) {
+            return;
+        }
+
+        BiConsumer<Principal, Integer> v = (principal, flags) ->
+            validatePrincipal(principal, flags, includeUnset, errorCode);
+
+        v.accept(
+            operations.getEdit(),
+            PrincipalFlag.ADMIN
+        );
+        v.accept(
+            operations.getViewEmail(),
+            PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
+            | PrincipalFlag.ADMIN
+        );
     }
 
     public static void validateOperations(CommentOperations operations, boolean includeUnset, String errorCode) {

@@ -2,7 +2,7 @@ package org.moera.node.option.type;
 
 import java.util.function.Consumer;
 
-import org.moera.node.option.OptionTypeModifiers;
+import org.moera.lib.node.types.SettingTypeModifiers;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
 
@@ -10,7 +10,7 @@ import org.moera.node.option.exception.UnsuitableOptionValueException;
 public class IntOptionType extends OptionTypeBase {
 
     @Override
-    public IntOptionTypeModifiers parseTypeModifiers(OptionTypeModifiers modifiers) {
+    public IntOptionTypeModifiers parseTypeModifiers(SettingTypeModifiers modifiers) {
         IntOptionTypeModifiers intMods = new IntOptionTypeModifiers();
         if (modifiers != null && modifiers.getMin() != null) {
             intMods.setMin((Long) deserializeValue(modifiers.getMin()));

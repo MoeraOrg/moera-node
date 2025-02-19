@@ -6,11 +6,11 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.SettingDescriptor;
 import org.moera.node.data.DomainUpgrade;
 import org.moera.node.data.DomainUpgradeRepository;
 import org.moera.node.data.UpgradeType;
 import org.moera.node.domain.Domains;
-import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.Options;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.task.Job;
@@ -63,12 +63,12 @@ public class EncryptAllOptionsJob extends Job<EncryptAllOptionsJob.Parameters, O
             UUID nodeId = upgrade.getNodeId();
             Options options = domains.getDomainOptions(nodeId);
             optionsMetadata.getDescriptorsForNode(nodeId).stream()
-                    .filter(OptionDescriptor::isEncrypted)
-                    .map(OptionDescriptor::getName)
-                    .forEach(options::resave);
+                .filter(d -> Boolean.TRUE.equals(d.getEncrypted()))
+                .map(SettingDescriptor::getName)
+                .forEach(options::resave);
             tx.executeWriteQuietly(
-                    () -> domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.ENCRYPT_OPTIONS, nodeId),
-                    e -> log.error("Error deleting domain upgrade record: {}", e.getMessage())
+                () -> domainUpgradeRepository.deleteByTypeAndNode(UpgradeType.ENCRYPT_OPTIONS, nodeId),
+                e -> log.error("Error deleting domain upgrade record: {}", e.getMessage())
             );
         }
     }

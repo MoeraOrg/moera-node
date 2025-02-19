@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SettingDescriptor;
 import org.moera.lib.node.types.SettingInfo;
 import org.moera.lib.node.types.SettingMetaAttributes;
 import org.moera.lib.node.types.SettingMetaInfo;
@@ -30,7 +31,6 @@ import org.moera.node.model.OperationFailure;
 import org.moera.node.model.SettingInfoUtil;
 import org.moera.node.model.SettingMetaInfoUtil;
 import org.moera.node.operations.OptionsOperations;
-import org.moera.node.option.OptionDescriptor;
 import org.moera.node.option.OptionsMetadata;
 import org.moera.node.option.type.OptionTypeBase;
 import org.moera.node.util.Transaction;
@@ -82,8 +82,9 @@ public class SettingsController {
     public List<SettingInfo> getForNode(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/node");
 
-        return getOptions(name -> !name.startsWith(OptionsMetadata.CLIENT_PREFIX)
-                && (prefix == null || name.startsWith(prefix)));
+        return getOptions(name ->
+            !name.startsWith(OptionsMetadata.CLIENT_PREFIX) && (prefix == null || name.startsWith(prefix))
+        );
     }
 
     @GetMapping("/client")
@@ -91,8 +92,9 @@ public class SettingsController {
     public List<SettingInfo> getForClient(@RequestParam(required = false) String prefix) {
         log.info("GET /settings/client");
 
-        return getOptions(name -> name.startsWith(OptionsMetadata.CLIENT_PREFIX)
-                && (prefix == null || name.startsWith(prefix)));
+        return getOptions(name ->
+            name.startsWith(OptionsMetadata.CLIENT_PREFIX) && (prefix == null || name.startsWith(prefix))
+        );
     }
 
     @GetMapping("/node/metadata")
@@ -101,11 +103,11 @@ public class SettingsController {
         log.info("GET /settings/node/metadata");
 
         return optionsMetadata.getDescriptorsForNode(requestContext.nodeId()).stream()
-                .filter(d -> !d.isInternal())
-                .filter(d -> prefix == null || d.getName().startsWith(prefix))
-                .map(SettingMetaInfoUtil::build)
-                .sorted(Comparator.comparing(SettingMetaInfo::getName))
-                .collect(Collectors.toList());
+            .filter(d -> !Boolean.TRUE.equals(d.getInternal()))
+            .filter(d -> prefix == null || d.getName().startsWith(prefix))
+            .map(SettingMetaInfoUtil::build)
+            .sorted(Comparator.comparing(SettingMetaInfo::getName))
+            .collect(Collectors.toList());
     }
 
     @PutMapping("/node/metadata")
@@ -124,11 +126,11 @@ public class SettingsController {
                 if (meta.getName().startsWith(OptionsMetadata.PLUGIN_PREFIX)) {
                     throw new OperationFailure("setting.plugin");
                 }
-                OptionDescriptor descriptor = optionsMetadata.getDescriptor(meta.getName());
+                SettingDescriptor descriptor = optionsMetadata.getDescriptor(meta.getName());
                 if (descriptor == null) {
                     throw new OperationFailure("setting.unknown");
                 }
-                if (descriptor.isInternal()) {
+                if (Boolean.TRUE.equals(descriptor.getInternal())) {
                     throw new OperationFailure("setting.internal");
                 }
 
@@ -176,15 +178,18 @@ public class SettingsController {
         AtomicBoolean clientChanged = new AtomicBoolean(false);
         requestContext.getOptions().runInTransaction(options ->
             settings.forEach(setting -> {
-                OptionDescriptor descriptor = optionsMetadata.getDescriptor(setting.getName());
+                SettingDescriptor descriptor = optionsMetadata.getDescriptor(setting.getName());
                 if (descriptor == null) {
                     throw new OperationFailure("setting.unknown");
                 }
-                if (descriptor.isInternal()) {
+                if (Boolean.TRUE.equals(descriptor.getInternal())) {
                     throw new OperationFailure("setting.internal");
                 }
-                if (!descriptor.isPrivileged() && !requestContext.isAdmin(Scope.UPDATE_SETTINGS)
-                        || descriptor.isPrivileged() && !requestContext.isRootAdmin()) {
+                boolean privileged = Boolean.TRUE.equals(descriptor.getPrivileged());
+                if (
+                    !privileged && !requestContext.isAdmin(Scope.UPDATE_SETTINGS)
+                    || privileged && !requestContext.isRootAdmin()
+                ) {
                     throw new AuthenticationException();
                 }
                 if (setting.getValue() != null) {

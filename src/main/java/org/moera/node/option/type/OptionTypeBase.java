@@ -5,8 +5,8 @@ import java.security.PublicKey;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import org.moera.lib.node.types.SettingTypeModifiers;
 import org.moera.lib.node.types.principal.Principal;
-import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.InvalidOptionTypeConversionException;
 import org.moera.node.option.exception.UnsuitableOptionTypeException;
 import org.moera.node.util.ExtendedDuration;
@@ -21,7 +21,7 @@ public abstract class OptionTypeBase {
         return optionType.value();
     }
 
-    public Object parseTypeModifiers(OptionTypeModifiers modifiers) {
+    public Object parseTypeModifiers(SettingTypeModifiers modifiers) {
         return modifiers;
     }
 

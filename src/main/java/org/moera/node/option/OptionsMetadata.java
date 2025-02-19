@@ -22,11 +22,12 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.moera.lib.node.types.PluginDescription;
+import org.moera.lib.node.types.SettingDescriptor;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.OptionDefault;
 import org.moera.node.data.OptionDefaultRepository;
-import org.moera.node.model.PluginDescription;
 import org.moera.node.option.exception.UnknownOptionTypeException;
 import org.moera.node.option.type.OptionType;
 import org.moera.node.option.type.OptionTypeBase;
@@ -48,8 +49,8 @@ public class OptionsMetadata {
     private static final Logger log = LoggerFactory.getLogger(OptionsMetadata.class);
 
     private Map<String, OptionTypeBase> types;
-    private Map<String, OptionDescriptor> descriptors;
-    private final Map<String, SortedMap<String, OptionDescriptor>> pluginDescriptors = new HashMap<>();
+    private Map<String, SettingDescriptor> descriptors;
+    private final Map<String, SortedMap<String, SettingDescriptor>> pluginDescriptors = new HashMap<>();
     private Map<String, Object> typeModifiers;
 
     @Inject
@@ -78,13 +79,14 @@ public class OptionsMetadata {
 
     private void load() throws IOException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        List<OptionDescriptor> data = mapper.readValue(
-                applicationContext.getResource("classpath:options.yaml").getInputStream(),
-                new TypeReference<>() {
-                });
-        descriptors = data.stream().collect(Collectors.toMap(OptionDescriptor::getName, Function.identity()));
+        List<SettingDescriptor> data = mapper.readValue(
+            applicationContext.getResource("classpath:options.yaml").getInputStream(),
+            new TypeReference<>() {
+            }
+        );
+        descriptors = data.stream().collect(Collectors.toMap(SettingDescriptor::getName, Function.identity()));
         for (var option : config.getOptions()) {
-            OptionDescriptor descriptor = descriptors.get(option.getName());
+            SettingDescriptor descriptor = descriptors.get(option.getName());
             if (descriptor == null) {
                 log.warn("Unknown option referenced in the config file: {}", LogUtil.format(option.getName()));
                 continue;
@@ -92,18 +94,19 @@ public class OptionsMetadata {
             descriptor.setDefaultValue(option.getDefaultValue());
         }
         typeModifiers = data.stream()
-                .filter(desc -> desc.getModifiers() != null)
-                .filter(desc -> types.get(desc.getType()) != null)
-                .collect(Collectors.toMap(
-                        OptionDescriptor::getName,
-                        desc -> types.get(desc.getType()).parseTypeModifiers(desc.getModifiers())));
+            .filter(desc -> desc.getModifiers() != null)
+            .filter(desc -> types.get(desc.getType()) != null)
+            .collect(Collectors.toMap(
+                SettingDescriptor::getName,
+                desc -> types.get(desc.getType()).parseTypeModifiers(desc.getModifiers())
+            ));
     }
 
     public void loadPlugin(PluginDescription pluginDescription) {
         String pluginPrefix = PLUGIN_PREFIX + pluginDescription.getName() + ".";
 
-        SortedMap<String, OptionDescriptor> descs = new TreeMap<>();
-        for (OptionDescriptor desc : pluginDescription.getOptions()) {
+        SortedMap<String, SettingDescriptor> descs = new TreeMap<>();
+        for (SettingDescriptor desc : pluginDescription.getOptions()) {
             desc.setName(pluginPrefix + desc.getName());
             descs.put(desc.getName(), desc);
 
@@ -129,7 +132,7 @@ public class OptionsMetadata {
             if (filter != null && !filter.test(def.getName())) {
                 continue;
             }
-            OptionDescriptor desc = getDescriptor(def.getName());
+            SettingDescriptor desc = getDescriptor(def.getName());
             if (desc == null) {
                 continue;
             }
@@ -153,18 +156,18 @@ public class OptionsMetadata {
         return optionType;
     }
 
-    private static OptionDescriptor clientDescriptor(String name) {
-        OptionDescriptor descriptor = new OptionDescriptor();
+    private static SettingDescriptor clientDescriptor(String name) {
+        SettingDescriptor descriptor = new SettingDescriptor();
         descriptor.setName(name);
         descriptor.setType("string");
         return descriptor;
     }
 
-    public OptionDescriptor getDescriptor(String name) {
+    public SettingDescriptor getDescriptor(String name) {
         if (name.startsWith(CLIENT_PREFIX)) {
             return clientDescriptor(name);
         }
-        OptionDescriptor desc;
+        SettingDescriptor desc;
         String pluginName = getPluginName(name);
         if (pluginName != null) {
             desc = pluginDescriptors.getOrDefault(pluginName, Collections.emptySortedMap()).get(name);
@@ -179,35 +182,35 @@ public class OptionsMetadata {
     }
 
     public OptionTypeBase getOptionType(String name) {
-        OptionDescriptor descriptor = getDescriptor(name);
+        SettingDescriptor descriptor = getDescriptor(name);
         return descriptor != null ? getType(descriptor.getType()) : null;
     }
 
     public boolean isInternal(String name) {
-        OptionDescriptor descriptor = getDescriptor(name);
-        return descriptor != null && descriptor.isInternal();
+        SettingDescriptor descriptor = getDescriptor(name);
+        return descriptor != null && Boolean.TRUE.equals(descriptor.getInternal());
     }
 
     public boolean isPrivileged(String name) {
-        OptionDescriptor descriptor = getDescriptor(name);
-        return descriptor != null && descriptor.isPrivileged();
+        SettingDescriptor descriptor = getDescriptor(name);
+        return descriptor != null && Boolean.TRUE.equals(descriptor.getPrivileged());
     }
 
     public boolean isEncrypted(String name) {
-        OptionDescriptor descriptor = getDescriptor(name);
-        return descriptor != null && descriptor.isEncrypted();
+        SettingDescriptor descriptor = getDescriptor(name);
+        return descriptor != null && Boolean.TRUE.equals(descriptor.getEncrypted());
     }
 
-    private Map<String, OptionDescriptor> getDescriptors() {
+    private Map<String, SettingDescriptor> getDescriptors() {
         return descriptors;
     }
 
-    public Map<String, OptionDescriptor> getPluginDescriptors(String pluginName) {
+    public Map<String, SettingDescriptor> getPluginDescriptors(String pluginName) {
         return pluginDescriptors.get(pluginName);
     }
 
-    public List<OptionDescriptor> getDescriptorsForNode(UUID nodeId) {
-        List<OptionDescriptor> list = new ArrayList<>(getDescriptors().values());
+    public List<SettingDescriptor> getDescriptorsForNode(UUID nodeId) {
+        List<SettingDescriptor> list = new ArrayList<>(getDescriptors().values());
         plugins.getNames(nodeId).forEach(pluginName -> list.addAll(getPluginDescriptors(pluginName).values()));
         return list;
     }

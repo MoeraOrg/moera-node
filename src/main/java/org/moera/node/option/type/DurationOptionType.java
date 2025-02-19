@@ -1,6 +1,6 @@
 package org.moera.node.option.type;
 
-import org.moera.node.option.OptionTypeModifiers;
+import org.moera.lib.node.types.SettingTypeModifiers;
 import org.moera.node.option.exception.DeserializeOptionValueException;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
 import org.moera.node.util.DurationFormatException;
@@ -19,7 +19,7 @@ public class DurationOptionType extends OptionTypeBase {
     }
 
     @Override
-    public DurationOptionTypeModifiers parseTypeModifiers(OptionTypeModifiers modifiers) {
+    public DurationOptionTypeModifiers parseTypeModifiers(SettingTypeModifiers modifiers) {
         if (modifiers == null) {
             return new DurationOptionTypeModifiers();
         }
@@ -36,18 +36,10 @@ public class DurationOptionType extends OptionTypeBase {
             durMods.setMaxSeconds(Long.MAX_VALUE);
         }
         if (modifiers.getNever() != null) {
-            Boolean never = Util.toBoolean(modifiers.getNever());
-            if (never == null) {
-                throw new DeserializeOptionValueException("bool", modifiers.getNever());
-            }
-            durMods.setNever(never);
+            durMods.setNever(modifiers.getNever());
         }
         if (modifiers.getAlways() != null) {
-            Boolean always = Util.toBoolean(modifiers.getAlways());
-            if (always == null) {
-                throw new DeserializeOptionValueException("bool", modifiers.getAlways());
-            }
-            durMods.setAlways(always);
+            durMods.setAlways(modifiers.getAlways());
         }
         return durMods;
     }

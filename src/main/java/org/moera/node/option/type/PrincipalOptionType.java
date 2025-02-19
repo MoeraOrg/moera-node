@@ -1,8 +1,8 @@
 package org.moera.node.option.type;
 
+import org.moera.lib.node.types.SettingTypeModifiers;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFlag;
-import org.moera.node.option.OptionTypeModifiers;
 import org.moera.node.option.exception.UnsuitableOptionValueException;
 
 @OptionType("Principal")
@@ -29,12 +29,12 @@ public class PrincipalOptionType extends OptionTypeBase {
             return value;
         }
         if (value instanceof String) {
-            return acceptString((String) value, (OptionTypeModifiers) typeModifiers);
+            return acceptString((String) value, (SettingTypeModifiers) typeModifiers);
         }
         return super.accept(value);
     }
 
-    private Principal acceptString(String value, OptionTypeModifiers typeModifiers) {
+    private Principal acceptString(String value, SettingTypeModifiers typeModifiers) {
         if (typeModifiers != null && typeModifiers.getPrincipals() != null) {
             int flags = PrincipalFlag.fromNames(typeModifiers.getPrincipals());
             if (!new Principal(value).isOneOf(flags)) {

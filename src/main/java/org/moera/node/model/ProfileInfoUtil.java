@@ -1,7 +1,6 @@
 package org.moera.node.model;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.moera.lib.node.types.FundraiserInfo;
@@ -68,7 +67,7 @@ public class ProfileInfoUtil {
     private static List<FundraiserInfo> deserializeFundraisers(Options options) {
         String value = options.getString("profile.fundraisers");
         try {
-            return Arrays.asList(FundraiserInfo.deserializeValue(value));
+            return FundraiserInfo.deserializeValue(value);
         } catch (IOException e) {
             throw new DeserializeOptionValueException("FundraiserInfo[]", value);
         }
