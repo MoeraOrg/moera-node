@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.BlockedPostingInstantInfo;

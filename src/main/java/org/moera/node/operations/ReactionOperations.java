@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.EmojiList;
 import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Scope;
@@ -42,7 +43,6 @@ import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.util.EmojiList;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
@@ -149,9 +149,11 @@ public class ReactionOperations {
             }
         }
 
-        EmojiList accepted = new EmojiList(!reactionDescription.isNegative()
+        EmojiList accepted = new EmojiList(
+            !reactionDescription.isNegative()
                 ? entry.getAcceptedReactionsPositive()
-                : entry.getAcceptedReactionsNegative());
+                : entry.getAcceptedReactionsNegative()
+        );
         if (!accepted.isAccepted(reactionDescription.getEmoji())) {
             throw new ValidationFailure("reaction.not-accepted");
         }

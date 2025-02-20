@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.MediaWithDigest;

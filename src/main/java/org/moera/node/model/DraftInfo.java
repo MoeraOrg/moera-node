@@ -6,6 +6,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.AcceptedReactions;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.DraftType;
 import org.moera.lib.node.types.MediaAttachment;
