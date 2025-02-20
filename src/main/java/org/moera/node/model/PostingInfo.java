@@ -24,6 +24,7 @@ import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.UpdateInfo;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.lib.node.types.principal.AccessCheckers;
@@ -220,8 +221,8 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         bodyFormat = revision.getBodyFormat();
         media = mediaAttachmentsProvider.getMediaAttachments(revision, receiverName);
         heading = revision.getHeading();
-        if (!UpdateInfo.isEmpty(revision)) {
-            updateInfo = new UpdateInfo(revision);
+        if (!UpdateInfoUtil.isEmpty(revision)) {
+            updateInfo = UpdateInfoUtil.build(revision);
         }
         createdAt = Util.toEpochSecond(posting.getCreatedAt());
         editedAt = Util.toEpochSecond(posting.getEditedAt());

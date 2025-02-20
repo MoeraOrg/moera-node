@@ -13,6 +13,7 @@ import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.DraftType;
 import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.UpdateInfo;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Draft;

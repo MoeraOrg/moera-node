@@ -7,7 +7,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
@@ -16,11 +15,13 @@ import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.RemoteFeed;
 import org.moera.lib.node.types.RemotePosting;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriptionDescription;
 import org.moera.lib.node.types.SubscriptionFilter;
 import org.moera.lib.node.types.SubscriptionInfo;
 import org.moera.lib.node.types.SubscriptionOverride;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.auth.AuthenticationException;
@@ -37,7 +38,7 @@ import org.moera.node.liberin.model.SubscriptionDeletedLiberin;
 import org.moera.node.liberin.model.SubscriptionOperationsUpdatedLiberin;
 import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.SubscriptionDescription;
+import org.moera.node.model.SubscriptionDescriptionUtil;
 import org.moera.node.model.SubscriptionInfoUtil;
 import org.moera.node.model.SubscriptionOverrideUtil;
 import org.moera.node.model.ValidationFailure;
@@ -124,32 +125,32 @@ public class SubscriptionController {
     @Admin(Scope.SUBSCRIBE)
     @Entitled
     @Transactional
-    public SubscriptionInfo post(@Valid @RequestBody SubscriptionDescription subscriptionDescription) {
-        log.info("POST /people/subscriptions (type = {}, feedName = {}, remoteNodeName = {}, remotePostingId = {})",
-                LogUtil.format(SubscriptionType.toValue(subscriptionDescription.getType())),
-                LogUtil.format(subscriptionDescription.getFeedName()),
-                LogUtil.format(subscriptionDescription.getRemoteNodeName()),
-                LogUtil.format(subscriptionDescription.getRemotePostingId()));
+    public SubscriptionInfo post(@RequestBody SubscriptionDescription subscriptionDescription) {
+        log.info(
+            "POST /people/subscriptions (type = {}, feedName = {}, remoteNodeName = {}, remotePostingId = {})",
+            LogUtil.format(SubscriptionType.toValue(subscriptionDescription.getType())),
+            LogUtil.format(subscriptionDescription.getFeedName()),
+            LogUtil.format(subscriptionDescription.getRemoteNodeName()),
+            LogUtil.format(subscriptionDescription.getRemotePostingId())
+        );
 
-        if (subscriptionDescription.getType() == null) {
-            throw new ValidationFailure("subscriptionDescription.type.blank");
-        }
-        if (subscriptionDescription.getReason() == null) {
-            throw new ValidationFailure("subscriptionDescription.reason.blank");
-        }
+        subscriptionDescription.validate();
         if (subscriptionDescription.getType() == SubscriptionType.FEED) {
-            if (ObjectUtils.isEmpty(subscriptionDescription.getFeedName())) {
-                throw new ValidationFailure("subscriptionDescription.feedName.blank");
-            }
+            ValidationUtil.notBlank(subscriptionDescription.getFeedName(), "subscription.feed-name.blank");
             if (!Feed.isStandard(subscriptionDescription.getFeedName())) {
-                throw new ValidationFailure("subscriptionDescription.feedName.not-found");
+                throw new ObjectNotFoundFailure("feed.not-found");
             }
         }
-        OperationsValidator.validateOperations(subscriptionDescription::getPrincipal,
-                OperationsValidator.SUBSCRIPTION_OPERATIONS, false,
-                "subscriptionDescription.operations.wrong-principal");
+        OperationsValidator.validateOperations(
+            subscriptionDescription.getOperations(),
+            false,
+            "subscription.operations.wrong-principal"
+        );
 
-        UserSubscription subscription = subscriptionOperations.subscribe(subscriptionDescription::toUserSubscription);
+        UserSubscription subscription = subscriptionOperations.subscribe(
+            userSubscription ->
+                SubscriptionDescriptionUtil.toUserSubscription(subscriptionDescription, userSubscription)
+        );
 
         return SubscriptionInfoUtil.build(subscription, requestContext.getOptions(), requestContext);
     }
@@ -171,7 +172,7 @@ public class SubscriptionController {
         OperationsValidator.validateOperations(
             subscriptionOverride.getOperations(),
             false,
-            "subscriptionOverride.operations.wrong-principal"
+            "subscription.operations.wrong-principal"
         );
 
         SubscriptionOverrideUtil.toUserSubscription(subscriptionOverride, subscription);

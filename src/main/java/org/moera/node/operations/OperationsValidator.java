@@ -111,12 +111,6 @@ public class OperationsValidator {
                     | PrincipalFlag.MAJOR | PrincipalFlag.OWNER | PrincipalFlag.ADMIN | PrincipalFlag.NONE)
     );
 
-    public static final List<Pair<String, Integer>> SUBSCRIBER_OPERATIONS = List.of(
-            Pair.of("view",
-                    PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS
-                    | PrincipalFlag.PRIVATE)
-    );
-
     public static final List<Pair<String, Integer>> SUBSCRIPTION_OPERATIONS = List.of(
             Pair.of("view",
                     PrincipalFlag.PUBLIC | PrincipalFlag.SIGNED | PrincipalFlag.SUBSCRIBED | PrincipalFlag.FRIENDS

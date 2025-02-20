@@ -6,19 +6,20 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoException;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriberDescription;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.api.naming.NamingNotAvailableException;
 import org.moera.node.api.node.NodeApiException;
+import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiUnknownNameException;
-import org.moera.node.api.node.NodeApiValidationException;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.data.UserSubscription;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.SubscriberDescriptionQ;
+import org.moera.node.model.SubscriberDescriptionUtil;
 import org.moera.node.rest.notification.ProfileUpdateJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.Task;
@@ -69,8 +70,11 @@ public class SubscriptionTask extends Task {
                 return;
             }
             boolean used = subscription.getUsageCount() > 0;
-            log.info("Subscription status is {}, {}",
-                    subscription.getStatus().name().toLowerCase(), used ? "used" : "not used");
+            log.info(
+                "Subscription status is {}, {}",
+                subscription.getStatus().name().toLowerCase(),
+                used ? "used" : "not used"
+            );
             switch (subscription.getStatus()) {
                 case PENDING:
                     if (used) {
@@ -100,25 +104,32 @@ public class SubscriptionTask extends Task {
         long lastEditedAt = Instant.now().getEpochSecond();
         if (subscription.getSubscriptionType() == SubscriptionType.POSTING) {
             Posting posting = postingRepository.findByReceiverId(
-                    getNodeId(), targetNodeName, subscription.getRemoteEntryId()).orElse(null);
+                getNodeId(), targetNodeName, subscription.getRemoteEntryId()
+            ).orElse(null);
             if (posting != null) {
                 lastEditedAt = Util.toEpochSecond(posting.getReceiverEditedAt());
             }
         }
         try {
             mediaManager.uploadPublicMedia(
-                    targetNodeName, generateCarte(targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA), getAvatar());
-            SubscriberDescriptionQ description = new SubscriberDescriptionQ(subscription.getSubscriptionType(),
-                    subscription.getRemoteFeedName(), subscription.getRemoteEntryId(), lastEditedAt,
-                    UserSubscription.getViewAllPrincipal(getOptions()).isPublic());
+                targetNodeName, generateCarte(targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA), getAvatar()
+            );
+            SubscriberDescription description = SubscriberDescriptionUtil.build(
+                subscription.getSubscriptionType(),
+                subscription.getRemoteFeedName(),
+                subscription.getRemoteEntryId(),
+                lastEditedAt,
+                UserSubscription.getViewAllPrincipal(getOptions()).isPublic()
+            );
             SubscriberInfo subscriberInfo = nodeApi.postSubscriber(
-                    targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), description);
+                targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), description
+            );
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
         } catch (CryptoException | NodeApiException | NamingNotAvailableException e) {
             error(true, e);
-            if (e instanceof NodeApiValidationException
-                    && ((NodeApiValidationException) e).getErrorCode()
-                            .equals("subscriberDescription.postingId.not-found")) {
+            if (
+                e instanceof NodeApiNotFoundException ve && ve.getResult().getErrorCode().equals("posting.not-found")
+            ) {
                 subscriptionManager.subscriptionInvalid(subscription);
             } else {
                 subscriptionManager.failed(subscription);
@@ -133,8 +144,8 @@ public class SubscriptionTask extends Task {
         targetNodeName = subscription.getRemoteNodeName();
         try {
             nodeApi.deleteSubscriber(
-                    targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE),
-                    subscription.getRemoteSubscriberId());
+                targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), subscription.getRemoteSubscriberId()
+            );
         } catch (CryptoException | NodeApiException e) {
             error(false, e);
         }

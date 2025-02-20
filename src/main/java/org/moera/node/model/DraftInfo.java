@@ -10,6 +10,7 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.DraftType;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.UpdateInfo;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Draft;
@@ -76,8 +77,8 @@ public class DraftInfo {
                 .toArray(MediaAttachment[]::new);
         heading = draft.getHeading();
         publishAt = Util.toEpochSecond(draft.getPublishAt());
-        if (!UpdateInfo.isEmpty(draft)) {
-            updateInfo = new UpdateInfo(draft);
+        if (!UpdateInfoUtil.isEmpty(draft)) {
+            updateInfo = UpdateInfoUtil.build(draft);
         }
         try {
             operations = new ObjectMapper().readValue(draft.getOperations(), Map.class);

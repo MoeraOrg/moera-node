@@ -28,6 +28,7 @@ import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.SheriffOrderDetails;
+import org.moera.lib.node.types.SubscriberDescription;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriberOverride;
 import org.moera.lib.node.types.SubscriptionType;
@@ -49,7 +50,6 @@ import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PostingText;
-import org.moera.node.model.SubscriberDescriptionQ;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.api.naming.RegisteredNameDetails;
 import org.moera.node.util.DigestingOutputStream;
@@ -309,7 +309,7 @@ public class NodeApi {
         return call("POST", nodeName, "/notifications", null, notificationPacket, Result.class);
     }
 
-    public SubscriberInfo postSubscriber(String nodeName, String carte, SubscriberDescriptionQ subscriber)
+    public SubscriberInfo postSubscriber(String nodeName, String carte, SubscriberDescription subscriber)
             throws NodeApiException {
 
         return call("POST", nodeName, "/people/subscribers", auth("carte", carte), subscriber,

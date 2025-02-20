@@ -10,13 +10,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.Password;
 import org.moera.lib.node.types.DomainInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.TokenAttributes;
 import org.moera.lib.node.types.TokenInfo;
 import org.moera.lib.node.types.TokenUpdate;
 import org.moera.lib.util.LogUtil;
@@ -34,7 +34,6 @@ import org.moera.node.liberin.model.TokenDeletedLiberin;
 import org.moera.node.liberin.model.TokenUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
-import org.moera.node.model.TokenAttributes;
 import org.moera.node.model.TokenInfoUtil;
 import org.moera.node.notification.receive.DefrostNotificationsJob;
 import org.moera.node.option.Options;
@@ -77,16 +76,22 @@ public class TokenController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<TokenInfo> post(@Valid @RequestBody TokenAttributes attributes) {
+    public ResponseEntity<TokenInfo> post(@RequestBody TokenAttributes attributes) {
         log.info("POST /tokens (login = '{}')", attributes.getLogin());
 
+        attributes.validate();
+
         Options options = requestContext.getOptions();
-        if (ObjectUtils.isEmpty(options.getString("credentials.login"))
-                || ObjectUtils.isEmpty(options.getString("credentials.password-hash"))) {
+        if (
+            ObjectUtils.isEmpty(options.getString("credentials.login"))
+            || ObjectUtils.isEmpty(options.getString("credentials.password-hash"))
+        ) {
             throw new OperationFailure("credentials.not-created");
         }
-        if (!attributes.getLogin().equals(options.getString("credentials.login"))
-            || !Password.validate(options.getString("credentials.password-hash"), attributes.getPassword())) {
+        if (
+            !attributes.getLogin().equals(options.getString("credentials.login"))
+            || !Password.validate(options.getString("credentials.password-hash"), attributes.getPassword())
+        ) {
             throw new OperationFailure("credentials.login-incorrect");
         }
 
@@ -95,11 +100,10 @@ public class TokenController {
         token.setNodeId(options.nodeId());
         token.setName(attributes.getName());
         token.setToken(CryptoUtil.token());
-        token.setAuthScope(attributes.getPermissions() != null
-                ? Scope.forValues(attributes.getPermissions())
-                : Scope.ALL.getMask());
-        token.setDeadline(Timestamp.from(Instant.now().plus(
-                options.getDuration("token.lifetime").getDuration())));
+        token.setAuthScope(
+            attributes.getPermissions() != null ? Scope.forValues(attributes.getPermissions()) : Scope.ALL.getMask()
+        );
+        token.setDeadline(Timestamp.from(Instant.now().plus(options.getDuration("token.lifetime").getDuration())));
         tokenRepository.save(token);
 
         if (requestContext.getOptions().isFrozen()) {

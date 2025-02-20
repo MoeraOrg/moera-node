@@ -6,6 +6,7 @@ import org.moera.lib.node.types.ClientReactionInfo;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.UpdateInfo;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessChecker;
 import org.moera.node.data.EntryRevision;
@@ -53,8 +54,8 @@ public class PostingRevisionInfo implements RevisionInfo {
         bodyFormat = revision.getBodyFormat();
         media = mediaAttachmentsProvider.getMediaAttachments(revision, receiverName);
         heading = revision.getHeading();
-        if (!UpdateInfo.isEmpty(revision)) {
-            updateInfo = new UpdateInfo(revision);
+        if (!UpdateInfoUtil.isEmpty(revision)) {
+            updateInfo = UpdateInfoUtil.build(revision);
         }
         createdAt = Util.toEpochSecond(revision.getCreatedAt());
         deletedAt = Util.toEpochSecond(revision.getDeletedAt());

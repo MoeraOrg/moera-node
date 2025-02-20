@@ -5,13 +5,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.UserListInfo;
+import org.moera.lib.node.types.UserListItemAttributes;
 import org.moera.lib.node.types.UserListItemInfo;
 import org.moera.lib.node.types.UserListSliceInfo;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.UserListItem;
@@ -24,10 +25,8 @@ import org.moera.node.liberin.model.UserListItemDeletedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.UserListInfoUtil;
-import org.moera.node.model.UserListItemAttributes;
 import org.moera.node.model.UserListItemInfoUtil;
 import org.moera.node.model.UserListSliceInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
 import org.moera.node.util.Util;
@@ -76,22 +75,20 @@ public class UserListController {
     @GetMapping("/{name}/items")
     @Transactional
     public UserListSliceInfo getItems(
-            @PathVariable("name") String listName,
-            @RequestParam(required = false) Long before,
-            @RequestParam(required = false) Long after,
-            @RequestParam(required = false) Integer limit) {
+        @PathVariable("name") String listName,
+        @RequestParam(required = false) Long before,
+        @RequestParam(required = false) Long after,
+        @RequestParam(required = false) Integer limit
+    ) {
+        log.info(
+            "GET /user-lists/{name}/items (name = {}, before = {}, after = {}, limit = {})",
+            LogUtil.format(listName), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit)
+        );
 
-        log.info("GET /user-lists/{name}/items (name = {}, before = {}, after = {}, limit = {})",
-                LogUtil.format(listName), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
-
-        if (before != null && after != null) {
-            throw new ValidationFailure("user-list-items.before-after-exclusive");
-        }
+        ValidationUtil.assertion(before == null || after == null, "user-list-items.before-after-exclusive");
 
         limit = limit != null && limit <= MAX_ITEMS_PER_REQUEST ? limit : MAX_ITEMS_PER_REQUEST;
-        if (limit < 0) {
-            throw new ValidationFailure("limit.invalid");
-        }
+        ValidationUtil.minValue(limit, 0, "limit.invalid");
 
         UserListSliceInfo sliceInfo;
         if (after == null) {
@@ -108,8 +105,9 @@ public class UserListController {
     private UserListSliceInfo getItemsBefore(String listName, long before, int limit) {
         UserListSliceInfo sliceInfo = UserListSliceInfoUtil.build(listName);
         sliceInfo.setBefore(before);
-        Page<UserListItem> page = findSlice(requestContext.nodeId(), listName, SafeInteger.MIN_VALUE, before,
-                limit + 1, Sort.Direction.DESC);
+        Page<UserListItem> page = findSlice(
+            requestContext.nodeId(), listName, SafeInteger.MIN_VALUE, before, limit + 1, Sort.Direction.DESC
+        );
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setAfter(SafeInteger.MIN_VALUE);
         } else {
@@ -122,8 +120,9 @@ public class UserListController {
     private UserListSliceInfo getItemsAfter(String listName, long after, int limit) {
         UserListSliceInfo sliceInfo = UserListSliceInfoUtil.build(listName);
         sliceInfo.setAfter(after);
-        Page<UserListItem> page = findSlice(requestContext.nodeId(), listName, after, SafeInteger.MAX_VALUE,
-                limit + 1, Sort.Direction.ASC);
+        Page<UserListItem> page = findSlice(
+            requestContext.nodeId(), listName, after, SafeInteger.MAX_VALUE, limit + 1, Sort.Direction.ASC
+        );
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setBefore(SafeInteger.MAX_VALUE);
         } else {
@@ -133,8 +132,9 @@ public class UserListController {
         return sliceInfo;
     }
 
-    private Page<UserListItem> findSlice(UUID nodeId, String listName, long afterMoment, long beforeMoment, int limit,
-                                         Sort.Direction direction) {
+    private Page<UserListItem> findSlice(
+        UUID nodeId, String listName, long afterMoment, long beforeMoment, int limit, Sort.Direction direction
+    ) {
         Pageable pageable = PageRequest.of(0, limit + 1, direction, "moment");
         return userListItemRepository.findInRange(nodeId, listName, afterMoment, beforeMoment, pageable);
     }
@@ -154,7 +154,8 @@ public class UserListController {
             sliceInfo.setTotalInPast(total - sliceInfo.getItems().size());
         } else {
             int totalInFuture = userListItemRepository.countInRange(
-                    requestContext.nodeId(), sliceInfo.getListName(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE);
+                requestContext.nodeId(), sliceInfo.getListName(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE
+            );
             sliceInfo.setTotalInFuture(totalInFuture);
             sliceInfo.setTotalInPast(total - totalInFuture - sliceInfo.getItems().size());
         }
@@ -163,11 +164,13 @@ public class UserListController {
     @GetMapping("/{name}/items/{nodeName}")
     @Transactional
     public UserListItemInfo getItem(@PathVariable("name") String listName, @PathVariable String nodeName) {
-        log.info("GET /user-lists/{name}/items/{nodeName} (name = {}, nodeName = {})",
-                LogUtil.format(listName), LogUtil.format(nodeName));
+        log.info(
+            "GET /user-lists/{name}/items/{nodeName} (name = {}, nodeName = {})",
+            LogUtil.format(listName), LogUtil.format(nodeName)
+        );
 
         UserListItem item = userListItemRepository.findByListAndNodeName(requestContext.nodeId(), listName, nodeName)
-                .orElseThrow(() -> new ObjectNotFoundFailure("user-list-item.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("user-list-item.not-found"));
 
         return UserListItemInfoUtil.build(item);
     }
@@ -176,14 +179,19 @@ public class UserListController {
     @Admin(Scope.USER_LISTS)
     @Transactional
     public ResponseEntity<UserListItemInfo> postItem(
-            @PathVariable("name") String listName,
-            @Valid @RequestBody UserListItemAttributes userListItemAttributes) {
+        @PathVariable("name") String listName,
+        @RequestBody UserListItemAttributes userListItemAttributes
+    ) {
+        log.info(
+            "POST /user-lists/{name}/items (name = {}, nodeName = {})",
+            LogUtil.format(listName), LogUtil.format(userListItemAttributes.getNodeName())
+        );
 
-        log.info("POST /user-lists/{name}/items (name = {}, nodeName = {})",
-                LogUtil.format(listName), LogUtil.format(userListItemAttributes.getNodeName()));
+        userListItemAttributes.validate();
 
         UserListItem item = userListItemRepository.findByListAndNodeName(
-                requestContext.nodeId(), listName, userListItemAttributes.getNodeName()).orElse(null);
+            requestContext.nodeId(), listName, userListItemAttributes.getNodeName()
+        ).orElse(null);
         if (item != null) {
             throw new OperationFailure("user-list-item.already-exists");
         }
@@ -194,26 +202,29 @@ public class UserListController {
         item.setListName(listName);
         item.setNodeName(userListItemAttributes.getNodeName());
         item.setMoment(momentFinder.find(
-                moment -> userListItemRepository.countMoments(requestContext.nodeId(), moment) == 0,
-                Util.now()));
+            moment -> userListItemRepository.countMoments(requestContext.nodeId(), moment) == 0,
+            Util.now())
+        );
         item = userListItemRepository.save(item);
 
         requestContext.send(new UserListItemAddedLiberin(item));
 
         return ResponseEntity
-                .created(URI.create(String.format("/%s/items/%s", Util.ue(listName), Util.ue(item.getNodeName()))))
-                .body(UserListItemInfoUtil.build(item));
+            .created(URI.create(String.format("/%s/items/%s", Util.ue(listName), Util.ue(item.getNodeName()))))
+            .body(UserListItemInfoUtil.build(item));
     }
 
     @DeleteMapping("/{name}/items/{nodeName}")
     @Admin(Scope.USER_LISTS)
     @Transactional
     public Result deleteItem(@PathVariable("name") String listName, @PathVariable String nodeName) {
-        log.info("DELETE /user-lists/{name}/items/{nodeName} (name = {}, nodeName = {})",
-                LogUtil.format(listName), LogUtil.format(nodeName));
+        log.info(
+            "DELETE /user-lists/{name}/items/{nodeName} (name = {}, nodeName = {})",
+            LogUtil.format(listName), LogUtil.format(nodeName)
+        );
 
         UserListItem item = userListItemRepository.findByListAndNodeName(requestContext.nodeId(), listName, nodeName)
-                .orElseThrow(() -> new ObjectNotFoundFailure("user-list-item.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("user-list-item.not-found"));
         userListItemRepository.delete(item);
 
         requestContext.send(new UserListItemDeletedLiberin(item));

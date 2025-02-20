@@ -7,17 +7,18 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.ContactInfo;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SubscriberDescription;
 import org.moera.lib.node.types.SubscriberInfo;
 import org.moera.lib.node.types.SubscriberOverride;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.Contact;
@@ -38,12 +39,12 @@ import org.moera.node.liberin.model.SubscriberDeletedLiberin;
 import org.moera.node.liberin.model.SubscriberOperationsUpdatedLiberin;
 import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.SubscriberDescription;
+import org.moera.node.model.SubscriberDescriptionUtil;
 import org.moera.node.model.SubscriberInfoUtil;
 import org.moera.node.model.SubscriberOverrideUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.OperationsValidator;
+import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;
@@ -145,15 +146,16 @@ public class SubscriberController {
     @PostMapping
     @Entitled
     @Transactional
-    public SubscriberInfo post(@Valid @RequestBody SubscriberDescription subscriberDescription) {
-        log.info("POST /people/subscribers (type = {}, feedName = {}, postingId = {})",
-                LogUtil.format(SubscriptionType.toValue(subscriberDescription.getType())),
-                LogUtil.format(subscriberDescription.getFeedName()),
-                LogUtil.format(subscriberDescription.getPostingId()));
+    public SubscriberInfo post(@RequestBody SubscriberDescription subscriberDescription) {
+        log.info(
+            "POST /people/subscribers (type = {}, feedName = {}, postingId = {})",
+            LogUtil.format(SubscriptionType.toValue(subscriberDescription.getType())),
+            LogUtil.format(subscriberDescription.getFeedName()),
+            LogUtil.format(subscriberDescription.getPostingId())
+        );
 
-        if (subscriberDescription.getType() == null) {
-            throw new ValidationFailure("subscriberDescription.type.blank");
-        }
+        subscriberDescription.validate();
+
         String ownerName = requestContext.getClientName(Scope.SUBSCRIBE);
         if (ObjectUtils.isEmpty(ownerName)) {
             throw new AuthenticationException();
@@ -164,11 +166,12 @@ public class SubscriberController {
         subscriber.setId(UUID.randomUUID());
         subscriber.setNodeId(requestContext.nodeId());
         subscriber.setRemoteNodeName(ownerName);
-        subscriberDescription.toSubscriber(subscriber);
+        SubscriberDescriptionUtil.toSubscriber(subscriberDescription, subscriber);
         if (subscriberDescription.getPostingId() != null) {
-            Posting posting = postingRepository.findByNodeIdAndId(
-                    requestContext.nodeId(), subscriberDescription.getPostingId())
-                    .orElseThrow(() -> new ValidationFailure("subscriberDescription.postingId.not-found"));
+            UUID postingId = Util.uuid(subscriberDescription.getPostingId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
             if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                 throw new ObjectNotFoundFailure("posting.not-found");
             }
@@ -195,37 +198,31 @@ public class SubscriberController {
     private void validate(SubscriberDescription description) {
         switch (description.getType()) {
             case FEED:
-                if (ObjectUtils.isEmpty(description.getFeedName())) {
-                    throw new ValidationFailure("subscriberDescription.feedName.blank");
-                }
-                if (!Feed.isStandard(description.getFeedName())) {
-                    throw new ValidationFailure("subscriberDescription.feedName.not-found");
-                }
-                if (Feed.isAdmin(description.getFeedName())) {
-                    throw new ValidationFailure("subscriberDescription.feedName.not-found");
+                ValidationUtil.notBlank(description.getFeedName(), "subscriber.feed-name.blank");
+                if (!Feed.isStandard(description.getFeedName()) || Feed.isAdmin(description.getFeedName())) {
+                    throw new ObjectNotFoundFailure("feed.not-found");
                 }
                 break;
             case POSTING:
             case POSTING_COMMENTS:
-                if (description.getPostingId() == null) {
-                    throw new ValidationFailure("subscriberDescription.postingId.blank");
-                }
+                ValidationUtil.notBlank(description.getPostingId(), "subscriber.posting-id.blank");
                 break;
             case PROFILE:
                 break;
             case USER_LIST:
-                if (ObjectUtils.isEmpty(description.getFeedName())) {
-                    throw new ValidationFailure("subscriberDescription.feedName.blank");
-                }
+                ValidationUtil.notBlank(description.getFeedName(), "subscriber.feed-name.blank");
+                ValidationUtil.assertion(UserList.isKnown(description.getFeedName()), "feed.not-found");
                 if (!UserList.isKnown(description.getFeedName())) {
-                    throw new ValidationFailure("subscriberDescription.feedName.not-found");
+                    throw new ObjectNotFoundFailure("user-list.not-found");
                 }
                 break;
         }
 
-        OperationsValidator.validateOperations(description::getPrincipal,
-                OperationsValidator.SUBSCRIBER_OPERATIONS, false,
-                "subscriberDescription.operations.wrong-principal");
+        OperationsValidator.validateOperations(
+            description.getOperations(),
+            false,
+            "subscriber.operations.wrong-principal"
+        );
     }
 
     @PutMapping("/{id}")
@@ -249,7 +246,7 @@ public class SubscriberController {
         OperationsValidator.validateOperations(
             subscriberOverride.getOperations(),
             false,
-            "subscriberOverride.operations.wrong-principal"
+            "subscriber.operations.wrong-principal"
         );
         if (
             subscriberOverride.getAdminOperations() != null
@@ -261,7 +258,7 @@ public class SubscriberController {
         OperationsValidator.validateOperations(
             subscriberOverride.getAdminOperations(),
             true,
-            "subscriberOverride.adminOperations.wrong-principal"
+            "subscriber.admin-operations.wrong-principal"
         );
 
         SubscriberOverrideUtil.toSubscriber(subscriberOverride, subscriber);
