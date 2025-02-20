@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
+import org.moera.lib.node.Sheriffs;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.data.Feed;
 import org.moera.node.data.Reminder;
@@ -18,7 +19,6 @@ import org.moera.node.domain.Domains;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.StoryAddedLiberin;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
-import org.moera.node.model.Sheriffs;
 import org.moera.node.model.StoryTypeUtil;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
@@ -186,9 +186,10 @@ public class ReminderOperations {
             case REMINDER_EMAIL -> !ObjectUtils.isEmpty(universalContext.getOptions().getString("profile.email"));
             case REMINDER_SHERIFF_ALLOW -> {
                 List<String> sheriffs = SheriffUtil.deserializeSheriffs(
-                        universalContext.getOptions().getString("sheriffs.timeline")).orElse(null);
+                    universalContext.getOptions().getString("sheriffs.timeline")
+                ).orElse(null);
                 yield sheriffs != null
-                        && sheriffs.stream().anyMatch(name -> name.equals(Sheriffs.GOOGLE_PLAY_TIMELINE));
+                    && sheriffs.stream().anyMatch(name -> name.equals(Sheriffs.GOOGLE_PLAY_TIMELINE));
             }
             default -> true;
         };
@@ -223,7 +224,7 @@ public class ReminderOperations {
         universalContext.associate(change.getNodeId());
         List<String> sheriffs = SheriffUtil.deserializeSheriffs((String) change.getNewValue()).orElse(null);
         boolean sheriffAllowed = sheriffs != null
-                && sheriffs.stream().anyMatch(name -> name.equals(Sheriffs.GOOGLE_PLAY_TIMELINE));
+            && sheriffs.stream().anyMatch(name -> name.equals(Sheriffs.GOOGLE_PLAY_TIMELINE));
         if (sheriffAllowed) {
             unpublishAndDelete(StoryType.REMINDER_SHERIFF_ALLOW);
         }
