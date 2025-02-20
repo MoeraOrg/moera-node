@@ -4,10 +4,10 @@ import java.util.Objects;
 import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffOrderAttributes;
 import org.moera.lib.node.types.SheriffOrderCategory;
 import org.moera.lib.node.types.SheriffOrderInfo;
 import org.moera.lib.node.types.SheriffOrderReason;
@@ -20,7 +20,6 @@ import org.moera.node.global.Entitled;
 import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.SheriffOrderAttributes;
 import org.moera.node.model.SheriffOrderInfoUtil;
 import org.moera.node.rest.task.SheriffOrderPostJob;
 import org.moera.node.task.Jobs;
@@ -51,26 +50,31 @@ public class RemoteSheriffOrderController {
     @PostMapping
     @Admin(Scope.SHERIFF)
     @Entitled
-    public Result post(@PathVariable String nodeName,
-                       @Valid @RequestBody SheriffOrderAttributes sheriffOrderAttributes) {
-        log.info("POST /moera/api/nodes/{nodeName}/sheriff/orders (nodeName = {}, delete = {}, feedName = {},"
-                        + " postingId = {}, commentId = {}, category = {}, reasonCode = {})",
-                LogUtil.format(nodeName),
-                LogUtil.format(sheriffOrderAttributes.isDelete()),
-                LogUtil.format(sheriffOrderAttributes.getFeedName()),
-                LogUtil.format(sheriffOrderAttributes.getPostingId()),
-                LogUtil.format(sheriffOrderAttributes.getCommentId()),
-                LogUtil.format(SheriffOrderCategory.toValue(sheriffOrderAttributes.getCategory())),
-                LogUtil.format(SheriffOrderReason.toValue(sheriffOrderAttributes.getReasonCode())));
+    public Result post(
+        @PathVariable String nodeName, @RequestBody SheriffOrderAttributes sheriffOrderAttributes
+    ) {
+        log.info(
+            "POST /moera/api/nodes/{nodeName}/sheriff/orders (nodeName = {}, delete = {}, feedName = {},"
+                + " postingId = {}, commentId = {}, category = {}, reasonCode = {})",
+            LogUtil.format(nodeName),
+            LogUtil.format(sheriffOrderAttributes.getDelete()),
+            LogUtil.format(sheriffOrderAttributes.getFeedName()),
+            LogUtil.format(sheriffOrderAttributes.getPostingId()),
+            LogUtil.format(sheriffOrderAttributes.getCommentId()),
+            LogUtil.format(SheriffOrderCategory.toValue(sheriffOrderAttributes.getCategory())),
+            LogUtil.format(SheriffOrderReason.toValue(sheriffOrderAttributes.getReasonCode()))
+        );
 
+        sheriffOrderAttributes.validate();
         if (sheriffOrderAttributes.getReasonCode() == null) {
             sheriffOrderAttributes.setReasonCode(SheriffOrderReason.OTHER);
         }
 
         jobs.run(
-                SheriffOrderPostJob.class,
-                new SheriffOrderPostJob.Parameters(nodeName, sheriffOrderAttributes, null),
-                requestContext.nodeId());
+            SheriffOrderPostJob.class,
+            new SheriffOrderPostJob.Parameters(nodeName, sheriffOrderAttributes, null),
+            requestContext.nodeId()
+        );
 
         return Result.OK;
     }
@@ -78,11 +82,13 @@ public class RemoteSheriffOrderController {
     @GetMapping("/{id}")
     @Transactional
     public SheriffOrderInfo get(@PathVariable String nodeName, @PathVariable UUID id) {
-        log.info("GET /moera/api/nodes/{nodeName}/sheriff/orders/{id} (nodeName = {}, id = {})",
-                LogUtil.format(nodeName), LogUtil.format(id));
+        log.info(
+            "GET /moera/api/nodes/{nodeName}/sheriff/orders/{id} (nodeName = {}, id = {})",
+            LogUtil.format(nodeName), LogUtil.format(id)
+        );
 
         SheriffOrder sheriffOrder = sheriffOrderRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-order.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-order.not-found"));
         if (!Objects.equals(sheriffOrder.getRemoteNodeName(), nodeName)) {
             throw new ObjectNotFoundFailure("sheriff-order.wrong-node");
         }

@@ -6,14 +6,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffComplaintDecisionText;
 import org.moera.lib.node.types.SheriffComplaintGroupInfo;
 import org.moera.lib.node.types.SheriffComplaintGroupsSliceInfo;
 import org.moera.lib.node.types.SheriffComplaintInfo;
 import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.lib.node.types.SheriffOrderCategory;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.SheriffComplaint;
@@ -25,10 +26,10 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SheriffComplaintGroupUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.SheriffComplaintDecisionText;
+import org.moera.node.model.SheriffComplaintDecisionTextUtil;
 import org.moera.node.model.SheriffComplaintGroupInfoUtil;
 import org.moera.node.model.SheriffComplaintInfoUtil;
-import org.moera.node.model.SheriffOrderAttributes;
+import org.moera.node.model.SheriffOrderAttributesUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.rest.task.SheriffOrderPostJob;
 import org.moera.node.task.Jobs;
@@ -103,8 +104,9 @@ public class SheriffComplaintGroupController {
     private SheriffComplaintGroupsSliceInfo getGroupsBefore(long before, int limit, SheriffComplaintStatus status) {
         SheriffComplaintGroupsSliceInfo sliceInfo = new SheriffComplaintGroupsSliceInfo();
         sliceInfo.setBefore(before);
-        Page<SheriffComplaintGroup> page = findSlice(requestContext.nodeId(), SafeInteger.MIN_VALUE, before,
-                limit + 1, Sort.Direction.DESC, status);
+        Page<SheriffComplaintGroup> page = findSlice(
+            requestContext.nodeId(), SafeInteger.MIN_VALUE, before, limit + 1, Sort.Direction.DESC, status
+        );
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setAfter(SafeInteger.MIN_VALUE);
         } else {
@@ -117,8 +119,9 @@ public class SheriffComplaintGroupController {
     private SheriffComplaintGroupsSliceInfo getGroupsAfter(long after, int limit, SheriffComplaintStatus status) {
         SheriffComplaintGroupsSliceInfo sliceInfo = new SheriffComplaintGroupsSliceInfo();
         sliceInfo.setAfter(after);
-        Page<SheriffComplaintGroup> page = findSlice(requestContext.nodeId(), after, SafeInteger.MAX_VALUE,
-                limit + 1, Sort.Direction.ASC, status);
+        Page<SheriffComplaintGroup> page = findSlice(
+            requestContext.nodeId(), after, SafeInteger.MAX_VALUE, limit + 1, Sort.Direction.ASC, status
+        );
         if (page.getNumberOfElements() < limit + 1) {
             sliceInfo.setBefore(SafeInteger.MAX_VALUE);
         } else {
@@ -128,13 +131,14 @@ public class SheriffComplaintGroupController {
         return sliceInfo;
     }
 
-    private Page<SheriffComplaintGroup> findSlice(UUID nodeId, long afterMoment, long beforeMoment, int limit,
-                                                  Sort.Direction direction, SheriffComplaintStatus status) {
+    private Page<SheriffComplaintGroup> findSlice(
+        UUID nodeId, long afterMoment, long beforeMoment, int limit, Sort.Direction direction,
+        SheriffComplaintStatus status
+    ) {
         Pageable pageable = PageRequest.of(0, limit + 1, direction, "moment");
         return status == null
-                ? sheriffComplaintGroupRepository.findInRange(nodeId, afterMoment, beforeMoment, pageable)
-                : sheriffComplaintGroupRepository.findByStatusInRange(
-                        nodeId, afterMoment, beforeMoment, status, pageable);
+            ? sheriffComplaintGroupRepository.findInRange(nodeId, afterMoment, beforeMoment, pageable)
+            : sheriffComplaintGroupRepository.findByStatusInRange(nodeId, afterMoment, beforeMoment, status, pageable);
     }
 
     private static void fillSlice(SheriffComplaintGroupsSliceInfo sliceInfo, Page<SheriffComplaintGroup> page) {
@@ -147,8 +151,8 @@ public class SheriffComplaintGroupController {
 
     private void calcSliceTotals(SheriffComplaintGroupsSliceInfo sliceInfo, SheriffComplaintStatus status) {
         int total = status == null
-                ? sheriffComplaintGroupRepository.countByNodeId(requestContext.nodeId())
-                : sheriffComplaintGroupRepository.countByStatus(requestContext.nodeId(), status);
+            ? sheriffComplaintGroupRepository.countByNodeId(requestContext.nodeId())
+            : sheriffComplaintGroupRepository.countByStatus(requestContext.nodeId(), status);
         sliceInfo.setTotal(total);
         if (sliceInfo.getAfter() <= SafeInteger.MIN_VALUE) {
             sliceInfo.setTotalInPast(0);
@@ -158,10 +162,12 @@ public class SheriffComplaintGroupController {
             sliceInfo.setTotalInPast(total - sliceInfo.getGroups().size());
         } else {
             int totalInFuture = status == null
-                    ? sheriffComplaintGroupRepository.countInRange(
-                            requestContext.nodeId(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE)
-                    : sheriffComplaintGroupRepository.countByStatusInRange(
-                            requestContext.nodeId(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE, status);
+                ? sheriffComplaintGroupRepository.countInRange(
+                    requestContext.nodeId(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE
+                )
+                : sheriffComplaintGroupRepository.countByStatusInRange(
+                    requestContext.nodeId(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE, status
+                );
             sliceInfo.setTotalInFuture(totalInFuture);
             sliceInfo.setTotalInPast(total - totalInFuture - sliceInfo.getGroups().size());
         }
@@ -173,8 +179,8 @@ public class SheriffComplaintGroupController {
         log.info("GET /sheriff/complaints/groups/{id} (id = {})", LogUtil.format(id));
 
         SheriffComplaintGroup sheriffComplaintGroup = sheriffComplaintGroupRepository
-                .findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
+            .findByNodeIdAndId(requestContext.nodeId(), id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
 
         return SheriffComplaintGroupInfoUtil.build(sheriffComplaintGroup);
     }
@@ -185,49 +191,55 @@ public class SheriffComplaintGroupController {
         log.info("GET /sheriff/complaints/groups/{id}/complaints (id = {})", LogUtil.format(id));
 
         SheriffComplaintGroup sheriffComplaintGroup = sheriffComplaintGroupRepository
-                .findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
+            .findByNodeIdAndId(requestContext.nodeId(), id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
 
         List<SheriffComplaint> sheriffComplaints = sheriffComplaintRepository.findByGroupId(requestContext.nodeId(), id);
 
         return sheriffComplaints.stream()
-                .filter(
-                    sc -> !sheriffComplaintGroup.isAnonymous()
-                        || requestContext.isAdmin(Scope.SHERIFF)
-                        || requestContext.isClient(sc.getOwnerName(), Scope.IDENTIFY)
-                )
-                .map(sc -> SheriffComplaintInfoUtil.build(sc, false))
-                .collect(Collectors.toList());
+            .filter(
+                sc -> !sheriffComplaintGroup.isAnonymous()
+                    || requestContext.isAdmin(Scope.SHERIFF)
+                    || requestContext.isClient(sc.getOwnerName(), Scope.IDENTIFY)
+            )
+            .map(sc -> SheriffComplaintInfoUtil.build(sc, false))
+            .collect(Collectors.toList());
     }
 
     @PutMapping("/{id}")
     @Admin(Scope.SHERIFF)
     @Transactional
-    public SheriffComplaintGroupInfo put(@PathVariable UUID id,
-                                         @Valid @RequestBody SheriffComplaintDecisionText sheriffComplaintDecisionText) {
-        log.info("PUT /sheriff/complaints/groups/{id} (id = {}, reject = {}, decisionCode = {})",
-                LogUtil.format(id),
-                LogUtil.format(sheriffComplaintDecisionText.isReject()),
-                LogUtil.format(Objects.toString(sheriffComplaintDecisionText.getDecisionCode(), null)));
+    public SheriffComplaintGroupInfo put(
+        @PathVariable UUID id,
+        @RequestBody SheriffComplaintDecisionText sheriffComplaintDecisionText
+    ) {
+        log.info(
+            "PUT /sheriff/complaints/groups/{id} (id = {}, reject = {}, decisionCode = {})",
+            LogUtil.format(id),
+            LogUtil.format(sheriffComplaintDecisionText.isReject()),
+            LogUtil.format(Objects.toString(sheriffComplaintDecisionText.getDecisionCode(), null))
+        );
 
-        if (!sheriffComplaintDecisionText.isReject() && sheriffComplaintDecisionText.getDecisionCode() == null) {
-            throw new ValidationFailure("sheriffComplaintDecisionText.decisionCode.blank");
-        }
+        sheriffComplaintDecisionText.validate();
+        ValidationUtil.assertion(
+            sheriffComplaintDecisionText.isReject() || sheriffComplaintDecisionText.getDecisionCode() != null,
+            "sheriff-complaint-decision.decision-code.missing"
+        );
 
         SheriffComplaintGroup sheriffComplaintGroup = sheriffComplaintGroupRepository
-                .findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
+            .findByNodeIdAndId(requestContext.nodeId(), id)
+            .orElseThrow(() -> new ObjectNotFoundFailure("sheriff-complaint-group.not-found"));
         SheriffComplaintStatus prevStatus = sheriffComplaintGroup.getStatus();
         boolean noOrder = (prevStatus == SheriffComplaintStatus.POSTED || prevStatus == SheriffComplaintStatus.PREPARED)
                 && sheriffComplaintDecisionText.isReject();
-        sheriffComplaintDecisionText.toSheriffComplaintGroup(sheriffComplaintGroup);
+        SheriffComplaintDecisionTextUtil.toSheriffComplaintGroup(sheriffComplaintDecisionText, sheriffComplaintGroup);
 
         if (!noOrder) {
             jobs.run(
                 SheriffOrderPostJob.class,
                 new SheriffOrderPostJob.Parameters(
                     sheriffComplaintGroup.getRemoteNodeName(),
-                    new SheriffOrderAttributes(
+                    SheriffOrderAttributesUtil.build(
                         sheriffComplaintGroup,
                         SheriffOrderCategory.VISIBILITY,
                         sheriffComplaintDecisionText

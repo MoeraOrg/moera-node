@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.SheriffOrderAttributes;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.SheriffComplaintGroup;
@@ -21,7 +22,6 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.SheriffOrderAttributes;
 import org.moera.node.model.SheriffOrderDetailsQ;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
@@ -180,26 +180,29 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
 
         if (postingId != null && state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
-                    parameters.remoteNodeName,
-                    generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
-                    postingId);
+                parameters.remoteNodeName,
+                generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
+                postingId
+            );
             checkpoint();
         }
 
         if (postingId != null && commentId != null && state.commentInfo == null) {
             state.commentInfo = nodeApi.getComment(
-                    parameters.remoteNodeName,
-                    generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
-                    postingId,
-                    commentId);
+                parameters.remoteNodeName,
+                generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
+                postingId,
+                commentId
+            );
             checkpoint();
         }
 
         if (!state.avatarUploaded) {
             mediaManager.uploadPublicMedia(
-                    parameters.remoteNodeName,
-                    generateCarte(parameters.remoteNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
-                    getAvatar());
+                parameters.remoteNodeName,
+                generateCarte(parameters.remoteNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
+                getAvatar()
+            );
             state.avatarUploaded = true;
             checkpoint();
         }
@@ -230,9 +233,9 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
             SheriffOrder sheriffOrder = tx.executeWrite(
                 () -> {
                     SheriffComplaintGroup complaintGroup = parameters.complaintGroupId != null
-                            ? sheriffComplaintGroupRepository.findByNodeIdAndId(nodeId, parameters.complaintGroupId)
-                                    .orElse(null)
-                            : null;
+                        ? sheriffComplaintGroupRepository.findByNodeIdAndId(nodeId, parameters.complaintGroupId)
+                            .orElse(null)
+                        : null;
 
                     SheriffOrder order = buildSheriffOrder(complaintGroup);
                     state.sheriffOrderDetails.toSheriffOrder(order);

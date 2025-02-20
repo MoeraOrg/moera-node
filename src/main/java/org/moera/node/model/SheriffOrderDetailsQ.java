@@ -1,6 +1,7 @@
 package org.moera.node.model;
 
 import org.moera.lib.node.types.AvatarDescription;
+import org.moera.lib.node.types.SheriffOrderAttributes;
 import org.moera.lib.node.types.SheriffOrderCategory;
 import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.node.data.SheriffOrder;
@@ -28,7 +29,7 @@ public class SheriffOrderDetailsQ {
     public SheriffOrderDetailsQ(String id, String sheriffName, AvatarDescription sheriffAvatar,
                                 SheriffOrderAttributes attributes) {
         this.id = id;
-        delete = attributes.isDelete();
+        delete = Boolean.TRUE.equals(attributes.getDelete());
         this.sheriffName = sheriffName;
         this.sheriffAvatar = sheriffAvatar;
         feedName = attributes.getFeedName();

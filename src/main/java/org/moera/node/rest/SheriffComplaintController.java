@@ -5,11 +5,11 @@ import java.util.Optional;
 import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffComplaintInfo;
 import org.moera.lib.node.types.SheriffComplaintStatus;
+import org.moera.lib.node.types.SheriffComplaintText;
 import org.moera.lib.node.types.SheriffOrderReason;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.AuthenticationException;
@@ -23,7 +23,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SheriffComplaintAddedLiberin;
 import org.moera.node.liberin.model.SheriffComplaintGroupAddedLiberin;
 import org.moera.node.model.SheriffComplaintInfoUtil;
-import org.moera.node.model.SheriffComplaintText;
+import org.moera.node.model.SheriffComplaintTextUtil;
 import org.moera.node.rest.task.SheriffComplaintGroupPrepareJob;
 import org.moera.node.task.Jobs;
 import org.moera.node.util.MomentFinder;
@@ -65,14 +65,17 @@ public class SheriffComplaintController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<SheriffComplaintInfo> post(@Valid @RequestBody SheriffComplaintText sheriffComplaintText) {
-        log.info("POST /sheriff/complaints"
-                        + " (nodeName = {}, feedName = {}, postingId = {}, commentId = {}, reasonCode = {})",
-                LogUtil.format(sheriffComplaintText.getNodeName()),
-                LogUtil.format(sheriffComplaintText.getFeedName()),
-                LogUtil.format(sheriffComplaintText.getPostingId()),
-                LogUtil.format(sheriffComplaintText.getCommentId()),
-                LogUtil.format(SheriffOrderReason.toValue(sheriffComplaintText.getReasonCode())));
+    public ResponseEntity<SheriffComplaintInfo> post(@RequestBody SheriffComplaintText sheriffComplaintText) {
+        log.info(
+            "POST /sheriff/complaints (nodeName = {}, feedName = {}, postingId = {}, commentId = {}, reasonCode = {})",
+            LogUtil.format(sheriffComplaintText.getNodeName()),
+            LogUtil.format(sheriffComplaintText.getFeedName()),
+            LogUtil.format(sheriffComplaintText.getPostingId()),
+            LogUtil.format(sheriffComplaintText.getCommentId()),
+            LogUtil.format(SheriffOrderReason.toValue(sheriffComplaintText.getReasonCode()))
+        );
+
+        sheriffComplaintText.validate();
 
         String clientName = requestContext.getClientName(Scope.IDENTIFY);
         if (ObjectUtils.isEmpty(clientName)) {
@@ -87,8 +90,9 @@ public class SheriffComplaintController {
         boolean groupCreated = groupAndCreated.getSecond();
         sheriffComplaint.setGroup(group);
         sheriffComplaint.setOwnerName(clientName);
-        sheriffComplaintText.toSheriffComplaint(sheriffComplaint);
-        if (group.getStatus() != SheriffComplaintStatus.APPROVED
+        SheriffComplaintTextUtil.toSheriffComplaint(sheriffComplaintText, sheriffComplaint);
+        if (
+            group.getStatus() != SheriffComplaintStatus.APPROVED
             && group.getStatus() != SheriffComplaintStatus.REJECTED
         ) {
             group.setAnonymous(group.isAnonymous() || sheriffComplaint.isAnonymousRequested());
@@ -99,20 +103,23 @@ public class SheriffComplaintController {
             requestContext.send(new SheriffComplaintGroupAddedLiberin(group));
 
             jobs.run(
-                    SheriffComplaintGroupPrepareJob.class,
-                    new SheriffComplaintGroupPrepareJob.Parameters(
-                            group.getId(),
-                            group.getRemoteNodeName(),
-                            group.getRemoteFeedName(),
-                            group.getRemotePostingId(),
-                            group.getRemoteCommentId()),
-                    requestContext.nodeId());
+                SheriffComplaintGroupPrepareJob.class,
+                new SheriffComplaintGroupPrepareJob.Parameters(
+                    group.getId(),
+                    group.getRemoteNodeName(),
+                    group.getRemoteFeedName(),
+                    group.getRemotePostingId(),
+                    group.getRemoteCommentId()
+                ),
+                requestContext.nodeId()
+            );
         }
 
         requestContext.send(new SheriffComplaintAddedLiberin(sheriffComplaint, group));
 
-        return ResponseEntity.created(URI.create("/sheriff/complaints/" + sheriffComplaint.getId()))
-                .body(SheriffComplaintInfoUtil.build(sheriffComplaint, true));
+        return ResponseEntity
+            .created(URI.create("/sheriff/complaints/" + sheriffComplaint.getId()))
+            .body(SheriffComplaintInfoUtil.build(sheriffComplaint, true));
     }
 
     private Pair<SheriffComplaintGroup, Boolean> findOrCreateComplaintGroup(SheriffComplaintText sheriffComplaintText) {
@@ -125,10 +132,11 @@ public class SheriffComplaintController {
                 SheriffComplaintGroup grp = new SheriffComplaintGroup();
                 grp.setId(UUID.randomUUID());
                 grp.setNodeId(requestContext.nodeId());
-                sheriffComplaintText.toSheriffComplaintGroup(grp);
+                SheriffComplaintTextUtil.toSheriffComplaintGroup(sheriffComplaintText, grp);
                 grp.setMoment(momentFinder.find(
-                        moment -> sheriffComplaintGroupRepository.countMoments(requestContext.nodeId(), moment) == 0,
-                        Util.now()));
+                    moment -> sheriffComplaintGroupRepository.countMoments(requestContext.nodeId(), moment) == 0,
+                    Util.now()
+                ));
                 return Pair.of(sheriffComplaintGroupRepository.save(grp), true);
             });
         } catch (DataIntegrityViolationException e) {
@@ -138,16 +146,19 @@ public class SheriffComplaintController {
 
     private Optional<SheriffComplaintGroup> findComplaintGroup(SheriffComplaintText sheriffComplaintText) {
         if (sheriffComplaintText.getPostingId() == null) {
-            return sheriffComplaintGroupRepository.findByFeed(requestContext.nodeId(),
-                    sheriffComplaintText.getNodeName(), sheriffComplaintText.getFeedName());
+            return sheriffComplaintGroupRepository.findByFeed(
+                requestContext.nodeId(), sheriffComplaintText.getNodeName(), sheriffComplaintText.getFeedName()
+            );
         } else if (sheriffComplaintText.getCommentId() == null) {
-            return sheriffComplaintGroupRepository.findByPosting(requestContext.nodeId(),
-                    sheriffComplaintText.getNodeName(), sheriffComplaintText.getFeedName(),
-                    sheriffComplaintText.getPostingId());
+            return sheriffComplaintGroupRepository.findByPosting(
+                requestContext.nodeId(), sheriffComplaintText.getNodeName(), sheriffComplaintText.getFeedName(),
+                sheriffComplaintText.getPostingId()
+            );
         } else {
-            return sheriffComplaintGroupRepository.findByComment(requestContext.nodeId(),
-                    sheriffComplaintText.getNodeName(), sheriffComplaintText.getFeedName(),
-                    sheriffComplaintText.getPostingId(), sheriffComplaintText.getCommentId());
+            return sheriffComplaintGroupRepository.findByComment(
+                requestContext.nodeId(), sheriffComplaintText.getNodeName(), sheriffComplaintText.getFeedName(),
+                sheriffComplaintText.getPostingId(), sheriffComplaintText.getCommentId()
+            );
         }
     }
 
