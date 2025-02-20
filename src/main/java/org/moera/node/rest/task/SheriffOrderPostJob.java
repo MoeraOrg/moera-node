@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffOrderAttributes;
+import org.moera.lib.node.types.SheriffOrderDetails;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.SheriffComplaintGroup;
@@ -22,7 +23,7 @@ import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.SheriffOrderDetailsQ;
+import org.moera.node.model.SheriffOrderDetailsUtil;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         private PostingInfo postingInfo;
         private CommentInfo commentInfo;
         private boolean avatarUploaded;
-        private SheriffOrderDetailsQ sheriffOrderDetails;
+        private SheriffOrderDetails sheriffOrderDetails;
 
         public State() {
         }
@@ -122,11 +123,11 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
             this.avatarUploaded = avatarUploaded;
         }
 
-        public SheriffOrderDetailsQ getSheriffOrderDetails() {
+        public SheriffOrderDetails getSheriffOrderDetails() {
             return sheriffOrderDetails;
         }
 
-        public void setSheriffOrderDetails(SheriffOrderDetailsQ sheriffOrderDetails) {
+        public void setSheriffOrderDetails(SheriffOrderDetails sheriffOrderDetails) {
             this.sheriffOrderDetails = sheriffOrderDetails;
         }
 
@@ -208,7 +209,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         }
 
         if (state.sheriffOrderDetails == null) {
-            state.sheriffOrderDetails = new SheriffOrderDetailsQ(
+            state.sheriffOrderDetails = SheriffOrderDetailsUtil.build(
                 state.sheriffOrderId.toString(),
                 nodeName(),
                 AvatarDescriptionUtil.build(getAvatar()),
@@ -238,7 +239,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
                         : null;
 
                     SheriffOrder order = buildSheriffOrder(complaintGroup);
-                    state.sheriffOrderDetails.toSheriffOrder(order);
+                    SheriffOrderDetailsUtil.toSheriffOrder(state.sheriffOrderDetails, order);
                     return sheriffOrderRepository.save(order);
                 }
             );

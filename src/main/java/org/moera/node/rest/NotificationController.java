@@ -19,6 +19,7 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingClient;
+import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.FrozenNotification;
 import org.moera.node.data.FrozenNotificationRepository;
 import org.moera.node.domain.Domains;
@@ -97,7 +98,9 @@ public class NotificationController {
             Instant.ofEpochSecond(packet.getCreatedAt()).plus(10, ChronoUnit.MINUTES).isAfter(Instant.now()),
             "notification.created-at.too-old"
         );
-        ValidationUtil.assertion(verifySignature(packet), "notification.signature.invalid");
+        if (!verifySignature(packet)) {
+            throw new IncorrectSignatureException();
+        }
         requestContext.authenticatedWithSignature(packet.getNodeName());
 
         Notification notification;

@@ -3,15 +3,18 @@ package org.moera.node.rest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.SheriffOrderCategory;
+import org.moera.lib.node.types.SheriffOrderDetails;
 import org.moera.lib.node.types.SheriffOrderReason;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
+import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
 import org.moera.node.data.Comment;
@@ -27,11 +30,10 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.SheriffOrderReceivedLiberin;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.SheriffOrderDetails;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.api.naming.NamingCache;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.util.SheriffUtil;
 import org.moera.node.util.Util;
@@ -73,53 +75,62 @@ public class SheriffOrderController {
 
     @PostMapping
     @Transactional
-    public Result post(@Valid @RequestBody SheriffOrderDetails sheriffOrderDetails) {
-        log.info("POST /sheriff/orders (delete = {}, sheriffName = {}, feedName = {}, postingId = {}, commentId = {},"
-                        + " category = {}, reasonCode = {})",
-                LogUtil.format(sheriffOrderDetails.isDelete()),
-                LogUtil.format(sheriffOrderDetails.getSheriffName()),
-                LogUtil.format(sheriffOrderDetails.getFeedName()),
-                LogUtil.format(sheriffOrderDetails.getPostingId()),
-                LogUtil.format(sheriffOrderDetails.getCommentId()),
-                LogUtil.format(SheriffOrderCategory.toValue(sheriffOrderDetails.getCategory())),
-                LogUtil.format(SheriffOrderReason.toValue(sheriffOrderDetails.getReasonCode())));
+    public Result post(@RequestBody SheriffOrderDetails sheriffOrderDetails) {
+        log.info(
+            "POST /sheriff/orders (delete = {}, sheriffName = {}, feedName = {}, postingId = {}, commentId = {},"
+                + " category = {}, reasonCode = {})",
+            LogUtil.format(sheriffOrderDetails.getDelete()),
+            LogUtil.format(sheriffOrderDetails.getSheriffName()),
+            LogUtil.format(sheriffOrderDetails.getFeedName()),
+            LogUtil.format(sheriffOrderDetails.getPostingId()),
+            LogUtil.format(sheriffOrderDetails.getCommentId()),
+            LogUtil.format(SheriffOrderCategory.toValue(sheriffOrderDetails.getCategory())),
+            LogUtil.format(SheriffOrderReason.toValue(sheriffOrderDetails.getReasonCode()))
+        );
 
-        if (Duration.between(Instant.ofEpochSecond(sheriffOrderDetails.getCreatedAt()), Instant.now()).abs()
-                .compareTo(CREATED_AT_MARGIN) > 0) {
-            throw new ValidationFailure("sheriffOrderDetails.createdAt.out-of-range");
-        }
+        sheriffOrderDetails.validate();
+        ValidationUtil.assertion(
+            Duration.between(Instant.ofEpochSecond(sheriffOrderDetails.getCreatedAt()), Instant.now())
+                .abs()
+                .compareTo(CREATED_AT_MARGIN) < 0,
+            "sheriff-order.created-at.out-of-range"
+        );
 
         mediaOperations.validateAvatar(
-                sheriffOrderDetails.getSheriffAvatar(),
-                sheriffOrderDetails::setSheriffAvatarMediaFile,
-                () -> new ValidationFailure("sheriffOrderDetails.sheriffAvatar.mediaId.not-found"));
+            sheriffOrderDetails.getSheriffAvatar(),
+            mf -> AvatarDescriptionUtil.setMediaFile(sheriffOrderDetails.getSheriffAvatar(), mf),
+            () -> new ValidationFailure("avatar.not-found")
+        );
 
         Posting posting = null;
         Comment comment = null;
         byte[] entryDigest = null;
         if (sheriffOrderDetails.getPostingId() != null) {
-            posting = postingRepository.findFullByNodeIdAndId(
-                            requestContext.nodeId(), sheriffOrderDetails.getPostingId())
-                    .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            UUID postingId = Util.uuid(sheriffOrderDetails.getPostingId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
+                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
             if (posting.getCurrentRevision().getSignature() == null) {
                 throw new ValidationFailure("posting.not-signed");
             }
             List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
             boolean inFeed = stories.stream()
-                    .anyMatch(story -> story.getFeedName().equals(sheriffOrderDetails.getFeedName()));
+                .anyMatch(story -> story.getFeedName().equals(sheriffOrderDetails.getFeedName()));
             if (!inFeed) {
                 throw new ValidationFailure("sheriff-order.wrong-feed");
             }
             entryDigest = posting.getCurrentRevision().getDigest();
-        }
-        if (sheriffOrderDetails.getCommentId() != null) {
-            comment = commentRepository.findFullByNodeIdAndId(
-                    requestContext.nodeId(), sheriffOrderDetails.getCommentId())
+
+            if (sheriffOrderDetails.getCommentId() != null) {
+                UUID commentId = Util.uuid(sheriffOrderDetails.getCommentId())
                     .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
-            if (!comment.getPosting().getId().equals(sheriffOrderDetails.getPostingId())) {
-                throw new ObjectNotFoundFailure("comment.wrong-posting");
+                comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
+                    .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+                if (!comment.getPosting().getId().equals(postingId)) {
+                    throw new ObjectNotFoundFailure("comment.wrong-posting");
+                }
+                entryDigest = comment.getCurrentRevision().getDigest();
             }
-            entryDigest = comment.getCurrentRevision().getDigest();
         }
 
         byte[] signingKey = namingCache.get(sheriffOrderDetails.getSheriffName()).getSigningKey();
@@ -135,31 +146,39 @@ public class SheriffOrderController {
             throw new AuthenticationException();
         }
 
+        boolean delete = Boolean.TRUE.equals(sheriffOrderDetails.getDelete());
+
         if (posting == null) {
             String optionName = FeedOperations.getFeedSheriffMarksOption(sheriffOrderDetails.getFeedName());
             SheriffUtil.updateSheriffMarks(
-                    sheriffOrderDetails.getSheriffName(),
-                    sheriffOrderDetails.isDelete(),
-                    () -> requestContext.getOptions().getString(optionName),
-                    value -> requestContext.getOptions().set(optionName, value));
+                sheriffOrderDetails.getSheriffName(),
+                delete,
+                () -> requestContext.getOptions().getString(optionName),
+                value -> requestContext.getOptions().set(optionName, value)
+            );
         } else {
             Entry entry = comment == null ? posting : comment;
             SheriffUtil.updateSheriffMarks(
-                    sheriffOrderDetails.getSheriffName(), sheriffOrderDetails.isDelete(), entry);
+                sheriffOrderDetails.getSheriffName(),
+                delete,
+                entry
+            );
             entry.setEditedAt(Util.now());
         }
 
         requestContext.send(new SheriffOrderReceivedLiberin(
-            sheriffOrderDetails.isDelete(),
+            delete,
             sheriffOrderDetails.getFeedName(),
             posting,
             comment,
             sheriffOrderDetails.getSheriffName(),
             AvatarImageUtil.build(
-                sheriffOrderDetails.getSheriffAvatar(), sheriffOrderDetails.getSheriffAvatarMediaFile()
+                sheriffOrderDetails.getSheriffAvatar(),
+                AvatarDescriptionUtil.getMediaFile(sheriffOrderDetails.getSheriffAvatar())
             ),
             sheriffOrderDetails.getId()
         ));
+
         return Result.OK;
     }
 
