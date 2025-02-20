@@ -3,8 +3,8 @@ package org.moera.node.fingerprint;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;
 import org.moera.lib.node.types.ReactionAttributes;
+import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionInfo;
-import org.moera.node.model.ReactionDescription;
 
 public class ReactionFingerprintBuilder {
 

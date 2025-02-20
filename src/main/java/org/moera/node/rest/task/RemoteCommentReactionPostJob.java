@@ -10,6 +10,7 @@ import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.ReactionCreated;
+import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.MediaFile;
@@ -22,7 +23,7 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfo;
 import org.moera.node.model.PostingInfo;
 import org.moera.node.model.PostingRevisionInfo;
-import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,22 +142,26 @@ public class RemoteCommentReactionPostJob
     @Override
     protected void started() {
         super.started();
-        log.info("Adding a reaction to the comment {} under posting {} at node {}",
-                parameters.commentId, parameters.postingId, parameters.targetNodeName);
+        log.info(
+            "Adding a reaction to the comment {} under posting {} at node {}",
+            parameters.commentId, parameters.postingId, parameters.targetNodeName
+        );
     }
 
     @Override
     protected void execute() throws NodeApiException {
         if (state.commentInfo == null) {
             mediaManager.uploadPublicMedia(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
-                    getAvatar());
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
+                getAvatar()
+            );
             state.commentInfo = nodeApi.getComment(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                    parameters.postingId,
-                    parameters.commentId);
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                parameters.postingId,
+                parameters.commentId
+            );
             if (state.commentInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile =
                         mediaManager.downloadPublicMedia(parameters.targetNodeName, state.commentInfo.getOwnerAvatar());
@@ -167,9 +172,10 @@ public class RemoteCommentReactionPostJob
 
         if (state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                    parameters.postingId);
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                parameters.postingId
+            );
             if (state.postingInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile =
                         mediaManager.downloadPublicMedia(parameters.targetNodeName, state.postingInfo.getOwnerAvatar());
@@ -178,21 +184,25 @@ public class RemoteCommentReactionPostJob
             checkpoint();
         }
 
-        if (state.postingRevisionInfo == null
-                && !state.commentInfo.getPostingRevisionId().equals(state.postingInfo.getRevisionId())) {
+        if (
+            state.postingRevisionInfo == null
+            && !state.commentInfo.getPostingRevisionId().equals(state.postingInfo.getRevisionId())
+        ) {
             state.postingRevisionInfo = nodeApi.getPostingRevision(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                    parameters.postingId,
-                    state.commentInfo.getPostingRevisionId());
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                parameters.postingId,
+                state.commentInfo.getPostingRevisionId()
+            );
             checkpoint();
         }
 
         created = nodeApi.postCommentReaction(
-                parameters.targetNodeName,
-                parameters.postingId,
-                parameters.commentId,
-                buildReaction());
+            parameters.targetNodeName,
+            parameters.postingId,
+            parameters.commentId,
+            buildReaction()
+        );
     }
 
     private ReactionDescription buildReaction() {
@@ -221,8 +231,9 @@ public class RemoteCommentReactionPostJob
         );
         byte[] fingerprint = ReactionFingerprintBuilder.build(nodeName(), parameters.attributes, commentFingerprint);
 
-        ReactionDescription description = new ReactionDescription(
-                nodeName(), fullName(), gender(), getAvatar(), parameters.attributes);
+        ReactionDescription description = ReactionDescriptionUtil.build(
+            nodeName(), fullName(), gender(), getAvatar(), parameters.attributes
+        );
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprintBuilder.LATEST_VERSION);
 
@@ -232,15 +243,21 @@ public class RemoteCommentReactionPostJob
     @Override
     protected void succeeded() {
         super.succeeded();
-        log.info("Succeeded to post a reaction to the comment {} under posting {} at node {}",
-                created.getReaction().getCommentId(), created.getReaction().getPostingId(), parameters.targetNodeName);
+        log.info(
+            "Succeeded to post a reaction to the comment {} under posting {} at node {}",
+            created.getReaction().getCommentId(), created.getReaction().getPostingId(), parameters.targetNodeName
+        );
     }
 
     @Override
     protected void failed() {
         super.failed();
-        send(new RemoteCommentReactionAddingFailedLiberin(parameters.targetNodeName, parameters.postingId,
-                state.postingInfo, parameters.commentId, state.commentInfo));
+        send(
+            new RemoteCommentReactionAddingFailedLiberin(
+                parameters.targetNodeName, parameters.postingId, state.postingInfo, parameters.commentId,
+                state.commentInfo
+            )
+        );
     }
 
 }

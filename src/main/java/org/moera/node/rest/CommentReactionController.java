@@ -4,10 +4,10 @@ import java.net.URI;
 import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.ReactionCreated;
+import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.ReactionOverride;
 import org.moera.lib.node.types.ReactionTotalsInfo;
@@ -31,7 +31,6 @@ import org.moera.node.liberin.model.CommentReactionOperationsUpdatedLiberin;
 import org.moera.node.liberin.model.CommentReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreatedUtil;
-import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ReactionOverrideUtil;
 import org.moera.node.model.ReactionsSliceInfoUtil;
@@ -88,21 +87,23 @@ public class CommentReactionController {
 
     @PostMapping
     public ResponseEntity<ReactionCreated> post(
-            @PathVariable UUID postingId, @PathVariable UUID commentId,
-            @Valid @RequestBody ReactionDescription reactionDescription) {
-
-        log.info("POST /postings/{postingId}/comments/{commentId}/reactions"
-                        + " (postingId = {}, commentId = {}, negative = {}, emoji = {})",
-                LogUtil.format(postingId),
-                LogUtil.format(commentId),
-                LogUtil.format(reactionDescription.isNegative()),
-                LogUtil.format(reactionDescription.getEmoji()));
+        @PathVariable UUID postingId, @PathVariable UUID commentId,
+        @RequestBody ReactionDescription reactionDescription
+    ) {
+        log.info(
+            "POST /postings/{postingId}/comments/{commentId}/reactions"
+                + " (postingId = {}, commentId = {}, negative = {}, emoji = {})",
+            LogUtil.format(postingId),
+            LogUtil.format(commentId),
+            LogUtil.format(reactionDescription.isNegative()),
+            LogUtil.format(reactionDescription.getEmoji())
+        );
 
         lock.lock(postingId);
         try {
             return tx.executeWrite(() -> {
                 Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                        .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+                    .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
                 if (!comment.getPosting().getId().equals(postingId)) {
                     throw new ObjectNotFoundFailure("comment.wrong-posting");
                 }
@@ -122,21 +123,29 @@ public class CommentReactionController {
                 if (blockedUserOperations.isBlocked(BlockedOperation.REACTION, postingId)) {
                     throw new UserBlockedException();
                 }
-                OperationsValidator.validateOperations(reactionDescription::getPrincipal,
-                        OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
-                        "reactionDescription.operations.wrong-principal");
+                OperationsValidator.validateOperations(
+                    true,
+                    reactionDescription.getOperations(),
+                    false,
+                    "reaction.operations.wrong-principal"
+                );
 
                 var liberin = new CommentReactionAddedLiberin(comment);
-                Reaction reaction = reactionOperations.post(reactionDescription, comment, liberin::setDeletedReaction,
-                        liberin::setAddedReaction);
+                Reaction reaction = reactionOperations.post(
+                    reactionDescription, comment, liberin::setDeletedReaction, liberin::setAddedReaction
+                );
                 requestContext.send(liberin);
 
                 var totalsInfo = reactionTotalOperations.getInfo(comment);
-                return ResponseEntity.created(
-                        URI.create(String.format("/postings/%s/comments/%s/reactions/%s",
-                                postingId, comment.getId(), reaction.getId())))
-                        .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
-                    });
+                return ResponseEntity
+                    .created(
+                        URI.create(
+                            String.format("/postings/%s/comments/%s/reactions/%s",
+                            postingId, comment.getId(), reaction.getId())
+                        )
+                    )
+                    .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
+            });
         } finally {
             lock.unlock(postingId);
         }
@@ -184,7 +193,7 @@ public class CommentReactionController {
             true,
             reactionOverride.getOperations(),
             false,
-            "reactionOverride.operations.wrong-principal"
+            "reaction.operations.wrong-principal"
         );
         if (
             reactionOverride.getSeniorOperations() != null
@@ -197,7 +206,7 @@ public class CommentReactionController {
             true,
             reactionOverride.getSeniorOperations(),
             true,
-            "reactionOverride.seniorOperations.wrong-principal"
+            "reaction.senior-operations.wrong-principal"
         );
         if (
             reactionOverride.getSeniorOperations() != null
@@ -212,7 +221,7 @@ public class CommentReactionController {
             true,
             reactionOverride.getMajorOperations(),
             true,
-            "reactionOverride.majorOperations.wrong-principal"
+            "reaction.major-operations.wrong-principal"
         );
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(comment.getId(), ownerName);
         if (reaction == null) {

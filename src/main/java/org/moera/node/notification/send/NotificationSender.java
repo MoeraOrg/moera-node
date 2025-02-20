@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.NotificationPacket;
 import org.moera.lib.node.types.Result;
 import org.moera.node.api.node.NodeApiAuthenticationException;
 import org.moera.node.api.node.NodeApiNotFoundException;
@@ -26,7 +27,6 @@ import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.SubscriberNotification;
-import org.moera.node.notification.NotificationPacket;
 import org.moera.node.operations.RemoteConnectivityOperations;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
@@ -240,7 +240,7 @@ public class NotificationSender extends Task {
     private boolean isUnsubscribeError(Throwable e) {
         if (e instanceof NodeApiValidationException) {
             String errorCode = ((NodeApiValidationException) e).getErrorCode();
-            return errorCode.equals("subscription.unsubscribe") || errorCode.equals("notificationPacket.type.unknown");
+            return errorCode.equals("subscription.unsubscribe") || errorCode.equals("notification.type.unknown");
         }
         return false;
     }

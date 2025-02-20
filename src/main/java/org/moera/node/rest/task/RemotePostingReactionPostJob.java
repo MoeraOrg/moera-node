@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.ReactionAttributes;
 import org.moera.lib.node.types.ReactionCreated;
+import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
@@ -24,7 +25,7 @@ import org.moera.node.liberin.model.RemotePostingReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
@@ -190,8 +191,9 @@ public class RemotePostingReactionPostJob
 
         if (!state.targetAvatarMediaFileLoaded) {
             MediaFile mediaFile = mediaManager.downloadPublicMedia(
-                    parameters.targetNodeName,
-                    state.target.getAvatar());
+                parameters.targetNodeName,
+                state.target.getAvatar()
+            );
             state.targetAvatarMediaFileId = mediaFile != null ? mediaFile.getId() : null;
             state.targetAvatarMediaFileLoaded = true;
             checkpoint();
@@ -199,18 +201,20 @@ public class RemotePostingReactionPostJob
 
         if (!state.ownerAvatarUploaded) {
             mediaManager.uploadPublicMedia(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
-                    getAvatar());
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
+                getAvatar()
+            );
             state.ownerAvatarUploaded = true;
             checkpoint();
         }
 
         if (state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                    parameters.postingId);
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                parameters.postingId
+            );
             checkpoint();
         }
 
@@ -233,9 +237,10 @@ public class RemotePostingReactionPostJob
 
         if (state.reactionInfo == null) {
             ReactionCreated created = nodeApi.postPostingReaction(
-                    parameters.targetNodeName,
-                    parameters.postingId,
-                    state.reactionDescription);
+                parameters.targetNodeName,
+                parameters.postingId,
+                state.reactionDescription
+            );
             state.reactionInfo = created.getReaction();
             checkpoint();
         }
@@ -246,10 +251,11 @@ public class RemotePostingReactionPostJob
     private ReactionDescription buildReaction() {
         byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
-                        parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                        state.postingInfo.getParentMediaId(),
-                        null)
+                    parameters.targetNodeName,
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                    state.postingInfo.getParentMediaId(),
+                    null
+                )
                 : null;
         byte[] fingerprint = ReactionFingerprintBuilder.build(
                 nodeName(),
@@ -266,8 +272,8 @@ public class RemotePostingReactionPostJob
                         )
                 )
         );
-        ReactionDescription description = new ReactionDescription(
-                nodeName(), fullName(), gender(), getAvatar(), parameters.attributes
+        ReactionDescription description = ReactionDescriptionUtil.build(
+            nodeName(), fullName(), gender(), getAvatar(), parameters.attributes
         );
         description.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
         description.setSignatureVersion(ReactionFingerprintBuilder.LATEST_VERSION);
@@ -278,8 +284,8 @@ public class RemotePostingReactionPostJob
         tx.executeWrite(
             () -> {
                 OwnReaction ownReaction = ownReactionRepository
-                        .findByRemotePostingId(nodeId, parameters.targetNodeName, parameters.postingId)
-                        .orElse(null);
+                    .findByRemotePostingId(nodeId, parameters.targetNodeName, parameters.postingId)
+                    .orElse(null);
                 if (ownReaction == null) {
                     ownReaction = new OwnReaction();
                     ownReaction.setId(UUID.randomUUID());
@@ -298,30 +304,39 @@ public class RemotePostingReactionPostJob
                 ownReaction.setPostingHeading(state.postingInfo.getHeading());
             }
         );
-        send(new RemotePostingReactionAddedLiberin(parameters.targetNodeName, parameters.postingId, state.reactionInfo));
+        send(
+            new RemotePostingReactionAddedLiberin(parameters.targetNodeName, parameters.postingId, state.reactionInfo)
+        );
     }
 
     @Override
     protected void succeeded() {
         super.succeeded();
-        log.info("Succeeded to post reaction to posting {} at node {}",
-                state.reactionInfo.getPostingId(), parameters.targetNodeName);
+        log.info(
+            "Succeeded to post reaction to posting {} at node {}",
+            state.reactionInfo.getPostingId(), parameters.targetNodeName
+        );
     }
 
     @Override
     protected void failed() {
         super.failed();
         if (state.postingInfo.getParentMediaId() == null) {
-            send(new RemotePostingReactionAddingFailedLiberin(
-                    parameters.targetNodeName, parameters.postingId, state.postingInfo));
+            send(
+                new RemotePostingReactionAddingFailedLiberin(
+                    parameters.targetNodeName, parameters.postingId, state.postingInfo
+                )
+            );
         } else {
             jobs.run(
-                    RemoteMediaReactionFailedJob.class,
-                    new RemoteMediaReactionFailedJob.Parameters(
-                            parameters.targetNodeName,
-                            state.postingInfo.getParentMediaId(),
-                            parameters.postingId),
-                    nodeId);
+                RemoteMediaReactionFailedJob.class,
+                new RemoteMediaReactionFailedJob.Parameters(
+                    parameters.targetNodeName,
+                    state.postingInfo.getParentMediaId(),
+                    parameters.postingId
+                ),
+                nodeId
+            );
         }
     }
 

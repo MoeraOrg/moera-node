@@ -10,10 +10,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.ReactionCreated;
+import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.ReactionOverride;
 import org.moera.lib.node.types.ReactionTotalsInfo;
@@ -39,7 +39,6 @@ import org.moera.node.liberin.model.PostingReactionOperationsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionsDeletedAllLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionCreatedUtil;
-import org.moera.node.model.ReactionDescription;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ReactionOverrideUtil;
 import org.moera.node.model.ReactionsSliceInfoUtil;
@@ -99,13 +98,15 @@ public class PostingReactionController {
 
     @PostMapping("/{postingId}/reactions")
     public ResponseEntity<ReactionCreated> post(
-            @PathVariable UUID postingId,
-            @Valid @RequestBody ReactionDescription reactionDescription) {
-
-        log.info("POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {})",
-                LogUtil.format(postingId),
-                LogUtil.format(reactionDescription.isNegative()),
-                LogUtil.format(reactionDescription.getEmoji()));
+        @PathVariable UUID postingId,
+        @RequestBody ReactionDescription reactionDescription
+    ) {
+        log.info(
+            "POST /postings/{postingId}/reactions (postingId = {}, negative = {}, emoji = {})",
+            LogUtil.format(postingId),
+            LogUtil.format(reactionDescription.isNegative()),
+            LogUtil.format(reactionDescription.getEmoji())
+        );
 
         lock.lock(postingId);
         try {
@@ -119,9 +120,12 @@ public class PostingReactionController {
                 if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
                     throw new ObjectNotFoundFailure("posting.not-found");
                 }
-                OperationsValidator.validateOperations(reactionDescription::getPrincipal,
-                        OperationsValidator.POSTING_REACTION_OPERATIONS, false,
-                        "reactionDescription.operations.wrong-principal");
+                OperationsValidator.validateOperations(
+                    false,
+                    reactionDescription.getOperations(),
+                    false,
+                    "reaction.operations.wrong-principal"
+                );
 
                 if (posting.isOriginal()) {
                     return postToOriginal(reactionDescription, posting);
@@ -139,37 +143,45 @@ public class PostingReactionController {
     private ResponseEntity<ReactionCreated> postToOriginal(ReactionDescription reactionDescription, Posting posting) {
         var liberin = new PostingReactionAddedLiberin(posting);
 
-        Reaction reaction = reactionOperations.post(reactionDescription, posting, liberin::setDeletedReaction,
-                liberin::setAddedReaction);
+        Reaction reaction = reactionOperations.post(
+            reactionDescription, posting, liberin::setDeletedReaction, liberin::setAddedReaction
+        );
         var totalsInfo = reactionTotalOperations.getInfo(posting);
 
         liberin.setReactionTotals(totalsInfo.getPublicInfo());
         requestContext.send(liberin);
 
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
-                .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
+        return ResponseEntity
+            .created(URI.create("/postings/" + posting.getId() + "/reactions" + reaction.getId()))
+            .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));
     }
 
-    private ResponseEntity<ReactionCreated> postToPickedAtHome(ReactionDescription reactionDescription,
-                                                               Posting posting) {
-        Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(requestContext.nodeId(),
-                posting.getReceiverName(), posting.getReceiverEntryId());
+    private ResponseEntity<ReactionCreated> postToPickedAtHome(
+        ReactionDescription reactionDescription, Posting posting
+    ) {
+        Optional<OwnReaction> ownReaction = ownReactionRepository.findByRemotePostingId(
+            requestContext.nodeId(), posting.getReceiverName(), posting.getReceiverEntryId()
+        );
         ownReaction.ifPresent(r -> reactionTotalOperations.changeEntryTotal(posting, r.isNegative(), r.getEmoji(), -1));
-        reactionTotalOperations.changeEntryTotal(posting, reactionDescription.isNegative(),
-                reactionDescription.getEmoji(), 1);
+        reactionTotalOperations.changeEntryTotal(
+            posting, reactionDescription.isNegative(), reactionDescription.getEmoji(), 1
+        );
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
-                .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
+        return ResponseEntity
+            .created(URI.create("/postings/" + posting.getId() + "/reactions"))
+            .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
     }
 
     private ResponseEntity<ReactionCreated> postToPicked(ReactionDescription reactionDescription, Posting posting) {
-        reactionTotalOperations.changeEntryTotal(posting, reactionDescription.isNegative(),
-                reactionDescription.getEmoji(), 1);
+        reactionTotalOperations.changeEntryTotal(
+            posting, reactionDescription.isNegative(), reactionDescription.getEmoji(), 1
+        );
 
         var totalsInfo = reactionTotalOperations.getInfo(posting);
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/reactions"))
-                .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
+        return ResponseEntity
+            .created(URI.create("/postings/" + posting.getId() + "/reactions"))
+            .body(ReactionCreatedUtil.build(null, totalsInfo.getClientInfo(), requestContext));
     }
 
     @PutMapping("/{postingId}/reactions/{ownerName}")
@@ -201,7 +213,7 @@ public class PostingReactionController {
             false,
             reactionOverride.getOperations(),
             false,
-            "reactionOverride.operations.wrong-principal"
+            "reaction.operations.wrong-principal"
         );
         if (
             reactionOverride.getSeniorOperations() != null
@@ -214,7 +226,7 @@ public class PostingReactionController {
             false,
             reactionOverride.getSeniorOperations(),
             true,
-            "reactionOverride.seniorOperations.wrong-principal"
+            "reaction.senior-operations.wrong-principal"
         );
         Reaction reaction = reactionRepository.findByEntryIdAndOwner(posting.getId(), ownerName);
         if (reaction == null) {

@@ -14,6 +14,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
@@ -37,7 +38,7 @@ import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.ReactionDescription;
+import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.EmojiList;
@@ -98,9 +99,10 @@ public class ReactionOperations {
 
     public void validate(ReactionDescription reactionDescription, Entry entry) {
         mediaOperations.validateAvatar(
-                reactionDescription.getOwnerAvatar(),
-                reactionDescription::setOwnerAvatarMediaFile,
-                () -> new ValidationFailure("reactionDescription.ownerAvatar.mediaId.not-found"));
+            reactionDescription.getOwnerAvatar(),
+            mf -> ReactionDescriptionUtil.setOwnerAvatarMediaFile(reactionDescription, mf),
+            () -> new ValidationFailure("avatar.not-found")
+        );
 
         if (reactionDescription.getSignature() == null) {
             String ownerName = reactionDescription.getOwnerName();
@@ -200,7 +202,7 @@ public class ReactionOperations {
                 toReaction(ops.getView(), reaction::setPostingViewPrincipal);
                 toReaction(ops.getDelete(), reaction::setPostingDeletePrincipal);
             }
-            reactionDescription.toReaction(reaction);
+            ReactionDescriptionUtil.toReaction(reactionDescription, reaction);
             if (reactionDescription.getSignature() == null) {
                 reaction.setDeadline(Timestamp.from(Instant.now().plus(ReactionOperations.UNSIGNED_TTL)));
             }

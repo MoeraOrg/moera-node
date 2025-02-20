@@ -2,7 +2,7 @@ package org.moera.node.fingerprint;
 
 import org.moera.lib.crypto.FingerprintException;
 import org.moera.lib.node.Fingerprints;
-import org.moera.node.notification.NotificationPacket;
+import org.moera.lib.node.types.NotificationPacket;
 import org.moera.node.util.Util;
 
 public class NotificationPacketFingerprintBuilder {

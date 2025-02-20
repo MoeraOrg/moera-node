@@ -8,14 +8,15 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.naming.types.RegisteredNameInfo;
+import org.moera.lib.node.types.NotificationPacket;
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingClient;
 import org.moera.node.data.FrozenNotification;
@@ -29,7 +30,6 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.model.notification.Notification;
 import org.moera.node.model.notification.NotificationType;
-import org.moera.node.notification.NotificationPacket;
 import org.moera.node.notification.receive.NotificationRouter;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -80,32 +80,31 @@ public class NotificationController {
     private Transaction tx;
 
     @PostMapping
-    public Result post(@Valid @RequestBody NotificationPacket packet, Errors errors) throws Throwable {
-        log.info("POST /notifications (nodeName = {}, id = {}, type = {})",
-                LogUtil.format(packet.getNodeName()), LogUtil.format(packet.getId()), LogUtil.format(packet.getType()));
+    public Result post(@RequestBody NotificationPacket packet, Errors errors) throws Throwable {
+        log.info(
+            "POST /notifications (nodeName = {}, id = {}, type = {})",
+            LogUtil.format(packet.getNodeName()), LogUtil.format(packet.getId()), LogUtil.format(packet.getType())
+        );
 
+        packet.validate();
         NotificationType type = NotificationType.forValue(packet.getType());
-        if (type == null) {
-            throw new ValidationFailure("notificationPacket.type.unknown");
-        }
+        ValidationUtil.notNull(type, "notification.type.unknown");
         HandlerMethod handler = notificationRouter.getHandler(type);
         if (handler == null) {
             return Result.OK;
         }
-        if (packet.getCreatedAt() == null
-                || Instant.ofEpochSecond(packet.getCreatedAt()).plus(10, ChronoUnit.MINUTES).isBefore(Instant.now())) {
-            throw new ValidationFailure("notificationPacket.createdAt.too-old");
-        }
-        if (!verifySignature(packet)) {
-            throw new ValidationFailure("notificationPacket.signature.invalid");
-        }
+        ValidationUtil.assertion(
+            Instant.ofEpochSecond(packet.getCreatedAt()).plus(10, ChronoUnit.MINUTES).isAfter(Instant.now()),
+            "notification.created-at.too-old"
+        );
+        ValidationUtil.assertion(verifySignature(packet), "notification.signature.invalid");
         requestContext.authenticatedWithSignature(packet.getNodeName());
 
         Notification notification;
         try {
             notification = objectMapper.readValue(packet.getNotification(), type.getStructure());
         } catch (IOException e) {
-            throw new ValidationFailure("notificationPacket.notification.invalid");
+            throw new ValidationFailure("notification.notification.invalid");
         }
 
         validate(notification, errors);
@@ -135,7 +134,7 @@ public class NotificationController {
             if (codes != null && codes.length > 0) {
                 throw new ValidationFailure(codes[0]);
             } else {
-                throw new ValidationFailure("notificationPacket.notification.invalid");
+                throw new ValidationFailure("notification.notification.invalid");
             }
         }
     }
