@@ -1,0 +1,109 @@
+package org.moera.node.model;
+
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.BodyFormat;
+import org.moera.lib.node.types.DraftText;
+import org.moera.lib.node.types.RemoteMedia;
+import org.moera.lib.node.types.SourceFormat;
+import org.moera.lib.node.types.body.Body;
+import org.moera.node.data.Draft;
+import org.moera.node.data.MediaFile;
+import org.moera.node.text.HeadingExtractor;
+import org.moera.node.text.MediaExtractor;
+import org.moera.node.text.TextConverter;
+import org.moera.node.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
+
+public class DraftTextUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(DraftTextUtil.class);
+
+    public static void toDraft(DraftText draftText, Draft draft, TextConverter textConverter) {
+        draft.setDraftType(draftText.getDraftType());
+        draft.setEditedAt(Util.now());
+        draft.setRepliedToId(draftText.getRepliedToId());
+        if (draftText.getOwnerFullName() != null) {
+            draft.setOwnerFullName(draftText.getOwnerFullName());
+        }
+        if (draftText.getOwnerAvatar() != null) {
+            MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(draftText.getOwnerAvatar());
+            if (ownerAvatarMediaFile != null) {
+                draft.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
+            }
+            if (draftText.getOwnerAvatar().getShape() != null) {
+                draft.setOwnerAvatarShape(draftText.getOwnerAvatar().getShape());
+            }
+        }
+
+        if (draftText.getAcceptedReactions() != null) {
+            if (draftText.getAcceptedReactions().getPositive() != null) {
+                draft.setAcceptedReactionsPositive(draftText.getAcceptedReactions().getPositive());
+            }
+            if (draftText.getAcceptedReactions().getNegative() != null) {
+                draft.setAcceptedReactionsNegative(draftText.getAcceptedReactions().getNegative());
+            }
+        }
+        if (draftText.getBodySrcFormat() != null) {
+            draft.setBodySrcFormat(draftText.getBodySrcFormat());
+        }
+
+        if (!ObjectUtils.isEmpty(draftText.getBodySrc())) {
+            if (draft.getBodySrcFormat() != SourceFormat.APPLICATION) {
+                draft.setBodySrc(draftText.getBodySrc().getEncoded());
+                Body body = textConverter.toHtml(draft.getBodySrcFormat(), draftText.getBodySrc());
+                draft.setBody(body.getEncoded());
+                draft.setBodyFormat(BodyFormat.MESSAGE.getValue());
+                draft.setHeading(
+                    HeadingExtractor.extractHeading(body, hasAttachedGallery(body, draftText.getMedia()), true)
+                );
+            } else {
+                draft.setBodySrc(Body.EMPTY);
+                draft.setBody(draftText.getBodySrc().getEncoded());
+                draft.setBodyFormat(BodyFormat.APPLICATION.getValue());
+            }
+        }
+
+        if (draftText.getPublishAt() != null) {
+            draft.setPublishAt(Util.toTimestamp(draftText.getPublishAt()));
+        }
+
+        if (draftText.getUpdateInfo() != null) {
+            if (draftText.getUpdateInfo().getImportant() != null) {
+                draft.setUpdateImportant(draftText.getUpdateInfo().getImportant());
+            }
+            if (draftText.getUpdateInfo().getDescription() != null) {
+                draft.setUpdateDescription(draftText.getUpdateInfo().getDescription());
+            }
+        }
+
+        if (draftText.getOperations() != null) {
+            try {
+                draft.setOperations(new ObjectMapper().writeValueAsString(draftText.getOperations()));
+            } catch (JsonProcessingException e) {
+                log.error("Error serializing DraftText.operations", e);
+            }
+        }
+
+        if (draftText.getCommentOperations() != null) {
+            try {
+                draft.setChildOperations(new ObjectMapper().writeValueAsString(draftText.getCommentOperations()));
+            } catch (JsonProcessingException e) {
+                log.error("Error serializing DraftText.commentOperations", e);
+            }
+        }
+    }
+
+    private static boolean hasAttachedGallery(Body body, List<RemoteMedia> media) {
+        if (ObjectUtils.isEmpty(media)) {
+            return false;
+        }
+        int embeddedCount = MediaExtractor.extractMediaFileIds(body).size();
+        return media.size() > embeddedCount;
+    }
+
+}

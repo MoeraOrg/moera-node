@@ -40,6 +40,7 @@ import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AvatarDescriptionUtil;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.model.ReactionInfoUtil;
 import org.moera.node.model.ValidationFailure;
@@ -102,7 +103,7 @@ public class ReactionOperations {
         mediaOperations.validateAvatar(
             reactionDescription.getOwnerAvatar(),
             mf -> AvatarDescriptionUtil.setMediaFile(reactionDescription.getOwnerAvatar(), mf),
-            () -> new ValidationFailure("avatar.not-found")
+            () -> new ObjectNotFoundFailure("avatar.not-found")
         );
 
         if (reactionDescription.getSignature() == null) {

@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.moera.node.data.Draft;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.DraftInfo;
+import org.moera.node.model.DraftInfoUtil;
 
 public class DraftDeletedLiberin extends Liberin {
 
@@ -25,7 +25,7 @@ public class DraftDeletedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model) {
         super.toModel(model);
-        model.put("draft", new DraftInfo(draft));
+        model.put("draft", DraftInfoUtil.build(draft));
     }
 
 }

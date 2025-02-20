@@ -3,7 +3,6 @@ package org.moera.node.rest;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +13,8 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.moera.lib.node.types.DraftInfo;
+import org.moera.lib.node.types.DraftText;
 import org.moera.lib.node.types.DraftType;
 import org.moera.lib.node.types.RemoteMedia;
 import org.moera.lib.node.types.Result;
@@ -21,6 +22,7 @@ import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.body.BodyMappingException;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Draft;
@@ -40,8 +42,9 @@ import org.moera.node.liberin.model.DraftAddedLiberin;
 import org.moera.node.liberin.model.DraftDeletedLiberin;
 import org.moera.node.liberin.model.DraftUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.DraftInfo;
-import org.moera.node.model.DraftText;
+import org.moera.node.model.AvatarDescriptionUtil;
+import org.moera.node.model.DraftInfoUtil;
+import org.moera.node.model.DraftTextUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.PostingOperations;
@@ -100,19 +103,27 @@ public class DraftController {
     @Admin(Scope.DRAFTS)
     @Transactional
     public List<DraftInfo> getAll(
-            @RequestParam DraftType draftType,
-            @RequestParam String nodeName,
-            @RequestParam(required = false) String postingId,
-            @RequestParam(required = false) String commentId,
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer limit) throws MissingServletRequestParameterException {
+        @RequestParam DraftType draftType,
+        @RequestParam String nodeName,
+        @RequestParam(required = false) String postingId,
+        @RequestParam(required = false) String commentId,
+        @RequestParam(required = false) Integer page,
+        @RequestParam(required = false) Integer limit
+    ) throws MissingServletRequestParameterException {
+        log.info(
+            "GET /drafts (draftType = {}, nodeName = {}, postingId = {}, commentId = {}, page = {}, limit = {})",
+            LogUtil.format(draftType.toString()), LogUtil.format(nodeName), LogUtil.format(postingId),
+            LogUtil.format(commentId), LogUtil.format(page), LogUtil.format(limit)
+        );
 
-        log.info("GET /drafts (draftType = {}, nodeName = {}, postingId = {}, commentId = {}, page = {}, limit = {})",
-                LogUtil.format(draftType.toString()), LogUtil.format(nodeName), LogUtil.format(postingId),
-                LogUtil.format(commentId), LogUtil.format(page), LogUtil.format(limit));
-
-        if ((draftType == DraftType.POSTING_UPDATE || draftType == DraftType.NEW_COMMENT
-                || draftType == DraftType.COMMENT_UPDATE) && ObjectUtils.isEmpty(postingId)) {
+        if (
+            (
+                draftType == DraftType.POSTING_UPDATE
+                || draftType == DraftType.NEW_COMMENT
+                || draftType == DraftType.COMMENT_UPDATE
+            )
+            && ObjectUtils.isEmpty(postingId)
+        ) {
             throw new MissingServletRequestParameterException("postingId", "string");
         }
         if (draftType == DraftType.COMMENT_UPDATE && ObjectUtils.isEmpty(commentId)) {
@@ -124,7 +135,8 @@ public class DraftController {
             throw new ValidationFailure("page.invalid");
         }
         limit = limit != null && limit <= PostingOperations.MAX_POSTINGS_PER_REQUEST
-                ? limit : PostingOperations.MAX_POSTINGS_PER_REQUEST;
+            ? limit
+            : PostingOperations.MAX_POSTINGS_PER_REQUEST;
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
@@ -134,23 +146,27 @@ public class DraftController {
         switch (draftType) {
             case NEW_POSTING:
                 drafts = draftRepository.findAllNewPosting(
-                        requestContext.nodeId(), requestContext.nodeName(), pageable);
+                    requestContext.nodeId(), requestContext.nodeName(), pageable
+                );
                 break;
 
             case POSTING_UPDATE: {
                 drafts = draftRepository.findPostingUpdate(
-                        requestContext.nodeId(), requestContext.nodeName(), postingId, pageable);
+                    requestContext.nodeId(), requestContext.nodeName(), postingId, pageable
+                );
                 break;
             }
 
             case NEW_COMMENT:
                 drafts = draftRepository.findAllNewComment(
-                        requestContext.nodeId(), nodeName, postingId, pageable);
+                    requestContext.nodeId(), nodeName, postingId, pageable
+                );
                 break;
 
             case COMMENT_UPDATE: {
                 drafts = draftRepository.findCommentUpdate(
-                        requestContext.nodeId(), nodeName, postingId, commentId, pageable);
+                    requestContext.nodeId(), nodeName, postingId, commentId, pageable
+                );
                 break;
             }
 
@@ -159,32 +175,36 @@ public class DraftController {
                 break;
         }
         return drafts.stream()
-                .map(DraftInfo::new)
-                .collect(Collectors.toList());
+            .map(DraftInfoUtil::build)
+            .collect(Collectors.toList());
     }
 
     @PostMapping
     @Admin(Scope.DRAFTS)
     @Entitled
     @Transactional
-    public ResponseEntity<DraftInfo> post(@Valid @RequestBody DraftText draftText) {
-        log.info("POST /drafts (draftType = {}, nodeName = {}, postingId = {}, commentId = {}, bodySrc = {},"
-                        + " bodySrcFormat = {})",
-                LogUtil.format(draftText.getDraftType().toString()), LogUtil.format(draftText.getReceiverName()),
-                LogUtil.format(draftText.getReceiverPostingId()), LogUtil.format(draftText.getReceiverCommentId()),
-                LogUtil.format(draftText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat())));
+    public ResponseEntity<DraftInfo> post(@RequestBody DraftText draftText) {
+        log.info(
+            "POST /drafts (draftType = {}, nodeName = {}, postingId = {}, commentId = {}, bodySrc = {},"
+                + " bodySrcFormat = {})",
+            LogUtil.format(draftText.getDraftType().toString()), LogUtil.format(draftText.getReceiverName()),
+            LogUtil.format(draftText.getReceiverPostingId()), LogUtil.format(draftText.getReceiverCommentId()),
+            LogUtil.format(draftText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat()))
+        );
 
-        if ((draftText.getDraftType() == DraftType.POSTING_UPDATE
-                || draftText.getDraftType() == DraftType.NEW_COMMENT
-                || draftText.getDraftType() == DraftType.COMMENT_UPDATE)
-                && ObjectUtils.isEmpty(draftText.getReceiverPostingId())) {
-            throw new ValidationFailure("draftText.postingId.blank");
-        }
-        if (draftText.getDraftType() == DraftType.COMMENT_UPDATE
-                && ObjectUtils.isEmpty(draftText.getReceiverCommentId())) {
-            throw new ValidationFailure("draftText.commentId.blank");
-        }
+        draftText.validate();
+
+        ValidationUtil.assertion(
+            draftText.getDraftType() == DraftType.NEW_POSTING
+                || !ObjectUtils.isEmpty(draftText.getReceiverPostingId()),
+            "draft.receiver-posting-id.blank"
+        );
+        ValidationUtil.assertion(
+            draftText.getDraftType() != DraftType.COMMENT_UPDATE
+                || !ObjectUtils.isEmpty(draftText.getReceiverCommentId()),
+            "draft.receiver-comment-id.blank"
+        );
 
         List<MediaFileOwner> media = validate(draftText);
 
@@ -201,9 +221,9 @@ public class DraftController {
         }
         draft.setCreatedAt(Util.now());
         try {
-            draftText.toDraft(draft, textConverter);
+            DraftTextUtil.toDraft(draftText, draft, textConverter);
         } catch (BodyMappingException e) {
-            throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
+            throw new ValidationFailure("draft.body-src.wrong-encoding");
         }
         updateDeadline(draft);
         draft = draftRepository.save(draft);
@@ -211,47 +231,50 @@ public class DraftController {
 
         requestContext.send(new DraftAddedLiberin(draft));
 
-        return ResponseEntity.created(URI.create("/drafts/" + draft.getId())).body(new DraftInfo(draft));
+        return ResponseEntity.created(URI.create("/drafts/" + draft.getId())).body(DraftInfoUtil.build(draft));
     }
 
     @PutMapping("/{id}")
     @Admin(Scope.DRAFTS)
     @Entitled
     @Transactional
-    public DraftInfo put(@PathVariable UUID id, @Valid @RequestBody DraftText draftText) {
-        log.info("PUT /drafts/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
-                LogUtil.format(id),
-                LogUtil.format(draftText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat())));
+    public DraftInfo put(@PathVariable UUID id, @RequestBody DraftText draftText) {
+        log.info(
+            "PUT /drafts/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
+            LogUtil.format(id),
+            LogUtil.format(draftText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat()))
+        );
 
+        draftText.validate();
         List<MediaFileOwner> media = validate(draftText);
 
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         try {
-            draftText.toDraft(draft, textConverter);
+            DraftTextUtil.toDraft(draftText, draft, textConverter);
         } catch (BodyMappingException e) {
-            throw new ValidationFailure("draftText.bodySrc.wrong-encoding");
+            throw new ValidationFailure("draft.body-src.wrong-encoding");
         }
         updateDeadline(draft);
         updateAttachments(draft, media, draftText.getMedia());
 
         requestContext.send(new DraftUpdatedLiberin(draft));
 
-        return new DraftInfo(draft);
+        return DraftInfoUtil.build(draft);
     }
 
     private List<MediaFileOwner> validate(@RequestBody @Valid DraftText draftText) {
-        if (draftText.getBodySrc() != null && draftText.getBodySrc().length() > getMaxPostingSize()) {
-            throw new ValidationFailure("draftText.bodySrc.wrong-size");
+        if (draftText.getBodySrc() != null && draftText.getBodySrc().getEncoded().length() > getMaxPostingSize()) {
+            throw new ValidationFailure("draft.body-src.wrong-size");
         }
 
         if (draftText.getOwnerAvatar() != null && draftText.getOwnerAvatar().getMediaId() != null) {
             MediaFile mediaFile = mediaFileRepository.findById(draftText.getOwnerAvatar().getMediaId()).orElse(null);
             if (mediaFile == null || !mediaFile.isExposed()) {
-                throw new ValidationFailure("draftText.ownerAvatar.mediaId.not-found");
+                throw new ObjectNotFoundFailure("avatar.not-found");
             }
-            draftText.setOwnerAvatarMediaFile(mediaFile);
+            AvatarDescriptionUtil.setMediaFile(draftText.getOwnerAvatar(), mediaFile);
         }
 
         if (draftText.getReceiverName().equals(requestContext.nodeName())) {
@@ -261,17 +284,17 @@ public class DraftController {
 
             UUID[] ids;
             try {
-                ids = Arrays.stream(draftText.getMedia())
+                ids = draftText.getMedia().stream()
                     .map(RemoteMedia::getId)
                     .map(UUID::fromString)
                     .toArray(UUID[]::new);
             } catch (IllegalArgumentException e) {
-                throw new ValidationFailure("draftText.media.not-found");
+                throw new ObjectNotFoundFailure("media.not-found");
             }
 
             return mediaOperations.validateAttachments(
                 ids,
-                () -> new ValidationFailure("draftText.media.not-found"),
+                () -> new ObjectNotFoundFailure("media.not-found"),
                 null,
                 requestContext.isAdmin(Scope.VIEW_MEDIA),
                 requestContext.isAdmin(Scope.DRAFTS),
@@ -282,7 +305,7 @@ public class DraftController {
         }
     }
 
-    private void updateAttachments(Draft draft, List<MediaFileOwner> media, RemoteMedia[] remoteMedia) {
+    private void updateAttachments(Draft draft, List<MediaFileOwner> media, List<RemoteMedia> remoteMedia) {
         Set<EntryAttachment> attachments = new HashSet<>(draft.getAttachments());
         for (EntryAttachment ea : attachments) {
             draft.removeAttachment(ea);
@@ -314,9 +337,10 @@ public class DraftController {
     }
 
     private void updateDeadline(Draft draft) {
-        String ttlOptionName = draft.getDraftType() == DraftType.NEW_POSTING
-                || draft.getDraftType() == DraftType.POSTING_UPDATE
-                ? "posting.draft.lifetime" : "comment.draft.lifetime";
+        String ttlOptionName =
+            draft.getDraftType() == DraftType.NEW_POSTING || draft.getDraftType() == DraftType.POSTING_UPDATE
+                ? "posting.draft.lifetime"
+                : "comment.draft.lifetime";
         ExtendedDuration draftTtl = requestContext.getOptions().getDuration(ttlOptionName);
         if (!draftTtl.isNever()) {
             draft.setDeadline(Timestamp.from(Instant.now().plus(draftTtl.getDuration())));
@@ -330,9 +354,9 @@ public class DraftController {
         log.info("GET /drafts/{id}, (id = {})", LogUtil.format(id));
 
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
 
-        return new DraftInfo(draft);
+        return DraftInfoUtil.build(draft);
     }
 
     @DeleteMapping("/{id}")
@@ -342,7 +366,7 @@ public class DraftController {
         log.info("DELETE /drafts/{id}, (id = {})", LogUtil.format(id));
 
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
         draftRepository.delete(draft);
 
         requestContext.send(new DraftDeletedLiberin(draft));

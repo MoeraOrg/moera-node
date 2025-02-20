@@ -99,7 +99,7 @@ public class SheriffOrderController {
         mediaOperations.validateAvatar(
             sheriffOrderDetails.getSheriffAvatar(),
             mf -> AvatarDescriptionUtil.setMediaFile(sheriffOrderDetails.getSheriffAvatar(), mf),
-            () -> new ValidationFailure("avatar.not-found")
+            () -> new ObjectNotFoundFailure("avatar.not-found")
         );
 
         Posting posting = null;
