@@ -2,6 +2,7 @@ package org.moera.node.model;
 
 import org.moera.lib.node.types.AvatarDescription;
 import org.moera.node.data.Avatar;
+import org.moera.node.data.MediaFile;
 
 public class AvatarDescriptionUtil {
     
@@ -12,6 +13,14 @@ public class AvatarDescriptionUtil {
             avatarDescription.setShape(avatar.getShape());
         }
         return avatarDescription;
+    }
+
+    public static MediaFile getMediaFile(AvatarDescription description) {
+        return description != null ? (MediaFile) description.getExtra() : null;
+    }
+
+    public static void setMediaFile(AvatarDescription description, MediaFile mediaFile) {
+        description.setExtra(mediaFile);
     }
 
 }

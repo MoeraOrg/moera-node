@@ -30,21 +30,14 @@ public class ReactionDescriptionUtil {
         return description;
     }
 
-    public static MediaFile getOwnerAvatarMediaFile(ReactionDescription description) {
-        return (MediaFile) description.getExtra();
-    }
-
-    public static void setOwnerAvatarMediaFile(ReactionDescription description, MediaFile mediaFile) {
-        description.setExtra(mediaFile);
-    }
-
     public static void toReaction(ReactionDescription description, Reaction reaction) {
         reaction.setOwnerName(description.getOwnerName());
         reaction.setOwnerFullName(description.getOwnerFullName());
         reaction.setOwnerGender(description.getOwnerGender());
         if (description.getOwnerAvatar() != null) {
-            if (getOwnerAvatarMediaFile(description) != null) {
-                reaction.setOwnerAvatarMediaFile(getOwnerAvatarMediaFile(description));
+            MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(description.getOwnerAvatar());
+            if (ownerAvatarMediaFile != null) {
+                reaction.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
             }
             if (description.getOwnerAvatar().getShape() != null) {
                 reaction.setOwnerAvatarShape(description.getOwnerAvatar().getShape());
