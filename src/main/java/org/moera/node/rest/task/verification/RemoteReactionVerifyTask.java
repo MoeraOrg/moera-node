@@ -5,6 +5,8 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.CommentRevisionInfo;
+import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.ReactionInfo;
 import org.moera.lib.node.types.Scope;
@@ -19,9 +21,7 @@ import org.moera.node.liberin.model.RemoteReactionVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemoteReactionVerifiedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
-import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingRevisionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,39 +47,47 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
             String remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
             PostingInfo postingInfo = nodeApi.getPosting(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
+            );
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();
                 remotePostingId = postingInfo.getReceiverPostingId();
                 postingInfo = nodeApi.getPosting(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
+                );
             }
             if (data.getCommentId() == null) {
                 ReactionInfo reactionInfo = nodeApi.getPostingReaction(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                        data.getOwnerName());
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                    data.getOwnerName()
+                );
                 try {
                     PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(
-                            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                            reactionInfo.getPostingRevisionId());
+                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                        reactionInfo.getPostingRevisionId()
+                    );
                     verify(postingInfo, postingRevisionInfo, reactionInfo);
                 } catch (NodeApiNotFoundException e) {
                     succeeded(false);
                 }
             } else {
                 ReactionInfo reactionInfo = nodeApi.getCommentReaction(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                        data.getCommentId(), data.getOwnerName());
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                    data.getCommentId(), data.getOwnerName()
+                );
                 CommentInfo commentInfo = nodeApi.getComment(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                        data.getCommentId());
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                    data.getCommentId()
+                );
                 try {
                     CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(
-                            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                            data.getCommentId(), reactionInfo.getCommentRevisionId());
+                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                        data.getCommentId(), reactionInfo.getCommentRevisionId()
+                    );
                     PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(
-                            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                            commentInfo.getPostingRevisionId());
+                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
+                        commentInfo.getPostingRevisionId()
+                    );
                     verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
                 } catch (NodeApiNotFoundException e) {
                     succeeded(false);
@@ -103,13 +111,15 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         }
 
         byte[] postingParentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
-                        postingInfo.getParentMediaId(), null)
-                : null;
+            ? mediaManager.getPrivateMediaDigest(
+                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
+                null
+            )
+            : null;
         Function<PrivateMediaFileInfo, byte[]> postingMediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(
-                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
+            pmf -> mediaManager.getPrivateMediaDigest(
+                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
+            );
 
         byte[] fingerprint = ReactionFingerprintBuilder.build(
             reactionInfo.getSignatureVersion(),
@@ -125,8 +135,13 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         succeeded(CryptoUtil.verifySignature(fingerprint, reactionInfo.getSignature(), signingKey));
     }
 
-    private void verify(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
-                        CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo, ReactionInfo reactionInfo) {
+    private void verify(
+        PostingInfo postingInfo,
+        PostingRevisionInfo postingRevisionInfo,
+        CommentInfo commentInfo,
+        CommentRevisionInfo commentRevisionInfo,
+        ReactionInfo reactionInfo
+    ) {
         if (postingRevisionInfo.getSignature() == null || commentRevisionInfo.getSignature() == null) {
             succeeded(false);
             return;
@@ -139,13 +154,15 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         }
 
         byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
-                postingInfo.getParentMediaId(), null)
-                : null;
+            ? mediaManager.getPrivateMediaDigest(
+                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
+                null
+            )
+            : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(
-                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
+            pmf -> mediaManager.getPrivateMediaDigest(
+                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
+            );
 
         byte[] fingerprint = ReactionFingerprintBuilder.build(
             reactionInfo.getSignatureVersion(),
@@ -181,11 +198,15 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     protected void reportSuccess(boolean correct) {
         String status = correct ? "correct" : "incorrect";
         if (data.getCommentId() == null) {
-            log.info("Verified reaction of {} to posting {} at node {}: {}",
-                    data.getOwnerName(), data.getPostingId(), data.getNodeName(), status);
+            log.info(
+                "Verified reaction of {} to posting {} at node {}: {}",
+                data.getOwnerName(), data.getPostingId(), data.getNodeName(), status
+            );
         } else {
-            log.info("Verified reaction of {} to comment {} to posting {} at node {}: {}",
-                    data.getOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(), status);
+            log.info(
+                "Verified reaction of {} to comment {} to posting {} at node {}: {}",
+                data.getOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(), status
+            );
         }
         updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
         send(new RemoteReactionVerifiedLiberin(data));
@@ -194,12 +215,16 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
     @Override
     protected void reportFailure(String errorCode, String errorMessage) {
         if (data.getCommentId() == null) {
-            log.info("Verification of reaction of {} to posting {} at node {} failed: {} ({})",
-                    data.getOwnerName(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode);
+            log.info(
+                "Verification of reaction of {} to posting {} at node {} failed: {} ({})",
+                data.getOwnerName(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode
+            );
         } else {
-            log.info("Verification of reaction of {} to comment {} to posting {} at node {} failed: {} ({})",
-                    data.getOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(),
-                    errorMessage, errorCode);
+            log.info(
+                "Verification of reaction of {} to comment {} to posting {} at node {} failed: {} ({})",
+                data.getOwnerName(), data.getCommentId(), data.getPostingId(), data.getNodeName(),
+                errorMessage, errorCode
+            );
         }
         updateData(data -> {
             data.setStatus(VerificationStatus.ERROR);

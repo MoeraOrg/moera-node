@@ -7,6 +7,8 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.CommentRevisionInfo;
+import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
@@ -20,9 +22,7 @@ import org.moera.node.liberin.model.RemoteCommentVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentVerifiedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.CommentInfo;
-import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.rest.task.RepliedToDigestVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,22 +54,25 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
             PostingInfo postingInfo = nodeApi.getPosting(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
+            );
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();
                 remotePostingId = postingInfo.getReceiverPostingId();
                 postingInfo = nodeApi.getPosting(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
+                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
+                );
             }
             CommentInfo commentInfo = nodeApi.getComment(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                    data.getCommentId());
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId, data.getCommentId()
+            );
             if (data.getRevisionId() == null) {
                 verify(postingInfo, commentInfo);
             } else {
                 CommentRevisionInfo revisionInfo = nodeApi.getCommentRevision(
-                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId(),
-                        data.getCommentId(), data.getRevisionId());
+                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId(),
+                    data.getCommentId(), data.getRevisionId()
+                );
                 verify(postingInfo, commentInfo, revisionInfo);
             }
         } catch (Exception e) {
@@ -81,8 +84,9 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         PostingRevisionInfo revisionInfo;
         try {
             revisionInfo = nodeApi.getPostingRevision(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
-                    commentInfo.getPostingRevisionId());
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
+                commentInfo.getPostingRevisionId()
+            );
         } catch (NodeApiNotFoundException e) {
             succeeded(false);
             return;
@@ -120,7 +124,8 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
             repliedToRevisionId = commentInfo.getRepliedTo().getRevisionId();
         }
         byte[] repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(
-                remoteNodeName, this::generateCarte, postingInfo, revisions, repliedToId, repliedToRevisionId);
+            remoteNodeName, this::generateCarte, postingInfo, revisions, repliedToId, repliedToRevisionId
+        );
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentInfo.getSignatureVersion(),
             commentInfo,
@@ -137,14 +142,15 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         succeeded(CryptoUtil.verifySignature(fingerprint, commentInfo.getSignature(), signingKey));
     }
 
-    private void verify(PostingInfo postingInfo, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo)
-            throws NodeApiException {
-
+    private void verify(
+        PostingInfo postingInfo, CommentInfo commentInfo, CommentRevisionInfo commentRevisionInfo
+    ) throws NodeApiException {
         PostingRevisionInfo postingRevisionInfo;
         try {
             postingRevisionInfo = nodeApi.getPostingRevision(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
-                    commentInfo.getPostingRevisionId());
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
+                commentInfo.getPostingRevisionId()
+            );
         } catch (NodeApiNotFoundException e) {
             succeeded(false);
             return;
@@ -163,13 +169,14 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         }
 
         byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                ? mediaManager.getPrivateMediaDigest(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), postingInfo.getParentMediaId(),
-                        null)
-                : null;
+            ? mediaManager.getPrivateMediaDigest(
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), postingInfo.getParentMediaId(), null
+            )
+            : null;
         Function<PrivateMediaFileInfo, byte[]> mediaDigest =
-                pmf -> mediaManager.getPrivateMediaDigest(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf);
+            pmf -> mediaManager.getPrivateMediaDigest(
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), pmf
+            );
 
         String repliedToId = null;
         String repliedToRevisionId = null;
@@ -209,17 +216,20 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
 
     @Override
     protected void reportSuccess(boolean correct) {
-        log.info("Verified comment {} to posting {} at node {}: {}",
-                data.getCommentId(), data.getPostingId(), data.getNodeName(),
-                correct ? "correct" : "incorrect");
+        log.info(
+            "Verified comment {} to posting {} at node {}: {}",
+            data.getCommentId(), data.getPostingId(), data.getNodeName(), correct ? "correct" : "incorrect"
+        );
         updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
         send(new RemoteCommentVerifiedLiberin(data));
     }
 
     @Override
     protected void reportFailure(String errorCode, String errorMessage) {
-        log.info("Verification of comment {} to posting {} at node {} failed: {} ({})",
-                data.getCommentId(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode);
+        log.info(
+            "Verification of comment {} to posting {} at node {} failed: {} ({})",
+            data.getCommentId(), data.getPostingId(), data.getNodeName(), errorMessage, errorCode
+        );
         updateData(data -> {
             data.setStatus(VerificationStatus.ERROR);
             data.setErrorCode(errorCode);

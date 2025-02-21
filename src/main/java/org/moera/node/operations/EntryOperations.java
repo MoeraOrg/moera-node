@@ -3,8 +3,10 @@ package org.moera.node.operations;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -88,11 +90,11 @@ public class EntryOperations implements MediaAttachmentsProvider {
         }
     }
 
-    public MediaAttachment[] getMediaAttachments(EntryRevision revision, String receiverName) {
+    public List<MediaAttachment> getMediaAttachments(EntryRevision revision, String receiverName) {
         try {
             if (revision.getAttachmentsCache() != null) {
                 var data = objectMapper.readValue(revision.getAttachmentsCache(), MediaAttachmentsCache.class);
-                MediaAttachment[] cache = data.getCache(receiverName);
+                var cache = data.getCache(receiverName);
                 if (cache != null) {
                     return cache;
                 }
@@ -103,14 +105,15 @@ public class EntryOperations implements MediaAttachmentsProvider {
         }
 
         jobs.runNoPersist(
-                CacheMediaAttachmentsJob.class,
-                new CacheMediaAttachmentsJob.Parameters(revision.getId(), receiverName));
+            CacheMediaAttachmentsJob.class,
+            new CacheMediaAttachmentsJob.Parameters(revision.getId(), receiverName)
+        );
 
         Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
         return attachments.stream()
-                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                .map(ea -> MediaAttachmentUtil.build(ea, receiverName))
-                .toArray(MediaAttachment[]::new);
+            .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+            .map(ea -> MediaAttachmentUtil.build(ea, receiverName))
+            .collect(Collectors.toList());
     }
 
 }

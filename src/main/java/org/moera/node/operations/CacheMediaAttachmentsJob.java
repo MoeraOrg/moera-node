@@ -1,8 +1,10 @@
 package org.moera.node.operations;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -104,10 +106,10 @@ public class CacheMediaAttachmentsJob extends Job<CacheMediaAttachmentsJob.Param
             }
 
             Set<EntryAttachment> attachments = entryAttachmentRepository.findByEntryRevision(revision.getId());
-            MediaAttachment[] mediaAttachments = attachments.stream()
-                    .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
-                    .map(ea -> MediaAttachmentUtil.build(ea, parameters.receiverName))
-                    .toArray(MediaAttachment[]::new);
+            List<MediaAttachment> mediaAttachments = attachments.stream()
+                .sorted(Comparator.comparingInt(EntryAttachment::getOrdinal))
+                .map(ea -> MediaAttachmentUtil.build(ea, parameters.receiverName))
+                .collect(Collectors.toList());
             cache.putCache(parameters.receiverName, mediaAttachments);
 
             try {

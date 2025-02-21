@@ -220,7 +220,7 @@ public class PostingInfo implements MediaInfo, ReactionsInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
-        media = mediaAttachmentsProvider.getMediaAttachments(revision, receiverName);
+        media = mediaAttachmentsProvider.getMediaAttachments(revision, receiverName).toArray(MediaAttachment[]::new);
         heading = revision.getHeading();
         if (!UpdateInfoUtil.isEmpty(revision)) {
             updateInfo = UpdateInfoUtil.build(revision);

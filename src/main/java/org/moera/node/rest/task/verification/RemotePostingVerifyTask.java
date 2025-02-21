@@ -5,6 +5,7 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.VerificationStatus;
@@ -15,7 +16,6 @@ import org.moera.node.liberin.model.RemotePostingVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingVerifiedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingRevisionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,23 +39,27 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
     protected void execute() {
         try {
             PostingInfo postingInfo = nodeApi.getPosting(
-                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId());
+                data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId()
+            );
             updateData(data -> data.setOwnerName(postingInfo.getReceiverName()));
             byte[] parentMediaDigest = postingInfo.getParentMediaId() != null
-                    ? mediaManager.getPrivateMediaDigest(
-                            data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
-                            postingInfo.getParentMediaId(), null)
-                    : null;
-            Function<PrivateMediaFileInfo, byte[]> mediaDigest
-                    = pmf -> mediaManager.getPrivateMediaDigest(
-                            data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf);
+                ? mediaManager.getPrivateMediaDigest(
+                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA),
+                    postingInfo.getParentMediaId(), null
+                )
+                : null;
+            Function<PrivateMediaFileInfo, byte[]> mediaDigest =
+                pmf -> mediaManager.getPrivateMediaDigest(
+                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_MEDIA), pmf
+                );
 
             if (data.getRevisionId() == null) {
                 verifySignature(postingInfo, parentMediaDigest, mediaDigest);
             } else {
                 PostingRevisionInfo revisionInfo = nodeApi.getPostingRevision(
-                        data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId(),
-                        data.getRevisionId());
+                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId(),
+                    data.getRevisionId()
+                );
                 verifySignature(postingInfo, revisionInfo, parentMediaDigest, mediaDigest);
             }
         } catch (Exception e) {
@@ -63,8 +67,9 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         }
     }
 
-    private void verifySignature(PostingInfo postingInfo, byte[] parentMediaDigest,
-                                 Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+    private void verifySignature(
+        PostingInfo postingInfo, byte[] parentMediaDigest, Function<PrivateMediaFileInfo, byte[]> mediaDigest
+    ) {
         byte[] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingInfo.getEditedAt());
         if (signingKey == null) {
             succeeded(false);
@@ -77,8 +82,10 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
         succeeded(CryptoUtil.verifySignature(fingerprint, postingInfo.getSignature(), signingKey));
     }
 
-    private void verifySignature(PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo,
-                                 byte[] parentMediaDigest, Function<PrivateMediaFileInfo, byte[]> mediaDigest) {
+    private void verifySignature(
+        PostingInfo postingInfo, PostingRevisionInfo postingRevisionInfo, byte[] parentMediaDigest,
+        Function<PrivateMediaFileInfo, byte[]> mediaDigest
+    ) {
         byte [] signingKey = fetchSigningKey(postingInfo.getOwnerName(), postingRevisionInfo.getCreatedAt());
         if (signingKey == null) {
             succeeded(false);
@@ -102,16 +109,20 @@ public class RemotePostingVerifyTask extends RemoteVerificationTask {
 
     @Override
     protected void reportSuccess(boolean correct) {
-        log.info("Verified posting {}/{} at node {}: {}",
-                data.getPostingId(), data.getRevisionId(), data.getNodeName(), correct ? "correct" : "incorrect");
+        log.info(
+            "Verified posting {}/{} at node {}: {}",
+            data.getPostingId(), data.getRevisionId(), data.getNodeName(), correct ? "correct" : "incorrect"
+        );
         updateData(data -> data.setStatus(correct ? VerificationStatus.CORRECT : VerificationStatus.INCORRECT));
         send(new RemotePostingVerifiedLiberin(data));
     }
 
     @Override
     protected void reportFailure(String errorCode, String errorMessage) {
-        log.info("Verification of posting {}/{} at node {} failed: {} ({})",
-                data.getPostingId(), data.getRevisionId(), data.getNodeName(), errorMessage, errorCode);
+        log.info(
+            "Verification of posting {}/{} at node {} failed: {} ({})",
+            data.getPostingId(), data.getRevisionId(), data.getNodeName(), errorMessage, errorCode
+        );
         updateData(data -> {
             data.setStatus(VerificationStatus.ERROR);
             data.setErrorCode(errorCode);

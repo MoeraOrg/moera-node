@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -21,7 +22,7 @@ import org.moera.node.global.NoCache;
 import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingRevisionInfo;
+import org.moera.node.model.PostingRevisionInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
@@ -76,12 +77,12 @@ public abstract class PostingRevisionControllerBase {
 
     private EntryRevision getRevision(UUID postingId, UUID id) {
         return findRevision(postingId, id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"));
     }
 
     private EntryRevision getRevisionWithAttachments(UUID postingId, UUID id) {
         return findRevisionWithAttachments(postingId, id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting-revision.not-found"));
     }
 
     protected abstract Liberin getRestorationLiberin(Posting posting, EntryRevision latest);
@@ -89,10 +90,13 @@ public abstract class PostingRevisionControllerBase {
     @GetMapping
     @NoCache
     @Transactional
-    public List<PostingRevisionInfo> getAll(@PathVariable UUID postingId,
-                                            @RequestParam(required = false) Integer limit) {
-        getLog().info("GET {}/{postingId}/revisions (postingId = {}, limit = {})",
-                getDirectory(), LogUtil.format(postingId), LogUtil.format(limit));
+    public List<PostingRevisionInfo> getAll(
+        @PathVariable UUID postingId, @RequestParam(required = false) Integer limit
+    ) {
+        getLog().info(
+            "GET {}/{postingId}/revisions (postingId = {}, limit = {})",
+            getDirectory(), LogUtil.format(postingId), LogUtil.format(limit)
+        );
 
         Posting posting = getPosting(postingId);
 
@@ -101,26 +105,33 @@ public abstract class PostingRevisionControllerBase {
             throw new ValidationFailure("limit.invalid");
         }
 
-        return entryRevisionRepository.findAllByEntryId(requestContext.nodeId(), postingId,
-                PageRequest.of(0, limit, Sort.Direction.DESC, "createdAt"))
-                .get()
-                .map(r ->
-                        new PostingRevisionInfo(posting, r, entryOperations, posting.getReceiverName(), requestContext))
-                .collect(Collectors.toList());
+        return entryRevisionRepository
+            .findAllByEntryId(
+                requestContext.nodeId(),
+                postingId,
+                PageRequest.of(0, limit, Sort.Direction.DESC, "createdAt")
+            )
+            .get()
+            .map(r ->
+                PostingRevisionInfoUtil.build(posting, r, entryOperations, posting.getReceiverName(), requestContext)
+            )
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     @Transactional
     public PostingRevisionInfo get(@PathVariable UUID postingId, @PathVariable UUID id) {
-        getLog().info("GET {}/{postingId}/revisions/{id} (postingId = {}, id = {})",
-                getDirectory(),
-                LogUtil.format(postingId),
-                LogUtil.format(id));
+        getLog().info(
+            "GET {}/{postingId}/revisions/{id} (postingId = {}, id = {})",
+            getDirectory(), LogUtil.format(postingId), LogUtil.format(id)
+        );
 
         Posting posting = getPosting(postingId);
         EntryRevision revision = getRevision(postingId, id);
 
-        return new PostingRevisionInfo(posting, revision, entryOperations, posting.getReceiverName(), requestContext);
+        return PostingRevisionInfoUtil.build(
+            posting, revision, entryOperations, posting.getReceiverName(), requestContext
+        );
     }
 
     @PostMapping("/{id}/restore")
@@ -128,10 +139,10 @@ public abstract class PostingRevisionControllerBase {
     @Entitled
     @Transactional
     public PostingRevisionInfo restore(@PathVariable UUID postingId, @PathVariable UUID id) {
-        getLog().info("POST {}/{postingId}/revisions/{id}/restore (postingId = {}, id = {})",
-                getDirectory(),
-                LogUtil.format(postingId),
-                LogUtil.format(id));
+        getLog().info(
+            "POST {}/{postingId}/revisions/{id}/restore (postingId = {}, id = {})",
+            getDirectory(), LogUtil.format(postingId), LogUtil.format(id)
+        );
 
         Posting posting = getPosting(postingId);
         if (posting.getDeletedAt() == null && posting.getCurrentRevision().getId().equals(id)) {
@@ -150,8 +161,9 @@ public abstract class PostingRevisionControllerBase {
 
         requestContext.send(getRestorationLiberin(posting, latest));
 
-        return new PostingRevisionInfo(posting, revision, MediaAttachmentsProvider.RELATIONS, posting.getReceiverName(),
-                requestContext);
+        return PostingRevisionInfoUtil.build(
+            posting, revision, MediaAttachmentsProvider.RELATIONS, posting.getReceiverName(), requestContext
+        );
     }
 
 }

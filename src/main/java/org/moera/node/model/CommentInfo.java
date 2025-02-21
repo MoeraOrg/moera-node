@@ -122,7 +122,7 @@ public class CommentInfo implements MediaInfo, ReactionsInfo {
         bodySrcFormat = revision.getBodySrcFormat();
         body = new Body(revision.getBody());
         bodyFormat = revision.getBodyFormat();
-        media = mediaAttachmentsProvider.getMediaAttachments(revision, null);
+        media = mediaAttachmentsProvider.getMediaAttachments(revision, null).toArray(MediaAttachment[]::new);
         heading = revision.getHeading();
         if (comment.getRepliedTo() != null) {
             repliedTo = RepliedToUtil.build(comment);

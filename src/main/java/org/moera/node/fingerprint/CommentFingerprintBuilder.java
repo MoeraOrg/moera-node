@@ -1,14 +1,15 @@
 package org.moera.node.fingerprint;
 
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.CommentRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.Comment;
 import org.moera.node.model.CommentInfo;
-import org.moera.node.model.CommentRevisionInfo;
 import org.moera.node.model.CommentText;
 import org.moera.node.util.Util;
 
@@ -81,7 +82,9 @@ public class CommentFingerprintBuilder {
             commentInfo.getBodyFormat(),
             Util.toTimestamp(commentInfo.getRevisionCreatedAt()),
             (byte) 0,
-            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
+            CryptoUtil.digest(
+                AttachmentFingerprintBuilder.build(null, Arrays.asList(commentInfo.getMedia()), mediaDigest)
+            )
         );
     }
 
@@ -99,10 +102,12 @@ public class CommentFingerprintBuilder {
             commentRevisionInfo.getBodySrcHash(),
             commentRevisionInfo.getBodySrcFormat().getValue(),
             commentRevisionInfo.getBody().getEncoded(),
-            commentRevisionInfo.getBodyFormat(),
+            commentRevisionInfo.getBodyFormat().getValue(),
             Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
             (byte) 0,
-            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
+            CryptoUtil.digest(
+                AttachmentFingerprintBuilder.build(null, Arrays.asList(commentInfo.getMedia()), mediaDigest)
+            )
         );
     }
 
@@ -123,7 +128,9 @@ public class CommentFingerprintBuilder {
             commentInfo.getBodyFormat(),
             Util.toTimestamp(commentInfo.getRevisionCreatedAt()),
             (byte) 0,
-            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
+            CryptoUtil.digest(
+                AttachmentFingerprintBuilder.build(null, Arrays.asList(commentInfo.getMedia()), mediaDigest)
+            )
         );
     }
 
@@ -142,10 +149,12 @@ public class CommentFingerprintBuilder {
             commentRevisionInfo.getBodySrcHash(),
             commentRevisionInfo.getBodySrcFormat().getValue(),
             commentRevisionInfo.getBody().getEncoded(),
-            commentRevisionInfo.getBodyFormat(),
+            commentRevisionInfo.getBodyFormat().getValue(),
             Util.toTimestamp(commentRevisionInfo.getCreatedAt()),
             (byte) 0,
-            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentInfo.getMedia(), mediaDigest))
+            CryptoUtil.digest(
+                AttachmentFingerprintBuilder.build(null, Arrays.asList(commentInfo.getMedia()), mediaDigest)
+            )
         );
     }
 

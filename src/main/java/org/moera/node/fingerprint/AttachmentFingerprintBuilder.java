@@ -65,18 +65,18 @@ public class AttachmentFingerprintBuilder {
 
     public static List<byte[]> build(
         byte[] parentMediaDigest,
-        MediaAttachment[] mediaAttachments,
+        Collection<MediaAttachment> mediaAttachments,
         Function<PrivateMediaFileInfo, byte[]> mediaDigest
     ) {
         if (mediaAttachments == null) {
-            mediaAttachments = new MediaAttachment[0];
+            mediaAttachments = Collections.emptyList();
         }
 
         List<byte[]> digests = new ArrayList<>();
         if (parentMediaDigest != null) {
             digests.add(build(parentMediaDigest));
         }
-        Arrays.stream(mediaAttachments)
+        mediaAttachments.stream()
             .map(MediaAttachment::getMedia)
             .map(mediaDigest)
             .map(AttachmentFingerprintBuilder::build)

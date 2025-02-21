@@ -1,17 +1,18 @@
 package org.moera.node.fingerprint;
 
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.function.Function;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.crypto.FingerprintException;
 import org.moera.lib.node.Fingerprints;
+import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.model.PostingInfo;
-import org.moera.node.model.PostingRevisionInfo;
 import org.moera.node.model.PostingText;
 import org.moera.node.util.Util;
 
@@ -85,7 +86,9 @@ public class PostingFingerprintBuilder {
                     ),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.build(parentMediaDigest, postingInfo.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.build(
+                            parentMediaDigest, Arrays.asList(postingInfo.getMedia()), mediaDigest
+                        )
                     )
                 );
             case 0 ->
@@ -123,7 +126,7 @@ public class PostingFingerprintBuilder {
                     postingRevisionInfo.getBodySrcHash(),
                     SourceFormat.toValue(postingRevisionInfo.getBodySrcFormat()),
                     postingRevisionInfo.getBody().getEncoded(),
-                    postingRevisionInfo.getBodyFormat(),
+                    postingRevisionInfo.getBodyFormat().getValue(),
                     Util.toTimestamp(
                         postingInfo.isOriginal()
                             ? postingRevisionInfo.getCreatedAt()
@@ -143,7 +146,7 @@ public class PostingFingerprintBuilder {
                     postingRevisionInfo.getBodySrcHash(),
                     SourceFormat.toValue(postingRevisionInfo.getBodySrcFormat()),
                     postingRevisionInfo.getBody().getEncoded(),
-                    postingRevisionInfo.getBodyFormat(),
+                    postingRevisionInfo.getBodyFormat().getValue(),
                     Util.toTimestamp(
                         postingInfo.isOriginal()
                             ? postingRevisionInfo.getCreatedAt()
