@@ -25,6 +25,7 @@ import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.FeedInfo;
 import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.FeedStatusChange;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.RemotePostingOrNode;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
@@ -51,7 +52,7 @@ import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
 import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.RemotePostingOrNodeUtil;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.model.ValidationFailure;
@@ -122,11 +123,11 @@ public class FeedController {
         log.info("GET /feeds");
 
         return Feed.getAllStandard(requestContext.isAdmin(Scope.VIEW_FEEDS))
-                .stream()
-                .map(FeedInfo::clone)
-                .peek(this::fillFeedTotals)
-                .peek(fi -> FeedInfoUtil.fillSheriffs(fi, requestContext.getOptions()))
-                .collect(Collectors.toList());
+            .stream()
+            .map(FeedInfo::clone)
+            .peek(this::fillFeedTotals)
+            .peek(fi -> FeedInfoUtil.fillSheriffs(fi, requestContext.getOptions()))
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/{feedName}")
@@ -257,8 +258,9 @@ public class FeedController {
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
-            List<Long> slice = findSlice(requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE, sliceBefore,
-                    limit + 1, Sort.Direction.DESC);
+            List<Long> slice = findSlice(
+                requestContext.nodeId(), feedName, SafeInteger.MIN_VALUE, sliceBefore, limit + 1, Sort.Direction.DESC
+            );
             if (slice.size() < limit + 1) {
                 sliceInfo.setAfter(SafeInteger.MIN_VALUE);
             } else {
@@ -275,8 +277,9 @@ public class FeedController {
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
-            List<Long> slice = findSlice(requestContext.nodeId(), feedName, sliceAfter, SafeInteger.MAX_VALUE,
-                    limit + 1, Sort.Direction.ASC);
+            List<Long> slice = findSlice(
+                requestContext.nodeId(), feedName, sliceAfter, SafeInteger.MAX_VALUE, limit + 1, Sort.Direction.ASC
+            );
             if (slice.size() < limit + 1) {
                 sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             } else {
@@ -288,16 +291,17 @@ public class FeedController {
         return sliceInfo;
     }
 
-    private List<Long> findSlice(UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit,
-                                 Sort.Direction direction) {
+    private List<Long> findSlice(
+        UUID nodeId, String feedName, long afterMoment, long beforeMoment, int limit, Sort.Direction direction
+    ) {
         QStory story = QStory.story;
         return new JPAQueryFactory(entityManager)
-                .select(story.moment)
-                .from(story)
-                .where(storyFilter(nodeId, feedName, afterMoment, beforeMoment))
-                .orderBy(new OrderSpecifier<>(direction.isAscending() ? Order.ASC : Order.DESC, story.moment))
-                .limit(limit + 1)
-                .fetch();
+            .select(story.moment)
+            .from(story)
+            .where(storyFilter(nodeId, feedName, afterMoment, beforeMoment))
+            .orderBy(new OrderSpecifier<>(direction.isAscending() ? Order.ASC : Order.DESC, story.moment))
+            .limit(limit + 1)
+            .fetch();
     }
 
     private void fillSlice(FeedSliceInfo sliceInfo, String feedName) {
@@ -305,39 +309,41 @@ public class FeedController {
         QEntry entry = QEntry.entry;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;
         List<StoryInfo> stories = new JPAQueryFactory(entityManager)
-                .selectFrom(story)
-                .distinct()
-                .leftJoin(story.remoteAvatarMediaFile).fetchJoin()
-                .leftJoin(story.remoteOwnerAvatarMediaFile).fetchJoin()
-                .leftJoin(story.entry, entry).fetchJoin()
-                .leftJoin(entry.currentRevision, currentRevision).fetchJoin()
-                .leftJoin(entry.reactionTotals).fetchJoin()
-                .leftJoin(entry.sources).fetchJoin()
-                .leftJoin(entry.ownerAvatarMediaFile).fetchJoin()
-                .leftJoin(entry.blockedInstants).fetchJoin()
-                .where(storyFilter(requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore()))
-                .fetch()
-                .stream()
-                .map(this::buildStoryInfo)
-                // This should be unnecessary, but let it be for reliability
-                .filter(this::isStoryVisible)
-                .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
-                .toList();
+            .selectFrom(story)
+            .distinct()
+            .leftJoin(story.remoteAvatarMediaFile).fetchJoin()
+            .leftJoin(story.remoteOwnerAvatarMediaFile).fetchJoin()
+            .leftJoin(story.entry, entry).fetchJoin()
+            .leftJoin(entry.currentRevision, currentRevision).fetchJoin()
+            .leftJoin(entry.reactionTotals).fetchJoin()
+            .leftJoin(entry.sources).fetchJoin()
+            .leftJoin(entry.ownerAvatarMediaFile).fetchJoin()
+            .leftJoin(entry.blockedInstants).fetchJoin()
+            .where(storyFilter(requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore()))
+            .fetch()
+            .stream()
+            .map(this::buildStoryInfo)
+            // This should be unnecessary, but let it be for reliability
+            .filter(this::isStoryVisible)
+            .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
+            .toList();
 
         Map<String, PostingInfo> postingMap = stories.stream()
-                .map(StoryInfo::getPosting)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(PostingInfo::getId, Function.identity(), (p1, p2) -> p1));
+            .map(StoryInfo::getPosting)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toMap(PostingInfo::getId, Function.identity(), (p1, p2) -> p1));
         if (!requestContext.isOwner()) {
             String clientName = requestContext.getClientName(Scope.IDENTIFY);
             if (!ObjectUtils.isEmpty(clientName)) {
-                fillReactions(sliceInfo, feedName, postingMap, clientName,
-                        requestContext.hasClientScope(Scope.VIEW_CONTENT));
+                fillReactions(
+                    sliceInfo, feedName, postingMap, clientName, requestContext.hasClientScope(Scope.VIEW_CONTENT)
+                );
                 fillBlocked(clientName, postingMap);
             }
         } else {
-            fillReactions(sliceInfo, feedName, postingMap, requestContext.nodeName(),
-                    requestContext.isAdmin(Scope.VIEW_CONTENT));
+            fillReactions(
+                sliceInfo, feedName, postingMap, requestContext.nodeName(), requestContext.isAdmin(Scope.VIEW_CONTENT)
+            );
             fillOwnInfo(stories, postingMap);
         }
 
@@ -346,8 +352,10 @@ public class FeedController {
         sliceInfo.getStories().addAll(stories);
     }
 
-    private void fillReactions(FeedSliceInfo sliceInfo, String feedName, Map<String, PostingInfo> postingMap,
-                               String clientName, boolean viewContent) {
+    private void fillReactions(
+        FeedSliceInfo sliceInfo, String feedName, Map<String, PostingInfo> postingMap, String clientName,
+        boolean viewContent
+    ) {
         reactionRepository
             .findByStoriesInRangeAndOwner(
                 requestContext.nodeId(), feedName, sliceInfo.getAfter(), sliceInfo.getBefore(), clientName
@@ -362,10 +370,11 @@ public class FeedController {
     private Predicate storyFilter(UUID nodeId, String feedName, long afterMoment, long beforeMoment) {
         QStory story = QStory.story;
         BooleanBuilder where = new BooleanBuilder();
-        where.and(story.nodeId.eq(nodeId))
-                .and(story.feedName.eq(feedName))
-                .and(story.moment.gt(afterMoment))
-                .and(story.moment.loe(beforeMoment));
+        where
+            .and(story.nodeId.eq(nodeId))
+            .and(story.feedName.eq(feedName))
+            .and(story.moment.gt(afterMoment))
+            .and(story.moment.loe(beforeMoment));
         if (!requestContext.isAdmin(Scope.VIEW_CONTENT)) {
             var viewPrincipal = story.entry.viewPrincipal;
             BooleanBuilder visibility = new BooleanBuilder();
@@ -420,11 +429,13 @@ public class FeedController {
         );
         for (BlockedUser blockedUser : blockedUsers) {
             if (blockedUser.isGlobal()) {
-                postingMap.values().forEach(p -> p.putBlockedOperation(blockedUser.getBlockedOperation()));
+                postingMap.values().forEach(p ->
+                    PostingInfoUtil.putBlockedOperation(p, blockedUser.getBlockedOperation())
+                );
             } else {
                 PostingInfo postingInfo = postingMap.get(blockedUser.getEntry().getId().toString());
                 if (postingInfo != null) {
-                    postingInfo.putBlockedOperation(blockedUser.getBlockedOperation());
+                    PostingInfoUtil.putBlockedOperation(postingInfo, blockedUser.getBlockedOperation());
                 }
             }
         }
@@ -432,14 +443,14 @@ public class FeedController {
 
     private void fillOwnInfo(List<StoryInfo> stories, Map<String, PostingInfo> postingMap) {
         List<PostingInfo> postings = stories.stream()
-                .map(StoryInfo::getPosting)
-                .filter(Objects::nonNull)
-                .filter(p -> !p.isOriginal())
-                .collect(Collectors.toList());
+            .map(StoryInfo::getPosting)
+            .filter(Objects::nonNull)
+            .filter(p -> !PostingInfoUtil.isOriginal(p))
+            .collect(Collectors.toList());
         List<RemotePostingOrNode> remotePostingsOrNodes = postingMap.values().stream()
-                .filter(p -> !p.isOriginal())
-                .map(p -> RemotePostingOrNodeUtil.build(p.getReceiverName(), p.getReceiverPostingId()))
-                .collect(Collectors.toList());
+            .filter(p -> !PostingInfoUtil.isOriginal(p))
+            .map(p -> RemotePostingOrNodeUtil.build(p.getReceiverName(), p.getReceiverPostingId()))
+            .collect(Collectors.toList());
         if (!remotePostingsOrNodes.isEmpty()) {
             // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
             if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
@@ -451,18 +462,22 @@ public class FeedController {
 
     private void fillOwnReactions(List<PostingInfo> postings, List<RemotePostingOrNode> remotePostingsOrNodes) {
         List<String> remotePostingIds = remotePostingsOrNodes.stream()
-                .map(RemotePostingOrNode::getPostingId)
-                .collect(Collectors.toList());
+            .map(RemotePostingOrNode::getPostingId)
+            .collect(Collectors.toList());
         Map<String, OwnReaction> ownReactions = ownReactionRepository
-                .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        OwnReaction::getRemotePostingId, Function.identity(), (p1, p2) -> p1));
+            .findAllByRemotePostingIds(requestContext.nodeId(), remotePostingIds)
+            .stream()
+            .collect(Collectors.toMap(
+                OwnReaction::getRemotePostingId, Function.identity(),
+                (p1, p2) -> p1
+            ));
         postings.forEach(posting -> {
             OwnReaction ownReaction = ownReactions.get(posting.getReceiverPostingId());
-            if (ownReaction != null
-                    && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
-                    && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())) {
+            if (
+                ownReaction != null
+                && ownReaction.getRemoteNodeName().equals(posting.getReceiverName())
+                && ownReaction.getRemotePostingId().equals(posting.getReceiverPostingId())
+            ) {
                 posting.setClientReaction(ClientReactionInfoUtil.build(ownReaction));
             }
         });
@@ -487,7 +502,7 @@ public class FeedController {
                         || blockedByUser.getRemotePostingId().equals(posting.getReceiverPostingId())
                     )
                 ) {
-                    posting.putBlockedOperation(blockedByUser.getBlockedOperation());
+                    PostingInfoUtil.putBlockedOperation(posting, blockedByUser.getBlockedOperation());
                 }
             }
         }
@@ -495,10 +510,11 @@ public class FeedController {
 
     private StoryInfo buildStoryInfo(Story story) {
         return StoryInfo.build(
-                story,
-                requestContext.isAdmin(Scope.VIEW_FEEDS),
-                t -> new PostingInfo(
-                        t.getEntry(), List.of(t), entryOperations, requestContext, requestContext.getOptions())
+            story,
+            requestContext.isAdmin(Scope.VIEW_FEEDS),
+            t -> PostingInfoUtil.build(
+                t.getEntry(), List.of(t), entryOperations, requestContext, requestContext.getOptions()
+            )
         );
     }
 
@@ -507,9 +523,9 @@ public class FeedController {
         if (postingInfo == null) {
             return true;
         }
-        Principal viewPrincipal = postingInfo.getOperations() != null
-                ? postingInfo.getOperations().getOrDefault("view", Principal.PUBLIC)
-                : Principal.PUBLIC; // FIXME other types of stories may be invisible by default and require VIEW_FEEDS
+        Principal viewPrincipal =
+            org.moera.lib.node.types.PostingOperations.getView(postingInfo.getOperations(), Principal.PUBLIC);
+        // FIXME other types of stories may be invisible by default and require VIEW_FEEDS
         return requestContext.isPrincipal(viewPrincipal.withOwner(postingInfo.getOwnerName()), Scope.VIEW_CONTENT);
     }
 

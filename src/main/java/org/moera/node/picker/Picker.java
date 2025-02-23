@@ -12,6 +12,7 @@ import jakarta.inject.Inject;
 import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.MediaAttachment;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.StoryType;
@@ -40,7 +41,7 @@ import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.ReactionTotalOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.task.Task;
@@ -144,14 +145,17 @@ public class Picker extends Task {
     }
 
     private void download(Pick pick) throws Exception {
-        log.info("Downloading pick {} from node {}, postingId = {}",
-                LogUtil.format(pick.getId()), LogUtil.format(remoteNodeName), LogUtil.format(pick.getRemotePostingId()));
+        log.info(
+            "Downloading pick {} from node {}, postingId = {}",
+            LogUtil.format(pick.getId()), LogUtil.format(remoteNodeName), LogUtil.format(pick.getRemotePostingId())
+        );
 
         List<Liberin> liberins = new ArrayList<>();
         List<Pick> picks = new ArrayList<>();
         Posting posting = tx.executeWriteWithExceptions(() -> {
-            Posting p = downloadPosting(pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(),
-                    liberins, picks);
+            Posting p = downloadPosting(
+                pick.getRemotePostingId(), pick.getFeedName(), pick.getMediaFileOwner(), liberins, picks
+            );
             saveSources(p, pick);
             return p;
         });
@@ -164,25 +168,27 @@ public class Picker extends Task {
     private Posting downloadPosting(String remotePostingId, String feedName, MediaFileOwner parentMedia,
                                     List<Liberin> liberins, List<Pick> picks) throws NodeApiException {
         PostingInfo postingInfo = nodeApi.getPosting(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId);
+            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
+        );
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
-        String receiverName = postingInfo.isOriginal() ? remoteNodeName : postingInfo.getReceiverName();
-        String receiverFullName = postingInfo.isOriginal()
-                ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
-        String receiverGender = postingInfo.isOriginal()
-                ? postingInfo.getOwnerGender() : postingInfo.getReceiverGender();
-        MediaFile receiverAvatar = postingInfo.isOriginal()
-                ? ownerAvatar
-                : mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getReceiverAvatar());
+        boolean original = PostingInfoUtil.isOriginal(postingInfo);
+        String receiverName = original ? remoteNodeName : postingInfo.getReceiverName();
+        String receiverFullName = original ? postingInfo.getOwnerFullName() : postingInfo.getReceiverFullName();
+        String receiverGender = original ? postingInfo.getOwnerGender() : postingInfo.getReceiverGender();
+        MediaFile receiverAvatar = original
+            ? ownerAvatar
+            : mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getReceiverAvatar());
         String receiverAvatarShape;
-        if (postingInfo.isOriginal()) {
+        if (original) {
             receiverAvatarShape = postingInfo.getOwnerAvatar() != null
-                    ? postingInfo.getOwnerAvatar().getShape() : null;
+                ? postingInfo.getOwnerAvatar().getShape()
+                : null;
         } else {
             receiverAvatarShape = postingInfo.getReceiverAvatar() != null
-                    ? postingInfo.getReceiverAvatar().getShape() : null;
+                ? postingInfo.getReceiverAvatar().getShape()
+                : null;
         }
-        String receiverPostingId = postingInfo.isOriginal() ? remotePostingId : postingInfo.getReceiverPostingId();
+        String receiverPostingId = original ? remotePostingId : postingInfo.getReceiverPostingId();
         Posting posting = postingRepository.findByReceiverId(nodeId, receiverName, receiverPostingId).orElse(null);
         if (posting == null) {
             posting = new Posting();
@@ -197,7 +203,7 @@ public class Picker extends Task {
             posting.setReceiverGender(receiverGender);
             posting.setOwnerAvatarMediaFile(ownerAvatar);
             posting = postingRepository.save(posting);
-            postingInfo.toPickedPosting(posting);
+            PostingInfoUtil.toPickedPosting(postingInfo, posting);
             createRevision(posting, postingInfo);
             downloadMedia(postingInfo, null, posting.getCurrentRevision(), picks);
             updateRevision(posting, postingInfo, posting.getCurrentRevision());
@@ -207,7 +213,7 @@ public class Picker extends Task {
         } else if (!postingInfo.getEditedAt().equals(Util.toEpochSecond(posting.getEditedAt()))) {
             Principal latestView = posting.getViewE();
             posting.setOwnerAvatarMediaFile(ownerAvatar);
-            postingInfo.toPickedPosting(posting);
+            PostingInfoUtil.toPickedPosting(postingInfo, posting);
             EntryRevision latest = posting.getCurrentRevision();
             createRevision(posting, postingInfo);
             downloadMedia(postingInfo, posting.getId(), posting.getCurrentRevision(), picks);
@@ -254,18 +260,20 @@ public class Picker extends Task {
     }
 
     private void updateRevision(Posting posting, PostingInfo postingInfo, EntryRevision revision) {
-        postingInfo.toPickedEntryRevision(revision);
+        PostingInfoUtil.toPickedEntryRevision(postingInfo, revision);
 
         byte[] fingerprint = PostingFingerprintBuilder.build(revision.getSignatureVersion(), posting, revision);
         revision.setDigest(CryptoUtil.digest(fingerprint));
     }
 
-    private void downloadMedia(PostingInfo postingInfo, UUID entryId, EntryRevision revision,
-                               List<Pick> picks) throws NodeApiException {
+    private void downloadMedia(
+        PostingInfo postingInfo, UUID entryId, EntryRevision revision, List<Pick> picks
+    ) throws NodeApiException {
         int ordinal = 0;
         for (MediaAttachment attach : postingInfo.getMedia()) {
             MediaFileOwner media = mediaManager.downloadPrivateMedia(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), attach.getMedia(), entryId);
+                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_MEDIA), attach.getMedia(), entryId
+            );
             if (media != null) {
                 EntryAttachment attachment = new EntryAttachment(revision, media, ordinal++);
                 attachment.setEmbedded(attach.isEmbedded());
@@ -292,8 +300,9 @@ public class Picker extends Task {
         if (feedName == null) {
             return;
         }
-        int totalStories = storyRepository.countByFeedAndTypeAndEntryId(nodeId, feedName, StoryType.POSTING_ADDED,
-                posting.getId());
+        int totalStories = storyRepository.countByFeedAndTypeAndEntryId(
+            nodeId, feedName, StoryType.POSTING_ADDED, posting.getId()
+        );
         if (totalStories > 0) {
             return;
         }

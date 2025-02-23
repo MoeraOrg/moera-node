@@ -8,7 +8,7 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.ReactionInfoUtil;
 
 public class CommentReactionOperationsUpdatedLiberin extends Liberin {
@@ -42,7 +42,7 @@ public class CommentReactionOperationsUpdatedLiberin extends Liberin {
         super.toModel(model);
         comment = entityManager.merge(comment);
         reaction = entityManager.merge(reaction);
-        model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
+        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
         model.put("reaction", ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN));
     }
 

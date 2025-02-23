@@ -9,7 +9,7 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.ReactionInfoUtil;
 
 public class PostingReactionDeletedLiberin extends Liberin {
@@ -51,7 +51,7 @@ public class PostingReactionDeletedLiberin extends Liberin {
         super.toModel(model);
         posting = entityManager.merge(posting);
         reaction = entityManager.merge(reaction);
-        model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
+        model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
         model.put("reaction", ReactionInfoUtil.build(reaction, AccessCheckers.ADMIN));
         model.put("reactionTotals", reactionTotals);
     }

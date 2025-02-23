@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -29,7 +30,7 @@ import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.event.PostingAddedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
@@ -162,8 +163,13 @@ public class PostingReceptor extends LiberinReceptorBase {
                 ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
                 : Collections.emptySet();
         if (!currentMentions.isEmpty()) {
-            PostingInfo postingInfo = new PostingInfo(posting, posting.getStories(), MediaAttachmentsProvider.NONE,
-                    AccessCheckers.ADMIN, universalContext.getOptions());
+            PostingInfo postingInfo = PostingInfoUtil.build(
+                posting,
+                posting.getStories(),
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions()
+            );
             userListOperations.fillSheriffListMarks(postingInfo);
             currentMentions.stream()
                     .filter(m -> !latestMentions.contains(m))

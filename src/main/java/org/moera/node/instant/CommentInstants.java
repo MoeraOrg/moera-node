@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StorySummaryEntry;
 import org.moera.lib.node.types.StoryType;
@@ -19,8 +21,6 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.util.Util;
 import org.springframework.stereotype.Component;
@@ -34,9 +34,11 @@ public class CommentInstants extends InstantsCreator {
     private StoryRepository storyRepository;
 
     public void added(Comment comment) {
-        if (comment.getOwnerName().equals(nodeName())
-                // 'reply-comment' instant is expected to be created for such a comment
-                || comment.getRepliedTo() != null && comment.getRepliedToName().equals(nodeName())) {
+        if (
+            comment.getOwnerName().equals(nodeName())
+            // 'reply-comment' instant is expected to be created for such a comment
+            || comment.getRepliedTo() != null && comment.getRepliedToName().equals(nodeName())
+        ) {
             return;
         }
 
@@ -45,17 +47,21 @@ public class CommentInstants extends InstantsCreator {
         }
 
         boolean alreadyReported = !storyRepository.findSubsByTypeAndEntryId(
-                nodeId(), StoryType.COMMENT_ADDED, comment.getId()).isEmpty();
+            nodeId(), StoryType.COMMENT_ADDED, comment.getId()
+        ).isEmpty();
         if (alreadyReported) {
             return;
         }
 
         boolean isNewStory = false;
-        Story story = storyRepository.findFullByFeedAndTypeAndEntryId(nodeId(), Feed.INSTANT,
-                StoryType.COMMENT_ADDED, comment.getPosting().getId()).stream().findFirst().orElse(null);
-        if (story == null
-                || story.isRead()
-                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+        Story story = storyRepository.findFullByFeedAndTypeAndEntryId(
+            nodeId(), Feed.INSTANT, StoryType.COMMENT_ADDED, comment.getPosting().getId()
+        ).stream().findFirst().orElse(null);
+        if (
+            story == null
+            || story.isRead()
+            || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())
+        ) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), StoryType.COMMENT_ADDED);
             story.setFeedName(Feed.INSTANT);
@@ -82,8 +88,9 @@ public class CommentInstants extends InstantsCreator {
             return;
         }
 
-        List<Story> stories = storyRepository.findSubsByTypeAndEntryId(nodeId(), StoryType.COMMENT_ADDED,
-                comment.getId());
+        List<Story> stories = storyRepository.findSubsByTypeAndEntryId(
+            nodeId(), StoryType.COMMENT_ADDED, comment.getId()
+        );
         for (Story substory : stories) {
             Story story = substory.getParent();
             story.removeSubstory(substory);
@@ -94,8 +101,8 @@ public class CommentInstants extends InstantsCreator {
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
         List<Story> stories = story.getSubstories().stream()
-                .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
-                .collect(Collectors.toList());
+            .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
+            .collect(Collectors.toList());
         if (stories.isEmpty()) {
             storyRepository.delete(story);
             if (!isNew) {
@@ -176,15 +183,18 @@ public class CommentInstants extends InstantsCreator {
         }
         story.setRemotePostingId(remotePostingId);
         story.setSummaryData(buildAddingFailedSummary(
-                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading));
+            postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading)
+        );
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    public void updateFailed(String remoteNodeName, String remotePostingId, PostingInfo postingInfo,
-                             String remoteCommentId, CommentInfo commentInfo) {
+    public void updateFailed(
+        String remoteNodeName, String remotePostingId, PostingInfo postingInfo, String remoteCommentId,
+        CommentInfo commentInfo
+    ) {
         if (isBlocked(StoryType.COMMENT_UPDATE_TASK_FAILED, null, remotePostingId, remoteCommentId)) {
             return;
         }
@@ -208,22 +218,25 @@ public class CommentInstants extends InstantsCreator {
         story.setRemotePostingId(remotePostingId);
         story.setRemoteCommentId(remoteCommentId);
         story.setSummaryData(buildUpdateFailedSummary(
-                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading, commentHeading));
+            postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading, commentHeading)
+        );
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String gender,
-                                                             String postingHeading) {
+    private static StorySummaryData buildAddingFailedSummary(
+        String nodeName, String fullName, String gender, String postingHeading
+    ) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, gender, postingHeading));
         return summaryData;
     }
 
-    private static StorySummaryData buildUpdateFailedSummary(String nodeName, String fullName, String gender,
-                                                             String postingHeading, String commentHeading) {
+    private static StorySummaryData buildUpdateFailedSummary(
+        String nodeName, String fullName, String gender, String postingHeading, String commentHeading
+    ) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, gender, postingHeading));
         summaryData.setComment(StorySummaryEntryUtil.build(null, null, null, commentHeading));

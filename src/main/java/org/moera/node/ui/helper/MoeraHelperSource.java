@@ -123,11 +123,13 @@ public class MoeraHelperSource {
 
     public CharSequence reactions(ReactionsInfo reactionsInfo) {
         ReactionTotalsInfo totalsInfo = reactionsInfo.getReactions();
-        boolean totalsVisible = reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
-                || reactionsInfo.getPrincipal("viewReactionTotals", Principal.PUBLIC).isPublic();
-        boolean negativeTotalsVisible = reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
-                && reactionsInfo.getPrincipal("viewNegativeReactions", Principal.PUBLIC).isPublic()
-                || reactionsInfo.getPrincipal("viewNegativeReactionTotals", Principal.PUBLIC).isPublic();
+        boolean totalsVisible =
+            reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
+            || reactionsInfo.getPrincipal("viewReactionTotals", Principal.PUBLIC).isPublic();
+        boolean negativeTotalsVisible =
+            reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
+            && reactionsInfo.getPrincipal("viewNegativeReactions", Principal.PUBLIC).isPublic()
+            || reactionsInfo.getPrincipal("viewNegativeReactionTotals", Principal.PUBLIC).isPublic();
 
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");

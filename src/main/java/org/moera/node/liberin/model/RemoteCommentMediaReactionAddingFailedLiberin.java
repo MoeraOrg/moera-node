@@ -2,9 +2,9 @@ package org.moera.node.liberin.model;
 
 import java.util.Map;
 
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
 
 public class RemoteCommentMediaReactionAddingFailedLiberin extends Liberin {
 
@@ -14,8 +14,13 @@ public class RemoteCommentMediaReactionAddingFailedLiberin extends Liberin {
     private PostingInfo parentPostingInfo;
     private CommentInfo parentCommentInfo;
 
-    public RemoteCommentMediaReactionAddingFailedLiberin(String nodeName, String mediaPostingId, String parentMediaId,
-                                                         PostingInfo parentPostingInfo, CommentInfo parentCommentInfo) {
+    public RemoteCommentMediaReactionAddingFailedLiberin(
+        String nodeName,
+        String mediaPostingId,
+        String parentMediaId,
+        PostingInfo parentPostingInfo,
+        CommentInfo parentCommentInfo
+    ) {
         this.nodeName = nodeName;
         this.mediaPostingId = mediaPostingId;
         this.parentMediaId = parentMediaId;

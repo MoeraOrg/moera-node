@@ -12,6 +12,10 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.CommentCreated;
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.api.node.NodeApiException;
@@ -27,11 +31,9 @@ import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.CommentCreated;
-import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentSourceText;
 import org.moera.node.model.CommentText;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 import org.moera.node.text.TextConverter;
@@ -239,9 +241,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
 
         if (!state.targetAvatarMediaFileLoaded) {
-            MediaFile mediaFile = mediaManager.downloadPublicMedia(
-                    parameters.targetNodeName,
-                    state.target.getAvatar());
+            MediaFile mediaFile = mediaManager.downloadPublicMedia(parameters.targetNodeName, state.target.getAvatar());
             state.targetAvatarMediaFileId = mediaFile != null ? mediaFile.getId() : null;
             state.targetAvatarMediaFileLoaded = true;
             checkpoint();
@@ -249,9 +249,10 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
         if (state.postingInfo == null) {
             state.postingInfo = nodeApi.getPosting(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                    parameters.postingId);
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                parameters.postingId
+            );
             checkpoint();
         }
 
@@ -269,19 +270,21 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
         if (!state.ownerAvatarUploaded) {
             mediaManager.uploadPublicMedia(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
-                    parameters.sourceText.getOwnerAvatarMediaFile());
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
+                parameters.sourceText.getOwnerAvatarMediaFile()
+            );
             state.ownerAvatarUploaded = true;
             checkpoint();
         }
 
         if (parameters.commentId != null && state.prevCommentInfo == null) {
             state.prevCommentInfo = nodeApi.getComment(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                    parameters.postingId,
-                    parameters.commentId);
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                parameters.postingId,
+                parameters.commentId
+            );
             checkpoint();
 
         }
@@ -290,26 +293,28 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             String repliedToId = null;
             String repliedToRevisionId = null;
             if (state.prevCommentInfo != null) {
-                repliedToId = state.prevCommentInfo.getRepliedToId();
-                repliedToRevisionId = state.prevCommentInfo.getRepliedToRevisionId();
+                repliedToId = CommentInfoUtil.getRepliedToId(state.prevCommentInfo);
+                repliedToRevisionId = CommentInfoUtil.getRepliedToRevisionId(state.prevCommentInfo);
             } else if (parameters.sourceText.getRepliedToId() != null) {
                 CommentInfo repliedToCommentInfo = nodeApi.getComment(
-                        parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                        parameters.postingId,
-                        parameters.sourceText.getRepliedToId().toString());
+                    parameters.targetNodeName,
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                    parameters.postingId,
+                    parameters.sourceText.getRepliedToId().toString()
+                );
                 if (repliedToCommentInfo != null) {
                     repliedToId = repliedToCommentInfo.getId();
                     repliedToRevisionId = repliedToCommentInfo.getRevisionId();
                 }
             }
             state.repliedToDigest = repliedToDigestVerifier.getRepliedToDigest(
-                    parameters.targetNodeName,
-                    this::generateCarte,
-                    state.postingInfo,
-                    new HashMap<>(),
-                    repliedToId,
-                    repliedToRevisionId);
+                parameters.targetNodeName,
+                this::generateCarte,
+                state.postingInfo,
+                new HashMap<>(),
+                repliedToId,
+                repliedToRevisionId
+            );
             state.repliedToLoaded = true;
             checkpoint();
         }
@@ -322,29 +327,35 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         if (state.commentInfo == null) {
             if (parameters.commentId == null) {
                 CommentCreated created = nodeApi.postComment(
-                        parameters.targetNodeName,
-                        parameters.postingId,
-                        state.commentText);
+                    parameters.targetNodeName,
+                    parameters.postingId,
+                    state.commentText
+                );
                 state.commentInfo = created.getComment();
                 String commentId = state.commentInfo.getId();
-                send(new RemoteCommentAddedLiberin(
-                        parameters.targetNodeName, parameters.postingId, commentId));
+                send(new RemoteCommentAddedLiberin(parameters.targetNodeName, parameters.postingId, commentId));
             } else {
                 state.commentInfo = nodeApi.putComment(
-                        parameters.targetNodeName,
-                        parameters.postingId,
-                        parameters.commentId,
-                        state.commentText);
-                send(new RemoteCommentUpdatedLiberin(
-                        parameters.targetNodeName, parameters.postingId, parameters.commentId));
+                    parameters.targetNodeName,
+                    parameters.postingId,
+                    parameters.commentId,
+                    state.commentText
+                );
+                send(
+                    new RemoteCommentUpdatedLiberin(
+                        parameters.targetNodeName, parameters.postingId, parameters.commentId
+                    )
+                );
             }
             checkpoint();
         }
 
         MediaFile repliedToAvatarMediaFile = null;
-        if (state.commentInfo.getRepliedToAvatar() != null) {
-            repliedToAvatarMediaFile =
-                    mediaManager.downloadPublicMedia(parameters.targetNodeName, state.commentInfo.getRepliedToAvatar());
+        if (CommentInfoUtil.getRepliedToAvatar(state.commentInfo) != null) {
+            repliedToAvatarMediaFile = mediaManager.downloadPublicMedia(
+                parameters.targetNodeName,
+                CommentInfoUtil.getRepliedToAvatar(state.commentInfo)
+            );
         }
 
         saveComment(state.commentInfo, repliedToAvatarMediaFile);
@@ -352,15 +363,17 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
     private CommentText buildComment() {
         CommentText commentText = new CommentText(
-                nodeName(), fullName(), gender(), parameters.sourceText, textConverter);
+            nodeName(), fullName(), gender(), parameters.sourceText, textConverter
+        );
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
         cacheMediaDigests(mediaDigests);
         byte[] parentMediaDigest = state.postingInfo.getParentMediaId() != null
                 ? mediaManager.getPrivateMediaDigest(
-                        parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                        state.postingInfo.getParentMediaId(),
-                        null)
+                    parameters.targetNodeName,
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                    state.postingInfo.getParentMediaId(),
+                    null
+                )
                 : null;
         byte[] fingerprint = CommentFingerprintBuilder.build(
             commentText,
@@ -370,9 +383,9 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                 state.postingInfo,
                 parentMediaDigest,
                 pmf -> mediaManager.getPrivateMediaDigest(
-                        parameters.targetNodeName,
-                        generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                        pmf
+                    parameters.targetNodeName,
+                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                    pmf
                 )
             )),
             state.repliedToDigest
@@ -388,15 +401,16 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
 
         return Arrays.stream(parameters.sourceText.getMedia())
-                .filter(md -> md.getDigest() != null)
-                .map(md -> Pair.of(Util.uuid(md.getId()), md.getDigest()))
-                .filter(p -> p.getFirst().isPresent())
-                .collect(Collectors.toMap(p -> p.getFirst().get(), p -> Util.base64decode(p.getSecond())));
+            .filter(md -> md.getDigest() != null)
+            .map(md -> Pair.of(Util.uuid(md.getId()), md.getDigest()))
+            .filter(p -> p.getFirst().isPresent())
+            .collect(Collectors.toMap(p -> p.getFirst().get(), p -> Util.base64decode(p.getSecond())));
     }
 
     private void cacheMediaDigests(Map<UUID, byte[]> mediaDigests) {
         mediaDigests.forEach((id, digest) ->
-                mediaManager.cacheUploadedRemoteMedia(parameters.targetNodeName, id.toString(), digest));
+            mediaManager.cacheUploadedRemoteMedia(parameters.targetNodeName, id.toString(), digest)
+        );
     }
 
     private byte[] commentMediaDigest(UUID id, Map<UUID, byte[]> mediaDigests) {
@@ -404,18 +418,19 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             return mediaDigests.get(id);
         }
         return mediaManager.getPrivateMediaDigest(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                id.toString(),
-                null);
+            parameters.targetNodeName,
+            generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+            id.toString(),
+            null
+        );
     }
 
     private void saveComment(CommentInfo info, MediaFile repliedToAvatarMediaFile) {
         tx.executeWrite(
             () -> {
                 OwnComment ownComment = ownCommentRepository
-                        .findByRemoteCommentId(nodeId, parameters.targetNodeName, parameters.postingId, info.getId())
-                        .orElse(null);
+                    .findByRemoteCommentId(nodeId, parameters.targetNodeName, parameters.postingId, info.getId())
+                    .orElse(null);
                 if (ownComment == null) {
                     ownComment = new OwnComment();
                     ownComment.setId(UUID.randomUUID());
@@ -429,13 +444,15 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                     }
                     if (repliedToAvatarMediaFile != null) {
                         ownComment.setRemoteRepliedToAvatarMediaFile(repliedToAvatarMediaFile);
-                        ownComment.setRemoteRepliedToAvatarShape(info.getRepliedToAvatar().getShape());
+                        AvatarImage repliedToAvatar = CommentInfoUtil.getRepliedToAvatar(info);
+                        String remoteRepliedToAvatarShape = repliedToAvatar != null ? repliedToAvatar.getShape() : null;
+                        ownComment.setRemoteRepliedToAvatarShape(remoteRepliedToAvatarShape);
                     }
                     ownComment = ownCommentRepository.save(ownComment);
                     contactOperations.updateCloseness(nodeId, parameters.targetNodeName, 1);
-                    contactOperations.updateCloseness(nodeId, info.getRepliedToName(), 1);
+                    contactOperations.updateCloseness(nodeId, CommentInfoUtil.getRepliedToName(info), 1);
                 }
-                info.toOwnComment(ownComment);
+                CommentInfoUtil.toOwnComment(info, ownComment);
                 ownComment.setPostingHeading(state.postingInfo.getHeading());
             }
         );
@@ -451,12 +468,23 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
     protected void failed() {
         super.failed();
         if (state.prevCommentInfo == null) {
-            send(new RemoteCommentAddingFailedLiberin(
-                    parameters.targetNodeName, parameters.postingId, state.postingInfo));
+            send(
+                new RemoteCommentAddingFailedLiberin(
+                    parameters.targetNodeName,
+                    parameters.postingId,
+                    state.postingInfo
+                )
+            );
         } else {
-            send(new RemoteCommentUpdateFailedLiberin(
-                    parameters.targetNodeName, parameters.postingId, state.postingInfo, parameters.commentId,
-                    state.prevCommentInfo));
+            send(
+                new RemoteCommentUpdateFailedLiberin(
+                    parameters.targetNodeName,
+                    parameters.postingId,
+                    state.postingInfo,
+                    parameters.commentId,
+                    state.prevCommentInfo
+                )
+            );
         }
     }
 

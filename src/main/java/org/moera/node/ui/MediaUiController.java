@@ -18,7 +18,7 @@ import org.moera.node.global.PageNotFoundException;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UiController;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.operations.FeedOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.slf4j.Logger;
@@ -119,7 +119,7 @@ public class MediaUiController {
         }
         String body = posting.getCurrentRevision().getSaneBody();
         body = body != null ? body : "";
-        model.addAttribute("posting", new PostingInfo(posting, MediaAttachmentsProvider.NONE, requestContext));
+        model.addAttribute("posting", PostingInfoUtil.build(posting, MediaAttachmentsProvider.NONE, requestContext));
         model.addAttribute("caption", new SafeString(body));
 
         return "caption";

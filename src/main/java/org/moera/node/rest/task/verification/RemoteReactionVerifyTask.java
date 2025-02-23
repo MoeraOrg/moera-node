@@ -5,7 +5,9 @@ import java.util.function.Function;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.ReactionInfo;
@@ -20,8 +22,6 @@ import org.moera.node.fingerprint.ReactionFingerprintBuilder;
 import org.moera.node.liberin.model.RemoteReactionVerificationFailedLiberin;
 import org.moera.node.liberin.model.RemoteReactionVerifiedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

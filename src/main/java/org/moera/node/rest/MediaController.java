@@ -20,6 +20,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.EntryInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.PublicMediaFileInfo;
 import org.moera.lib.node.types.Scope;
@@ -42,12 +43,11 @@ import org.moera.node.media.InvalidImageException;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.media.MediaPathNotSetException;
 import org.moera.node.media.ThresholdReachedException;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.EntryInfo;
+import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.PostingFeaturesUtil;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PrivateMediaFileInfoUtil;
 import org.moera.node.model.PublicMediaFileInfoUtil;
 import org.moera.node.model.ValidationFailure;
@@ -311,12 +311,15 @@ public class MediaController {
         Set<Entry> entries = entryRepository.findByMediaId(mediaFileOwner.getId());
         List<EntryInfo> parents = new ArrayList<>();
         for (Entry entry : entries) {
-            if (entry instanceof Posting) {
-                parents.add(new EntryInfo(new PostingInfo(entry, entryOperations, requestContext)));
+            EntryInfo info = new EntryInfo();
+            if (entry instanceof Posting posting) {
+                info.setPosting(PostingInfoUtil.build(posting, entryOperations, requestContext));
+            } else if (entry instanceof Comment comment) {
+                info.setComment(CommentInfoUtil.build(comment, entryOperations, requestContext));
+            } else {
+                continue;
             }
-            if (entry instanceof Comment) {
-                parents.add(new EntryInfo(new CommentInfo((Comment) entry, entryOperations, requestContext)));
-            }
+            parents.add(info);
         }
 
         return parents;

@@ -4,6 +4,7 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.WhoAmI;
@@ -11,7 +12,6 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.model.StorySummaryNodeUtil;
 import org.moera.node.util.Util;
@@ -53,15 +53,23 @@ public class PostingInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildSubscribingToCommentsFailedSummary(
-            String ownerName, String ownerFullName, String ownerGender, String postingHeading) {
-
+            String ownerName, String ownerFullName, String ownerGender, String postingHeading
+    ) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(StorySummaryEntryUtil.build(ownerName, ownerFullName, ownerGender, postingHeading));
         return summaryData;
     }
 
-    public void updated(String nodeName, String ownerName, String ownerFullName, String ownerGender,
-                        AvatarImage ownerAvatar, String id, String heading, String description) {
+    public void updated(
+        String nodeName,
+        String ownerName,
+        String ownerFullName,
+        String ownerGender,
+        AvatarImage ownerAvatar,
+        String id,
+        String heading,
+        String description
+    ) {
         if (isBlocked(StoryType.POSTING_UPDATED, null, nodeName, id, ownerName)) {
             return;
         }
@@ -84,8 +92,8 @@ public class PostingInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildPostingUpdatedSummary(
-            String ownerName, String ownerFullName, String ownerGender, String heading, String description) {
-
+        String ownerName, String ownerFullName, String ownerGender, String heading, String description
+    ) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(StorySummaryEntryUtil.build(ownerName, ownerFullName, ownerGender, heading));
         summaryData.setDescription(description);
@@ -152,8 +160,8 @@ public class PostingInstants extends InstantsCreator {
     }
 
     private static StorySummaryData buildRemoteUpdateFailedSummary(
-            String nodeName, String fullName, String gender, String postingHeading) {
-
+        String nodeName, String fullName, String gender, String postingHeading
+    ) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setNode(StorySummaryNodeUtil.build(nodeName, fullName, gender));
         summaryData.setPosting(StorySummaryEntryUtil.build(null, null, null, postingHeading));

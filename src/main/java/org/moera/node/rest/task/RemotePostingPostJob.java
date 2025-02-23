@@ -11,6 +11,7 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
 import org.moera.node.api.node.NodeApiException;
@@ -24,7 +25,7 @@ import org.moera.node.liberin.model.RemotePostingAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingSourceText;
 import org.moera.node.model.PostingText;
 import org.moera.node.operations.ContactOperations;
@@ -318,7 +319,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
                     ownPosting = ownPostingRepository.save(ownPosting);
                     contactOperations.updateCloseness(nodeId, parameters.targetNodeName, 1);
                 }
-                state.postingInfo.toOwnPosting(ownPosting);
+                PostingInfoUtil.toOwnPosting(state.postingInfo, ownPosting);
             }
         );
     }

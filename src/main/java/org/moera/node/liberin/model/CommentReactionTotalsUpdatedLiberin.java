@@ -7,7 +7,7 @@ import jakarta.persistence.EntityManager;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentInfoUtil;
 
 public class CommentReactionTotalsUpdatedLiberin extends Liberin {
 
@@ -29,7 +29,7 @@ public class CommentReactionTotalsUpdatedLiberin extends Liberin {
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
         comment = entityManager.merge(comment);
-        model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
+        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
     }
 
 }

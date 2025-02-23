@@ -12,14 +12,14 @@ import jakarta.inject.Inject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars.SafeString;
+import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.MediaFilePreviewInfo;
+import org.moera.lib.node.types.MediaInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.global.RequestContext;
-import org.moera.node.model.CommentInfo;
 import org.moera.node.model.MediaFilePreviewInfoUtil;
-import org.moera.node.model.MediaInfo;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.util.MediaUtil;
 import org.moera.node.util.Util;
@@ -34,9 +34,14 @@ public class GalleriesHelperSource {
     @Inject
     private ObjectMapper objectMapper;
 
-    public CharSequence postingGalleries(PostingInfo posting, Collection<CommentInfo> comments, String canonicalUrl,
-                                         String postingId, String commentId,
-                                         String mediaId) throws JsonProcessingException {
+    public CharSequence postingGalleries(
+        PostingInfo posting,
+        Collection<CommentInfo> comments,
+        String canonicalUrl,
+        String postingId,
+        String commentId,
+        String mediaId
+    ) throws JsonProcessingException {
         Collection<MediaInfo> entries = new ArrayList<>();
         entries.add(posting);
         if (comments != null) {
@@ -45,25 +50,34 @@ public class GalleriesHelperSource {
         return galleries(entries, canonicalUrl, postingId, commentId, mediaId);
     }
 
-    public CharSequence feedGalleries(Collection<StoryInfo> stories,
-                                      String canonicalUrl) throws JsonProcessingException {
-        return galleries(stories.stream().map(StoryInfo::getPosting).collect(Collectors.toList()),
-                canonicalUrl, null, null, null);
+    public CharSequence feedGalleries(
+        Collection<StoryInfo> stories,
+        String canonicalUrl
+    ) throws JsonProcessingException {
+        return galleries(
+            stories.stream().map(StoryInfo::getPosting).collect(Collectors.toList()), canonicalUrl, null, null, null
+        );
     }
 
-    private CharSequence galleries(Collection<MediaInfo> entries, String canonicalUrl, String galleryPostingId,
-                                   String galleryCommentId, String galleryMediaId) throws JsonProcessingException {
+    private CharSequence galleries(
+        Collection<MediaInfo> entries,
+        String canonicalUrl,
+        String galleryPostingId,
+        String galleryCommentId,
+        String galleryMediaId
+    ) throws JsonProcessingException {
         Map<String, Map<String, String>[]> entryMap = new HashMap<>();
         for (MediaInfo entry : entries) {
-            var props = Arrays.stream(entry.getMedia())
-                    .map(MediaAttachment::getMedia)
-                    .map(mfo -> Map.of(
-                        "id", mfo.getId(),
-                        "src", "/moera/media/" + mfo.getPath(),
-                        "thumb", "/moera/media/" + mfo.getPath() + "?width=150",
-                        "subHtmlUrl", "/moera/media/private/" + mfo.getId() + "/caption"
-                    ))
-                    .toArray(Map[]::new);
+            var props = entry.getMedia()
+                .stream()
+                .map(MediaAttachment::getMedia)
+                .map(mfo -> Map.of(
+                    "id", mfo.getId(),
+                    "src", "/moera/media/" + mfo.getPath(),
+                    "thumb", "/moera/media/" + mfo.getPath() + "?width=150",
+                    "subHtmlUrl", "/moera/media/private/" + mfo.getId() + "/caption"
+                ))
+                .toArray(Map[]::new);
             entryMap.put(entry.getId(), props);
         }
 
@@ -111,8 +125,9 @@ public class GalleriesHelperSource {
         return entryImage(postingId, commentId, mediaFile, flex, null);
     }
 
-    private CharSequence entryImage(String postingId, String commentId, PrivateMediaFileInfo mediaFile, String flex,
-                                    Integer count) {
+    private CharSequence entryImage(
+        String postingId, String commentId, PrivateMediaFileInfo mediaFile, String flex, Integer count
+    ) {
         MediaFilePreviewInfo preview = MediaFilePreviewInfoUtil.findLargerPreview(mediaFile.getPreviews(), 900);
         int imageWidth = preview != null ? preview.getWidth() : mediaFile.getWidth();
         int imageHeight = preview != null ? preview.getHeight() : mediaFile.getHeight();
@@ -128,9 +143,11 @@ public class GalleriesHelperSource {
 
         String klass = count != null && count > 0 ? "entry-image counted" : "entry-image";
         String href = commentId != null
-                ? String.format("/post/%s?comment=%s&media=%s", Util.ue(postingId), Util.ue(commentId),
-                                Util.ue(mediaFile.getId()))
-                : String.format("/post/%s?media=%s", Util.ue(postingId), Util.ue(mediaFile.getId()));
+            ? String.format(
+                "/post/%s?comment=%s&media=%s",
+                Util.ue(postingId), Util.ue(commentId), Util.ue(mediaFile.getId())
+            )
+            : String.format("/post/%s?media=%s", Util.ue(postingId), Util.ue(mediaFile.getId()));
 
         StringBuilder buf = new StringBuilder();
 
@@ -180,9 +197,9 @@ public class GalleriesHelperSource {
         }
 
         List<PrivateMediaFileInfo> images = Arrays.stream(media)
-                .filter(ma -> !ma.isEmbedded())
-                .map(MediaAttachment::getMedia)
-                .collect(Collectors.toList());
+            .filter(ma -> !ma.isEmbedded())
+            .map(MediaAttachment::getMedia)
+            .collect(Collectors.toList());
         if (images.isEmpty()) {
             return null;
         }
@@ -195,8 +212,11 @@ public class GalleriesHelperSource {
             case 1:
                 buf.append("<div");
                 HelperUtil.appendAttr(buf, "class", String.format("gallery single %s", orientation));
-                HelperUtil.appendAttr(buf, "style",
-                        String.format("--image-height: %dpx", singleImageHeight(images.get(0))));
+                HelperUtil.appendAttr(
+                    buf,
+                    "style",
+                    String.format("--image-height: %dpx", singleImageHeight(images.get(0)))
+                );
                 buf.append('>');
                 buf.append(entryImage(postingId, commentId, images.get(0)));
                 buf.append("</div>");

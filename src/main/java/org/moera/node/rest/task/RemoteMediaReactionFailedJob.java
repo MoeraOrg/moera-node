@@ -4,15 +4,15 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.EntryInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.liberin.model.RemoteCommentMediaReactionAddingFailedLiberin;
 import org.moera.node.liberin.model.RemotePostingMediaReactionAddingFailedLiberin;
 import org.moera.node.media.MediaManager;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.EntryInfo;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,9 +110,10 @@ public class RemoteMediaReactionFailedJob
     protected void execute() throws NodeApiException {
         if (state.parentPosting == null) {
             EntryInfo[] parents = nodeApi.getPrivateMediaParent(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                    parameters.mediaId);
+                parameters.targetNodeName,
+                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
+                parameters.mediaId
+            );
             if (parents != null && parents.length > 0) {
                 if (parents[0].getComment() == null) {
                     state.parentPosting = parents[0].getPosting();
@@ -120,9 +121,10 @@ public class RemoteMediaReactionFailedJob
                     state.parentComment = parents[0].getComment();
                     if (state.parentComment != null) {
                         state.parentPosting = nodeApi.getPosting(
-                                parameters.targetNodeName,
-                                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                                state.parentComment.getPostingId());
+                            parameters.targetNodeName,
+                            generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
+                            state.parentComment.getPostingId()
+                        );
                     }
                 }
             }
@@ -147,19 +149,25 @@ public class RemoteMediaReactionFailedJob
         }
 
         if (state.parentComment == null) {
-            send(new RemotePostingMediaReactionAddingFailedLiberin(
+            send(
+                new RemotePostingMediaReactionAddingFailedLiberin(
                     parameters.targetNodeName,
                     parameters.postingId,
                     state.parentPosting.getId(),
                     parameters.mediaId,
-                    state.parentPosting));
+                    state.parentPosting
+                )
+            );
         } else {
-            send(new RemoteCommentMediaReactionAddingFailedLiberin(
+            send(
+                new RemoteCommentMediaReactionAddingFailedLiberin(
                     parameters.targetNodeName,
                     parameters.postingId,
                     parameters.mediaId,
                     state.parentPosting,
-                    state.parentComment));
+                    state.parentComment
+                )
+            );
         }
     }
 

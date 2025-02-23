@@ -8,7 +8,9 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.FeedInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SheriffComplaintStatus;
 import org.moera.lib.node.types.WhoAmI;
@@ -20,8 +22,7 @@ import org.moera.node.data.SheriffComplaintGroupRepository;
 import org.moera.node.data.SheriffOrder;
 import org.moera.node.data.SheriffOrderRepository;
 import org.moera.node.liberin.model.SheriffComplaintGroupUpdatedLiberin;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.task.Job;
 import org.moera.node.util.Util;
 import org.slf4j.Logger;
@@ -223,7 +224,7 @@ public class SheriffComplaintGroupPrepareJob
                     updateComplaintGroupStatus(SheriffComplaintStatus.INVALID_TARGET);
                     return;
                 }
-                if (!state.postingInfo.isOriginal()) {
+                if (!PostingInfoUtil.isOriginal(state.postingInfo)) {
                     updateComplaintGroupStatus(SheriffComplaintStatus.NOT_ORIGINAL);
                     return;
                 }

@@ -9,7 +9,7 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Posting;
 import org.moera.node.data.Reaction;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.ReactionInfoUtil;
 
 public class PostingReactionAddedLiberin extends Liberin {
@@ -59,7 +59,7 @@ public class PostingReactionAddedLiberin extends Liberin {
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
         posting = entityManager.merge(posting);
-        model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
+        model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
         if (addedReaction != null) {
             addedReaction = entityManager.merge(addedReaction);
             model.put("addedReaction", ReactionInfoUtil.build(addedReaction, AccessCheckers.ADMIN));

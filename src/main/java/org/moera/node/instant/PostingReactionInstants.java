@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StorySummaryReaction;
 import org.moera.lib.node.types.StoryType;
@@ -20,7 +21,6 @@ import org.moera.node.data.Posting;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.model.StorySummaryReactionUtil;
 import org.moera.node.util.Util;
@@ -34,8 +34,10 @@ public class PostingReactionInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    public void added(Posting posting, String ownerName, String ownerFullName, String ownerGender,
-                      AvatarImage ownerAvatar, boolean negative, int emoji) {
+    public void added(
+        Posting posting, String ownerName, String ownerFullName, String ownerGender, AvatarImage ownerAvatar,
+        boolean negative, int emoji
+    ) {
         if (ownerName.equals(nodeName())) {
             return;
         }
@@ -48,9 +50,12 @@ public class PostingReactionInstants extends InstantsCreator {
 
         boolean isNewStory = false;
         Story story = storyRepository.findFullByFeedAndTypeAndEntryId(
-                nodeId(), Feed.INSTANT, storyType, posting.getId()).stream().findFirst().orElse(null);
-        if (story == null
-                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+            nodeId(), Feed.INSTANT, storyType, posting.getId()
+        ).stream().findFirst().orElse(null);
+        if (
+            story == null
+            || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())
+        ) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
@@ -88,12 +93,13 @@ public class PostingReactionInstants extends InstantsCreator {
 
         StoryType storyType = negative ? StoryType.REACTION_ADDED_NEGATIVE : StoryType.REACTION_ADDED_POSITIVE;
         List<Story> stories = storyRepository.findFullByFeedAndTypeAndEntryId(
-                nodeId(), Feed.INSTANT, storyType, postingId);
+            nodeId(), Feed.INSTANT, storyType, postingId
+        );
         for (Story story : stories) {
             Story substory = story.getSubstories().stream()
-                    .filter(t -> Objects.equals(t.getRemoteOwnerName(), ownerName))
-                    .findAny()
-                    .orElse(null);
+                .filter(t -> Objects.equals(t.getRemoteOwnerName(), ownerName))
+                .findAny()
+                .orElse(null);
             if (substory != null) {
                 story.removeSubstory(substory);
                 storyRepository.delete(substory);
@@ -104,16 +110,18 @@ public class PostingReactionInstants extends InstantsCreator {
 
     public void deletedAll(UUID postingId) {
         storyRepository.deleteByFeedAndTypeAndEntryId(
-                nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_POSITIVE, postingId);
+            nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_POSITIVE, postingId
+        );
         storyRepository.deleteByFeedAndTypeAndEntryId(
-                nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_NEGATIVE, postingId);
+            nodeId(), Feed.INSTANT, StoryType.REACTION_ADDED_NEGATIVE, postingId
+        );
         feedUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
         List<Story> stories = story.getSubstories().stream()
-                .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
-                .collect(Collectors.toList());
+            .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
+            .collect(Collectors.toList());
         if (stories.isEmpty()) {
             storyRepository.delete(story);
             if (!isNew) {
@@ -182,15 +190,17 @@ public class PostingReactionInstants extends InstantsCreator {
         }
         story.setRemotePostingId(postingId);
         story.setSummaryData(buildAddingFailedSummary(
-                postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading));
+            postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading
+        ));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildAddingFailedSummary(String nodeName, String fullName, String gender,
-                                                             String postingHeading) {
+    private static StorySummaryData buildAddingFailedSummary(
+        String nodeName, String fullName, String gender, String postingHeading
+    ) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(StorySummaryEntryUtil.build(nodeName, fullName, gender, postingHeading));
         return summaryData;

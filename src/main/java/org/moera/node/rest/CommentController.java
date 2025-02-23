@@ -27,8 +27,11 @@ import com.querydsl.core.types.dsl.SimplePath;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.CommentCreated;
+import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentMassAttributes;
 import org.moera.lib.node.types.CommentTotalInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
@@ -66,14 +69,14 @@ import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.liberin.model.CommentsReadLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfoUtil;
-import org.moera.node.model.CommentCreated;
-import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentCreatedUtil;
+import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentMassAttributesUtil;
 import org.moera.node.model.CommentText;
 import org.moera.node.model.CommentTotalInfoUtil;
 import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedUserOperations;
 import org.moera.node.operations.CommentOperations;
@@ -174,16 +177,18 @@ public class CommentController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<CommentCreated> post(@PathVariable UUID postingId,
-            @Valid @RequestBody CommentText commentText) {
-
-        log.info("POST /postings/{postingId}/comments (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
-                LogUtil.format(postingId),
-                LogUtil.format(commentText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
+    public ResponseEntity<CommentCreated> post(
+        @PathVariable UUID postingId, @Valid @RequestBody CommentText commentText
+    ) {
+        log.info(
+            "POST /postings/{postingId}/comments (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
+            LogUtil.format(postingId),
+            LogUtil.format(commentText.getBodySrc(), 64),
+            LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
+        );
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
@@ -193,15 +198,19 @@ public class CommentController {
         Comment repliedTo = null;
         if (commentText.getRepliedToId() != null) {
             repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentText.getRepliedToId())
-                    .orElse(null);
-            if (repliedTo == null || !repliedTo.getPosting().getId().equals(posting.getId())
-                    || !requestContext.isPrincipal(repliedTo.getViewE(), Scope.VIEW_CONTENT)) {
+                .orElse(null);
+            if (
+                repliedTo == null
+                || !repliedTo.getPosting().getId().equals(posting.getId())
+                || !requestContext.isPrincipal(repliedTo.getViewE(), Scope.VIEW_CONTENT)
+            ) {
                 throw new ObjectNotFoundFailure("commentText.repliedToId.not-found");
             }
         }
         byte[] repliedToDigest = repliedTo != null ? repliedTo.getCurrentRevision().getDigest() : null;
-        byte[] digest = validateCommentText(posting, null, commentText, commentText.getOwnerName(),
-                repliedToDigest);
+        byte[] digest = validateCommentText(
+            posting, null, commentText, commentText.getOwnerName(), repliedToDigest
+        );
         if (commentText.getSignature() != null) {
             requestContext.authenticatedWithSignature(commentText.getOwnerName());
         }
@@ -215,22 +224,30 @@ public class CommentController {
             throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(
-                commentText.getOwnerAvatar(),
-                commentText::setOwnerAvatarMediaFile,
-                () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
+            commentText.getOwnerAvatar(),
+            commentText::setOwnerAvatarMediaFile,
+            () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found")
+        );
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-                commentText.getMedia(),
-                () -> new ValidationFailure("commentText.media.not-found"),
-                () -> new ValidationFailure("commentText.media.not-compressed"),
-                requestContext.isAdmin(Scope.VIEW_CONTENT),
-                requestContext.isAdmin(Scope.ADD_COMMENT),
-                commentText.getOwnerName());
+            commentText.getMedia(),
+            () -> new ValidationFailure("commentText.media.not-found"),
+            () -> new ValidationFailure("commentText.media.not-compressed"),
+            requestContext.isAdmin(Scope.VIEW_CONTENT),
+            requestContext.isAdmin(Scope.ADD_COMMENT),
+            commentText.getOwnerName()
+        );
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
         try {
-            comment = commentOperations.createOrUpdateComment(posting, comment, null, media, null,
-                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
-                    commentText::toEntry);
+            comment = commentOperations.createOrUpdateComment(
+                posting,
+                comment,
+                null,
+                media,
+                null,
+                revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
+                commentText::toEntry
+            );
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
@@ -247,39 +264,44 @@ public class CommentController {
         requestContext.send(new CommentAddedLiberin(posting, comment));
 
         var blockedOperations = blockedUserOperations.findBlockedOperations(postingId);
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
-                .body(new CommentCreated(
-                        comment,
-                        posting.getTotalChildren(),
-                        MediaAttachmentsProvider.RELATIONS,
-                        requestContext,
-                        blockedOperations
-                ));
+        return ResponseEntity
+            .created(URI.create("/postings/" + posting.getId() + "/comments" + comment.getId()))
+            .body(CommentCreatedUtil.build(
+                comment,
+                posting.getTotalChildren(),
+                MediaAttachmentsProvider.RELATIONS,
+                requestContext,
+                blockedOperations
+            ));
     }
 
     @PutMapping("/{commentId}")
     @Transactional
-    public CommentInfo put(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                           @Valid @RequestBody CommentText commentText) {
-
-        log.info("PUT /postings/{postingId}/comments/{commentId}"
-                        + " (postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
-                LogUtil.format(postingId),
-                LogUtil.format(commentId),
-                LogUtil.format(commentText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat())));
+    public CommentInfo put(
+        @PathVariable UUID postingId, @PathVariable UUID commentId, @Valid @RequestBody CommentText commentText
+    ) {
+        log.info(
+            "PUT /postings/{postingId}/comments/{commentId}"
+                + " (postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
+            LogUtil.format(postingId),
+            LogUtil.format(commentId),
+            LogUtil.format(commentText.getBodySrc(), 64),
+            LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
+        );
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
         Principal latestView = comment.getViewE();
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         byte[] repliedToDigest = comment.getRepliedTo() != null
-                ? comment.getRepliedTo().getCurrentRevision().getDigest() : null;
-        byte[] digest = validateCommentText(comment.getPosting(), comment, commentText, comment.getOwnerName(),
-                repliedToDigest);
+            ? comment.getRepliedTo().getCurrentRevision().getDigest()
+            : null;
+        byte[] digest = validateCommentText(
+            comment.getPosting(), comment, commentText, comment.getOwnerName(), repliedToDigest
+        );
         if (commentText.getSignature() != null) {
             requestContext.authenticatedWithSignature(commentText.getOwnerName());
         }
@@ -296,25 +318,32 @@ public class CommentController {
             throw new UserBlockedException();
         }
         mediaOperations.validateAvatar(
-                commentText.getOwnerAvatar(),
-                commentText::setOwnerAvatarMediaFile,
-                () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found"));
+            commentText.getOwnerAvatar(),
+            commentText::setOwnerAvatarMediaFile,
+            () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found")
+        );
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-                commentText.getMedia(),
-                () -> new ValidationFailure("commentText.media.not-found"),
-                () -> new ValidationFailure("commentText.media.not-compressed"),
-                requestContext.isAdmin(Scope.VIEW_CONTENT),
-                requestContext.isAdmin(Scope.UPDATE_COMMENT),
-                comment.getOwnerName());
+            commentText.getMedia(),
+            () -> new ValidationFailure("commentText.media.not-found"),
+            () -> new ValidationFailure("commentText.media.not-compressed"),
+            requestContext.isAdmin(Scope.VIEW_CONTENT),
+            requestContext.isAdmin(Scope.UPDATE_COMMENT),
+            comment.getOwnerName()
+        );
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         if (requestContext.isPrincipal(comment.getEditE(), Scope.UPDATE_COMMENT)) {
             commentText.toEntry(comment);
             try {
-                comment = commentOperations.createOrUpdateComment(comment.getPosting(), comment,
-                        comment.getCurrentRevision(), media, commentText::sameAsRevision,
-                        revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
-                        commentText::toEntry);
+                comment = commentOperations.createOrUpdateComment(
+                    comment.getPosting(),
+                    comment,
+                    comment.getCurrentRevision(),
+                    media,
+                    commentText::sameAsRevision,
+                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
+                    commentText::toEntry
+                );
             } catch (BodyMappingException e) {
                 String field = e.getField() != null ? e.getField() : "bodySrc";
                 throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
@@ -327,8 +356,8 @@ public class CommentController {
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
 
         return withBlockings(withSeniorReaction(
-                withClientReaction(new CommentInfo(comment, MediaAttachmentsProvider.RELATIONS, requestContext)),
-                comment.getPosting().getOwnerName()
+            withClientReaction(CommentInfoUtil.build(comment, MediaAttachmentsProvider.RELATIONS, requestContext)),
+            comment.getPosting().getOwnerName()
         ));
     }
 
@@ -466,25 +495,31 @@ public class CommentController {
     @GetMapping
     @Transactional
     public CommentsSliceInfo getAll(
-            @PathVariable UUID postingId,
-            @RequestParam(required = false) Long before,
-            @RequestParam(required = false) Long after,
-            @RequestParam(required = false) Integer limit) {
-
-        log.info("GET /postings/{postingId}/comments (postingId = {}, before = {}, after = {}, limit = {})",
-                LogUtil.format(postingId), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit));
+        @PathVariable UUID postingId,
+        @RequestParam(required = false) Long before,
+        @RequestParam(required = false) Long after,
+        @RequestParam(required = false) Integer limit
+    ) {
+        log.info(
+            "GET /postings/{postingId}/comments (postingId = {}, before = {}, after = {}, limit = {})",
+            LogUtil.format(postingId), LogUtil.format(before), LogUtil.format(after), LogUtil.format(limit)
+        );
 
         Posting posting = postingRepository.findByNodeIdAndId(requestContext.nodeId(), postingId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         List<Story> stories = requestContext.isPossibleSheriff()
-                ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
-                : Collections.emptyList();
-        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
-                && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
+            ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
+            : Collections.emptyList();
+        if (
+            !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
+            && !feedOperations.isSheriffAllowed(stories, posting.getViewE())
+        ) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)
-                && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())) {
+        if (
+            !requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)
+            && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())
+        ) {
             CommentsSliceInfo sliceInfo = new CommentsSliceInfo();
             sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             sliceInfo.setAfter(SafeInteger.MIN_VALUE);
@@ -496,7 +531,8 @@ public class CommentController {
         }
 
         limit = limit != null && limit <= CommentOperations.MAX_COMMENTS_PER_REQUEST
-                ? limit : CommentOperations.MAX_COMMENTS_PER_REQUEST;
+            ? limit
+            : CommentOperations.MAX_COMMENTS_PER_REQUEST;
         if (limit < 0) {
             throw new ValidationFailure("limit.invalid");
         }
@@ -522,8 +558,15 @@ public class CommentController {
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
-            List<Long> slice = findSlice(requestContext.nodeId(), posting.getId(), SafeInteger.MIN_VALUE, sliceBefore,
-                    limit + 1, Sort.Direction.DESC, sheriff);
+            List<Long> slice = findSlice(
+                requestContext.nodeId(),
+                posting.getId(),
+                SafeInteger.MIN_VALUE,
+                sliceBefore,
+                limit + 1,
+                Sort.Direction.DESC,
+                sheriff
+            );
             if (slice.size() < limit + 1) {
                 sliceInfo.setAfter(SafeInteger.MIN_VALUE);
             } else {
@@ -540,8 +583,15 @@ public class CommentController {
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
-            List<Long> slice = findSlice(requestContext.nodeId(), posting.getId(), sliceAfter, SafeInteger.MAX_VALUE,
-                    limit + 1, Sort.Direction.ASC, sheriff);
+            List<Long> slice = findSlice(
+                requestContext.nodeId(),
+                posting.getId(),
+                sliceAfter,
+                SafeInteger.MAX_VALUE,
+                limit + 1,
+                Sort.Direction.ASC,
+                sheriff
+            );
             if (slice.size() < limit + 1) {
                 sliceInfo.setBefore(SafeInteger.MAX_VALUE);
             } else {
@@ -556,11 +606,12 @@ public class CommentController {
     private Predicate commentFilter(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, boolean sheriff) {
         QComment comment = QComment.comment;
         BooleanBuilder where = new BooleanBuilder();
-        where.and(comment.nodeId.eq(nodeId))
-                .and(comment.parent.id.eq(parentId))
-                .and(comment.moment.gt(afterMoment))
-                .and(comment.moment.loe(beforeMoment))
-                .and(comment.deletedAt.isNull());
+        where
+            .and(comment.nodeId.eq(nodeId))
+            .and(comment.parent.id.eq(parentId))
+            .and(comment.moment.gt(afterMoment))
+            .and(comment.moment.loe(beforeMoment))
+            .and(comment.deletedAt.isNull());
         if (!requestContext.isAdmin(Scope.VIEW_CONTENT)) {
             BooleanBuilder visibility = new BooleanBuilder();
             visibility.or(visibilityFilter(comment, comment.parentViewPrincipal, sheriff));
@@ -592,8 +643,8 @@ public class CommentController {
             visibility.or(viewPrincipal.eq(Principal.SUBSCRIBED));
         }
         String[] friendGroups = sheriff
-                ? friendCache.getNodeGroupIds()
-                : requestContext.getFriendGroups(Scope.VIEW_CONTENT);
+            ? friendCache.getNodeGroupIds()
+            : requestContext.getFriendGroups(Scope.VIEW_CONTENT);
         if (friendGroups != null) {
             for (String friendGroupName : friendGroups) {
                 visibility.or(viewPrincipal.eq(Principal.ofFriendGroup(friendGroupName)));
@@ -602,51 +653,58 @@ public class CommentController {
         return visibility;
     }
 
-    private List<Long> findSlice(UUID nodeId, UUID parentId, long afterMoment, long beforeMoment, int limit,
-                                 Sort.Direction direction, boolean sheriff) {
+    private List<Long> findSlice(
+        UUID nodeId,
+        UUID parentId,
+        long afterMoment,
+        long beforeMoment,
+        int limit,
+        Sort.Direction direction,
+        boolean sheriff
+    ) {
         QComment comment = QComment.comment;
         return new JPAQueryFactory(entityManager)
-                .select(comment.moment)
-                .from(comment)
-                .where(commentFilter(nodeId, parentId, afterMoment, beforeMoment, sheriff))
-                .orderBy(new OrderSpecifier<>(direction.isAscending() ? Order.ASC : Order.DESC, comment.moment))
-                .limit(limit + 1)
-                .fetch();
+            .select(comment.moment)
+            .from(comment)
+            .where(commentFilter(nodeId, parentId, afterMoment, beforeMoment, sheriff))
+            .orderBy(new OrderSpecifier<>(direction.isAscending() ? Order.ASC : Order.DESC, comment.moment))
+            .limit(limit + 1)
+            .fetch();
     }
 
     private void fillSlice(CommentsSliceInfo sliceInfo, Posting posting, int limit, boolean sheriff) {
         QComment comment = QComment.comment;
         QEntryRevision currentRevision = QEntryRevision.entryRevision;
         List<CommentInfo> comments = new JPAQueryFactory(entityManager)
-                .selectFrom(comment)
-                .leftJoin(comment.currentRevision, currentRevision).fetchJoin()
-                .leftJoin(comment.ownerAvatarMediaFile).fetchJoin()
-                .leftJoin(comment.reactionTotals).fetchJoin()
-                .distinct()
-                .where(commentFilter(
-                        requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore(), sheriff
-                ))
-                .fetch()
-                .stream()
-                // This should be unnecessary, but let it be for reliability
-                .filter(c -> requestContext.isPrincipal(c.getViewE(), Scope.VIEW_CONTENT) || sheriff)
-                .map(c -> new CommentInfo(c, entryOperations, requestContext))
-                .sorted(Comparator.comparing(CommentInfo::getMoment))
-                .collect(Collectors.toList());
+            .selectFrom(comment)
+            .leftJoin(comment.currentRevision, currentRevision).fetchJoin()
+            .leftJoin(comment.ownerAvatarMediaFile).fetchJoin()
+            .leftJoin(comment.reactionTotals).fetchJoin()
+            .distinct()
+            .where(commentFilter(
+                requestContext.nodeId(), posting.getId(), sliceInfo.getAfter(), sliceInfo.getBefore(), sheriff
+            ))
+            .fetch()
+            .stream()
+            // This should be unnecessary, but let it be for reliability
+            .filter(c -> requestContext.isPrincipal(c.getViewE(), Scope.VIEW_CONTENT) || sheriff)
+            .map(c -> CommentInfoUtil.build(c, entryOperations, requestContext))
+            .sorted(Comparator.comparing(CommentInfo::getMoment))
+            .collect(Collectors.toList());
 
         if (comments.size() > limit) {
             comments.remove(limit);
         }
 
         Map<String, CommentInfo> commentMap = comments.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
+            .filter(Objects::nonNull)
+            .collect(Collectors.toMap(CommentInfo::getId, Function.identity(), (p1, p2) -> p1));
         String clientName = !requestContext.isOwner()
-                ? requestContext.getClientName(Scope.IDENTIFY)
-                : requestContext.nodeName();
+            ? requestContext.getClientName(Scope.IDENTIFY)
+            : requestContext.nodeName();
         boolean viewContent = !requestContext.isOwner()
-                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
-                : requestContext.isAdmin(Scope.VIEW_CONTENT);
+            ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+            : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (!ObjectUtils.isEmpty(clientName)) {
             reactionRepository
                 .findByCommentsInRangeAndOwner(
@@ -669,7 +727,7 @@ public class CommentController {
             .forEach(r -> commentMap.get(ClientReactionInfoUtil.getEntryId(r)).setSeniorReaction(r));
 
         var blockedOperations = blockedUserOperations.findBlockedOperations(posting.getId());
-        comments.forEach(c -> c.putBlockedOperations(blockedOperations));
+        comments.forEach(c -> CommentInfoUtil.putBlockedOperations(c, blockedOperations));
 
         userListOperations.fillSheriffListMarks(posting, comments);
 
@@ -685,8 +743,9 @@ public class CommentController {
             sliceInfo.setTotalInFuture(0);
             sliceInfo.setTotalInPast(posting.getTotalChildren() - sliceInfo.getComments().size());
         } else {
-            int totalInFuture = commentRepository.countInRange(requestContext.nodeId(), posting.getId(),
-                    sliceInfo.getBefore(), SafeInteger.MAX_VALUE);
+            int totalInFuture = commentRepository.countInRange(
+                requestContext.nodeId(), posting.getId(), sliceInfo.getBefore(), SafeInteger.MAX_VALUE
+            );
             sliceInfo.setTotalInFuture(totalInFuture);
             sliceInfo.setTotalInPast(posting.getTotalChildren() - totalInFuture - sliceInfo.getComments().size());
         }
@@ -694,29 +753,40 @@ public class CommentController {
 
     @GetMapping("/{commentId}")
     @Transactional
-    public CommentInfo get(@PathVariable UUID postingId, @PathVariable UUID commentId,
-                           @RequestParam(required = false) String include) {
-        log.info("GET /postings/{postingId}/comments/{commentId}, (postingId = {}, commentId = {}, include = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(include));
+    public CommentInfo get(
+        @PathVariable UUID postingId,
+        @PathVariable UUID commentId,
+        @RequestParam(required = false) String include
+    ) {
+        log.info(
+            "GET /postings/{postingId}/comments/{commentId}, (postingId = {}, commentId = {}, include = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId), LogUtil.format(include)
+        );
 
         Set<String> includeSet = Util.setParam(include);
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         Entry posting = comment.getPosting();
         List<Story> stories = requestContext.isPossibleSheriff()
-                ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
-                : Collections.emptyList();
-        if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)
-                && !feedOperations.isSheriffAllowed(stories, comment.getViewE())) {
+            ? storyRepository.findByEntryId(requestContext.nodeId(), posting.getId())
+            : Collections.emptyList();
+        if (
+            !requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)
+            && !feedOperations.isSheriffAllowed(stories, comment.getViewE())
+        ) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
-                && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
+        if (
+            !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
+            && !feedOperations.isSheriffAllowed(stories, posting.getViewE())
+        ) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
-        if (!requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)
-                && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())) {
+        if (
+            !requestContext.isPrincipal(posting.getViewCommentsE(), Scope.VIEW_CONTENT)
+            && !feedOperations.isSheriffAllowed(stories, posting.getViewCommentsE())
+        ) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
         if (!posting.getId().equals(postingId)) {
@@ -724,21 +794,23 @@ public class CommentController {
         }
 
         return withSheriffUserListMarks(withBlockings(withSeniorReaction(
-                withClientReaction(
-                        new CommentInfo(comment, entryOperations, includeSet.contains("source"), requestContext)
-                ),
-                posting.getOwnerName()
+            withClientReaction(
+                CommentInfoUtil.build(comment, entryOperations, includeSet.contains("source"), requestContext)
+            ),
+            posting.getOwnerName()
         )), posting);
     }
 
     @DeleteMapping("/{commentId}")
     @Transactional
     public CommentTotalInfo delete(@PathVariable UUID postingId, @PathVariable UUID commentId) {
-        log.info("DELETE /postings/{postingId}/comments/{commentId} (postingId = {}, commentId = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId));
+        log.info(
+            "DELETE /postings/{postingId}/comments/{commentId} (postingId = {}, commentId = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId)
+        );
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         EntryRevision latest = comment.getCurrentRevision();
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
@@ -752,12 +824,16 @@ public class CommentController {
         if (!comment.getPosting().getId().equals(postingId)) {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
-        if (requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
-                && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
+        if (
+            requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
+            && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OWN_CONTENT)
+        ) {
             throw new AuthenticationException();
         }
-        if (!requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
-                && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
+        if (
+            !requestContext.isClient(comment.getOwnerName(), Scope.IDENTIFY)
+            && !requestContext.isPrincipal(comment.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)
+        ) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
@@ -779,11 +855,13 @@ public class CommentController {
     @GetMapping("/{commentId}/attached")
     @Transactional
     public List<PostingInfo> getAttached(@PathVariable UUID postingId, @PathVariable UUID commentId) {
-        log.info("GET /postings/{postingId}/comments/{commentId}/attached, (postingId = {}, commentId = {})",
-                LogUtil.format(postingId), LogUtil.format(commentId));
+        log.info(
+            "GET /postings/{postingId}/comments/{commentId}/attached, (postingId = {}, commentId = {})",
+            LogUtil.format(postingId), LogUtil.format(commentId)
+        );
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
-                .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
         if (!requestContext.isPrincipal(comment.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("comment.not-found");
         }
@@ -797,19 +875,20 @@ public class CommentController {
             throw new ObjectNotFoundFailure("comment.wrong-posting");
         }
         List<Posting> attached = entryAttachmentRepository.findOwnAttachedPostings(
-                requestContext.nodeId(), comment.getCurrentRevision().getId());
+            requestContext.nodeId(), comment.getCurrentRevision().getId()
+        );
         return attached.stream()
-                .map(p -> withBlockings(withClientReaction(new PostingInfo(p, false, requestContext))))
-                .collect(Collectors.toList());
+            .map(p -> withBlockings(withClientReaction(PostingInfoUtil.build(p, false, requestContext))))
+            .collect(Collectors.toList());
     }
 
     private CommentInfo withClientReaction(CommentInfo commentInfo) {
         String clientName = !requestContext.isOwner()
-                ? requestContext.getClientName(Scope.IDENTIFY)
-                : requestContext.nodeName();
+            ? requestContext.getClientName(Scope.IDENTIFY)
+            : requestContext.nodeName();
         boolean viewContent = !requestContext.isOwner()
-                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
-                : requestContext.isAdmin(Scope.VIEW_CONTENT);
+            ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+            : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (ObjectUtils.isEmpty(clientName)) {
             return commentInfo;
         }
@@ -830,11 +909,11 @@ public class CommentController {
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
         String clientName = !requestContext.isOwner()
-                ? requestContext.getClientName(Scope.IDENTIFY)
-                : requestContext.nodeName();
+            ? requestContext.getClientName(Scope.IDENTIFY)
+            : requestContext.nodeName();
         boolean viewContent = !requestContext.isOwner()
-                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
-                : requestContext.isAdmin(Scope.VIEW_CONTENT);
+            ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+            : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
@@ -846,14 +925,18 @@ public class CommentController {
     }
 
     private PostingInfo withBlockings(PostingInfo postingInfo) {
-        postingInfo.putBlockedOperations(
-                blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
+        PostingInfoUtil.putBlockedOperations(
+            postingInfo,
+            blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId()))
+        );
         return postingInfo;
     }
 
     private CommentInfo withBlockings(CommentInfo commentInfo) {
-        commentInfo.putBlockedOperations(
-                blockedUserOperations.findBlockedOperations(UUID.fromString(commentInfo.getPostingId())));
+        CommentInfoUtil.putBlockedOperations(
+            commentInfo,
+            blockedUserOperations.findBlockedOperations(UUID.fromString(commentInfo.getPostingId()))
+        );
         return commentInfo;
     }
 

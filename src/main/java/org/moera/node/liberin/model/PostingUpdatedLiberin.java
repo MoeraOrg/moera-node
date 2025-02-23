@@ -9,7 +9,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingRevisionInfoUtil;
 import org.moera.node.operations.MediaAttachmentsProvider;
 
@@ -54,7 +54,7 @@ public class PostingUpdatedLiberin extends Liberin {
         super.toModel(model);
         posting = entityManager.merge(posting);
         latestRevision = entityManager.merge(latestRevision);
-        model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
+        model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
         model.put("latestRevision",
             PostingRevisionInfoUtil.build(
                 posting, latestRevision, MediaAttachmentsProvider.RELATIONS, posting.getReceiverName(),

@@ -2,6 +2,8 @@ package org.moera.node.model;
 
 import java.util.List;
 
+import org.moera.lib.node.types.CommentInfo;
+
 public class CommentsSliceInfo {
 
     private long before;

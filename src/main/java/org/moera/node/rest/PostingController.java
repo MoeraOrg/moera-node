@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BlockedOperation;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
@@ -50,7 +51,7 @@ import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.PostingText;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
@@ -149,21 +150,26 @@ public class PostingController {
     @Entitled
     @Transactional
     public ResponseEntity<PostingInfo> post(@Valid @RequestBody PostingText postingText) {
-        log.info("POST /postings (bodySrc = {}, bodySrcFormat = {})",
-                LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
+        log.info(
+            "POST /postings (bodySrc = {}, bodySrcFormat = {})",
+            LogUtil.format(postingText.getBodySrc(), 64),
+            LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
+        );
 
-        if (!requestContext.isAdmin(Scope.ADD_POST)
-                && !requestContext.getOptions().getBool("posting.non-admin.allowed")) {
+        if (
+            !requestContext.isAdmin(Scope.ADD_POST)
+            && !requestContext.getOptions().getBool("posting.non-admin.allowed")
+        ) {
             throw new AuthenticationException();
         }
         if (!ObjectUtils.isEmpty(postingText.getPublications()) && !requestContext.isAdmin(Scope.UPDATE_FEEDS)) {
             throw new AuthenticationException();
         }
         mediaOperations.validateAvatar(
-                postingText.getOwnerAvatar(),
-                postingText::setOwnerAvatarMediaFile,
-                () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
+            postingText.getOwnerAvatar(),
+            postingText::setOwnerAvatarMediaFile,
+            () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found")
+        );
         byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
@@ -172,19 +178,25 @@ public class PostingController {
             throw new UserBlockedException();
         }
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-                postingText.getMedia(),
-                () -> new ValidationFailure("postingText.media.not-found"),
-                () -> new ValidationFailure("postingText.media.not-compressed"),
-                requestContext.isAdmin(Scope.VIEW_MEDIA),
-                requestContext.isAdmin(Scope.ADD_POST),
-                requestContext.getClientName(Scope.VIEW_MEDIA));
+            postingText.getMedia(),
+            () -> new ValidationFailure("postingText.media.not-found"),
+            () -> new ValidationFailure("postingText.media.not-compressed"),
+            requestContext.isAdmin(Scope.VIEW_MEDIA),
+            requestContext.isAdmin(Scope.ADD_POST),
+            requestContext.getClientName(Scope.VIEW_MEDIA)
+        );
 
         Posting posting = postingOperations.newPosting(postingText);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, null, media,
-                    postingText.getPublications(), null,
-                    revision -> postingText.toEntryRevision(revision, digest, textConverter, media),
-                    postingText::toEntry);
+            posting = postingOperations.createOrUpdatePosting(
+                posting,
+                null,
+                media,
+                postingText.getPublications(),
+                null,
+                revision -> postingText.toEntryRevision(revision, digest, textConverter, media),
+                postingText::toEntry
+            );
         } catch (BodyMappingException e) {
             throw new ValidationFailure("postingText.bodySrc.wrong-encoding");
         }
@@ -192,36 +204,40 @@ public class PostingController {
 
         requestContext.send(new PostingAddedLiberin(posting));
 
-        return ResponseEntity.created(URI.create("/postings/" + posting.getId()))
-                .body(withBlockings(new PostingInfo(
-                        posting,
-                        stories,
-                        MediaAttachmentsProvider.RELATIONS,
-                        requestContext,
-                        requestContext.getOptions()
-                )));
+        return ResponseEntity
+            .created(URI.create("/postings/" + posting.getId()))
+            .body(withBlockings(PostingInfoUtil.build(
+                posting,
+                stories,
+                MediaAttachmentsProvider.RELATIONS,
+                requestContext,
+                requestContext.getOptions()
+            )));
     }
 
     @PutMapping("/{id}")
     @Entitled
     @Transactional
     public PostingInfo put(@PathVariable UUID id, @Valid @RequestBody PostingText postingText) {
-        log.info("PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
-                LogUtil.format(id),
-                LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
+        log.info(
+            "PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
+            LogUtil.format(id),
+            LogUtil.format(postingText.getBodySrc(), 64),
+            LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
+        );
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!posting.isOriginal()) {
             throw new ValidationFailure("posting.not-original");
         }
         Principal latestView = posting.getViewE();
         EntryRevision latest = posting.getCurrentRevision();
         mediaOperations.validateAvatar(
-                postingText.getOwnerAvatar(),
-                postingText::setOwnerAvatarMediaFile,
-                () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
+            postingText.getOwnerAvatar(),
+            postingText::setOwnerAvatarMediaFile,
+            () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found")
+        );
         byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName());
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
@@ -236,21 +252,27 @@ public class PostingController {
             throw new ValidationFailure("postingText.publications.cannot-modify");
         }
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-                postingText.getMedia(),
-                () -> new ValidationFailure("postingText.media.not-found"),
-                () -> new ValidationFailure("postingText.media.not-compressed"),
-                requestContext.isAdmin(Scope.VIEW_MEDIA),
-                requestContext.isAdmin(Scope.UPDATE_POST),
-                requestContext.getClientName(Scope.VIEW_MEDIA));
+            postingText.getMedia(),
+            () -> new ValidationFailure("postingText.media.not-found"),
+            () -> new ValidationFailure("postingText.media.not-compressed"),
+            requestContext.isAdmin(Scope.VIEW_MEDIA),
+            requestContext.isAdmin(Scope.UPDATE_POST),
+            requestContext.getClientName(Scope.VIEW_MEDIA)
+        );
 
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         boolean sameViewComments = postingText.sameViewComments(posting);
         postingText.toEntry(posting);
         try {
-            posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media,
-                    null, postingText::sameAsRevision,
-                    revision -> postingText.toEntryRevision(revision, digest, textConverter, media),
-                    postingText::toEntry);
+            posting = postingOperations.createOrUpdatePosting(
+                posting,
+                posting.getCurrentRevision(),
+                media,
+                null,
+                postingText::sameAsRevision,
+                revision -> postingText.toEntryRevision(revision, digest, textConverter, media),
+                postingText::toEntry
+            );
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
             throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
@@ -263,13 +285,13 @@ public class PostingController {
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 
         return withBlockings(withClientReaction(
-                new PostingInfo(
-                        posting,
-                        stories,
-                        MediaAttachmentsProvider.RELATIONS,
-                        requestContext,
-                        requestContext.getOptions()
-                )
+            PostingInfoUtil.build(
+                posting,
+                stories,
+                MediaAttachmentsProvider.RELATIONS,
+                requestContext,
+                requestContext.getOptions()
+            )
         ));
     }
 
@@ -280,8 +302,9 @@ public class PostingController {
             String clientName = requestContext.getClientName(scope);
             boolean valid = false;
             if (!ObjectUtils.isEmpty(ownerName)) {
-                valid = ownerName.equals(clientName)
-                        || ownerName.equals(requestContext.nodeName()) && requestContext.isAdmin(scope);
+                valid =
+                    ownerName.equals(clientName)
+                    || ownerName.equals(requestContext.nodeName()) && requestContext.isAdmin(scope);
             } else {
                 if (!ObjectUtils.isEmpty(clientName)) {
                     postingText.setOwnerName(clientName);
@@ -295,8 +318,11 @@ public class PostingController {
                 throw new AuthenticationException();
             }
 
-            if (posting == null && ObjectUtils.isEmpty(postingText.getBodySrc())
-                    && ObjectUtils.isEmpty(postingText.getMedia())) {
+            if (
+                posting == null
+                && ObjectUtils.isEmpty(postingText.getBodySrc())
+                && ObjectUtils.isEmpty(postingText.getMedia())
+            ) {
                 throw new ValidationFailure("postingText.bodySrc.blank");
             }
             if (postingText.getBodySrc() != null && postingText.getBodySrc().length() > getMaxPostingSize()) {
@@ -324,8 +350,12 @@ public class PostingController {
             if (postingText.getCreatedAt() == null) {
                 throw new ValidationFailure("postingText.createdAt.blank");
             }
-            if (Duration.between(Instant.ofEpochSecond(postingText.getCreatedAt()), Instant.now()).abs()
-                    .compareTo(CREATED_AT_MARGIN) > 0) {
+            if (
+                Duration
+                    .between(Instant.ofEpochSecond(postingText.getCreatedAt()), Instant.now())
+                    .abs()
+                    .compareTo(CREATED_AT_MARGIN) > 0
+            ) {
                 throw new ValidationFailure("postingText.createdAt.out-of-range");
             }
         }
@@ -344,8 +374,8 @@ public class PostingController {
 
     private byte[] parentMediaDigest(Posting posting) {
         return posting != null && posting.getParentMedia() != null
-                ? posting.getParentMedia().getMediaFile().getDigest()
-                : null;
+            ? posting.getParentMedia().getMediaFile().getDigest()
+            : null;
     }
 
     private byte[] mediaDigest(UUID id) {
@@ -361,18 +391,27 @@ public class PostingController {
         Set<String> includeSet = Util.setParam(include);
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
-        if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
-                && !feedOperations.isSheriffAllowed(stories, posting.getViewE())) {
+        if (
+            !requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)
+            && !feedOperations.isSheriffAllowed(stories, posting.getViewE())
+        ) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
 
         requestContext.send(new PostingReadLiberin(id));
 
         return withSheriffUserListMarks(withBlockings(withClientReaction(
-                new PostingInfo(posting, stories, entryOperations, includeSet.contains("source"), requestContext,
-                        requestContext.getOptions()))));
+            PostingInfoUtil.build(
+                posting,
+                stories,
+                entryOperations,
+                includeSet.contains("source"),
+                requestContext,
+                requestContext.getOptions()
+            )
+        )));
     }
 
     @DeleteMapping("/{id}")
@@ -381,14 +420,18 @@ public class PostingController {
         log.info("DELETE /postings/{id}, (id = {})", LogUtil.format(id));
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         EntryRevision latest = posting.getCurrentRevision();
-        if (requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
-                && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OWN_CONTENT)) {
+        if (
+            requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
+            && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OWN_CONTENT)
+        ) {
             throw new AuthenticationException();
         }
-        if (!requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
-                && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)) {
+        if (
+            !requestContext.isClient(posting.getOwnerName(), Scope.IDENTIFY)
+            && !requestContext.isPrincipal(posting.getDeleteE(), Scope.DELETE_OTHERS_CONTENT)
+        ) {
             throw new AuthenticationException();
         }
         if (blockedUserOperations.isBlocked(BlockedOperation.POSTING)) {
@@ -409,54 +452,62 @@ public class PostingController {
         log.info("GET /postings/{id}/attached, (id = {})", LogUtil.format(id));
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
         if (!requestContext.isPrincipal(posting.getViewE(), Scope.VIEW_CONTENT)) {
             throw new ObjectNotFoundFailure("posting.not-found");
         }
         List<Posting> attached = posting.isOriginal()
-                ? entryAttachmentRepository.findOwnAttachedPostings(
-                        requestContext.nodeId(), posting.getCurrentRevision().getId())
-                : entryAttachmentRepository.findReceivedAttachedPostings(
-                        requestContext.nodeId(), posting.getCurrentRevision().getId(), posting.getReceiverName());
+            ? entryAttachmentRepository.findOwnAttachedPostings(
+                requestContext.nodeId(), posting.getCurrentRevision().getId()
+            )
+            : entryAttachmentRepository.findReceivedAttachedPostings(
+                requestContext.nodeId(), posting.getCurrentRevision().getId(), posting.getReceiverName()
+            );
         return attached.stream()
-                .map(p -> withBlockings(withClientReaction(new PostingInfo(p, false, requestContext))))
-                .collect(Collectors.toList());
+            .map(p -> withBlockings(withClientReaction(PostingInfoUtil.build(p, false, requestContext))))
+            .collect(Collectors.toList());
     }
 
     private PostingInfo withClientReaction(PostingInfo postingInfo) {
         String clientName = !requestContext.isOwner()
-                ? requestContext.getClientName(Scope.IDENTIFY)
-                : requestContext.nodeName();
+            ? requestContext.getClientName(Scope.IDENTIFY)
+            : requestContext.nodeName();
         boolean viewContent = !requestContext.isOwner()
-                ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
-                : requestContext.isAdmin(Scope.VIEW_CONTENT);
+            ? requestContext.hasClientScope(Scope.VIEW_CONTENT)
+            : requestContext.isAdmin(Scope.VIEW_CONTENT);
         if (ObjectUtils.isEmpty(clientName)) {
             return postingInfo;
         }
-        if (postingInfo.isOriginal()) {
+        if (PostingInfoUtil.isOriginal(postingInfo)) {
             Reaction reaction = reactionRepository.findByEntryIdAndOwner(
-                    UUID.fromString(postingInfo.getId()), clientName);
+                UUID.fromString(postingInfo.getId()), clientName
+            );
             if (reaction != null && (reaction.getViewE().isPublic() || viewContent)) {
                 postingInfo.setClientReaction(ClientReactionInfoUtil.build(reaction));
             }
         } else if (requestContext.isAdmin(Scope.VIEW_CONTENT)) {
             // TODO to see public reactions, we need to store the reaction's view principal in OwnReaction
             OwnReaction ownReaction = ownReactionRepository.findByRemotePostingId(
-                    requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId())
-                    .orElse(null);
+                requestContext.nodeId(), postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()
+            ).orElse(null);
             postingInfo.setClientReaction(ownReaction != null ? ClientReactionInfoUtil.build(ownReaction) : null);
         }
         return postingInfo;
     }
 
     private PostingInfo withBlockings(PostingInfo postingInfo) {
-        if (postingInfo.isOriginal()) {
-            postingInfo.putBlockedOperations(
-                    blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId())));
+        if (PostingInfoUtil.isOriginal(postingInfo)) {
+            PostingInfoUtil.putBlockedOperations(
+                postingInfo,
+                blockedUserOperations.findBlockedOperations(UUID.fromString(postingInfo.getId()))
+            );
         } else if (requestContext.isOwner() && requestContext.isAdmin(Scope.VIEW_PEOPLE)) {
-            postingInfo.putBlockedOperations(
-                    blockedByUserOperations.findBlockedOperations(
-                            postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()));
+            PostingInfoUtil.putBlockedOperations(
+                postingInfo,
+                blockedByUserOperations.findBlockedOperations(
+                    postingInfo.getReceiverName(), postingInfo.getReceiverPostingId()
+                )
+            );
         }
         return postingInfo;
     }

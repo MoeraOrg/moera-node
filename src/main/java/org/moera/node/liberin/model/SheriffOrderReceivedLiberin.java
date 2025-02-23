@@ -8,8 +8,8 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.Posting;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.CommentInfoUtil;
+import org.moera.node.model.PostingInfoUtil;
 
 public class SheriffOrderReceivedLiberin extends Liberin {
 
@@ -95,11 +95,11 @@ public class SheriffOrderReceivedLiberin extends Liberin {
         model.put("feedName", feedName);
         if (posting != null) {
             posting = entityManager.merge(posting);
-            model.put("posting", new PostingInfo(posting, AccessCheckers.ADMIN));
+            model.put("posting", PostingInfoUtil.build(posting, AccessCheckers.ADMIN));
         }
         if (comment != null) {
             comment = entityManager.merge(comment);
-            model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
+            model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
         }
         model.put("sheriffName", sheriffName);
         model.put("sheriffAvatar", sheriffAvatar);

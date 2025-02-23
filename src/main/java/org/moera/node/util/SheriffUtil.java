@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.SheriffMark;
 import org.moera.node.data.Entry;
 import org.moera.node.data.SheriffMarkUtil;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ObjectUtils;

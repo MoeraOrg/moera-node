@@ -18,7 +18,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.StoryDeletedLiberin;
 import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.StoryAttributesUtil;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.operations.EntryOperations;
@@ -65,41 +65,55 @@ public class StoryController {
         if (story == null || Feed.isAdmin(story.getFeedName()) && !requestContext.isAdmin(Scope.VIEW_FEEDS)) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
-        if (story.getEntry() != null
-                && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)) {
+        if (
+            story.getEntry() != null
+            && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)
+        ) {
             throw new ObjectNotFoundFailure("story.not-found");
         }
 
-        return StoryInfo.build(story, requestContext.isAdmin(Scope.VIEW_FEEDS),
-                t -> new PostingInfo(t.getEntry(), entryOperations, requestContext));
+        return StoryInfo.build(
+            story,
+            requestContext.isAdmin(Scope.VIEW_FEEDS),
+            t -> PostingInfoUtil.build(t.getEntry(), entryOperations, requestContext)
+        );
     }
 
     @PutMapping("/{id}")
     @Admin(Scope.UPDATE_FEEDS)
     public StoryInfo put(@PathVariable UUID id, @RequestBody StoryAttributes storyAttributes) {
-        log.info("PUT /stories/{id} (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
-                LogUtil.format(id),
-                LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
-                LogUtil.format(storyAttributes.getPinned()),
-                LogUtil.format(storyAttributes.getViewed()),
-                LogUtil.format(storyAttributes.getRead()));
+        log.info(
+            "PUT /stories/{id} (id = {}, publishAt = {}, pinned = {}, viewed = {}, read = {})",
+            LogUtil.format(id),
+            LogUtil.formatTimestamp(storyAttributes.getPublishAt()),
+            LogUtil.format(storyAttributes.getPinned()),
+            LogUtil.format(storyAttributes.getViewed()),
+            LogUtil.format(storyAttributes.getRead())
+        );
 
         Pair<Story, StoryInfo> info = tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                    .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
-            if (story.getEntry() != null
-                    && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)) {
+                .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
+            if (
+                story.getEntry() != null
+                && !requestContext.isPrincipal(story.getViewPrincipalFilter(), Scope.VIEW_CONTENT)
+            ) {
                 throw new ObjectNotFoundFailure("story.not-found");
             }
             StoryAttributesUtil.toStory(storyAttributes, story);
-            if (storyAttributes.getFeedName() != null
-                    || storyAttributes.getPublishAt() != null
-                    || storyAttributes.getPinned() != null) {
+            if (
+                storyAttributes.getFeedName() != null
+                || storyAttributes.getPublishAt() != null
+                || storyAttributes.getPinned() != null
+            ) {
                 storyOperations.updateMoment(story, requestContext.nodeId());
             }
 
-            StoryInfo storyInfo = StoryInfo.build(story, requestContext.isAdmin(Scope.VIEW_FEEDS),
-                    t -> new PostingInfo(t.getEntry(), entryOperations, requestContext));
+            StoryInfo storyInfo = StoryInfo.build(
+                story,
+                requestContext.isAdmin(Scope.VIEW_FEEDS),
+                t -> PostingInfoUtil.build(t.getEntry(), entryOperations, requestContext)
+            );
 
             return Pair.of(story, storyInfo);
         });
@@ -116,7 +130,7 @@ public class StoryController {
 
         Story deletedStory = tx.executeWrite(() -> {
             Story story = storyRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                    .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
+                .orElseThrow(() -> new ObjectNotFoundFailure("story.not-found"));
             storyRepository.delete(story);
 
             return story;

@@ -8,7 +8,7 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentInfoUtil;
 
 public class CommentDeletedLiberin extends Liberin {
 
@@ -41,7 +41,7 @@ public class CommentDeletedLiberin extends Liberin {
         super.toModel(model);
         comment = entityManager.merge(comment);
         latestRevision = entityManager.merge(latestRevision);
-        model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
+        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
     }
 
 }

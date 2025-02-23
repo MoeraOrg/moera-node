@@ -6,7 +6,7 @@ import jakarta.persistence.EntityManager;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.StoryInfo;
 
 public class StoryUpdatedLiberin extends Liberin {
@@ -28,8 +28,14 @@ public class StoryUpdatedLiberin extends Liberin {
     @Override
     protected void toModel(Map<String, Object> model, EntityManager entityManager) {
         super.toModel(model);
-        model.put("story", StoryInfo.build(story, true,
-                t -> new PostingInfo(entityManager.merge(t.getEntry()), AccessCheckers.ADMIN)));
+        model.put(
+            "story",
+            StoryInfo.build(
+                story,
+                true,
+                t -> PostingInfoUtil.build(entityManager.merge(t.getEntry()), AccessCheckers.ADMIN)
+            )
+        );
     }
 
 }

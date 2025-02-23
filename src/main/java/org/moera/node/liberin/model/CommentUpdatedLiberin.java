@@ -9,7 +9,7 @@ import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Comment;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.CommentInfo;
+import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentRevisionInfoUtil;
 
 public class CommentUpdatedLiberin extends Liberin {
@@ -53,7 +53,7 @@ public class CommentUpdatedLiberin extends Liberin {
         super.toModel(model);
         comment = entityManager.merge(comment);
         latestRevision = entityManager.merge(latestRevision);
-        model.put("comment", new CommentInfo(comment, AccessCheckers.ADMIN));
+        model.put("comment", CommentInfoUtil.build(comment, AccessCheckers.ADMIN));
         model.put("latestRevision", CommentRevisionInfoUtil.build(comment, latestRevision, AccessCheckers.ADMIN));
         model.put("latestViewPrincipal", latestViewE);
     }

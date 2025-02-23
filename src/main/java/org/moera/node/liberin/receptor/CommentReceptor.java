@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
@@ -27,8 +29,8 @@ import org.moera.node.liberin.model.CommentAddedLiberin;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.CommentInfoUtil;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.event.CommentAddedEvent;
 import org.moera.node.model.event.CommentDeletedEvent;
 import org.moera.node.model.event.CommentUpdatedEvent;
@@ -133,20 +135,42 @@ public class CommentReceptor extends LiberinReceptorBase {
             tx.executeWriteQuietly(() -> {
                 Entry aposting = entityManager.merge(posting);
                 Comment acomment = entityManager.merge(comment);
-                PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(),
-                        MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN, universalContext.getOptions());
+                PostingInfo postingInfo = PostingInfoUtil.build(
+                    aposting,
+                    aposting.getStories(),
+                    MediaAttachmentsProvider.NONE,
+                    AccessCheckers.ADMIN,
+                    universalContext.getOptions()
+                );
                 userListOperations.fillSheriffListMarks(postingInfo);
-                CommentInfo commentInfo = new CommentInfo(acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN);
+                CommentInfo commentInfo = CommentInfoUtil.build(
+                    acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
+                );
                 userListOperations.fillSheriffListMarks(aposting, commentInfo);
                 UUID repliedToId = comment.getRepliedTo() != null ? comment.getRepliedTo().getId() : null;
-                send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(),
-                                visibilityFilter(posting, comment)),
-                        new PostingCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                                posting.getOwnerGender(), postingInfo.getOwnerAvatar(), posting.getId(),
-                                postingInfo.getHeading(), postingInfo.getSheriffs(), postingInfo.getSheriffMarks(),
-                                comment.getId(), comment.getOwnerName(), comment.getOwnerFullName(),
-                                comment.getOwnerGender(), commentInfo.getOwnerAvatar(), commentInfo.getHeading(),
-                                commentInfo.getSheriffMarks(), repliedToId));
+                send(
+                    Directions.postingCommentsSubscribers(
+                        posting.getNodeId(), posting.getId(), visibilityFilter(posting, comment)
+                    ),
+                    new PostingCommentAddedNotification(
+                        posting.getOwnerName(),
+                        posting.getOwnerFullName(),
+                        posting.getOwnerGender(),
+                        postingInfo.getOwnerAvatar(),
+                        posting.getId(),
+                        postingInfo.getHeading(),
+                        postingInfo.getSheriffs(),
+                        postingInfo.getSheriffMarks(),
+                        comment.getId(),
+                        comment.getOwnerName(),
+                        comment.getOwnerFullName(),
+                        comment.getOwnerGender(),
+                        commentInfo.getOwnerAvatar(),
+                        commentInfo.getHeading(),
+                        commentInfo.getSheriffMarks(),
+                        repliedToId
+                    )
+                );
                 commentInstants.added(comment);
             });
         }
@@ -160,19 +184,42 @@ public class CommentReceptor extends LiberinReceptorBase {
         tx.executeWriteQuietly(() -> {
             Entry aposting = entityManager.merge(posting);
             Comment acomment = entityManager.merge(comment);
-            PostingInfo postingInfo = new PostingInfo(aposting, aposting.getStories(), MediaAttachmentsProvider.NONE,
-                    AccessCheckers.ADMIN, universalContext.getOptions());
+            PostingInfo postingInfo = PostingInfoUtil.build(
+                aposting,
+                aposting.getStories(),
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions()
+            );
             userListOperations.fillSheriffListMarks(postingInfo);
-            CommentInfo commentInfo = new CommentInfo(acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN);
+            CommentInfo commentInfo = CommentInfoUtil.build(
+                acomment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
+            );
             userListOperations.fillSheriffListMarks(aposting, commentInfo);
-            send(Directions.single(
-                    acomment.getNodeId(), acomment.getRepliedToName(), visibilityFilter(aposting, acomment)),
-                    new ReplyCommentAddedNotification(aposting.getOwnerName(), aposting.getOwnerFullName(),
-                            aposting.getOwnerGender(), postingInfo.getOwnerAvatar(), aposting.getId(), acomment.getId(),
-                            acomment.getRepliedTo().getId(), postingInfo.getHeading(), postingInfo.getSheriffs(),
-                            postingInfo.getSheriffMarks(), acomment.getOwnerName(), acomment.getOwnerFullName(),
-                            acomment.getOwnerGender(), commentInfo.getOwnerAvatar(), commentInfo.getHeading(),
-                            commentInfo.getSheriffMarks(), acomment.getRepliedToHeading()));
+            send(
+                Directions.single(
+                    acomment.getNodeId(), acomment.getRepliedToName(), visibilityFilter(aposting, acomment)
+                ),
+                new ReplyCommentAddedNotification(
+                    aposting.getOwnerName(),
+                    aposting.getOwnerFullName(),
+                    aposting.getOwnerGender(),
+                    postingInfo.getOwnerAvatar(),
+                    aposting.getId(),
+                    acomment.getId(),
+                    acomment.getRepliedTo().getId(),
+                    postingInfo.getHeading(),
+                    postingInfo.getSheriffs(),
+                    postingInfo.getSheriffMarks(),
+                    acomment.getOwnerName(),
+                    acomment.getOwnerFullName(),
+                    acomment.getOwnerGender(),
+                    commentInfo.getOwnerAvatar(),
+                    commentInfo.getHeading(),
+                    commentInfo.getSheriffMarks(),
+                    acomment.getRepliedToHeading()
+                )
+            );
         });
     }
 
@@ -194,48 +241,82 @@ public class CommentReceptor extends LiberinReceptorBase {
         );
     }
 
-    private void notifyMentioned(Entry posting, Comment comment, EntryRevision current, Principal currentView,
-                                 EntryRevision latest, Principal latestView) {
+    private void notifyMentioned(
+        Entry posting,
+        Comment comment,
+        EntryRevision current,
+        Principal currentView,
+        EntryRevision latest,
+        Principal latestView
+    ) {
         // TODO it is better to do this only for signed revisions. But it this case 'latest' should be the latest
         // signed revision
         String ownerName = comment.getOwnerName();
         String ownerFullName = comment.getOwnerFullName();
         Set<String> currentMentions = current != null
-                ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
-                : Collections.emptySet();
+            ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
+            : Collections.emptySet();
         Set<String> latestMentions = latest != null
-                ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
-                : Collections.emptySet();
+            ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
+            : Collections.emptySet();
         if (!currentMentions.isEmpty()) {
-            PostingInfo postingInfo = new PostingInfo(posting, posting.getStories(), MediaAttachmentsProvider.NONE,
-                    AccessCheckers.ADMIN, universalContext.getOptions());
+            PostingInfo postingInfo = PostingInfoUtil.build(
+                posting,
+                posting.getStories(),
+                MediaAttachmentsProvider.NONE,
+                AccessCheckers.ADMIN,
+                universalContext.getOptions()
+            );
             userListOperations.fillSheriffListMarks(postingInfo);
-            CommentInfo commentInfo = new CommentInfo(comment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN);
+            CommentInfo commentInfo = CommentInfoUtil.build(
+                comment, MediaAttachmentsProvider.NONE, AccessCheckers.ADMIN
+            );
             userListOperations.fillSheriffListMarks(posting, commentInfo);
             currentMentions.stream()
-                    .filter(m -> !latestMentions.contains(m))
-                    .map(m -> Directions.single(posting.getNodeId(), m))
-                    .forEach(d -> send(d,
-                            new MentionCommentAddedNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                                    posting.getOwnerGender(), postingInfo.getOwnerAvatar(), posting.getId(),
-                                    comment.getId(), postingInfo.getHeading(), postingInfo.getSheriffs(),
-                                    postingInfo.getSheriffMarks(), ownerName, ownerFullName, comment.getOwnerGender(),
-                                    commentInfo.getOwnerAvatar(), commentInfo.getHeading(),
-                                    commentInfo.getSheriffMarks())));
+                .filter(m -> !latestMentions.contains(m))
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d ->
+                    send(
+                        d,
+                        new MentionCommentAddedNotification(
+                            posting.getOwnerName(),
+                            posting.getOwnerFullName(),
+                            posting.getOwnerGender(),
+                            postingInfo.getOwnerAvatar(),
+                            posting.getId(),
+                            comment.getId(),
+                            postingInfo.getHeading(),
+                            postingInfo.getSheriffs(),
+                            postingInfo.getSheriffMarks(),
+                            ownerName,
+                            ownerFullName,
+                            comment.getOwnerGender(),
+                            commentInfo.getOwnerAvatar(),
+                            commentInfo.getHeading(),
+                            commentInfo.getSheriffMarks()
+                        )
+                    )
+                );
         }
         latestMentions.stream()
-                .filter(m -> !currentMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m))
-                .forEach(d -> send(d, new MentionCommentDeletedNotification(posting.getId(), comment.getId())));
+            .filter(m -> !currentMentions.contains(m))
+            .map(m -> Directions.single(posting.getNodeId(), m))
+            .forEach(d -> send(d, new MentionCommentDeletedNotification(posting.getId(), comment.getId())));
     }
 
     private Set<String> filterMentions(Set<String> mentions, String ownerName, Principal view) {
         return mentions.stream()
-                .filter(m -> !Objects.equals(ownerName, m))
-                .filter(m -> !m.equals(":"))
-                .filter(m -> view.includes(false, m, () -> subscribedCache.isSubscribed(m),
-                        () -> friendCache.getClientGroupIds(m)))
-                .collect(Collectors.toSet());
+            .filter(m -> !Objects.equals(ownerName, m))
+            .filter(m -> !m.equals(":"))
+            .filter(m ->
+                view.includes(
+                    false,
+                    m,
+                    () -> subscribedCache.isSubscribed(m),
+                    () -> friendCache.getClientGroupIds(m)
+                )
+            )
+            .collect(Collectors.toSet());
     }
 
     private PrincipalExpression generalVisibilityFilter(Entry posting) {

@@ -6,6 +6,8 @@ import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;

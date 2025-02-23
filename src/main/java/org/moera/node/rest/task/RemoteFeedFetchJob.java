@@ -5,13 +5,14 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
 import org.moera.node.model.FeedSliceInfo;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.StoryInfo;
 import org.moera.node.picker.PickerPool;
 import org.moera.node.task.Job;
@@ -87,24 +88,28 @@ public class RemoteFeedFetchJob extends Job<RemoteFeedFetchJob.Parameters, Objec
     @Override
     protected void execute() throws NodeApiException {
         FeedSliceInfo sliceInfo = nodeApi.getFeedStories(
-                parameters.remoteNodeName,
-                parameters.remoteFeedName,
-                FETCH_LIMIT);
-        log.info("Got {} stories from feed {} at node {}",
-                sliceInfo.getStories().size(), parameters.remoteFeedName, parameters.remoteNodeName);
+            parameters.remoteNodeName,
+            parameters.remoteFeedName,
+            FETCH_LIMIT
+        );
+        log.info(
+            "Got {} stories from feed {} at node {}",
+            sliceInfo.getStories().size(), parameters.remoteFeedName, parameters.remoteNodeName
+        );
         List<PostingInfo> list = sliceInfo.getStories().stream()
-                .filter(t -> t.getStoryType() == StoryType.POSTING_ADDED)
-                .filter(t -> !t.isPinned())
-                .map(StoryInfo::getPosting)
-                .toList();
+            .filter(t -> t.getStoryType() == StoryType.POSTING_ADDED)
+            .filter(t -> !t.isPinned())
+            .map(StoryInfo::getPosting)
+            .toList();
         for (int i = list.size() - 1; i >= 0; i--) {
             download(list.get(i));
         }
     }
 
     private void download(PostingInfo postingInfo) {
-        String receiverName = postingInfo.isOriginal() ? parameters.remoteNodeName : postingInfo.getReceiverName();
-        String receiverPostingId = postingInfo.isOriginal() ? postingInfo.getId() : postingInfo.getReceiverPostingId();
+        boolean original = PostingInfoUtil.isOriginal(postingInfo);
+        String receiverName = original ? parameters.remoteNodeName : postingInfo.getReceiverName();
+        String receiverPostingId = original ? postingInfo.getId() : postingInfo.getReceiverPostingId();
         Posting posting = postingRepository.findByReceiverId(nodeId, receiverName, receiverPostingId).orElse(null);
         if (posting == null) {
             Pick pick = new Pick();

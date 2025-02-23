@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -23,7 +24,7 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.liberin.model.PostingRestoredLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
-import org.moera.node.model.PostingInfo;
+import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.MediaAttachmentsProvider;
@@ -70,9 +71,9 @@ public class DeletedPostingController {
     @Admin(Scope.DELETE_OWN_CONTENT)
     @Transactional
     public List<PostingInfo> getAll(
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer limit) {
-
+        @RequestParam(required = false) Integer page,
+        @RequestParam(required = false) Integer limit
+    ) {
         log.info("GET /deleted-postings (page = {}, limit = {})", LogUtil.format(page), LogUtil.format(limit));
 
         page = page != null ? page : 0;
@@ -86,10 +87,10 @@ public class DeletedPostingController {
         }
 
         return postingRepository.findDeleted(requestContext.nodeId(),
-                PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
-                .stream()
-                .map(p -> new PostingInfo(p, entryOperations, requestContext))
-                .collect(Collectors.toList());
+            PageRequest.of(page, limit, Sort.by(Sort.Direction.DESC, "deletedAt")))
+            .stream()
+            .map(p -> PostingInfoUtil.build(p, entryOperations, requestContext))
+            .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
@@ -99,9 +100,9 @@ public class DeletedPostingController {
         log.info("GET /deleted-postings/{id}, (id = {})", LogUtil.format(id));
 
         Posting posting = postingRepository.findDeletedById(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
-        return new PostingInfo(posting, entryOperations, requestContext);
+        return PostingInfoUtil.build(posting, entryOperations, requestContext);
     }
 
     @PostMapping("/{id}/restore")
@@ -112,21 +113,23 @@ public class DeletedPostingController {
         log.info("POST /deleted-postings/{id}/restore (id = {})", LogUtil.format(id));
 
         Posting posting = postingRepository.findDeletedWithAttachmentsById(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
 
         posting.setDeletedAt(null);
         posting.setDeadline(null);
         List<MediaFileOwner> media = posting.getCurrentRevision().getAttachments().stream()
-                .map(EntryAttachment::getMediaFileOwner)
-                .collect(Collectors.toList());
-        posting = postingOperations.createOrUpdatePosting(posting, posting.getCurrentRevision(), media, null,
-                null, null, null);
+            .map(EntryAttachment::getMediaFileOwner)
+            .collect(Collectors.toList());
+        posting = postingOperations.createOrUpdatePosting(
+            posting, posting.getCurrentRevision(), media, null, null, null, null
+        );
 
         requestContext.send(new PostingRestoredLiberin(posting));
 
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), id);
-        return new PostingInfo(posting, stories, MediaAttachmentsProvider.RELATIONS, requestContext,
-                requestContext.getOptions());
+        return PostingInfoUtil.build(
+            posting, stories, MediaAttachmentsProvider.RELATIONS, requestContext, requestContext.getOptions()
+        );
     }
 
     @Scheduled(fixedDelayString = "P1D")

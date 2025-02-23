@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StorySummaryReaction;
 import org.moera.lib.node.types.StoryType;
@@ -19,8 +21,6 @@ import org.moera.node.data.Feed;
 import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.CommentInfo;
-import org.moera.node.model.PostingInfo;
 import org.moera.node.model.StorySummaryEntryUtil;
 import org.moera.node.model.StorySummaryReactionUtil;
 import org.moera.node.util.Util;
@@ -34,16 +34,29 @@ public class CommentReactionInstants extends InstantsCreator {
     @Inject
     private StoryRepository storyRepository;
 
-    public void added(String nodeName, String postingOwnerName, String postingOwnerFullName, String postingOwnerGender,
-                      AvatarImage postingOwnerAvatar, String postingId, String commentId, String reactionNodeName,
-                      String reactionFullName, String reactionGender, AvatarImage reactionAvatar, String commentHeading,
-                      boolean reactionNegative, int reactionEmoji) {
+    public void added(
+        String nodeName,
+        String postingOwnerName,
+        String postingOwnerFullName,
+        String postingOwnerGender,
+        AvatarImage postingOwnerAvatar,
+        String postingId,
+        String commentId,
+        String reactionNodeName,
+        String reactionFullName,
+        String reactionGender,
+        AvatarImage reactionAvatar,
+        String commentHeading,
+        boolean reactionNegative,
+        int reactionEmoji
+    ) {
         if (reactionNodeName.equals(nodeName())) {
             return;
         }
 
-        StoryType storyType = reactionNegative ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
-                : StoryType.COMMENT_REACTION_ADDED_POSITIVE;
+        StoryType storyType = reactionNegative
+            ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
+            : StoryType.COMMENT_REACTION_ADDED_POSITIVE;
 
         if (isBlocked(storyType, null, nodeName, postingId, reactionNodeName)) {
             return;
@@ -51,10 +64,12 @@ public class CommentReactionInstants extends InstantsCreator {
 
         boolean isNewStory = false;
         Story story = storyRepository.findFullByRemotePostingAndCommentId(
-                nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId).stream()
-                .findFirst().orElse(null);
-        if (story == null
-                || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())) {
+            nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId
+        ).stream().findFirst().orElse(null);
+        if (
+            story == null
+            || story.isViewed() && story.getCreatedAt().toInstant().plus(GROUP_PERIOD).isBefore(Instant.now())
+        ) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
@@ -100,21 +115,24 @@ public class CommentReactionInstants extends InstantsCreator {
         return summaryData;
     }
 
-    public void deleted(String nodeName, String postingId, String commentId,
-                        String reactionOwnerName, boolean reactionNegative) {
+    public void deleted(
+        String nodeName, String postingId, String commentId, String reactionOwnerName, boolean reactionNegative
+    ) {
         if (reactionOwnerName.equals(nodeName())) {
             return;
         }
 
-        StoryType storyType = reactionNegative ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
-                : StoryType.COMMENT_REACTION_ADDED_POSITIVE;
+        StoryType storyType = reactionNegative
+            ? StoryType.COMMENT_REACTION_ADDED_NEGATIVE
+            : StoryType.COMMENT_REACTION_ADDED_POSITIVE;
         List<Story> stories = storyRepository.findFullByRemotePostingAndCommentId(
-                nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId);
+            nodeId(), Feed.INSTANT, storyType, nodeName, postingId, commentId
+        );
         for (Story story : stories) {
             Story substory = story.getSubstories().stream()
-                    .filter(t -> Objects.equals(t.getRemoteOwnerName(), reactionOwnerName))
-                    .findAny()
-                    .orElse(null);
+                .filter(t -> Objects.equals(t.getRemoteOwnerName(), reactionOwnerName))
+                .findAny()
+                .orElse(null);
             if (substory != null) {
                 story.removeSubstory(substory);
                 storyRepository.delete(substory);
@@ -124,17 +142,19 @@ public class CommentReactionInstants extends InstantsCreator {
     }
 
     public void deletedAll(String nodeName, String postingId, String commentId) {
-        storyRepository.deleteByRemotePostingAndCommentId(nodeId(), Feed.INSTANT,
-                StoryType.COMMENT_REACTION_ADDED_POSITIVE, nodeName, postingId, commentId);
-        storyRepository.deleteByRemotePostingAndCommentId(nodeId(), Feed.INSTANT,
-                StoryType.COMMENT_REACTION_ADDED_NEGATIVE, nodeName, postingId, commentId);
+        storyRepository.deleteByRemotePostingAndCommentId(
+            nodeId(), Feed.INSTANT, StoryType.COMMENT_REACTION_ADDED_POSITIVE, nodeName, postingId, commentId
+        );
+        storyRepository.deleteByRemotePostingAndCommentId(
+            nodeId(), Feed.INSTANT, StoryType.COMMENT_REACTION_ADDED_NEGATIVE, nodeName, postingId, commentId
+        );
         feedUpdated();
     }
 
     private void updated(Story story, boolean isNew, boolean isAdded) {
         List<Story> stories = story.getSubstories().stream()
-                .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
-                .collect(Collectors.toList());
+            .sorted(Comparator.comparing(Story::getCreatedAt).reversed())
+            .collect(Collectors.toList());
         if (stories.isEmpty()) {
             storyRepository.delete(story);
             if (!isNew) {
@@ -184,8 +204,9 @@ public class CommentReactionInstants extends InstantsCreator {
         return summaryData;
     }
 
-    public void addingFailed(String nodeName, String postingId, PostingInfo postingInfo, String commentId,
-                             CommentInfo commentInfo) {
+    public void addingFailed(
+        String nodeName, String postingId, PostingInfo postingInfo, String commentId, CommentInfo commentInfo
+    ) {
         if (isBlocked(StoryType.COMMENT_REACTION_TASK_FAILED, null, nodeName, postingId)) {
             return;
         }
@@ -218,18 +239,32 @@ public class CommentReactionInstants extends InstantsCreator {
             story.setRemoteOwnerAvatarShape(commentOwnerAvatar.getShape());
         }
         story.setRemoteCommentId(commentId);
-        story.setSummaryData(buildAddingFailedSummary(postingOwnerName, postingOwnerFullName, postingOwnerGender,
-                postingHeading, commentOwnerName, commentOwnerFullName, commentOwnerGender, commentHeading));
+        story.setSummaryData(buildAddingFailedSummary(
+            postingOwnerName,
+            postingOwnerFullName,
+            postingOwnerGender,
+            postingHeading,
+            commentOwnerName,
+            commentOwnerFullName,
+            commentOwnerGender,
+            commentHeading
+        ));
         story.setPublishedAt(Util.now());
         updateMoment(story);
         story = storyRepository.save(story);
         storyAdded(story);
     }
 
-    private static StorySummaryData buildAddingFailedSummary(String postingOwnerName, String postingOwnerFullName,
-                                                             String postingOwnerGender, String postingHeading,
-                                                             String commentOwnerName, String commentOwnerFullName,
-                                                             String commentOwnerGender, String commentHeading) {
+    private static StorySummaryData buildAddingFailedSummary(
+        String postingOwnerName,
+        String postingOwnerFullName,
+        String postingOwnerGender,
+        String postingHeading,
+        String commentOwnerName,
+        String commentOwnerFullName,
+        String commentOwnerGender,
+        String commentHeading
+    ) {
         StorySummaryData summaryData = new StorySummaryData();
         summaryData.setPosting(StorySummaryEntryUtil.build(
             postingOwnerName, postingOwnerFullName, postingOwnerGender, postingHeading
