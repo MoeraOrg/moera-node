@@ -45,15 +45,22 @@ public class TextConverter {
         return converted;
     }
 
-    public void toRevision(String bodySrc, String sourceBody, String bodyFormat, String sourceBodyPreview,
-                           boolean isSigned, List<MediaFileOwner> media, boolean collapseQuotations,
-                           EntryRevision revision) {
+    public void toRevision(
+        Body bodySrc,
+        Body sourceBody,
+        BodyFormat bodyFormat,
+        Body sourceBodyPreview,
+        boolean isSigned,
+        List<MediaFileOwner> media,
+        boolean collapseQuotations,
+        EntryRevision revision
+    ) {
         Body body = new Body();
-        if (!isSigned && ObjectUtils.isEmpty(sourceBody)) {
-            if (!ObjectUtils.isEmpty(bodySrc)) {
+        if (!isSigned && sourceBody == null) {
+            if (bodySrc != null) {
                 if (revision.getBodySrcFormat() != SourceFormat.APPLICATION) {
-                    revision.setBodySrc(bodySrc);
-                    body = toHtml(revision.getBodySrcFormat(), new Body(bodySrc));
+                    revision.setBodySrc(bodySrc.getEncoded());
+                    body = toHtml(revision.getBodySrcFormat(), bodySrc);
                     revision.setBody(body.getEncoded());
                     revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
                     revision.setBodyFormat(BodyFormat.MESSAGE.getValue());
@@ -67,34 +74,35 @@ public class TextConverter {
                     }
                 } else {
                     revision.setBodySrc(Body.EMPTY);
-                    revision.setBody(bodySrc);
+                    revision.setBody(bodySrc.getEncoded());
                     revision.setSaneBody(null);
                     revision.setBodyFormat(BodyFormat.APPLICATION.getValue());
                 }
             }
         } else {
-            revision.setBodySrc(bodySrc);
-            revision.setBodyFormat(bodyFormat);
-            if (BodyFormat.MESSAGE.getValue().equals(bodyFormat)) {
+            revision.setBodySrc(bodySrc.getEncoded());
+            revision.setBodyFormat(bodyFormat.getValue());
+            if (BodyFormat.MESSAGE.equals(bodyFormat)) {
                 try {
-                    body = new Body(sourceBody);
-                    revision.setBody(sourceBody);
+                    body = sourceBody.clone();
+                    revision.setBody(sourceBody.getEncoded());
                     revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
                 } catch (BodyMappingException e) {
                     e.setField("body");
                     throw e;
                 }
                 try {
-                    Body bodyPreview = new Body(sourceBodyPreview);
-                    revision.setBodyPreview(sourceBodyPreview);
+                    Body bodyPreview = sourceBodyPreview.clone();
+                    revision.setBodyPreview(sourceBodyPreview.getEncoded());
                     revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                            !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media));
+                        !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media)
+                    );
                 } catch (BodyMappingException e) {
                     e.setField("bodyPreview");
                     throw e;
                 }
             } else {
-                revision.setBody(sourceBody);
+                revision.setBody(sourceBody.getEncoded());
                 revision.setSaneBody(null);
             }
         }

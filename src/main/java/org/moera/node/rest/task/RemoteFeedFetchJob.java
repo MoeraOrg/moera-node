@@ -5,15 +5,15 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.FeedSliceInfo;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StoryType;
 import org.moera.node.api.node.NodeApiException;
 import org.moera.node.data.Pick;
 import org.moera.node.data.Posting;
 import org.moera.node.data.PostingRepository;
-import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.StoryInfo;
 import org.moera.node.picker.PickerPool;
 import org.moera.node.task.Job;
 import org.slf4j.Logger;
@@ -98,7 +98,7 @@ public class RemoteFeedFetchJob extends Job<RemoteFeedFetchJob.Parameters, Objec
         );
         List<PostingInfo> list = sliceInfo.getStories().stream()
             .filter(t -> t.getStoryType() == StoryType.POSTING_ADDED)
-            .filter(t -> !t.isPinned())
+            .filter(t -> !Boolean.TRUE.equals(t.getPinned()))
             .map(StoryInfo::getPosting)
             .toList();
         for (int i = list.size() - 1; i >= 0; i--) {

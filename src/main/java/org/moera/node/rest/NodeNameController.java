@@ -6,7 +6,6 @@ import java.util.Arrays;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.Rules;
 import org.moera.lib.crypto.CryptoUtil;
@@ -102,7 +101,7 @@ public class NodeNameController {
     @PutMapping
     @Admin(Scope.NAME)
     @Transactional
-    public Result put(@Valid @RequestBody RegisteredNameSecret registeredNameSecret, HttpServletRequest request) {
+    public Result put(@RequestBody RegisteredNameSecret registeredNameSecret, HttpServletRequest request) {
         log.info("PUT /node-name");
 
         Options options = requestContext.getOptions();

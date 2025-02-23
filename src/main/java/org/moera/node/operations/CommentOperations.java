@@ -15,6 +15,7 @@ import java.util.function.Predicate;
 import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
+import org.moera.lib.node.types.CommentText;
 import org.moera.lib.node.types.body.Body;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
@@ -25,6 +26,7 @@ import org.moera.node.data.EntryAttachment;
 import org.moera.node.data.EntryAttachmentRepository;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.EntryRevisionRepository;
+import org.moera.node.data.MediaFile;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.data.Posting;
 import org.moera.node.fingerprint.CommentFingerprintBuilder;
@@ -35,7 +37,8 @@ import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.CommentText;
+import org.moera.node.model.AvatarDescriptionUtil;
+import org.moera.node.model.CommentTextUtil;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
@@ -87,7 +90,7 @@ public class CommentOperations {
     private final MomentFinder momentFinder = new MomentFinder();
 
     public Comment newComment(Posting posting, CommentText commentText, Comment repliedTo) {
-        commentText.initAcceptedReactionsDefaults();
+        CommentTextUtil.initAcceptedReactionsDefaults(commentText);
 
         Comment comment = new Comment();
         comment.setId(UUID.randomUUID());
@@ -96,8 +99,9 @@ public class CommentOperations {
         comment.setOwnerFullName(commentText.getOwnerFullName());
         comment.setOwnerGender(commentText.getOwnerGender());
         if (commentText.getOwnerAvatar() != null) {
-            if (commentText.getOwnerAvatarMediaFile() != null) {
-                comment.setOwnerAvatarMediaFile(commentText.getOwnerAvatarMediaFile());
+            MediaFile ownerAvatarMediaFile = AvatarDescriptionUtil.getMediaFile(commentText.getOwnerAvatar());
+            if (ownerAvatarMediaFile != null) {
+                comment.setOwnerAvatarMediaFile(ownerAvatarMediaFile);
             }
             if (commentText.getOwnerAvatar().getShape() != null) {
                 comment.setOwnerAvatarShape(commentText.getOwnerAvatar().getShape());
@@ -134,7 +138,7 @@ public class CommentOperations {
         comment.setParentAddNegativeReactionPrincipal(orUnset(posting.getChildOperations().getAddNegativeReaction()));
         comment.setParentOverrideReactionPrincipal(orUnset(posting.getChildOperations().getOverrideReaction()));
 
-        commentText.toEntry(comment);
+        CommentTextUtil.toEntry(commentText, comment);
         comment.setMoment(momentFinder.find(
                 moment -> commentRepository.countMoments(posting.getId(), moment) == 0,
                 Util.now()));

@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.StoryAttributes;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
 import org.moera.node.data.Feed;
@@ -20,7 +21,7 @@ import org.moera.node.liberin.model.StoryUpdatedLiberin;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.StoryAttributesUtil;
-import org.moera.node.model.StoryInfo;
+import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.StoryOperations;
 import org.moera.node.util.Transaction;
@@ -72,7 +73,7 @@ public class StoryController {
             throw new ObjectNotFoundFailure("story.not-found");
         }
 
-        return StoryInfo.build(
+        return StoryInfoUtil.build(
             story,
             requestContext.isAdmin(Scope.VIEW_FEEDS),
             t -> PostingInfoUtil.build(t.getEntry(), entryOperations, requestContext)
@@ -109,7 +110,7 @@ public class StoryController {
                 storyOperations.updateMoment(story, requestContext.nodeId());
             }
 
-            StoryInfo storyInfo = StoryInfo.build(
+            StoryInfo storyInfo = StoryInfoUtil.build(
                 story,
                 requestContext.isAdmin(Scope.VIEW_FEEDS),
                 t -> PostingInfoUtil.build(t.getEntry(), entryOperations, requestContext)

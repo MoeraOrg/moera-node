@@ -19,6 +19,7 @@ import jakarta.transaction.Transactional;
 
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.SubscriptionReason;
 import org.moera.lib.node.types.SubscriptionType;
 import org.moera.node.data.Comment;
@@ -39,7 +40,6 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.StoryInfo;
 import org.moera.node.option.OptionHook;
 import org.moera.node.option.OptionValueChange;
 import org.moera.node.rest.task.RemoteUserListItemFetchJob;

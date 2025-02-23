@@ -15,6 +15,7 @@ import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.MediaAttachment;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.data.Comment;
@@ -35,7 +36,7 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentUiInfo;
 import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.StoryInfo;
+import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.operations.CommentPublicPageOperations;
 import org.moera.node.operations.EntryOperations;
 import org.moera.node.operations.TimelinePublicPageOperations;
@@ -104,7 +105,7 @@ public class TimelineUiController {
                 .filter(t -> t.getEntry() != null)
                 .filter(t -> t.getEntry().isMessage())
                 .filter(t -> t.getEntry().getViewCompound().isPublic())
-                .map(s -> StoryInfo.build(s, false, t -> PostingInfoUtil.buildForUi(t.getEntry(), entryOperations)))
+                .map(s -> StoryInfoUtil.build(s, false, t -> PostingInfoUtil.buildForUi(t.getEntry(), entryOperations)))
                 .sorted(Comparator.comparing(StoryInfo::getMoment).reversed())
                 .toList();
         }

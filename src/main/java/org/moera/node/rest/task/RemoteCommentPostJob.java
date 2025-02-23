@@ -1,7 +1,6 @@
 package org.moera.node.rest.task;
 
 import java.security.interfaces.ECPrivateKey;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +14,8 @@ import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.CommentCreated;
 import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.CommentSourceText;
+import org.moera.lib.node.types.CommentText;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.WhoAmI;
@@ -30,10 +31,10 @@ import org.moera.node.liberin.model.RemoteCommentAddingFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdateFailedLiberin;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaManager;
+import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.CommentInfoUtil;
-import org.moera.node.model.CommentSourceText;
-import org.moera.node.model.CommentText;
+import org.moera.node.model.CommentTextUtil;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.task.Job;
 import org.moera.node.text.TextConverter;
@@ -272,7 +273,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             mediaManager.uploadPublicMedia(
                 parameters.targetNodeName,
                 generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
-                parameters.sourceText.getOwnerAvatarMediaFile()
+                AvatarDescriptionUtil.getMediaFile(parameters.sourceText.getOwnerAvatar())
             );
             state.ownerAvatarUploaded = true;
             checkpoint();
@@ -362,7 +363,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
     }
 
     private CommentText buildComment() {
-        CommentText commentText = new CommentText(
+        CommentText commentText = CommentTextUtil.build(
             nodeName(), fullName(), gender(), parameters.sourceText, textConverter
         );
         Map<UUID, byte[]> mediaDigests = buildMediaDigestsMap();
@@ -400,7 +401,8 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
             return Collections.emptyMap();
         }
 
-        return Arrays.stream(parameters.sourceText.getMedia())
+        return parameters.sourceText.getMedia()
+            .stream()
             .filter(md -> md.getDigest() != null)
             .map(md -> Pair.of(Util.uuid(md.getId()), md.getDigest()))
             .filter(p -> p.getFirst().isPresent())

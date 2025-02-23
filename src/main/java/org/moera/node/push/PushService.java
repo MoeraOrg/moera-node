@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.PushContent;
 import org.moera.node.data.PushClient;
 import org.moera.node.data.PushClientRepository;
 import org.moera.node.data.PushNotificationRepository;

@@ -11,7 +11,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.DraftInfo;
 import org.moera.lib.node.types.DraftText;
@@ -264,7 +263,7 @@ public class DraftController {
         return DraftInfoUtil.build(draft);
     }
 
-    private List<MediaFileOwner> validate(@RequestBody @Valid DraftText draftText) {
+    private List<MediaFileOwner> validate(DraftText draftText) {
         if (draftText.getBodySrc() != null && draftText.getBodySrc().getEncoded().length() > getMaxPostingSize()) {
             throw new ValidationFailure("draft.body-src.wrong-size");
         }

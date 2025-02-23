@@ -17,7 +17,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Order;
@@ -30,7 +29,9 @@ import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.CommentCreated;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentMassAttributes;
+import org.moera.lib.node.types.CommentText;
 import org.moera.lib.node.types.CommentTotalInfo;
+import org.moera.lib.node.types.CommentsSliceInfo;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
@@ -68,13 +69,13 @@ import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.liberin.model.CommentsReadLiberin;
 import org.moera.node.media.MediaOperations;
+import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.CommentCreatedUtil;
 import org.moera.node.model.CommentInfoUtil;
 import org.moera.node.model.CommentMassAttributesUtil;
-import org.moera.node.model.CommentText;
+import org.moera.node.model.CommentTextUtil;
 import org.moera.node.model.CommentTotalInfoUtil;
-import org.moera.node.model.CommentsSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.ValidationFailure;
@@ -177,15 +178,15 @@ public class CommentController {
 
     @PostMapping
     @Transactional
-    public ResponseEntity<CommentCreated> post(
-        @PathVariable UUID postingId, @Valid @RequestBody CommentText commentText
-    ) {
+    public ResponseEntity<CommentCreated> post(@PathVariable UUID postingId, @RequestBody CommentText commentText) {
         log.info(
             "POST /postings/{postingId}/comments (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(postingId),
-            LogUtil.format(commentText.getBodySrc(), 64),
+            LogUtil.format(commentText.getBodySrc().getEncoded(), 64),
             LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
         );
+
+        commentText.validate();
 
         Posting posting = postingRepository.findFullByNodeIdAndId(requestContext.nodeId(), postingId)
             .orElseThrow(() -> new ObjectNotFoundFailure("posting.not-found"));
@@ -197,14 +198,15 @@ public class CommentController {
         }
         Comment repliedTo = null;
         if (commentText.getRepliedToId() != null) {
-            repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentText.getRepliedToId())
-                .orElse(null);
+            UUID repliedToId = Util.uuid(commentText.getRepliedToId())
+                .orElseThrow(() -> new ObjectNotFoundFailure("comment.replied-to-id.not-found"));
+            repliedTo = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), repliedToId).orElse(null);
             if (
                 repliedTo == null
                 || !repliedTo.getPosting().getId().equals(posting.getId())
                 || !requestContext.isPrincipal(repliedTo.getViewE(), Scope.VIEW_CONTENT)
             ) {
-                throw new ObjectNotFoundFailure("commentText.repliedToId.not-found");
+                throw new ObjectNotFoundFailure("comment.replied-to-id.not-found");
             }
         }
         byte[] repliedToDigest = repliedTo != null ? repliedTo.getCurrentRevision().getDigest() : null;
@@ -225,13 +227,13 @@ public class CommentController {
         }
         mediaOperations.validateAvatar(
             commentText.getOwnerAvatar(),
-            commentText::setOwnerAvatarMediaFile,
-            () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found")
+            mf -> AvatarDescriptionUtil.setMediaFile(commentText.getOwnerAvatar(), mf),
+            () -> new ObjectNotFoundFailure("avatar.not-found")
         );
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-            commentText.getMedia(),
-            () -> new ValidationFailure("commentText.media.not-found"),
-            () -> new ValidationFailure("commentText.media.not-compressed"),
+            commentText.getMedia().stream().map(UUID::fromString).toArray(UUID[]::new),
+            () -> new ObjectNotFoundFailure("media.not-found"),
+            () -> new ValidationFailure("media.not-compressed"),
             requestContext.isAdmin(Scope.VIEW_CONTENT),
             requestContext.isAdmin(Scope.ADD_COMMENT),
             commentText.getOwnerName()
@@ -245,8 +247,8 @@ public class CommentController {
                 null,
                 media,
                 null,
-                revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
-                commentText::toEntry
+                revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
+                entry -> CommentTextUtil.toEntry(commentText, entry)
             );
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
@@ -278,16 +280,18 @@ public class CommentController {
     @PutMapping("/{commentId}")
     @Transactional
     public CommentInfo put(
-        @PathVariable UUID postingId, @PathVariable UUID commentId, @Valid @RequestBody CommentText commentText
+        @PathVariable UUID postingId, @PathVariable UUID commentId, @RequestBody CommentText commentText
     ) {
         log.info(
             "PUT /postings/{postingId}/comments/{commentId}"
                 + " (postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(postingId),
             LogUtil.format(commentId),
-            LogUtil.format(commentText.getBodySrc(), 64),
+            LogUtil.format(commentText.getBodySrc().getEncoded(), 64),
             LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
         );
+
+        commentText.validate();
 
         Comment comment = commentRepository.findFullByNodeIdAndId(requestContext.nodeId(), commentId)
             .orElseThrow(() -> new ObjectNotFoundFailure("comment.not-found"));
@@ -319,13 +323,13 @@ public class CommentController {
         }
         mediaOperations.validateAvatar(
             commentText.getOwnerAvatar(),
-            commentText::setOwnerAvatarMediaFile,
-            () -> new ValidationFailure("commentText.ownerAvatar.mediaId.not-found")
+            mf -> AvatarDescriptionUtil.setMediaFile(commentText.getOwnerAvatar(), mf),
+            () -> new ObjectNotFoundFailure("avatar.not-found")
         );
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-            commentText.getMedia(),
-            () -> new ValidationFailure("commentText.media.not-found"),
-            () -> new ValidationFailure("commentText.media.not-compressed"),
+            commentText.getMedia().stream().map(UUID::fromString).toArray(UUID[]::new),
+            () -> new ObjectNotFoundFailure("media.not-found"),
+            () -> new ValidationFailure("media.not-compressed"),
             requestContext.isAdmin(Scope.VIEW_CONTENT),
             requestContext.isAdmin(Scope.UPDATE_COMMENT),
             comment.getOwnerName()
@@ -333,16 +337,16 @@ public class CommentController {
 
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         if (requestContext.isPrincipal(comment.getEditE(), Scope.UPDATE_COMMENT)) {
-            commentText.toEntry(comment);
+            CommentTextUtil.toEntry(commentText, comment);
             try {
                 comment = commentOperations.createOrUpdateComment(
                     comment.getPosting(),
                     comment,
                     comment.getCurrentRevision(),
                     media,
-                    commentText::sameAsRevision,
-                    revision -> commentText.toEntryRevision(revision, digest, textConverter, media),
-                    commentText::toEntry
+                    revision -> CommentTextUtil.sameAsRevision(commentText, revision),
+                    revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
+                    entry -> CommentTextUtil.toEntry(commentText, entry)
                 );
             } catch (BodyMappingException e) {
                 String field = e.getField() != null ? e.getField() : "bodySrc";
@@ -350,7 +354,7 @@ public class CommentController {
             }
         } else {
             // senior, but not owner
-            commentText.toEntrySenior(comment);
+            CommentTextUtil.toEntrySenior(commentText, comment);
         }
 
         requestContext.send(new CommentUpdatedLiberin(comment, latest, latestView));
@@ -361,9 +365,13 @@ public class CommentController {
         ));
     }
 
-    private byte[] validateCommentText(Entry posting, Comment comment, CommentText commentText, String ownerName,
-                                       byte[] repliedToDigest) {
-
+    private byte[] validateCommentText(
+        Entry posting,
+        Comment comment,
+        CommentText commentText,
+        String ownerName,
+        byte[] repliedToDigest
+    ) {
         boolean isSenior = requestContext.isPrincipal(posting.getOverrideCommentE(), Scope.DELETE_OTHERS_CONTENT);
 
         byte[] digest = null;
@@ -390,12 +398,14 @@ public class CommentController {
                 }
             }
 
-            if (comment == null && ObjectUtils.isEmpty(commentText.getBodySrc())
-                    && ObjectUtils.isEmpty(commentText.getMedia())) {
-                throw new ValidationFailure("commentText.bodySrc.blank");
+            if (comment == null && commentText.getBodySrc() == null && ObjectUtils.isEmpty(commentText.getMedia())) {
+                throw new ValidationFailure("comment.body-src.blank");
             }
-            if (commentText.getBodySrc() != null && commentText.getBodySrc().length() > getMaxCommentSize()) {
-                throw new ValidationFailure("commentText.bodySrc.wrong-size");
+            if (
+                commentText.getBodySrc() != null
+                && commentText.getBodySrc().getEncoded().length() > getMaxCommentSize()
+            ) {
+                throw new ValidationFailure("comment.body-src.wrong-size");
             }
         } else {
             byte[] signingKey = namingCache.get(ownerName).getSigningKey();
@@ -411,33 +421,45 @@ public class CommentController {
             }
             digest = CryptoUtil.digest(fingerprint);
 
-            if (ObjectUtils.isEmpty(commentText.getBody()) && ObjectUtils.isEmpty(commentText.getMedia())) {
-                throw new ValidationFailure("commentText.body.blank");
+            if (commentText.getBody() == null && ObjectUtils.isEmpty(commentText.getMedia())) {
+                throw new ValidationFailure("comment.body.blank");
             }
-            if (commentText.getBody().length() > getMaxCommentSize()) {
-                throw new ValidationFailure("commentText.body.wrong-size");
+            if (commentText.getBody().getEncoded().length() > getMaxCommentSize()) {
+                throw new ValidationFailure("comment.body.wrong-size");
             }
-            if (ObjectUtils.isEmpty(commentText.getBodyFormat())) {
-                throw new ValidationFailure("commentText.bodyFormat.blank");
+            if (commentText.getBodyFormat() == null) {
+                throw new ValidationFailure("comment.body-format.missing");
             }
             if (commentText.getCreatedAt() == null) {
-                throw new ValidationFailure("commentText.createdAt.blank");
+                throw new ValidationFailure("comment.created-at.missing");
             }
-            if (Duration.between(Instant.ofEpochSecond(commentText.getCreatedAt()), Instant.now()).abs()
-                    .compareTo(CREATED_AT_MARGIN) > 0) {
-                throw new ValidationFailure("commentText.createdAt.out-of-range");
+            if (
+                Duration.between(Instant.ofEpochSecond(commentText.getCreatedAt()), Instant.now())
+                    .abs()
+                    .compareTo(CREATED_AT_MARGIN) > 0
+            ) {
+                throw new ValidationFailure("comment.created-at.out-of-range");
             }
         }
-        OperationsValidator.validateOperations(commentText::getPrincipal, OperationsValidator.COMMENT_OPERATIONS,
-                false, "commentText.operations.wrong-principal");
+        OperationsValidator.validateOperations(
+            commentText.getOperations(),
+            false,
+            "comment.operations.wrong-principal"
+        );
         if (commentText.getSeniorOperations() != null && !commentText.getSeniorOperations().isEmpty() && !isSenior) {
             throw new AuthenticationException();
         }
-        OperationsValidator.validateOperations(commentText::getSeniorPrincipal, OperationsValidator.COMMENT_OPERATIONS,
-                true, "commentText.seniorOperations.wrong-principal");
-        OperationsValidator.validateOperations(commentText::getPrincipal,
-                OperationsValidator.COMMENT_REACTION_OPERATIONS, false,
-                "commentText.reactionOperations.wrong-principal");
+        OperationsValidator.validateOperations(
+            commentText.getSeniorOperations(),
+            true,
+            "comment.senior-operations.wrong-principal"
+        );
+        OperationsValidator.validateOperations(
+            true,
+            commentText.getReactionOperations(),
+            false,
+            "comment.reaction-operations.wrong-principal"
+        );
 
         return digest;
     }
@@ -467,7 +489,7 @@ public class CommentController {
         OperationsValidator.validateOperations(
             commentMassAttributes.getSeniorOperations(),
             true,
-            "commentMassAttributes.seniorOperations.wrong-principal"
+            "comment.senior-operations.wrong-principal"
         );
 
         Page<Comment> page;

@@ -10,7 +10,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
@@ -171,7 +170,7 @@ public class SettingsController {
 
     @PutMapping
     @Transactional
-    public Result put(@RequestBody @Valid List<SettingInfo> settings) {
+    public Result put(@RequestBody List<SettingInfo> settings) {
         log.info("PUT /settings");
 
         AtomicBoolean nodeChanged = new AtomicBoolean(false);

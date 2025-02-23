@@ -7,7 +7,7 @@ import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.node.data.Story;
 import org.moera.node.liberin.Liberin;
 import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.StoryInfo;
+import org.moera.node.model.StoryInfoUtil;
 
 public class StoryAddedLiberin extends Liberin {
 
@@ -30,7 +30,7 @@ public class StoryAddedLiberin extends Liberin {
         super.toModel(model);
         model.put(
             "story",
-            StoryInfo.build(
+            StoryInfoUtil.build(
                 story,
                 true,
                 t -> PostingInfoUtil.build(entityManager.merge(t.getEntry()), AccessCheckers.ADMIN)

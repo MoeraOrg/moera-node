@@ -16,6 +16,7 @@ import jakarta.inject.Inject;
 
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.BodyFormat;
+import org.moera.lib.node.types.PostingText;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.StoryAttributes;
 import org.moera.lib.node.types.body.Body;
@@ -41,7 +42,7 @@ import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.PostingText;
+import org.moera.node.model.PostingTextUtil;
 import org.moera.node.option.Options;
 import org.moera.node.text.MediaExtractor;
 import org.moera.node.util.ExtendedDuration;
@@ -116,10 +117,10 @@ public class PostingOperations {
     }
 
     public Posting newPosting(PostingText postingText) {
-        postingText.initAcceptedReactionsDefaults();
+        PostingTextUtil.initAcceptedReactionsDefaults(postingText);
 
         Posting posting = newPosting("");
-        postingText.toEntry(posting);
+        PostingTextUtil.toEntry(postingText, posting);
 
         return posting;
     }

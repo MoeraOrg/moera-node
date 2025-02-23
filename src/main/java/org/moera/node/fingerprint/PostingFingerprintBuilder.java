@@ -8,12 +8,12 @@ import org.moera.lib.crypto.FingerprintException;
 import org.moera.lib.node.Fingerprints;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.PostingRevisionInfo;
+import org.moera.lib.node.types.PostingText;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.Posting;
 import org.moera.node.model.PostingInfoUtil;
-import org.moera.node.model.PostingText;
 import org.moera.node.util.Util;
 
 public class PostingFingerprintBuilder {
@@ -172,24 +172,24 @@ public class PostingFingerprintBuilder {
                 Fingerprints.posting1(
                     postingText.getOwnerName(),
                     postingText.getOwnerName(),
-                    CryptoUtil.digest(CryptoUtil.fingerprint(postingText.getBodySrc())),
+                    CryptoUtil.digest(CryptoUtil.fingerprint(postingText.getBodySrc().getEncoded())),
                     postingText.getBodySrcFormat().getValue(),
-                    postingText.getBody(),
-                    postingText.getBodyFormat(),
+                    postingText.getBody().getEncoded(),
+                    postingText.getBodyFormat().getValue(),
                     Util.toTimestamp(postingText.getCreatedAt()),
                     (byte) 0,
                     CryptoUtil.digest(
-                        AttachmentFingerprintBuilder.build(parentMediaDigest, postingText.getMedia(), mediaDigest)
+                        AttachmentFingerprintBuilder.buildFromIds(parentMediaDigest, postingText.getMedia(), mediaDigest)
                     )
                 );
             case 0 ->
                 Fingerprints.posting0(
                     postingText.getOwnerName(),
                     postingText.getOwnerName(),
-                    CryptoUtil.digest(CryptoUtil.fingerprint(postingText.getBodySrc())),
+                    CryptoUtil.digest(CryptoUtil.fingerprint(postingText.getBodySrc().getEncoded())),
                     postingText.getBodySrcFormat().getValue(),
-                    postingText.getBody(),
-                    postingText.getBodyFormat(),
+                    postingText.getBody().getEncoded(),
+                    postingText.getBodyFormat().getValue(),
                     Util.toTimestamp(postingText.getCreatedAt()),
                     (byte) 0,
                     (byte) 0

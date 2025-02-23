@@ -1,79 +1,47 @@
 package org.moera.node.model;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import org.moera.lib.node.types.AvatarImage;
-import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.StoryInfo;
+import org.moera.lib.node.types.StoryOperations;
 import org.moera.lib.node.types.StorySummaryData;
-import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.data.Story;
 import org.moera.node.util.Util;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class StoryInfo {
+public class StoryInfoUtil {
 
-    private String id;
-    private String feedName;
-    private StoryType storyType;
-    private long createdAt;
-    private long publishedAt;
-    private boolean pinned;
-    private Long moment;
-    private Boolean viewed;
-    private Boolean read;
-    private Boolean satisfied;
-    private String summaryNodeName;
-    private String summaryFullName;
-    private AvatarImage summaryAvatar;
-    private String summary;
-    private StorySummaryData summaryData;
-    private PostingInfo posting;
-    private String postingId;
-    private CommentInfo comment;
-    private String commentId;
-    private String remoteNodeName;
-    private String remoteFullName;
-    private String remotePostingId;
-    private String remoteCommentId;
-    private String remoteMediaId;
-    private Map<String, Principal> operations;
-
-    public StoryInfo() {
-    }
-
-    private StoryInfo(Story story, boolean isAdmin) { // See also StoryEvent constructor
-        id = story.getId().toString();
-        feedName = story.getFeedName();
-        storyType = story.getStoryType();
-        createdAt = Util.toEpochSecond(story.getCreatedAt());
-        publishedAt = Util.toEpochSecond(story.getPublishedAt());
-        pinned = story.isPinned();
-        moment = story.getMoment();
+    private static void buildTo(StoryInfo info, Story story, boolean isAdmin) { // See also StoryEvent constructor
+        info.setId(story.getId().toString());
+        info.setFeedName(story.getFeedName());
+        info.setStoryType(story.getStoryType());
+        info.setCreatedAt(Util.toEpochSecond(story.getCreatedAt()));
+        info.setPublishedAt(Util.toEpochSecond(story.getPublishedAt()));
+        info.setPinned(story.isPinned());
+        info.setMoment(story.getMoment());
         if (isAdmin) {
-            viewed = story.isViewed();
-            read = story.isRead();
-            satisfied = story.isSatisfied();
+            info.setViewed(story.isViewed());
+            info.setRead(story.isRead());
+            info.setSatisfied(story.isSatisfied());
         }
         if (story.getSummary().startsWith("{")) {
-            summaryData = story.getSummaryData();
+            info.setSummaryData(story.getSummaryData());
         } else if (story.getSummary().isEmpty()) {
-            summaryData = new StorySummaryData();
+            info.setSummaryData(new StorySummaryData());
         } else {
-            summary = story.getSummary();
+            info.setSummary(story.getSummary());
         }
-        operations = new HashMap<>();
-        operations.put("edit", Principal.ADMIN);
-        operations.put("delete", Principal.ADMIN);
+        StoryOperations operations = new StoryOperations();
+        operations.setEdit(Principal.ADMIN);
+        operations.setDelete(Principal.ADMIN);
+        info.setOperations(operations);
     }
 
-    public static StoryInfo build(Story story, boolean isAdmin,
-                                  Function<Story, PostingInfo> buildPostingInfo) {
-        StoryInfo info = new StoryInfo(story, isAdmin);
+    public static StoryInfo build(Story story, boolean isAdmin, Function<Story, PostingInfo> buildPostingInfo) {
+        StoryInfo info = new StoryInfo();
+        buildTo(info, story, isAdmin);
+
         switch (story.getStoryType()) {
             case POSTING_ADDED:
                 info.setPosting(buildPostingInfo.apply(story));
@@ -278,207 +246,8 @@ public class StoryInfo {
                 }
                 break;
         }
+
         return info;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getFeedName() {
-        return feedName;
-    }
-
-    public void setFeedName(String feedName) {
-        this.feedName = feedName;
-    }
-
-    public StoryType getStoryType() {
-        return storyType;
-    }
-
-    public void setStoryType(StoryType storyType) {
-        this.storyType = storyType;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public long getPublishedAt() {
-        return publishedAt;
-    }
-
-    public void setPublishedAt(long publishedAt) {
-        this.publishedAt = publishedAt;
-    }
-
-    public boolean isPinned() {
-        return pinned;
-    }
-
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
-    }
-
-    public Long getMoment() {
-        return moment;
-    }
-
-    public void setMoment(Long moment) {
-        this.moment = moment;
-    }
-
-    public Boolean getViewed() {
-        return viewed;
-    }
-
-    public void setViewed(Boolean viewed) {
-        this.viewed = viewed;
-    }
-
-    public Boolean getRead() {
-        return read;
-    }
-
-    public void setRead(Boolean read) {
-        this.read = read;
-    }
-
-    public Boolean getSatisfied() {
-        return satisfied;
-    }
-
-    public void setSatisfied(Boolean satisfied) {
-        this.satisfied = satisfied;
-    }
-
-    public String getSummaryNodeName() {
-        return summaryNodeName;
-    }
-
-    public void setSummaryNodeName(String summaryNodeName) {
-        this.summaryNodeName = summaryNodeName;
-    }
-
-    public String getSummaryFullName() {
-        return summaryFullName;
-    }
-
-    public void setSummaryFullName(String summaryFullName) {
-        this.summaryFullName = summaryFullName;
-    }
-
-    public AvatarImage getSummaryAvatar() {
-        return summaryAvatar;
-    }
-
-    public void setSummaryAvatar(AvatarImage summaryAvatar) {
-        this.summaryAvatar = summaryAvatar;
-    }
-
-    public String getSummary() {
-        return summary;
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
-    }
-
-    public StorySummaryData getSummaryData() {
-        return summaryData;
-    }
-
-    public void setSummaryData(StorySummaryData summaryData) {
-        this.summaryData = summaryData;
-    }
-
-    public PostingInfo getPosting() {
-        return posting;
-    }
-
-    public void setPosting(PostingInfo posting) {
-        this.posting = posting;
-    }
-
-    public String getPostingId() {
-        return postingId;
-    }
-
-    public void setPostingId(String postingId) {
-        this.postingId = postingId;
-    }
-
-    public CommentInfo getComment() {
-        return comment;
-    }
-
-    public void setComment(CommentInfo comment) {
-        this.comment = comment;
-    }
-
-    public String getCommentId() {
-        return commentId;
-    }
-
-    public void setCommentId(String commentId) {
-        this.commentId = commentId;
-    }
-
-    public String getRemoteNodeName() {
-        return remoteNodeName;
-    }
-
-    public void setRemoteNodeName(String remoteNodeName) {
-        this.remoteNodeName = remoteNodeName;
-    }
-
-    public String getRemoteFullName() {
-        return remoteFullName;
-    }
-
-    public void setRemoteFullName(String remoteFullName) {
-        this.remoteFullName = remoteFullName;
-    }
-
-    public String getRemotePostingId() {
-        return remotePostingId;
-    }
-
-    public void setRemotePostingId(String remotePostingId) {
-        this.remotePostingId = remotePostingId;
-    }
-
-    public String getRemoteCommentId() {
-        return remoteCommentId;
-    }
-
-    public void setRemoteCommentId(String remoteCommentId) {
-        this.remoteCommentId = remoteCommentId;
-    }
-
-    public String getRemoteMediaId() {
-        return remoteMediaId;
-    }
-
-    public void setRemoteMediaId(String remoteMediaId) {
-        this.remoteMediaId = remoteMediaId;
-    }
-
-    public Map<String, Principal> getOperations() {
-        return operations;
-    }
-
-    public void setOperations(Map<String, Principal> operations) {
-        this.operations = operations;
     }
 
 }

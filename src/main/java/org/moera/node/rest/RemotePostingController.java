@@ -4,9 +4,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.AsyncOperationCreated;
+import org.moera.lib.node.types.PostingSourceText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
@@ -23,8 +23,8 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
-import org.moera.node.model.PostingSourceText;
-import org.moera.node.model.ValidationFailure;
+import org.moera.node.model.AvatarDescriptionUtil;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingPostJob;
 import org.moera.node.rest.task.verification.RemotePostingVerifyTask;
@@ -77,12 +77,15 @@ public class RemotePostingController {
     @Admin(Scope.REMOTE_ADD_POST)
     @Entitled
     @Transactional
-    public Result post(@PathVariable String nodeName, @Valid @RequestBody PostingSourceText postingText) {
-        log.info("POST /nodes/{nodeName}/postings (nodeName = {}, bodySrc = {}, bodySrcFormat = {})",
-                LogUtil.format(nodeName),
-                LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
+    public Result post(@PathVariable String nodeName, @RequestBody PostingSourceText postingText) {
+        log.info(
+            "POST /nodes/{nodeName}/postings (nodeName = {}, bodySrc = {}, bodySrcFormat = {})",
+            LogUtil.format(nodeName),
+            LogUtil.format(postingText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
+        );
 
+        postingText.validate();
         update(nodeName, null, postingText);
 
         return Result.OK;
@@ -92,15 +95,19 @@ public class RemotePostingController {
     @Admin(Scope.REMOTE_UPDATE_POST)
     @Entitled
     @Transactional
-    public Result put(@PathVariable String nodeName, @PathVariable String postingId,
-                      @Valid @RequestBody PostingSourceText postingText) {
-        log.info("PUT /nodes/{nodeName}/postings/{postingId}"
-                        + " (nodeName = {}, postingId = {}, bodySrc = {}, bodySrcFormat = {})",
-                LogUtil.format(nodeName),
-                LogUtil.format(postingId),
-                LogUtil.format(postingText.getBodySrc(), 64),
-                LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat())));
+    public Result put(
+        @PathVariable String nodeName, @PathVariable String postingId, @RequestBody PostingSourceText postingText
+    ) {
+        log.info(
+            "PUT /nodes/{nodeName}/postings/{postingId}"
+                + " (nodeName = {}, postingId = {}, bodySrc = {}, bodySrcFormat = {})",
+            LogUtil.format(nodeName),
+            LogUtil.format(postingId),
+            LogUtil.format(postingText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
+        );
 
+        postingText.validate();
         update(nodeName, postingId, postingText);
 
         return Result.OK;
@@ -108,26 +115,29 @@ public class RemotePostingController {
 
     private void update(String nodeName, String postingId, PostingSourceText postingText) {
         mediaOperations.validateAvatar(
-                postingText.getOwnerAvatar(),
-                postingText::setOwnerAvatarMediaFile,
-                () -> new ValidationFailure("postingText.ownerAvatar.mediaId.not-found"));
+            postingText.getOwnerAvatar(),
+            mf -> AvatarDescriptionUtil.setMediaFile(postingText.getOwnerAvatar(), mf),
+            () -> new ObjectNotFoundFailure("avatar.not-found")
+        );
         jobs.run(
-                RemotePostingPostJob.class,
-                new RemotePostingPostJob.Parameters(nodeName, postingId, postingText),
-                requestContext.nodeId());
+            RemotePostingPostJob.class,
+            new RemotePostingPostJob.Parameters(nodeName, postingId, postingText),
+            requestContext.nodeId()
+        );
     }
 
     @DeleteMapping("/{postingId}")
     @Admin(Scope.REMOTE_DELETE_CONTENT)
     @Transactional
     public Result delete(@PathVariable String nodeName, @PathVariable String postingId) {
-        log.info("DELETE /nodes/{nodeName}/postings/{postingId} (nodeName = {}, postingId = {})",
-                LogUtil.format(nodeName),
-                LogUtil.format(postingId));
+        log.info(
+            "DELETE /nodes/{nodeName}/postings/{postingId} (nodeName = {}, postingId = {})",
+            LogUtil.format(nodeName), LogUtil.format(postingId)
+        );
 
         OwnPosting ownPosting = ownPostingRepository
-                .findByRemotePostingId(requestContext.nodeId(), nodeName, postingId)
-                .orElse(null);
+            .findByRemotePostingId(requestContext.nodeId(), nodeName, postingId)
+            .orElse(null);
         if (ownPosting != null) {
             contactOperations.asyncUpdateCloseness(nodeName, -1);
             requestContext.send(new RemotePostingUpdatedLiberin(nodeName, postingId));
@@ -140,8 +150,10 @@ public class RemotePostingController {
     @Admin(Scope.OTHER)
     @Transactional
     public AsyncOperationCreated verify(@PathVariable String nodeName, @PathVariable String id) {
-        log.info("POST /nodes/{name}/postings/{id}/verify, (name = {}, id = {})",
-                LogUtil.format(nodeName), LogUtil.format(id));
+        log.info(
+            "POST /nodes/{name}/postings/{id}/verify, (name = {}, id = {})",
+            LogUtil.format(nodeName), LogUtil.format(id)
+        );
 
         return executeVerifyTask(nodeName, id, null);
     }
@@ -149,19 +161,26 @@ public class RemotePostingController {
     @PostMapping("/{id}/revisions/{revisionId}/verify")
     @Admin(Scope.OTHER)
     @Transactional
-    public AsyncOperationCreated verifyRevision(@PathVariable String nodeName, @PathVariable String id,
-                                                @PathVariable String revisionId) {
-        log.info("POST /nodes/{name}/postings/{id}/revisions/{revisionId}/verify, (name = {}, id = {}, revisionId = {})",
-                LogUtil.format(nodeName), LogUtil.format(id), LogUtil.format(revisionId));
+    public AsyncOperationCreated verifyRevision(
+        @PathVariable String nodeName, @PathVariable String id, @PathVariable String revisionId
+    ) {
+        log.info(
+            "POST /nodes/{name}/postings/{id}/revisions/{revisionId}/verify, (name = {}, id = {}, revisionId = {})",
+            LogUtil.format(nodeName), LogUtil.format(id), LogUtil.format(revisionId)
+        );
 
         return executeVerifyTask(nodeName, id, revisionId);
     }
 
     private AsyncOperationCreated executeVerifyTask(String nodeName, String id, String revisionId) {
         RemotePostingVerification data = new RemotePostingVerification(
-                requestContext.nodeId(), nodeName, id, revisionId);
-        data.setDeadline(Timestamp.from(Instant.now().plus(
-                requestContext.getOptions().getDuration("remote-posting-verification.lifetime").getDuration())));
+            requestContext.nodeId(), nodeName, id, revisionId
+        );
+        data.setDeadline(Timestamp.from(
+            Instant.now().plus(
+                requestContext.getOptions().getDuration("remote-posting-verification.lifetime").getDuration()
+            )
+        ));
         remotePostingVerificationRepository.saveAndFlush(data);
 
         RemotePostingVerifyTask task = new RemotePostingVerifyTask(data);

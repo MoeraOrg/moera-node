@@ -7,9 +7,9 @@ import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.Fingerprints;
 import org.moera.lib.node.types.CommentInfo;
 import org.moera.lib.node.types.CommentRevisionInfo;
+import org.moera.lib.node.types.CommentText;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
 import org.moera.node.data.Comment;
-import org.moera.node.model.CommentText;
 import org.moera.node.util.Util;
 
 public class CommentFingerprintBuilder {
@@ -55,13 +55,13 @@ public class CommentFingerprintBuilder {
             commentText.getOwnerName(),
             postingDigest,
             nullDigest(repliedToDigest),
-            CryptoUtil.digest(CryptoUtil.fingerprint(commentText.getBodySrc())),
+            CryptoUtil.digest(CryptoUtil.fingerprint(commentText.getBodySrc().getEncoded())),
             commentText.getBodySrcFormat().getValue(),
-            commentText.getBody(),
-            commentText.getBodyFormat(),
+            commentText.getBody().getEncoded(),
+            commentText.getBodyFormat().getValue(),
             Util.toTimestamp(commentText.getCreatedAt()),
             (byte) 0,
-            CryptoUtil.digest(AttachmentFingerprintBuilder.build(null, commentText.getMedia(), mediaDigest))
+            CryptoUtil.digest(AttachmentFingerprintBuilder.buildFromIds(null, commentText.getMedia(), mediaDigest))
         );
     }
 

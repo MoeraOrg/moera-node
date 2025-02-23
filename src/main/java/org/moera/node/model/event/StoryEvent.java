@@ -7,12 +7,13 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.StorySummaryData;
 import org.moera.lib.node.types.StoryType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.data.Story;
-import org.moera.node.model.StoryInfo;
+import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.util.Util;
 import org.springframework.data.util.Pair;
 
@@ -44,10 +45,13 @@ public class StoryEvent extends Event {
         super(type, Scope.VIEW_FEEDS);
     }
 
-    protected StoryEvent(EventType type, Story story, boolean isAdmin) { // See also StoryInfo constructor
-        super(type, Scope.VIEW_FEEDS,
-                isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN));
-        StoryInfo storyInfo = StoryInfo.build(story, isAdmin, st -> null);
+    protected StoryEvent(EventType type, Story story, boolean isAdmin) { // See also StoryInfoUtil.buildTo()
+        super(
+            type,
+            Scope.VIEW_FEEDS,
+            isAdmin ? Principal.ADMIN : story.getViewPrincipalFilter().a().andNot(Principal.ADMIN)
+        );
+        StoryInfo storyInfo = StoryInfoUtil.build(story, isAdmin, st -> null);
         id = story.getId().toString();
         storyType = story.getStoryType();
         feedName = story.getFeedName();

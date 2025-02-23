@@ -10,7 +10,6 @@ import java.util.Locale;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 import org.moera.lib.node.types.CarteAttributes;
 import org.moera.lib.node.types.CarteInfo;
@@ -96,7 +95,7 @@ public class CarteController {
     @Admin(Scope.REMOTE_IDENTIFY)
     @Entitled
     @Transactional
-    public CarteSet post(@Valid @RequestBody CarteAttributes attributes, HttpServletRequest request) {
+    public CarteSet post(@RequestBody CarteAttributes attributes, HttpServletRequest request) {
         log.info("POST /cartes");
 
         int limit = attributes.getLimit() != null ? attributes.getLimit() : DEFAULT_SET_SIZE;

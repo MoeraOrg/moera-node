@@ -23,11 +23,13 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.moera.lib.node.types.BlockedOperation;
 import org.moera.lib.node.types.FeedInfo;
+import org.moera.lib.node.types.FeedSliceInfo;
 import org.moera.lib.node.types.FeedStatus;
 import org.moera.lib.node.types.FeedStatusChange;
 import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.RemotePostingOrNode;
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.StoryInfo;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -50,11 +52,10 @@ import org.moera.node.liberin.model.FeedStatusUpdatedLiberin;
 import org.moera.node.liberin.model.FeedStoriesReadLiberin;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.FeedInfoUtil;
-import org.moera.node.model.FeedSliceInfo;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
 import org.moera.node.model.RemotePostingOrNodeUtil;
-import org.moera.node.model.StoryInfo;
+import org.moera.node.model.StoryInfoUtil;
 import org.moera.node.model.ValidationFailure;
 import org.moera.node.operations.BlockedByUserOperations;
 import org.moera.node.operations.BlockedUserOperations;
@@ -509,7 +510,7 @@ public class FeedController {
     }
 
     private StoryInfo buildStoryInfo(Story story) {
-        return StoryInfo.build(
+        return StoryInfoUtil.build(
             story,
             requestContext.isAdmin(Scope.VIEW_FEEDS),
             t -> PostingInfoUtil.build(

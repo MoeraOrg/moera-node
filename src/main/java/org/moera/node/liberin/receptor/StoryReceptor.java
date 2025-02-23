@@ -20,7 +20,7 @@ import org.moera.node.model.event.StoryUpdatedEvent;
 import org.moera.node.model.notification.StoryAddedNotification;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.StoryOperations;
-import org.moera.node.push.PushContent;
+import org.moera.node.push.PushContentBuilder;
 
 @LiberinReceptor
 public class StoryReceptor extends LiberinReceptorBase {
@@ -76,13 +76,13 @@ public class StoryReceptor extends LiberinReceptorBase {
 
     private void push(Story story) {
         if (Objects.equals(story.getFeedName(), Feed.INSTANT)) {
-            send(PushContent.storyAdded(story));
+            send(PushContentBuilder.storyAdded(story));
         }
     }
 
     private void deletePush(String feedName, UUID id) {
         if (Objects.equals(feedName, Feed.INSTANT)) {
-            send(PushContent.storyDeleted(id));
+            send(PushContentBuilder.storyDeleted(id));
         }
     }
 

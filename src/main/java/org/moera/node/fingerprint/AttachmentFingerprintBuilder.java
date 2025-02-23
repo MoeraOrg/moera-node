@@ -1,7 +1,6 @@
 package org.moera.node.fingerprint;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,20 +83,21 @@ public class AttachmentFingerprintBuilder {
         return digests;
     }
 
-    public static List<byte[]> build(
+    public static List<byte[]> buildFromIds(
         byte[] parentMediaDigest,
-        UUID[] mediaIds,
+        Collection<String> mediaIds,
         Function<UUID, byte[]> mediaDigest
     ) {
         if (mediaIds == null) {
-            mediaIds = new UUID[0];
+            mediaIds = Collections.emptyList();
         }
 
         List<byte[]> digests = new ArrayList<>();
         if (parentMediaDigest != null) {
             digests.add(build(parentMediaDigest));
         }
-        Arrays.stream(mediaIds)
+        mediaIds.stream()
+            .map(UUID::fromString)
             .map(mediaDigest)
             .map(AttachmentFingerprintBuilder::build)
             .forEach(digests::add);
