@@ -12,13 +12,16 @@ import org.moera.lib.UniversalLocation;
 import org.moera.lib.naming.NodeName;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.AvatarInfo;
+import org.moera.lib.node.types.CommentInfo;
+import org.moera.lib.node.types.CommentOperations;
+import org.moera.lib.node.types.PostingInfo;
+import org.moera.lib.node.types.PostingOperations;
 import org.moera.lib.node.types.ReactionTotalInfo;
 import org.moera.lib.node.types.ReactionTotalsInfo;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.global.RequestContext;
 import org.moera.node.global.UserAgentOs;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.ReactionsInfo;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.util.Util;
 import org.springframework.util.ObjectUtils;
@@ -121,19 +124,36 @@ public class MoeraHelperSource {
         return new SafeString(buf);
     }
 
-    public CharSequence reactions(ReactionsInfo reactionsInfo) {
-        ReactionTotalsInfo totalsInfo = reactionsInfo.getReactions();
-        boolean totalsVisible =
-            reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
-            || reactionsInfo.getPrincipal("viewReactionTotals", Principal.PUBLIC).isPublic();
-        boolean negativeTotalsVisible =
-            reactionsInfo.getPrincipal("viewReactions", Principal.PUBLIC).isPublic()
-            && reactionsInfo.getPrincipal("viewNegativeReactions", Principal.PUBLIC).isPublic()
-            || reactionsInfo.getPrincipal("viewNegativeReactionTotals", Principal.PUBLIC).isPublic();
+    public CharSequence reactions(Object postingOrCommentInfo) {
+        ReactionTotalsInfo totalsInfo = null;
+        boolean totalsVisible = false;
+        boolean negativeTotalsVisible = false;
+        if (postingOrCommentInfo instanceof PostingInfo info) {
+            totalsInfo = info.getReactions();
+            totalsVisible =
+                PostingOperations.getViewReactions(info.getOperations(), Principal.PUBLIC).isPublic()
+                || PostingOperations.getViewReactionTotals(info.getOperations(), Principal.PUBLIC).isPublic();
+            negativeTotalsVisible =
+                PostingOperations.getViewReactions(info.getOperations(), Principal.PUBLIC).isPublic()
+                    && PostingOperations.getViewNegativeReactions(info.getOperations(), Principal.PUBLIC).isPublic()
+                || PostingOperations.getViewReactionTotals(info.getOperations(), Principal.PUBLIC).isPublic()
+                    && PostingOperations.getViewNegativeReactionTotals(info.getOperations(), Principal.PUBLIC).isPublic();
+        }
+        if (postingOrCommentInfo instanceof CommentInfo info) {
+            totalsInfo = info.getReactions();
+            totalsVisible =
+                CommentOperations.getViewReactions(info.getOperations(), Principal.PUBLIC).isPublic()
+                || CommentOperations.getViewReactionTotals(info.getOperations(), Principal.PUBLIC).isPublic();
+            negativeTotalsVisible =
+                CommentOperations.getViewReactions(info.getOperations(), Principal.PUBLIC).isPublic()
+                    && CommentOperations.getViewNegativeReactions(info.getOperations(), Principal.PUBLIC).isPublic()
+                || CommentOperations.getViewReactionTotals(info.getOperations(), Principal.PUBLIC).isPublic()
+                    && CommentOperations.getViewNegativeReactionTotals(info.getOperations(), Principal.PUBLIC).isPublic();
+        }
 
         StringBuilder buf = new StringBuilder();
         buf.append("<div class=\"reactions\">");
-        if (!totalsInfo.getPositive().isEmpty()) {
+        if (totalsInfo != null && !totalsInfo.getPositive().isEmpty()) {
             buf.append("<span class=\"positive\">");
             appendEmojis(buf, totalsInfo.getPositive());
             if (totalsVisible) {
@@ -141,7 +161,7 @@ public class MoeraHelperSource {
             }
             buf.append("</span>");
         }
-        if (!totalsInfo.getNegative().isEmpty()) {
+        if (totalsInfo != null && !totalsInfo.getNegative().isEmpty()) {
             buf.append("<span class=\"negative\">");
             appendEmojis(buf, totalsInfo.getNegative());
             if (totalsVisible && negativeTotalsVisible) {
