@@ -79,24 +79,6 @@ public class PostingInfoUtil {
         );
     }
 
-    // for fingerprints
-    public static PostingInfo build(
-        Entry posting,
-        EntryRevision revision,
-        boolean includeSource,
-        AccessChecker accessChecker
-    ) {
-        return build(
-            posting,
-            revision,
-            null,
-            MediaAttachmentsProvider.RELATIONS,
-            includeSource,
-            accessChecker,
-            null
-        );
-    }
-
     public static PostingInfo build(
         Entry posting,
         Collection<Story> stories,
