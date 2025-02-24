@@ -32,7 +32,7 @@ public class OperationFailure extends RuntimeException implements MessageSourceR
 
     @Override
     public String getDefaultMessage() {
-        return null;
+        return getMessage();
     }
 
 }
