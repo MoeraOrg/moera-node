@@ -1,6 +1,7 @@
 package org.moera.node.rest;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -256,6 +257,7 @@ public class FeedController {
 
     private FeedSliceInfo getStoriesBefore(String feedName, long before, int limit) {
         FeedSliceInfo sliceInfo = new FeedSliceInfo();
+        sliceInfo.setStories(new ArrayList<>());
         sliceInfo.setBefore(before);
         long sliceBefore = before;
         do {
@@ -275,6 +277,7 @@ public class FeedController {
 
     private FeedSliceInfo getStoriesAfter(String feedName, long after, int limit) {
         FeedSliceInfo sliceInfo = new FeedSliceInfo();
+        sliceInfo.setStories(new ArrayList<>());
         sliceInfo.setAfter(after);
         long sliceAfter = after;
         do {
