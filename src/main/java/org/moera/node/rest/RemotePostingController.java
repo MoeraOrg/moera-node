@@ -23,8 +23,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemotePostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
-import org.moera.node.model.AvatarDescriptionUtil;
-import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.rest.task.RemotePostingPostJob;
 import org.moera.node.rest.task.verification.RemotePostingVerifyTask;
@@ -114,11 +112,7 @@ public class RemotePostingController {
     }
 
     private void update(String nodeName, String postingId, PostingSourceText postingText) {
-        mediaOperations.validateAvatar(
-            postingText.getOwnerAvatar(),
-            mf -> AvatarDescriptionUtil.setMediaFile(postingText.getOwnerAvatar(), mf),
-            () -> new ObjectNotFoundFailure("avatar.not-found")
-        );
+        mediaOperations.validateAvatar(postingText.getOwnerAvatar());
         jobs.run(
             RemotePostingPostJob.class,
             new RemotePostingPostJob.Parameters(nodeName, postingId, postingText),

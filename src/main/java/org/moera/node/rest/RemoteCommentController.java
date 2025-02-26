@@ -24,8 +24,6 @@ import org.moera.node.global.RequestContext;
 import org.moera.node.liberin.model.RemoteCommentUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.AsyncOperationCreatedUtil;
-import org.moera.node.model.AvatarDescriptionUtil;
-import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.SubscriptionOperations;
 import org.moera.node.rest.task.RemoteCommentPostJob;
@@ -129,11 +127,7 @@ public class RemoteCommentController {
     }
 
     private void update(String nodeName, String postingId, String commentId, CommentSourceText commentText) {
-        mediaOperations.validateAvatar(
-            commentText.getOwnerAvatar(),
-            mf -> AvatarDescriptionUtil.setMediaFile(commentText.getOwnerAvatar(), mf),
-            () -> new ObjectNotFoundFailure("avatar.not-found")
-        );
+        mediaOperations.validateAvatar(commentText.getOwnerAvatar());
         jobs.run(
             RemoteCommentPostJob.class,
             new RemoteCommentPostJob.Parameters(nodeName, postingId, commentId, commentText),

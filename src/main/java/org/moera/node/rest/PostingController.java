@@ -49,7 +49,6 @@ import org.moera.node.liberin.model.PostingDeletedLiberin;
 import org.moera.node.liberin.model.PostingReadLiberin;
 import org.moera.node.liberin.model.PostingUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingInfoUtil;
@@ -168,11 +167,7 @@ public class PostingController {
         if (!ObjectUtils.isEmpty(postingText.getPublications()) && !requestContext.isAdmin(Scope.UPDATE_FEEDS)) {
             throw new AuthenticationException();
         }
-        mediaOperations.validateAvatar(
-            postingText.getOwnerAvatar(),
-            mf -> AvatarDescriptionUtil.setMediaFile(postingText.getOwnerAvatar(), mf),
-            () -> new ObjectNotFoundFailure("avatar.not-found")
-        );
+        mediaOperations.validateAvatar(postingText.getOwnerAvatar());
         byte[] digest = validatePostingText(null, postingText, postingText.getOwnerName());
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());
@@ -237,11 +232,7 @@ public class PostingController {
         }
         Principal latestView = posting.getViewE();
         EntryRevision latest = posting.getCurrentRevision();
-        mediaOperations.validateAvatar(
-            postingText.getOwnerAvatar(),
-            mf -> AvatarDescriptionUtil.setMediaFile(postingText.getOwnerAvatar(), mf),
-            () -> new ObjectNotFoundFailure("avatar.not-found")
-        );
+        mediaOperations.validateAvatar(postingText.getOwnerAvatar());
         byte[] digest = validatePostingText(posting, postingText, posting.getOwnerName());
         if (postingText.getSignature() != null) {
             requestContext.authenticatedWithSignature(postingText.getOwnerName());

@@ -96,11 +96,7 @@ public class SheriffOrderController {
             "sheriff-order.created-at.out-of-range"
         );
 
-        mediaOperations.validateAvatar(
-            sheriffOrderDetails.getSheriffAvatar(),
-            mf -> AvatarDescriptionUtil.setMediaFile(sheriffOrderDetails.getSheriffAvatar(), mf),
-            () -> new ObjectNotFoundFailure("avatar.not-found")
-        );
+        mediaOperations.validateAvatar(sheriffOrderDetails.getSheriffAvatar());
 
         Posting posting = null;
         Comment comment = null;

@@ -69,7 +69,6 @@ import org.moera.node.liberin.model.CommentDeletedLiberin;
 import org.moera.node.liberin.model.CommentUpdatedLiberin;
 import org.moera.node.liberin.model.CommentsReadLiberin;
 import org.moera.node.media.MediaOperations;
-import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ClientReactionInfoUtil;
 import org.moera.node.model.CommentCreatedUtil;
 import org.moera.node.model.CommentInfoUtil;
@@ -225,11 +224,7 @@ public class CommentController {
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
             throw new UserBlockedException();
         }
-        mediaOperations.validateAvatar(
-            commentText.getOwnerAvatar(),
-            mf -> AvatarDescriptionUtil.setMediaFile(commentText.getOwnerAvatar(), mf),
-            () -> new ObjectNotFoundFailure("avatar.not-found")
-        );
+        mediaOperations.validateAvatar(commentText.getOwnerAvatar());
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
             true,
@@ -320,11 +315,7 @@ public class CommentController {
         if (blockedUserOperations.isBlocked(BlockedOperation.COMMENT, postingId)) {
             throw new UserBlockedException();
         }
-        mediaOperations.validateAvatar(
-            commentText.getOwnerAvatar(),
-            mf -> AvatarDescriptionUtil.setMediaFile(commentText.getOwnerAvatar(), mf),
-            () -> new ObjectNotFoundFailure("avatar.not-found")
-        );
+        mediaOperations.validateAvatar(commentText.getOwnerAvatar());
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
             commentText.getMedia(),
             true,

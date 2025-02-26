@@ -31,9 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -75,6 +73,7 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeaturesUtil;
 import org.moera.node.model.ValidationFailure;
@@ -564,11 +563,7 @@ public class MediaOperations {
         return serve(preview != null ? preview.getMediaFile() : mediaFile, download);
     }
 
-    public void validateAvatar(
-        AvatarDescription avatar,
-        Consumer<MediaFile> found,
-        Supplier<RuntimeException> notFound
-    ) {
+    public void validateAvatar(AvatarDescription avatar) {
         if (avatar == null || avatar.getMediaId() == null) {
             return;
         }
@@ -578,9 +573,9 @@ public class MediaOperations {
             mediaFile = null;
         }
         if (mediaFile == null && (avatar.getOptional() == null || !avatar.getOptional())) {
-            throw notFound.get();
+            throw new ObjectNotFoundFailure("avatar.not-found");
         } else {
-            found.accept(mediaFile);
+            AvatarDescriptionUtil.setMediaFile(avatar, mediaFile);
         }
     }
 
