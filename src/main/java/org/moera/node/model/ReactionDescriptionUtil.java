@@ -22,10 +22,12 @@ public class ReactionDescriptionUtil {
         description.setNegative(attributes.isNegative());
         description.setEmoji(attributes.getEmoji());
 
-        ReactionOperations operations = new ReactionOperations();
-        operations.setView(attributes.getOperations().getView(), Principal.PUBLIC);
-        operations.setDelete(attributes.getOperations().getDelete(), Principal.PRIVATE);
-        description.setOperations(operations);
+        if (attributes.getOperations() != null) {
+            ReactionOperations operations = new ReactionOperations();
+            operations.setView(attributes.getOperations().getView(), Principal.PUBLIC);
+            operations.setDelete(attributes.getOperations().getDelete(), Principal.PRIVATE);
+            description.setOperations(operations);
+        }
         
         return description;
     }
