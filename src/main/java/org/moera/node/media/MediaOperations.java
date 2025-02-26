@@ -1,8 +1,8 @@
 package org.moera.node.media;
 
+import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.CREATE;
-import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -75,7 +75,9 @@ import org.moera.node.data.Story;
 import org.moera.node.data.StoryRepository;
 import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
+import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeaturesUtil;
+import org.moera.node.model.ValidationFailure;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.util.DigestingOutputStream;
@@ -582,10 +584,57 @@ public class MediaOperations {
         }
     }
 
+    public <T> List<MediaFileOwner> validateAttachments(
+        Collection<T> records,
+        Function<T, String> idGetter,
+        boolean compressed,
+        boolean isAdminViewMedia,
+        boolean isAdminUncompressedMedia,
+        String clientName
+    ) {
+        if (ObjectUtils.isEmpty(records)) {
+            return Collections.emptyList();
+        }
+
+        UUID[] uuids;
+        try {
+            uuids = records.stream()
+                .map(idGetter)
+                .map(UUID::fromString)
+                .toArray(UUID[]::new);
+        } catch (IllegalArgumentException e) {
+            throw new ObjectNotFoundFailure("media.not-found");
+        }
+
+        return validateAttachments(uuids, compressed, isAdminViewMedia, isAdminUncompressedMedia, clientName);
+    }
+
     public List<MediaFileOwner> validateAttachments(
+        Collection<String> ids,
+        boolean compressed,
+        boolean isAdminViewMedia,
+        boolean isAdminUncompressedMedia,
+        String clientName
+    ) {
+        if (ObjectUtils.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+
+        UUID[] uuids;
+        try {
+            uuids = ids.stream()
+                .map(UUID::fromString)
+                .toArray(UUID[]::new);
+        } catch (IllegalArgumentException e) {
+            throw new ObjectNotFoundFailure("media.not-found");
+        }
+
+        return validateAttachments(uuids, compressed, isAdminViewMedia, isAdminUncompressedMedia, clientName);
+    }
+
+    private List<MediaFileOwner> validateAttachments(
         UUID[] ids,
-        Supplier<RuntimeException> notFound,
-        Supplier<RuntimeException> notCompressed,
+        boolean compressed,
         boolean isAdminViewMedia,
         boolean isAdminUncompressedMedia,
         String clientName
@@ -600,23 +649,27 @@ public class MediaOperations {
         List<MediaFileOwner> attached = new ArrayList<>();
         Set<UUID> usedIds = new HashSet<>();
         Map<UUID, MediaFileOwner> mediaFileOwners = mediaFileOwnerRepository.findByIds(universalContext.nodeId(), ids)
-                .stream().collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
+            .stream().collect(Collectors.toMap(MediaFileOwner::getId, Function.identity()));
         for (UUID id : ids) {
             if (usedIds.contains(id)) {
                 continue;
             }
             MediaFileOwner mediaFileOwner = mediaFileOwners.get(id);
             if (mediaFileOwner == null) {
-                throw notFound.get();
+                throw new ObjectNotFoundFailure("media.not-found");
             }
-            if (mediaFileOwner.getOwnerName() == null && !isAdminViewMedia
-                    || mediaFileOwner.getOwnerName() != null
-                        && !mediaFileOwner.getOwnerName().equals(clientName)) {
-                throw notFound.get();
+            if (
+                mediaFileOwner.getOwnerName() == null && !isAdminViewMedia
+                || mediaFileOwner.getOwnerName() != null && !mediaFileOwner.getOwnerName().equals(clientName)
+            ) {
+                throw new ObjectNotFoundFailure("media.not-found");
             }
-            if (notCompressed != null && !isAdminUncompressedMedia
-                    && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize) {
-                throw notCompressed.get();
+            if (
+                compressed
+                && !isAdminUncompressedMedia
+                && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize
+            ) {
+                throw new ValidationFailure("media.not-compressed");
             }
             attached.add(mediaFileOwner);
             usedIds.add(id);

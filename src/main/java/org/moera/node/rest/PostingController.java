@@ -181,9 +181,8 @@ public class PostingController {
             throw new UserBlockedException();
         }
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-            postingText.getMedia().stream().map(UUID::fromString).toArray(UUID[]::new),
-            () -> new ObjectNotFoundFailure("media.not-found"),
-            () -> new ValidationFailure("media.not-compressed"),
+            postingText.getMedia(),
+            true,
             requestContext.isAdmin(Scope.VIEW_MEDIA),
             requestContext.isAdmin(Scope.ADD_POST),
             requestContext.getClientName(Scope.VIEW_MEDIA)
@@ -225,7 +224,7 @@ public class PostingController {
         log.info(
             "PUT /postings/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(id),
-            LogUtil.format(postingText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(postingText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
         );
 
@@ -257,9 +256,8 @@ public class PostingController {
             throw new ValidationFailure("posting.publications.cannot-modify");
         }
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-            postingText.getMedia().stream().map(UUID::fromString).toArray(UUID[]::new),
-            () -> new ObjectNotFoundFailure("media.not-found"),
-            () -> new ValidationFailure("media.not-compressed"),
+            postingText.getMedia(),
+            true,
             requestContext.isAdmin(Scope.VIEW_MEDIA),
             requestContext.isAdmin(Scope.UPDATE_POST),
             requestContext.getClientName(Scope.VIEW_MEDIA)

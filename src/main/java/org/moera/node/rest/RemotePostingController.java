@@ -81,7 +81,7 @@ public class RemotePostingController {
         log.info(
             "POST /nodes/{nodeName}/postings (nodeName = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(nodeName),
-            LogUtil.format(postingText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(postingText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
         );
 
@@ -103,7 +103,7 @@ public class RemotePostingController {
                 + " (nodeName = {}, postingId = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(nodeName),
             LogUtil.format(postingId),
-            LogUtil.format(postingText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(postingText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(postingText.getBodySrcFormat()))
         );
 

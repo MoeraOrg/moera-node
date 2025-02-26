@@ -182,7 +182,7 @@ public class CommentController {
         log.info(
             "POST /postings/{postingId}/comments (postingId = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(postingId),
-            LogUtil.format(commentText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(commentText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
         );
 
@@ -231,9 +231,8 @@ public class CommentController {
             () -> new ObjectNotFoundFailure("avatar.not-found")
         );
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-            commentText.getMedia().stream().map(UUID::fromString).toArray(UUID[]::new),
-            () -> new ObjectNotFoundFailure("media.not-found"),
-            () -> new ValidationFailure("media.not-compressed"),
+            commentText.getMedia(),
+            true,
             requestContext.isAdmin(Scope.VIEW_CONTENT),
             requestContext.isAdmin(Scope.ADD_COMMENT),
             commentText.getOwnerName()
@@ -287,7 +286,7 @@ public class CommentController {
                 + " (postingId = {}, commentId = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(postingId),
             LogUtil.format(commentId),
-            LogUtil.format(commentText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(commentText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
         );
 
@@ -327,9 +326,8 @@ public class CommentController {
             () -> new ObjectNotFoundFailure("avatar.not-found")
         );
         List<MediaFileOwner> media = mediaOperations.validateAttachments(
-            commentText.getMedia().stream().map(UUID::fromString).toArray(UUID[]::new),
-            () -> new ObjectNotFoundFailure("media.not-found"),
-            () -> new ValidationFailure("media.not-compressed"),
+            commentText.getMedia(),
+            true,
             requestContext.isAdmin(Scope.VIEW_CONTENT),
             requestContext.isAdmin(Scope.UPDATE_COMMENT),
             comment.getOwnerName()

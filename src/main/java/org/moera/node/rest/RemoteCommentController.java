@@ -92,7 +92,7 @@ public class RemoteCommentController {
                 + " (nodeName = {}, postingId = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(nodeName),
             LogUtil.format(postingId),
-            LogUtil.format(commentText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(commentText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
         );
 
@@ -118,7 +118,7 @@ public class RemoteCommentController {
             LogUtil.format(nodeName),
             LogUtil.format(postingId),
             LogUtil.format(commentId),
-            LogUtil.format(commentText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(commentText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(commentText.getBodySrcFormat()))
         );
 

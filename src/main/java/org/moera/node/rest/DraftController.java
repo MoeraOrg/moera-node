@@ -188,7 +188,7 @@ public class DraftController {
                 + " bodySrcFormat = {})",
             LogUtil.format(draftText.getDraftType().toString()), LogUtil.format(draftText.getReceiverName()),
             LogUtil.format(draftText.getReceiverPostingId()), LogUtil.format(draftText.getReceiverCommentId()),
-            LogUtil.format(draftText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(draftText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat()))
         );
 
@@ -241,7 +241,7 @@ public class DraftController {
         log.info(
             "PUT /drafts/{id}, (id = {}, bodySrc = {}, bodySrcFormat = {})",
             LogUtil.format(id),
-            LogUtil.format(draftText.getBodySrc().getEncoded(), 64),
+            LogUtil.format(draftText.getBodySrc(), 64),
             LogUtil.format(SourceFormat.toValue(draftText.getBodySrcFormat()))
         );
 
@@ -277,24 +277,10 @@ public class DraftController {
         }
 
         if (draftText.getReceiverName().equals(requestContext.nodeName())) {
-            if (draftText.getMedia() == null) {
-                return Collections.emptyList();
-            }
-
-            UUID[] ids;
-            try {
-                ids = draftText.getMedia().stream()
-                    .map(RemoteMedia::getId)
-                    .map(UUID::fromString)
-                    .toArray(UUID[]::new);
-            } catch (IllegalArgumentException e) {
-                throw new ObjectNotFoundFailure("media.not-found");
-            }
-
             return mediaOperations.validateAttachments(
-                ids,
-                () -> new ObjectNotFoundFailure("media.not-found"),
-                null,
+                draftText.getMedia(),
+                RemoteMedia::getId,
+                false,
                 requestContext.isAdmin(Scope.VIEW_MEDIA),
                 requestContext.isAdmin(Scope.DRAFTS),
                 requestContext.getClientName(Scope.VIEW_MEDIA)
