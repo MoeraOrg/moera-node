@@ -32,15 +32,15 @@ public class BlockedUserInstants extends InstantsCreator {
 
     public void blocked(BlockedByUser blockedByUser, String entryHeading) {
         StoryType storyType = blockedByUser.getRemotePostingId() == null
-                ? StoryType.BLOCKED_USER
-                : StoryType.BLOCKED_USER_IN_POSTING;
+            ? StoryType.BLOCKED_USER
+            : StoryType.BLOCKED_USER_IN_POSTING;
         buildStory(storyType, blockedByUser, entryHeading);
     }
 
     public void unblocked(BlockedByUser blockedByUser, String entryHeading) {
         StoryType storyType = blockedByUser.getRemotePostingId() == null
-                ? StoryType.UNBLOCKED_USER
-                : StoryType.UNBLOCKED_USER_IN_POSTING;
+            ? StoryType.UNBLOCKED_USER
+            : StoryType.UNBLOCKED_USER_IN_POSTING;
         buildStory(storyType, blockedByUser, entryHeading);
     }
 
@@ -51,17 +51,21 @@ public class BlockedUserInstants extends InstantsCreator {
 
         Contact contact = blockedByUser.getContact();
 
-        Story story = storyRepository.findByFeed(nodeId(), Feed.INSTANT,
-                PageRequest.of(0, 1, Sort.Direction.DESC, "moment")).stream()
-                .findFirst()
-                .orElse(null);
+        Story story = storyRepository.findByFeed(
+            nodeId(), Feed.INSTANT, PageRequest.of(0, 1, Sort.Direction.DESC, "moment")
+        )
+            .stream()
+            .findFirst()
+            .orElse(null);
+        StorySummaryData prevSummary = story != null ? story.getSummaryData() : null;
 
         boolean isNewStory = false;
-        if (story == null
-                || story.getStoryType() != storyType
-                || !Objects.equals(story.getRemoteNodeName(), blockedByUser.getRemoteNodeName())
-                || !Objects.equals(story.getRemotePostingId(), blockedByUser.getRemotePostingId())) {
-
+        if (
+            story == null
+            || story.getStoryType() != storyType
+            || !Objects.equals(story.getRemoteNodeName(), blockedByUser.getRemoteNodeName())
+            || !Objects.equals(story.getRemotePostingId(), blockedByUser.getRemotePostingId())
+        ) {
             isNewStory = true;
             story = new Story(UUID.randomUUID(), nodeId(), storyType);
             story.setFeedName(Feed.INSTANT);
@@ -72,8 +76,13 @@ public class BlockedUserInstants extends InstantsCreator {
             story.setRemotePostingId(blockedByUser.getRemotePostingId());
         }
 
-        story.setSummaryData(buildSummary(contact, story.getSummaryData(), blockedByUser.getBlockedOperation(),
-                blockedByUser.getDeadline(), entryHeading));
+        story.setSummaryData(buildSummary(
+            contact,
+            prevSummary,
+            blockedByUser.getBlockedOperation(),
+            blockedByUser.getDeadline(),
+            entryHeading
+        ));
         story.setPublishedAt(Util.now());
         story.setRead(false);
         story.setViewed(false);
@@ -82,9 +91,13 @@ public class BlockedUserInstants extends InstantsCreator {
         storyAddedOrUpdated(story, isNewStory);
     }
 
-    private static StorySummaryData buildSummary(Contact contact, StorySummaryData prevSummary,
-                                                 BlockedOperation newOperation, Timestamp deadline,
-                                                 String entryHeading) {
+    private static StorySummaryData buildSummary(
+        Contact contact,
+        StorySummaryData prevSummary,
+        BlockedOperation newOperation,
+        Timestamp deadline,
+        String entryHeading
+    ) {
         Set<BlockedOperation> operations;
         if (prevSummary == null) {
             operations = Set.of(newOperation);
