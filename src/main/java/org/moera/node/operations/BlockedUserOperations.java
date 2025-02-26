@@ -107,11 +107,11 @@ public class BlockedUserOperations {
             strict
         );
         return new JPAQueryFactory(entityManager)
-                .selectFrom(blockedUser)
-                .leftJoin(blockedUser.contact, contact).fetchJoin()
-                .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
-                .where(where)
-                .fetch();
+            .selectFrom(blockedUser)
+            .leftJoin(blockedUser.contact, contact).fetchJoin()
+            .leftJoin(contact.remoteAvatarMediaFile).fetchJoin()
+            .where(where)
+            .fetch();
     }
 
     public long count(

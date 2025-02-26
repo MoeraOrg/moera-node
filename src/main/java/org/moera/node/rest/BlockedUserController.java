@@ -119,10 +119,12 @@ public class BlockedUserController {
         log.info("GET /people/blocked-users/{id}, (id = {})", LogUtil.format(id));
 
         BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
 
-        if (!requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
-                && !requestContext.isClient(blockedUser.getRemoteNodeName(), Scope.VIEW_PEOPLE)) {
+        if (
+            !requestContext.isPrincipal(BlockedUser.getViewAllE(requestContext.getOptions()), Scope.VIEW_PEOPLE)
+            && !requestContext.isClient(blockedUser.getRemoteNodeName(), Scope.VIEW_PEOPLE)
+        ) {
             throw new AuthenticationException();
         }
 
@@ -136,7 +138,7 @@ public class BlockedUserController {
         log.info("DELETE /people/blocked-users/{id}, (id = {})", LogUtil.format(id));
 
         BlockedUser blockedUser = blockedUserRepository.findByNodeIdAndId(requestContext.nodeId(), id)
-                .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
+            .orElseThrow(() -> new ObjectNotFoundFailure("blocked-user.not-found"));
         blockedUserRepository.delete(blockedUser);
         contactOperations.updateBlockedUserCounts(blockedUser, -1).fill(blockedUser);
 
