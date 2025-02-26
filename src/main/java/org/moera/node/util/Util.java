@@ -215,6 +215,9 @@ public class Util {
     }
 
     public static Optional<UUID> uuid(String value) {
+        if (value == null) {
+            return Optional.empty();
+        }
         try {
             return Optional.of(UUID.fromString(value));
         } catch (IllegalArgumentException e) {
