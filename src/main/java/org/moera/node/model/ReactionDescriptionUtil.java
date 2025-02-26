@@ -45,8 +45,10 @@ public class ReactionDescriptionUtil {
         }
         reaction.setNegative(description.isNegative());
         reaction.setEmoji(description.getEmoji());
-        reaction.setSignature(description.getSignature());
-        reaction.setSignatureVersion(description.getSignatureVersion());
+        if (description.getSignature() != null && description.getSignatureVersion() != null) {
+            reaction.setSignature(description.getSignature());
+            reaction.setSignatureVersion(description.getSignatureVersion());
+        }
         Principal viewPrincipal = ReactionOperations.getView(description.getOperations(), null);
         if (viewPrincipal != null) {
             reaction.setViewPrincipal(viewPrincipal);

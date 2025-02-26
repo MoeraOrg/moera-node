@@ -547,8 +547,10 @@ public class PostingInfoUtil {
         }
         entryRevision.setReceiverCreatedAt(Util.toTimestamp(info.getRevisionCreatedAt()));
         entryRevision.setReceiverDeletedAt(Util.toTimestamp(info.getDeletedAt()));
-        entryRevision.setSignature(info.getSignature());
-        entryRevision.setSignatureVersion(info.getSignatureVersion());
+        if (info.getSignature() != null && info.getSignatureVersion() != null) {
+            entryRevision.setSignature(info.getSignature());
+            entryRevision.setSignatureVersion(info.getSignatureVersion());
+        }
     }
 
     public static void toOwnPosting(PostingInfo info, OwnPosting ownPosting) {

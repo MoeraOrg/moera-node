@@ -341,8 +341,10 @@ public class PostingTextUtil {
         if (postingText.getBodySrcFormat() != null) {
             revision.setBodySrcFormat(postingText.getBodySrcFormat());
         }
-        revision.setSignature(postingText.getSignature());
-        revision.setSignatureVersion(postingText.getSignatureVersion());
+        if (postingText.getSignature() != null && postingText.getSignatureVersion() != null) {
+            revision.setSignature(postingText.getSignature());
+            revision.setSignatureVersion(postingText.getSignatureVersion());
+        }
         revision.setDigest(digest);
         textConverter.toRevision(
             postingText.getBodySrc(),

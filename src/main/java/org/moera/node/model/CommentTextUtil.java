@@ -313,8 +313,10 @@ public class CommentTextUtil {
         if (commentText.getBodySrcFormat() != null) {
             revision.setBodySrcFormat(commentText.getBodySrcFormat());
         }
-        revision.setSignature(commentText.getSignature());
-        revision.setSignatureVersion(commentText.getSignatureVersion());
+        if (commentText.getSignature() != null && commentText.getSignatureVersion() != null) {
+            revision.setSignature(commentText.getSignature());
+            revision.setSignatureVersion(commentText.getSignatureVersion());
+        }
         revision.setDigest(digest);
         textConverter.toRevision(
             commentText.getBodySrc(),
