@@ -73,9 +73,13 @@ public class PostingProcessor {
     @Transactional
     public void added(StoryAddedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
-        if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.FEED
-                || !notification.getFeedName().equals(subscription.getRemoteFeedName())) {
+            universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()
+        ).orElse(null);
+        if (
+            subscription == null
+            || subscription.getSubscriptionType() != SubscriptionType.FEED
+            || !notification.getFeedName().equals(subscription.getRemoteFeedName())
+        ) {
             throw new UnsubscribeFailure();
         }
 
@@ -85,7 +89,8 @@ public class PostingProcessor {
 
         List<UserSubscription> userSubscriptions = userSubscriptionRepository.findAllByTypeAndNodeAndFeedName(
                 universalContext.nodeId(), SubscriptionType.FEED, notification.getSenderNodeName(),
-                subscription.getRemoteFeedName());
+                subscription.getRemoteFeedName()
+        );
 
         for (UserSubscription userSubscription : userSubscriptions) {
             Pick pick = new Pick();
@@ -97,16 +102,22 @@ public class PostingProcessor {
         }
     }
 
-    private void withValidPostingSubscription(PostingSubscriberNotification notification,
-                                              PostingSubscriptionRunnable runnable) {
+    private void withValidPostingSubscription(
+        PostingSubscriberNotification notification, PostingSubscriptionRunnable runnable
+    ) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
-        if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.POSTING
-                || !notification.getPostingId().equals(subscription.getRemoteEntryId())) {
+            universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()
+        ).orElse(null);
+        if (
+            subscription == null
+            || subscription.getSubscriptionType() != SubscriptionType.POSTING
+            || !notification.getPostingId().equals(subscription.getRemoteEntryId())
+        ) {
             throw new UnsubscribeFailure();
         }
-        Posting posting = postingRepository.findByReceiverId(universalContext.nodeId(), subscription.getRemoteNodeName(),
-                notification.getPostingId()).orElseThrow(UnsubscribeFailure::new);
+        Posting posting = postingRepository.findByReceiverId(
+            universalContext.nodeId(), subscription.getRemoteNodeName(), notification.getPostingId()
+        ).orElseThrow(UnsubscribeFailure::new);
 
         runnable.run(subscription, posting);
     }
@@ -148,8 +159,10 @@ public class PostingProcessor {
     public void commentsUpdated(PostingCommentsUpdatedNotification notification) {
         withValidPostingSubscription(notification, (subscription, posting) -> {
             if (posting.getTotalChildren() != notification.getTotal()) {
-                log.debug("Total comments for posting {} = {}: updated from notification",
-                        LogUtil.format(posting.getId()), LogUtil.format(notification.getTotal()));
+                log.debug(
+                    "Total comments for posting {} = {}: updated from notification",
+                    LogUtil.format(posting.getId()), LogUtil.format(notification.getTotal())
+                );
                 posting.setTotalChildren(notification.getTotal());
             }
             // The number may be the same, but events were not sent yet, because comments weren't signed
