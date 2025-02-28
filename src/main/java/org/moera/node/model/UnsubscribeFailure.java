@@ -1,6 +1,8 @@
 package org.moera.node.model;
 
-public class UnsubscribeFailure extends ValidationFailure {
+import org.moera.lib.node.types.validate.ValidationException;
+
+public class UnsubscribeFailure extends ValidationException {
 
     public UnsubscribeFailure() {
         super("subscription.unsubscribe");

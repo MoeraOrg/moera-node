@@ -12,7 +12,7 @@ import org.moera.lib.node.types.SubscriberOperations;
 import org.moera.lib.node.types.SubscriptionOperations;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.node.types.principal.PrincipalFlag;
-import org.moera.node.model.ValidationFailure;
+import org.moera.lib.node.types.validate.ValidationUtil;
 
 public class OperationsValidator {
 
@@ -270,9 +270,10 @@ public class OperationsValidator {
     }
 
     private static void validatePrincipal(Principal principal, int flags, boolean includeUnset, String errorCode) {
-        if (principal != null && !principal.isOneOf(flags) && (!includeUnset || !principal.isUnset())) {
-            throw new ValidationFailure(errorCode);
-        }
+        ValidationUtil.assertion(
+            principal == null || principal.isOneOf(flags) || includeUnset && principal.isUnset(),
+            errorCode
+        );
     }
 
 }

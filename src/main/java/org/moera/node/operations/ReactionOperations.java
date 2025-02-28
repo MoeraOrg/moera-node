@@ -19,6 +19,7 @@ import org.moera.lib.node.types.ReactionDescription;
 import org.moera.lib.node.types.ReactionsSliceInfo;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
 import org.moera.node.auth.AuthenticationException;
@@ -41,7 +42,6 @@ import org.moera.node.liberin.model.PostingReactionTotalsUpdatedLiberin;
 import org.moera.node.media.MediaOperations;
 import org.moera.node.model.ReactionDescriptionUtil;
 import org.moera.node.model.ReactionInfoUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.util.ExtendedDuration;
 import org.moera.node.util.MomentFinder;
 import org.moera.node.util.SafeInteger;
@@ -149,9 +149,7 @@ public class ReactionOperations {
                 ? entry.getAcceptedReactionsPositive()
                 : entry.getAcceptedReactionsNegative()
         );
-        if (!accepted.isAccepted(reactionDescription.getEmoji())) {
-            throw new ValidationFailure("reaction.not-accepted");
-        }
+        ValidationUtil.assertion(accepted.isAccepted(reactionDescription.getEmoji()), "reaction.not-accepted");
     }
 
     public Reaction post(ReactionDescription reactionDescription, Entry entry, Consumer<Reaction> reactionDeleted,

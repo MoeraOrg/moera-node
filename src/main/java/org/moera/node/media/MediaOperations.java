@@ -54,6 +54,7 @@ import org.moera.lib.node.types.AvatarDescription;
 import org.moera.lib.node.types.PostingFeatures;
 import org.moera.lib.node.types.principal.AccessCheckers;
 import org.moera.lib.node.types.principal.Principal;
+import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.Comment;
@@ -76,7 +77,6 @@ import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarDescriptionUtil;
 import org.moera.node.model.ObjectNotFoundFailure;
 import org.moera.node.model.PostingFeaturesUtil;
-import org.moera.node.model.ValidationFailure;
 import org.moera.node.task.Jobs;
 import org.moera.node.task.JobsManagerInitializedEvent;
 import org.moera.node.util.DigestingOutputStream;
@@ -659,13 +659,12 @@ public class MediaOperations {
             ) {
                 throw new ObjectNotFoundFailure("media.not-found");
             }
-            if (
-                compressed
-                && !isAdminUncompressedMedia
-                && mediaFileOwner.getMediaFile().getFileSize() > recommendedSize
-            ) {
-                throw new ValidationFailure("media.not-compressed");
-            }
+            ValidationUtil.assertion(
+                !compressed
+                    || isAdminUncompressedMedia
+                    || mediaFileOwner.getMediaFile().getFileSize() <= recommendedSize,
+                "media.not-compressed"
+            );
             attached.add(mediaFileOwner);
             usedIds.add(id);
         }
