@@ -4,12 +4,11 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import org.moera.lib.node.types.SearchEngine;
+import org.moera.lib.node.types.notifications.NotificationType;
+import org.moera.lib.node.types.notifications.SearchEngineClickedNotification;
 import org.moera.node.data.SearchEngineStatistics;
 import org.moera.node.data.SearchEngineStatisticsRepository;
 import org.moera.node.global.UniversalContext;
-import org.moera.node.model.notification.NotificationType;
-import org.moera.node.model.notification.SearchEngineClickedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.util.Util;
@@ -27,22 +26,18 @@ public class SearchEngineProcessor {
     @NotificationMapping(NotificationType.SEARCH_ENGINE_CLICKED)
     @Transactional
     public void clicked(SearchEngineClickedNotification notification) {
-        if (ObjectUtils.isEmpty(universalContext.nodeName())) {
-            return;
-        }
-
-        if (ObjectUtils.isEmpty(notification.getHeading())) {
-            return;
-        }
-        SearchEngine searchEngine = SearchEngine.forValue(notification.getSearchEngine());
-        if (searchEngine == null) {
+        if (
+            ObjectUtils.isEmpty(universalContext.nodeName())
+            || ObjectUtils.isEmpty(notification.getHeading())
+            || notification.getSearchEngine() == null
+        ) {
             return;
         }
 
         SearchEngineStatistics searchEngineStatistics = new SearchEngineStatistics();
         searchEngineStatistics.setId(UUID.randomUUID());
         searchEngineStatistics.setNodeName(notification.getSenderNodeName());
-        searchEngineStatistics.setEngine(searchEngine);
+        searchEngineStatistics.setEngine(notification.getSearchEngine());
         searchEngineStatistics.setOwnerName(universalContext.nodeName());
         searchEngineStatistics.setPostingId(notification.getPostingId());
         searchEngineStatistics.setCommentId(notification.getCommentId());

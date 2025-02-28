@@ -4,9 +4,11 @@ import java.util.Map;
 import jakarta.persistence.EntityManager;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.notifications.SheriffOrderForCommentAddedNotification;
+import org.moera.lib.node.types.notifications.SheriffOrderForCommentDeletedNotification;
+import org.moera.lib.node.types.notifications.SheriffOrderForPostingAddedNotification;
+import org.moera.lib.node.types.notifications.SheriffOrderForPostingDeletedNotification;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.notification.SheriffOrderForCommentNotification;
-import org.moera.node.model.notification.SheriffOrderForPostingNotification;
 
 public class RemoteSheriffOrderReceivedLiberin extends Liberin {
 
@@ -23,8 +25,8 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
     private AvatarImage sheriffAvatar;
     private String orderId;
 
-    public RemoteSheriffOrderReceivedLiberin(boolean deleted, SheriffOrderForPostingNotification notification) {
-        this.deleted = deleted;
+    public RemoteSheriffOrderReceivedLiberin(SheriffOrderForPostingAddedNotification notification) {
+        this.deleted = false;
         remoteNodeName = notification.getRemoteNodeName();
         remoteFeedName = notification.getRemoteFeedName();
         postingHeading = notification.getPostingHeading();
@@ -34,8 +36,34 @@ public class RemoteSheriffOrderReceivedLiberin extends Liberin {
         orderId = notification.getOrderId();
     }
 
-    public RemoteSheriffOrderReceivedLiberin(boolean deleted, SheriffOrderForCommentNotification notification) {
-        this.deleted = deleted;
+    public RemoteSheriffOrderReceivedLiberin(SheriffOrderForPostingDeletedNotification notification) {
+        this.deleted = true;
+        remoteNodeName = notification.getRemoteNodeName();
+        remoteFeedName = notification.getRemoteFeedName();
+        postingHeading = notification.getPostingHeading();
+        postingId = notification.getPostingId();
+        sheriffName = notification.getSenderNodeName();
+        sheriffAvatar = notification.getSenderAvatar();
+        orderId = notification.getOrderId();
+    }
+
+    public RemoteSheriffOrderReceivedLiberin(SheriffOrderForCommentAddedNotification notification) {
+        this.deleted = false;
+        remoteNodeName = notification.getRemoteNodeName();
+        remoteFeedName = notification.getRemoteFeedName();
+        postingOwnerName = notification.getPostingOwnerName();
+        postingOwnerFullName = notification.getPostingOwnerFullName();
+        postingHeading = notification.getPostingHeading();
+        postingId = notification.getPostingId();
+        commentHeading = notification.getCommentHeading();
+        commentId = notification.getCommentId();
+        sheriffName = notification.getSenderNodeName();
+        sheriffAvatar = notification.getSenderAvatar();
+        orderId = notification.getOrderId();
+    }
+
+    public RemoteSheriffOrderReceivedLiberin(SheriffOrderForCommentDeletedNotification notification) {
+        this.deleted = true;
         remoteNodeName = notification.getRemoteNodeName();
         remoteFeedName = notification.getRemoteFeedName();
         postingOwnerName = notification.getPostingOwnerName();

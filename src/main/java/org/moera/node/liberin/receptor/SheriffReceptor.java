@@ -14,11 +14,11 @@ import org.moera.node.liberin.model.SheriffOrderReceivedLiberin;
 import org.moera.node.liberin.model.SheriffOrderSentLiberin;
 import org.moera.node.model.event.CommentUpdatedEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.model.notification.SheriffOrderForCommentAddedNotification;
-import org.moera.node.model.notification.SheriffOrderForCommentDeletedNotification;
-import org.moera.node.model.notification.SheriffOrderForPostingAddedNotification;
-import org.moera.node.model.notification.SheriffOrderForPostingDeletedNotification;
+import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
+import org.moera.node.model.notification.SheriffOrderForCommentAddedNotificationUtil;
+import org.moera.node.model.notification.SheriffOrderForCommentDeletedNotificationUtil;
+import org.moera.node.model.notification.SheriffOrderForPostingAddedNotificationUtil;
+import org.moera.node.model.notification.SheriffOrderForPostingDeletedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 
 @LiberinReceptor
@@ -34,27 +34,51 @@ public class SheriffReceptor extends LiberinReceptorBase {
             return;
         }
         if (order.getRemoteCommentId() == null) {
-            send(Directions.single(liberin.getNodeId(), order.getRemotePostingOwnerName()),
-                    !order.isDelete()
-                            ? new SheriffOrderForPostingAddedNotification(order.getRemoteNodeName(),
-                                    order.getRemoteFeedName(), order.getRemotePostingHeading(),
-                                    order.getRemotePostingId(), order.getId().toString())
-                            : new SheriffOrderForPostingDeletedNotification(order.getRemoteNodeName(),
-                                    order.getRemoteFeedName(), order.getRemotePostingHeading(),
-                                    order.getRemotePostingId(), order.getId().toString()));
+            send(
+                Directions.single(liberin.getNodeId(), order.getRemotePostingOwnerName()),
+                !order.isDelete()
+                    ? SheriffOrderForPostingAddedNotificationUtil.build(
+                        order.getRemoteNodeName(),
+                        order.getRemoteFeedName(),
+                        order.getRemotePostingHeading(),
+                        order.getRemotePostingId(),
+                        order.getId().toString()
+                    )
+                    : SheriffOrderForPostingDeletedNotificationUtil.build(
+                        order.getRemoteNodeName(),
+                        order.getRemoteFeedName(),
+                        order.getRemotePostingHeading(),
+                        order.getRemotePostingId(),
+                        order.getId().toString()
+                    )
+            );
         } else {
-            send(Directions.single(liberin.getNodeId(), order.getRemoteCommentOwnerName()),
-                    !order.isDelete()
-                            ? new SheriffOrderForCommentAddedNotification(order.getRemoteNodeName(),
-                                    order.getRemoteFeedName(), order.getRemotePostingOwnerName(),
-                                    order.getRemotePostingOwnerFullName(), order.getRemotePostingHeading(),
-                                    order.getRemotePostingId(), order.getRemoteCommentHeading(),
-                                    order.getRemoteCommentId(), order.getId().toString())
-                            : new SheriffOrderForCommentDeletedNotification(order.getRemoteNodeName(),
-                                    order.getRemoteFeedName(), order.getRemotePostingOwnerName(),
-                                    order.getRemotePostingOwnerFullName(), order.getRemotePostingHeading(),
-                                    order.getRemotePostingId(), order.getRemoteCommentHeading(),
-                                    order.getRemoteCommentId(), order.getId().toString()));
+            send(
+                Directions.single(liberin.getNodeId(), order.getRemoteCommentOwnerName()),
+                !order.isDelete()
+                    ? SheriffOrderForCommentAddedNotificationUtil.build(
+                        order.getRemoteNodeName(),
+                        order.getRemoteFeedName(),
+                        order.getRemotePostingOwnerName(),
+                        order.getRemotePostingOwnerFullName(),
+                        order.getRemotePostingHeading(),
+                        order.getRemotePostingId(),
+                        order.getRemoteCommentHeading(),
+                        order.getRemoteCommentId(),
+                        order.getId().toString()
+                    )
+                    : SheriffOrderForCommentDeletedNotificationUtil.build(
+                        order.getRemoteNodeName(),
+                        order.getRemoteFeedName(),
+                        order.getRemotePostingOwnerName(),
+                        order.getRemotePostingOwnerFullName(),
+                        order.getRemotePostingHeading(),
+                        order.getRemotePostingId(),
+                        order.getRemoteCommentHeading(),
+                        order.getRemoteCommentId(),
+                        order.getId().toString()
+                    )
+            );
         }
     }
 
@@ -64,21 +88,29 @@ public class SheriffReceptor extends LiberinReceptorBase {
         Comment comment = liberin.getComment();
         if (posting == null) {
             if (!liberin.isDeleted()) {
-                sheriffInstants.orderForFeed(liberin.getFeedName(), liberin.getSheriffName(),
-                        liberin.getSheriffAvatar(), liberin.getOrderId());
+                sheriffInstants.orderForFeed(
+                    liberin.getFeedName(), liberin.getSheriffName(), liberin.getSheriffAvatar(), liberin.getOrderId()
+                );
             } else {
                 sheriffInstants.deletedOrderForFeed(
-                        liberin.getFeedName(), liberin.getSheriffName(), liberin.getSheriffAvatar(),
-                        liberin.getOrderId());
+                    liberin.getFeedName(), liberin.getSheriffName(), liberin.getSheriffAvatar(), liberin.getOrderId()
+                );
             }
         } else {
             if (comment == null) {
                 send(liberin, new PostingUpdatedEvent(posting, posting.getViewE()));
-                send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
-                        new PostingUpdatedNotification(posting.getId()));
+                send(
+                    Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
+                    PostingUpdatedNotificationUtil.build(posting.getId())
+                );
             } else {
-                send(liberin, new CommentUpdatedEvent(comment,
-                        posting.getViewE().a().and(posting.getViewCommentsE()).and(comment.getViewE())));
+                send(
+                    liberin,
+                    new CommentUpdatedEvent(
+                        comment,
+                        posting.getViewE().a().and(posting.getViewCommentsE()).and(comment.getViewE())
+                    )
+                );
             }
         }
     }
@@ -87,25 +119,55 @@ public class SheriffReceptor extends LiberinReceptorBase {
     public void remoteOrderReceived(RemoteSheriffOrderReceivedLiberin liberin) {
         if (liberin.getCommentId() == null) {
             if (!liberin.isDeleted()) {
-                sheriffInstants.orderForPosting(liberin.getRemoteNodeName(), liberin.getRemoteFeedName(),
-                        liberin.getPostingHeading(), liberin.getPostingId(), liberin.getSheriffName(),
-                        liberin.getSheriffAvatar(), liberin.getOrderId());
+                sheriffInstants.orderForPosting(
+                    liberin.getRemoteNodeName(),
+                    liberin.getRemoteFeedName(),
+                    liberin.getPostingHeading(),
+                    liberin.getPostingId(),
+                    liberin.getSheriffName(),
+                    liberin.getSheriffAvatar(),
+                    liberin.getOrderId()
+                );
             } else {
-                sheriffInstants.deletedOrderForPosting(liberin.getRemoteNodeName(), liberin.getRemoteFeedName(),
-                        liberin.getPostingHeading(), liberin.getPostingId(), liberin.getSheriffName(),
-                        liberin.getSheriffAvatar(), liberin.getOrderId());
+                sheriffInstants.deletedOrderForPosting(
+                    liberin.getRemoteNodeName(),
+                    liberin.getRemoteFeedName(),
+                    liberin.getPostingHeading(),
+                    liberin.getPostingId(),
+                    liberin.getSheriffName(),
+                    liberin.getSheriffAvatar(),
+                    liberin.getOrderId()
+                );
             }
         } else {
             if (!liberin.isDeleted()) {
-                sheriffInstants.orderForComment(liberin.getRemoteNodeName(), liberin.getRemoteFeedName(),
-                        liberin.getPostingOwnerName(), liberin.getPostingOwnerFullName(), liberin.getPostingHeading(),
-                        liberin.getPostingId(), liberin.getCommentHeading(), liberin.getCommentId(),
-                        liberin.getSheriffName(), liberin.getSheriffAvatar(), liberin.getOrderId());
+                sheriffInstants.orderForComment(
+                    liberin.getRemoteNodeName(),
+                    liberin.getRemoteFeedName(),
+                    liberin.getPostingOwnerName(),
+                    liberin.getPostingOwnerFullName(),
+                    liberin.getPostingHeading(),
+                    liberin.getPostingId(),
+                    liberin.getCommentHeading(),
+                    liberin.getCommentId(),
+                    liberin.getSheriffName(),
+                    liberin.getSheriffAvatar(),
+                    liberin.getOrderId()
+                );
             } else {
-                sheriffInstants.deletedOrderForComment(liberin.getRemoteNodeName(), liberin.getRemoteFeedName(),
-                        liberin.getPostingOwnerName(), liberin.getPostingOwnerFullName(), liberin.getPostingHeading(),
-                        liberin.getPostingId(), liberin.getCommentHeading(), liberin.getCommentId(),
-                        liberin.getSheriffName(), liberin.getSheriffAvatar(), liberin.getOrderId());
+                sheriffInstants.deletedOrderForComment(
+                    liberin.getRemoteNodeName(),
+                    liberin.getRemoteFeedName(),
+                    liberin.getPostingOwnerName(),
+                    liberin.getPostingOwnerFullName(),
+                    liberin.getPostingHeading(),
+                    liberin.getPostingId(),
+                    liberin.getCommentHeading(),
+                    liberin.getCommentId(),
+                    liberin.getSheriffName(),
+                    liberin.getSheriffAvatar(),
+                    liberin.getOrderId()
+                );
             }
         }
     }

@@ -17,9 +17,9 @@ import org.moera.node.liberin.model.CommentReactionTotalsUpdatedLiberin;
 import org.moera.node.liberin.model.CommentReactionsDeletedAllLiberin;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.event.CommentReactionsChangedEvent;
-import org.moera.node.model.notification.CommentReactionAddedNotification;
-import org.moera.node.model.notification.CommentReactionDeletedAllNotification;
-import org.moera.node.model.notification.CommentReactionDeletedNotification;
+import org.moera.node.model.notification.CommentReactionAddedNotificationUtil;
+import org.moera.node.model.notification.CommentReactionDeletedAllNotificationUtil;
+import org.moera.node.model.notification.CommentReactionDeletedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 
 @LiberinReceptor
@@ -41,7 +41,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                 Directions.single(
                     liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment, deletedReaction)
                 ),
-                new CommentReactionDeletedNotification(
+                CommentReactionDeletedNotificationUtil.build(
                     comment.getPosting().getId(),
                     comment.getId(),
                     deletedReaction.getOwnerName(),
@@ -64,7 +64,7 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
                 Directions.single(
                     liberin.getNodeId(), comment.getOwnerName(), visibilityFilter(comment, addedReaction)
                 ),
-                new CommentReactionAddedNotification(
+                CommentReactionAddedNotificationUtil.build(
                     posting.getOwnerName(),
                     posting.getOwnerFullName(),
                     posting.getOwnerGender(),
@@ -91,28 +91,32 @@ public class CommentReactionReceptor extends LiberinReceptorBase {
     public void deletedAll(CommentReactionsDeletedAllLiberin liberin) {
         Comment comment = liberin.getComment();
 
-        send(Directions.single(liberin.getNodeId(), comment.getOwnerName(), generalVisibilityFilter(comment)),
-                new CommentReactionDeletedAllNotification(comment.getPosting().getId(), comment.getId()));
+        send(
+            Directions.single(liberin.getNodeId(), comment.getOwnerName(), generalVisibilityFilter(comment)),
+            CommentReactionDeletedAllNotificationUtil.build(comment.getPosting().getId(), comment.getId())
+        );
         send(liberin, new CommentReactionsChangedEvent(comment, generalVisibilityFilter(comment)));
     }
 
     @LiberinMapping
     public void totalsUpdated(CommentReactionTotalsUpdatedLiberin liberin) {
-        send(liberin, new CommentReactionsChangedEvent(liberin.getComment(),
-                generalVisibilityFilter(liberin.getComment())));
+        send(
+            liberin,
+            new CommentReactionsChangedEvent(liberin.getComment(), generalVisibilityFilter(liberin.getComment()))
+        );
     }
 
     private PrincipalExpression generalVisibilityFilter(Comment comment) {
         return comment.getViewE().a()
-                .and(comment.getPosting().getViewE())
-                .and(comment.getPosting().getViewCommentsE());
+            .and(comment.getPosting().getViewE())
+            .and(comment.getPosting().getViewCommentsE());
     }
 
     private PrincipalFilter visibilityFilter(Comment comment, Reaction reaction) {
         return generalVisibilityFilter(comment)
-                .and(comment.getViewReactionsE())
-                .and(reaction.isNegative() ? comment.getViewNegativeReactionsE() : Principal.PUBLIC)
-                .and(reaction.getViewE());
+            .and(comment.getViewReactionsE())
+            .and(reaction.isNegative() ? comment.getViewNegativeReactionsE() : Principal.PUBLIC)
+            .and(reaction.getViewE());
     }
 
 }

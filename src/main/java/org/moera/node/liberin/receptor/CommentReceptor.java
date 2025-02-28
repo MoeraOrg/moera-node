@@ -35,13 +35,13 @@ import org.moera.node.model.event.CommentAddedEvent;
 import org.moera.node.model.event.CommentDeletedEvent;
 import org.moera.node.model.event.CommentUpdatedEvent;
 import org.moera.node.model.event.PostingCommentsChangedEvent;
-import org.moera.node.model.notification.MentionCommentAddedNotification;
-import org.moera.node.model.notification.MentionCommentDeletedNotification;
-import org.moera.node.model.notification.PostingCommentAddedNotification;
-import org.moera.node.model.notification.PostingCommentDeletedNotification;
-import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
-import org.moera.node.model.notification.ReplyCommentAddedNotification;
-import org.moera.node.model.notification.ReplyCommentDeletedNotification;
+import org.moera.node.model.notification.MentionCommentAddedNotificationUtil;
+import org.moera.node.model.notification.MentionCommentDeletedNotificationUtil;
+import org.moera.node.model.notification.PostingCommentAddedNotificationUtil;
+import org.moera.node.model.notification.PostingCommentDeletedNotificationUtil;
+import org.moera.node.model.notification.PostingCommentsUpdatedNotificationUtil;
+import org.moera.node.model.notification.ReplyCommentAddedNotificationUtil;
+import org.moera.node.model.notification.ReplyCommentDeletedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.UserListOperations;
@@ -76,13 +76,21 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewE(), null,
-                Principal.PUBLIC);
+        notifyMentioned(
+            posting,
+            comment,
+            comment.getCurrentRevision(),
+            comment.getViewE(),
+            null,
+            Principal.PUBLIC
+        );
 
         send(liberin, new CommentAddedEvent(comment, visibilityFilter(posting, comment)));
         send(liberin, new PostingCommentsChangedEvent(posting, generalVisibilityFilter(posting)));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
-                new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
+            PostingCommentsUpdatedNotificationUtil.build(posting.getId(), posting.getTotalChildren())
+        );
     }
 
     @LiberinMapping
@@ -92,8 +100,14 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         notifySubscribersCommentAdded(posting, comment);
         notifyReplyAdded(posting, comment);
-        notifyMentioned(posting, comment, comment.getCurrentRevision(), comment.getViewE(),
-                liberin.getLatestRevision(), liberin.getLatestViewE());
+        notifyMentioned(
+            posting,
+            comment,
+            comment.getCurrentRevision(),
+            comment.getViewE(),
+            liberin.getLatestRevision(),
+            liberin.getLatestViewE()
+        );
 
         send(liberin, new CommentUpdatedEvent(comment, visibilityFilter(posting, comment)));
     }
@@ -105,18 +119,24 @@ public class CommentReceptor extends LiberinReceptorBase {
 
         commentInstants.deleted(comment);
         notifyReplyDeleted(posting, comment);
-        notifyMentioned(posting, comment, null, Principal.PUBLIC, liberin.getLatestRevision(),
-                comment.getViewE());
+        notifyMentioned(
+            posting,
+            comment,
+            null,
+            Principal.PUBLIC,
+            liberin.getLatestRevision(),
+            comment.getViewE()
+        );
 
         send(
             Directions.postingSubscribers(comment.getNodeId(), posting.getId(), generalVisibilityFilter(posting)),
-            new PostingCommentsUpdatedNotification(posting.getId(), posting.getTotalChildren())
+            PostingCommentsUpdatedNotificationUtil.build(posting.getId(), posting.getTotalChildren())
         );
         send(
             Directions.postingCommentsSubscribers(
                 comment.getNodeId(), posting.getId(), visibilityFilter(posting, comment)
             ),
-            new PostingCommentDeletedNotification(
+            PostingCommentDeletedNotificationUtil.build(
                 posting.getId(),
                 comment.getId(),
                 comment.getOwnerName(),
@@ -152,7 +172,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                     Directions.postingCommentsSubscribers(
                         posting.getNodeId(), posting.getId(), visibilityFilter(posting, comment)
                     ),
-                    new PostingCommentAddedNotification(
+                    PostingCommentAddedNotificationUtil.build(
                         posting.getOwnerName(),
                         posting.getOwnerFullName(),
                         posting.getOwnerGender(),
@@ -177,8 +197,11 @@ public class CommentReceptor extends LiberinReceptorBase {
     }
 
     private void notifyReplyAdded(Entry posting, Comment comment) {
-        if (comment.getRepliedTo() == null || comment.getCurrentRevision().getSignature() == null
-                || comment.getTotalRevisions() > 1) {
+        if (
+            comment.getRepliedTo() == null
+            || comment.getCurrentRevision().getSignature() == null
+            || comment.getTotalRevisions() > 1
+        ) {
             return;
         }
         tx.executeWriteQuietly(() -> {
@@ -200,7 +223,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 Directions.single(
                     acomment.getNodeId(), acomment.getRepliedToName(), visibilityFilter(aposting, acomment)
                 ),
-                new ReplyCommentAddedNotification(
+                ReplyCommentAddedNotificationUtil.build(
                     aposting.getOwnerName(),
                     aposting.getOwnerFullName(),
                     aposting.getOwnerGender(),
@@ -229,7 +252,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         }
         send(
             Directions.single(comment.getNodeId(), comment.getRepliedToName(), visibilityFilter(posting, comment)),
-            new ReplyCommentDeletedNotification(
+            ReplyCommentDeletedNotificationUtil.build(
                 posting.getId(),
                 comment.getId(),
                 comment.getRepliedTo().getId(),
@@ -278,7 +301,7 @@ public class CommentReceptor extends LiberinReceptorBase {
                 .forEach(d ->
                     send(
                         d,
-                        new MentionCommentAddedNotification(
+                        MentionCommentAddedNotificationUtil.build(
                             posting.getOwnerName(),
                             posting.getOwnerFullName(),
                             posting.getOwnerGender(),
@@ -301,7 +324,7 @@ public class CommentReceptor extends LiberinReceptorBase {
         latestMentions.stream()
             .filter(m -> !currentMentions.contains(m))
             .map(m -> Directions.single(posting.getNodeId(), m))
-            .forEach(d -> send(d, new MentionCommentDeletedNotification(posting.getId(), comment.getId())));
+            .forEach(d -> send(d, MentionCommentDeletedNotificationUtil.build(posting.getId(), comment.getId())));
     }
 
     private Set<String> filterMentions(Set<String> mentions, String ownerName, Principal view) {

@@ -2,6 +2,7 @@ package org.moera.node.liberin.receptor;
 
 import java.util.Objects;
 
+import org.moera.lib.node.types.notifications.ProfileUpdatedNotification;
 import org.moera.node.liberin.LiberinMapping;
 import org.moera.node.liberin.LiberinReceptor;
 import org.moera.node.liberin.LiberinReceptorBase;
@@ -13,7 +14,6 @@ import org.moera.node.mail.EmailConfirmMail;
 import org.moera.node.model.event.NodeNameChangedEvent;
 import org.moera.node.model.event.ProfileUpdatedEvent;
 import org.moera.node.model.event.RegisteredNameOperationStatusEvent;
-import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.send.Directions;
 import org.springframework.util.ObjectUtils;
 

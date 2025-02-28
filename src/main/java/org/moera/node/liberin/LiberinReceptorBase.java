@@ -3,13 +3,13 @@ package org.moera.node.liberin;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.PushContent;
+import org.moera.lib.node.types.notifications.Notification;
 import org.moera.node.api.pushrelay.FcmRelay;
 import org.moera.node.event.EventManager;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.mail.Mail;
 import org.moera.node.mail.MailService;
 import org.moera.node.model.event.Event;
-import org.moera.node.model.notification.Notification;
 import org.moera.node.notification.send.Direction;
 import org.moera.node.notification.send.NotificationSenderPool;
 import org.moera.node.push.PushService;

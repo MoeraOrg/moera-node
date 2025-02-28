@@ -13,7 +13,7 @@ import org.moera.node.model.ContactInfoUtil;
 import org.moera.node.model.FriendGroupDetailsUtil;
 import org.moera.node.model.FriendInfoUtil;
 import org.moera.node.model.event.FriendshipUpdatedEvent;
-import org.moera.node.model.notification.FriendshipUpdatedNotification;
+import org.moera.node.model.notification.FriendshipUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 
 @LiberinReceptor
@@ -25,8 +25,10 @@ public class FriendshipReceptor extends LiberinReceptorBase {
         if (friendGroups != null) {
             friendGroups = friendGroups.stream().map(FriendGroupDetailsUtil::toNonAdmin).collect(Collectors.toList());
         }
-        send(Directions.single(liberin.getNodeId(), liberin.getFriendNodeName()),
-                new FriendshipUpdatedNotification(friendGroups));
+        send(
+            Directions.single(liberin.getNodeId(), liberin.getFriendNodeName()),
+            FriendshipUpdatedNotificationUtil.build(friendGroups)
+        );
         FriendInfo friend = FriendInfoUtil.build(
             liberin.getFriendNodeName(),
             ContactInfoUtil.build(liberin.getContact(), universalContext.getOptions()),

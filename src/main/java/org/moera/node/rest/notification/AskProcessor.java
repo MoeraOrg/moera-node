@@ -7,6 +7,8 @@ import java.util.UUID;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.Scope;
+import org.moera.lib.node.types.notifications.AskedNotification;
+import org.moera.lib.node.types.notifications.NotificationType;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.data.AskHistoryRepository;
@@ -15,8 +17,6 @@ import org.moera.node.data.FriendGroupRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.OperationFailure;
 import org.moera.node.model.ValidationFailure;
-import org.moera.node.model.notification.AskedNotification;
-import org.moera.node.model.notification.NotificationType;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.task.Jobs;

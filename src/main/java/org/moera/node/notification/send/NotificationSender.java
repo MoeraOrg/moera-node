@@ -16,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 import org.moera.lib.crypto.CryptoUtil;
 import org.moera.lib.node.types.NotificationPacket;
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.notifications.Notification;
+import org.moera.lib.node.types.notifications.SubscriberNotification;
 import org.moera.node.api.node.NodeApiAuthenticationException;
 import org.moera.node.api.node.NodeApiNotFoundException;
 import org.moera.node.api.node.NodeApiOperationException;
@@ -25,8 +27,6 @@ import org.moera.node.data.ConnectivityStatus;
 import org.moera.node.data.PendingNotificationRepository;
 import org.moera.node.fingerprint.NotificationPacketFingerprintBuilder;
 import org.moera.node.model.AvatarImageUtil;
-import org.moera.node.model.notification.Notification;
-import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.operations.RemoteConnectivityOperations;
 import org.moera.node.task.Task;
 import org.moera.node.util.Util;
@@ -198,10 +198,11 @@ public class NotificationSender extends Task {
     }
 
     private void deletePending(Notification notification) {
-        if (notification.getPendingNotificationId() == null) {
+        UUID pendingNotificationId = Util.uuid(notification.getPendingNotificationId()).orElse(null);
+        if (pendingNotificationId == null) {
             return;
         }
-        tx.executeWriteQuietly(() -> pendingNotificationRepository.deleteById(notification.getPendingNotificationId()));
+        tx.executeWriteQuietly(() -> pendingNotificationRepository.deleteById(pendingNotificationId));
     }
 
     private void succeeded(Result result) {

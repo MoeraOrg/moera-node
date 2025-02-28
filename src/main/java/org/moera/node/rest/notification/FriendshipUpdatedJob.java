@@ -1,6 +1,7 @@
 package org.moera.node.rest.notification;
 
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
@@ -28,12 +29,12 @@ public class FriendshipUpdatedJob extends Job<FriendshipUpdatedJob.Parameters, O
 
         private String senderNodeName;
         private AvatarImage senderAvatar;
-        private FriendGroupDetails[] friendGroups;
+        private List<FriendGroupDetails> friendGroups;
 
         public Parameters() {
         }
 
-        public Parameters(String senderNodeName, AvatarImage senderAvatar, FriendGroupDetails[] friendGroups) {
+        public Parameters(String senderNodeName, AvatarImage senderAvatar, List<FriendGroupDetails> friendGroups) {
             this.senderNodeName = senderNodeName;
             this.senderAvatar = senderAvatar;
             this.friendGroups = friendGroups;
@@ -55,11 +56,11 @@ public class FriendshipUpdatedJob extends Job<FriendshipUpdatedJob.Parameters, O
             this.senderAvatar = senderAvatar;
         }
 
-        public FriendGroupDetails[] getFriendGroups() {
+        public List<FriendGroupDetails> getFriendGroups() {
             return friendGroups;
         }
 
-        public void setFriendGroups(FriendGroupDetails[] friendGroups) {
+        public void setFriendGroups(List<FriendGroupDetails> friendGroups) {
             this.friendGroups = friendGroups;
         }
 
@@ -93,14 +94,19 @@ public class FriendshipUpdatedJob extends Job<FriendshipUpdatedJob.Parameters, O
     @Override
     protected void execute() throws Exception {
         tx.executeWriteWithExceptions(() ->
-                mediaManager.downloadAvatar(parameters.senderNodeName, parameters.senderAvatar));
+            mediaManager.downloadAvatar(parameters.senderNodeName, parameters.senderAvatar)
+        );
 
         tx.executeWrite(() -> {
             Map<String, FriendOf> previous = friendOfRepository.findByNodeIdAndRemoteNode(
-                            universalContext.nodeId(), parameters.senderNodeName).stream()
-                    .collect(Collectors.toMap(FriendOf::getRemoteGroupId, Function.identity()));
-            Map<String, FriendGroupDetails> current = Arrays.stream(parameters.friendGroups)
-                    .collect(Collectors.toMap(FriendGroupDetails::getId, Function.identity()));
+                universalContext.nodeId(), parameters.senderNodeName
+            )
+                .stream()
+                .collect(Collectors.toMap(FriendOf::getRemoteGroupId, Function.identity()));
+            Map<String, FriendGroupDetails> current = parameters.friendGroups != null
+                ? parameters.friendGroups.stream()
+                    .collect(Collectors.toMap(FriendGroupDetails::getId, Function.identity()))
+                : Collections.emptyMap();
 
             RemoteFriendshipUpdatedLiberin liberin = new RemoteFriendshipUpdatedLiberin();
             Contact contact = contactOperations.find(parameters.senderNodeName);

@@ -19,7 +19,7 @@ import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.event.SheriffComplaintAddedEvent;
 import org.moera.node.model.event.SheriffComplaintGroupAddedEvent;
 import org.moera.node.model.event.SheriffComplaintGroupUpdatedEvent;
-import org.moera.node.model.notification.SheriffComplaintDecidedNotification;
+import org.moera.node.model.notification.SheriffComplaintDecidedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 
 @LiberinReceptor
@@ -53,7 +53,7 @@ public class SheriffComplaintReceptor extends LiberinReceptorBase {
                     break;
                 default:
                     sheriffComplaintRepository.findByGroupId(universalContext.nodeId(), liberin.getGroup().getId())
-                            .forEach(complaint -> notifyDecided(complaint.getOwnerName(), liberin.getGroup()));
+                        .forEach(complaint -> notifyDecided(complaint.getOwnerName(), liberin.getGroup()));
             }
         }
     }
@@ -63,27 +63,50 @@ public class SheriffComplaintReceptor extends LiberinReceptorBase {
         SheriffComplaint complaint = liberin.getComplaint();
         SheriffComplaintGroup group = liberin.getGroup();
         send(liberin, new SheriffComplaintAddedEvent(complaint, group.getId()));
-        if (group.getStatus() != SheriffComplaintStatus.POSTED && group.getStatus() != SheriffComplaintStatus.PREPARED) {
+        if (
+            group.getStatus() != SheriffComplaintStatus.POSTED
+            && group.getStatus() != SheriffComplaintStatus.PREPARED
+        ) {
             notifyDecided(complaint.getOwnerName(), group);
         }
     }
 
     private void notifyDecided(String targetNodeName, SheriffComplaintGroup group) {
-        send(Directions.single(universalContext.nodeId(), targetNodeName),
-                new SheriffComplaintDecidedNotification(group.getRemoteNodeName(), group.getRemoteFeedName(),
-                        group.getRemotePostingOwnerName(), group.getRemotePostingOwnerFullName(),
-                        group.getRemotePostingHeading(), group.getRemotePostingId(), group.getRemoteCommentOwnerName(),
-                        group.getRemoteCommentOwnerFullName(), group.getRemotePostingHeading(),
-                        group.getRemoteCommentId(), group.getId().toString()));
+        send(
+            Directions.single(universalContext.nodeId(), targetNodeName),
+            SheriffComplaintDecidedNotificationUtil.build(
+                group.getRemoteNodeName(),
+                group.getRemoteFeedName(),
+                group.getRemotePostingOwnerName(),
+                group.getRemotePostingOwnerFullName(),
+                group.getRemotePostingHeading(),
+                group.getRemotePostingId(),
+                group.getRemoteCommentOwnerName(),
+                group.getRemoteCommentOwnerFullName(),
+                group.getRemotePostingHeading(),
+                group.getRemoteCommentId(),
+                group.getId().toString()
+            )
+        );
     }
 
     @LiberinMapping
     public void remoteDecided(RemoteSheriffComplaintDecidedLiberin liberin) {
-        sheriffInstants.complaintDecided(liberin.getRemoteNodeName(), liberin.getRemoteFeedName(),
-                liberin.getPostingOwnerName(), liberin.getPostingOwnerFullName(), liberin.getPostingHeading(),
-                liberin.getPostingId(), liberin.getCommentOwnerName(), liberin.getCommentOwnerFullName(),
-                liberin.getCommentHeading(), liberin.getCommentId(), liberin.getSheriffName(),
-                liberin.getSheriffAvatar(), liberin.getComplaintGroupId());
+        sheriffInstants.complaintDecided(
+            liberin.getRemoteNodeName(),
+            liberin.getRemoteFeedName(),
+            liberin.getPostingOwnerName(),
+            liberin.getPostingOwnerFullName(),
+            liberin.getPostingHeading(),
+            liberin.getPostingId(),
+            liberin.getCommentOwnerName(),
+            liberin.getCommentOwnerFullName(),
+            liberin.getCommentHeading(),
+            liberin.getCommentId(),
+            liberin.getSheriffName(),
+            liberin.getSheriffAvatar(),
+            liberin.getComplaintGroupId()
+        );
     }
 
 }

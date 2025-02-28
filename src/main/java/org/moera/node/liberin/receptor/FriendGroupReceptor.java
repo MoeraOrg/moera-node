@@ -16,8 +16,8 @@ import org.moera.node.model.FriendGroupInfoUtil;
 import org.moera.node.model.event.FriendGroupAddedEvent;
 import org.moera.node.model.event.FriendGroupDeletedEvent;
 import org.moera.node.model.event.FriendGroupUpdatedEvent;
-import org.moera.node.model.notification.FriendGroupDeletedNotification;
-import org.moera.node.model.notification.FriendGroupUpdatedNotification;
+import org.moera.node.model.notification.FriendGroupDeletedNotificationUtil;
+import org.moera.node.model.notification.FriendGroupUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 
 @LiberinReceptor
@@ -25,14 +25,20 @@ public class FriendGroupReceptor extends LiberinReceptorBase {
 
     @LiberinMapping
     public void added(FriendGroupAddedLiberin liberin) {
-        send(liberin, new FriendGroupAddedEvent(
-            FriendGroupInfoUtil.build(liberin.getFriendGroup(), true),
-            Principal.ADMIN
-        ));
-        send(liberin, new FriendGroupAddedEvent(
-            FriendGroupInfoUtil.build(liberin.getFriendGroup(), false),
-            visibilityFilter(liberin.getFriendGroup()).a().andNot(Principal.ADMIN)
-        ));
+        send(
+            liberin,
+            new FriendGroupAddedEvent(
+                FriendGroupInfoUtil.build(liberin.getFriendGroup(), true),
+                Principal.ADMIN
+            )
+        );
+        send(
+            liberin,
+            new FriendGroupAddedEvent(
+                FriendGroupInfoUtil.build(liberin.getFriendGroup(), false),
+                visibilityFilter(liberin.getFriendGroup()).a().andNot(Principal.ADMIN)
+            )
+        );
     }
 
     @LiberinMapping
@@ -47,8 +53,10 @@ public class FriendGroupReceptor extends LiberinReceptorBase {
         send(liberin, new FriendGroupAddedEvent(friendGroupInfo, filter.a().andNot(latestFilter)));
 
         PrincipalExpression updateFilter = filter.a().and(latestFilter).andNot(Principal.ADMIN);
-        send(Directions.friends(liberin.getNodeId(), liberin.getFriendGroup().getId(), updateFilter),
-                new FriendGroupUpdatedNotification(friendGroupInfo));
+        send(
+            Directions.friends(liberin.getNodeId(), liberin.getFriendGroup().getId(), updateFilter),
+            FriendGroupUpdatedNotificationUtil.build(friendGroupInfo)
+        );
         send(liberin, new FriendGroupUpdatedEvent(friendGroupInfo, updateFilter));
 
         send(liberin, new FriendGroupDeletedEvent(friendGroupInfo.getId(), filter.not().and(latestFilter)));
@@ -59,10 +67,16 @@ public class FriendGroupReceptor extends LiberinReceptorBase {
         if (liberin.getFriendName() == null) {
             send(liberin, new FriendGroupDeletedEvent(liberin.getFriendGroupId().toString(), Principal.ADMIN));
         } else if (!liberin.getLatestViewPrincipal().isAdmin()) {
-            send(Directions.single(liberin.getNodeId(), liberin.getFriendName()),
-                    new FriendGroupDeletedNotification(liberin.getFriendGroupId()));
-            send(liberin, new FriendGroupDeletedEvent(liberin.getFriendGroupId().toString(),
-                    Principal.ofNode(liberin.getFriendName())));
+            send(
+                Directions.single(liberin.getNodeId(), liberin.getFriendName()),
+                FriendGroupDeletedNotificationUtil.build(liberin.getFriendGroupId())
+            );
+            send(
+                liberin,
+                new FriendGroupDeletedEvent(
+                    liberin.getFriendGroupId().toString(), Principal.ofNode(liberin.getFriendName())
+                )
+            );
         }
     }
 

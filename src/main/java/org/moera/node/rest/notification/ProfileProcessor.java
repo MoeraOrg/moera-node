@@ -3,12 +3,12 @@ package org.moera.node.rest.notification;
 import jakarta.inject.Inject;
 
 import org.moera.lib.node.types.SubscriptionType;
+import org.moera.lib.node.types.notifications.NotificationType;
+import org.moera.lib.node.types.notifications.ProfileUpdatedNotification;
 import org.moera.node.data.Subscription;
 import org.moera.node.data.SubscriptionRepository;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.UnsubscribeFailure;
-import org.moera.node.model.notification.NotificationType;
-import org.moera.node.model.notification.ProfileUpdatedNotification;
 import org.moera.node.notification.receive.NotificationMapping;
 import org.moera.node.notification.receive.NotificationProcessor;
 import org.moera.node.task.Jobs;
@@ -31,7 +31,8 @@ public class ProfileProcessor {
 
     private void validateSubscription(ProfileUpdatedNotification notification) {
         Subscription subscription = subscriptionRepository.findBySubscriber(
-                universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()).orElse(null);
+            universalContext.nodeId(), notification.getSenderNodeName(), notification.getSubscriberId()
+        ).orElse(null);
         if (subscription == null || subscription.getSubscriptionType() != SubscriptionType.PROFILE) {
             throw new UnsubscribeFailure();
         }
@@ -41,9 +42,10 @@ public class ProfileProcessor {
     public void profileUpdated(ProfileUpdatedNotification notification) {
         tx.executeRead(() -> validateSubscription(notification));
         jobs.run(
-                ProfileUpdateJob.class,
-                new ProfileUpdateJob.Parameters(notification.getSenderNodeName()),
-                universalContext.nodeId());
+            ProfileUpdateJob.class,
+            new ProfileUpdateJob.Parameters(notification.getSenderNodeName()),
+            universalContext.nodeId()
+        );
     }
 
 }

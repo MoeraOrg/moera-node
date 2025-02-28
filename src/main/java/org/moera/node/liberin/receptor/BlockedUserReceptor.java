@@ -10,8 +10,8 @@ import org.moera.node.liberin.model.BlockedUserDeletedLiberin;
 import org.moera.node.model.BlockedUserInfoUtil;
 import org.moera.node.model.event.BlockedUserAddedEvent;
 import org.moera.node.model.event.BlockedUserDeletedEvent;
-import org.moera.node.model.notification.BlockingAddedNotification;
-import org.moera.node.model.notification.BlockingDeletedNotification;
+import org.moera.node.model.notification.BlockingAddedNotificationUtil;
+import org.moera.node.model.notification.BlockingDeletedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.util.Util;
 
@@ -38,7 +38,7 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
             }
             send(
                 Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
-                new BlockingAddedNotification(
+                BlockingAddedNotificationUtil.build(
                     blockedUser.getBlockedOperation(),
                     postingId,
                     postingHeading,
@@ -69,7 +69,7 @@ public class BlockedUserReceptor extends LiberinReceptorBase {
             }
             send(
                 Directions.single(liberin.getNodeId(), blockedUser.getRemoteNodeName()),
-                new BlockingDeletedNotification(blockedUser.getBlockedOperation(), postingId, postingHeading)
+                BlockingDeletedNotificationUtil.build(blockedUser.getBlockedOperation(), postingId, postingHeading)
             );
         }
     }

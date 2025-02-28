@@ -22,7 +22,7 @@ import org.moera.node.model.event.SubscriberAddedEvent;
 import org.moera.node.model.event.SubscriberDeletedEvent;
 import org.moera.node.model.event.SubscriberUpdatedEvent;
 import org.moera.node.model.event.SubscribersTotalChangedEvent;
-import org.moera.node.model.notification.PostingUpdatedNotification;
+import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.option.Options;
 import org.moera.node.util.Util;
@@ -40,28 +40,36 @@ public class SubscriberReceptor extends LiberinReceptorBase {
     public void added(SubscriberAddedLiberin liberin) {
         Subscriber subscriber = liberin.getSubscriber();
 
-        if (subscriber.getSubscriptionType() == SubscriptionType.POSTING && subscriber.getEntry() != null
-                && !Util.toEpochSecond(subscriber.getEntry().getEditedAt())
-                        .equals(liberin.getSubscriberLastUpdatedAt())) {
-            PostingUpdatedNotification notification = new PostingUpdatedNotification(subscriber.getEntry().getId());
+        if (
+            subscriber.getSubscriptionType() == SubscriptionType.POSTING
+            && subscriber.getEntry() != null
+            && !Util.toEpochSecond(subscriber.getEntry().getEditedAt()).equals(liberin.getSubscriberLastUpdatedAt())
+        ) {
+            var notification = PostingUpdatedNotificationUtil.build(subscriber.getEntry().getId());
             notification.setSubscriberId(subscriber.getId().toString());
             notification.setSubscriptionCreatedAt(Util.now());
             send(Directions.single(liberin.getNodeId(), subscriber.getRemoteNodeName()), notification);
         }
 
         if (subscriber.getSubscriptionType() == SubscriptionType.FEED) {
-            send(liberin, new SubscriberAddedEvent(
-                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
-                visibilityFilter(universalContext.getOptions(), subscriber)
+            send(
+                liberin,
+                new SubscriberAddedEvent(
+                    SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                    visibilityFilter(universalContext.getOptions(), subscriber
+                )
             ));
-            send(liberin, new SubscriberAddedEvent(
-                SubscriberInfoUtil.build(
-                    subscriber,
-                    universalContext.getOptions(),
-                    AccessCheckers.node(subscriber.getRemoteNodeName())
-                ),
-                Principal.ofNode(subscriber.getRemoteNodeName())
-            ));
+            send(
+                liberin,
+                new SubscriberAddedEvent(
+                    SubscriberInfoUtil.build(
+                        subscriber,
+                        universalContext.getOptions(),
+                        AccessCheckers.node(subscriber.getRemoteNodeName())
+                    ),
+                    Principal.ofNode(subscriber.getRemoteNodeName())
+                )
+            );
             sendPeopleChangedEvent(liberin);
         }
 
@@ -77,18 +85,26 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         }
 
         PrincipalExpression addedFilter = generalVisibilityFilter(universalContext.getOptions(), subscriber)
-                .and(subscriber.getViewE())
-                .andNot(liberin.getLatestViewPrincipal());
-        send(liberin, new SubscriberAddedEvent(
-            SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), addedFilter
-        ));
+            .and(subscriber.getViewE())
+            .andNot(liberin.getLatestViewPrincipal());
+        send(
+            liberin,
+            new SubscriberAddedEvent(
+                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                addedFilter
+            )
+        );
 
         PrincipalExpression updatedFilter = generalVisibilityFilter(universalContext.getOptions(), subscriber)
-                .and(subscriber.getViewE())
-                .and(liberin.getLatestViewPrincipal());
-        send(liberin, new SubscriberUpdatedEvent(
-            SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), updatedFilter
-        ));
+            .and(subscriber.getViewE())
+            .and(liberin.getLatestViewPrincipal());
+        send(
+            liberin,
+            new SubscriberUpdatedEvent(
+                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                updatedFilter
+            )
+        );
         send(liberin, new SubscriberUpdatedEvent(
             SubscriberInfoUtil.build(
                 subscriber,
@@ -99,11 +115,15 @@ public class SubscriberReceptor extends LiberinReceptorBase {
         ));
 
         PrincipalExpression deletedFilter = generalVisibilityFilter(universalContext.getOptions(), subscriber)
-                .andNot(subscriber.getViewE())
-                .and(liberin.getLatestViewPrincipal());
-        send(liberin, new SubscriberDeletedEvent(
-            SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC), deletedFilter
-        ));
+            .andNot(subscriber.getViewE())
+            .and(liberin.getLatestViewPrincipal());
+        send(
+            liberin,
+            new SubscriberDeletedEvent(
+                SubscriberInfoUtil.build(subscriber, universalContext.getOptions(), AccessCheckers.PUBLIC),
+                deletedFilter
+            )
+        );
     }
 
     @LiberinMapping
@@ -131,14 +151,16 @@ public class SubscriberReceptor extends LiberinReceptorBase {
 
     private void sendPeopleChangedEvent(Liberin liberin) {
         int subscribersTotal = subscriberRepository.countAllByType(liberin.getNodeId(), SubscriptionType.FEED);
-        send(liberin, new SubscribersTotalChangedEvent(subscribersTotal,
-                totalVisibilityFilter(universalContext.getOptions())));
+        send(
+            liberin,
+            new SubscribersTotalChangedEvent(subscribersTotal, totalVisibilityFilter(universalContext.getOptions()))
+        );
     }
 
     private PrincipalExpression generalVisibilityFilter(Options options, Subscriber subscriber) {
         return subscriber.getSubscriptionType() == SubscriptionType.FEED
-                ? Subscriber.getViewAllE(options).a().andNot(Principal.ofNode(subscriber.getRemoteNodeName()))
-                : Principal.ADMIN.a();
+            ? Subscriber.getViewAllE(options).a().andNot(Principal.ofNode(subscriber.getRemoteNodeName()))
+            : Principal.ADMIN.a();
     }
 
     private PrincipalExpression visibilityFilter(Options options, Subscriber subscriber) {
@@ -147,7 +169,7 @@ public class SubscriberReceptor extends LiberinReceptorBase {
 
     private PrincipalFilter totalVisibilityFilter(Options options) {
         return Subscriber.getViewAllE(options).a()
-                .or(Subscriber.getViewTotalE(options));
+            .or(Subscriber.getViewTotalE(options));
     }
 
 }

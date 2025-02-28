@@ -18,6 +18,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SubscriptionType;
+import org.moera.lib.node.types.notifications.Notification;
+import org.moera.lib.node.types.notifications.SubscriberNotification;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.config.Config;
 import org.moera.node.data.ConnectivityStatus;
@@ -35,8 +37,6 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.liberin.LiberinManager;
 import org.moera.node.liberin.model.SubscriberDeletedLiberin;
-import org.moera.node.model.notification.Notification;
-import org.moera.node.model.notification.SubscriberNotification;
 import org.moera.node.operations.ContactOperations;
 import org.moera.node.operations.GrantCache;
 import org.moera.node.operations.RemoteConnectivityOperations;
@@ -126,17 +126,18 @@ public class NotificationSenderPool {
         SingleDirection direction = new SingleDirection(pending.getNodeId(), pending.getNodeName());
         Notification notification;
         try {
-            notification = objectMapper.readValue(pending.getNotification(),
-                    pending.getNotificationType().getStructure());
+            notification = objectMapper.readValue(
+                pending.getNotification(), pending.getNotificationType().getStructure()
+            );
         } catch (IOException e) {
             log.error("Error deserializing pending notification {}: {}", pending.getId(), e.getMessage());
             return;
         }
         notification.setType(pending.getNotificationType());
-        notification.setPendingNotificationId(pending.getId());
+        notification.setPendingNotificationId(pending.getId().toString());
         notification.setCreatedAt(pending.getCreatedAt());
-        if (notification instanceof SubscriberNotification) {
-            ((SubscriberNotification) notification).setSubscriptionCreatedAt(pending.getSubscriptionCreatedAt());
+        if (notification instanceof SubscriberNotification subscriberNotification) {
+            subscriberNotification.setSubscriptionCreatedAt(pending.getSubscriptionCreatedAt());
         }
         send(direction, notification);
     }
@@ -287,7 +288,7 @@ public class NotificationSenderPool {
         }
         tx.executeWriteQuietly(() -> {
             pendingNotificationRepository.save(pending);
-            notification.setPendingNotificationId(pending.getId());
+            notification.setPendingNotificationId(pending.getId().toString());
         });
     }
 

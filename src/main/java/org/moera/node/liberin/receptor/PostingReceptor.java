@@ -36,13 +36,13 @@ import org.moera.node.model.event.PostingCommentsChangedEvent;
 import org.moera.node.model.event.PostingDeletedEvent;
 import org.moera.node.model.event.PostingRestoredEvent;
 import org.moera.node.model.event.PostingUpdatedEvent;
-import org.moera.node.model.notification.MentionPostingAddedNotification;
-import org.moera.node.model.notification.MentionPostingDeletedNotification;
-import org.moera.node.model.notification.PostingCommentsUpdatedNotification;
-import org.moera.node.model.notification.PostingDeletedNotification;
-import org.moera.node.model.notification.PostingImportantUpdateNotification;
-import org.moera.node.model.notification.PostingUpdatedNotification;
-import org.moera.node.model.notification.StoryAddedNotification;
+import org.moera.node.model.notification.MentionPostingAddedNotificationUtil;
+import org.moera.node.model.notification.MentionPostingDeletedNotificationUtil;
+import org.moera.node.model.notification.PostingCommentsUpdatedNotificationUtil;
+import org.moera.node.model.notification.PostingDeletedNotificationUtil;
+import org.moera.node.model.notification.PostingImportantUpdateNotificationUtil;
+import org.moera.node.model.notification.PostingUpdatedNotificationUtil;
+import org.moera.node.model.notification.StoryAddedNotificationUtil;
 import org.moera.node.notification.send.Directions;
 import org.moera.node.operations.MediaAttachmentsProvider;
 import org.moera.node.operations.UserListOperations;
@@ -69,8 +69,14 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(posting, posting.getCurrentRevision(), posting.getViewE(),
-                    null, Principal.PUBLIC, posting.getOwnerName());
+            notifyMentioned(
+                posting,
+                posting.getCurrentRevision(),
+                posting.getViewE(),
+                null,
+                Principal.PUBLIC,
+                posting.getOwnerName()
+            );
         }
         send(liberin, new PostingAddedEvent(posting, posting.getViewE()));
     }
@@ -80,41 +86,60 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(posting, posting.getCurrentRevision(), posting.getViewE(),
-                    liberin.getLatestRevision(), liberin.getLatestViewPrincipal(), posting.getOwnerName());
+            notifyMentioned(
+                posting,
+                posting.getCurrentRevision(),
+                posting.getViewE(),
+                liberin.getLatestRevision(),
+                liberin.getLatestViewPrincipal(),
+                posting.getOwnerName()
+            );
         }
 
         PrincipalExpression addedFilter = posting.getViewE().a()
-                .andNot(liberin.getLatestViewPrincipal());
+            .andNot(liberin.getLatestViewPrincipal());
         send(liberin, new PostingAddedEvent(posting, addedFilter));
         if (isNotifyWhenRevealed(posting)) {
             List<Story> stories = storyRepository.findByEntryId(posting.getNodeId(), posting.getId());
             stories.forEach(story ->
-                    send(Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
-                            new StoryAddedNotification(story)));
+                send(
+                    Directions.feedSubscribers(posting.getNodeId(), story.getFeedName(), addedFilter),
+                    StoryAddedNotificationUtil.build(story)
+                )
+            );
         }
 
         PrincipalExpression updatedFilter = posting.getViewE().a()
-                .and(liberin.getLatestViewPrincipal());
+            .and(liberin.getLatestViewPrincipal());
         send(liberin, new PostingUpdatedEvent(posting, updatedFilter));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
-                new PostingUpdatedNotification(posting.getId()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
+            PostingUpdatedNotificationUtil.build(posting.getId())
+        );
         if (posting.getCurrentRevision().isUpdateImportant()) {
             AvatarImage ownerAvatar = AvatarImageUtil.build(
                 posting.getOwnerAvatarMediaFile(), posting.getOwnerAvatarShape()
             );
-            send(Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
-                    new PostingImportantUpdateNotification(posting.getOwnerName(), posting.getOwnerFullName(),
-                            posting.getOwnerGender(), ownerAvatar, posting.getId(),
-                            posting.getCurrentRevision().getHeading(),
-                            posting.getCurrentRevision().getUpdateDescription()));
+            send(
+                Directions.postingCommentsSubscribers(posting.getNodeId(), posting.getId(), updatedFilter),
+                PostingImportantUpdateNotificationUtil.build(
+                    posting.getOwnerName(),
+                    posting.getOwnerFullName(),
+                    posting.getOwnerGender(),
+                    ownerAvatar, posting.getId(),
+                    posting.getCurrentRevision().getHeading(),
+                    posting.getCurrentRevision().getUpdateDescription()
+                )
+            );
         }
 
         PrincipalExpression deletedFilter = posting.getViewE().not()
-                .and(liberin.getLatestViewPrincipal());
+            .and(liberin.getLatestViewPrincipal());
         send(liberin, new PostingDeletedEvent(posting, deletedFilter));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), deletedFilter),
-                new PostingDeletedNotification(posting.getId()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), deletedFilter),
+            PostingDeletedNotificationUtil.build(posting.getId())
+        );
     }
 
     private boolean isNotifyWhenRevealed(Posting posting) {
@@ -133,12 +158,20 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(posting, null, Principal.PUBLIC, liberin.getLatestRevision(),
-                    posting.getViewE(), posting.getOwnerName());
+            notifyMentioned(
+                posting,
+                null,
+                Principal.PUBLIC,
+                liberin.getLatestRevision(),
+                posting.getViewE(),
+                posting.getOwnerName()
+            );
         }
         send(liberin, new PostingDeletedEvent(posting, posting.getViewE()));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
-                new PostingDeletedNotification(posting.getId()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
+            PostingDeletedNotificationUtil.build(posting.getId())
+        );
     }
 
     @LiberinMapping
@@ -146,22 +179,36 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         if (posting.isOriginal()) {
-            notifyMentioned(posting, posting.getCurrentRevision(), posting.getViewE(),
-                    null, Principal.PUBLIC, posting.getOwnerName());
+            notifyMentioned(
+                posting,
+                posting.getCurrentRevision(),
+                posting.getViewE(),
+                null,
+                Principal.PUBLIC,
+                posting.getOwnerName()
+            );
         }
         send(liberin, new PostingRestoredEvent(posting, posting.getViewE()));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
-                new PostingUpdatedNotification(posting.getId()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), posting.getViewE()),
+            PostingUpdatedNotificationUtil.build(posting.getId())
+        );
     }
 
-    private void notifyMentioned(Posting posting, EntryRevision current, Principal currentView, EntryRevision latest,
-                                 Principal latestView, String ownerName) {
+    private void notifyMentioned(
+        Posting posting,
+        EntryRevision current,
+        Principal currentView,
+        EntryRevision latest,
+        Principal latestView,
+        String ownerName
+    ) {
         Set<String> currentMentions = current != null
-                ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
-                : Collections.emptySet();
+            ? filterMentions(MentionsExtractor.extract(new Body(current.getBody())), ownerName, currentView)
+            : Collections.emptySet();
         Set<String> latestMentions = latest != null && latest.getSignature() != null
-                ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
-                : Collections.emptySet();
+            ? filterMentions(MentionsExtractor.extract(new Body(latest.getBody())), ownerName, latestView)
+            : Collections.emptySet();
         if (!currentMentions.isEmpty()) {
             PostingInfo postingInfo = PostingInfoUtil.build(
                 posting,
@@ -172,25 +219,35 @@ public class PostingReceptor extends LiberinReceptorBase {
             );
             userListOperations.fillSheriffListMarks(postingInfo);
             currentMentions.stream()
-                    .filter(m -> !latestMentions.contains(m))
-                    .map(m -> Directions.single(posting.getNodeId(), m))
-                    .forEach(d -> send(d, new MentionPostingAddedNotification(posting.getId(), posting.getOwnerName(),
-                            posting.getOwnerFullName(), posting.getOwnerGender(), postingInfo.getOwnerAvatar(),
-                            postingInfo.getHeading(), postingInfo.getSheriffs(), postingInfo.getSheriffMarks())));
+                .filter(m -> !latestMentions.contains(m))
+                .map(m -> Directions.single(posting.getNodeId(), m))
+                .forEach(d ->
+                    send(d, MentionPostingAddedNotificationUtil.build(
+                        posting.getId(),
+                        posting.getOwnerName(),
+                        posting.getOwnerFullName(),
+                        posting.getOwnerGender(),
+                        postingInfo.getOwnerAvatar(),
+                        postingInfo.getHeading(),
+                        postingInfo.getSheriffs(),
+                        postingInfo.getSheriffMarks()
+                    ))
+                );
         }
         latestMentions.stream()
-                .filter(m -> !currentMentions.contains(m))
-                .map(m -> Directions.single(posting.getNodeId(), m))
-                .forEach(d -> send(d, new MentionPostingDeletedNotification(posting.getId())));
+            .filter(m -> !currentMentions.contains(m))
+            .map(m -> Directions.single(posting.getNodeId(), m))
+            .forEach(d -> send(d, MentionPostingDeletedNotificationUtil.build(posting.getId())));
     }
 
     private Set<String> filterMentions(Set<String> mentions, String ownerName, Principal view) {
         return mentions.stream()
-                .filter(m -> !Objects.equals(ownerName, m))
-                .filter(m -> !m.equals(":"))
-                .filter(m -> view.includes(false, m, () -> subscribedCache.isSubscribed(m),
-                        () -> friendCache.getClientGroupIds(m)))
-                .collect(Collectors.toSet());
+            .filter(m -> !Objects.equals(ownerName, m))
+            .filter(m -> !m.equals(":"))
+            .filter(m ->
+                view.includes(false, m, () -> subscribedCache.isSubscribed(m), () -> friendCache.getClientGroupIds(m))
+            )
+            .collect(Collectors.toSet());
     }
 
     @LiberinMapping
@@ -198,13 +255,15 @@ public class PostingReceptor extends LiberinReceptorBase {
         Posting posting = liberin.getPosting();
 
         Principal viewComments = posting.isOriginal()
-                ? posting.getViewCommentsE()
-                : posting.getReceiverViewCommentsE();
+            ? posting.getViewCommentsE()
+            : posting.getReceiverViewCommentsE();
         PrincipalFilter viewFilter = posting.getViewE().a()
-                .and(viewComments);
+            .and(viewComments);
         send(liberin, new PostingCommentsChangedEvent(posting, viewFilter));
-        send(Directions.postingSubscribers(posting.getNodeId(), posting.getId(), viewFilter),
-                new PostingCommentsUpdatedNotification(posting.getId(), liberin.getTotal()));
+        send(
+            Directions.postingSubscribers(posting.getNodeId(), posting.getId(), viewFilter),
+            PostingCommentsUpdatedNotificationUtil.build(posting.getId(), liberin.getTotal())
+        );
     }
 
 }

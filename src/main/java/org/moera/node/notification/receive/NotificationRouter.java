@@ -6,7 +6,7 @@ import java.util.Map;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
-import org.moera.node.model.notification.NotificationType;
+import org.moera.lib.node.types.notifications.NotificationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;

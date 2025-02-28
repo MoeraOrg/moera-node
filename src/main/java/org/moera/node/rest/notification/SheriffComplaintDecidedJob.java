@@ -4,9 +4,9 @@ import jakarta.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.moera.lib.node.types.notifications.SheriffComplaintDecidedNotification;
 import org.moera.node.liberin.model.RemoteSheriffComplaintDecidedLiberin;
 import org.moera.node.media.MediaManager;
-import org.moera.node.model.notification.SheriffComplaintDecidedNotification;
 import org.moera.node.task.Job;
 
 public class SheriffComplaintDecidedJob extends Job<SheriffComplaintDecidedJob.Parameters, Object> {
@@ -51,9 +51,11 @@ public class SheriffComplaintDecidedJob extends Job<SheriffComplaintDecidedJob.P
     @Override
     protected void execute() throws Exception {
         tx.executeWriteWithExceptions(() ->
-                mediaManager.downloadAvatar(
-                        parameters.notification.getSenderNodeName(),
-                        parameters.notification.getSenderAvatar()));
+            mediaManager.downloadAvatar(
+                parameters.notification.getSenderNodeName(),
+                parameters.notification.getSenderAvatar()
+            )
+        );
         universalContext.send(new RemoteSheriffComplaintDecidedLiberin(parameters.notification));
     }
 

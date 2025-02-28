@@ -4,8 +4,8 @@ import java.util.Map;
 import jakarta.persistence.EntityManager;
 
 import org.moera.lib.node.types.AvatarImage;
+import org.moera.lib.node.types.notifications.SheriffComplaintDecidedNotification;
 import org.moera.node.liberin.Liberin;
-import org.moera.node.model.notification.SheriffComplaintDecidedNotification;
 
 public class RemoteSheriffComplaintDecidedLiberin extends Liberin {
 
