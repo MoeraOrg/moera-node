@@ -37,8 +37,6 @@ import org.moera.node.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -75,13 +73,10 @@ public class NotificationController {
     private ObjectMapper objectMapper;
 
     @Inject
-    private Validator validator;
-
-    @Inject
     private Transaction tx;
 
     @PostMapping
-    public Result post(@RequestBody NotificationPacket packet, Errors errors) throws Throwable {
+    public Result post(@RequestBody NotificationPacket packet) throws Throwable {
         log.info(
             "POST /notifications (nodeName = {}, id = {}, type = {})",
             LogUtil.format(packet.getNodeName()), LogUtil.format(packet.getId()), LogUtil.format(packet.getType())
@@ -110,7 +105,7 @@ public class NotificationController {
             throw new ValidationFailure("notification.notification.invalid");
         }
 
-        validate(notification, errors);
+        notification.validate();
 
         if (requestContext.getOptions().isFrozen()) {
             freeze(packet);
@@ -128,18 +123,6 @@ public class NotificationController {
         }
 
         return Result.OK;
-    }
-
-    private void validate(Notification notification, Errors errors) {
-        validator.validate(notification, errors);
-        if (errors.hasErrors()) {
-            String[] codes = errors.getAllErrors().get(0).getCodes();
-            if (codes != null && codes.length > 0) {
-                throw new ValidationFailure(codes[0]);
-            } else {
-                throw new ValidationFailure("notification.notification.invalid");
-            }
-        }
     }
 
     private boolean verifySignature(NotificationPacket packet) {
