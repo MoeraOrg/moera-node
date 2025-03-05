@@ -52,16 +52,18 @@ public class IndexUiController {
     public String robots() {
         if (requestContext.getOptions().getBool("webui.allow-indexing")) {
             return String.format(
-                    "User-agent: *\n"
-                    + "Disallow: /registrar\n"
-                    + "Disallow: /moera/gotoname\n"
-                    + "Disallow: /moera/news\n"
-                    + "\n"
-                    + "Sitemap: %s/sitemaps\n",
-                    requestContext.getSiteUrl());
+                "User-agent: *\n"
+                + "Disallow: /registrar\n"
+                + "Disallow: /moera/gotoname\n"
+                + "Disallow: /moera/news\n"
+                + "\n"
+                + "Sitemap: %s/sitemaps\n",
+                requestContext.getSiteUrl()
+            );
         } else {
-            return "User-agent: *\n"
-                    + "Disallow: /\n";
+            return
+                "User-agent: *\n"
+                + "Disallow: /\n";
         }
     }
 

@@ -112,7 +112,8 @@ public class MediaManager {
                 return mediaFile;
             } catch (IOException e) {
                 throw new NodeApiLocalStorageException(
-                        String.format("Error storing public media %s: %s", id, e.getMessage()));
+                    "Error storing public media %s: %s".formatted(id, e.getMessage())
+                );
             } finally {
                 try {
                     Files.deleteIfExists(tmp.getPath());
@@ -251,7 +252,8 @@ public class MediaManager {
                 return mediaFileOwner;
             } catch (IOException e) {
                 throw new NodeApiLocalStorageException(
-                        String.format("Error storing private media %s: %s", id, e.getMessage()));
+                    "Error storing private media %s: %s".formatted(id, e.getMessage())
+                );
             }
         } finally {
             mediaFileLocks.unlock(mediaFileId);

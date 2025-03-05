@@ -13,8 +13,8 @@ public class UriUtil {
 
     public static UriComponentsBuilder createBuilderFromRequest(HttpServletRequest request) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromHttpUrl(request.getRequestURL().toString())
-                .query(request.getQueryString());
+            .fromHttpUrl(request.getRequestURL().toString())
+            .query(request.getQueryString());
         String forwardedHost = request.getHeader("X-Forwarded-Host");
         if (!ObjectUtils.isEmpty(forwardedHost)) {
             builder.host(forwardedHost);
@@ -27,8 +27,11 @@ public class UriUtil {
         }
         UriComponents components = builder.build();
         if (components.getScheme() != null
-                && (components.getScheme().equalsIgnoreCase("https") && components.getPort() == 443
-                    || components.getScheme().equalsIgnoreCase("http") && components.getPort() == 80)) {
+            && (
+                components.getScheme().equalsIgnoreCase("https") && components.getPort() == 443
+                || components.getScheme().equalsIgnoreCase("http") && components.getPort() == 80
+            )
+        ) {
             builder.port(null);
         }
         return builder;
@@ -36,8 +39,8 @@ public class UriUtil {
 
     public static UriComponentsBuilder createLocalBuilderFromRequest(HttpServletRequest request) {
         return UriComponentsBuilder
-                .fromPath(request.getRequestURI())
-                .query(request.getQueryString());
+            .fromPath(request.getRequestURI())
+            .query(request.getQueryString());
     }
 
     public static String normalize(String uri) {
@@ -49,27 +52,28 @@ public class UriUtil {
 
     public static InetAddress remoteAddress(HttpServletRequest request) throws UnknownHostException {
         String forwardedAddress = request.getHeader("X-Forwarded-For");
-        return InetAddress.getByName(!ObjectUtils.isEmpty(forwardedAddress)
+        return InetAddress.getByName(
+            !ObjectUtils.isEmpty(forwardedAddress)
                 ? forwardedAddress
-                : request.getRemoteAddr());
+                : request.getRemoteAddr()
+        );
     }
 
     public static InetAddress remoteAddress(ServerHttpRequest request) throws UnknownHostException {
         String forwardedAddress = request.getHeaders().getFirst("X-Forwarded-For");
-        return InetAddress.getByName(!ObjectUtils.isEmpty(forwardedAddress)
+        return InetAddress.getByName(
+            !ObjectUtils.isEmpty(forwardedAddress)
                 ? forwardedAddress
-                : request.getRemoteAddress().getAddress().getHostAddress());
+                : request.getRemoteAddress().getAddress().getHostAddress()
+        );
     }
 
     public static String siteUrl(String host, int port) {
-        switch (port) {
-            case 80:
-                return String.format("http://%s", host);
-            case 443:
-                return String.format("https://%s", host);
-            default:
-                return port > 0 ? String.format("http://%s:%d", host, port) : String.format("https://%s", host);
-        }
+        return switch (port) {
+            case 80 -> "http://%s".formatted(host);
+            case 443 -> "https://%s".formatted(host);
+            default -> port > 0 ? "http://%s:%d".formatted(host, port) : "https://%s".formatted(host);
+        };
     }
 
 }

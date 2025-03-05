@@ -246,7 +246,7 @@ public class CommentController {
             );
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
-            throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
+            throw new ValidationFailure("commentText.%s.wrong-encoding".formatted(field));
         }
 
         if (comment.getCurrentRevision().getSignature() != null) {
@@ -339,7 +339,7 @@ public class CommentController {
                 );
             } catch (BodyMappingException e) {
                 String field = e.getField() != null ? e.getField() : "bodySrc";
-                throw new ValidationFailure(String.format("commentText.%s.wrong-encoding", field));
+                throw new ValidationFailure("commentText.%s.wrong-encoding".formatted(field));
             }
         } else {
             // senior, but not owner

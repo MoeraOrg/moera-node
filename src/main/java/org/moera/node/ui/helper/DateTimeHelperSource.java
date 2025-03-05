@@ -28,10 +28,11 @@ public class DateTimeHelperSource {
         Util.copyToCalendar(timestamp, calendar);
         String exactDate = new SimpleDateFormat(pattern, Locale.ENGLISH).format(calendar);
         if (isDisplayDateFromNow(options)) {
-            return new SafeString(String.format("<time datetime=\"%s\" title=\"%s\">%s</time>",
-                    isoDate, exactDate, Util.fromNow(timestamp)));
+            return new SafeString(
+                "<time datetime=\"%s\" title=\"%s\">%s</time>".formatted(isoDate, exactDate, Util.fromNow(timestamp))
+            );
         } else {
-            return new SafeString(String.format("<time datetime=\"%s\">%s</time>", isoDate, exactDate));
+            return new SafeString("<time datetime=\"%s\">%s</time>".formatted(isoDate, exactDate));
         }
     }
 

@@ -99,33 +99,33 @@ public class Util {
             return "a minute ago";
         }
         if (diff < 60) {
-            return String.format("%d minutes ago", diff);
+            return "%d minutes ago".formatted(diff);
         }
         diff /= 60;
         if (diff == 1) {
             return "an hour ago";
         }
         if (diff < 24) {
-            return String.format("%d hours ago", diff);
+            return "%d hours ago".formatted(diff);
         }
         diff /= 24;
         if (diff == 1) {
             return "yesterday";
         }
         if (diff < 30) {
-            return String.format("%d days ago", diff);
+            return "%d days ago".formatted(diff);
         }
         if (diff < 60) {
             return "a month ago";
         }
         if (diff < 330) {
-            return String.format("%d months ago", diff / 30);
+            return "%d months ago".formatted(diff / 30);
         }
         diff /= 365;
         if (diff <= 1) {
             return "a year ago";
         }
-        return String.format("%d years ago", diff);
+        return "%d years ago".formatted(diff);
     }
 
     public static Boolean toBoolean(String value) {
@@ -138,7 +138,7 @@ public class Util {
         if ("false".equalsIgnoreCase(value) || "no".equalsIgnoreCase(value) || "0".equals(value)) {
             return false;
         }
-        throw new IllegalArgumentException(String.format("\"%s\" is not a valid value for boolean", value));
+        throw new IllegalArgumentException("\"%s\" is not a valid value for boolean".formatted(value));
     }
 
     public static Duration toDuration(String s) {
@@ -211,7 +211,7 @@ public class Util {
     }
 
     public static String hexByte(byte b) {
-        return String.format("%02X", b >= 0 ? b : 256 + (int) b);
+        return "%02X".formatted(b >= 0 ? b : 256 + (int) b);
     }
 
     public static Optional<UUID> uuid(String value) {

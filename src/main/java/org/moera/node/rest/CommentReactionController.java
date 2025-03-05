@@ -140,8 +140,8 @@ public class CommentReactionController {
                 return ResponseEntity
                     .created(
                         URI.create(
-                            String.format("/postings/%s/comments/%s/reactions/%s",
-                            postingId, comment.getId(), reaction.getId())
+                            "/postings/%s/comments/%s/reactions/%s"
+                                .formatted(postingId, comment.getId(), reaction.getId())
                         )
                     )
                     .body(ReactionCreatedUtil.build(reaction, totalsInfo.getClientInfo(), requestContext));

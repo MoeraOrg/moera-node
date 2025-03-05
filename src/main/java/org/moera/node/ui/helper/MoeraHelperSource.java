@@ -68,7 +68,7 @@ public class MoeraHelperSource {
                 }
             }
 
-            buf.append(String.format("</%s>", tag));
+            buf.append("</%s>".formatted(tag));
         }
         return new SafeString(buf);
     }
@@ -188,7 +188,7 @@ public class MoeraHelperSource {
                 .collect(Collectors.toList());
         buf.append("<span class=\"emojis\">");
         for (int i = 0; i < 3 && i < totals.size(); i++) {
-            buf.append(String.format("&#%d;", totals.get(i).getEmoji()));
+            buf.append("&#%d;".formatted(totals.get(i).getEmoji()));
         }
         buf.append("</span>");
     }

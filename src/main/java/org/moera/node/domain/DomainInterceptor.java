@@ -70,8 +70,9 @@ public class DomainInterceptor implements HandlerInterceptor {
 
         if (acceptsHtml(request) && config.isRegistrarEnabled()) {
             String hostname = host.substring(0, host.length() - config.getRegistrar().getDomain().length() - 1);
-            response.sendRedirect(String.format("%s/registrar?host=%s",
-                    UriUtil.siteUrl(config.getRegistrar().getHost(), uriComponents.getPort()), Util.ue(hostname)));
+            response.sendRedirect("%s/registrar?host=%s".formatted(
+                UriUtil.siteUrl(config.getRegistrar().getHost(), uriComponents.getPort()), Util.ue(hostname)
+            ));
             return false;
         }
 

@@ -49,8 +49,7 @@ public class AvatarImageUtil {
     }
 
     public static String toLogString(AvatarImage avatarImage) {
-        return String.format(
-            "AvatarImage(path=%s, shape=%s)",
+        return "AvatarImage(path=%s, shape=%s)".formatted(
             LogUtil.format(avatarImage.getPath()), LogUtil.format(avatarImage.getShape())
         );
     }

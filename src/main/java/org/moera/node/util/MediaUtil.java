@@ -15,12 +15,12 @@ import org.springframework.util.ObjectUtils;
 public class MediaUtil {
 
     public static String mediaPreview(String location, int width) {
-        return String.format("%s?width=%d", location, width);
+        return "%s?width=%d".formatted(location, width);
     }
 
     public static String mediaPreviewDirect(String location, int width) {
         int pos = location.lastIndexOf('.');
-        return String.format("%s_%d%s", location.substring(0, pos), width, location.substring(pos));
+        return "%s_%d%s".formatted(location.substring(0, pos), width, location.substring(pos));
     }
 
     public static String mediaSources(String location, Collection<MediaFilePreview> previews, boolean directServing) {
@@ -45,7 +45,7 @@ public class MediaUtil {
                     : (preview.getDirectPath() != null
                         ? "/moera/media/" + preview.getDirectPath()
                         : mediaPreview(location, preview.getTargetWidth()));
-            sources.add(String.format("%s %dw", url, preview.getWidth()));
+            sources.add("%s %dw".formatted(url, preview.getWidth()));
         }
         return String.join(",", sources);
     }
@@ -62,15 +62,17 @@ public class MediaUtil {
     }
 
     public static String mediaSizes(MediaFile mediaFile) {
-        return String.format("(max-width: 400px) %dpx, %dpx",
-                Math.min(350, findLargerPreviewWidth(mediaFile, 350)),
-                Math.min(900, findLargerPreviewWidth(mediaFile, 900)));
+        return "(max-width: 400px) %dpx, %dpx".formatted(
+            Math.min(350, findLargerPreviewWidth(mediaFile, 350)),
+            Math.min(900, findLargerPreviewWidth(mediaFile, 900))
+        );
     }
 
     public static String mediaSizes(PrivateMediaFileInfo mediaFile) {
-        return String.format("(max-width: 400px) %dpx, %dpx",
-                Math.min(350, findLargerPreviewWidth(mediaFile, 350)),
-                Math.min(900, findLargerPreviewWidth(mediaFile, 900)));
+        return "(max-width: 400px) %dpx, %dpx".formatted(
+            Math.min(350, findLargerPreviewWidth(mediaFile, 350)),
+            Math.min(900, findLargerPreviewWidth(mediaFile, 900))
+        );
     }
 
 }

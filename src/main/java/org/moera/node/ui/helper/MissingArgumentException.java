@@ -11,7 +11,7 @@ public class MissingArgumentException extends RuntimeException {
     }
 
     private static String getMessageText(String paramName) {
-        return String.format("Missing required parameter '%s'", paramName);
+        return "Missing required parameter '%s'".formatted(paramName);
     }
 
 }

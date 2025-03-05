@@ -77,12 +77,12 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
                 if (width != null) {
                     newAttrs.add("width");
                     newAttrs.add(Integer.toString(width));
-                    style += String.format("; --width: %spx", width);
+                    style += "; --width: %spx".formatted(width);
                 }
                 if (height != null) {
                     newAttrs.add("height");
                     newAttrs.add(Integer.toString(height));
-                    style += String.format("; --height: %spx", height);
+                    style += "; --height: %spx".formatted(height);
                 }
                 newAttrs.add("style");
                 newAttrs.add(style);
@@ -129,7 +129,7 @@ class ImageProcessor extends HtmlStreamEventReceiverWrapper {
             newAttrs.add("height");
             newAttrs.add(imageHeight);
             newAttrs.add("style");
-            newAttrs.add(String.format("--width: %spx; --height: %spx", imageWidth, imageHeight));
+            newAttrs.add("--width: %spx; --height: %spx".formatted(imageWidth, imageHeight));
             super.openTag(elementName, newAttrs);
 
             super.closeTag("a");

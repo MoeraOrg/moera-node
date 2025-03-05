@@ -40,7 +40,7 @@ public class RequestCounter {
 
     private void defineRequestId() {
         int rid = new Random().nextInt(0x1000000);
-        MDC.put("rid", String.format("%06x", rid));
+        MDC.put("rid", "%06x".formatted(rid));
     }
 
     private void undefineRequestId() {

@@ -178,16 +178,16 @@ public class SearchEngineStatisticsOperations {
         String path;
         String query;
         if (clicks.getPostingId() != null) {
-            path = String.format("/post/%s", clicks.getPostingId());
+            path = "/post/%s".formatted(clicks.getPostingId());
             if (clicks.getCommentId() != null) {
                 if (clicks.getMediaId() != null) {
-                    query = String.format("comment=%s&media=%s", clicks.getCommentId(), clicks.getMediaId());
+                    query = "comment=%s&media=%s".formatted(clicks.getCommentId(), clicks.getMediaId());
                 } else {
-                    query = String.format("comment=%s", clicks.getCommentId());
+                    query = "comment=%s".formatted(clicks.getCommentId());
                 }
             } else {
                 if (clicks.getMediaId() != null) {
-                    query = String.format("media=%s", clicks.getMediaId());
+                    query = "media=%s".formatted(clicks.getMediaId());
                 } else {
                     query = null;
                 }

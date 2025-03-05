@@ -135,19 +135,18 @@ public class GalleriesHelperSource {
         String style = null;
         if (flex != null || count != null) {
             if ("row".equals(flex)) {
-                style = String.format("flex: %f", ((float) imageWidth) / imageHeight);
+                style = "flex: %f".formatted(((float) imageWidth) / imageHeight);
             } else if ("column".equals(flex)) {
-                style = String.format("flex: %f", ((float) imageHeight) / imageWidth);
+                style = "flex: %f".formatted(((float) imageHeight) / imageWidth);
             }
         }
 
         String klass = count != null && count > 0 ? "entry-image counted" : "entry-image";
         String href = commentId != null
-            ? String.format(
-                "/post/%s?comment=%s&media=%s",
-                Util.ue(postingId), Util.ue(commentId), Util.ue(mediaFile.getId())
+            ? "/post/%s?comment=%s&media=%s"
+                .formatted(Util.ue(postingId), Util.ue(commentId), Util.ue(mediaFile.getId())
             )
-            : String.format("/post/%s?media=%s", Util.ue(postingId), Util.ue(mediaFile.getId()));
+            : "/post/%s?media=%s".formatted(Util.ue(postingId), Util.ue(mediaFile.getId()));
 
         StringBuilder buf = new StringBuilder();
 
@@ -159,7 +158,7 @@ public class GalleriesHelperSource {
         buf.append('>');
 
         if (count != null && count > 0) {
-            buf.append(String.format("<div class=\"count\">+%d</div>", count));
+            buf.append("<div class=\"count\">+%d</div>".formatted(count));
         }
 
         boolean directServing = mediaFile.getDirectPath() != null;
@@ -211,11 +210,11 @@ public class GalleriesHelperSource {
         switch (images.size()) {
             case 1:
                 buf.append("<div");
-                HelperUtil.appendAttr(buf, "class", String.format("gallery single %s", orientation));
+                HelperUtil.appendAttr(buf, "class", "gallery single %s".formatted(orientation));
                 HelperUtil.appendAttr(
                     buf,
                     "style",
-                    String.format("--image-height: %dpx", singleImageHeight(images.get(0)))
+                    "--image-height: %dpx".formatted(singleImageHeight(images.get(0)))
                 );
                 buf.append('>');
                 buf.append(entryImage(postingId, commentId, images.get(0)));
@@ -223,14 +222,14 @@ public class GalleriesHelperSource {
                 break;
 
             case 2:
-                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery %s\">".formatted(orientation));
                 buf.append(entryImage(postingId, commentId, images.get(0), "row"));
                 buf.append(entryImage(postingId, commentId, images.get(1), "row"));
                 buf.append("</div>");
                 break;
 
             case 3:
-                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery %s\">".formatted(orientation));
                 buf.append("<div class=\"gallery-row\">");
                 buf.append(entryImage(postingId, commentId, images.get(0), null));
                 buf.append("</div>");
@@ -242,7 +241,7 @@ public class GalleriesHelperSource {
                 break;
 
             case 4:
-                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery %s\">".formatted(orientation));
                 buf.append("<div class=\"gallery-row\">");
                 buf.append(entryImage(postingId, commentId, images.get(0), "row"));
                 buf.append(entryImage(postingId, commentId, images.get(1), "row"));
@@ -255,7 +254,7 @@ public class GalleriesHelperSource {
                 break;
 
             case 5:
-                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery %s\">".formatted(orientation));
                 buf.append("<div class=\"gallery-row\">");
                 buf.append(entryImage(postingId, commentId, images.get(0), "row"));
                 buf.append(entryImage(postingId, commentId, images.get(1), "row"));
@@ -269,7 +268,7 @@ public class GalleriesHelperSource {
                 break;
 
             default:
-                buf.append(String.format("<div class=\"gallery %s\">", orientation));
+                buf.append("<div class=\"gallery %s\">".formatted(orientation));
                 buf.append("<div class=\"gallery-row\">");
                 buf.append(entryImage(postingId, commentId, images.get(0), "row"));
                 buf.append(entryImage(postingId, commentId, images.get(1), "row"));

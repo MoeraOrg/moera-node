@@ -59,9 +59,9 @@ public abstract class Event {
             return getType().toString();
         }
         String params = parameters.stream()
-                .map(p -> p.getFirst() + " = " + p.getSecond())
-                .collect(Collectors.joining(", "));
-        return String.format("%s (%s)", getType(), params);
+            .map(p -> p.getFirst() + " = " + p.getSecond())
+            .collect(Collectors.joining(", "));
+        return "%s (%s)".formatted(getType(), params);
     }
 
     public void logParameters(List<Pair<String, String>> parameters) {

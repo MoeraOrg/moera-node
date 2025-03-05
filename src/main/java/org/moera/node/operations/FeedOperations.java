@@ -83,7 +83,7 @@ public class FeedOperations {
     }
 
     public static String getFeedSheriffMarksOption(String feedName) {
-        return String.format("sheriffs.%s.marks", feedName);
+        return "sheriffs.%s.marks".formatted(feedName);
     }
 
     public static Optional<List<SheriffMark>> getFeedSheriffMarks(Options options, String feedName) {

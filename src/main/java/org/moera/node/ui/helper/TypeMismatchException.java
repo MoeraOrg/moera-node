@@ -57,7 +57,7 @@ public class TypeMismatchException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return String.format("Incorrect value for type %s passed as parameter '%s': %s", typeName, paramName, value);
+        return "Incorrect value for type %s passed as parameter '%s': %s".formatted(typeName, paramName, value);
     }
 
 }

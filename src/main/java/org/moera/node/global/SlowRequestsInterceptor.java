@@ -75,30 +75,32 @@ public class SlowRequestsInterceptor implements HandlerInterceptor {
         if (!(handler instanceof HandlerMethod handlerMethod)) {
             return null;
         }
-        return String.format("%s.%s", handlerMethod.getBeanType().getSimpleName(), handlerMethod.getMethod().getName());
+        return "%s.%s".formatted(handlerMethod.getBeanType().getSimpleName(), handlerMethod.getMethod().getName());
     }
 
     @Scheduled(fixedDelayString = "PT1H")
     public void reportStatistics() {
         log.debug("Requests statistics:");
         byRequest.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .forEach(entry -> {
-                    String name = entry.getKey();
-                    RequestStatistics stat = entry.getValue();
-                    long total = stat.count.get();
-                    if (total == 0) {
-                        return;
-                    }
-                    long avg = (long) ((double) stat.totalDuration.get() / total);
-                    long med = stat.medianDuration.getMedian();
-                    long min = stat.minDuration.get();
-                    long max = stat.maxDuration.get();
-                    long slow = stat.slowCount.get();
-                    String slowPercent = String.format("%.1f", slow * 100f / total);
-                    log.debug("{}: avg = {}ms, med = {}ms, min = {}ms, max = {}ms, total = {}, slow = {} ({}%)",
-                            name, avg, med, min, max, total, slow, slowPercent);
-                });
+            .sorted(Map.Entry.comparingByKey())
+            .forEach(entry -> {
+                String name = entry.getKey();
+                RequestStatistics stat = entry.getValue();
+                long total = stat.count.get();
+                if (total == 0) {
+                    return;
+                }
+                long avg = (long) ((double) stat.totalDuration.get() / total);
+                long med = stat.medianDuration.getMedian();
+                long min = stat.minDuration.get();
+                long max = stat.maxDuration.get();
+                long slow = stat.slowCount.get();
+                String slowPercent = "%.1f".formatted(slow * 100f / total);
+                log.debug(
+                    "{}: avg = {}ms, med = {}ms, min = {}ms, max = {}ms, total = {}, slow = {} ({}%)",
+                    name, avg, med, min, max, total, slow, slowPercent
+                );
+            });
     }
 
 }

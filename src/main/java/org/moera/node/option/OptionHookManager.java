@@ -66,8 +66,9 @@ public class OptionHookManager {
                     handler.getMethod().invoke(handler.getBean());
                 }
             } catch (IllegalAccessException | InvocationTargetException e) {
-                log.error(String.format("Error executing hook for setting '%s' (%s):",
-                        change.getName(), handler.getMethod()), e);
+                log.error(
+                    "Error executing hook for setting '%s' (%s):".formatted(change.getName(), handler.getMethod()), e
+                );
             }
         }
     }

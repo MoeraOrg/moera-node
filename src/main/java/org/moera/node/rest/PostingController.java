@@ -269,7 +269,7 @@ public class PostingController {
             );
         } catch (BodyMappingException e) {
             String field = e.getField() != null ? e.getField() : "bodySrc";
-            throw new ValidationFailure(String.format("postingText.%s.wrong-encoding", field));
+            throw new ValidationFailure("postingText.%s.wrong-encoding".formatted(field));
         }
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
         if (!sameViewComments) {

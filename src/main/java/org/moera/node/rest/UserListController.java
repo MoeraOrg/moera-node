@@ -210,7 +210,7 @@ public class UserListController {
         requestContext.send(new UserListItemAddedLiberin(item));
 
         return ResponseEntity
-            .created(URI.create(String.format("/%s/items/%s", Util.ue(listName), Util.ue(item.getNodeName()))))
+            .created(URI.create("/%s/items/%s".formatted(Util.ue(listName), Util.ue(item.getNodeName()))))
             .body(UserListItemInfoUtil.build(item));
     }
 

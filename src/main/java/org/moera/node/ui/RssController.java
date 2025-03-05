@@ -94,7 +94,7 @@ public class RssController {
             if (ObjectUtils.isEmpty(email)) {
                 return name;
             } else {
-                return String.format("%s (%s)", email, name);
+                return "%s (%s)".formatted(email, name);
             }
         }
     }
@@ -116,7 +116,7 @@ public class RssController {
         buf.append(hasPreview ? revision.getBodyPreview() : revision.getBody());
         buf.append("</div>");
         if (hasPreview) {
-            buf.append(String.format("<a href=\"/post/%s\">Continue Reading &rarr;</a>", posting.getId()));
+            buf.append("<a href=\"/post/%s\">Continue Reading &rarr;</a>".formatted(posting.getId()));
         }
 
         SyndContent content = new SyndContentImpl();

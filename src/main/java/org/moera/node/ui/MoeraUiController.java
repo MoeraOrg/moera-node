@@ -28,7 +28,7 @@ public class MoeraUiController {
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/timeline")
     @VirtualPage
     public String timeline(@RequestParam(required = false) Long before) {
-        return before == null ? "redirect:/timeline" : String.format("redirect:/timeline?before=%d", before);
+        return before == null ? "redirect:/timeline" : "redirect:/timeline?before=%d".formatted(before);
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.HEAD}, path = "/post/{id}")

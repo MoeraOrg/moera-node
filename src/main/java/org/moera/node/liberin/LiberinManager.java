@@ -118,7 +118,7 @@ public class LiberinManager implements Runnable {
             Liberin lb = liberin;
             tx.executeWriteQuietly(
                 () -> plugins.send(lb),
-                e -> log.error(String.format("Error sending liberin %s to plugins:", lb.getClass().getSimpleName()), e)
+                e -> log.error("Error sending liberin %s to plugins:".formatted(lb.getClass().getSimpleName()), e)
             );
 
             log.debug("Delivering liberin {}", liberin.getClass().getSimpleName());
@@ -132,7 +132,7 @@ public class LiberinManager implements Runnable {
                 () -> {
                     handler.getMethod().invoke(handler.getBean(), lb);
                 },
-                e -> log.error(String.format("Error handling liberin %s:", lb.getClass().getSimpleName()), e)
+                e -> log.error("Error handling liberin %s:".formatted(lb.getClass().getSimpleName()), e)
             );
         }
     }

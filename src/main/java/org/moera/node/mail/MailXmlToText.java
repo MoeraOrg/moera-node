@@ -17,8 +17,8 @@ public class MailXmlToText extends DefaultHandler {
 
     public static final class Result {
 
-        private CharSequence subject;
-        private CharSequence body;
+        private final CharSequence subject;
+        private final CharSequence body;
 
         private Result(CharSequence subject, CharSequence body) {
             this.subject = subject;
@@ -35,8 +35,8 @@ public class MailXmlToText extends DefaultHandler {
 
     }
 
-    private StringBuilder subject = new StringBuilder();
-    private StringBuilder body = new StringBuilder();
+    private final StringBuilder subject = new StringBuilder();
+    private final StringBuilder body = new StringBuilder();
 
     private FormatterState state = FormatterState.GLOBAL;
     private StringBuilder current = new StringBuilder();
@@ -47,7 +47,7 @@ public class MailXmlToText extends DefaultHandler {
 
     @Override
     public void error(SAXParseException e) throws SAXException {
-        body.append(String.format("*** %s ***", e.getMessage()));
+        body.append("*** %s ***".formatted(e.getMessage()));
     }
 
     private void flushCurrent() {
@@ -95,14 +95,15 @@ public class MailXmlToText extends DefaultHandler {
             return;
         }
         String data = new String(ch, start, length);
-        data = data.replace('\r', ' ')
-                   .replace('\n', ' ')
-                   .replace("&nbsp;", " ")
-                   .replaceAll("\\s+", " ");
+        data = data
+            .replace('\r', ' ')
+            .replace('\n', ' ')
+            .replace("&nbsp;", " ")
+            .replaceAll("\\s+", " ");
         if (data.isEmpty()) {
             return;
         }
-        if (current.length() == 0 && data.charAt(0) == ' ') {
+        if (current.isEmpty() && data.charAt(0) == ' ') {
             current.append(data.substring(1));
         } else {
             current.append(data);

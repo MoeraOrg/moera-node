@@ -68,7 +68,8 @@ public class LinkPreviewNet {
                 LinkPreviewNetInfo info = objectMapper.readValue(response.body(), LinkPreviewNetInfo.class);
                 int errorCode = info.getError() != null ? info.getError() : response.statusCode();
                 throw new LinkPreviewNetException(
-                        String.format("Error returned (%d): %s", errorCode, info.getDescription()));
+                    "Error returned (%d): %s".formatted(errorCode, info.getDescription())
+                );
             } catch (IOException e) {
                 throw new LinkPreviewNetException("Error status returned: " + response.statusCode());
             }
