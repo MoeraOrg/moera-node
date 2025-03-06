@@ -198,12 +198,12 @@ public class SheriffComplaintGroupPrepareJob
 
     private void prepare() throws MoeraNodeException {
         if (state.whoAmI == null) {
-            state.whoAmI = nodeApi.whoAmI(parameters.nodeName);
+            state.whoAmI = nodeApi.at(parameters.nodeName).whoAmI();
             checkpoint();
         }
 
         if (!state.feedSheriffChecked) {
-            FeedInfo feedInfo = nodeApi.getFeed(parameters.nodeName, parameters.feedName);
+            FeedInfo feedInfo = nodeApi.at(parameters.nodeName).getFeedGeneral(parameters.feedName);
             if (feedInfo.getSheriffs() == null || !feedInfo.getSheriffs().contains(nodeName())) {
                 updateComplaintGroupStatus(SheriffComplaintStatus.NOT_SHERIFF);
                 return;
@@ -213,13 +213,12 @@ public class SheriffComplaintGroupPrepareJob
         }
 
         if (state.postingInfo == null && parameters.postingId != null) {
-            state.postingInfo = nodeApi.getPosting(
-                    parameters.nodeName,
-                    generateCarte(parameters.nodeName, Scope.SHERIFF),
-                    parameters.postingId);
+            state.postingInfo = nodeApi
+                .at(parameters.nodeName, generateCarte(parameters.nodeName, Scope.SHERIFF))
+                .getPosting(parameters.postingId, false);
             if (state.postingInfo != null) {
                 boolean inFeed = state.postingInfo.getFeedReferences().stream()
-                        .anyMatch(fr -> fr.getFeedName().equals(parameters.feedName));
+                    .anyMatch(fr -> fr.getFeedName().equals(parameters.feedName));
                 if (!inFeed) {
                     updateComplaintGroupStatus(SheriffComplaintStatus.INVALID_TARGET);
                     return;
@@ -233,11 +232,9 @@ public class SheriffComplaintGroupPrepareJob
         }
 
         if (state.commentInfo == null && parameters.commentId != null) {
-            state.commentInfo = nodeApi.getComment(
-                    parameters.nodeName,
-                    generateCarte(parameters.nodeName, Scope.SHERIFF),
-                    parameters.postingId,
-                    parameters.commentId);
+            state.commentInfo = nodeApi
+                .at(parameters.nodeName, generateCarte(parameters.nodeName, Scope.SHERIFF))
+                .getComment(parameters.postingId, parameters.commentId, false);
             checkpoint();
         }
 
@@ -268,13 +265,16 @@ public class SheriffComplaintGroupPrepareJob
         PageRequest page = PageRequest.of(0, 1, Sort.Direction.DESC, "createdAt");
         if (parameters.postingId == null) {
             orders = sheriffOrderRepository.findByFeed(
-                    nodeId, parameters.nodeName, parameters.feedName, page);
+                nodeId, parameters.nodeName, parameters.feedName, page
+            );
         } else if (parameters.commentId == null) {
             orders = sheriffOrderRepository.findByPosting(
-                    nodeId, parameters.nodeName, parameters.feedName, parameters.postingId, page);
+                nodeId, parameters.nodeName, parameters.feedName, parameters.postingId, page
+            );
         } else {
             orders = sheriffOrderRepository.findByComment(
-                    nodeId, parameters.nodeName, parameters.feedName, parameters.postingId, parameters.commentId, page);
+                nodeId, parameters.nodeName, parameters.feedName, parameters.postingId, parameters.commentId, page
+            );
         }
         if (!orders.isEmpty()) {
             SheriffOrder order = orders.get(0);
@@ -292,7 +292,7 @@ public class SheriffComplaintGroupPrepareJob
     private void updateComplaintGroup(Consumer<SheriffComplaintGroup> updater) {
         var liberin = tx.executeWrite(() -> {
             SheriffComplaintGroup complaintGroup =
-                    sheriffComplaintGroupRepository.findByNodeIdAndId(nodeId, parameters.groupId).orElse(null);
+                sheriffComplaintGroupRepository.findByNodeIdAndId(nodeId, parameters.groupId).orElse(null);
             if (complaintGroup == null) {
                 return null;
             }

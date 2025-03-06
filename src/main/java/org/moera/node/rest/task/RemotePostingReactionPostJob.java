@@ -185,7 +185,7 @@ public class RemotePostingReactionPostJob
     @Override
     protected void execute() throws MoeraNodeException {
         if (state.target == null) {
-            state.target = nodeApi.whoAmI(parameters.targetNodeName);
+            state.target = nodeApi.at(parameters.targetNodeName).whoAmI();
             checkpoint();
         }
 
@@ -210,11 +210,9 @@ public class RemotePostingReactionPostJob
         }
 
         if (state.postingInfo == null) {
-            state.postingInfo = nodeApi.getPosting(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                parameters.postingId
-            );
+            state.postingInfo = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getPosting(parameters.postingId, false);
             checkpoint();
         }
 
@@ -236,11 +234,9 @@ public class RemotePostingReactionPostJob
         }
 
         if (state.reactionInfo == null) {
-            ReactionCreated created = nodeApi.postPostingReaction(
-                parameters.targetNodeName,
-                parameters.postingId,
-                state.reactionDescription
-            );
+            ReactionCreated created = nodeApi
+                .at(parameters.targetNodeName)
+                .createPostingReaction(parameters.postingId, state.reactionDescription);
             state.reactionInfo = created.getReaction();
             checkpoint();
         }

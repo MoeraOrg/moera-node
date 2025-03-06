@@ -60,7 +60,7 @@ public class ContactsUpgradeTask extends Task {
         universalContext.associate(this);
 
         try {
-            WhoAmI whoAmI = nodeApi.whoAmI(upgrade.getRemoteNodeName());
+            WhoAmI whoAmI = nodeApi.at(upgrade.getRemoteNodeName()).whoAmI();
             if (whoAmI.getFullName() != null || whoAmI.getGender() != null) {
                 contactOperations.updateDetails(upgrade.getRemoteNodeName(), whoAmI.getFullName(), whoAmI.getGender());
                 send(new RemoteNodeFullNameChangedLiberin(upgrade.getRemoteNodeName(), whoAmI.getFullName()));

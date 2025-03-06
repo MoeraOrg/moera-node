@@ -94,12 +94,12 @@ public class AllRemoteSubscribersUpdateJob
 
             log.info("Updating subscriber info at node {}", subscription.getRemoteNodeName());
             try {
-                nodeApi.putSubscriber(
-                    subscription.getRemoteNodeName(),
-                    generateCarte(subscription.getRemoteNodeName(), Scope.SUBSCRIBE),
-                    subscription.getRemoteSubscriberId(),
-                    override
-                );
+                nodeApi
+                    .at(
+                        subscription.getRemoteNodeName(),
+                        generateCarte(subscription.getRemoteNodeName(), Scope.SUBSCRIBE)
+                    )
+                    .updateSubscriber(subscription.getRemoteSubscriberId(), override);
                 state.updated.add(subscription.getId());
             } catch (MoeraNodeException e) {
                 log.warn(

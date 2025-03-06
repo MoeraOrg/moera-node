@@ -237,7 +237,7 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
     @Override
     protected void execute() throws MoeraNodeException {
         if (state.target == null) {
-            state.target = nodeApi.whoAmI(parameters.targetNodeName);
+            state.target = nodeApi.at(parameters.targetNodeName).whoAmI();
             checkpoint();
         }
 
@@ -249,11 +249,9 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
 
         if (state.postingInfo == null) {
-            state.postingInfo = nodeApi.getPosting(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                parameters.postingId
-            );
+            state.postingInfo = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getPosting(parameters.postingId, false);
             checkpoint();
         }
 
@@ -280,12 +278,9 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
         }
 
         if (parameters.commentId != null && state.prevCommentInfo == null) {
-            state.prevCommentInfo = nodeApi.getComment(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                parameters.postingId,
-                parameters.commentId
-            );
+            state.prevCommentInfo = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getComment(parameters.postingId, parameters.commentId, false);
             checkpoint();
 
         }
@@ -297,12 +292,9 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
                 repliedToId = CommentInfoUtil.getRepliedToId(state.prevCommentInfo);
                 repliedToRevisionId = CommentInfoUtil.getRepliedToRevisionId(state.prevCommentInfo);
             } else if (parameters.sourceText.getRepliedToId() != null) {
-                CommentInfo repliedToCommentInfo = nodeApi.getComment(
-                    parameters.targetNodeName,
-                    generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                    parameters.postingId,
-                    parameters.sourceText.getRepliedToId().toString()
-                );
+                CommentInfo repliedToCommentInfo = nodeApi
+                    .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                    .getComment(parameters.postingId, parameters.sourceText.getRepliedToId(), false);
                 if (repliedToCommentInfo != null) {
                     repliedToId = repliedToCommentInfo.getId();
                     repliedToRevisionId = repliedToCommentInfo.getRevisionId();
@@ -327,21 +319,16 @@ public class RemoteCommentPostJob extends Job<RemoteCommentPostJob.Parameters, R
 
         if (state.commentInfo == null) {
             if (parameters.commentId == null) {
-                CommentCreated created = nodeApi.postComment(
-                    parameters.targetNodeName,
-                    parameters.postingId,
-                    state.commentText
-                );
+                CommentCreated created = nodeApi
+                    .at(parameters.targetNodeName)
+                    .createComment(parameters.postingId, state.commentText);
                 state.commentInfo = created.getComment();
                 String commentId = state.commentInfo.getId();
                 send(new RemoteCommentAddedLiberin(parameters.targetNodeName, parameters.postingId, commentId));
             } else {
-                state.commentInfo = nodeApi.putComment(
-                    parameters.targetNodeName,
-                    parameters.postingId,
-                    parameters.commentId,
-                    state.commentText
-                );
+                state.commentInfo = nodeApi
+                    .at(parameters.targetNodeName)
+                    .updateComment(parameters.postingId, parameters.commentId, state.commentText);
                 send(
                     new RemoteCommentUpdatedLiberin(
                         parameters.targetNodeName, parameters.postingId, parameters.commentId

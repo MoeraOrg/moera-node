@@ -53,26 +53,25 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
         try {
             remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
-            PostingInfo postingInfo = nodeApi.getPosting(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
-            );
+            PostingInfo postingInfo = nodeApi
+                .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                .getPosting(remotePostingId, false);
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();
                 remotePostingId = postingInfo.getReceiverPostingId();
-                postingInfo = nodeApi.getPosting(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
-                );
+                postingInfo = nodeApi
+                    .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                    .getPosting(remotePostingId, false);
             }
-            CommentInfo commentInfo = nodeApi.getComment(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId, data.getCommentId()
-            );
+            CommentInfo commentInfo = nodeApi
+                .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                .getComment(remotePostingId, data.getCommentId(), false);
             if (data.getRevisionId() == null) {
                 verify(postingInfo, commentInfo);
             } else {
-                CommentRevisionInfo revisionInfo = nodeApi.getCommentRevision(
-                    data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT), data.getPostingId(),
-                    data.getCommentId(), data.getRevisionId()
-                );
+                CommentRevisionInfo revisionInfo = nodeApi
+                    .at(data.getNodeName(), generateCarte(data.getNodeName(), Scope.VIEW_CONTENT))
+                    .getCommentRevision(data.getPostingId(), data.getCommentId(), data.getRevisionId());
                 verify(postingInfo, commentInfo, revisionInfo);
             }
         } catch (Exception e) {
@@ -83,10 +82,9 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
     private void verify(PostingInfo postingInfo, CommentInfo commentInfo) throws MoeraNodeException {
         PostingRevisionInfo revisionInfo;
         try {
-            revisionInfo = nodeApi.getPostingRevision(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
-                commentInfo.getPostingRevisionId()
-            );
+            revisionInfo = nodeApi
+                .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                .getPostingRevision(postingInfo.getId(), commentInfo.getPostingRevisionId());
         } catch (MoeraNodeApiNotFoundException e) {
             succeeded(false);
             return;
@@ -147,10 +145,9 @@ public class RemoteCommentVerifyTask extends RemoteVerificationTask {
     ) throws MoeraNodeException {
         PostingRevisionInfo postingRevisionInfo;
         try {
-            postingRevisionInfo = nodeApi.getPostingRevision(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
-                commentInfo.getPostingRevisionId()
-            );
+            postingRevisionInfo = nodeApi
+                .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                .getPostingRevision(postingInfo.getId(), commentInfo.getPostingRevisionId());
         } catch (MoeraNodeApiNotFoundException e) {
             succeeded(false);
             return;

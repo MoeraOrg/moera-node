@@ -156,12 +156,9 @@ public class RemoteCommentReactionPostJob
                 generateCarte(parameters.targetNodeName, Scope.UPLOAD_PUBLIC_MEDIA),
                 getAvatar()
             );
-            state.commentInfo = nodeApi.getComment(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                parameters.postingId,
-                parameters.commentId
-            );
+            state.commentInfo = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getComment(parameters.postingId, parameters.commentId, false);
             if (state.commentInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile =
                         mediaManager.downloadPublicMedia(parameters.targetNodeName, state.commentInfo.getOwnerAvatar());
@@ -171,11 +168,9 @@ public class RemoteCommentReactionPostJob
         }
 
         if (state.postingInfo == null) {
-            state.postingInfo = nodeApi.getPosting(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                parameters.postingId
-            );
+            state.postingInfo = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getPosting(parameters.postingId, false);
             if (state.postingInfo.getOwnerAvatar() != null) {
                 MediaFile mediaFile =
                         mediaManager.downloadPublicMedia(parameters.targetNodeName, state.postingInfo.getOwnerAvatar());
@@ -188,21 +183,15 @@ public class RemoteCommentReactionPostJob
             state.postingRevisionInfo == null
             && !state.commentInfo.getPostingRevisionId().equals(state.postingInfo.getRevisionId())
         ) {
-            state.postingRevisionInfo = nodeApi.getPostingRevision(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                parameters.postingId,
-                state.commentInfo.getPostingRevisionId()
-            );
+            state.postingRevisionInfo = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getPostingRevision(parameters.postingId, state.commentInfo.getPostingRevisionId());
             checkpoint();
         }
 
-        created = nodeApi.postCommentReaction(
-            parameters.targetNodeName,
-            parameters.postingId,
-            parameters.commentId,
-            buildReaction()
-        );
+        created = nodeApi
+            .at(parameters.targetNodeName)
+            .createCommentReaction(parameters.postingId, parameters.commentId, buildReaction());
     }
 
     private ReactionDescription buildReaction() {

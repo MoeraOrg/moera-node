@@ -175,7 +175,7 @@ public class UserListUpdateJob extends Job<UserListUpdateJob.Parameters, UserLis
             state.before = SafeInteger.MAX_VALUE;
         }
         do {
-            slice = nodeApi.getUserListItems(parameters.listNodeName, parameters.listName, state.before);
+            slice = nodeApi.at(parameters.listNodeName).getUserListSlice(parameters.listName, null, state.before, null);
             var items = slice.getItems();
             tx.executeWrite(() ->
                 items.forEach(item ->

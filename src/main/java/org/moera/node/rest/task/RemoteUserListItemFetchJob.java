@@ -126,9 +126,9 @@ public class RemoteUserListItemFetchJob
     protected void execute() throws MoeraNodeException {
         if (state.absent == null) {
             try {
-                state.absent = nodeApi.getUserListItem(
-                    parameters.sheriffName, UserList.SHERIFF_HIDE, parameters.ownerName
-                ) == null;
+                state.absent = nodeApi
+                    .at(parameters.sheriffName)
+                    .getUserListItem(UserList.SHERIFF_HIDE, parameters.ownerName) == null;
             } catch (MoeraNodeApiNotFoundException e) {
                 state.absent = true;
             }

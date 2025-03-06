@@ -6,12 +6,15 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
+import okhttp3.ResponseBody;
 import org.moera.lib.node.exception.MoeraNodeException;
 import org.moera.lib.node.types.AvatarImage;
 import org.moera.lib.node.types.PrivateMediaFileInfo;
@@ -31,6 +34,7 @@ import org.moera.node.global.RequestCounter;
 import org.moera.node.global.UniversalContext;
 import org.moera.node.model.AvatarImageUtil;
 import org.moera.node.model.PostingFeaturesUtil;
+import org.moera.node.util.DigestingOutputStream;
 import org.moera.node.util.ParametrizedLock;
 import org.moera.node.util.Transaction;
 import org.moera.node.util.Util;
@@ -80,6 +84,41 @@ public class MediaManager {
 
     private final ParametrizedLock<String> mediaFileLocks = new ParametrizedLock<>();
 
+    private TemporaryMediaFile receiveMediaFile(
+        String remoteNodeName, String mediaId, ResponseBody responseBody, TemporaryFile tmpFile, int maxSize
+    ) throws MoeraNodeException {
+        String contentType = Objects.toString(responseBody.contentType(), null);
+        if (contentType == null) {
+            throw new MoeraNodeException("Response has no Content-Type");
+        }
+        Long contentLength = responseBody.contentLength() >= 0 ? responseBody.contentLength() : null;
+        try {
+            DigestingOutputStream out = MediaOperations.transfer(
+                responseBody.byteStream(), tmpFile.getOutputStream(), contentLength, maxSize
+            );
+            return new TemporaryMediaFile(out.getHash(), contentType, out.getDigest());
+        } catch (ThresholdReachedException e) {
+            throw new MoeraNodeLocalStorageException(
+                "Media %s at %s reports a wrong size or larger than %d bytes"
+                    .formatted(mediaId, remoteNodeName, maxSize)
+            );
+        } catch (IOException e) {
+            throw new MoeraNodeLocalStorageException(
+                "Error downloading media %s: %s".formatted(mediaId, e.getMessage())
+            );
+        }
+    }
+
+    private TemporaryMediaFile getPublicMedia(
+        String nodeName, String id, TemporaryFile tmpFile, int maxSize
+    ) throws MoeraNodeException {
+        var result = new AtomicReference<TemporaryMediaFile>();
+        nodeApi.at(nodeName).getPublicMedia(id, null, null, responseBody ->
+            result.set(receiveMediaFile(nodeName, id, responseBody, tmpFile, maxSize))
+        );
+        return result.get();
+    }
+
     public MediaFile downloadPublicMedia(String nodeName, String id, int maxSize) throws MoeraNodeException {
         if (id == null) {
             return null;
@@ -100,7 +139,7 @@ public class MediaManager {
 
             var tmp = mediaOperations.tmpFile();
             try {
-                var tmpMedia = nodeApi.getPublicMedia(nodeName, id, tmp, maxSize);
+                var tmpMedia = getPublicMedia(nodeName, id, tmp, maxSize);
                 if (!tmpMedia.getMediaFileId().equals(id)) {
                     log.warn("Public media {} has hash {}", id, tmpMedia.getMediaFileId());
                     return null;
@@ -167,11 +206,11 @@ public class MediaManager {
         if (mediaFile == null) {
             return;
         }
-        PublicMediaFileInfo info = nodeApi.getPublicMediaInfo(nodeName, mediaFile.getId());
+        PublicMediaFileInfo info = nodeApi.at(nodeName).getPublicMediaInfo(mediaFile.getId());
         if (info != null) {
             return;
         }
-        nodeApi.postPublicMedia(nodeName, carte, mediaFile);
+        nodeApi.at(nodeName, carte).uploadPublicMedia(mediaOperations.getPath(mediaFile), mediaFile.getMimeType());
     }
 
     public void uploadPublicMedia(String nodeName, String carte, Avatar avatar) throws MoeraNodeException {
@@ -196,6 +235,16 @@ public class MediaManager {
         }
 
         return null;
+    }
+
+    private TemporaryMediaFile getPrivateMedia(
+        String nodeName, String carte, String id, TemporaryFile tmpFile, int maxSize
+    ) throws MoeraNodeException {
+        var result = new AtomicReference<TemporaryMediaFile>();
+        nodeApi.at(nodeName, carte).getPrivateMedia(id, null, null, responseBody ->
+            result.set(receiveMediaFile(nodeName, id, responseBody, tmpFile, maxSize))
+        );
+        return result.get();
     }
 
     public MediaFileOwner downloadPrivateMedia(
@@ -232,7 +281,7 @@ public class MediaManager {
                 } else {
                     var tmp = mediaOperations.tmpFile();
                     try {
-                        var tmpMedia = nodeApi.getPrivateMedia(nodeName, carte, id, tmp, maxSize);
+                        var tmpMedia = getPrivateMedia(nodeName, carte, id, tmp, maxSize);
                         if (!tmpMedia.getMediaFileId().equals(mediaFileId)) {
                             log.warn("Media {} has hash {} instead of {}", id, tmpMedia.getMediaFileId(), mediaFileId);
                             return null;
@@ -297,7 +346,7 @@ public class MediaManager {
 
         var tmp = mediaOperations.tmpFile();
         try {
-            var tmpMedia = nodeApi.getPrivateMedia(
+            var tmpMedia = getPrivateMedia(
                 nodeName, carte, id, tmp, universalContext.getOptions().getInt("media.verification.max-size")
             );
             cacheRemoteMedia(null, nodeName, id, tmpMedia.getDigest(), null);

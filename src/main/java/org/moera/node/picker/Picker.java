@@ -138,7 +138,7 @@ public class Picker extends Task {
     }
 
     private void fetchNodeDetails() throws MoeraNodeException {
-        WhoAmI remote = nodeApi.whoAmI(remoteNodeName);
+        WhoAmI remote = nodeApi.at(remoteNodeName).whoAmI();
         remoteFullName = remote.getFullName();
         remoteAvatarMediaFile = mediaManager.downloadPublicMedia(remoteNodeName, remote.getAvatar());
         remoteAvatarShape = remote.getAvatar() != null ? remote.getAvatar().getShape() : null;
@@ -168,9 +168,9 @@ public class Picker extends Task {
     private Posting downloadPosting(
         String remotePostingId, String feedName, MediaFileOwner parentMedia, List<Liberin> liberins, List<Pick> picks
     ) throws MoeraNodeException {
-        PostingInfo postingInfo = nodeApi.getPosting(
-            remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
-        );
+        PostingInfo postingInfo = nodeApi
+            .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+            .getPosting(remotePostingId, false);
         MediaFile ownerAvatar = mediaManager.downloadPublicMedia(remoteNodeName, postingInfo.getOwnerAvatar());
         boolean original = PostingInfoUtil.isOriginal(postingInfo);
         String receiverName = original ? remoteNodeName : postingInfo.getReceiverName();

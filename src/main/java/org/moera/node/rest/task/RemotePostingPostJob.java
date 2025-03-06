@@ -191,7 +191,7 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
     @Override
     protected void execute() throws MoeraNodeException {
         if (state.target == null) {
-            state.target = nodeApi.whoAmI(parameters.targetNodeName);
+            state.target = nodeApi.at(parameters.targetNodeName).whoAmI();
             checkpoint();
         }
 
@@ -216,11 +216,9 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
         }
 
         if (state.prevPostingInfo == null && parameters.postingId != null) {
-            state.prevPostingInfo = nodeApi.getPosting(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                parameters.postingId
-            );
+            state.prevPostingInfo = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                .getPosting(parameters.postingId, false);
             checkpoint();
         }
 
@@ -231,18 +229,13 @@ public class RemotePostingPostJob extends Job<RemotePostingPostJob.Parameters, R
 
         if (state.postingInfo == null) {
             if (parameters.postingId == null) {
-                state.postingInfo = nodeApi.postPosting(
-                    parameters.targetNodeName,
-                    state.postingText
-                );
+                state.postingInfo = nodeApi.at(parameters.targetNodeName).createPosting(state.postingText);
                 String postingId = state.postingInfo.getId();
                 send(new RemotePostingAddedLiberin(parameters.targetNodeName, postingId));
             } else {
-                state.postingInfo = nodeApi.putPosting(
-                    parameters.targetNodeName,
-                    parameters.postingId,
-                    state.postingText
-                );
+                state.postingInfo = nodeApi
+                    .at(parameters.targetNodeName)
+                    .updatePosting(parameters.postingId, state.postingText);
                 send(new RemotePostingUpdatedLiberin(parameters.targetNodeName, parameters.postingId));
             }
             checkpoint();

@@ -172,7 +172,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         }
 
         if (state.whoAmI == null) {
-            state.whoAmI = nodeApi.whoAmI(parameters.remoteNodeName);
+            state.whoAmI = nodeApi.at(parameters.remoteNodeName).whoAmI();
             checkpoint();
         }
 
@@ -180,21 +180,16 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
         String commentId = parameters.attributes.getCommentId();
 
         if (postingId != null && state.postingInfo == null) {
-            state.postingInfo = nodeApi.getPosting(
-                parameters.remoteNodeName,
-                generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
-                postingId
-            );
+            state.postingInfo = nodeApi
+                .at(parameters.remoteNodeName, generateCarte(parameters.remoteNodeName, Scope.SHERIFF))
+                .getPosting(postingId, false);
             checkpoint();
         }
 
         if (postingId != null && commentId != null && state.commentInfo == null) {
-            state.commentInfo = nodeApi.getComment(
-                parameters.remoteNodeName,
-                generateCarte(parameters.remoteNodeName, Scope.SHERIFF),
-                postingId,
-                commentId
-            );
+            state.commentInfo = nodeApi
+                .at(parameters.remoteNodeName, generateCarte(parameters.remoteNodeName, Scope.SHERIFF))
+                .getComment(postingId, commentId, false);
             checkpoint();
         }
 
@@ -226,7 +221,7 @@ public class SheriffOrderPostJob extends Job<SheriffOrderPostJob.Parameters, She
             );
             state.sheriffOrderDetails.setSignature(CryptoUtil.sign(fingerprint, (ECPrivateKey) signingKey()));
             state.sheriffOrderDetails.setSignatureVersion(SheriffOrderFingerprintBuilder.LATEST_VERSION);
-            nodeApi.postSheriffOrder(parameters.remoteNodeName, state.sheriffOrderDetails);
+            nodeApi.at(parameters.remoteNodeName).createSheriffOrder(state.sheriffOrderDetails);
             checkpoint();
         }
 

@@ -122,9 +122,9 @@ public class SubscriptionTask extends Task {
                 lastEditedAt,
                 UserSubscription.getViewAllPrincipal(getOptions()).isPublic()
             );
-            SubscriberInfo subscriberInfo = nodeApi.postSubscriber(
-                targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), description
-            );
+            SubscriberInfo subscriberInfo = nodeApi
+                .at(targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE))
+                .createSubscriber(description);
             subscriptionManager.succeededSubscribe(subscriptionId, subscriberInfo.getId());
         } catch (CryptoException | MoeraNodeException | NamingNotAvailableException e) {
             error(true, e);
@@ -144,9 +144,9 @@ public class SubscriptionTask extends Task {
     private void unsubscribe(Subscription subscription) {
         targetNodeName = subscription.getRemoteNodeName();
         try {
-            nodeApi.deleteSubscriber(
-                targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE), subscription.getRemoteSubscriberId()
-            );
+            nodeApi
+                .at(targetNodeName, generateCarte(targetNodeName, Scope.SUBSCRIBE))
+                .deleteSubscriber(subscription.getRemoteSubscriberId());
         } catch (CryptoException | MoeraNodeException e) {
             error(false, e);
         }

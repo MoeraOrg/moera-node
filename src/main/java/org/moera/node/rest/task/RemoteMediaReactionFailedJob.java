@@ -109,22 +109,18 @@ public class RemoteMediaReactionFailedJob
     @Override
     protected void execute() throws MoeraNodeException {
         if (state.parentPosting == null) {
-            EntryInfo[] parents = nodeApi.getPrivateMediaParent(
-                parameters.targetNodeName,
-                generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA),
-                parameters.mediaId
-            );
+            EntryInfo[] parents = nodeApi
+                .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_MEDIA))
+                .getPrivateMediaParentEntry(parameters.mediaId);
             if (parents != null && parents.length > 0) {
                 if (parents[0].getComment() == null) {
                     state.parentPosting = parents[0].getPosting();
                 } else {
                     state.parentComment = parents[0].getComment();
                     if (state.parentComment != null) {
-                        state.parentPosting = nodeApi.getPosting(
-                            parameters.targetNodeName,
-                            generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT),
-                            state.parentComment.getPostingId()
-                        );
+                        state.parentPosting = nodeApi
+                            .at(parameters.targetNodeName, generateCarte(parameters.targetNodeName, Scope.VIEW_CONTENT))
+                            .getPosting(state.parentComment.getPostingId(), false);
                     }
                 }
             }

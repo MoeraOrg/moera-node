@@ -81,19 +81,18 @@ public class RepliedToDigestVerifier {
 
         CommentInfo commentInfo;
         try {
-            commentInfo = nodeApi.getComment(
-                targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(), id
-            );
+            commentInfo = nodeApi
+                .at(targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT))
+                .getComment(postingInfo.getId(), id, false);
         } catch (MoeraNodeApiNotFoundException e) {
             throw new ObjectNotFoundFailure("comment.reply-not-found");
         }
         CommentRevisionInfo commentRevisionInfo = commentRevisions.get(revisionId);
         if (commentRevisionInfo == null) {
             try {
-                commentRevisionInfo = nodeApi.getCommentRevision(
-                    targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
-                    id, revisionId
-                );
+                commentRevisionInfo = nodeApi
+                    .at(targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT))
+                    .getCommentRevision(postingInfo.getId(), id, revisionId);
             } catch (MoeraNodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }
@@ -127,10 +126,9 @@ public class RepliedToDigestVerifier {
         PostingRevisionInfo postingRevisionInfo = postingRevisions.get(commentRevisionInfo.getPostingRevisionId());
         if (postingRevisionInfo == null) {
             try {
-                postingRevisionInfo = nodeApi.getPostingRevision(
-                    targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT), postingInfo.getId(),
-                    commentRevisionInfo.getPostingRevisionId()
-                );
+                postingRevisionInfo = nodeApi
+                    .at(targetNodeName, generateCarte.generate(targetNodeName, Scope.VIEW_CONTENT))
+                    .getPostingRevision(postingInfo.getId(), commentRevisionInfo.getPostingRevisionId());
             } catch (MoeraNodeApiNotFoundException e) {
                 throw new ObjectNotFoundFailure("comment.reply-not-found");
             }

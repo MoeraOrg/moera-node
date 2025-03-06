@@ -86,7 +86,7 @@ public class ProfileUpdateJob extends Job<ProfileUpdateJob.Parameters, ProfileUp
     @Override
     protected void execute() throws Exception {
         if (state.whoAmI == null) {
-            state.whoAmI = nodeApi.whoAmI(parameters.nodeName);
+            state.whoAmI = nodeApi.at(parameters.nodeName).whoAmI();
             checkpoint();
         }
 

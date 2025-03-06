@@ -63,7 +63,7 @@ public class AllRemoteGendersDownloadTask extends Task {
     }
 
     private void download(String targetNodeName) throws MoeraNodeException {
-        WhoAmI target = nodeApi.whoAmI(targetNodeName);
+        WhoAmI target = nodeApi.at(targetNodeName).whoAmI();
         String targetFullName = target.getFullName();
         String targetGender = target.getGender();
         if (targetGender != null) {

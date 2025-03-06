@@ -155,7 +155,7 @@ public class NotificationSender extends Task {
             var errorType = NotificationSenderError.REGULAR;
 
             try {
-                Result result = nodeApi.postNotification(receiverNodeName, createPacket(notification));
+                Result result = nodeApi.at(receiverNodeName).sendNotification(createPacket(notification));
                 succeeded(result);
                 break;
             } catch (Throwable e) {

@@ -68,7 +68,7 @@ public class AllRemoteAvatarsDownloadTask extends Task {
     }
 
     private void download(String targetNodeName) throws MoeraNodeException {
-        AvatarImage targetAvatar = nodeApi.whoAmI(targetNodeName).getAvatar();
+        AvatarImage targetAvatar = nodeApi.at(targetNodeName).whoAmI().getAvatar();
         MediaFile mediaFile = mediaManager.downloadPublicMedia(targetNodeName, targetAvatar);
         if (mediaFile != null) {
             tx.executeWrite(() ->

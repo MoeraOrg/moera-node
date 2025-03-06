@@ -46,48 +46,42 @@ public class RemoteReactionVerifyTask extends RemoteVerificationTask {
         try {
             String remoteNodeName = data.getNodeName();
             String remotePostingId = data.getPostingId();
-            PostingInfo postingInfo = nodeApi.getPosting(
-                remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
-            );
+            PostingInfo postingInfo = nodeApi
+                .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                .getPosting(remotePostingId, false);
             if (postingInfo.getReceiverName() != null) {
                 remoteNodeName = postingInfo.getReceiverName();
                 remotePostingId = postingInfo.getReceiverPostingId();
-                postingInfo = nodeApi.getPosting(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId
-                );
+                postingInfo = nodeApi
+                    .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                    .getPosting(remotePostingId, false);
             }
             if (data.getCommentId() == null) {
-                ReactionInfo reactionInfo = nodeApi.getPostingReaction(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                    data.getOwnerName()
-                );
+                ReactionInfo reactionInfo = nodeApi
+                    .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                    .getPostingReaction(remotePostingId, data.getOwnerName());
                 try {
-                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                        reactionInfo.getPostingRevisionId()
-                    );
+                    PostingRevisionInfo postingRevisionInfo = nodeApi
+                        .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                        .getPostingRevision(remotePostingId, reactionInfo.getPostingRevisionId());
                     verify(postingInfo, postingRevisionInfo, reactionInfo);
                 } catch (MoeraNodeApiNotFoundException e) {
                     succeeded(false);
                 }
             } else {
-                ReactionInfo reactionInfo = nodeApi.getCommentReaction(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                    data.getCommentId(), data.getOwnerName()
-                );
-                CommentInfo commentInfo = nodeApi.getComment(
-                    remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                    data.getCommentId()
-                );
+                ReactionInfo reactionInfo = nodeApi
+                    .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                    .getCommentReaction(remotePostingId, data.getCommentId(), data.getOwnerName());
+                CommentInfo commentInfo = nodeApi
+                    .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                    .getComment(remotePostingId, data.getCommentId(), false);
                 try {
-                    CommentRevisionInfo commentRevisionInfo = nodeApi.getCommentRevision(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                        data.getCommentId(), reactionInfo.getCommentRevisionId()
-                    );
-                    PostingRevisionInfo postingRevisionInfo = nodeApi.getPostingRevision(
-                        remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT), remotePostingId,
-                        commentInfo.getPostingRevisionId()
-                    );
+                    CommentRevisionInfo commentRevisionInfo = nodeApi
+                        .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                        .getCommentRevision(remotePostingId, data.getCommentId(), reactionInfo.getCommentRevisionId());
+                    PostingRevisionInfo postingRevisionInfo = nodeApi
+                        .at(remoteNodeName, generateCarte(remoteNodeName, Scope.VIEW_CONTENT))
+                        .getPostingRevision(remotePostingId, commentInfo.getPostingRevisionId());
                     verify(postingInfo, postingRevisionInfo, commentInfo, commentRevisionInfo, reactionInfo);
                 } catch (MoeraNodeApiNotFoundException e) {
                     succeeded(false);

@@ -87,11 +87,9 @@ public class RemoteFeedFetchJob extends Job<RemoteFeedFetchJob.Parameters, Objec
 
     @Override
     protected void execute() throws MoeraNodeException {
-        FeedSliceInfo sliceInfo = nodeApi.getFeedStories(
-            parameters.remoteNodeName,
-            parameters.remoteFeedName,
-            FETCH_LIMIT
-        );
+        FeedSliceInfo sliceInfo = nodeApi
+            .at(parameters.remoteNodeName)
+            .getFeedSlice(parameters.remoteFeedName, null, null, FETCH_LIMIT);
         log.info(
             "Got {} stories from feed {} at node {}",
             sliceInfo.getStories().size(), parameters.remoteFeedName, parameters.remoteNodeName
