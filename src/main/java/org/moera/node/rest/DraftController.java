@@ -20,7 +20,6 @@ import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
-import org.moera.lib.node.types.body.BodyMappingException;
 import org.moera.lib.node.types.validate.ValidationUtil;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.auth.Admin;
@@ -219,11 +218,7 @@ public class DraftController {
             draft.setOwnerAvatarShape(requestContext.getAvatar().getShape());
         }
         draft.setCreatedAt(Util.now());
-        try {
-            DraftTextUtil.toDraft(draftText, draft, textConverter);
-        } catch (BodyMappingException e) {
-            throw new ValidationFailure("draft.body-src.wrong-encoding");
-        }
+        DraftTextUtil.toDraft(draftText, draft, textConverter);
         updateDeadline(draft);
         draft = draftRepository.save(draft);
         updateAttachments(draft, media, draftText.getMedia());
@@ -250,11 +245,7 @@ public class DraftController {
 
         Draft draft = draftRepository.findById(requestContext.nodeId(), id)
             .orElseThrow(() -> new ObjectNotFoundFailure("draft.not-found"));
-        try {
-            DraftTextUtil.toDraft(draftText, draft, textConverter);
-        } catch (BodyMappingException e) {
-            throw new ValidationFailure("draft.body-src.wrong-encoding");
-        }
+        DraftTextUtil.toDraft(draftText, draft, textConverter);
         updateDeadline(draft);
         updateAttachments(draft, media, draftText.getMedia());
 

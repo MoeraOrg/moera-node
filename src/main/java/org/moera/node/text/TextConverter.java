@@ -6,7 +6,6 @@ import jakarta.inject.Inject;
 import org.moera.lib.node.types.BodyFormat;
 import org.moera.lib.node.types.SourceFormat;
 import org.moera.lib.node.types.body.Body;
-import org.moera.lib.node.types.body.BodyMappingException;
 import org.moera.node.data.EntryRevision;
 import org.moera.node.data.MediaFileOwner;
 import org.moera.node.text.sanitizer.HtmlSanitizer;
@@ -36,12 +35,7 @@ public class TextConverter {
     public Body toHtml(SourceFormat format, Body source) {
         Body converted = source.clone();
         converted.setSubject(source.getSubject());
-        try {
-            converted.setText(toHtml(format, source.getText()));
-        } catch (Exception e) {
-            log.warn("Text conversion error", e);
-            throw new BodyMappingException();
-        }
+        converted.setText(toHtml(format, source.getText()));
         return converted;
     }
 
@@ -83,24 +77,15 @@ public class TextConverter {
             revision.setBodySrc(bodySrc.getEncoded());
             revision.setBodyFormat(bodyFormat.getValue());
             if (BodyFormat.MESSAGE.equals(bodyFormat)) {
-                try {
-                    body = sourceBody.clone();
-                    revision.setBody(sourceBody.getEncoded());
-                    revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
-                } catch (BodyMappingException e) {
-                    e.setField("body");
-                    throw e;
-                }
-                try {
-                    Body bodyPreview = sourceBodyPreview.clone();
-                    revision.setBodyPreview(sourceBodyPreview.getEncoded());
-                    revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
-                        !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media)
-                    );
-                } catch (BodyMappingException e) {
-                    e.setField("bodyPreview");
-                    throw e;
-                }
+                body = sourceBody.clone();
+                revision.setBody(sourceBody.getEncoded());
+                revision.setSaneBody(HtmlSanitizer.sanitizeIfNeeded(body, false, media));
+
+                Body bodyPreview = sourceBodyPreview.clone();
+                revision.setBodyPreview(sourceBodyPreview.getEncoded());
+                revision.setSaneBodyPreview(HtmlSanitizer.sanitizeIfNeeded(
+                    !ObjectUtils.isEmpty(bodyPreview.getText()) ? bodyPreview : body, true, media)
+                );
             } else {
                 revision.setBody(sourceBody.getEncoded());
                 revision.setSaneBody(null);

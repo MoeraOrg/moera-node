@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.moera.lib.node.types.Result;
+import org.moera.lib.node.types.body.BodyMappingException;
 import org.moera.lib.node.types.validate.ValidationException;
 import org.moera.node.auth.AuthenticationException;
 import org.moera.node.auth.IncorrectSignatureException;
@@ -122,7 +123,7 @@ public class ExceptionsControllerAdvice {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result validationException(ValidationException e) {
-        String message = messageSource.getMessage(e.getErrorCode(), new Object[0], Locale.getDefault());
+        String message = messageSource.getMessage(e.getErrorCode(), null, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
     }
 
@@ -131,6 +132,14 @@ public class ExceptionsControllerAdvice {
     public Result validationFailure(ValidationFailure e) {
         String message = messageSource.getMessage(e, Locale.getDefault());
         return new Result(e.getErrorCode(), message);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result bodyMappingException(BodyMappingException e) {
+        String errorCode = "invalid-syntax";
+        String message = messageSource.getMessage(errorCode, null, Locale.getDefault());
+        return new Result(errorCode, message);
     }
 
     @ExceptionHandler

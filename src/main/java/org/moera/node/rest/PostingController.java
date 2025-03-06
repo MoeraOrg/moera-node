@@ -20,7 +20,6 @@ import org.moera.lib.node.types.PostingText;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.lib.node.types.body.BodyMappingException;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
@@ -184,19 +183,15 @@ public class PostingController {
         );
 
         Posting posting = postingOperations.newPosting(postingText);
-        try {
-            posting = postingOperations.createOrUpdatePosting(
-                posting,
-                null,
-                media,
-                postingText.getPublications(),
-                null,
-                revision -> PostingTextUtil.toEntryRevision(postingText, revision, digest, textConverter, media),
-                entry -> PostingTextUtil.toEntry(postingText, entry)
-            );
-        } catch (BodyMappingException e) {
-            throw new ValidationFailure("posting.body-src.wrong-encoding");
-        }
+        posting = postingOperations.createOrUpdatePosting(
+            posting,
+            null,
+            media,
+            postingText.getPublications(),
+            null,
+            revision -> PostingTextUtil.toEntryRevision(postingText, revision, digest, textConverter, media),
+            entry -> PostingTextUtil.toEntry(postingText, entry)
+        );
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
 
         requestContext.send(new PostingAddedLiberin(posting));
@@ -257,24 +252,20 @@ public class PostingController {
         entityManager.lock(posting, LockModeType.PESSIMISTIC_WRITE);
         boolean sameViewComments = PostingTextUtil.sameViewComments(postingText, posting);
         PostingTextUtil.toEntry(postingText, posting);
-        try {
-            posting = postingOperations.createOrUpdatePosting(
-                posting,
-                posting.getCurrentRevision(),
-                media,
-                null,
-                revision -> PostingTextUtil.sameAsRevision(postingText, revision),
-                revision -> PostingTextUtil.toEntryRevision(postingText, revision, digest, textConverter, media),
-                entry -> PostingTextUtil.toEntry(postingText, entry)
-            );
-        } catch (BodyMappingException e) {
-            String field = e.getField() != null ? e.getField() : "bodySrc";
-            throw new ValidationFailure("postingText.%s.wrong-encoding".formatted(field));
-        }
+        posting = postingOperations.createOrUpdatePosting(
+            posting,
+            posting.getCurrentRevision(),
+            media,
+            null,
+            revision -> PostingTextUtil.sameAsRevision(postingText, revision),
+            revision -> PostingTextUtil.toEntryRevision(postingText, revision, digest, textConverter, media),
+            entry -> PostingTextUtil.toEntry(postingText, entry)
+        );
         List<Story> stories = storyRepository.findByEntryId(requestContext.nodeId(), posting.getId());
         if (!sameViewComments) {
             mediaFileOwnerRepository.updateUsageOfCommentAttachments(
-                    requestContext.nodeId(), posting.getId(), Util.now());
+                requestContext.nodeId(), posting.getId(), Util.now()
+            );
         }
         requestContext.send(new PostingUpdatedLiberin(posting, latest, latestView));
 

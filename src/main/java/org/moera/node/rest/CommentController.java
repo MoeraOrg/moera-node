@@ -36,7 +36,6 @@ import org.moera.lib.node.types.PostingInfo;
 import org.moera.lib.node.types.Result;
 import org.moera.lib.node.types.Scope;
 import org.moera.lib.node.types.SourceFormat;
-import org.moera.lib.node.types.body.BodyMappingException;
 import org.moera.lib.node.types.principal.Principal;
 import org.moera.lib.util.LogUtil;
 import org.moera.node.api.naming.NamingCache;
@@ -234,20 +233,15 @@ public class CommentController {
         );
 
         Comment comment = commentOperations.newComment(posting, commentText, repliedTo);
-        try {
-            comment = commentOperations.createOrUpdateComment(
-                posting,
-                comment,
-                null,
-                media,
-                null,
-                revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
-                entry -> CommentTextUtil.toEntry(commentText, entry)
-            );
-        } catch (BodyMappingException e) {
-            String field = e.getField() != null ? e.getField() : "bodySrc";
-            throw new ValidationFailure("commentText.%s.wrong-encoding".formatted(field));
-        }
+        comment = commentOperations.createOrUpdateComment(
+            posting,
+            comment,
+            null,
+            media,
+            null,
+            revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
+            entry -> CommentTextUtil.toEntry(commentText, entry)
+        );
 
         if (comment.getCurrentRevision().getSignature() != null) {
             if (comment.getOwnerName().equals(requestContext.nodeName())) {
@@ -327,20 +321,15 @@ public class CommentController {
         entityManager.lock(comment, LockModeType.PESSIMISTIC_WRITE);
         if (requestContext.isPrincipal(comment.getEditE(), Scope.UPDATE_COMMENT)) {
             CommentTextUtil.toEntry(commentText, comment);
-            try {
-                comment = commentOperations.createOrUpdateComment(
-                    comment.getPosting(),
-                    comment,
-                    comment.getCurrentRevision(),
-                    media,
-                    revision -> CommentTextUtil.sameAsRevision(commentText, revision),
-                    revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
-                    entry -> CommentTextUtil.toEntry(commentText, entry)
-                );
-            } catch (BodyMappingException e) {
-                String field = e.getField() != null ? e.getField() : "bodySrc";
-                throw new ValidationFailure("commentText.%s.wrong-encoding".formatted(field));
-            }
+            comment = commentOperations.createOrUpdateComment(
+                comment.getPosting(),
+                comment,
+                comment.getCurrentRevision(),
+                media,
+                revision -> CommentTextUtil.sameAsRevision(commentText, revision),
+                revision -> CommentTextUtil.toEntryRevision(commentText, revision, digest, textConverter, media),
+                entry -> CommentTextUtil.toEntry(commentText, entry)
+            );
         } else {
             // senior, but not owner
             CommentTextUtil.toEntrySenior(commentText, comment);
